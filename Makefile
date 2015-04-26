@@ -1,25 +1,27 @@
 # Project: SDLPoP
 # Makefile created by Dev-C++ 4.9.9.2
 
-CC   = gcc
-OBJ  = main.o data.o seg000.o seg001.o seg002.o seg003.o seg004.o seg005.o seg006.o seg007.o seg008.o seg009.o
-LIBS =  `sdl-config --libs` -l"SDL_image" -l"SDL_mixer"
-INCS = `sdl-config --cflags`
-BIN  = prince
-CFLAGS = $(INCS) -Wall -pedantic -std=gnu99
+CC = gcc
 RM = rm -f
-HFILES   = common.h config.h data.h proto.h types.h
 
-.PHONY: all all-before all-after clean clean-custom
+HFILES = common.h config.h data.h proto.h types.h
+OBJ = main.o data.o seg000.o seg001.o seg002.o seg003.o seg004.o seg005.o seg006.o seg007.o seg008.o seg009.o
+BIN = prince
 
-all: all-before $(BIN) all-after
+LIBS := $(shell sdl-config --libs) -lSDL_image -lSDL_mixer
+INCS := $(shell sdl-config --cflags)
 
+CFLAGS += $(INCS) -Wall -std=gnu99
 
-clean: clean-custom
-	${RM} $(OBJ) $(BIN)
+all: $(BIN)
+
+clean:
+	$(RM) $(OBJ) $(BIN)
 
 $(BIN): $(OBJ)
-	$(CC) $(OBJ) -o $(BIN) $(LIBS)
+	$(CC) $(LDFLAGS) $(OBJ) -o $@ $(LIBS)
 
 %.o: %.c $(HFILES)
-	$(CC) -c $< $(CFLAGS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -c $<
+
+.PHONY: all clean
