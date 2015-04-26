@@ -53,6 +53,7 @@ Ctrl-K: keyboard mode
 Ctrl-R: return to intro
 Ctrl-S: sound on/off
 Ctrl-V: show version
+Ctrl-Q: quit game
 
 Cheats:
 Shift-L: go to next level
