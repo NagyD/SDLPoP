@@ -4,7 +4,7 @@
 CC   = gcc
 OBJ  = main.o data.o seg000.o seg001.o seg002.o seg003.o seg004.o seg005.o seg006.o seg007.o seg008.o seg009.o
 LIBS =  `sdl-config --libs` -l"SDL_image" -l"SDL_mixer"
-INCS =  
+INCS = `sdl-config --cflags`
 BIN  = prince
 CFLAGS = $(INCS) -Wall -pedantic -std=gnu99
 RM = rm -f
