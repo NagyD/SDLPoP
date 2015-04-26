@@ -2,6 +2,7 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <time.h>
+#include <sys/stat.h>
 
 // Most functions in this file are different from those in the original game.
 
@@ -1477,10 +1478,9 @@ void load_sound_names() {
 		char name[256];
 		fscanf(fp, "%d=%255s\n", &number, /*sizeof(name)-1,*/ name);
 		//if (feof(fp)) break;
-		printf("sound_names[%d] = %s\n",number,name);
+		//printf("sound_names[%d] = %s\n",number,name);
 		if (number>=0 && number<max_sound_id) {
-			sound_names[number] = malloc(strlen(name)+1);
-			strcpy(sound_names[number], name);
+			sound_names[number] = strdup(name);
 		}
 	}
 	fclose(fp);
@@ -1503,11 +1503,15 @@ sound_buffer_type* load_sound(int index) {
 				//printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
 				char filename[256];
 				const char* ext=exts[i];
+				struct stat info;
+
 				snprintf(filename, sizeof(filename), "data/music/%s.%s", sound_names[index], ext);
+				if (stat(filename, &info))
+					continue;
 				//printf("Trying to load %s\n", filename);
 				Mix_Chunk* chunk = Mix_LoadWAV(filename);
 				if (chunk == NULL) {
-					sdlperror("Mix_LoadWAV");
+					sdlperror(filename);
 					continue;
 				}
 				//printf("Loaded sound from %s\n", filename);
@@ -1525,6 +1529,9 @@ sound_buffer_type* load_sound(int index) {
 	if (result == NULL) {
 		//printf("Trying to load from DAT\n");
 		result = (sound_buffer_type*) load_from_opendats_alloc(index + 10000, "bin", NULL, NULL);
+	}
+	if (result == NULL) {
+		fprintf(stderr, "Failed to load sound %d '%s'\n", index, sound_names[index]);
 	}
 	return result;
 }
