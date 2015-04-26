@@ -1278,8 +1278,10 @@ rect_type far * __pascal far union_rect(rect_type far *output,const rect_type fa
 	return output;
 }
 
-const int userevent_SOUND = 'SOUN';
-const int userevent_TIMER = 'TIME';
+enum userevents {
+	userevent_SOUND,
+	userevent_TIMER,
+};
 
 SDL_TimerID sound_timer = NULL;
 short speaker_playing = 0;
