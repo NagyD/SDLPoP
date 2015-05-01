@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <sys/stat.h>
+#include <errno.h>
 
 // Most functions in this file are different from those in the original game.
 
@@ -1481,14 +1482,18 @@ const int max_sound_id = 58;
 char** sound_names = NULL;
 
 void load_sound_names() {
+	const char const * names_path = "data/music/names.txt";
 	if (sound_names != NULL) return;
-	FILE* fp = fopen("data/music/names.txt","rt");
+	FILE* fp = fopen(names_path,"rt");
 	if (fp==NULL) return;
 	sound_names = (char**) calloc(sizeof(char*) * max_sound_id, 1);
 	while (!feof(fp)) {
 		int number;
 		char name[256];
-		fscanf(fp, "%d=%255s\n", &number, /*sizeof(name)-1,*/ name);
+		if (fscanf(fp, "%d=%255s\n", &number, /*sizeof(name)-1,*/ name) != 2) {
+			perror(names_path);
+			continue;
+		}
 		//if (feof(fp)) break;
 		//printf("sound_names[%d] = %s\n",number,name);
 		if (number>=0 && number<max_sound_id) {
@@ -1795,13 +1800,14 @@ int __pascal far get_text_color(int cga_color,int low_half,int high_half_mask) {
 //	// stub
 //}
 
-void load_from_opendats_metadata(int resource_id, const char* extension, FILE** out_fp, data_location* result, byte* checksum, int* size) {
+void load_from_opendats_metadata(int resource_id, const char* extension, FILE** out_fp, data_location* result, byte* checksum, int* size, dat_type** out_pointer) {
 	char image_filename[256];
 	FILE* fp = NULL;
 	dat_type* pointer;
 	*result = data_none;
 	// Go through all open DAT files.
 	for (pointer = dat_chain_ptr; fp == NULL && pointer != NULL; pointer = pointer->next_dat) {
+		*out_pointer = pointer;
 		if (pointer->handle != NULL) {
 			// If it's an actual DAT file:
 			fp = pointer->handle;
@@ -1816,8 +1822,11 @@ void load_from_opendats_metadata(int resource_id, const char* extension, FILE** 
 				// found
 				*result = data_DAT;
 				*size = dat_table->entries[i].size;
-				fseek(fp, dat_table->entries[i].offset, SEEK_SET);
-				fread(checksum, 1, 1, fp);
+				if (fseek(fp, dat_table->entries[i].offset, SEEK_SET) ||
+				    fread(checksum, 1, 1, fp) != 1) {
+					perror(pointer->filename);
+					fp = NULL;
+				}
 			} else {
 				// not found
 				fp = NULL;
@@ -1828,10 +1837,15 @@ void load_from_opendats_metadata(int resource_id, const char* extension, FILE** 
 			//printf("loading (binary) %s",image_filename);
 			fp = fopen(image_filename, "rb");
 			if (fp != NULL) {
-				*result = data_directory;
 				struct stat buf;
-				fstat(fileno(fp), &buf);
-				*size = buf.st_size;
+				if (fstat(fileno(fp), &buf) == 0) {
+					*result = data_directory;
+					*size = buf.st_size;
+				} else {
+					perror(image_filename);
+					fclose(fp);
+					fp = NULL;
+				}
 			}
 		}
 	}
@@ -1866,18 +1880,26 @@ void __pascal far close_dat(dat_type far *pointer) {
 void far *__pascal load_from_opendats_alloc(int resource, const char* extension, data_location* out_result, int* out_size) {
 	// stub
 	//printf("id = %d\n",resource);
+	dat_type* pointer;
 	data_location result;
 	byte checksum;
 	int size;
 	FILE* fp = NULL;
-	load_from_opendats_metadata(resource, extension, &fp, &result, &checksum, &size);
+	load_from_opendats_metadata(resource, extension, &fp, &result, &checksum, &size, &pointer);
 	if (out_result != NULL) *out_result = result;
 	if (out_size != NULL) *out_size = size;
 	if (result == data_none) return NULL;
 	void* area = malloc(size);
 	//read(fd, area, size);
-	fread(area, size, 1, fp);
+	if (fread(area, size, 1, fp) != 1) {
+		fprintf(stderr, "%s: %s, resource %d, size %d, failed: %s\n",
+			__func__, pointer->filename, resource,
+			size, strerror(errno));
+		free(area);
+		area = NULL;
+	}
 	if (result == data_directory) fclose(fp);
+	/* XXX: check checksum */
 	return area;
 }
 
@@ -1885,14 +1907,21 @@ void far *__pascal load_from_opendats_alloc(int resource, const char* extension,
 int __pascal far load_from_opendats_to_area(int resource,void far *area,int length, const char* extension) {
 	// stub
 	//return 0;
+	dat_type* pointer;
 	data_location result;
 	byte checksum;
 	int size;
 	FILE* fp = NULL;
-	load_from_opendats_metadata(resource, extension, &fp, &result, &checksum, &size);
+	load_from_opendats_metadata(resource, extension, &fp, &result, &checksum, &size, &pointer);
 	if (result == data_none) return 0;
-	fread(area, MIN(size, length), 1, fp);
+	if (fread(area, MIN(size, length), 1, fp) != 1) {
+		fprintf(stderr, "%s: %s, resource %d, size %d, failed: %s\n",
+			__func__, pointer->filename, resource,
+			size, strerror(errno));
+		memset(area, 0, MIN(size, length));
+	}
 	if (result == data_directory) fclose(fp);
+	/* XXX: check checksum */
 	return 0;
 }
 
