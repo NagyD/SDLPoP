@@ -92,23 +92,33 @@ dat_type *__pascal open_dat(const char *filename,int drive) {
 	FILE* fp = fopen(filename, "rb");
 	dat_header_type dat_header;
 	dat_table_type* dat_table = NULL;
-	if (fp != NULL) {
-		fread(&dat_header, 6, 1, fp);
-		dat_table = (dat_table_type*) malloc(dat_header.table_size);
-		fseek(fp, dat_header.table_offset, SEEK_SET);
-		fread(dat_table, dat_header.table_size, 1, fp);
-	}
-	dat_type* pointer = (dat_type*) malloc(sizeof(dat_type));
-	memset(pointer, 0, sizeof(dat_type));
+
+	dat_type* pointer = (dat_type*) calloc(1, sizeof(dat_type));
 	strncpy(pointer->filename, filename, sizeof(pointer->filename));
 	pointer->next_dat = dat_chain_ptr;
+	dat_chain_ptr = pointer;
+
 	if (fp != NULL) {
+		if (fread(&dat_header, 6, 1, fp) != 1)
+			goto failed;
+		dat_table = (dat_table_type*) malloc(dat_header.table_size);
+		if (dat_table == NULL ||
+		    fseek(fp, dat_header.table_offset, SEEK_SET) ||
+		    fread(dat_table, dat_header.table_size, 1, fp) != 1)
+			goto failed;
 		pointer->handle = fp;
 		pointer->dat_table = dat_table;
 	}
-	dat_chain_ptr = pointer;
+out:
 	// stub
 	return pointer;
+failed:
+	perror(filename);
+	if (fp)
+		fclose(fp);
+	if (dat_table)
+		free(dat_table);
+	goto out;
 }
 
 // seg009:101B
