@@ -1,0 +1,162 @@
+Change log and history.
+
+2012 July 28
+Released disassembly of PoP1 DOS: http://forum.princed.org/viewtopic.php?p=11347#p11347
+
+2013 September 01
+I posted the room-drawing code in the forum.
+http://forum.princed.org/viewtopic.php?f=68&t=3368
+
+2013 December
+Started rewriting the further parts of the disassembly to C.
+
+2014 January 03
+Released disassembly: http://forum.princed.org/viewtopic.php?p=14291#p14291
+
+2014 January
+Most rewriting is done.
+I started to find and fix the (many!) bugs.
+Most of them resulted from the mis-reading of the disassembly.
+
+2014 May 29
+Made the code compatible with GNU/Linux.
+
+2014 July 11
+First public mention of the port.
+http://forum.princed.org/viewtopic.php?p=14975#p14975
+
+2014 July 21
+(version 1.00)
+The first public release.
+http://forum.princed.org/viewtopic.php?f=69&t=3512
+
+2014 July 22
+(version 1.01)
+Fixed bugs:
+FIXED: Game is too fast for a short time after switching rooms. (Or restarting the level)
+FIXED: Cutscenes fade too fast without COMPAT_TIMER
+FIXED: Andrew: "New rooms take quite some time to be drawn, with the screen being blank in-between"
+FIXED: If the mouse cursor leaves/enters the window, the game does as if the pressed keys were released.
+New feature:
+DONE: Hide cursor in fullscreen.
+
+2014 July 23
+Fixed bugs:
+FIXED: Keys did not repeat themselves.
+	Needed for keys like "+" and "-".
+FIXED: Starting a new game after winning a previous one makes all texts in the game blue instead of white.
+
+2014 July 24
+Fixed bugs:
+FIXED: When the screen is flashing, there may be black rectangles around the moving objects.
+FIXED: Can't do level 7 trick.
+
+2014 August 01
+New feature:
+DONE: Support LEVELS.DAT
+
+2014 August 04
+Fixed bugs:
+FIXED: Can't interrupt fading of title screen.
+FIXED: (Micro Palace, level 12) If kid is on the very left (in bottom row), then shadow is in wrong direction (looking left), and is constantly turning around.
+
+2014 August 05
+(version 1.02)
+(Contains all fixes listed above)
+
+2014 August 06
+FIXED: (Micro Palace, level 4) After kid enters exit door, chomper bites kid.
+FIXED: shadow is partially green when he is looking to the right
+FIXED: (Prince of Wateria, level 5 room 3) (palace) Empty potion has red bubbles.
+DONE: Use .DAT files
+
+2014 August 07
+(version 1.03)
+(Contains all fixes listed above)
+
+2014 August 08
+(version 1.04)
+FIXED: Made compatible with 64-bit.
+
+2014 August 10
+FIXED: If color 0 of a palette was not black, then it was not transparent.
+FIXED: PNGs with alpha channel are drawn properly.
+
+2014 August 11
+(version 1.05)
+(Contains all fixes listed above)
+
+2014 August 23
+FIXED: When fighting, parry-attack-parry-attack-... sequences stop when the guard attacks.
+
+2014 August 24
+(version 1.06)
+DONE: Sound timing (slow-fall and intro needs this)
+DONE: Background color of texts in intro and ending
+FIXED: prandom(): initialize from current time
+
+2014 August 28
+(version 1.07)
+FIXED: Under Linux, the game hanged randomly, because the main timer sometimes didn't generate its event.
+FIXED: Removed the "Would play sound", "length =", "set_char_collision" and "Loading chtab" messages.
+	Those were annoying and possibly slowed the game down.
+FIXED: Level 12: If I enter the last room while the music is still "playing", then the game does not advance to level 13.
+	And quits with error: Tried to load cutscene for level 26, not in 0..15
+FIXED: Level 12->13 transition should not restore full HP or show level number.
+FIXED: Displaying text is visibly slow on some systems.
+
+2014 September 05
+FIXED: Pressing "K" on a skeleton crashes the game.
+
+2014 September 22
+(version 1.08)
+DONE: Digi sounds (only from DAT)
+
+2014 September 23
+FIXED: The game quits in the intro, when Jaffar opens the door.
+
+2014 September 25
+FIXED: When doing the level 5 trick (backing through the gate), the kid appears in the room to the *right* instead of left.
+FIXED: Level 5: If you back out from the room where the guard is originally (but the screen is not switched), the kid might fall through the floor at the level door.
+
+2014 September 28
+(version 1.09)
+(Contains all fixes listed above)
+Renamed the project to SDLPoP.
+DONE: Added version number to the window title.
+
+2014 October 11
+(version 1.10)
+FIXED: Made the game compatible with Mac OS X, based on the suggestions by StaticReturn (from the Princed forum).
+CHANGE: Now cheats are disabled by default unless the game is compiled in debug mode.
+
+2014 October 27
+CHANGE: Added a font inside the exe. So the game can start without the data/font/ folder.
+CHANGE: Changed project type to GUI. This means that the (empty) console window won't appear under Windows.
+CHANGE: Changed "SDL" to "SDLPoP" in the window title.
+
+2014 October 28
+(version 1.11)
+(Contains all changes listed above)
+
+2014 December 3
+FIXED: When doing Trick 95, the kid might bounce back from the wall a bit.
+
+2014 December 20
+(version 1.12)
+FIXED: Don't quit if there is no sound device available.
+	Instead, just disable digi sound.
+	This can happen, for example, on a Raspberry PI emulator (QEMU).
+
+2015 February 13
+(version 1.13)
+Added support for music.
+Fixed some memory leaks.
+
+2015 February 16
+(version 1.14)
+FIXED: Changed project type to GUI in the "release" project, too.
+FIXED: Ctrl-S did not turn off mixer sounds.
+FIXED: Ctrl-S did not stop currently playing sounds.
+DONE: Toggle fullscreen with alt-enter.
+FIXED: If the game is in full screen, and I switch away (alt-tab) and back, most of the screen will be black, until it is redrawn.

@@ -1,0 +1,14 @@
+Makefile:			  A new OSX specific makefile.
+seg007.c:  Line 608:  Clang was erroring because the comparison could never be equal, so I simplified it.
+proto.h:   Line 500:
+	and
+seg009.c:  Line 85:	  Previous declaration of wait() in /usr/include/sys/wait.h, so I renamed the SDLPoP function
+					  with a macro.
+
+seg009.c:  Line 1915:
+	and other places: "cast from pointer to smaller type 'int' loses information" error.  Changing the typecast
+					  to (uintptr_t) gets rid of the warning/error, but does it slove the problem?  Is
+					  there any danger? 
+
+Everywhere else:	  Lots of added tyepcasts.  Some of the typecasts were strange, for example: (byte*)-1.
+					  Is that dangerous?

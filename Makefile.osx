@@ -1,0 +1,20 @@
+# Makefile for OSX
+# 
+# CFLAGS is the result of -DOSX and the output of the command 'sdl-config --cflags'.  You may have to replace those values
+# if the SDL headers are not installed in /opt/local/include.
+
+CC		 = clang
+CFLAGS	 = -DOSX -I/opt/local/include -D_GNU_SOURCE=1 -D_THREAD_SAFE
+LDFLAGS	 = `sdl-config --libs` -lSDL_image -lSDL_mixer
+OBJ		 = main.o data.o seg000.o seg001.o seg002.o seg003.o seg004.o seg005.o seg006.o seg007.o seg008.o seg009.o
+HFILES   = common.h config.h data.h proto.h types.h
+
+prince: $(OBJ)
+	$(CC) -o $@ $^ $(LDFLAGS) 
+
+%.o: %.c $(HFILES)
+	$(CC) -c $< $(CFLAGS)
+
+clean:
+	rm -rf $(OBJ)
+	rm -rf prince

@@ -1,0 +1,625 @@
+fixed bugs:
+
+signed vs. unsigned
+same thing with multiple names (kid_room vs. kid.room)
+pop_main: break;
+	# Level selection: 10 meant 1
++ vs. - in draw_mid
+	# Wrong y-pos
+draw_back_fore: which_table == 0 instead of 1
+	# Foretable was not drawn
+sub_B726/redraw_needed_tiles: --drawn_col should be ++drawn_col
+	# How did it work?
+process_key: if (start_level == 0) was !=
+	# Shift or enter restarted level
+process_key: next_level = current_level + 1; was ++
+	# Shift-L didn't work
+play_level_2: if (next_level == current_level || check_sound_playing()) { was || ! check_...
+draw_tile_fore: wall_pattern(1, 0); should be wall_pattern(1, 1);
+	# Badly drawn wall
+load_lev_spr: release_dathandle(dathandle); was release_dathandle();
+	# Guard.dat not released
+add_drect: the loop
+	# Not redrawn
+get_curr_tile: missing & 0x1F
+check_spike_below: not_finished = 0; was outside do
+	# HANG
+down_pressed:
+	bad:
+	distance_to_edge_weight();
+	char_.x = char_dx_forward(9);
+	good:
+	char_.x = char_dx_forward(distance_to_edge_weight() - 9);
+	# Can't press button
+load_frame_to_obj:
+	bad:
+	if ((cur_frame.flags ^ obj_direction) & 0x80) {
+	good:
+	if ((cur_frame.flags ^ obj_direction) >= 0) {
+	# Bad xpos
+land: if (! tile_is_floor(get_tile_behind_char()) && was if(tile_...
+leave_room:
+	bad:
+		if (curr_tile2 != tiles_7_doortop_with_floor &&
+			curr_tile2 != tiles_12_doortop
+		) {
+			if (char_x_right >= 201) {
+	good:
+		if (curr_tile2 != tiles_7_doortop_with_floor &&
+			curr_tile2 != tiles_12_doortop &&
+			char_x_right >= 201
+		) {
+	missing:
+		} else {
+			return -1;
+		}
+sub_54A5: short var_A; was word
+sub_55BD: char_.frame < 135 || char_.frame >= 149  =>  (char_.frame < 135 || char_.frame >= 149)
+check_chomped: short was word
+sub_5D9B/dist_from_wall_behind: - 13; was +
+sub_562A: get_left_wall_xpos was get_right_wall_xpos
+back_pressed: || dist... was && dist...
+land: if (! take_hp(1)) { was if(take_...
+	# Kid died from two-row falls
+do_paused: while (! process_key()); had no !
+leave_room: chary > -16 was 240
+down_pressed: ! tile_is_floor had no !
+	else crouch2()
+mob_down_a_row: missing - 1
+	# Loose that fell out of room appeared at wrong place
+read_keyb_control: control_shift = -(...) had no -
+	# didn't notice shift
+get_some_tile: if (tile_type(tile) != 0) { was too long
+control_hanging: char_.direction == dir_FF_left was !=
+	action and wall were separate
+hang_fall: ! missing (2*)
+guard_notice: else missing
+loose_land: case (0, BAD!) 1 missing
+	# loose
+is_spike_harmful: short->byte
+do_trigger_list: != was ==
+	# buttons didn't work
+trigger_1: missing result=
+	# buttons didn't work (?)
+anim_door: array boundary
+	# gate didn't close
+anim_guard: char_frame <= 150 -> >=
+control_hanging: if (! tile_is_floor( had no !
+jump_up: } else if (! tile_is_floor( had no !
+SWAP left and right + dir_front/behind + get_tile_...
+	# VERY silly
+draw_gate_fore: missing -2
+	# Gate looks bad if kid is behind it
+do_paused: && -> ||
+sub_5840: 2 ifs -> 1 if &&
+	# Go through wall
+sub_BAD5: missing == tiles_0_empty
+redraw_at_char2: >= 80 was >
+redraw_at_char: short was word
+do_mobs: short was word
+do_mobs: mobs[new_index++] = mobs[index]; was flipped
+	# If multiple loose floors were falling
+level12_shadow_anim: if (can_guard_see_kid < 2 was >=
+extern sbyte byte_1F00E; was byte
+extern sbyte byte_1EFD2; was byte
+leave_room: added (sbyte) cast
+	# Can't go up to other room
+check_can_guard_see_kid: word -> short
+extern short obj_x; was word
+	# When run-jumping out of a room, kid suddenly appears in the middle
+do_control: very silly
+do_control: if ((word)var_2 < (word)-6) { was var_2 < 6
+dx_weight: word -> sbyte
+get_tile_div_mod_m7: missing return
+check_action: missing else (or return)
+	# level 1: shift -> wants to grab (in_wall???)
+clip_char:
+	bad:
+			if (action != actions_0_stand && (frame == 79 || frame == 81) ||
+				get_tile(room, char_col_left, char_top_row) == tiles_20_wall ||
+				tile_is_floor(curr_tile2)
+			) {
+	good:
+			if (action == actions_0_stand && (frame == 79 || frame == 81) ||
+				get_tile(room, char_col_right, char_top_row) == tiles_20_wall ||
+				tile_is_floor(curr_tile2)
+			) {
+check_press: else return;
+	# Can't break loose floor from above (breaks 2 tiles to the right)
+fell_on_your_head: frame < 5 || was &&
+	# Landing loose won't hurt kid
+play_seq: missing is_guard_notice = 1;
+	# Guard doesn't hear footsteps
+dist_from_wall_forward: ! can_bump_into_gate() had no !
+	# Kid wants to run towards gate instead of stepping (but he steps if it's open) + when he bumps into gate, pushed to wrong position
+redraw_at_char: short was word
+	# Level 4 right: bump into gate, then turn around -> game hangs
+set_clip_rect: ptr_scrninfo was surface
+	# no clipping at all
+	# When climbing up to floor: not overlaid (direction = right)
+reset_clip_rect: ptr_scrninfo was surface
+clip_char:
+	bad(?):
+			if ((get_tile(room, col, row) == tiles_7_doortop_with_floor ||
+				curr_tile2 == tiles_12_doortop) &&
+				action == actions_3_in_midair ||
+				action == actions_4_in_freefall && frame == 106 ||
+				action == actions_5_bumped && frame == 107 ||
+				char_.direction < 0 && (
+					action == actions_2_hang_climb ||
+					action == actions_6_hang_straight ||
+					action == actions_1_run_jump &&
+					frame >= 137 && frame < 140
+				)
+			) {
+	good(?):
+			if ((get_tile(room, col, row) != tiles_7_doortop_with_floor &&
+				curr_tile2 != tiles_12_doortop) ||
+				action == actions_3_in_midair ||
+				action == actions_4_in_freefall && frame == 106 ||
+				action == actions_5_bumped && frame == 107 ||
+				char_.direction < 0 && (
+					action == actions_2_hang_climb ||
+					action == actions_6_hang_straight ||
+					action == actions_1_run_jump &&
+					frame >= 137 && frame < 140
+				)
+			) {
+	# Kid can be seen through doortop
+set_joy_mode: need_clear_kbdbuf = 1;
+	# Home/Page Up doesn't jump if I press it only shortly
+method_3_blit_mono: , 0x10); was 0
+	# potion bubbles have a black background
+draw_image_2:
+	# title texts are grey
+animate_chomper: modifier > 15 was >=
+	bad:
+		if ((trob.room != drawn_room || trob.tile / 10 != kid.curr_row)
+			&& kid.alive >= 0 && var_2 == 0 && (curr_modifier & 0x7F) >= 6
+		) {
+	bad 2:
+		if ((trob.room != drawn_room || trob.tile / 10 != kid.curr_row) ||
+			kid.alive >= 0 && var_2 == 0 && (curr_modifier & 0x7F) >= 6
+		) {
+	# Level 8: 2 chompers move even if kid is not in top row
+	# chompers don't stop if kid leaves their row
+	good:
+		if ((trob.room != drawn_room || trob.tile / 10 != kid.curr_row ||
+			kid.alive >= 0 && var_2 == 0) && (curr_modifier & 0x7F) >= 6
+		) {
+	# chompers get stuck if kid leaves their row
+start_chompers: if ((byte)char_.curr_row < 3) { was if(char_
+	# Level 7 room 2: chomper moves weird ---- now it's stuck
+load_lev_spr:
+	# guard1/2.dat not released
+stand_flipped: if (control_forward < 0) { was >
+	# Guard turns away from kid (guard_notice: move_down_forw); anim_guard_2 ? do_control ? stand_flipped?
+take_hp: dead = 1; missing from guard
+	# guard steps back before dying
+sub_509A:
+	bad:
+	char_.fall_y = char_.y = y_land[char_.curr_row + 1];
+	good:
+	char_.y = y_land[char_.curr_row + 1];
+	char_.fall_y = 0;
+	# when guard bumps kid, kid flies out of room
+get_some_tile: missing else branch of distance != 0
+hurt_by_sword: missing:
+			char_.y = y_land[char_.curr_row + 1];
+			char_.fall_y = 0;
+	# When guard pokes kid when kid is jumping, kid dies in air.
+anim_guard: missing return; after <50
+check_hurting: if (char_.frame == 154) { was char_frame
+	if (char_.frame == 154 && opp.frame != 161 was char_frame and opp_frame
+control_with_sword:
+	if ((word)distance < (word)90) { had no (word) cast
+	if ((word)distance < (word)-4) {  had no (word) cast
+	# kid/guard won't turn around if guard/kid is behind him; guard goes forward
+show_time: rem_min != 0 was missing
+	rem_min % 5 == 0 was !=
+jump_up2: char_dx_forward(distance - 3); was (3);
+	# Level 2 room 4: When facing wall, press up. Kid should jump up.
+forward_pressed: short was word
+check_can_guard_see_kid: kid_frame was kid.frame
+guard_follows_kid_down: parantheses after &&, !tile_...
+sub_404B: if (tile... was if (!tile...
+hof_read: .HOF was .SAV
+	# intro: empty hof is shown
+do_wait was wrong
+	# now h/j/u/n work after second esc
+added do_simple_wait, replaced do_wait with do_simple_wait in play_level_2 and sub_4B16
+	# h,j,u,n doesn't work
+	# after pausing, first(second) esc is ignored
+		# first ESC is read by play_level_2/do_wait/idle,
+		# second by play_level_2/do_wait/do_paused/idle,
+		# next are read by play_level_2/play_frame/play_kid_frame/check_died/sub_7981/do_paused/idle
+anim_guard: short was word
+FIXED? # Game hangs if kid with sword is too far from guard
+FIXED: # When looking left and climbing up/down, overlay is drawn at wrong position (level 4 room 17)
+FIXED? # Hang against wall is positioned wrongly.
+FIXED: # level 6: shadow doesn't step onto button
+# Immediate shift-L on level 1: room = -1 (from collision)
+	worked around
+	also present in original, see: dos-debug-FF.txt
+FIXED: # kid falls into spike in demo
+FIXED: # kid/guard has no sword when looking right ; hflip does something weird with sword image
+	# most images use SDL_SRCCOLORKEY, sword uses SDL_SRCALPHA
+	# when the skeleton falls into other room, it disappears ... or just becomes invisible?
+in_wall: short was word
+distance_to_edge: short was word
+sub_80A3: short was word
+load_frame: short was word
+check_action: short was word
+do_wait and do_simple_wait: while was do-while
+	# when un-pausing with arrow (or home/pageup), arrow is not noticed (annoying with chompers) + hangs until key is released
+control_with_sword: removed else
+	# Level 2 room 4, level 1 room 3: Guard won't attack if kid is too far (but sees him!) except if kid turns his back to the guard
+FIXED: # intro: Jaffar disappears after turning
+bumped_floor: return; was missing
+start_game: missing else
+check_action: ###
+	bad:
+	if (action == actions_6_hang_straight ||
+		(action == actions_5_bumped && frame == 109)
+	) {
+		// nothing
+	good:
+	if (action == actions_6_hang_straight ||
+		action == actions_5_bumped
+	) {
+		if (frame == 109) {
+			check_on_floor();
+		}
+FIXED: # Level 1 room 12, Level 7 room 9, Level 8 room 7, level 4 room 4, level 15 room 4: can jump/fall through single wall; step to wall and press up/down ; up fixed
+	# in_wall: get_tile_infrontof_char, curr_col is inside wall! -> infrontof is the other side of the wall!
+	# start_fall: row is immediately changed to 2
+	# if gate (level 4): play_level_2/play_frame/play_kid_frame/check_bumped/check_bumped_look_left/is_obstacle_at_col/is_obstacle/can_bump_into_gate
+	# if wall (level 1): play_level_2/play_frame/play_kid_frame/check_bumped/check_bumped_look_left/is_obstacle_at_col/is_obstacle
+FIXED: # level 2 room 5: When run-jumping to wall, kid is not hurt
+FIXED: # level 1 room 1: after run-jumping to gate, kid falls too early (related to wall-jump?)
+draw_hurt_splash: missing obj_dx_forward(5);
+	# when hurt by fall, hurt splash appears at wrong xpos (6 to the left)
+compare_curr_objs:
+	bad:
+	if (objtable[obj_index1].obj_type != 0x80 ||
+		objtable[obj_index2].obj_type != 0x80
+	) {
+		if (objtable[obj_index1].y >= objtable[obj_index2].y) return 0;
+	} else {
+		if (objtable[obj_index1].y <= objtable[obj_index2].y) return 0;
+	}
+	good:
+	if (objtable[obj_index1].obj_type == 0x80 &&
+		objtable[obj_index2].obj_type == 0x80
+	) {
+		return (objtable[obj_index1].y < objtable[obj_index2].y);
+	} else {
+		return (objtable[obj_index1].y > objtable[obj_index2].y);
+	}
+	# kid appears in front of dead guards
+show_time: leveldoor_open == 0 was !=
+	# 1 HP does not blink on level 13
+animate_sword: if (curr_modifier == 0) { was if (curr_modifier) {
+run_jump: (word)var_8 < (word)-8 was var_8 < -8
+FIXED: # shadow is invisible (wrong pos) on level 12 if kid enters from right ... until kid pokes shadow
+# INVALID: shadow dies from one hit?
+Some HPs [after third] disappear when going down.
+	method_1_blit_rect used SDL_FillRect
+Gate does not stay open if a guard is killed on an open button.
+	died_on_button: missing tile = tiles_14_debris;
+bug_chomper.PNG
+	caused by FIX_BIGPILLAR_CLIMB
+bug_climb.PNG
+	caused by FIX_BIGPILLAR_CLIMB
+--- after 20140524 ---
+end_sequence: hof_index <= hof_count was hof_index < hof_count
+	FIXED?: # at the end of the game, no hall of fame?
+# Crashes instead of demo level. (after HOF) even in 20140524
+	release_title_images: free_near(xlat_title_40);
+	warning: Invalid Address specified to RtlFreeHeap ( 00A30000, 00DE23D8 )
+	added some NULL checks
+	init_game(): free_screeninfo() hangs (?)
+	after loading kid.dat
+	added some more =NULL statements.
+	FIXED?
+	why was this not a problem before?
+FIXED: # "Press button..." does not blink correctly.
+FIXED: # HOF is not saved after adding myself.
+	PRINCE.HOF (and PRINCE.SAV) is read-only!
+	hof_write: missing ,0600
+FIXED: # Start level 14, press H until the ending is shown. HOF shows 60:xx instead of 59:xx.
+	show_hof: missing - 1
+FIXED: get_trob_right_above_pos_in_drawn_room, inside if(trob.room == room_B) : missing else{tile_pos = 30;}
+draw_game_frame: var_2 = word_20C6A / 12; -> var_2 = word_20C6A % 12;
+--- 2014-07-06
+FIXED: # fading bugs
+	* set_gr_mode: 24bit vs. 32bit
+	* make_offscreen_buffer: RGB vs. BGR
+	* fade_out_frame: missing "++off_pixel_ptr;"
+FIXED: # Fading of cutscenes is too slow... unless I move the cursor over the window.
+	proc_cutscene_frame: where to put idle() ?
+FIXED?: # Before the first frame of the level, the last frame (of the previous level or the cutscene) is drawn.
+	# draw_level_first() -> redraw_screen(0) -> remove_flash()
+--- 2014-07-22
+FIXED: # Game is too fast for a short time after switching rooms. (Or restarting the level)
+	# was caused by the "COMPAT_TIMER"
+FIXED: Cutscenes fade too fast without COMPAT_TIMER
+	# Changed 0 to 1 in the calls to make_pal_buffer_fade{in,out} (seg001.c)
+FIXED: Andrew: "New rooms take quite some time to be drawn, with the screen being blank in-between"
+	# SDL_UpdateRect was called after each drawing. -- It is needed only if the target is the on-screen surface.
+FIXED: If the mouse cursor leaves/enters the window, the game does as if the pressed keys were released.
+	# This should happen only if the game loses keyboard focus.
+	# Perhaps the game should also be paused in this case?
+	# idle(): There are many types of SDL_ACTIVEEVENT, losing SDL_APPINPUTFOCUS if just one of them.
+--- 2014-07-23
+FIXED: Keys did not repeat themselves.
+	Needed for keys like "+" and "-".
+	Using SDL_EnableKeyRepeat().
+FIXED: # Starting a new game after winning a previous one makes all texts in the game blue instead of white.
+	draw_text_cursor(): added textstate.textcolor = 15;
+--- 2014-07-24
+FIXED: # When the screen is flashing, there may be black rectangles around the moving objects.
+	Move the flashing after the redraws at two places:
+	1. play_level_2() in seg003.c (through flash_if_hurt())
+	2. proc_cutscene_frame() in seg001.c
+FIXED: start_fall(): distance_to_edge_weight() <= 7 was 6 (under seq_id = 82;)
+FIXED: # Can't do level 7 trick: In room 24 bump into the right wall. Turn left, run left and immediately jump.
+	play_frame -> play_kid_frame -> check_bumped -> check_bumped_look_left -> bumped -> bumped_floor -> bumped_sound
+	bumped_floor():
+	bad: if (char_.sword != 2 && y_land[char_.curr_row + 1] - char_.y >= 15) {
+	good: if (char_.sword != 2 && (word)(y_land[char_.curr_row + 1] - char_.y) >= (word)15) {
+FIXED: check_hang():
+	bad: y_land[char_.curr_row + 1] <= char_.y + 25
+	good: (word)y_land[char_.curr_row + 1] <= (word)(char_.y + 25)
+FIXED: do_fall():
+	bad: if (y_land[char_.curr_row + 1] > char_.y) {
+	good: if ((word)y_land[char_.curr_row + 1] > (word)char_.y) {
+--- 2014-08-04
+FIXED: # Can't interrupt fading of title screen.
+	The problem is that fade_in_2 does a zero-length wait, and expects keypresses to happen then.
+	fade_{in/out}_frame does a "simple wait", that is, keypresses are not processed then.
+	So I changed that to a "regular" wait.
+FIXED: # (Micro Palace, level 12) If kid is on the very left (in bottom row), then shadow is in wrong direction (looking left), and is constantly turning around.
+	move_2_backward() is called from level12_shadow_anim()
+	Local variable xdiff might be used uninitialized!
+	Workaround: initialize xdiff with a big number.
+	This behavior matches the DOS version but not the Apple II source. (AUTO.S, part around "wait until kid gets close")
+--- 2014-08-06
+FIXED: When using DAT files: some images are not loaded. (Example: pillar left, spike left)
+	load_more_opt_graf(): missing -1
+FIXED: # (Micro Palace, level 4) After kid enters exit door, chomper bites kid.
+	set_char_collision(): If current image is NULL then width=height=0. (Older version didn't set width/height in this case.)
+FIXED: # shadow is partially green when he is looking to the right
+	hflip(): output surface should have no alpha
+FIXED: replaced exit with quit at many places
+FIXED: # When using DAT files: chomper blood is a rectangle.
+	"Extra" optional images were not set transparent.
+	method_3_blit_mono(): Added SDL_SetColorKey call.
+FIXED: # (Prince of Wateria, level 5 room 3) (palace) Empty potion has red bubbles.
+	draw_tile_anim(): case 0x00: break; -> return;
+--- 2014-08-07
+FIXED: parry(): char_charid == charid_0_kid -> char_charid != charid_0_kid
+FIXED: parry(): var_6 = 1; } -> var_6 = 1; } else
+FIXED: parry(): back_with_sword(); (the first) -> back_with_sword(); return;
+--- 2014-08-08
+FIXED: Made compatible with 64-bit.
+	I replaced occurences of "short" and "long" with "Uint16" and "Uint32".
+	To be extra sure, I also added some compile time asserts about the sizes of all types that are used in the DAT files.
+--- 2014-08-10
+FIXED: If color 0 of a palette was not black, then it was not transparent.
+	For example, in Lost In The Forest ( http://www.popot.org/custom_levels.php?mod=0000082 ).
+FIXED: PNGs with alpha channel are drawn properly.
+--- 2014-08-23
+FIXED: make_loose_fall():
+-	if (curr_room_modif[curr_tile_pos] <= 0) {
++	if ((sbyte)curr_room_modif[curr_tile_pos] <= 0) {
+FIXED: # When fighting, parry-attack-parry-attack-... sequences stop when the guard attacks.
+	parry():
+-	if (opp_frame != 167) return;
++	if (char_frame != 167) return;
+--- 2014-08-24
+FIXED: prandom(): initialize from current time
+--- 2014-08-26
+FIXED: animate_leveldoor(): (seg007.c)
+-	!(sound_flags & sfDigi) &&
++	(sound_flags & sfDigi) &&
+FIXED: play_speaker_sound(): (seg009.c)
++	speaker_sound_stop();
+--- 2014-08-28
+FIXED: Under Linux, the game hanged randomly, because the main timer sometimes didn't generate its event.
+	timer_callback() and sound_callback(): (in seg009.c)
+		Remove and NULL the timer handle before generating the event.
+	This also prevents the "SDL_RemoveTimer:" errors.
+FIXED: Removed the "Would play sound", "length =", "set_char_collision" and "Loading chtab" messages.
+	Those were annoying and possibly slowed the game down.
+FIXED: # Level 12: If I enter the last room while the music is still "playing", then the game does not advance to level 13.
+	# Tried to load cutscene for level 26, not in 0..15
+	play_frame(): (in seg000.c)
++			stop_sounds();
+FIXED: # Level 12->13 transition should not restore full HP or show level number.
+	play_frame(): (in seg000.c)
++			seamless = 1;
+FIXED: # Displaying text is visibly slow on some systems.
+	method_1_blit_rect(), method_5_rect(), blit_xor(), method_6_blit_img_to_scr(): (in seg009.c)
+	Update only the affected area instead of the whole screen.
+-		SDL_UpdateRect(onscreen_surface_, 0, 0, 0, 0);
++		SDL_UpdateRects(onscreen_surface_, 1, &dest_rect);
+--- 2014-09-05
+FIXED: Pressing "K" on a skeleton crashes the game.
+	add_midtable(): (in seg008.c)
++	if (id > chtab_addrs[chtab_id]->n_images) {
++		printf("add_midtable: Tried to use image %d of chtab %d, not in 1..%d\n", id, chtab_id, chtab_addrs[chtab_id]->n_images);
++		return 0;
++	}
+FIXED: Added "return 0;" after the "*Table Overflow" messages.
+--- 2014-09-22
+FIXED: blit_xor(): (in seg009.c)
+-		SDL_UpdateRects(onscreen_surface_, 1, &dest_rect);
++		SDL_UpdateRects(onscreen_surface_, 1, /*&*/dest_rect);
+FIXED: process_key(): (in seg000.c)
+-			turn_sound_on_off(!is_sound_on * 15);
++			turn_sound_on_off((!is_sound_on) * 15);
+FIXED: load_opt_sounds(): (in seg000.c)
+-		digi_dat = open_dat("DIGISND21.DAT", 0);
++		digi_dat = open_dat("DIGISND2.DAT", 0);
+FIXED: # Digi sounds hang the game for 1 second (or permanently).
+	Instead of opening and closing the audio device for each sound, keep it open (with a constant rate -> resampling is needed).
+FIXED: # On windows, digi sounds are played with the wrong timing. You can hear this best when the kid is continuously running, or when a gate is opening/closing.
+	Sound buffer length is 5512 instead of the 512 I set.
+	With 22050 Hz samplerate, this means 0.25 seconds instead of 0.023 s.
+	On Linux, the length is 256, and the timing is good.
+	Fixed by replacing SDL.dll (1.14) with the newest version (1.2.15).
+--- 2014-09-23
+FIXED: The game quits in the intro, when Jaffar opens the door.
+	play_digi_sound(): (in seg009.c) SDL_BuildAudioCVT() might also return 0 on success, but this is not documented in the docs of SDL 1.2.
+--- 2014-09-25
+FIXED: Index overflow in get_tile_div_mod() is kid is far off left.
+	FIXED: # When doing the level 5 trick (backing through the gate), the kid appears in the room to the *right* instead of left.
+	FIXED: # Level 5: If you back out from the room where the guard is originally (but the screen is not switched), the kid might fall through the floor at the level door.
+--- 2014-10-06
+FIXED: check_shadow(): (in seg002.c)
+-	if (leveldoor_open == 0x4D) {
++	if (leveldoor_open != 0x4D) {
+--- 2014-10-11
+FIXED: Made the game compatible with Mac OS X, based on the suggestions by StaticReturn (from the Princed forum).
+	(See also MAC_CHANGES.txt)
+	- Renamed wait() to pop_wait().
+	- do_trigger_list:
+-	while (doorlink1_ad[index] != -1) { // these can't be equal!
++	while (1) {
+	- Added typecasts to pointers (at malloc() calls for example).
+FIXED: Fixed most things that caused compiler warnings.
+	- Changed some pointers from void* to a better type.
+	- Removed some unused variables.
+	- Removed some unused parameters.
+	- Changed the numbers in tile and frame tables from unsigned to signed where this was needed.
+	- Added const to some parameters.
+CHANGE: Now cheats are disabled by default unless the game is compiled in debug mode.
+CHANGE: Disambiguated tilepos and tiletype.
+--- 2014-10-27
+CHANGE: Added a font inside the exe. (hc_font_data[])
+CHANGE: Changed project type to GUI. This means that the (empty) console window won't appear under Windows.
+CHANGE: Changed project's name to "SDLPoP" (was "port").
+CHANGE: Changed the title to "Prince of Persia (SDLPoP) v1.11" (it used to say "... (SDL) v#.##")
+--- 2014-12-03
+FIXED: When doing Trick 95, the kid might bounce back from the wall a bit.
+start_fall(): (seg006.c)
+	seqtbl_offset_char(104); // start fall (when?)
++	play_seq();
+--- 2014-12-20
+FIXED: Don't quit if there is no sound device available.
+	Instead, just disable digi sound.
+	This can happen, for example, on a Raspberry PI emulator (QEMU).
+init_digi():
+-	quit(1);
++	digi_unavailable = 1;
++	return;
+play_digi_sound():
++	if (digi_unavailable) return;
+--- 2015-02-16
+FIXED: Ctrl-S did not turn off mixer sounds.
+play_chunk_sound():
++	//if (!is_sound_on) return;
+	Note: this is not good for sound-based timing!
+FIXED: Ctrl-S did not stop currently playing sounds.
+turn_sound_on_off():
++	//if (!is_sound_on) stop_sounds();
+	Note: this is not good for sound-based timing!
++	init_digi();
++	if (digi_unavailable) return;
++	Mix_Volume(-1, is_sound_on ? MIX_MAX_VOLUME : 0);
+Note: If digi is unavailable, then load_sound will load the speaker sounds, so sound-based timing will still work.
+FIXED: # If the game is in full screen, and I switch away (alt-tab) and back, most of the screen will be black, until it is redrawn.
+idle():
++	if ((event.active.state & SDL_APPACTIVE) && event.active.gain == 1) {
++		SDL_UpdateRect(onscreen_surface_,0,0,0,0);
++	}
+Note: In this case, DOSBox switches to windowed mode.
+
+not fixed yet:
+# game speed is a bit off (delay is longer than it should be) -- you can see this best with chompers
+# GNU/Linux: Full screen resolution is 640*480 instead of 320*200.
+	Also on Windows, depending on video card.
+# GNU/Linux: After quitting (from full screen), the resolution is not restored, and an error message appears on the console. (X-error.txt)
+	It seems that this bug disappeared, even from the old versions. It was probably caused by something outside the game.
+# Sometimes when jumping right to room 0: bounces back
+	# also present in original
+# "Shift" of Shift-L interrupts cutscene too soon.
+# shadow is invisible on level 12 if kid enters from left, or starts in the left half ... until kid pokes shadow
+	Wrong ypos, you can see that when kid unites with shadow.
+	# "enters from left": could not reproduce
+	# "starts in the left half": also present in original
+# Keys other than Shift won't interrupt fading of cutscene.
+
+leaks:
+# LEAK: Going to new level allocates memory (~ 500 kB) that is never freed.
+	free_chtab(): free_far -> SDL_FreeSurface
+# LEAK: Switching between playing and intro allocates memory that is never freed. (play->intro: ~ 500 kB, intro->play: ~ 1 MB)
+	clear_screen_and_sounds(): not freeing
+# LEAK: still leaking
+	intro->play: ~ 1 MB
+	play->intro: ~ 340 kB,
+offscreen_info = 192 kB, it is never freed!
+Fixed
+# LEAK: still leaking
+	intro->play: ~ 772 kB
+	play->intro: ~ 196 kB
+	Level 1->2->...->14->1 : ~ 80 kB
+--- 2015-02-13
+FIXED: release_title_images is never called!
+in start_game() added:
++	release_title_images();
++	free_optsnd_chtab();
+Title: 44844 K
+Level 1: 28184 K
+Title: 45440 K
+Level 1: 28188 K
+Title: 45448 K
+Level 1: 28204 K
+45440-44844 = 596
+45448-45440 = 8
+28188-28184 = 4
+28204-28188 = 16
+Level 1->2->...->14->1 : 28188 -> 28296 -> 28304 ~ 108 or 8
+
+formerly not implemented:
+
+DONE: # Coloring monochrome images (bubbles, chomper blood, story texts, gate top mask) and black blitter
+	FIXED: # Top of gate looks weird (mask is drawn)
+DONE: # Cutscenes
+DONE: # upside-down
+	FIXED # hangs / bad clip if kid drinks upside-down potion
+DONE: # blitter 9
+	FIXED # guard HP does not disappear if guard dies
+DONE: # Flashing
+DONE: # xor blitter (shadow needs this)
+DONE: # Guard palettes (can't see guard's HP without this)
+DONE: Full screen mode: use the "full" command line option.
+--- after 20140524 ---
+DONE: Made compatible with GNU/Linux. (2014 May 29)
+DONE: # Texts (needs monochrome) (2014 June 2)
+DONE: # Fading (almost perfect) (2014 July 6)
+--- 2014-07-22
+DONE: # Hide cursor in fullscreen.
+--- 2014-08-01
+DONE: # Support LEVELS.DAT
+--- 2014-08-06
+DONE: # Use .DAT files
+	GNU/Linux: The names of the DAT files must be all-uppercase.
+--- 2014-08-24
+DONE: # Sound timing (slow-fall and intro needs this)
+DONE: # Background color of texts in intro and ending
+--- 2014-09-22
+DONE: # Digi sounds (only from DAT)
+--- 2014-09-28
+DONE: Added version number to the window title.
+--- 2015-02-13
+DONE: Use mixer.
+DONE: Added support for music.
+--- 2015-02-16
+DONE: Toggle fullscreen with alt-enter.
+
+Not (yet) implemented:
+# Digi sounds from wav files
+# speaker and midi sounds
+# stretch image to 2x, 3x (you can use fullscreen instead)
