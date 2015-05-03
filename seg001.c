@@ -767,7 +767,8 @@ int __pascal far fade_in_1() {
 #else
 	// stub
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, &screen_rect, &screen_rect, 0);
-	SDL_UpdateRect(onscreen_surface_, 0, 0, 0, 0); // debug
+	updateScreen();
+//	SDL_UpdateRect(onscreen_surface_, 0, 0, 0, 0); // debug
 	return 0;
 #endif
 }

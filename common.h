@@ -1,6 +1,11 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -18,9 +23,13 @@
 #endif
 #ifndef MIN
 #define MIN(a,b) ((a)<(b)?(a):(b))
-#endif 
+#endif
 #ifndef ABS
 #define ABS(x) ((x)<0?-(x):(x))
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif

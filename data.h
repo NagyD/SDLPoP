@@ -222,7 +222,8 @@ extern byte* doorlink1_ad;
 
 
 // data:4CC6
-extern sbyte control_shift;
+extern sbyte control_shift; // shift pressed?
+extern sbyte control_ctrl; // control pressed?
 // data:461C
 extern sbyte control_y;
 // data:4612
@@ -407,7 +408,8 @@ extern const short tbl_guard_type[] INIT(= {0, 0, 0, 2, 0, 0, 1, 0, 0, 0, 0, 0, 
 // data:5888
 extern word curr_guard_color;
 // data:288C
-extern byte key_states[SDLK_LAST];
+//extern byte key_states[SDLK_LAST];
+extern byte key_states[SDL_NUM_SCANCODES];
 // data:24A6
 extern const byte x_bump[] INIT(= {-12, 2, 16, 30, 44, 58, 72, 86, 100, 114, 128, 142, 156, 170, 184, 198, 212, 226, 240, 254});
 // data:42F4
@@ -523,6 +525,9 @@ extern byte edge_type;
 
 // data:596C
 extern SDL_Surface* onscreen_surface_;
+extern SDL_Renderer* renderer_;
+extern SDL_Window* window_;
+extern SDL_Texture* sdl_texture_;
 
 #ifndef USE_COMPAT_TIMER
 extern int timer_stopped[2];

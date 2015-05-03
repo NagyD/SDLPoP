@@ -91,7 +91,9 @@ void __pascal far enter_guard() {
 	room_minus_1 = drawn_room - 1;
 	frame = Char.frame; // hm?
 	guard_tile = level.guards_tile[room_minus_1];
+
 	if (guard_tile >= 30) return;
+
 	Char.room = drawn_room;
 	Char.curr_row = guard_tile / 10;
 	Char.y = y_land[Char.curr_row + 1];
@@ -122,7 +124,7 @@ void __pascal far enter_guard() {
 	} else {
 		Char.curr_seq = level.guards_seq_lo[room_minus_1] + (seq_hi << 8);
 	}
-	play_seq();
+    play_seq();
 	guard_skill = level.guards_skill[room_minus_1];
 	if (guard_skill >= 12) {
 		guard_skill = 3;

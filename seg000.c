@@ -26,6 +26,7 @@ word need_redraw_because_flipped;
 void far pop_main() {
 	//word mem_avail;
 	//word is_dig_snd;
+
 	char sprintf_temp[100];
 	int i;
 	//word video_mode;
@@ -36,7 +37,9 @@ void far pop_main() {
 	//p_do_paused = &do_paused;
 	//sub_15E92(0xFF);
 	dathandle = open_dat("PRINCE.DAT", 0);
+
 	/*video_mode =*/ parse_grmode();
+
 	//sub_DBEA(video_mode);
 	//change_int_vects();
 	init_timer(60);
@@ -125,6 +128,7 @@ void __pascal far init_game_main() {
 	//sub_16C48();
 	//sub_16C1B();
 	method_7_alloc(-1);
+
 	start_game();
 }
 
@@ -209,7 +213,8 @@ int __pascal far process_key() {
 	key = key_test_quit();
 	if (start_level == 0) {
 		if (key || control_shift) {
-			if (key == 12) { // ctrl-L
+			if (key == SDL_SCANCODE_L && control_ctrl) { // ctrl-L
+//			if (key == 12) { // ctrl-L
 				if (!load_game()) return 0;
 			} else {
 				start_level = 1;
@@ -230,25 +235,34 @@ int __pascal far process_key() {
 	}
 	if (key == 0) return 0;
 	if (is_keyboard_mode) clear_kbd_buf();
-	switch (key) {
-		case 27: // esc
+
+	switch(key) {
+		case SDL_SCANCODE_ESCAPE: // esc
+//		case 27: // esc
 			is_paused = 1;
 		break;
-		case ' ': // space
+		case SDL_SCANCODE_SPACE: // space
+//		case ' ': // space
 			is_show_time = 1;
 		break;
-		case 1: // ctrl-a
+		case SDL_SCANCODE_A: // ctrl-a
+//		case 1: // ctrl-a
+			if (!control_ctrl) break;
 			if (current_level != 15) {
 				stop_sounds();
 				is_restart_level = 1;
 			}
 		break;
-		case 7: // ctrl-g
+		case SDL_SCANCODE_G: // ctrl-g
+//		case 7: // ctrl-g
+			if (!control_ctrl) break;
 			if (current_level > 2 && current_level < 14) {
 				save_game();
 			}
 		break;
-		case 10: // ctrl-j
+		case SDL_SCANCODE_J: // ctrl-j
+//		case 10: // ctrl-j
+			if (!control_ctrl) break;
 			if (sound_flags & sfDigi && sound_mode == smTandy) {
 				answer_text = "JOYSTICK UNAVAILABLE";
 			} else {
@@ -260,17 +274,23 @@ int __pascal far process_key() {
 			}
 			need_show_text = 1;
 		break;
-		case 11: // ctrl-k
+		case SDL_SCANCODE_K: // ctrl-k
+//		case 11: // ctrl-k
+			if (!control_ctrl) break;
 			answer_text = "KEYBOARD MODE";
 			is_joyst_mode = 0;
 			is_keyboard_mode = 1;
 			need_show_text = 1;
 		break;
-		case 18: // ctrl-r
+		case SDL_SCANCODE_R: // ctrl-r
+//		case 18: // ctrl-r
+			if (!control_ctrl) break;
 			start_level = 0;
 			start_game();
 		break;
-		case 19: // ctrl-s
+		case SDL_SCANCODE_S: // ctrl-s
+//		case 19: // ctrl-s
+			if (!control_ctrl) break;
 			turn_sound_on_off((!is_sound_on) * 15);
 			answer_text = "SOUND OFF";
 			if (is_sound_on) {
@@ -279,11 +299,15 @@ int __pascal far process_key() {
 			//
 			need_show_text = 1;
 		break;
-		case 22: // ctrl-v
+		case SDL_SCANCODE_V: // ctrl-v
+//		case 22: // ctrl-v
+			if (!control_ctrl) break;
 			answer_text = "PRINCE OF PERSIA  V1.0";
 			need_show_text = 1;
 		break;
-		case 'L': // shift-l
+		case SDL_SCANCODE_L: // shift-l
+//		case 'L': // shift-l
+			if (!control_shift) break;
 			if (current_level <= 3 || cheats_enabled) {
 				if (current_level == 14) {
 					next_level = 1;
@@ -308,62 +332,88 @@ int __pascal far process_key() {
 	}
 	if (cheats_enabled) {
 		switch (key) {
-			case 'c':
-				snprintf(sprintf_temp, sizeof(sprintf_temp), "S%d L%d R%d A%d B%d", drawn_room, room_L, room_R, room_A, room_B);
-				answer_text = /*&*/sprintf_temp;
-				need_show_text = 1;
+			case SDL_SCANCODE_C:
+//			case 'c':
+				if (control_shift) { //shift+c
+					snprintf(sprintf_temp, sizeof(sprintf_temp), "AL%d AR%d BL%d BR%d", room_BR, room_BL, room_AR, room_AL);
+					answer_text = /*&*/sprintf_temp;
+					need_show_text = 1;
+				}
+				else { // 'c'
+					snprintf(sprintf_temp, sizeof(sprintf_temp), "S%d L%d R%d A%d B%d", drawn_room, room_L, room_R, room_A, room_B);
+					answer_text = /*&*/sprintf_temp;
+					need_show_text = 1;
+				}
+
 			break;
-			case 'C': // shift-c
-				snprintf(sprintf_temp, sizeof(sprintf_temp), "AL%d AR%d BL%d BR%d", room_BR, room_BL, room_AR, room_AL);
-				answer_text = /*&*/sprintf_temp;
-				need_show_text = 1;
-			break;
-			case '-':
+//			case 'C': // shift-c
+//				snprintf(sprintf_temp, sizeof(sprintf_temp), "AL%d AR%d BL%d BR%d", room_BR, room_BL, room_AR, room_AL);
+//				answer_text = /*&*/sprintf_temp;
+//				need_show_text = 1;
+//			break;
+			case SDL_SCANCODE_MINUS:
+			case SDL_SCANCODE_KP_MINUS:		// '-' --> subtract time cheat
+//			case '-':
 				if (rem_min > 1) --rem_min;
 				text_time_total = 0;
 				text_time_remaining = 0;
 				is_show_time = 1;
 			break;
-			case '+':
+			case SDL_SCANCODE_EQUALS:
+				if (!control_shift) break; // '+'
+			case SDL_SCANCODE_KP_PLUS:	   // '+' --> add time cheat
+//			case '+':
 				++rem_min;
 				text_time_total = 0;
 				text_time_remaining = 0;
 				is_show_time = 1;
 			break;
-			case 'r':
+			case SDL_SCANCODE_R: // R --> revive kid cheat
+//			case 'r':
 				if (Kid.alive > 0) {
 					resurrect_time = 20;
 					Kid.alive = -1;
 					erase_bottom_text(1);
 				}
 			break;
-			case 'k':
+			case SDL_SCANCODE_K: // K --> kill guard cheat
+//			case 'k':
 				guardhp_delta = -guardhp_curr;
 				Guard.alive = 0;
 			break;
-			case 'I': // shift-i
+			case SDL_SCANCODE_I: // shift-i
+//			case 'I': // shift-i
+				if (!control_shift) break; // shift+I --> invert cheat
 				toggle_upside();
 			break;
-			case 'W': // shift-w
+			case SDL_SCANCODE_W: // shift-w
+//			case 'W': // shift-w
+				if (!control_shift) break; // shift+W --> feather fall cheat
 				feather_fall();
 			break;
-			case 'h':
+			case SDL_SCANCODE_H: // H --> view room to the left
+//			case 'h':
 				draw_guard_hp(0, 10);
 				next_room = room_L;
 			break;
-			case 'j':
+			case SDL_SCANCODE_J: // J --> view room to the right
+//			case 'j':
 				draw_guard_hp(0, 10);
 				next_room = room_R;
 			break;
-			case 'u':
+			case SDL_SCANCODE_U: // U --> view room above
+//			case 'u':
 				draw_guard_hp(0, 10);
 				next_room = room_A;
 			break;
-			case 'n':
+			case SDL_SCANCODE_N: // N --> view room below
+//			case 'n':
 				draw_guard_hp(0, 10);
 				next_room = room_B;
 			break;
-			case 'B': // shift-b
+			case SDL_SCANCODE_B: // shift-b
+//			case 'B': // shift-b
+				if (!control_shift) break;
 				is_blind_mode = !is_blind_mode;
 				if (is_blind_mode) {
 					draw_rect(&rect_top, 0);
@@ -371,7 +421,9 @@ int __pascal far process_key() {
 					need_full_redraw = 1;
 				}
 			break;
-			case 'S': // shift-s
+			case SDL_SCANCODE_S: // shift-s
+//			case 'S': // shift-s
+				if (!control_shift) break;
 				if (hitp_curr != hitp_max) {
 					play_sound(33); // small potion (cheat)
 					hitp_delta = 1;
@@ -379,7 +431,9 @@ int __pascal far process_key() {
 					flash_time = 2;
 				}
 			break;
-			case 'T': // shift-t
+			case SDL_SCANCODE_T: // shift-t
+//			case 'T': // shift-t
+				if (!control_shift) break;
 				play_sound(30); // big potion (cheat)
 				flash_color = 4; // red
 				flash_time = 4;
@@ -540,12 +594,14 @@ void __pascal far anim_tile_modif() {
 void __pascal far load_sounds(int first,int last) {
 	dat_type* ibm_dat = NULL;
 	dat_type* digi1_dat = NULL;
+	//dat_type* digi2_dat = NULL;
 	dat_type* digi3_dat = NULL;
 	dat_type* midi_dat = NULL;
 	short current;
 	ibm_dat = open_dat("IBM_SND1.DAT", 0);
 	if (sound_flags & sfDigi) {
 		digi1_dat = open_dat("DIGISND1.DAT", 0);
+		//digi2_dat = open_dat("DIGISND2.DAT", 0);
 		digi3_dat = open_dat("DIGISND3.DAT", 0);
 	}
 	if (sound_flags & sfMidi) {
@@ -562,6 +618,7 @@ void __pascal far load_sounds(int first,int last) {
 	}
 	if (midi_dat) close_dat(midi_dat);
 	if (digi1_dat) close_dat(digi1_dat);
+	//if (digi2_dat) close_dat(digi2_dat);
 	if (digi3_dat) close_dat(digi3_dat);
 	close_dat(ibm_dat);
 }
@@ -1006,29 +1063,32 @@ int __pascal far do_paused() {
 
 // seg000:1500
 void __pascal far read_keyb_control() {
+
 	//if (key_states[0x48] || key_states[0x47] || key_states[0x49]) {
-	if (key_states[SDLK_UP] || key_states[SDLK_HOME] || key_states[SDLK_PAGEUP]
-		|| key_states[SDLK_KP8] || key_states[SDLK_KP7] || key_states[SDLK_KP9]
-	) {
+	if (key_states[SDL_SCANCODE_UP] || key_states[SDL_SCANCODE_HOME] || key_states[SDL_SCANCODE_PAGEUP]
+		|| key_states[SDL_SCANCODE_KP_8] || key_states[SDL_SCANCODE_KP_7] || key_states[SDL_SCANCODE_KP_9]
+			) {
 		control_y = -1;
-	//} else if (key_states[0x4C] || key_states[0x50]) {
-	} else if (key_states[SDLK_CLEAR] || key_states[SDLK_DOWN]
-		|| key_states[SDLK_KP5] || key_states[SDLK_KP2]
-	) {
+		//} else if (key_states[0x4C] || key_states[0x50]) {
+	} else if (key_states[SDL_SCANCODE_CLEAR] || key_states[SDL_SCANCODE_DOWN]
+			   || key_states[SDL_SCANCODE_KP_5] || key_states[SDL_SCANCODE_KP_2]
+			) {
 		control_y = 1;
 	}
 	//if (key_states[0x4B] || key_states[0x47]) {
-	if (key_states[SDLK_LEFT] || key_states[SDLK_HOME]
-		|| key_states[SDLK_KP4] || key_states[SDLK_KP7]
-	) {
+	if (key_states[SDL_SCANCODE_LEFT] || key_states[SDL_SCANCODE_HOME]
+		|| key_states[SDL_SCANCODE_KP_4] || key_states[SDL_SCANCODE_KP_7]
+			) {
 		control_x = -1;
-	//} else if (key_states[0x4D] || key_states[0x49]) {
-	} else if (key_states[SDLK_RIGHT] || key_states[SDLK_PAGEUP]
-		|| key_states[SDLK_KP6] || key_states[SDLK_KP9]
-	) {
+		//} else if (key_states[0x4D] || key_states[0x49]) {
+	} else if (key_states[SDL_SCANCODE_RIGHT] || key_states[SDL_SCANCODE_PAGEUP]
+			   || key_states[SDL_SCANCODE_KP_6] || key_states[SDL_SCANCODE_KP_9]
+			) {
 		control_x = 1;
 	}
-	control_shift = -(key_states[SDLK_LSHIFT] || key_states[SDLK_RSHIFT]);
+	control_shift = -(key_states[SDL_SCANCODE_LSHIFT] || key_states[SDL_SCANCODE_RSHIFT]);
+	control_ctrl = -(key_states[SDL_SCANCODE_LCTRL] || key_states[SDL_SCANCODE_RCTRL]);
+
 }
 
 // seg000:156D
@@ -1116,15 +1176,16 @@ void __pascal far show_title() {
 	load_title_images(1);
 	current_target_surface = offscreen_surface;
 	do_wait(0);
-	
+
 	draw_image_2(0 /*main title image*/, chtab_title50, xlat_title_50, 0, 0, blitters_0_no_transp);
-	fade_in_2(offscreen_surface, 0x1000);
+	fade_in_2(offscreen_surface, 0x1000); //STUB
+	method_1_blit_rect(onscreen_surface_, offscreen_surface, &screen_rect, &screen_rect, blitters_0_no_transp);
 	play_sound_from_buffer(sound_pointers[54]); // main theme
 	//wait_time0 = 0x82;
 	start_timer(0, 0x82);
 	draw_image_2(1 /*Broderbund Software presents*/, chtab_title50, xlat_title_50, 96, 106, blitters_0_no_transp);
 	do_wait(0);
-	
+
 	//wait_time0 = 0xCD;
 	start_timer(0,0xCD);
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, &rect_titles, &rect_titles, blitters_0_no_transp);
@@ -1160,6 +1221,7 @@ void __pascal far show_title() {
 		idle();
 		do_paused();
 	}
+//	method_1_blit_rect(onscreen_surface_, offscreen_surface, &screen_rect, &screen_rect, blitters_0_no_transp);
 	play_sound_from_buffer(sound_pointers[55]); // story 1: In the absence
 	transition_ltr();
 	pop_wait(0, 0x258);
@@ -1253,10 +1315,10 @@ void __pascal far draw_image_2(int id, chtab_type* chtab_ptr, void *xlat_tbl, in
 	//stride = source->stride;
 	//stride_ptr = &stride;
 	decoded_image = source;//decode_image_(source, xlat_tbl);
-	if (/* *stride_ptr & 0xF000*/ blit != 0 && blit != 0x10) {
-		method_3_blit_mono(decoded_image, xpos, ypos, 0, blit);
-	} else {
-		if (blit == blitters_10h_transp) {
+	if (/* *stride_ptr & 0xF000*/ blit != blitters_0_no_transp && blit != blitters_10h_transp) {
+		method_3_blit_mono(decoded_image, xpos, ypos, blitters_0_no_transp, blit);
+	} else if (blit == blitters_10h_transp) {
+
 			if (graphics_mode == gmCga || graphics_mode == gmHgaHerc) {
 				//mask = decode_image_(source, global_xlat_tbl);
 			} else {
@@ -1266,11 +1328,10 @@ void __pascal far draw_image_2(int id, chtab_type* chtab_ptr, void *xlat_tbl, in
 			if (graphics_mode == gmCga || graphics_mode == gmHgaHerc) {
 				free_far(mask);
 			}
-		} else {
-			method_6_blit_img_to_scr(decoded_image, xpos, ypos, blit);
 		}
+    else {
+			method_6_blit_img_to_scr(decoded_image, xpos, ypos, blit);
 	}
-	//free_far(decoded_image);
 }
 
 // seg000:1D2C
@@ -1420,14 +1481,16 @@ void __pascal far load_title_images(int bgcolor) {
 			color.r = 0x10;
 			color.g = 0x00;
 			color.b = 0x60;
+			color.a = 0x00;
 		} else {
 			// RGB(20h,0,0) = #800000 = dark red
 			set_pal((find_first_pal_row(1<<11) << 4) + 14, 0x20, 0x00, 0x00, 1);
 			color.r = 0x80;
 			color.g = 0x00;
 			color.b = 0x00;
+			color.a = 0x00;
 		}
-		SDL_SetColors(chtab_title40->pointers[0], &color, 14, 1);
+		SDL_SetPaletteColors(chtab_title40->pointers[0]->format->palette, &color, 14, 1);
 	} else if (graphics_mode == gmEga || graphics_mode == gmTga) {
 		// ...
 	}

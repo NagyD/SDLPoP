@@ -1,3 +1,7 @@
+# PoP music files
+data/music/*.ogg
+data/music/*.mp3
+
 # Object files
 *.o
 *.ko
@@ -33,3 +37,6 @@
 
 # Dev-C++
 *.layout
+
+# CLion
+.idea/

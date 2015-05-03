@@ -789,43 +789,41 @@ void __pascal far draw_back_fore(int which_table,int index) {
 
 
 SDL_Surface* hflip(SDL_Surface* input) {
+    byte is_new_surface_allocated;
+    SDL_Surface* colored_input = convert_surface_to_screen_format(input, &is_new_surface_allocated);
+
 	SDL_Surface* output;
 	int width = input->w;
 	int height = input->h;
 	int source_x, target_x;
-//	output = SDL_CreateRGBSurface(0, width, height, 24, 0xFF, 0xFF<<8, 0xFF<<16, 0);
-//	output = SDL_CreateRGBSurface(0, width, height, 32, 0xFF, 0xFF<<8, 0xFF<<16, 0xFF<<24);
+
 	// The simplest way to create a surface with same format as input:
-	output = SDL_ConvertSurface(input, input->format, 0);
+	output = SDL_ConvertSurfaceFormat(colored_input, colored_input->format->format, 0);
 	// The copied image will be overwritten anyway.
 	if (output == NULL) {
 		sdlperror("SDL_ConvertSurface");
 		quit(1);
 	}
-	
-	if (SDL_SetAlpha(output, 0, 0) != 0) {
-		sdlperror("SDL_SetAlpha");
-		quit(1);
-	}
-	
+
+	SDL_SetSurfaceBlendMode(colored_input, SDL_BLENDMODE_NONE);
+
 	// Temporarily turn off alpha and colorkey on input. So we overwrite the output image.
-	if (SDL_SetColorKey(input, 0, 0) != 0) {
-		sdlperror("SDL_SetColorKey");
-		quit(1);
-	}
-	if (SDL_SetAlpha(input, 0, 0) != 0) {
-		sdlperror("SDL_SetAlpha");
-		quit(1);
-	}
+	if (SDL_SetColorKey(colored_input, 0, 0) != 0) {
+        sdlperror("SDL_SetColorKey");
+        quit(1);
+    }
 
 	for (source_x = 0, target_x = width-1; source_x < width; ++source_x, --target_x) {
 		SDL_Rect srcrect = {source_x, 0, 1, height};
 		SDL_Rect dstrect = {target_x, 0, 1, height};
-		if (SDL_BlitSurface(input/*32*/, &srcrect, output, &dstrect) != 0) {
+		if (SDL_BlitSurface(colored_input/*32*/, &srcrect, output, &dstrect) != 0) {
 			sdlperror("SDL_BlitSurface");
 			quit(1);
 		}
 	}
+
+    if (is_new_surface_allocated)
+        SDL_FreeSurface(colored_input);
 
 	return output;
 }

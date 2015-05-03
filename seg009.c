@@ -61,7 +61,8 @@ void __pascal far restore_stuff() {
 int __pascal far key_test_quit() {
 	word key;
 	key = read_key();
-	if (key == 0x11) { // ctrl-q
+	if (key == SDL_SCANCODE_Q && control_ctrl) { // ctrl-q
+//	if (key == 0x11) { // ctrl-q
 		quit(0);
 	}
 	return key;
@@ -218,7 +219,7 @@ chtab_type* __pascal load_sprites_from_file(int resource,int palette_bits/*,byte
 //		if (image == NULL) printf(" failed");
 		if (image != NULL) {
 			
-			if (SDL_SetAlpha(image, 0, 0) != 0) {
+			if (SDL_SetSurfaceAlphaMod(image, 0) != 0) {
 				sdlperror("SDL_SetAlpha");
 				quit(1);
 			}
@@ -496,8 +497,9 @@ image_type* decode_image(image_data_type* image_data, dat_pal_type* palette) {
 		colors[i].r = palette->vga[i].r << 2;
 		colors[i].g = palette->vga[i].g << 2;
 		colors[i].b = palette->vga[i].b << 2;
+		colors[i].a = 0;   // SDL2's SDL_Color has a fourth alpha component
 	}
-	SDL_SetColors(image, colors, 0, 16);
+	SDL_SetPaletteColors(image->format->palette, colors, 0, 16); // SDL_SetColors = deprecated
 	return image;
 }
 
@@ -531,12 +533,12 @@ image_type* far __pascal far load_image(int resource_id, dat_pal_type* palette /
 	}
 	if (image_data != NULL) free(image_data);
 	if (image != NULL) {
-		if (SDL_SetColorKey(image, SDL_SRCCOLORKEY, 0) != 0) {
+		if (SDL_SetColorKey(image, SDL_TRUE, 0) != 0) { //sdl 1.2: SDL_SRCCOLORKEY
 			sdlperror("SDL_SetColorKey");
 			quit(1);
 		}
 //		printf("bpp = %d\n", image->format->BitsPerPixel);
-		if (SDL_SetAlpha(image, 0, 0) != 0) {
+		if (SDL_SetSurfaceAlphaMod(image, 0) != 0) { //sdl 1.2: SDL_SetAlpha removed
 			sdlperror("SDL_SetAlpha");
 			quit(1);
 		}
@@ -567,7 +569,8 @@ surface_type far *__pascal make_offscreen_buffer(const rect_type far *rect) {
 #ifndef USE_ALPHA
 	//return SDL_CreateRGBSurface(0, rect->right, rect->bottom, 24, 0xFF, 0xFF<<8, 0xFF<<16, 0);
 	// Bit order matches onscreen buffer, good for fading.
-	return SDL_CreateRGBSurface(0, rect->right, rect->bottom, 24, 0xFF<<16, 0xFF<<8, 0xFF<<0, 0);
+	return SDL_CreateRGBSurface(0, rect->right, rect->bottom, 32, 0xFF<<16, 0xFF<<8, 0xFF<<0, 0xFF<<24); //ARGB8888
+//	return SDL_CreateRGBSurface(0, rect->right, rect->bottom, 32, 0xFF, 0xFF<<8, 0xFF<<16, 0xFF<<24);
 #else
 	return SDL_CreateRGBSurface(0, rect->right, rect->bottom, 32, 0xFF, 0xFF<<8, 0xFF<<16, 0xFF<<24);
 #endif
@@ -655,7 +658,7 @@ void __pascal far flip_screen(surface_type far *surface) {
 void __pascal far fade_in_2(surface_type near *source_surface,int which_rows) {
 	// stub
 	method_1_blit_rect(onscreen_surface_, source_surface, &screen_rect, &screen_rect, 0);
-	SDL_UpdateRect(onscreen_surface_, 0, 0, 0, 0); // debug
+	update_screen();
 }
 
 // seg009:1CC9
@@ -667,7 +670,7 @@ void __pascal far fade_out_2(int rows) {
 // seg009:2288
 void __pascal far draw_image_transp_vga(image_type far *image,int xpos,int ypos) {
 	// stub
-	method_6_blit_img_to_scr(image, xpos, ypos, 0x10);
+	method_6_blit_img_to_scr(image, xpos, ypos, blitters_10h_transp);
 }
 
 #ifdef USE_TEXT
@@ -869,6 +872,7 @@ int __pascal far get_line_width(const char far *text,int length) {
 
 // seg009:3706
 int __pascal far draw_text_character(byte character) {
+	//printf("going to do draw_text_character...\n");
 	font_type* font = textstate.ptr_font;
 	int ax = 0;
 	if (character <= font->last_char && character >= font->first_char) {
@@ -906,6 +910,7 @@ int __pascal far draw_cstring(const char far *string) {
 
 // seg009:3F01
 const rect_type far *__pascal draw_text(const rect_type far *rect_ptr,int x_align_or_break,int y_align,const char far *text_ptr,int length) {
+	//printf("going to do draw_text()...\n");
 	short rect_top;
 	short rect_height;
 	short rect_width;
@@ -985,6 +990,7 @@ const rect_type far *__pascal draw_text(const rect_type far *rect_ptr,int x_alig
 			}
 		}
 		textstate.current_x = text_left;
+		//printf("going to draw text line...\n");
 		draw_text_line(bx,dx);
 		textstate.current_y += font_line_distance;
 	}
@@ -1477,7 +1483,7 @@ void load_sound_names() {
 		char name[256];
 		fscanf(fp, "%d=%255s\n", &number, /*sizeof(name)-1,*/ name);
 		//if (feof(fp)) break;
-		printf("sound_names[%d] = %s\n",number,name);
+		//printf("sound_names[%d] = %s\n",number,name);
 		if (number>=0 && number<max_sound_id) {
 			sound_names[number] = malloc(strlen(name)+1);
 			strcpy(sound_names[number], name);
@@ -1507,7 +1513,7 @@ sound_buffer_type* load_sound(int index) {
 				//printf("Trying to load %s\n", filename);
 				Mix_Chunk* chunk = Mix_LoadWAV(filename);
 				if (chunk == NULL) {
-					sdlperror("Mix_LoadWAV");
+					//sdlperror("Mix_LoadWAV 1516");
 					continue;
 				}
 				//printf("Loaded sound from %s\n", filename);
@@ -1686,11 +1692,31 @@ void __pascal far set_gr_mode(byte grmode) {
 		sdlperror("SDL_Init");
 		quit(1);
 	}
-	SDL_EnableUNICODE(1);
+
+	//SDL_EnableUNICODE(1); //deprecated
 	Uint32 flags = 0;
 	int fullscreen = check_param("full") != 0;
-	if (fullscreen) flags |= SDL_FULLSCREEN;
-	onscreen_surface_ = SDL_SetVideoMode(320, 200, 24, flags);
+	if (fullscreen) flags |= SDL_WINDOW_FULLSCREEN;
+	window_ = SDL_CreateWindow(WINDOW_TITLE,
+										  SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+										  POP_WINDOW_WIDTH, POP_WINDOW_HEIGHT, flags);
+	renderer_ = SDL_CreateRenderer(window_, -1 , 0);
+	//onscreen_surface_ = SDL_SetVideoMode(320, 200, 24, flags); // deprecated SDL1.2 code
+
+    /* Migration to SDL2: everything is still blitted to onscreen_surface_, however:
+     * SDL2 renders textures to the screen instead of surfaces; so for now, every screen
+     * update causes the onscreen_surface_ to be copied into sdl_texture_, which is
+     * subsequently displayed; awaits a better refactoring!
+     * The function handling the screen updates is update_screen()
+     * */
+    onscreen_surface_ = SDL_CreateRGBSurface(0, 320, 200, 32,
+											 0x00FF0000,
+											 0x0000FF00,
+											 0x000000FF,
+											 0xFF000000);
+	sdl_texture_ = SDL_CreateTexture(renderer_, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,
+												 320, 200);
+
 	if (onscreen_surface_ == NULL) {
 		sdlperror("SDL_SetVideoMode");
 		quit(1);
@@ -1698,15 +1724,25 @@ void __pascal far set_gr_mode(byte grmode) {
 	if (fullscreen) {
 		SDL_ShowCursor(SDL_DISABLE);
 	}
-	SDL_WM_SetCaption(WINDOW_TITLE, NULL);
-	if (SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL) != 0) {
-		sdlperror("SDL_EnableKeyRepeat");
-		quit(1);
-	}
+
+
+	//SDL_WM_SetCaption(WINDOW_TITLE, NULL);
+//	if (SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL) != 0) {  //deprecated
+//		sdlperror("SDL_EnableKeyRepeat");
+//		quit(1);
+//	}
 	graphics_mode = gmMcgaVga;
 #ifdef USE_TEXT
 	load_font();
 #endif
+}
+
+void update_screen() {
+	// draw to the screen; SDL2 code
+	SDL_UpdateTexture(sdl_texture_, NULL, onscreen_surface_->pixels, onscreen_surface_->pitch);
+	SDL_RenderClear(renderer_);
+	SDL_RenderCopy(renderer_, sdl_texture_, NULL, NULL);
+	SDL_RenderPresent(renderer_);
 }
 
 // seg009:9289
@@ -1891,17 +1927,7 @@ void __pascal far method_1_blit_rect(surface_type near *target_surface,surface_t
 	rect_to_sdlrect(source_rect, &src_rect);
 	SDL_Rect dest_rect;
 	rect_to_sdlrect(target_rect, &dest_rect);
-	/*
-	if (blit == blitters_0_no_transp) {
-		SDL_Rect dest_rect2 = dest_rect;
-		// SDL_FillRect modifies the rect!
-#ifndef USE_ALPHA
-		SDL_FillRect(target_surface, &dest_rect2, SDL_MapRGB(current_target_surface->format, 0, 0, 0));
-#else
-		SDL_FillRect(target_surface, &dest_rect2, SDL_MapRGBA(current_target_surface->format, 0, 0, 0, SDL_ALPHA_TRANSPARENT));
-#endif
-	}
-	*/
+
 	if (blit == blitters_0_no_transp) {
 		// Disable transparency.
 		if (SDL_SetColorKey(source_surface, 0, 0) != 0) {
@@ -1910,7 +1936,7 @@ void __pascal far method_1_blit_rect(surface_type near *target_surface,surface_t
 		}
 	} else {
 		// Enable transparency.
-		if (SDL_SetColorKey(source_surface, SDL_SRCCOLORKEY, 0) != 0) {
+		if (SDL_SetColorKey(source_surface, SDL_TRUE, 0) != 0) {
 			sdlperror("SDL_SetColorKey");
 			quit(1);
 		}
@@ -1920,30 +1946,50 @@ void __pascal far method_1_blit_rect(surface_type near *target_surface,surface_t
 		quit(1);
 	}
 	if (target_surface == onscreen_surface_) {
-		//SDL_UpdateRect(onscreen_surface_, 0, 0, 0, 0); // debug
-		SDL_UpdateRects(onscreen_surface_, 1, &dest_rect);
+        update_screen();
 	}
 	//SDL_Delay(10);
 }
 
-image_type far * __pascal far method_3_blit_mono(image_type far *image,int xpos,int ypos,int blitter,byte color) {
+SDL_Surface* convert_surface_to_screen_format(SDL_Surface* input_surface, byte* is_new_allocation) {
 	SDL_Surface* colored_image;
+
+	// Check whether the surface needs to be converted
+	uint32_t target_format = current_target_surface->format->format;
+	if (input_surface->format->format != target_format) {
+		colored_image = SDL_ConvertSurfaceFormat(input_surface, target_format, 0);
+		if (colored_image == NULL) {
+			sdlperror("SDL_ConvertSurface");
+			quit(1);
+		}
+		*is_new_allocation = 1;// caller must free colored_image later!
+		return colored_image;
+	} else { // format already OK so don't bother converting
+		*is_new_allocation = 0;
+		return input_surface;
+	}
+
+}
+
+image_type far * __pascal far method_3_blit_mono(image_type far *image,int xpos,int ypos,int blitter,byte color) {
+
+	byte is_new_surface_allocated;
+	SDL_Surface* colored_image = convert_surface_to_screen_format(image, &is_new_surface_allocated);
+
 	int w = image->w;
 	int h = image->h;
-	colored_image = SDL_CreateRGBSurface(SDL_SRCALPHA, w, h, 32, 0xFF, 0xFF<<8, 0xFF<<16, 0xFF<<24);
-	//SDL_Rect rect = {0, 0, image->w, image->h};
-	if (SDL_SetColorKey(image, SDL_SRCCOLORKEY, 0) != 0) {
+
+	SDL_SetSurfaceBlendMode(colored_image, SDL_BLENDMODE_NONE);
+	if (SDL_SetColorKey(colored_image, SDL_TRUE, 0) != 0) {
 		sdlperror("SDL_SetColorKey");
 		quit(1);
 	}
-	if (SDL_BlitSurface(image, NULL, colored_image, NULL) != 0) {
-		sdlperror("SDL_BlitSurface");
-		quit(1);
-	}
+
 	if (SDL_LockSurface(colored_image) != 0) {
 		sdlperror("SDL_LockSurface");
 		quit(1);
 	}
+
 	int y,x;
 	rgb_type palette_color = palette[color];
 	uint32_t rgb_color = SDL_MapRGB(colored_image->format, palette_color.r<<2, palette_color.g<<2, palette_color.b<<2) & 0xFFFFFF;
@@ -1953,12 +1999,34 @@ image_type far * __pascal far method_3_blit_mono(image_type far *image,int xpos,
 		for (x = 0; x < w; ++x) {
 			// set RGB but leave alpha
 			*pixel_ptr = (*pixel_ptr & 0xFF000000) | rgb_color;
+			//printf("pixel x=%d, y=%d, color = 0x%8x\n", x, y, *pixel_ptr);
 			++pixel_ptr;
 		}
 	}
 	SDL_UnlockSurface(colored_image);
-	method_6_blit_img_to_scr(colored_image, xpos, ypos, 0x10);
-	SDL_FreeSurface(colored_image);
+
+	SDL_Rect src_rect = {0, 0, image->w, image->h};
+	SDL_Rect dest_rect = {xpos, ypos, image->w, image->h};
+
+	SDL_SetSurfaceBlendMode(colored_image, SDL_BLENDMODE_NONE);
+
+    if (blitter == blitters_9_black) {
+        SDL_SetColorKey(colored_image, SDL_TRUE, rgb_color);
+//        SDL_SetColorKey(colored_image, SDL_FALSE, 0);
+    }
+    else {
+        SDL_SetColorKey(colored_image, SDL_TRUE, rgb_color); // only pixels with alpha=0xFF get copied
+    }
+
+	SDL_BlitSurface(colored_image, &src_rect, current_target_surface, &dest_rect);
+
+	if (is_new_surface_allocated)
+		SDL_FreeSurface(colored_image);
+
+    if (current_target_surface == onscreen_surface_)
+        update_screen();
+
+
 	return image;
 }
 
@@ -1976,10 +2044,8 @@ const rect_type far * __pascal far method_5_rect(const rect_type far *rect,int b
 		quit(1);
 	}
 	if (current_target_surface == onscreen_surface_) {
-		//SDL_UpdateRect(onscreen_surface_, 0, 0, 0, 0); // debug
-		SDL_UpdateRects(onscreen_surface_, 1, &dest_rect);
+        update_screen();
 	}
-	//SDL_Delay(10);
 	return rect;
 }
 
@@ -2002,15 +2068,15 @@ void blit_xor(SDL_Surface* target_surface, SDL_Rect* dest_rect, SDL_Surface* ima
 	SDL_Rect dest_rect2 = *src_rect;
 	// Read what is currently where we want to draw the new image.
 	if (SDL_BlitSurface(target_surface, dest_rect, helper_surface, &dest_rect2) != 0) {
-		sdlperror("SDL_BlitSurface");
+		sdlperror("SDL_BlitSurface 2032");
 		quit(1);
 	}
 	if (SDL_LockSurface(image_24) != 0) {
-		sdlperror("SDL_LockSurface");
+		sdlperror("SDL_LockSurface 2036");
 		quit(1);
 	}
 	if (SDL_LockSurface(helper_surface) != 0) {
-		sdlperror("SDL_LockSurface");
+		sdlperror("SDL_LockSurface 2040");
 		quit(1);
 	}
 	int size = helper_surface->h * helper_surface->pitch;
@@ -2035,14 +2101,13 @@ void blit_xor(SDL_Surface* target_surface, SDL_Rect* dest_rect, SDL_Surface* ima
 	SDL_UnlockSurface(helper_surface);
 	// Put the new area in place of the old one.
 	if (SDL_BlitSurface(helper_surface, src_rect, target_surface, dest_rect) != 0) {
-		sdlperror("SDL_BlitSurface");
+		sdlperror("SDL_BlitSurface 2065");
 		quit(1);
 	}
 	SDL_FreeSurface(image_24);
 	SDL_FreeSurface(helper_surface);
 	if (target_surface == onscreen_surface_) {
-		//SDL_UpdateRect(onscreen_surface_, 0, 0, 0, 0); // debug
-		SDL_UpdateRects(onscreen_surface_, 1, /*&*/dest_rect);
+        update_screen();
 	}
 }
 
@@ -2051,70 +2116,51 @@ image_type far * __pascal far method_6_blit_img_to_scr(image_type far *image,int
 		printf("method_6_blit_img_to_scr: image == NULL\n");
 		quit(1);
 	}
+
 	if (blit == blitters_9_black) {
-		method_3_blit_mono(image, xpos, ypos, blitters_10h_transp, 0);
+		method_3_blit_mono(image, xpos, ypos, blitters_9_black, 0);
+//		method_3_blit_mono(image, xpos, ypos, blitters_10h_transp, 0); // why?
 		return image;
 	}
-	SDL_Rect src_rect;
-	src_rect.x = 0;
-	src_rect.y = 0;
-	src_rect.w = image->w;
-	src_rect.h = image->h;
-	SDL_Rect dest_rect;
-	dest_rect.x = xpos;
-	dest_rect.y = ypos;
-	dest_rect.w = image->w;
-	dest_rect.h = image->h;
+
+	SDL_Rect src_rect = {0, 0, image->w, image->h};
+	SDL_Rect dest_rect = {xpos, ypos, image->w, image->h};
+
 	if (blit == blitters_3_xor) {
 		blit_xor(current_target_surface, &dest_rect, image, &src_rect);
 		return image;
 	}
-	/*
-	if (blit == blitters_0_no_transp) {
-		SDL_Rect dest_rect2 = dest_rect;
-		// SDL_FillRect modifies the rect!
-#ifndef USE_ALPHA
-		SDL_FillRect(current_target_surface, &dest_rect2, SDL_MapRGB(current_target_surface->format, 0, 0, 0));
-#else
-		SDL_FillRect(current_target_surface, &dest_rect2, SDL_MapRGBA(current_target_surface->format, 0, 0, 0, SDL_ALPHA_TRANSPARENT));
-#endif
-	}
-	*/
-	if (blit == blitters_0_no_transp) {
-		// Disable transparency.
-		if (SDL_SetColorKey(image, 0, 0) != 0) {
-			sdlperror("SDL_SetColorKey");
-			quit(1);
-		}
-	} else {
-		// Enable transparency.
-		if (SDL_SetColorKey(image, SDL_SRCCOLORKEY, 0) != 0) {
-			sdlperror("SDL_SetColorKey");
-			quit(1);
-		}
-		if (SDL_SetAlpha(image, image->format->Amask ? SDL_SRCALPHA : 0, 0) != 0) {
-			sdlperror("SDL_SetAlpha");
-			quit(1);
-		}
-	}
-	/*{ // debug
-		SDL_Rect dest_rect2 = dest_rect;
-		// SDL_FillRect modifies the rect!
-		SDL_FillRect(current_target_surface, &dest_rect2, SDL_MapRGB(current_target_surface->format, 255, 0, 0));
-	}*/
-	if (SDL_BlitSurface(image, &src_rect, current_target_surface, &dest_rect) != 0) {
-		sdlperror("SDL_BlitSurface");
-		quit(1);
-	}
-	if (SDL_SetAlpha(image, 0, 0) != 0) {
+
+	// temporarily convert the surface to screen format if necessary
+	byte is_new_surface_allocated;
+	SDL_Surface* colored_image = convert_surface_to_screen_format(image, &is_new_surface_allocated);
+
+	SDL_SetSurfaceBlendMode(colored_image, SDL_BLENDMODE_NONE);
+    SDL_SetSurfaceAlphaMod(colored_image, 1);
+
+    if (blit == blitters_0_no_transp) {
+        SDL_SetColorKey(colored_image, 0, 0); // don't use a color key
+        SDL_SetSurfaceBlendMode(current_target_surface, SDL_BLENDMODE_NONE);
+        //SDL_SetSurfaceAlphaMod(colored_image, 0);
+    }
+    else {
+        SDL_SetColorKey(colored_image, SDL_TRUE, 0);
+        SDL_SetSurfaceBlendMode(current_target_surface, SDL_BLENDMODE_NONE);
+        //SDL_SetSurfaceAlphaMod(colored_image, 0);
+    }
+	if (SDL_BlitSurface(colored_image, &src_rect, current_target_surface, &dest_rect) != 0) {
+        sdlperror("SDL_BlitSurface");
+        quit(1);
+    }
+	if (is_new_surface_allocated) SDL_FreeSurface(colored_image);
+
+	if (SDL_SetSurfaceAlphaMod(image, 0) != 0) {
 		sdlperror("SDL_SetAlpha");
 		quit(1);
 	}
-	if (current_target_surface == onscreen_surface_) {
-		//SDL_UpdateRect(onscreen_surface_, 0, 0, 0, 0); // debug
-		SDL_UpdateRects(onscreen_surface_, 1, &dest_rect);
-	}
-	//SDL_Delay(10);
+	if (current_target_surface == onscreen_surface_)
+        update_screen();
+
 	return image;
 }
 
@@ -2193,37 +2239,51 @@ void __pascal start_timer(int timer_index, int length) {
 }
 
 void toggle_fullscreen() {
-	//printf("Pressed alt-enter\n");
-	Uint32 flags = onscreen_surface_->flags;
-	flags ^= SDL_FULLSCREEN;
-	// The simplest way to copy a surface:
-	surface_type* temp_surface = SDL_ConvertSurface(onscreen_surface_, onscreen_surface_->format, 0);
-	if (temp_surface == NULL) {
-		sdlperror("SDL_ConvertSurface (toggle_fullscreen)");
-		quit(1);
-	}
-	surface_type* new_onscreen_surface_ = SDL_SetVideoMode(320, 200, 24, flags);
-	if (new_onscreen_surface_ == NULL) {
-		sdlperror("SDL_SetVideoMode (toggle_fullscreen)");
-		quit(1);
-	}
-	// Note: the old onscreen_surface_ is invalid at this point.
-	if (current_target_surface == onscreen_surface_) {
-		// Without this, the game crashes if I switch into fullscreen while the game is paused.
-		current_target_surface = new_onscreen_surface_;
-	}
-	onscreen_surface_ = new_onscreen_surface_;
-	int fullscreen = (flags & SDL_FULLSCREEN) != 0;
-	if (fullscreen) {
-		SDL_ShowCursor(SDL_DISABLE);
-	} else {
-		SDL_ShowCursor(SDL_ENABLE);
-	}
-	// The new surface is empty. Copy the old image over onto it.
-	// offscreen_surface is not good instead of temp_surface, because it does not contain the bottom 8 rows (hitpoints).
-	SDL_BlitSurface(temp_surface, NULL, onscreen_surface_, NULL);
-	SDL_UpdateRect(onscreen_surface_,0,0,0,0);
-	SDL_FreeSurface(temp_surface);
+    uint32_t flags = SDL_GetWindowFlags(window_);
+    if (flags & SDL_WINDOW_FULLSCREEN_DESKTOP) {
+        SDL_SetWindowFullscreen(window_, 0);
+        SDL_ShowCursor(SDL_ENABLE);
+    }
+    else {
+        SDL_SetWindowFullscreen(window_, SDL_WINDOW_FULLSCREEN_DESKTOP);
+        SDL_ShowCursor(SDL_DISABLE);
+    }
+
+//	printf("Pressed alt-enter\n");
+//	Uint32 flags = onscreen_surface_->flags;
+//	flags ^= SDL_FULLSCREEN;
+//	// The simplest way to copy a surface:
+//	surface_type* temp_surface = SDL_ConvertSurface(onscreen_surface_, onscreen_surface_->format, 0);
+//	if (temp_surface == NULL) {
+//		sdlperror("SDL_ConvertSurface (toggle_fullscreen)");
+//		quit(1);
+//	}
+//	surface_type* new_onscreen_surface_ = SDL_SetVideoMode(320, 200, 24, flags);
+//	if (new_onscreen_surface_ == NULL) {
+//		sdlperror("SDL_SetVideoMode (toggle_fullscreen)");
+//		quit(1);
+//	}
+
+
+
+//	// Note: the old onscreen_surface_ is invalid at this point.
+//	if (current_target_surface == onscreen_surface_) {
+//		// Without this, the game crashes if I switch into fullscreen while the game is paused.
+//		current_target_surface = new_onscreen_surface_;
+//	}
+//	onscreen_surface_ = new_onscreen_surface_;
+//	int fullscreen = (flags & SDL_FULLSCREEN) != 0;
+//	if (fullscreen) {
+//		SDL_ShowCursor(SDL_DISABLE);
+//	} else {
+//		SDL_ShowCursor(SDL_ENABLE);
+//	}
+//	// The new surface is empty. Copy the old image over onto it.
+//	// offscreen_surface is not good instead of temp_surface, because it does not contain the bottom 8 rows (hitpoints).
+//	SDL_BlitSurface(temp_surface, NULL, onscreen_surface_, NULL);
+//	//SDL_UpdateRect(onscreen_surface_,0,0,0,0);
+//	update_screen();
+//	SDL_FreeSurface(temp_surface);
 }
 
 void idle() {
@@ -2236,34 +2296,41 @@ void idle() {
 	}
 	switch (event.type) {
 		case SDL_KEYDOWN:
-			if ((event.key.keysym.mod & (KMOD_LALT|KMOD_RALT)) && event.key.keysym.sym == SDLK_RETURN) {
+			if ((event.key.keysym.mod & (KMOD_LALT|KMOD_RALT)) && event.key.keysym.scancode == SDL_SCANCODE_RETURN) {
 				// Alt-Enter: toggle fullscreen mode
 				toggle_fullscreen();
 			} else {
-				last_key = event.key.keysym.unicode;
+//				last_key = event.key.keysym.unicode;
+				last_key = event.key.keysym.scancode;
 				if (!last_key) {
-					if (event.key.keysym.sym < SDLK_NUMLOCK) {
-						last_key = event.key.keysym.scancode << 8;
+					if (event.key.keysym.scancode < SDL_SCANCODE_NUMLOCKCLEAR) {
+						//last_key = event.key.keysym.scancode << 8;
 					}
 				}
-				key_states[event.key.keysym.sym] = 1;
+//				key_states[event.key.keysym.sym] = 1;
+				key_states[event.key.keysym.scancode] = 1;
 			}
 		break;
 		case SDL_KEYUP:
 //			key_states[event.key.keysym.sym] = (event.type==SDL_KEYDOWN ? 0x01 : 0x00);
-			key_states[event.key.keysym.sym] = 0;
+//			key_states[event.key.keysym.sym] = 0;
+			key_states[event.key.keysym.scancode] = 0;
 		break;
-		case SDL_ACTIVEEVENT:
+		case SDL_WINDOWEVENT:
 			// In case the user switches away while holding a key: do as if all keys were released.
 			// (DOSBox does the same.)
+
+/* // not implemented in SDL2 for now
+ *
 			if ((event.active.state & SDL_APPINPUTFOCUS) && event.active.gain == 0) {
 				memset(key_states, 0, sizeof(key_states));
 			}
 			// Note: event.active.state can contain multiple flags or'ed.
 			// If the game is in full screen, and I switch away (alt-tab) and back, most of the screen will be black, until it is redrawn.
 			if ((event.active.state & SDL_APPACTIVE) && event.active.gain == 1) {
-				SDL_UpdateRect(onscreen_surface_,0,0,0,0);
+				update_screen();
 			}
+*/
 		break;
 		case SDL_USEREVENT:
 			if (event.user.code == userevent_TIMER /*&& event.user.data1 == (void*)timer_index*/) {
@@ -2371,7 +2438,7 @@ void __pascal far set_bg_attr(int vga_pal_index,int hc_pal_index) {
 		}
 		*/
 		// Make the black pixels transparent.
-		if (SDL_SetColorKey(offscreen_surface, SDL_SRCCOLORKEY, 0) != 0) {
+		if (SDL_SetColorKey(offscreen_surface, SDL_TRUE, 0) != 0) {	// SDL_SRCCOLORKEY old
 			sdlperror("SDL_SetColorKey");
 			quit(1);
 		}
@@ -2389,11 +2456,12 @@ void __pascal far set_bg_attr(int vga_pal_index,int hc_pal_index) {
 		//SDL_UpdateRect(onscreen_surface_, 0, 0, 0, 0);
 		// Then draw the offscreen image onto it.
 		if (SDL_BlitSurface(offscreen_surface, &rect, onscreen_surface_, &rect) != 0) {
-			sdlperror("SDL_BlitSurface");
+			sdlperror("SDL_BlitSurface 2432");
 			quit(1);
 		}
 		// And show it!
-		SDL_UpdateRect(onscreen_surface_, 0, 0, 0, 0);
+		//SDL_UpdateRect(onscreen_surface_, 0, 0, 0, 0);
+        update_screen();
 		// Give some time to show the flash.
 		//SDL_Flip(onscreen_surface_);
 		if (hc_pal_index != 0) SDL_Delay(2*1000/60);
@@ -2544,7 +2612,8 @@ int __pascal far fade_in_frame(palette_fade_type far *palette_buffer) {
 	SDL_UnlockSurface(onscreen_surface_);
 	SDL_UnlockSurface(offscreen_surface);
 
-	SDL_UpdateRect(onscreen_surface_, 0, 0, 0, 0); // debug
+	//SDL_UpdateRect(onscreen_surface_, 0, 0, 0, 0); // debug
+    update_screen();
 		
 //	/**/do_simple_wait(1); // too slow?
 	do_wait(1);
@@ -2664,7 +2733,8 @@ int __pascal far fade_out_frame(palette_fade_type far *palette_buffer) {
 	SDL_UnlockSurface(onscreen_surface_);
 	SDL_UnlockSurface(offscreen_surface);
 
-	SDL_UpdateRect(onscreen_surface_, 0, 0, 0, 0); // debug
+	//SDL_UpdateRect(onscreen_surface_, 0, 0, 0, 0); // debug
+    update_screen();
 	
 //	/**/do_simple_wait(1); // too slow?
 	do_wait(1);
@@ -2698,14 +2768,23 @@ void set_chtab_palette(chtab_type* chtab, byte* colors, int n_colors) {
 			scolors[i].r = *colors << 2; ++colors;
 			scolors[i].g = *colors << 2; ++colors;
 			scolors[i].b = *colors << 2; ++colors;
+            scolors[i].a = 0; // the SDL2 SDL_Color struct has an alpha component
 		}
 		//printf("setcolors\n",i);
 		for (i = 0; i < chtab->n_images; ++i) {
 			//printf("i=%d\n",i);
-			if (chtab->pointers[i] != NULL) {
-				//fprintf(stderr, "i=%d, BitsPerPixel=%d, palette=%p\n", i, chtab->pointers[i]->format->BitsPerPixel, chtab->pointers[i]->format->palette); // debug
-				if (SDL_SetColors(chtab->pointers[i], scolors, 0, n_colors) != 1) {
-					sdlperror("SDL_SetColors");
+            image_type* current_image = chtab->pointers[i];
+			if (current_image != NULL) {
+
+                int n_colors_to_be_set = n_colors;
+                SDL_Palette* current_palette = current_image->format->palette;
+
+                // one of the guard images (i=25) is only a single transparent pixel
+                // this caused SDL_SetPaletteColors to fail, I think because that palette contains only 2 colors
+                if (current_palette->ncolors < n_colors_to_be_set)
+                    n_colors_to_be_set = current_palette->ncolors;
+                if (SDL_SetPaletteColors(current_palette, scolors, 0, n_colors_to_be_set) != 0) {
+					sdlperror("SDL_SetPaletteColors");
 					quit(1);
 				}
 			}

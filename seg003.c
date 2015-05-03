@@ -217,9 +217,9 @@ void __pascal far draw_level_first() {
 }
 
 // seg003:037B
-void __pascal far redraw_screen(int arg_0) {
+void __pascal far redraw_screen(int drawing_different_room) {
 	//remove_flash();
-	if (arg_0) {
+	if (drawing_different_room) {
 		draw_rect(&rect_top, 0);
 	}
 	different_room = 0;
