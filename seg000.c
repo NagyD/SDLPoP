@@ -188,7 +188,7 @@ void far *__pascal load_pal_from_dat(const char near *filename,int resource,int 
 	byte area[100];
 	dat_type* handle_ptr;
 	handle_ptr = open_dat(filename, 0);
-	load_from_opendats_to_area(resource, area, 0, "pal");
+	load_from_opendats_to_area(resource, area, sizeof(area), "pal");
 	source = (dat_pal_type*)&(area[1]);
 	source -> row_bits = pal_row_bits;
 	xlat_buffer = malloc_near(0x200);
