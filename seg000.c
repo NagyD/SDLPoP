@@ -443,12 +443,18 @@ int __pascal far process_key() {
 				flash_time = 4;
 				add_life();
 			break;
-			// function must return 0 if ONLY shift or ctrl is pressed and nothing else
-			// this ensures that shift or ctrl does not unpause the game
+			// function should return 0 if ONLY modifier keys are pressed and nothing else
+			// this ensures that these keys not unpause the game
 			case SDL_SCANCODE_LSHIFT:
 			case SDL_SCANCODE_RSHIFT:
 			case SDL_SCANCODE_LCTRL:
 			case SDL_SCANCODE_RCTRL:
+			case SDL_SCANCODE_LALT:
+			case SDL_SCANCODE_RALT:
+			case SDL_SCANCODE_CAPSLOCK:
+			case SDL_SCANCODE_SCROLLLOCK:
+			case SDL_SCANCODE_NUMLOCKCLEAR:
+			case SDL_SCANCODE_APPLICATION:
 				return 0;
 		}
 	}
