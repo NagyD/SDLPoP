@@ -230,8 +230,12 @@ int __pascal far process_key() {
 		}
 	}
 	// If the Kid died, enter or shift will restart the level.
-	if (rem_min != 0 && Kid.alive > 6 && (control_shift || key == 13)) {
-		key = 1; // ctrl-a
+	if (rem_min != 0 && Kid.alive > 6 && (control_shift || key == SDL_SCANCODE_RETURN)) {
+//		key = 1; // ctrl-a
+		if (current_level != 15) { // restart the level
+			stop_sounds();
+			is_restart_level = 1;
+		}
 	}
 	if (key == 0) return 0;
 	if (is_keyboard_mode) clear_kbd_buf();
@@ -439,6 +443,13 @@ int __pascal far process_key() {
 				flash_time = 4;
 				add_life();
 			break;
+			// function must return 0 if ONLY shift or ctrl is pressed and nothing else
+			// this ensures that shift or ctrl does not unpause the game
+			case SDL_SCANCODE_LSHIFT:
+			case SDL_SCANCODE_RSHIFT:
+			case SDL_SCANCODE_LCTRL:
+			case SDL_SCANCODE_RCTRL:
+				return 0;
 		}
 	}
 	if (need_show_text) {

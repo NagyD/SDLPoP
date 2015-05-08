@@ -2136,7 +2136,7 @@ image_type far * __pascal far method_6_blit_img_to_scr(image_type far *image,int
 	SDL_Surface* colored_image = convert_surface_to_screen_format(image, &is_new_surface_allocated);
 
 	SDL_SetSurfaceBlendMode(colored_image, SDL_BLENDMODE_NONE);
-    SDL_SetSurfaceAlphaMod(colored_image, 1);
+    //SDL_SetSurfaceAlphaMod(colored_image, 0);
 
     if (blit == blitters_0_no_transp) {
         SDL_SetColorKey(colored_image, 0, 0); // don't use a color key
@@ -2146,7 +2146,7 @@ image_type far * __pascal far method_6_blit_img_to_scr(image_type far *image,int
     else {
         SDL_SetColorKey(colored_image, SDL_TRUE, 0);
         SDL_SetSurfaceBlendMode(current_target_surface, SDL_BLENDMODE_NONE);
-        //SDL_SetSurfaceAlphaMod(colored_image, 0);
+        //SDL_SetSurfaceAlphaMod(colored_image, 255);
     }
 	if (SDL_BlitSurface(colored_image, &src_rect, current_target_surface, &dest_rect) != 0) {
         sdlperror("SDL_BlitSurface");
@@ -2768,7 +2768,7 @@ void set_chtab_palette(chtab_type* chtab, byte* colors, int n_colors) {
 			scolors[i].r = *colors << 2; ++colors;
 			scolors[i].g = *colors << 2; ++colors;
 			scolors[i].b = *colors << 2; ++colors;
-            scolors[i].a = 0; // the SDL2 SDL_Color struct has an alpha component
+            scolors[i].a = SDL_ALPHA_OPAQUE; // the SDL2 SDL_Color struct has an alpha component
 		}
 		//printf("setcolors\n",i);
 		for (i = 0; i < chtab->n_images; ++i) {
