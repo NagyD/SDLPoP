@@ -1511,20 +1511,20 @@ sound_buffer_type* load_sound(int index) {
 	init_digi();
 	if (!digi_unavailable && result == NULL && index>=0 && index<max_sound_id) {
 		//printf("Trying to load from music folder\n");
-		load_sound_names();
+
+		//load_sound_names();  // Moved to load_sounds()
 		if (sound_names != NULL && sound_names[index] != NULL) {
 			//printf("Loading from music folder\n");
 			const char* exts[]={"mp3","ogg","flac","wav"};
 			int i;
 			for (i = 0; i < COUNT(exts); ++i) {
-				//printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
 				char filename[256];
 				const char* ext=exts[i];
 				snprintf(filename, sizeof(filename), "data/music/%s.%s", sound_names[index], ext);
 				//printf("Trying to load %s\n", filename);
 				Mix_Chunk* chunk = Mix_LoadWAV(filename);
 				if (chunk == NULL) {
-					//sdlperror("Mix_LoadWAV 1516");
+					//sdlperror("Mix_LoadWAV");
 					continue;
 				}
 				//printf("Loaded sound from %s\n", filename);

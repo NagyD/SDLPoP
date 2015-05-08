@@ -535,6 +535,10 @@ extern int timer_stopped[2];
 extern int wait_time[2];
 #endif
 
+#ifdef USE_MIXER
+extern char** sound_names;
+#endif
+
 extern int g_argc;
 extern char** g_argv;
 

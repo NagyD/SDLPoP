@@ -443,21 +443,18 @@ int __pascal far process_key() {
 				flash_time = 4;
 				add_life();
 			break;
-			// function should return 0 if ONLY modifier keys are pressed and nothing else
-			// this ensures that these keys not unpause the game
-			case SDL_SCANCODE_LSHIFT:
-			case SDL_SCANCODE_RSHIFT:
-			case SDL_SCANCODE_LCTRL:
-			case SDL_SCANCODE_RCTRL:
-			case SDL_SCANCODE_LALT:
-			case SDL_SCANCODE_RALT:
-			case SDL_SCANCODE_CAPSLOCK:
-			case SDL_SCANCODE_SCROLLLOCK:
-			case SDL_SCANCODE_NUMLOCKCLEAR:
-			case SDL_SCANCODE_APPLICATION:
-				return 0;
 		}
 	}
+
+	// function should return 0 if ONLY modifier keys are pressed and nothing else
+	// this ensures that these keys not unpause the game
+	if (key == SDL_SCANCODE_LSHIFT || key == SDL_SCANCODE_RSHIFT ||
+			key == SDL_SCANCODE_LCTRL ||key == SDL_SCANCODE_RCTRL ||
+			key == SDL_SCANCODE_LALT ||key == SDL_SCANCODE_RALT ||
+			key == SDL_SCANCODE_CAPSLOCK ||key == SDL_SCANCODE_SCROLLLOCK ||
+			key == SDL_SCANCODE_NUMLOCKCLEAR || key == SDL_SCANCODE_APPLICATION)
+		return 0;
+
 	if (need_show_text) {
 		display_text_bottom(answer_text);
 		text_time_total = 24;
@@ -630,6 +627,10 @@ void __pascal far load_sounds(int first,int last) {
 		} else*/ {
 			//sound_pointers[current] = (sound_buffer_type*) load_from_opendats_alloc(current + 10000, "bin", NULL, NULL);
 			//printf("overwriting sound_pointers[%d] = %p\n", current, sound_pointers[current]);
+			#ifdef USE_MIXER
+			load_sound_names();
+			#endif
+
 			sound_pointers[current] = load_sound(current);
 		}
 	}

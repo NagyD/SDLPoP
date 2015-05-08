@@ -7,6 +7,7 @@ int __pascal far process_key();
 void __pascal far play_frame();
 void __pascal far draw_game_frame();
 void __pascal far anim_tile_modif();
+void load_sound_names();
 void __pascal far load_sounds(int min_sound,int max_sound);
 void __pascal far load_opt_sounds(int first,int last);
 void __pascal far load_lev_spr(int level);

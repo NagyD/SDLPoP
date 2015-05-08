@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.1)
 project(SDLPoP)
 
 # Use C++11
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -mwindows")
 
 # have CMake output binaries to the directory that contains the source files
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${SDLPoP_SOURCE_DIR}")
