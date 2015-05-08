@@ -1,6 +1,7 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+#include <SDL2/SDL_main.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #ifdef USE_MIXER

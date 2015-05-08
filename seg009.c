@@ -13,20 +13,22 @@ void sdlperror(const char* header) {
 
 dat_type* dat_chain_ptr = NULL;
 
-int last_key;
+int last_key_scancode;
+char last_text_input;
 
 // seg009:000D
 int __pascal far read_key() {
 	// stub
-	int key = last_key;
-	last_key = 0;
+	int key = last_key_scancode;
+	last_key_scancode = 0;
 	return key;
 }
 
 // seg009:019A
 void __pascal far clear_kbd_buf() {
 	// stub
-	last_key = 0;
+	last_key_scancode = 0;
+	last_text_input = 0;
 }
 
 // seg009:040A
@@ -1090,12 +1092,12 @@ void __pascal far draw_text_cursor(int xpos,int ypos,int color) {
 int __pascal far input_str(const rect_type far *rect,char *buffer,int max_length,const char *initial,int has_initial,int arg_4,int color,int bgcolor) {
 	short length;
 	word key;
-	short var_6;
+	short cursor_visible;
 	short current_xpos;
 	short ypos;
 	short init_length;
 	length = 0;
-	var_6 = 0;
+	cursor_visible = 0;
 	draw_rect(rect, bgcolor);
 	init_length = strlen(initial);
 	if (has_initial) {
@@ -1112,19 +1114,20 @@ int __pascal far input_str(const rect_type far *rect,char *buffer,int max_length
 	do {
 		key = 0;
 		do {
-			if (var_6) {
+			if (cursor_visible) {
 				draw_text_cursor(current_xpos, ypos, color);
 			} else {
 				draw_text_cursor(current_xpos, ypos, bgcolor);
 			}
-			var_6 = !var_6;
+			cursor_visible = !cursor_visible;
 			start_timer(0, 6);
 			if (key) {
-				if (var_6) {
+				if (cursor_visible) {
 					draw_text_cursor(current_xpos, ypos, color);
-					var_6 = !var_6;
+					cursor_visible = !cursor_visible;
 				}
-				if (key == 0x0D) { // enter
+				if (key == SDL_SCANCODE_RETURN) { // enter
+//				if (key == 0x0D) { // enter
 					buffer[length] = 0;
 					return length;
 				} else break;
@@ -1132,12 +1135,19 @@ int __pascal far input_str(const rect_type far *rect,char *buffer,int max_length
 //			while (!timer_stopped[0] && (key = key_test_quit()) == 0) idle();
 			while (!has_timer_stopped(0) && (key = key_test_quit()) == 0) idle();
 		} while (1);
-		if (key == 0x1B) { // esc
+		// Only use the printable ASCII chars (UTF-8 encoding)
+		char entered_char = last_text_input <= 0x7E ? last_text_input : 0;
+		clear_kbd_buf();
+
+		if (key == SDL_SCANCODE_ESCAPE) { // esc
+//		if (key == 0x1B) { // esc
 			draw_rect(rect, bgcolor);
 			buffer[0] = 0;
 			return -1;
 		}
-		if (length != 0 && (key == 8 || key == 0x5300)) { // backspace, delete
+		if (length != 0 && (key == SDL_SCANCODE_BACKSPACE ||
+				key == SDL_SCANCODE_DELETE)) { // backspace, delete
+//		if (length != 0 && (key == 8 || key == 0x5300)) { // backspace, delete
 			--length;
 			draw_text_cursor(current_xpos, ypos, bgcolor);
 			current_xpos -= get_char_width(buffer[length]);
@@ -1146,13 +1156,14 @@ int __pascal far input_str(const rect_type far *rect,char *buffer,int max_length
 			draw_text_character(buffer[length]);
 			//restore_curr_pos?();
 			draw_text_cursor(current_xpos, ypos, color);
-		} else if (key >= 0x20 && key <= 0x7E && length < max_length) {
+		}
+		else if (entered_char >= 0x20 && entered_char <= 0x7E && length < max_length) {
 			// Would the new character make the cursor go past the right side of the rect?
-			if (get_char_width('_') + get_char_width(key) + current_xpos < rect->right) {
+			if (get_char_width('_') + get_char_width(entered_char) + current_xpos < rect->right) {
 				draw_text_cursor(current_xpos, ypos, bgcolor);
 				set_curr_pos(current_xpos, ypos);
 				/*current_target_surface->*/textstate.textcolor = color;
-				current_xpos += draw_text_character(buffer[length++] = key);
+				current_xpos += draw_text_character(buffer[length++] = entered_char);
 			}
 		}
 	} while(1);
@@ -2136,17 +2147,17 @@ image_type far * __pascal far method_6_blit_img_to_scr(image_type far *image,int
 	SDL_Surface* colored_image = convert_surface_to_screen_format(image, &is_new_surface_allocated);
 
 	SDL_SetSurfaceBlendMode(colored_image, SDL_BLENDMODE_NONE);
-    //SDL_SetSurfaceAlphaMod(colored_image, 0);
+    //SDL_SetSurfaceAlphaMod(colored_image, 1);
 
     if (blit == blitters_0_no_transp) {
         SDL_SetColorKey(colored_image, 0, 0); // don't use a color key
         SDL_SetSurfaceBlendMode(current_target_surface, SDL_BLENDMODE_NONE);
-        //SDL_SetSurfaceAlphaMod(colored_image, 0);
+        SDL_SetSurfaceAlphaMod(colored_image, 0);
     }
     else {
         SDL_SetColorKey(colored_image, SDL_TRUE, 0);
         SDL_SetSurfaceBlendMode(current_target_surface, SDL_BLENDMODE_NONE);
-        //SDL_SetSurfaceAlphaMod(colored_image, 255);
+        SDL_SetSurfaceAlphaMod(colored_image, 255);
     }
 	if (SDL_BlitSurface(colored_image, &src_rect, current_target_surface, &dest_rect) != 0) {
         sdlperror("SDL_BlitSurface");
@@ -2294,31 +2305,39 @@ void idle() {
 		sdlperror("SDL_WaitEvent");
 		quit(1);
 	}
-	switch (event.type) {
-		case SDL_KEYDOWN:
-			if ((event.key.keysym.mod & (KMOD_LALT|KMOD_RALT)) && event.key.keysym.scancode == SDL_SCANCODE_RETURN) {
-				// Alt-Enter: toggle fullscreen mode
-				toggle_fullscreen();
-			} else {
-//				last_key = event.key.keysym.unicode;
-				last_key = event.key.keysym.scancode;
-				if (!last_key) {
-					if (event.key.keysym.scancode < SDL_SCANCODE_NUMLOCKCLEAR) {
-						//last_key = event.key.keysym.scancode << 8;
+	// We still want to process all events in the queue
+	// For instance, there may be simultaneous SDL2 KEYDOWN and TEXTINPUT events
+	do { // while there are still events to be processed
+		switch (event.type) {
+			case SDL_KEYDOWN:
+				if ((event.key.keysym.mod & (KMOD_LALT | KMOD_RALT)) &&
+					event.key.keysym.scancode == SDL_SCANCODE_RETURN) {
+					// Alt-Enter: toggle fullscreen mode
+					toggle_fullscreen();
+				} else {
+//				last_key_scancode = event.key.keysym.unicode;
+					last_key_scancode = event.key.keysym.scancode;
+//				last_text_input = event.key.keysym.sym; // SDL_Keycode
+					if (!last_key_scancode) {
+						if (event.key.keysym.scancode < SDL_SCANCODE_NUMLOCKCLEAR) {
+							//last_key_scancode = event.key.keysym.scancode << 8;
+						}
 					}
-				}
 //				key_states[event.key.keysym.sym] = 1;
-				key_states[event.key.keysym.scancode] = 1;
-			}
-		break;
-		case SDL_KEYUP:
+					key_states[event.key.keysym.scancode] = 1;
+				}
+				break;
+			case SDL_KEYUP:
 //			key_states[event.key.keysym.sym] = (event.type==SDL_KEYDOWN ? 0x01 : 0x00);
 //			key_states[event.key.keysym.sym] = 0;
-			key_states[event.key.keysym.scancode] = 0;
-		break;
-		case SDL_WINDOWEVENT:
-			// In case the user switches away while holding a key: do as if all keys were released.
-			// (DOSBox does the same.)
+				key_states[event.key.keysym.scancode] = 0;
+				break;
+			case SDL_TEXTINPUT:
+				last_text_input = event.text.text[0]; // UTF-8 formatted char text input
+				break;
+			case SDL_WINDOWEVENT:
+				// In case the user switches away while holding a key: do as if all keys were released.
+				// (DOSBox does the same.)
 
 /* // not implemented in SDL2 for now
  *
@@ -2331,36 +2350,37 @@ void idle() {
 				update_screen();
 			}
 */
-		break;
-		case SDL_USEREVENT:
-			if (event.user.code == userevent_TIMER /*&& event.user.data1 == (void*)timer_index*/) {
+				break;
+			case SDL_USEREVENT:
+				if (event.user.code == userevent_TIMER /*&& event.user.data1 == (void*)timer_index*/) {
 #ifndef USE_COMPAT_TIMER
-				int timer_index = (uintptr_t)event.user.data1;
-				timer_stopped[timer_index] = 1;
-				//printf("timer_index = %d\n", timer_index);
-				// 2014-08-27: According to the output of the next line, handle is always NULL.
-				// 2014-08-28: Except when you interrupt fading of the cutscene.
-				//printf("timer_handles[timer_index] = %p\n", timer_handles[timer_index]);
-				// 2014-08-27: However, this line will change something: it makes the game too fast. Weird...
-				// 2014-08-28: Wait, now it doesn't...
-				//timer_handles[timer_index] = NULL;
+					int timer_index = (uintptr_t) event.user.data1;
+					timer_stopped[timer_index] = 1;
+					//printf("timer_index = %d\n", timer_index);
+					// 2014-08-27: According to the output of the next line, handle is always NULL.
+					// 2014-08-28: Except when you interrupt fading of the cutscene.
+					//printf("timer_handles[timer_index] = %p\n", timer_handles[timer_index]);
+					// 2014-08-27: However, this line will change something: it makes the game too fast. Weird...
+					// 2014-08-28: Wait, now it doesn't...
+					//timer_handles[timer_index] = NULL;
 #else
 				int index;
 				for (index = 0; index < 2; ++index) {
 					if (wait_time[index] > 0) --wait_time[index];
 				}
 #endif
-			} else if (event.user.code == userevent_SOUND) {
-				//sound_timer = NULL;
+				} else if (event.user.code == userevent_SOUND) {
+					//sound_timer = NULL;
 #ifndef USE_MIXER
 				//stop_sounds();
 #endif
-			}
-		break;
-		case SDL_QUIT:
-			quit(0);
-		break;
-	}
+				}
+				break;
+			case SDL_QUIT:
+				quit(0);
+				break;
+		}
+	} while (SDL_PollEvent(&event) == 1);
 }
 
 word word_1D63A = 1;

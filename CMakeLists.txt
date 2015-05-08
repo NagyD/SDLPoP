@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 3.1)
-project(SDL2PoP)
+project(SDLPoP)
 
 # Use C++11
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 # have CMake output binaries to the directory that contains the source files
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${SDL2PoP_SOURCE_DIR}")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${SDLPoP_SOURCE_DIR}")
 
 # if SDL_2, SDL2_image and SDL2_mixer are not in the toolchain/build environment, specify /include and /lib paths:
 
@@ -32,9 +32,9 @@ set(SOURCE_FILES
     seg009.c
     types.h
 )
-add_executable(SDL2PoP ${SOURCE_FILES})
+add_executable(SDLPoP ${SOURCE_FILES})
 
-target_link_libraries(SDL2PoP mingw32 SDL2main SDL2 SDL2.dll SDL2_image SDL2_mixer)
+target_link_libraries(SDLPoP mingw32 SDL2main SDL2 SDL2.dll SDL2_image SDL2_mixer)
 
 
 

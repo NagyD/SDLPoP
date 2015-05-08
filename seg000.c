@@ -1066,6 +1066,7 @@ int __pascal far do_paused() {
 		// busy waiting?
 		do {
 			idle();
+			update_screen();
 		} while (! process_key());
 		erase_bottom_text(1);
 	}

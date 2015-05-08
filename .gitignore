@@ -2,6 +2,9 @@
 data/music/*.ogg
 data/music/*.mp3
 
+# PoP Hall of Fame file
+prince.hof
+
 # Object files
 *.o
 *.ko
