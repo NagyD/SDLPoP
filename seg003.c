@@ -173,7 +173,7 @@ void __pascal far set_start_pos() {
 	Char.fall_y = 0;
 	Char.fall_x = 0;
 	word_1EFCE = 0;
-	Char.sword = 0;
+	Char.sword = sword_0_sheathed;
 	word_1EA12 = 0;
 	play_seq();
 	if (current_level == 7 && Char.room == 17) {
@@ -285,7 +285,7 @@ void __pascal far redraw_screen(int drawing_different_room) {
 // - The next level if the level was completed.
 int __pascal far play_level_2() {
 	again:
-	if (Kid.sword == 2) {
+	if (Kid.sword == sword_2_drawn) {
 		// speed when fighting (smaller is faster)
 		//wait_time1 = 6;
 		start_timer(1, 6);
@@ -327,7 +327,7 @@ void __pascal far redraw_at_char() {
 	short tile_row;
 	short x_col_left;
 	short x_col_right;
-	if (Char.sword >= 2) {
+	if (Char.sword >= sword_2_drawn) {
 		// If char is holding sword, it makes redraw-area bigger.
 		if (Char.direction >= dir_0_right) {
 			if (++char_col_right > 9) char_col_right = 9;
@@ -454,7 +454,7 @@ void __pascal far jump_through_mirror() {
 	check_mirror_image();
 	jumped_through_mirror = 0;
 	Char.charid = charid_1_shadow;
-	play_sound(45); // jump through mirror
+	play_sound(sound_45_jump_through_mirror); // jump through mirror
 	saveshad();
 	guardhp_max = guardhp_curr = hitp_max;
 	hitp_curr = 1;
@@ -481,8 +481,8 @@ void __pascal far bump_into_opponent() {
 	// This is called from play_kid_frame, so char=Kid, Opp=Guard
 	short distance;
 	if (can_guard_see_kid >= 2 &&
-		Char.sword == 0 && // Kid must not be in fighting pose
-		Opp.sword != 0 && // but Guard must
+		Char.sword == sword_0_sheathed && // Kid must not be in fighting pose
+		Opp.sword != sword_0_sheathed && // but Guard must
 		Opp.action < 2 &&
 		Char.direction != Opp.direction // must be facing toward each other
 	) {

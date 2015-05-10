@@ -32,7 +32,7 @@ void __pascal far seqtbl_offset_opp(int seq_index) {
 // seg005:0030
 void __pascal far do_fall() {
 	if (is_screaming == 0 && Char.fall_y >= 31) {
-		play_sound(1); // falling
+		play_sound(sound_1_falling); // falling
 		is_screaming = 1;
 	}
 	if ((word)y_land[Char.curr_row + 1] > (word)Char.y) {
@@ -78,21 +78,21 @@ void __pascal far land() {
 		{
 			if (Char.fall_y < 22) {
 				loc_5EFD:
-				if (Char.charid >= charid_2_guard || Char.sword == 2) {
-					Char.sword = 2;
+				if (Char.charid >= charid_2_guard || Char.sword == sword_2_drawn) {
+					Char.sword = sword_2_drawn;
 					seq_id = 63; // stand active after landing
 				} else {
 					seq_id = 17; // crouch (soft land)
 				}
 				if (Char.charid == charid_0_kid) {
-					play_sound(17); // soft land (crouch)
+					play_sound(sound_17_soft_land); // soft land (crouch)
 					is_guard_notice = 1;
 				}
 			} else if (Char.fall_y < 33) {
 				if (Char.charid == charid_1_shadow) goto loc_5EFD;
 				if (Char.charid == charid_2_guard) goto loc_5F6C;
 				if (! take_hp(1)) {
-					play_sound(16); // medium land
+					play_sound(sound_16_medium_land); // medium land
 					is_guard_notice = 1;
 					seq_id = 20; // medium land (lose 1 HP, crouch)
 				} else {
@@ -106,7 +106,7 @@ void __pascal far land() {
 		loc_5F6C:
 		take_hp(100);
 		loc_5F75:
-		play_sound(0); // prince crashing into the floor
+		play_sound(sound_0_fell_to_death); // prince crashing into the floor
 		seq_id = 22; // dead (after falling)
 	}
 	seqtbl_offset_char(seq_id);
@@ -122,7 +122,7 @@ void __pascal far spiked() {
 	Char.x = x_bump[tile_col + 5] + 10;
 	Char.x = char_dx_forward(8);
 	Char.fall_y = 0;
-	play_sound(48); // something spiked
+	play_sound(sound_48_spiked); // something spiked
 	take_hp(100);
 	seqtbl_offset_char(51); // spiked
 	play_seq();
@@ -147,7 +147,7 @@ void __pascal far control() {
 			char_action == actions_4_in_freefall
 		) {
 			release_arrows();
-		} else if (Char.sword == 2) {
+		} else if (Char.sword == sword_2_drawn) {
 			control_with_sword();
 		} else if (Char.charid >= charid_2_guard) {
 			control_guard_inactive();
@@ -177,7 +177,7 @@ void __pascal far control_crouched() {
 		// Special event: music when crouching
 		if (! check_sound_playing()) {
 			if (need_level1_music == 1) {
-				play_sound(25); // presentation (level 1 start)
+				play_sound(sound_25_presentation); // presentation (level 1 start)
 				need_level1_music = 2;
 			} else {
 				need_level1_music = 0;
@@ -342,7 +342,7 @@ void __pascal far back_pressed() {
 	) {
 		seq_id = 5; // turn
 	} else {
-		Char.sword = 2;
+		Char.sword = sword_2_drawn;
 		word_1EFCE = 0;
 		seq_id = 89; // turn and draw sword
 	}
@@ -544,7 +544,7 @@ void __pascal far control_hanging() {
 				)))
 			) {
 				if (word_1E18A == 0) {
-					play_sound(8); // touching a wall (hang against wall)
+					play_sound(sound_8_bumped); // touching a wall (hang against wall)
 				}
 				seqtbl_offset_char(25); // hang against wall (straight)
 			} else {
@@ -667,12 +667,12 @@ void __pascal far draw_sword() {
 	seq_id = 55; // draw sword
 	control_forward = control_shift2 = release_arrows();
 	if (Char.charid == charid_0_kid) {
-		play_sound(19); // taking out the sword
+		play_sound(sound_19_draw_sword); // taking out the sword
 		word_1EFCE = 0;
 	} else if (Char.charid != charid_1_shadow) {
 		seq_id = 90; // stand active
 	}
-	Char.sword = 2;
+	Char.sword = sword_2_drawn;
 	seqtbl_offset_char(seq_id);
 }
 
@@ -701,7 +701,7 @@ void __pascal far control_with_sword() {
 			if (Char.charid < charid_2_guard) {
 				// frame 171: stand with sword
 				if (Char.frame == 171) {
-					Char.sword = 0;
+					Char.sword = sword_0_sheathed;
 					seqtbl_offset_char(92); // put sword away (Guard died)
 				}
 			} else {
@@ -732,7 +732,7 @@ void __pascal far swordfight() {
 	if (control_down < 0) {
 		if (frame == 158 || frame == 170 || frame == 171) {
 			control_down = 1; // disable automatic repeat
-			Char.sword = 0;
+			Char.sword = sword_0_sheathed;
 			if (charid == charid_0_kid) {
 				word_1EFCE = 1;
 				guard_refrac = 9;

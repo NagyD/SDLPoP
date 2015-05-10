@@ -273,7 +273,7 @@ void __pascal far init_ending_kid() {
 
 // seg001:034D
 void __pascal far cutscene_8() {
-	play_sound(35); // cutscene 8, 9
+	play_sound(sound_35_cutscene_8_9); // cutscene 8, 9
 	set_hourglass_state(hourglass_frame());
 	init_mouse_cu8();
 	savekid();
@@ -291,7 +291,7 @@ void __pascal far cutscene_8() {
 
 // seg001:03B7
 void __pascal far cutscene_9() {
-	play_sound(35); // cutscene 8, 9
+	play_sound(sound_35_cutscene_8_9); // cutscene 8, 9
 	set_hourglass_state(hourglass_frame());
 	princess_stand();
 	saveshad();
@@ -313,7 +313,7 @@ void __pascal far end_sequence_anim() {
 		turn_sound_on_off(0x0F);
 	}
 	copy_screen_rect(&screen_rect);
-	play_sound(26); // arrived to princess
+	play_sound(sound_26_embrace); // arrived to princess
 	init_ending_princess();
 	saveshad();
 	init_ending_kid();
@@ -339,7 +339,7 @@ void __pascal far time_expired() {
 	disable_keys = 1;
 	set_hourglass_state(7);
 	hourglass_sandflow = -1;
-	play_sound(36); // time over
+	play_sound(sound_36_out_of_time); // time over
 	if (fade_in_1()) return;
 	if (proc_cutscene_frame(2)) return;
 	if (proc_cutscene_frame(100)) return;
@@ -358,7 +358,7 @@ void __pascal far cutscene_12() {
 		set_hourglass_state(var_2);
 		init_princess_x156();
 		saveshad();
-		play_sound(40); // cutscene 12 short time
+		play_sound(sound_40_cutscene_12_short_time); // cutscene 12 short time
 		if (fade_in_1()) return;
 		if (proc_cutscene_frame(2)) return;
 		seqtbl_offset_shad_char(98); // princess turn around [PV1]
@@ -371,7 +371,7 @@ void __pascal far cutscene_12() {
 
 // seg001:0584
 void __pascal far cutscene_4() {
-	play_sound(27); // cutscene 2, 4, 6, 12
+	play_sound(sound_27_cutscene_2_4_6_12); // cutscene 2, 4, 6, 12
 	set_hourglass_state(hourglass_frame());
 	princess_lying();
 	saveshad();
@@ -382,7 +382,7 @@ void __pascal far cutscene_4() {
 
 // seg001:05B8
 void __pascal far cutscene_2_6() {
-	play_sound(27); // cutscene 2, 4, 6, 12
+	play_sound(sound_27_cutscene_2_4_6_12); // cutscene 2, 4, 6, 12
 	set_hourglass_state(hourglass_frame());
 	init_princess_right();
 	saveshad();
@@ -399,24 +399,24 @@ void __pascal far pv_scene() {
 	init_vizier();
 	savekid();
 	if (proc_cutscene_frame(2)) return;
-	play_sound(50); // story 2: princess waiting
+	play_sound(sound_50_story_2_princess); // story 2: princess waiting
 	do {
 		if (proc_cutscene_frame(1)) return;
 		//idle();
 	} while(check_sound_playing());
 	cutscene_frame_time = 8;
 	if (proc_cutscene_frame(5)) return;
-	play_sound(4); // gate closing
+	play_sound(sound_4_gate_closing); // gate closing
 	do {
 		if (proc_cutscene_frame(1)) return;
 	} while(check_sound_playing());
-	play_sound(51); // princess door opening
+	play_sound(sound_51_princess_door_opening); // princess door opening
 	if (proc_cutscene_frame(3)) return;
 	seqtbl_offset_shad_char(98); // princess turn around [PV1]
 	if (proc_cutscene_frame(5)) return;
 	seqtbl_offset_kid_char(96); // Jaffar walk [PV1]
 	if (proc_cutscene_frame(6)) return;
-	play_sound(53); // story 3: Jaffar comes
+	play_sound(sound_53_story_3_Jaffar_comes); // story 3: Jaffar comes
 	seqtbl_offset_kid_char(97); // Jaffar stop [PV1]
 	if (proc_cutscene_frame(4)) return;
 	if (proc_cutscene_frame(18)) return;
@@ -439,7 +439,7 @@ void __pascal far pv_scene() {
 	seqtbl_offset_kid_char(100); // Jaffar end conjuring and walk [PV1]
 	hourglass_sandflow = 0;
 	if (proc_cutscene_frame(6)) return;
-	play_sound(52); // story 4: Jaffar leaves
+	play_sound(sound_52_story_4_Jaffar_leaves); // story 4: Jaffar leaves
 	if (proc_cutscene_frame(24)) return;
 	hourglass_state = 2;
 	if (proc_cutscene_frame(9)) return;
@@ -627,16 +627,17 @@ void __pascal far load_intro(int which_imgs,cutscene_ptr_type func,int free_soun
 	load_chtab_from_file(id_chtab_8_princessroom, 950, "PV.DAT", 1<<13/*, (void*)-1*/);
 	load_chtab_from_file(id_chtab_9_princessbed, 980, "PV.DAT", 1<<14/*, (void*)-1*/);
 	current_target_surface = offscreen_surface;
-	method_6_blit_img_to_scr(chtab_addrs[8]->pointers[0], 0, 0, 0);
-	method_6_blit_img_to_scr(chtab_addrs[9]->pointers[0], 0, 142, blitters_2_or);
+	method_6_blit_img_to_scr(chtab_addrs[id_chtab_8_princessroom]->images[0], 0, 0, 0);
+	method_6_blit_img_to_scr(chtab_addrs[id_chtab_9_princessbed]->images[0], 0, 142, blitters_2_or);
 	
 	// Free the images that are not needed anymore.
 	free_all_chtabs_from(id_chtab_9_princessbed);
-	SDL_FreeSurface(chtab_addrs[8]->pointers[0]);
-	chtab_addrs[8]->pointers[0] = NULL;
+	SDL_FreeSurface(chtab_addrs[id_chtab_8_princessroom]->images[0]);
+	chtab_addrs[id_chtab_8_princessroom]->images[0] = NULL;
 	
 	load_chtab_from_file(id_chtab_3_princessinstory, 800, "PV.DAT", 1<<9/*, (void*)-1*/);
-	load_chtab_from_file(4, 50*which_imgs + 850, "PV.DAT", 1<<10/*, (void*)-1*/);
+	load_chtab_from_file(id_chtab_4_jaffarinstory_princessincutscenes,
+                         50*which_imgs + 850, "PV.DAT", 1<<10/*, (void*)-1*/);
 	for (current_star = 0; current_star < N_STARS; ++current_star) {
 		draw_star(current_star, 0);
 	}

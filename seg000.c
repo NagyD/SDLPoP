@@ -115,9 +115,9 @@ void __pascal far init_game_main() {
 		set_pal( 6, 0x30, 0x26, 0x14, 0);
 	}
 	// PRINCE.DAT: sword
-	chtab_addrs[0] = load_sprites_from_file(700, 1<<2/*, (void*)-1, 0*/,1);
+	chtab_addrs[id_chtab_0_sword] = load_sprites_from_file(700, 1<<2/*, (void*)-1, 0*/,1);
 	// PRINCE.DAT: flame, sword on floor, potion
-	chtab_addrs[1] = load_sprites_from_file(150, 1<<3/*, (void*)-1, 1*/,1);
+	chtab_addrs[id_chtab_1_flameswordpotion] = load_sprites_from_file(150, 1<<3/*, (void*)-1, 1*/,1);
 	close_dat(dathandle);
 	load_sounds(0, 43);
 	//if (file_exists("KID.DAT")) one_disk = 1;
@@ -206,14 +206,18 @@ void far *__pascal load_pal_from_dat(const char near *filename,int resource,int 
 // seg000:04CD
 int __pascal far process_key() {
 	char sprintf_temp[80];
-	word key;
+	int key;
 	const char* answer_text;
 	word need_show_text;
 	need_show_text = 0;
 	key = key_test_quit();
+
+	sbyte is_shift_pressed = key_states[SDL_SCANCODE_LSHIFT] || key_states[SDL_SCANCODE_RSHIFT];
+	sbyte is_ctrl_pressed = key_states[SDL_SCANCODE_LCTRL] || key_states[SDL_SCANCODE_RCTRL];
+
 	if (start_level == 0) {
-		if (key || control_shift) {
-			if (key == SDL_SCANCODE_L && control_ctrl) { // ctrl-L
+		if (key || is_shift_pressed) {
+			if (key == SDL_SCANCODE_L && is_ctrl_pressed) { // ctrl-L
 //			if (key == 12) { // ctrl-L
 				if (!load_game()) return 0;
 			} else {
@@ -251,7 +255,7 @@ int __pascal far process_key() {
 		break;
 		case SDL_SCANCODE_A: // ctrl-a
 //		case 1: // ctrl-a
-			if (!control_ctrl) break;
+			if (!is_ctrl_pressed) break;
 			if (current_level != 15) {
 				stop_sounds();
 				is_restart_level = 1;
@@ -259,14 +263,14 @@ int __pascal far process_key() {
 		break;
 		case SDL_SCANCODE_G: // ctrl-g
 //		case 7: // ctrl-g
-			if (!control_ctrl) break;
+			if (!is_ctrl_pressed) break;
 			if (current_level > 2 && current_level < 14) {
 				save_game();
 			}
 		break;
 		case SDL_SCANCODE_J: // ctrl-j
 //		case 10: // ctrl-j
-			if (!control_ctrl) break;
+			if (!is_ctrl_pressed) break;
 			if (sound_flags & sfDigi && sound_mode == smTandy) {
 				answer_text = "JOYSTICK UNAVAILABLE";
 			} else {
@@ -280,7 +284,7 @@ int __pascal far process_key() {
 		break;
 		case SDL_SCANCODE_K: // ctrl-k
 //		case 11: // ctrl-k
-			if (!control_ctrl) break;
+			if (!is_ctrl_pressed) break;
 			answer_text = "KEYBOARD MODE";
 			is_joyst_mode = 0;
 			is_keyboard_mode = 1;
@@ -288,13 +292,13 @@ int __pascal far process_key() {
 		break;
 		case SDL_SCANCODE_R: // ctrl-r
 //		case 18: // ctrl-r
-			if (!control_ctrl) break;
+			if (!is_ctrl_pressed) break;
 			start_level = 0;
 			start_game();
 		break;
 		case SDL_SCANCODE_S: // ctrl-s
 //		case 19: // ctrl-s
-			if (!control_ctrl) break;
+			if (!is_ctrl_pressed) break;
 			turn_sound_on_off((!is_sound_on) * 15);
 			answer_text = "SOUND OFF";
 			if (is_sound_on) {
@@ -305,13 +309,13 @@ int __pascal far process_key() {
 		break;
 		case SDL_SCANCODE_V: // ctrl-v
 //		case 22: // ctrl-v
-			if (!control_ctrl) break;
+			if (!is_ctrl_pressed) break;
 			answer_text = "PRINCE OF PERSIA  V1.0";
 			need_show_text = 1;
 		break;
 		case SDL_SCANCODE_L: // shift-l
 //		case 'L': // shift-l
-			if (!control_shift) break;
+			if (!is_shift_pressed) break;
 			if (current_level <= 3 || cheats_enabled) {
 				if (current_level == 14) {
 					next_level = 1;
@@ -338,7 +342,7 @@ int __pascal far process_key() {
 		switch (key) {
 			case SDL_SCANCODE_C:
 //			case 'c':
-				if (control_shift) { //shift+c
+				if (is_shift_pressed) { //shift+c
 					snprintf(sprintf_temp, sizeof(sprintf_temp), "AL%d AR%d BL%d BR%d", room_BR, room_BL, room_AR, room_AL);
 					answer_text = /*&*/sprintf_temp;
 					need_show_text = 1;
@@ -364,7 +368,7 @@ int __pascal far process_key() {
 				is_show_time = 1;
 			break;
 			case SDL_SCANCODE_EQUALS:
-				if (!control_shift) break; // '+'
+				if (!is_shift_pressed) break; // '+'
 			case SDL_SCANCODE_KP_PLUS:	   // '+' --> add time cheat
 //			case '+':
 				++rem_min;
@@ -387,12 +391,12 @@ int __pascal far process_key() {
 			break;
 			case SDL_SCANCODE_I: // shift-i
 //			case 'I': // shift-i
-				if (!control_shift) break; // shift+I --> invert cheat
+				if (!is_shift_pressed) break; // shift+I --> invert cheat
 				toggle_upside();
 			break;
 			case SDL_SCANCODE_W: // shift-w
 //			case 'W': // shift-w
-				if (!control_shift) break; // shift+W --> feather fall cheat
+				if (!is_shift_pressed) break; // shift+W --> feather fall cheat
 				feather_fall();
 			break;
 			case SDL_SCANCODE_H: // H --> view room to the left
@@ -417,7 +421,7 @@ int __pascal far process_key() {
 			break;
 			case SDL_SCANCODE_B: // shift-b
 //			case 'B': // shift-b
-				if (!control_shift) break;
+				if (!is_shift_pressed) break;
 				is_blind_mode = !is_blind_mode;
 				if (is_blind_mode) {
 					draw_rect(&rect_top, 0);
@@ -427,9 +431,9 @@ int __pascal far process_key() {
 			break;
 			case SDL_SCANCODE_S: // shift-s
 //			case 'S': // shift-s
-				if (!control_shift) break;
+				if (!is_shift_pressed) break;
 				if (hitp_curr != hitp_max) {
-					play_sound(33); // small potion (cheat)
+					play_sound(sound_33_small_potion); // small potion (cheat)
 					hitp_delta = 1;
 					flash_color = 4; // red
 					flash_time = 2;
@@ -437,8 +441,8 @@ int __pascal far process_key() {
 			break;
 			case SDL_SCANCODE_T: // shift-t
 //			case 'T': // shift-t
-				if (!control_shift) break;
-				play_sound(30); // big potion (cheat)
+				if (!is_shift_pressed) break;
+				play_sound(sound_30_big_potion); // big potion (cheat)
 				flash_color = 4; // red
 				flash_time = 4;
 				add_life();
@@ -874,11 +878,11 @@ void __pascal far draw_kid_hp(short curr_hp,short max_hp) {
 	short drawn_hp_index;
 	for (drawn_hp_index = curr_hp; drawn_hp_index < max_hp; ++drawn_hp_index) {
 		// empty HP
-		method_6_blit_img_to_scr(chtab_addrs[2]->pointers[217], drawn_hp_index * 7, 194, blitters_0_no_transp);
+		method_6_blit_img_to_scr(chtab_addrs[id_chtab_2_kid]->images[217], drawn_hp_index * 7, 194, blitters_0_no_transp);
 	}
 	for (drawn_hp_index = 0; drawn_hp_index < curr_hp; ++drawn_hp_index) {
 		// full HP
-		method_6_blit_img_to_scr(chtab_addrs[2]->pointers[216], drawn_hp_index * 7, 194, blitters_0_no_transp);
+		method_6_blit_img_to_scr(chtab_addrs[id_chtab_2_kid]->images[216], drawn_hp_index * 7, 194, blitters_0_no_transp);
 	}
 }
 
@@ -886,7 +890,7 @@ void __pascal far draw_kid_hp(short curr_hp,short max_hp) {
 void __pascal far draw_guard_hp(short curr_hp,short max_hp) {
 	short drawn_hp_index;
 	short guard_charid;
-	if (chtab_addrs[5] == NULL) return;
+	if (chtab_addrs[id_chtab_5_guard] == NULL) return;
 	guard_charid = Guard.charid;
 	if (guard_charid != charid_4_skeleton &&
 		guard_charid != charid_24_mouse &&
@@ -894,10 +898,10 @@ void __pascal far draw_guard_hp(short curr_hp,short max_hp) {
 		(guard_charid != charid_1_shadow || current_level == 12)
 	) {
 		for (drawn_hp_index = curr_hp; drawn_hp_index < max_hp; ++drawn_hp_index) {
-			method_6_blit_img_to_scr(chtab_addrs[5]->pointers[0], 314 - drawn_hp_index * 7, 194, blitters_9_black);
+			method_6_blit_img_to_scr(chtab_addrs[id_chtab_5_guard]->images[0], 314 - drawn_hp_index * 7, 194, blitters_9_black);
 		}
 		for (drawn_hp_index = 0; drawn_hp_index < curr_hp; ++drawn_hp_index) {
-			method_6_blit_img_to_scr(chtab_addrs[5]->pointers[0], 314 - drawn_hp_index * 7, 194, blitters_0_no_transp);
+			method_6_blit_img_to_scr(chtab_addrs[id_chtab_5_guard]->images[0], 314 - drawn_hp_index * 7, 194, blitters_0_no_transp);
 		}
 	}
 }
@@ -994,7 +998,7 @@ void __pascal far play_next_sound() {
 // seg000:1353
 void __pascal far check_sword_vs_sword() {
 	if (Kid.frame == 167 || Guard.frame == 167) {
-		play_sound(10); // sword vs. sword
+		play_sound(sound_10_sword_vs_sword); // sword vs. sword
 	}
 }
 
@@ -1025,7 +1029,7 @@ void __pascal far load_one_optgraf(chtab_type* chtab_ptr,dat_pal_type far *pal_p
 	short index;
 	for (index = min_index; index <= max_index; ++index) {
 		image_type* image = load_image(base_id + index + 1, pal_ptr);
-		if (image != NULL) chtab_ptr->pointers[index] = image;
+		if (image != NULL) chtab_ptr->images[index] = image;
 	}
 }
 
@@ -1106,8 +1110,6 @@ void __pascal far read_keyb_control() {
 		control_x = 1;
 	}
 	control_shift = -(key_states[SDL_SCANCODE_LSHIFT] || key_states[SDL_SCANCODE_RSHIFT]);
-	control_ctrl = -(key_states[SDL_SCANCODE_LCTRL] || key_states[SDL_SCANCODE_RCTRL]);
-
 }
 
 // seg000:156D
@@ -1137,7 +1139,7 @@ void __pascal far feather_fall() {
 	flash_color = 2; // green
 	flash_time = 3;
 	stop_sounds();
-	play_sound(39); // low weight
+	play_sound(sound_39_low_weight); // low weight
 }
 
 // seg000:1618
@@ -1330,7 +1332,7 @@ void __pascal far draw_image_2(int id, chtab_type* chtab_ptr, void *xlat_tbl, in
 	//word* stride_ptr;
 	image_type* mask;
 	mask = NULL;
-	source = chtab_ptr->pointers[id];
+	source = chtab_ptr->images[id];
 	//stride = source->stride;
 	//stride_ptr = &stride;
 	decoded_image = source;//decode_image_(source, xlat_tbl);
@@ -1509,7 +1511,7 @@ void __pascal far load_title_images(int bgcolor) {
 			color.b = 0x00;
 			color.a = 0x00;
 		}
-		SDL_SetPaletteColors(chtab_title40->pointers[0]->format->palette, &color, 14, 1);
+		SDL_SetPaletteColors(chtab_title40->images[0]->format->palette, &color, 14, 1);
 	} else if (graphics_mode == gmEga || graphics_mode == gmTga) {
 		// ...
 	}

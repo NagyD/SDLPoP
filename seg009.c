@@ -63,7 +63,7 @@ void __pascal far restore_stuff() {
 int __pascal far key_test_quit() {
 	word key;
 	key = read_key();
-	if (key == SDL_SCANCODE_Q && control_ctrl) { // ctrl-q
+	if (key == SDL_SCANCODE_Q && (key_states[SDL_SCANCODE_LCTRL] || key_states[SDL_SCANCODE_RCTRL])) { // ctrl-q
 //	if (key == 0x11) { // ctrl-q
 		quit(0);
 	}
@@ -173,9 +173,9 @@ chtab_type* __pascal load_sprites_from_file(int resource,int palette_bits/*,byte
 	}
 	chtab_ptr->n_images = count;
 	for (curr_image_index = 0; curr_image_index < area.n_images; ++curr_image_index) {
-		chtab_ptr->pointers[curr_image_index] = load_image(
+		chtab_ptr->images[curr_image_index] = load_image(
 			resource + curr_image_index + 1, xlat_buffer, shift,
-			chtab_ptr->pointers[curr_image_index + area.n_images],
+			chtab_ptr->images[curr_image_index + area.n_images],
 			(int)pack == -1 ? 1 : (int)pack == 0 ? 0 : pack[curr_image_index]
 		);
 	}
@@ -234,7 +234,7 @@ chtab_type* __pascal load_sprites_from_file(int resource,int palette_bits/*,byte
 			*/
 		}
 //		printf("\n");
-		chtab->pointers[i-1] = image;
+		chtab->images[i-1] = image;
 	}
 	set_loaded_palette(pal_ptr);
 	return chtab;
@@ -250,7 +250,7 @@ void __pascal far free_chtab(chtab_type *chtab_ptr) {
 	}
 	n_images = chtab_ptr->n_images;
 	for (id = 0; id < n_images; ++id) {
-		curr_image = chtab_ptr->pointers[id];
+		curr_image = chtab_ptr->images[id];
 		if (curr_image) {
 			/*free_far*/SDL_FreeSurface(curr_image);
 		}
@@ -499,7 +499,7 @@ image_type* decode_image(image_data_type* image_data, dat_pal_type* palette) {
 		colors[i].r = palette->vga[i].r << 2;
 		colors[i].g = palette->vga[i].g << 2;
 		colors[i].b = palette->vga[i].b << 2;
-		colors[i].a = 0;   // SDL2's SDL_Color has a fourth alpha component
+		colors[i].a = 0xFF;   // SDL2's SDL_Color has a fourth alpha component
 	}
 	SDL_SetPaletteColors(image->format->palette, colors, 0, 16); // SDL_SetColors = deprecated
 	return image;
@@ -534,7 +534,11 @@ image_type* far __pascal far load_image(int resource_id, dat_pal_type* palette /
 		} break;
 	}
 	if (image_data != NULL) free(image_data);
+
+
 	if (image != NULL) {
+		// should immediately start using the onscreen pixel format, so conversion will not be needed
+
 		if (SDL_SetColorKey(image, SDL_TRUE, 0) != 0) { //sdl 1.2: SDL_SRCCOLORKEY
 			sdlperror("SDL_SetColorKey");
 			quit(1);
@@ -544,6 +548,13 @@ image_type* far __pascal far load_image(int resource_id, dat_pal_type* palette /
 			sdlperror("SDL_SetAlpha");
 			quit(1);
 		}
+//		image_type* colored_image = SDL_ConvertSurfaceFormat(image, SDL_PIXELFORMAT_ARGB8888, 0);
+//		if (!colored_image) {
+//			sdlperror("SDL_ConvertSurfaceFormat");
+//			quit(1);
+//		}
+//		SDL_FreeSurface(image);
+//		image = colored_image;
 	}
 	return image;
 }
@@ -798,7 +809,7 @@ font_type load_font_from_data(/*const*/ rawfont_type* data) {
 		/*const*/ image_data_type* image = (/*const*/ image_data_type*)((/*const*/ byte*)data + data->offsets[index]);
 		//image->flags=0;
 		if (image->height == 0) image->height = 1; // HACK: decode_image() returns NULL if height==0.
-		chtab->pointers[index] = decode_image(image, &dat_pal);
+		chtab->images[index] = decode_image(image, &dat_pal);
 	}
 	font.chtab = chtab;
 	return font;
@@ -820,7 +831,7 @@ int __pascal far get_char_width(byte character) {
 	font_type* font = textstate.ptr_font;
 	int ax = 0;
 	if (character <= font->last_char && character >= font->first_char) {
-		ax += font->chtab->pointers[character - font->first_char]->w; //char_ptrs[character - font->first_char]->width;
+		ax += font->chtab->images[character - font->first_char]->w; //char_ptrs[character - font->first_char]->width;
 		if (ax) ax += font->space_between_chars;
 	}
 	return ax;
@@ -878,7 +889,7 @@ int __pascal far draw_text_character(byte character) {
 	font_type* font = textstate.ptr_font;
 	int ax = 0;
 	if (character <= font->last_char && character >= font->first_char) {
-		image_type* image = font->chtab->pointers[character - font->first_char]; //char_ptrs[character - font->first_char];
+		image_type* image = font->chtab->images[character - font->first_char]; //char_ptrs[character - font->first_char];
 		method_3_blit_mono(image, textstate.current_x, textstate.current_y - font->height_above_baseline, textstate.textblit, textstate.textcolor);
 		ax = font->space_between_chars + image->w;
 	}
@@ -1248,7 +1259,9 @@ peel_type __pascal far read_peel_from_screen(const rect_type far *rect) {
 	memset(&result, 0, sizeof(result));
 	result.rect = *rect;
 #ifndef USE_ALPHA
-	SDL_Surface* peel_surface = SDL_CreateRGBSurface(0, rect->right - rect->left, rect->bottom - rect->top, 24, 0xFF, 0xFF<<8, 0xFF<<16, 0);
+	SDL_Surface* peel_surface = SDL_CreateRGBSurface(0, rect->right - rect->left, rect->bottom - rect->top,
+													 32, 0xFF<<16, 0xFF<<8, 0xFF, 0xFF<<24);
+//	SDL_Surface* peel_surface = SDL_CreateRGBSurface(0, rect->right - rect->left, rect->bottom - rect->top, 24, 0xFF, 0xFF<<8, 0xFF<<16, 0);
 #else
 	SDL_Surface* peel_surface = SDL_CreateRGBSurface(0, rect->right - rect->left, rect->bottom - rect->top, 32, 0xFF, 0xFF<<8, 0xFF<<16, 0xFF<<24);
 #endif
@@ -1297,7 +1310,7 @@ rect_type far * __pascal far union_rect(rect_type far *output,const rect_type fa
 const int userevent_SOUND = 'SOUN';
 const int userevent_TIMER = 'TIME';
 
-SDL_TimerID sound_timer = NULL;
+SDL_TimerID sound_timer = 0;
 short speaker_playing = 0;
 short digi_playing = 0;
 short midi_playing = 0;
@@ -1305,12 +1318,12 @@ short midi_playing = 0;
 void __pascal far speaker_sound_stop() {
 	// stub
 	speaker_playing = 0;
-	if (sound_timer != NULL) {
+	if (sound_timer != 0) {
 		if (!SDL_RemoveTimer(sound_timer)) {
 			sdlperror("SDL_RemoveTimer in speaker_sound_stop");
 			//quit(1);
 		}
-		sound_timer = NULL;
+		sound_timer = 0;
 	}
 }
 
@@ -1373,7 +1386,7 @@ Uint32 speaker_callback(Uint32 interval, void *param) {
 		sdlperror("SDL_RemoveTimer in speaker_callback");
 		//quit(1);
 	}
-	sound_timer = NULL;
+	sound_timer = 0;
 	speaker_playing = 0;
 	// First remove the timer, then allow the other thread to continue.
 	SDL_PushEvent(&event);
@@ -1393,7 +1406,7 @@ void __pascal far play_speaker_sound(sound_buffer_type far *buffer) {
 	int time_ms = length*1000 / buffer->speaker.tempo;
 	//printf("length = %d ms\n", time_ms);
 	sound_timer = SDL_AddTimer(time_ms, speaker_callback, NULL);
-	if (sound_timer == NULL) {
+	if (sound_timer == 0) {
 		sdlperror("SDL_AddTimer");
 		quit(1);
 	}
@@ -1966,7 +1979,7 @@ SDL_Surface* convert_surface_to_screen_format(SDL_Surface* input_surface, byte* 
 	SDL_Surface* colored_image;
 
 	// Check whether the surface needs to be converted
-	uint32_t target_format = current_target_surface->format->format;
+	uint32_t target_format = onscreen_surface_->format->format;
 	if (input_surface->format->format != target_format) {
 		colored_image = SDL_ConvertSurfaceFormat(input_surface, target_format, 0);
 		if (colored_image == NULL) {
@@ -2023,7 +2036,6 @@ image_type far * __pascal far method_3_blit_mono(image_type far *image,int xpos,
 
     if (blitter == blitters_9_black) {
         SDL_SetColorKey(colored_image, SDL_TRUE, rgb_color);
-//        SDL_SetColorKey(colored_image, SDL_FALSE, 0);
     }
     else {
         SDL_SetColorKey(colored_image, SDL_TRUE, rgb_color); // only pixels with alpha=0xFF get copied
@@ -2079,15 +2091,15 @@ void blit_xor(SDL_Surface* target_surface, SDL_Rect* dest_rect, SDL_Surface* ima
 	SDL_Rect dest_rect2 = *src_rect;
 	// Read what is currently where we want to draw the new image.
 	if (SDL_BlitSurface(target_surface, dest_rect, helper_surface, &dest_rect2) != 0) {
-		sdlperror("SDL_BlitSurface 2032");
+		sdlperror("SDL_BlitSurface");
 		quit(1);
 	}
 	if (SDL_LockSurface(image_24) != 0) {
-		sdlperror("SDL_LockSurface 2036");
+		sdlperror("SDL_LockSurface");
 		quit(1);
 	}
 	if (SDL_LockSurface(helper_surface) != 0) {
-		sdlperror("SDL_LockSurface 2040");
+		sdlperror("SDL_LockSurface");
 		quit(1);
 	}
 	int size = helper_surface->h * helper_surface->pitch;
@@ -2205,7 +2217,7 @@ void remove_timer(int timer_index) {
 			sdlperror("SDL_RemoveTimer in remove_timer");
 			//quit(1);
 		}
-		timer_handles[timer_index] = NULL;
+		timer_handles[timer_index] = 0;
 	}
 #endif
 }
@@ -2234,12 +2246,12 @@ void __pascal start_timer(int timer_index, int length) {
 #ifndef USE_COMPAT_TIMER
 	if (timer_handles[timer_index]) {
 		remove_timer(timer_index);
-		timer_handles[timer_index] = NULL;
+		timer_handles[timer_index] = 0;
 	}
 	timer_stopped[timer_index] = length<=0;
 	if (length <= 0) return;
 	SDL_TimerID timer = SDL_AddTimer(length*1000/fps, timer_callback, (void*)(uintptr_t)timer_index);
-	if (timer == NULL) {
+	if (timer == 0) {
 		sdlperror("SDL_AddTimer");
 		quit(1);
 	}
@@ -2259,42 +2271,6 @@ void toggle_fullscreen() {
         SDL_SetWindowFullscreen(window_, SDL_WINDOW_FULLSCREEN_DESKTOP);
         SDL_ShowCursor(SDL_DISABLE);
     }
-
-//	printf("Pressed alt-enter\n");
-//	Uint32 flags = onscreen_surface_->flags;
-//	flags ^= SDL_FULLSCREEN;
-//	// The simplest way to copy a surface:
-//	surface_type* temp_surface = SDL_ConvertSurface(onscreen_surface_, onscreen_surface_->format, 0);
-//	if (temp_surface == NULL) {
-//		sdlperror("SDL_ConvertSurface (toggle_fullscreen)");
-//		quit(1);
-//	}
-//	surface_type* new_onscreen_surface_ = SDL_SetVideoMode(320, 200, 24, flags);
-//	if (new_onscreen_surface_ == NULL) {
-//		sdlperror("SDL_SetVideoMode (toggle_fullscreen)");
-//		quit(1);
-//	}
-
-
-
-//	// Note: the old onscreen_surface_ is invalid at this point.
-//	if (current_target_surface == onscreen_surface_) {
-//		// Without this, the game crashes if I switch into fullscreen while the game is paused.
-//		current_target_surface = new_onscreen_surface_;
-//	}
-//	onscreen_surface_ = new_onscreen_surface_;
-//	int fullscreen = (flags & SDL_FULLSCREEN) != 0;
-//	if (fullscreen) {
-//		SDL_ShowCursor(SDL_DISABLE);
-//	} else {
-//		SDL_ShowCursor(SDL_ENABLE);
-//	}
-//	// The new surface is empty. Copy the old image over onto it.
-//	// offscreen_surface is not good instead of temp_surface, because it does not contain the bottom 8 rows (hitpoints).
-//	SDL_BlitSurface(temp_surface, NULL, onscreen_surface_, NULL);
-//	//SDL_UpdateRect(onscreen_surface_,0,0,0,0);
-//	update_screen();
-//	SDL_FreeSurface(temp_surface);
 }
 
 void idle() {
@@ -2309,27 +2285,27 @@ void idle() {
 	// For instance, there may be simultaneous SDL2 KEYDOWN and TEXTINPUT events
 	do { // while there are still events to be processed
 		switch (event.type) {
-			case SDL_KEYDOWN:
-				if ((event.key.keysym.mod & (KMOD_LALT | KMOD_RALT)) &&
-					event.key.keysym.scancode == SDL_SCANCODE_RETURN) {
+			case SDL_KEYDOWN: 
+			{
+				int modifier = event.key.keysym.mod;
+				int scancode = event.key.keysym.scancode;
+
+				if ((modifier & (KMOD_LALT | KMOD_RALT)) &&
+					scancode == SDL_SCANCODE_RETURN) {
 					// Alt-Enter: toggle fullscreen mode
 					toggle_fullscreen();
 				} else {
-//				last_key_scancode = event.key.keysym.unicode;
-					last_key_scancode = event.key.keysym.scancode;
-//				last_text_input = event.key.keysym.sym; // SDL_Keycode
+					key_states[scancode] = 1;
+					last_key_scancode = scancode;
 					if (!last_key_scancode) {
-						if (event.key.keysym.scancode < SDL_SCANCODE_NUMLOCKCLEAR) {
+						if (scancode < SDL_SCANCODE_NUMLOCKCLEAR) {
 							//last_key_scancode = event.key.keysym.scancode << 8;
 						}
 					}
-//				key_states[event.key.keysym.sym] = 1;
-					key_states[event.key.keysym.scancode] = 1;
 				}
 				break;
+			}
 			case SDL_KEYUP:
-//			key_states[event.key.keysym.sym] = (event.type==SDL_KEYDOWN ? 0x01 : 0x00);
-//			key_states[event.key.keysym.sym] = 0;
 				key_states[event.key.keysym.scancode] = 0;
 				break;
 			case SDL_TEXTINPUT:
@@ -2362,7 +2338,7 @@ void idle() {
 					//printf("timer_handles[timer_index] = %p\n", timer_handles[timer_index]);
 					// 2014-08-27: However, this line will change something: it makes the game too fast. Weird...
 					// 2014-08-28: Wait, now it doesn't...
-					//timer_handles[timer_index] = NULL;
+					//timer_handles[timer_index] = 0;
 #else
 				int index;
 				for (index = 0; index < 2; ++index) {
@@ -2370,7 +2346,7 @@ void idle() {
 				}
 #endif
 				} else if (event.user.code == userevent_SOUND) {
-					//sound_timer = NULL;
+					//sound_timer = 0;
 #ifndef USE_MIXER
 				//stop_sounds();
 #endif
@@ -2387,7 +2363,7 @@ word word_1D63A = 1;
 // seg009:0EA9
 int __pascal do_wait(int timer_index) {
 	//return; // debug
-	//if (timer_handles[timer_index] == NULL) return;
+	//if (timer_handles[timer_index] == 0) return;
 	/*
 	while (! timer_stopped[timer_index]) {
 		idle();
@@ -2420,13 +2396,13 @@ void __pascal far init_timer(int frequency) {
 #ifndef USE_COMPAT_TIMER
 	fps = frequency;
 #else
-	if (global_timer != NULL) {
+	if (global_timer != 0) {
 		if (!SDL_RemoveTimer(global_timer)) {
 			sdlperror("SDL_RemoveTimer");
 		}
 	}
 	global_timer = SDL_AddTimer(1000/frequency, timer_callback, NULL);
-	if (global_timer == NULL) {
+	if (global_timer == 0) {
 		sdlperror("SDL_AddTimer");
 		quit(1);
 	}
@@ -2793,7 +2769,7 @@ void set_chtab_palette(chtab_type* chtab, byte* colors, int n_colors) {
 		//printf("setcolors\n",i);
 		for (i = 0; i < chtab->n_images; ++i) {
 			//printf("i=%d\n",i);
-            image_type* current_image = chtab->pointers[i];
+            image_type* current_image = chtab->images[i];
 			if (current_image != NULL) {
 
                 int n_colors_to_be_set = n_colors;

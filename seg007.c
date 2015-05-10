@@ -265,7 +265,7 @@ void __pascal far animate_chomper() {
 		}
 		curr_modifier = blood | frame;
 		if (frame == 2) {
-			play_sound(47); // chomper
+			play_sound(sound_47_chomper); // chomper
 		}
 		// If either:
 		// - Kid left this room
@@ -335,7 +335,7 @@ Possible values of anim_type:
 			//if ((curr_modifier -= gate_close_speeds[anim_type]) < 0) {
 				curr_modifier = 0;
 				trob.type = -1;
-				play_sound(6); // gate closing fast
+				play_sound(sound_6_gate_closing_fast); // gate closing fast
 			}
 		} else {
 			if (curr_modifier != 0xFF) {
@@ -346,7 +346,7 @@ Possible values of anim_type:
 					if (curr_modifier != 0) {
 						if (curr_modifier < 188) {
 							if ((curr_modifier & 3) == 3) {
-								play_door_sound_if_visible(4); // gate closing
+								play_door_sound_if_visible(sound_4_gate_closing); // gate closing
 							}
 						}
 					} else {
@@ -356,7 +356,7 @@ Possible values of anim_type:
 					// opening
 					if (curr_modifier < 188) {
 						if ((curr_modifier & 7) == 0) {
-							play_sound(5); // gate opening
+							play_sound(sound_5_gate_opening); // gate opening
 						}
 					} else {
 						// stop
@@ -364,7 +364,7 @@ Possible values of anim_type:
 							// after regular open
 							curr_modifier = 238;
 							trob.type = 0; // closing
-							play_sound(7); // gate stop (after opening)
+							play_sound(sound_7_gate_stop); // gate stop (after opening)
 						} else {
 							// after permanent open
 							curr_modifier = 0xFF; // keep open
@@ -383,7 +383,7 @@ Possible values of anim_type:
 // seg007:05E3
 void __pascal far gate_stop() {
 	trob.type = -1;
-	play_door_sound_if_visible(7); // gate stop (after closing)
+	play_door_sound_if_visible(sound_7_gate_stop); // gate stop (after closing)
 }
 
 // data:27B8
@@ -407,14 +407,14 @@ Possible values of trob_type:
 			if ((sbyte)curr_modifier < 0) {
 				curr_modifier = 0;
 				trob.type = -1;
-				play_sound(14); // level door closing
+				play_sound(sound_14_leveldoor_closing); // level door closing
 			} else {
 				if (trob.type == 4 &&
 					(sound_flags & sfDigi) &&
 					word_1AD80 == 0
 				) {
 					sound_interruptible[15] = 1;
-					play_sound(15); // level door sliding (closing)
+					play_sound(sound_15_leveldoor_sliding); // level door sliding (closing)
 				}
 			}
 		} else {
@@ -433,7 +433,7 @@ Possible values of trob_type:
 				}
 			} else {
 				sound_interruptible[15] = 0;
-				play_sound(15); // level door sliding (opening)
+				play_sound(sound_15_leveldoor_sliding); // level door sliding (opening)
 			}
 		}
 	}
@@ -570,7 +570,7 @@ void __pascal far start_anim_spike(short room,short tilepos) {
 	if (old_modifier <= 0) {
 		if (old_modifier == 0) {
 			add_trob(room, tilepos, 1);
-			play_sound(49); // spikes
+			play_sound(sound_49_spikes); // spikes
 		} else {
 			// 0xFF means a disabled spike.
 			if (old_modifier != (sbyte)0xFF) {
@@ -738,7 +738,7 @@ void __pascal far trigger(int playsound,int button_type,int modifier) {
 			redraw_11h();
 			is_guard_notice = 1;
 			if (playsound) {
-				play_sound(3); // button pressed
+				play_sound(sound_3_button_pressed); // button pressed
 			}
 		}
 		do_trigger_list(modifier, button_type);
@@ -837,7 +837,7 @@ void __pascal far loose_shake(int arg_0) {
 	if (arg_0 || loose_sound[curr_modifier & 0x7F]) {
 		do {
 			// Sounds 20,21,22: loose floor shaking
-			sound_id = prandom(2) + 20;
+			sound_id = prandom(2) + sound_20_loose_shake_1;
 		} while(sound_id == last_loose_sound);
 		if (sound_flags & sfDigi) {
 			last_loose_sound = sound_id;
@@ -996,7 +996,7 @@ void __pascal far move_loose() {
 			mob_down_a_row();
 			return;
 		}
-		play_sound(2); // tile crashing
+		play_sound(sound_2_tile_crashing); // tile crashing
 		do_knock(curmob.room, curmob.row);
 		curmob.y = y_something[curmob.row + 1];
 		curmob.speed = -2;

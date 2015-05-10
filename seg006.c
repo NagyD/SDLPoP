@@ -574,22 +574,22 @@ void __pascal far play_seq() {
 						is_guard_notice = 1;
 						break;
 					case 1: // feet
-						play_sound(23); // footstep
+						play_sound(sound_23_footstep); // footstep
 						is_guard_notice = 1;
 						break;
 					case 2: // bump
-						play_sound(8); // touching a wall
+						play_sound(sound_8_bumped); // touching a wall
 						is_guard_notice = 1;
 						break;
 					case 3: // drink
-						play_sound(18); // drink
+						play_sound(sound_18_drink); // drink
 						break;
 					case 4: // level
 						if (is_sound_on) {
 							if (current_level == 4) {
-								play_sound(32); // end level with shadow (level 4)
+								play_sound(sound_32_shadow_music); // end level with shadow (level 4)
 							} else if (current_level != 13 && current_level != 15) {
-								play_sound(41); // end level
+								play_sound(sound_41_end_level_music); // end level
 							}
 						}
 						break;
@@ -888,7 +888,7 @@ void __pascal far set_char_collision() {
 		//return;
 		image = NULL;
 	} else {
-		image = chtab_addrs[obj_chtab]->pointers[obj_id];
+		image = chtab_addrs[obj_chtab]->images[obj_id];
 	}
 	if (image == NULL) {
 		//printf("set_char_collision: from chtab %d (%d images) trying to use NULL image %d\n", obj_chtab, chtab_addrs[obj_chtab]->n_images, obj_id);
@@ -954,7 +954,7 @@ void __pascal far start_fall() {
 	short frame;
 	word seq_id;
 	frame = Char.frame;
-	Char.sword = 0;
+	Char.sword = sword_0_sheathed;
 	inc_curr_row();
 	start_chompers();
 	fall_frame = frame;
@@ -1039,7 +1039,7 @@ void __pascal far check_grab() {
 			seqtbl_offset_char(15); // grab a ledge (after falling)
 			play_seq();
 			word_1E18A = 12;
-			play_sound(9); // grab
+			play_sound(sound_9_grab); // grab
 			is_screaming = 0;
 		}
 	}
@@ -1612,7 +1612,7 @@ void __pascal far proc_get_object() {
 	if (Char.charid != charid_0_kid || pickup_obj_type == 0) return;
 	if (pickup_obj_type == -1) {
 		have_sword = -1;
-		play_sound(37); // get sword
+		play_sound(sound_37_victory); // get sword
 		flash_color = 14; // yellow
 		flash_time = 8;
 	} else {
@@ -1620,7 +1620,7 @@ void __pascal far proc_get_object() {
 			case 0: // health
 				if (hitp_curr != hitp_max) {
 					stop_sounds();
-					play_sound(33); // small potion
+					play_sound(sound_33_small_potion); // small potion
 					hitp_delta = 1;
 					flash_color = 4; // red
 					flash_time = 2;
@@ -1628,7 +1628,7 @@ void __pascal far proc_get_object() {
 			break;
 			case 1: // life
 				stop_sounds();
-				play_sound(30); // big potion
+				play_sound(sound_30_big_potion); // big potion
 				flash_color = 4; // red
 				flash_time = 4;
 				add_life();
@@ -1645,7 +1645,7 @@ void __pascal far proc_get_object() {
 			break;
 			case 4: // hurt
 				stop_sounds();
-				play_sound(13); // Kid hurt (by potion)
+				play_sound(sound_13_kid_hurt); // Kid hurt (by potion)
 				// Special event: blue potions on potions level take half of HP
 				if (current_level == 15) {
 					hitp_delta = - ((hitp_max + 1) >> 1);
@@ -1671,11 +1671,11 @@ int __pascal far is_dead() {
 void __pascal far play_death_music() {
 	word sound_id;
 	if (Guard.charid == charid_1_shadow) {
-		sound_id = 32; // killed by shadow
+		sound_id = sound_32_shadow_music; // killed by shadow
 	} else if (holding_sword) {
-		sound_id = 28; // death in fight
+		sound_id = sound_28_death_in_fight; // death in fight
 	} else {
-		sound_id = 24; // death not in fight
+		sound_id = sound_24_death_regular; // death not in fight
 	}
 	play_sound(sound_id);
 }
@@ -1692,9 +1692,9 @@ void __pascal far on_guard_killed() {
 		flash_time = 18;
 		is_show_time = 1;
 		leveldoor_open = 2;
-		play_sound(43); // Jaffar's death
+		play_sound(sound_43_victory_Jaffar); // Jaffar's death
 	} else if (Char.charid != charid_1_shadow) {
-		play_sound(37); // Guard's death
+		play_sound(sound_37_victory); // Guard's death
 	}
 }
 
@@ -1862,7 +1862,7 @@ void __pascal far add_sword_to_objtable() {
 	short sword_frame;
 	frame = Char.frame;
 	if ((frame >= 229 && frame < 238) || // found sword + put sword away
-		Char.sword != 0 ||
+		Char.sword != sword_0_sheathed ||
 		(Char.charid == charid_2_guard && Char.alive < 0)
 	) {
 		sword_frame = cur_frame.sword & 0x3F;

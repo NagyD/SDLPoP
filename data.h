@@ -222,8 +222,7 @@ extern byte* doorlink1_ad;
 
 
 // data:4CC6
-extern sbyte control_shift; // shift pressed?
-extern sbyte control_ctrl; // control pressed?
+extern sbyte control_shift;
 // data:461C
 extern sbyte control_y;
 // data:4612
