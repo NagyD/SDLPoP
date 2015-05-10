@@ -1,7 +1,7 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#define WINDOW_TITLE "Prince of Persia (SDLPoP) v1.14b - SDL2 version"
+#define WINDOW_TITLE "Prince of Persia (SDLPoP) v1.14c - SDL2 version"
 
 // Window size; game will be scaled accordingly
 #define POP_WINDOW_WIDTH 640
