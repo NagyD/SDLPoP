@@ -53,6 +53,7 @@ Ctrl-K: keyboard mode
 Ctrl-R: return to intro
 Ctrl-S: sound on/off
 Ctrl-V: show version
+Ctrl-Q: quit game
 
 Cheats:
 Shift-L: go to next level
@@ -121,6 +122,7 @@ Windows:
 
 GNU/Linux:
 	The libraries can be installed with apt-get or a package manager.
+		sudo apt-get install libsdl-image1.2-dev libsdl-mixer1.2-dev
 	Just type the command:
 		make all
 	and the game should compile.
