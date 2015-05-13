@@ -481,9 +481,12 @@ void __pascal far set_redraw_anim(short tilepos, byte frames) {
 void __pascal far set_redraw2(short tilepos, byte frames) {
 	if (tilepos < 30) {
 		if (tilepos < 0) {
-			++tilepos;
-			redraw_frames_above[-tilepos] = frames;
-			// or simply: ~tilepos
+			// trying to draw a mob at a negative tilepos, in the range -1 .. -10
+			// used e.g. when the kid is climbing up to the room above
+			// however, loose tiles falling out of the room end up with a negative tilepos {-2 .. -11} !
+			tilepos = (-tilepos) - 1;
+			if (tilepos > 9) tilepos = 9; // prevent array index out of bounds!
+			redraw_frames_above[tilepos] = frames;
 		} else {
 			redraw_frames2[tilepos] = frames;
 		}
