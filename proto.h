@@ -531,7 +531,7 @@ void __pascal far play_sound_from_buffer(sound_buffer_type far *buffer);
 void __pascal far turn_sound_on_off(byte new_state);
 int __pascal far check_sound_playing();
 void __pascal far set_gr_mode(byte grmode);
-void update_screen(); // update and render the entire screen
+void request_screen_update();
 void __pascal far set_pal_arr(int start,int count,const rgb_type far *array,int vsync);
 void __pascal far set_pal(int index,int red,int green,int blue,int vsync);
 int __pascal far add_palette_bits(byte n_colors);
@@ -544,8 +544,8 @@ void __pascal far close_dat(dat_type far *pointer);
 //void far *__pascal load_from_opendats_alloc(int id, const char* ext);
 void far *__pascal load_from_opendats_alloc(int resource, const char* extension, data_location* out_result, int* out_size);
 int __pascal far load_from_opendats_to_area(int resource,void far *area,int length, const char* extension);
+void rect_to_sdlrect(const rect_type* rect, SDL_Rect* sdlrect);
 void __pascal far method_1_blit_rect(surface_type near *target_surface,surface_type near *source_surface,const rect_type far *target_rect, const rect_type far *source_rect,int blit);
-SDL_Surface* convert_surface_to_screen_format(SDL_Surface* input_surface, byte* is_new_allocation);
 image_type far * __pascal far method_3_blit_mono(image_type far *image,int xpos,int ypos,int blitter,byte color);
 const rect_type far * __pascal far method_5_rect(const rect_type far *rect,int blit,byte color);
 image_type far * __pascal far method_6_blit_img_to_scr(image_type far *image,int xpos,int ypos,int blit);

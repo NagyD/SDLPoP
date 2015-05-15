@@ -518,6 +518,8 @@ void __pascal far play_frame() {
 
 // seg000:09B6
 void __pascal far draw_game_frame() {
+	screen_updates_suspended = 1;
+
 	short var_2;
 	if (need_full_redraw) {
 		redraw_screen(0);
@@ -553,6 +555,9 @@ void __pascal far draw_game_frame() {
 			}
 		}
 	}
+	screen_updates_suspended = 0;
+	request_screen_update();
+
 	play_next_sound();
 	// Note: texts are identified by their total time!
 	if (text_time_remaining == 1) {
@@ -1077,7 +1082,7 @@ int __pascal far do_paused() {
 		// busy waiting?
 		do {
 			idle();
-			update_screen();
+			request_screen_update();
 		} while (! process_key());
 		erase_bottom_text(1);
 	}
@@ -1477,7 +1482,7 @@ void __pascal far free_optional_sounds() {
 // seg000:22BB
 void __pascal far free_optsnd_chtab() {
 	free_optional_sounds();
-	free_all_chtabs_from(3);
+	free_all_chtabs_from(id_chtab_3_princessinstory);
 }
 
 // seg000:22C8
@@ -1502,14 +1507,14 @@ void __pascal far load_title_images(int bgcolor) {
 			color.r = 0x10;
 			color.g = 0x00;
 			color.b = 0x60;
-			color.a = 0x00;
+			color.a = 0xFF;
 		} else {
 			// RGB(20h,0,0) = #800000 = dark red
 			set_pal((find_first_pal_row(1<<11) << 4) + 14, 0x20, 0x00, 0x00, 1);
 			color.r = 0x80;
 			color.g = 0x00;
 			color.b = 0x00;
-			color.a = 0x00;
+			color.a = 0xFF;
 		}
 		SDL_SetPaletteColors(chtab_title40->images[0]->format->palette, &color, 14, 1);
 	} else if (graphics_mode == gmEga || graphics_mode == gmTga) {

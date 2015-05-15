@@ -789,41 +789,33 @@ void __pascal far draw_back_fore(int which_table,int index) {
 
 
 SDL_Surface* hflip(SDL_Surface* input) {
-    byte is_new_surface_allocated;
-    SDL_Surface* colored_input = convert_surface_to_screen_format(input, &is_new_surface_allocated);
-
-	SDL_Surface* output;
 	int width = input->w;
 	int height = input->h;
 	int source_x, target_x;
 
 	// The simplest way to create a surface with same format as input:
-	output = SDL_ConvertSurfaceFormat(colored_input, colored_input->format->format, 0);
+	SDL_Surface* output = SDL_ConvertSurface(input, input->format, 0);
+	SDL_SetSurfacePalette(output, input->format->palette);
 	// The copied image will be overwritten anyway.
 	if (output == NULL) {
 		sdlperror("SDL_ConvertSurface");
 		quit(1);
 	}
 
-	SDL_SetSurfaceBlendMode(colored_input, SDL_BLENDMODE_NONE);
-
+	SDL_SetSurfaceBlendMode(input, SDL_BLENDMODE_NONE);
 	// Temporarily turn off alpha and colorkey on input. So we overwrite the output image.
-	if (SDL_SetColorKey(colored_input, 0, 0) != 0) {
-        sdlperror("SDL_SetColorKey");
-        quit(1);
-    }
+	SDL_SetColorKey(input, SDL_FALSE, 0);
+	SDL_SetColorKey(output, SDL_FALSE, 0);
+	SDL_SetSurfaceAlphaMod(input, 255);
 
 	for (source_x = 0, target_x = width-1; source_x < width; ++source_x, --target_x) {
 		SDL_Rect srcrect = {source_x, 0, 1, height};
 		SDL_Rect dstrect = {target_x, 0, 1, height};
-		if (SDL_BlitSurface(colored_input/*32*/, &srcrect, output, &dstrect) != 0) {
+		if (SDL_BlitSurface(input/*32*/, &srcrect, output, &dstrect) != 0) {
 			sdlperror("SDL_BlitSurface");
 			quit(1);
 		}
 	}
-
-    if (is_new_surface_allocated)
-        SDL_FreeSurface(colored_input);
 
 	return output;
 }
@@ -1102,9 +1094,14 @@ void __pascal far load_alter_mod(int tilepos) {
 
 // seg008:1AF8
 void __pascal far draw_moving() {
+	screen_updates_suspended++;
+
 	draw_mobs();
 	draw_people();
 	redraw_needed_tiles();
+
+	screen_updates_suspended--;
+	request_screen_update();
 }
 
 // seg008:1B06
@@ -1146,6 +1143,8 @@ void __pascal far draw_tile_wipe(byte height) {
 
 // seg008:1BEB
 void __pascal far draw_tables() {
+	screen_updates_suspended++;
+
 	drects_count = 0;
 	current_target_surface = offscreen_surface;
 	if (is_blind_mode) {
@@ -1160,6 +1159,9 @@ void __pascal far draw_tables() {
 	draw_table(1); // foretable
 	current_target_surface = onscreen_surface_;
 	show_copyprot(1);
+
+	screen_updates_suspended--;
+	request_screen_update();
 }
 
 // seg008:1C4E

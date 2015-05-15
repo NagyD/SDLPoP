@@ -527,6 +527,7 @@ extern SDL_Surface* onscreen_surface_;
 extern SDL_Renderer* renderer_;
 extern SDL_Window* window_;
 extern SDL_Texture* sdl_texture_;
+extern int screen_updates_suspended;
 
 #ifndef USE_COMPAT_TIMER
 extern int timer_stopped[2];

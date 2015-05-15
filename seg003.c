@@ -218,6 +218,8 @@ void __pascal far draw_level_first() {
 
 // seg003:037B
 void __pascal far redraw_screen(int drawing_different_room) {
+	screen_updates_suspended++;
+
 	//remove_flash();
 	if (drawing_different_room) {
 		draw_rect(&rect_top, 0);
@@ -277,6 +279,9 @@ void __pascal far redraw_screen(int drawing_different_room) {
 		}
 	}
 	word_2088A = 2;
+
+	screen_updates_suspended--;
+	request_screen_update();
 }
 
 // seg003:04F8

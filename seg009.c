@@ -580,10 +580,8 @@ int __pascal far set_joy_mode() {
 surface_type far *__pascal make_offscreen_buffer(const rect_type far *rect) {
 	// stub
 #ifndef USE_ALPHA
-	//return SDL_CreateRGBSurface(0, rect->right, rect->bottom, 24, 0xFF, 0xFF<<8, 0xFF<<16, 0);
 	// Bit order matches onscreen buffer, good for fading.
-	return SDL_CreateRGBSurface(0, rect->right, rect->bottom, 32, 0xFF<<16, 0xFF<<8, 0xFF<<0, 0xFF<<24); //ARGB8888
-//	return SDL_CreateRGBSurface(0, rect->right, rect->bottom, 32, 0xFF, 0xFF<<8, 0xFF<<16, 0xFF<<24);
+    return SDL_CreateRGBSurface(0, rect->right, rect->bottom, 24, 0xFF, 0xFF<<8, 0xFF<<16, 0); //RGB888 (little endian)
 #else
 	return SDL_CreateRGBSurface(0, rect->right, rect->bottom, 32, 0xFF, 0xFF<<8, 0xFF<<16, 0xFF<<24);
 #endif
@@ -671,7 +669,7 @@ void __pascal far flip_screen(surface_type far *surface) {
 void __pascal far fade_in_2(surface_type near *source_surface,int which_rows) {
 	// stub
 	method_1_blit_rect(onscreen_surface_, source_surface, &screen_rect, &screen_rect, 0);
-	update_screen();
+	request_screen_update();
 }
 
 // seg009:1CC9
@@ -918,6 +916,7 @@ int __pascal far draw_cstring(const char far *string) {
 		di += draw_text_character(*(si++));
 	}
 	//show_cursor();
+	request_screen_update();
 	return di;
 }
 
@@ -1018,6 +1017,7 @@ void __pascal far show_text(const rect_type far *rect_ptr,int x_align_or_break,i
 	// stub
 	//printf("show_text: %s\n",text);
 	draw_text(rect_ptr, x_align_or_break, y_align, text, strlen(text));
+	request_screen_update();
 }
 
 // seg009:04FF
@@ -1143,6 +1143,7 @@ int __pascal far input_str(const rect_type far *rect,char *buffer,int max_length
 					return length;
 				} else break;
 			}
+			request_screen_update();
 //			while (!timer_stopped[0] && (key = key_test_quit()) == 0) idle();
 			while (!has_timer_stopped(0) && (key = key_test_quit()) == 0) idle();
 		} while (1);
@@ -1177,6 +1178,7 @@ int __pascal far input_str(const rect_type far *rect,char *buffer,int max_length
 				current_xpos += draw_text_character(buffer[length++] = entered_char);
 			}
 		}
+		request_screen_update();
 	} while(1);
 }
 
@@ -1260,8 +1262,7 @@ peel_type __pascal far read_peel_from_screen(const rect_type far *rect) {
 	result.rect = *rect;
 #ifndef USE_ALPHA
 	SDL_Surface* peel_surface = SDL_CreateRGBSurface(0, rect->right - rect->left, rect->bottom - rect->top,
-													 32, 0xFF<<16, 0xFF<<8, 0xFF, 0xFF<<24);
-//	SDL_Surface* peel_surface = SDL_CreateRGBSurface(0, rect->right - rect->left, rect->bottom - rect->top, 24, 0xFF, 0xFF<<8, 0xFF<<16, 0);
+                                                     24, 0xFF, 0xFF<<8, 0xFF<<16, 0);
 #else
 	SDL_Surface* peel_surface = SDL_CreateRGBSurface(0, rect->right - rect->left, rect->bottom - rect->top, 32, 0xFF, 0xFF<<8, 0xFF<<16, 0xFF<<24);
 #endif
@@ -1725,21 +1726,18 @@ void __pascal far set_gr_mode(byte grmode) {
 										  SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 										  POP_WINDOW_WIDTH, POP_WINDOW_HEIGHT, flags);
 	renderer_ = SDL_CreateRenderer(window_, -1 , 0);
-	//onscreen_surface_ = SDL_SetVideoMode(320, 200, 24, flags); // deprecated SDL1.2 code
+    SDL_RenderPresent(renderer_); // this simply draws a black screen
 
     /* Migration to SDL2: everything is still blitted to onscreen_surface_, however:
      * SDL2 renders textures to the screen instead of surfaces; so for now, every screen
      * update causes the onscreen_surface_ to be copied into sdl_texture_, which is
      * subsequently displayed; awaits a better refactoring!
-     * The function handling the screen updates is update_screen()
+     * The function handling the screen updates is request_screen_update()
      * */
-    onscreen_surface_ = SDL_CreateRGBSurface(0, 320, 200, 32,
-											 0x00FF0000,
-											 0x0000FF00,
-											 0x000000FF,
-											 0xFF000000);
+    onscreen_surface_ = SDL_CreateRGBSurface(0, 320, 200, 24, 0xFF, 0xFF<<8, 0xFF<<16, 0) ;
 	sdl_texture_ = SDL_CreateTexture(renderer_, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,
 												 320, 200);
+	screen_updates_suspended = 0;
 
 	if (onscreen_surface_ == NULL) {
 		sdlperror("SDL_SetVideoMode");
@@ -1761,12 +1759,15 @@ void __pascal far set_gr_mode(byte grmode) {
 #endif
 }
 
-void update_screen() {
-	// draw to the screen; SDL2 code
-	SDL_UpdateTexture(sdl_texture_, NULL, onscreen_surface_->pixels, onscreen_surface_->pitch);
-	SDL_RenderClear(renderer_);
-	SDL_RenderCopy(renderer_, sdl_texture_, NULL, NULL);
-	SDL_RenderPresent(renderer_);
+void request_screen_update() {
+	if (!screen_updates_suspended) {
+		SDL_Surface *surface_32bpp = SDL_ConvertSurfaceFormat(onscreen_surface_, SDL_PIXELFORMAT_ARGB8888, 0);
+		SDL_UpdateTexture(sdl_texture_, NULL, surface_32bpp->pixels, surface_32bpp->pitch);
+		SDL_RenderClear(renderer_);
+		SDL_RenderCopy(renderer_, sdl_texture_, NULL, NULL);
+		SDL_RenderPresent(renderer_);
+		SDL_FreeSurface(surface_32bpp);
+	}
 }
 
 // seg009:9289
@@ -1970,40 +1971,17 @@ void __pascal far method_1_blit_rect(surface_type near *target_surface,surface_t
 		quit(1);
 	}
 	if (target_surface == onscreen_surface_) {
-        update_screen();
+		request_screen_update();
 	}
 	//SDL_Delay(10);
 }
 
-SDL_Surface* convert_surface_to_screen_format(SDL_Surface* input_surface, byte* is_new_allocation) {
-	SDL_Surface* colored_image;
-
-	// Check whether the surface needs to be converted
-	uint32_t target_format = onscreen_surface_->format->format;
-	if (input_surface->format->format != target_format) {
-		colored_image = SDL_ConvertSurfaceFormat(input_surface, target_format, 0);
-		if (colored_image == NULL) {
-			sdlperror("SDL_ConvertSurface");
-			quit(1);
-		}
-		*is_new_allocation = 1;// caller must free colored_image later!
-		return colored_image;
-	} else { // format already OK so don't bother converting
-		*is_new_allocation = 0;
-		return input_surface;
-	}
-
-}
-
 image_type far * __pascal far method_3_blit_mono(image_type far *image,int xpos,int ypos,int blitter,byte color) {
-
-	byte is_new_surface_allocated;
-	SDL_Surface* colored_image = convert_surface_to_screen_format(image, &is_new_surface_allocated);
-
 	int w = image->w;
-	int h = image->h;
+    int h = image->h;
+    SDL_Surface* colored_image = SDL_ConvertSurfaceFormat(image, SDL_PIXELFORMAT_ARGB8888, 0);
 
-	SDL_SetSurfaceBlendMode(colored_image, SDL_BLENDMODE_NONE);
+    SDL_SetSurfaceBlendMode(colored_image, SDL_BLENDMODE_NONE);
 	if (SDL_SetColorKey(colored_image, SDL_TRUE, 0) != 0) {
 		sdlperror("SDL_SetColorKey");
 		quit(1);
@@ -2032,23 +2010,14 @@ image_type far * __pascal far method_3_blit_mono(image_type far *image,int xpos,
 	SDL_Rect src_rect = {0, 0, image->w, image->h};
 	SDL_Rect dest_rect = {xpos, ypos, image->w, image->h};
 
-	SDL_SetSurfaceBlendMode(colored_image, SDL_BLENDMODE_NONE);
-
-    if (blitter == blitters_9_black) {
-        SDL_SetColorKey(colored_image, SDL_TRUE, rgb_color);
-    }
-    else {
-        SDL_SetColorKey(colored_image, SDL_TRUE, rgb_color); // only pixels with alpha=0xFF get copied
-    }
-
-	SDL_BlitSurface(colored_image, &src_rect, current_target_surface, &dest_rect);
-
-	if (is_new_surface_allocated)
-		SDL_FreeSurface(colored_image);
-
-    if (current_target_surface == onscreen_surface_)
-        update_screen();
-
+	SDL_SetSurfaceBlendMode(colored_image, SDL_BLENDMODE_BLEND);
+    SDL_SetSurfaceBlendMode(current_target_surface, SDL_BLENDMODE_BLEND);
+    SDL_SetSurfaceAlphaMod(colored_image, 255);
+	if (SDL_BlitSurface(colored_image, &src_rect, current_target_surface, &dest_rect) != 0) {
+		sdlperror("SDL_BlitSurface");
+		quit(1);
+	}
+    SDL_FreeSurface(colored_image);
 
 	return image;
 }
@@ -2058,7 +2027,8 @@ const rect_type far * __pascal far method_5_rect(const rect_type far *rect,int b
 	rect_to_sdlrect(rect, &dest_rect);
 	rgb_type palette_color = palette[color];
 #ifndef USE_ALPHA
-	uint32_t rgb_color = SDL_MapRGB(current_target_surface->format, palette_color.r<<2, palette_color.g<<2, palette_color.b<<2);
+	// @Hack: byte order (rgb) is reversed (otherwise the color is wrong) - why doesn't this work as expected?
+    uint32_t rgb_color = SDL_MapRGB(onscreen_surface_->format, palette_color.b<<2, palette_color.g<<2, palette_color.r<<2);
 #else
 	uint32_t rgb_color = SDL_MapRGBA(current_target_surface->format, palette_color.r<<2, palette_color.g<<2, palette_color.b<<2, color == 0 ? SDL_ALPHA_TRANSPARENT : SDL_ALPHA_OPAQUE);
 #endif
@@ -2067,7 +2037,7 @@ const rect_type far * __pascal far method_5_rect(const rect_type far *rect,int b
 		quit(1);
 	}
 	if (current_target_surface == onscreen_surface_) {
-        update_screen();
+		request_screen_update();
 	}
 	return rect;
 }
@@ -2130,7 +2100,7 @@ void blit_xor(SDL_Surface* target_surface, SDL_Rect* dest_rect, SDL_Surface* ima
 	SDL_FreeSurface(image_24);
 	SDL_FreeSurface(helper_surface);
 	if (target_surface == onscreen_surface_) {
-        update_screen();
+		request_screen_update();
 	}
 }
 
@@ -2142,7 +2112,6 @@ image_type far * __pascal far method_6_blit_img_to_scr(image_type far *image,int
 
 	if (blit == blitters_9_black) {
 		method_3_blit_mono(image, xpos, ypos, blitters_9_black, 0);
-//		method_3_blit_mono(image, xpos, ypos, blitters_10h_transp, 0); // why?
 		return image;
 	}
 
@@ -2153,36 +2122,27 @@ image_type far * __pascal far method_6_blit_img_to_scr(image_type far *image,int
 		blit_xor(current_target_surface, &dest_rect, image, &src_rect);
 		return image;
 	}
+	SDL_SetSurfaceBlendMode(image, SDL_BLENDMODE_NONE);
+	SDL_SetSurfaceBlendMode(current_target_surface, SDL_BLENDMODE_NONE);
+	SDL_SetSurfaceAlphaMod(image, 255);
 
-	// temporarily convert the surface to screen format if necessary
-	byte is_new_surface_allocated;
-	SDL_Surface* colored_image = convert_surface_to_screen_format(image, &is_new_surface_allocated);
-
-	SDL_SetSurfaceBlendMode(colored_image, SDL_BLENDMODE_NONE);
-    //SDL_SetSurfaceAlphaMod(colored_image, 1);
-
-    if (blit == blitters_0_no_transp) {
-        SDL_SetColorKey(colored_image, 0, 0); // don't use a color key
-        SDL_SetSurfaceBlendMode(current_target_surface, SDL_BLENDMODE_NONE);
-        SDL_SetSurfaceAlphaMod(colored_image, 0);
+	if (blit == blitters_0_no_transp) {
+		SDL_SetColorKey(image, SDL_FALSE, 0);
     }
     else {
-        SDL_SetColorKey(colored_image, SDL_TRUE, 0);
-        SDL_SetSurfaceBlendMode(current_target_surface, SDL_BLENDMODE_NONE);
-        SDL_SetSurfaceAlphaMod(colored_image, 255);
+        SDL_SetColorKey(image, SDL_TRUE, 0);
     }
-	if (SDL_BlitSurface(colored_image, &src_rect, current_target_surface, &dest_rect) != 0) {
-        sdlperror("SDL_BlitSurface");
+    if (SDL_BlitSurface(image, &src_rect, current_target_surface, &dest_rect) != 0) {
+        sdlperror("SDL_BlitSurface 2247");
         quit(1);
     }
-	if (is_new_surface_allocated) SDL_FreeSurface(colored_image);
 
 	if (SDL_SetSurfaceAlphaMod(image, 0) != 0) {
 		sdlperror("SDL_SetAlpha");
 		quit(1);
 	}
-	if (current_target_surface == onscreen_surface_)
-        update_screen();
+//	if (current_target_surface == onscreen_surface_)
+//		request_screen_update();
 
 	return image;
 }
@@ -2232,6 +2192,8 @@ Uint32 timer_callback(Uint32 interval, void *param) {
 	remove_timer(timer_index);
 	// First remove the timer, then allow the other thread to continue.
 	SDL_PushEvent(&event);
+
+
 #ifndef USE_COMPAT_TIMER
 //	remove_timer(timer_index);
 	return 0;
@@ -2323,7 +2285,7 @@ void idle() {
 			// Note: event.active.state can contain multiple flags or'ed.
 			// If the game is in full screen, and I switch away (alt-tab) and back, most of the screen will be black, until it is redrawn.
 			if ((event.active.state & SDL_APPACTIVE) && event.active.gain == 1) {
-				update_screen();
+				request_screen_update();
 			}
 */
 				break;
@@ -2442,7 +2404,8 @@ void __pascal far set_bg_attr(int vga_pal_index,int hc_pal_index) {
 		rect.w = offscreen_surface->w;
 		rect.h = offscreen_surface->h;
 		rgb_type palette_color = palette[hc_pal_index];
-		uint32_t rgb_color = SDL_MapRGB(onscreen_surface_->format, palette_color.r<<2, palette_color.g<<2, palette_color.b<<2) /*& 0xFFFFFF*/;
+        // @Hack: byte order is reversed (otherwise the color is wrong). Why doesn't this work as expected?
+		uint32_t rgb_color = SDL_MapRGB(onscreen_surface_->format, palette_color.b<<2, palette_color.g<<2, palette_color.r<<2) /*& 0xFFFFFF*/;
 		//SDL_UpdateRect(onscreen_surface_, 0, 0, 0, 0);
 		// First clear the screen with the color of the flash.
 		if (SDL_FillRect(onscreen_surface_, &rect, rgb_color) != 0) {
@@ -2452,12 +2415,11 @@ void __pascal far set_bg_attr(int vga_pal_index,int hc_pal_index) {
 		//SDL_UpdateRect(onscreen_surface_, 0, 0, 0, 0);
 		// Then draw the offscreen image onto it.
 		if (SDL_BlitSurface(offscreen_surface, &rect, onscreen_surface_, &rect) != 0) {
-			sdlperror("SDL_BlitSurface 2432");
+			sdlperror("SDL_BlitSurface");
 			quit(1);
 		}
 		// And show it!
-		//SDL_UpdateRect(onscreen_surface_, 0, 0, 0, 0);
-        update_screen();
+		request_screen_update();
 		// Give some time to show the flash.
 		//SDL_Flip(onscreen_surface_);
 		if (hc_pal_index != 0) SDL_Delay(2*1000/60);
@@ -2609,7 +2571,7 @@ int __pascal far fade_in_frame(palette_fade_type far *palette_buffer) {
 	SDL_UnlockSurface(offscreen_surface);
 
 	//SDL_UpdateRect(onscreen_surface_, 0, 0, 0, 0); // debug
-    update_screen();
+	request_screen_update();
 		
 //	/**/do_simple_wait(1); // too slow?
 	do_wait(1);
@@ -2729,8 +2691,7 @@ int __pascal far fade_out_frame(palette_fade_type far *palette_buffer) {
 	SDL_UnlockSurface(onscreen_surface_);
 	SDL_UnlockSurface(offscreen_surface);
 
-	//SDL_UpdateRect(onscreen_surface_, 0, 0, 0, 0); // debug
-    update_screen();
+	request_screen_update();
 	
 //	/**/do_simple_wait(1); // too slow?
 	do_wait(1);
