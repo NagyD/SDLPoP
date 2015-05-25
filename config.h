@@ -1,7 +1,11 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#define WINDOW_TITLE "Prince of Persia (SDLPoP) v1.14"
+#define WINDOW_TITLE "Prince of Persia (SDLPoP) v1.14d - SDL2 version"
+
+// Window size; game will be scaled accordingly
+#define POP_WINDOW_WIDTH 640
+#define POP_WINDOW_HEIGHT 400
 
 // Enable or disable fading.
 // Fading used to be very buggy, but now it works correctly.

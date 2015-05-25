@@ -629,10 +629,10 @@ int __pascal far add_backtable(short chtab_id, int id, sbyte xh, sbyte xl, int y
 	backtable_item->xl = xl;
 	backtable_item->chtab_id = chtab_id;
 	backtable_item->id = id - 1;
-	if (chtab_addrs[chtab_id]->pointers[id - 1] == NULL) {
+	if (chtab_addrs[chtab_id]->images[id - 1] == NULL) {
 		return 0;
 	}
-	backtable_item->y = ybottom - chtab_addrs[chtab_id]->pointers[id - 1]->h/*height*/ + 1;
+	backtable_item->y = ybottom - chtab_addrs[chtab_id]->images[id - 1]->h/*height*/ + 1;
 	backtable_item->blit = blit;
 	if (draw_mode) {
 		draw_back_fore(0, index);
@@ -655,10 +655,10 @@ int __pascal far add_foretable(short chtab_id, int id, sbyte xh, sbyte xl, int y
 	foretable_item->xl = xl;
 	foretable_item->chtab_id = chtab_id;
 	foretable_item->id = id - 1;
-	if (chtab_addrs[chtab_id]->pointers[id - 1] == NULL) {
+	if (chtab_addrs[chtab_id]->images[id - 1] == NULL) {
 		return 0;
 	}
-	foretable_item->y = ybottom - chtab_addrs[chtab_id]->pointers[id - 1]->h/*height*/ + 1;
+	foretable_item->y = ybottom - chtab_addrs[chtab_id]->images[id - 1]->h/*height*/ + 1;
 	foretable_item->blit = blit;
 	if (draw_mode) {
 		draw_back_fore(1, index);
@@ -687,10 +687,10 @@ int __pascal far add_midtable(short chtab_id, int id, sbyte xh, sbyte xl, int yb
 		printf("add_midtable: Tried to use image %d of chtab %d, not in 1..%d\n", id, chtab_id, chtab_addrs[chtab_id]->n_images);
 		return 0;
 	}
-	if (chtab_addrs[chtab_id]->pointers[id - 1] == NULL) {
+	if (chtab_addrs[chtab_id]->images[id - 1] == NULL) {
 		return 0;
 	}
-	midtable_item->y = ybottom - chtab_addrs[chtab_id]->pointers[id - 1]->h/*height*/ + 1;
+	midtable_item->y = ybottom - chtab_addrs[chtab_id]->images[id - 1]->h/*height*/ + 1;
 	if (obj_direction == dir_0_right && chtab_flip_clip[chtab_id] != 0) {
 		blit += 0x80;
 	}
@@ -778,45 +778,35 @@ void __pascal far draw_back_fore(int which_table,int index) {
 	} else if (which_table == 1) {
 		table_entry = &foretable[index];
 	}
-	image = mask = chtab_addrs[table_entry->chtab_id & 0xFF]->pointers[table_entry->id];
+	image = mask = chtab_addrs[table_entry->chtab_id & 0xFF]->images[table_entry->id];
 	if ((graphics_mode == gmCga || graphics_mode == gmHgaHerc) &&
 		chtab_shift[table_entry->chtab_id] == 0) {
 		chtab_type* chtab = chtab_addrs[table_entry->chtab_id];
-		mask = chtab->pointers[chtab->n_images / 2 + table_entry->id];
+		mask = chtab->images[chtab->n_images / 2 + table_entry->id];
 	}
 	draw_image(image, mask, table_entry->xh * 8 + table_entry->xl, table_entry->y, table_entry->blit);
 }
 
 
 SDL_Surface* hflip(SDL_Surface* input) {
-	SDL_Surface* output;
 	int width = input->w;
 	int height = input->h;
 	int source_x, target_x;
-//	output = SDL_CreateRGBSurface(0, width, height, 24, 0xFF, 0xFF<<8, 0xFF<<16, 0);
-//	output = SDL_CreateRGBSurface(0, width, height, 32, 0xFF, 0xFF<<8, 0xFF<<16, 0xFF<<24);
+
 	// The simplest way to create a surface with same format as input:
-	output = SDL_ConvertSurface(input, input->format, 0);
+	SDL_Surface* output = SDL_ConvertSurface(input, input->format, 0);
+	SDL_SetSurfacePalette(output, input->format->palette);
 	// The copied image will be overwritten anyway.
 	if (output == NULL) {
 		sdlperror("SDL_ConvertSurface");
 		quit(1);
 	}
-	
-	if (SDL_SetAlpha(output, 0, 0) != 0) {
-		sdlperror("SDL_SetAlpha");
-		quit(1);
-	}
-	
+
+	SDL_SetSurfaceBlendMode(input, SDL_BLENDMODE_NONE);
 	// Temporarily turn off alpha and colorkey on input. So we overwrite the output image.
-	if (SDL_SetColorKey(input, 0, 0) != 0) {
-		sdlperror("SDL_SetColorKey");
-		quit(1);
-	}
-	if (SDL_SetAlpha(input, 0, 0) != 0) {
-		sdlperror("SDL_SetAlpha");
-		quit(1);
-	}
+	SDL_SetColorKey(input, SDL_FALSE, 0);
+	SDL_SetColorKey(output, SDL_FALSE, 0);
+	SDL_SetSurfaceAlphaMod(input, 255);
 
 	for (source_x = 0, target_x = width-1; source_x < width; ++source_x, --target_x) {
 		SDL_Rect srcrect = {source_x, 0, 1, height};
@@ -852,9 +842,9 @@ void __pascal far draw_mid(int index) {
 	midtable_entry = &midtable[index];
 	image_id = midtable_entry->id;
 	chtab_id = midtable_entry->chtab_id;
-	image = mask = chtab_addrs[chtab_id & 0xFF]->pointers[image_id];
+	image = mask = chtab_addrs[chtab_id & 0xFF]->images[image_id];
 	if ((graphics_mode == gmCga || graphics_mode == gmHgaHerc) && chtab_shift[chtab_id]) {
-		mask = chtab_addrs[chtab_id]->pointers[image_id + chtab_addrs[chtab_id]->n_images / 2];
+		mask = chtab_addrs[chtab_id]->images[image_id + chtab_addrs[chtab_id]->n_images / 2];
 	}
 	xpos = midtable_entry->xh * 8 + midtable_entry->xl;
 	ypos = midtable_entry->y;
@@ -1104,9 +1094,14 @@ void __pascal far load_alter_mod(int tilepos) {
 
 // seg008:1AF8
 void __pascal far draw_moving() {
+	screen_updates_suspended++;
+
 	draw_mobs();
 	draw_people();
 	redraw_needed_tiles();
+
+	screen_updates_suspended--;
+	request_screen_update();
 }
 
 // seg008:1B06
@@ -1148,6 +1143,8 @@ void __pascal far draw_tile_wipe(byte height) {
 
 // seg008:1BEB
 void __pascal far draw_tables() {
+	screen_updates_suspended++;
+
 	drects_count = 0;
 	current_target_surface = offscreen_surface;
 	if (is_blind_mode) {
@@ -1162,6 +1159,9 @@ void __pascal far draw_tables() {
 	draw_table(1); // foretable
 	current_target_surface = onscreen_surface_;
 	show_copyprot(1);
+
+	screen_updates_suspended--;
+	request_screen_update();
 }
 
 // seg008:1C4E
@@ -1363,7 +1363,7 @@ void __pascal far draw_objtable_item(int index) {
 		case 1: // shadow
 		shadow:
 			if (united_with_shadow == 2) {
-				play_sound(41); // united with shadow
+				play_sound(sound_41_end_level_music); // united with shadow
 			}
 			add_midtable(obj_chtab, obj_id + 1, obj_xh, obj_xl, obj_y, blitters_2_or, 1);
 			add_midtable(obj_chtab, obj_id + 1, obj_xh, obj_xl + 1, obj_y, blitters_3_xor, 1);

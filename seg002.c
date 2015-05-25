@@ -61,7 +61,7 @@ void __pascal far check_shadow() {
 		Char.room = drawn_room;
 		if (Char.room == 1) {
 			if (leveldoor_open != 0x4D) {
-				play_sound(25); // presentation (level 6 shadow)
+				play_sound(sound_25_presentation); // presentation (level 6 shadow)
 				leveldoor_open = 0x4D;
 			}
 			do_init_shad(/*&*/init_shad_6, 2 /*stand*/);
@@ -91,7 +91,9 @@ void __pascal far enter_guard() {
 	room_minus_1 = drawn_room - 1;
 	frame = Char.frame; // hm?
 	guard_tile = level.guards_tile[room_minus_1];
+
 	if (guard_tile >= 30) return;
+
 	Char.room = drawn_room;
 	Char.curr_row = guard_tile / 10;
 	Char.y = y_land[Char.curr_row + 1];
@@ -113,16 +115,16 @@ void __pascal far enter_guard() {
 	seq_hi = level.guards_seq_hi[room_minus_1];
 	if (seq_hi == 0) {
 		if (Char.charid == charid_4_skeleton) {
-			Char.sword = 2;
+			Char.sword = sword_2_drawn;
 			seqtbl_offset_char(63); // stand active (when entering room) (skeleton)
 		} else {
-			Char.sword = 0;
+			Char.sword = sword_0_sheathed;
 			seqtbl_offset_char(77); // stand inactive (when entering room)
 		}
 	} else {
 		Char.curr_seq = level.guards_seq_lo[room_minus_1] + (seq_hi << 8);
 	}
-	play_seq();
+    play_seq();
 	guard_skill = level.guards_skill[room_minus_1];
 	if (guard_skill >= 12) {
 		guard_skill = 3;
@@ -226,7 +228,7 @@ void __pascal far exit_room() {
 	savekid();
 	next_room = Char.room;
 	if (Guard.direction == dir_56_none) return;
-	if (Guard.alive < 0 && Guard.sword == 2) {
+	if (Guard.alive < 0 && Guard.sword == sword_2_drawn) {
 		kid_room_m1 = Kid.room - 1;
 		if (level.guards_tile[kid_room_m1] >= 30 ||
 			level.guards_seq_hi[kid_room_m1] != 0
@@ -387,7 +389,7 @@ void __pascal far sword_disappears() {
 void __pascal far meet_Jaffar() {
 	// Special event: play music
 	if (current_level == 13 && leveldoor_open == 0 && Char.room == 3) {
-		play_sound(29); // meet Jaffar
+		play_sound(sound_29_meet_Jaffar); // meet Jaffar
 		// Special event: Jaffar waits a bit (28/12=2.33 seconds)
 		guard_notice_timer = 28;
 	}
@@ -403,7 +405,7 @@ void __pascal far play_mirr_mus() {
 		Char.curr_row == 0 &&
 		Char.room == 11
 	) {
-		play_sound(25); // presentation (level 4 mirror)
+		play_sound(sound_25_presentation); // presentation (level 4 mirror)
 		leveldoor_open = 0x4D;
 	}
 }
@@ -530,7 +532,7 @@ void __pascal far autocontrol_shadow() {
 
 // seg002:0850
 void __pascal far autocontrol_skeleton() {
-	Char.sword = 2;
+	Char.sword = sword_2_drawn;
 	autocontrol_guard();
 }
 
@@ -546,7 +548,7 @@ void __pascal far autocontrol_kid() {
 
 // seg002:0864
 void __pascal far autocontrol_guard() {
-	if (Char.sword < 2) {
+	if (Char.sword < sword_2_drawn) {
 		autocontrol_guard_inactive();
 	} else {
 		autocontrol_guard_active();
@@ -607,7 +609,7 @@ void __pascal far autocontrol_guard_active() {
 				return;
 			}
 			if (distance < 35) {
-				if ((Char.sword < 2 && distance < 8) || distance < 12) {
+				if ((Char.sword < sword_2_drawn && distance < 8) || distance < 12) {
 					if (Char.direction == Opp.direction) {
 						// turn around
 						move_2_backward();
@@ -685,7 +687,7 @@ void __pascal far guard_follows_kid_down() {
 
 // seg002:0A93
 void __pascal far autocontrol_guard_kid_in_sight(short distance) {
-	if (Opp.sword == 2) {
+	if (Opp.sword == sword_2_drawn) {
 		autocontrol_guard_kid_armed(distance);
 	} else if (guard_refrac == 0) {
 		if (distance < 29) {
@@ -760,7 +762,7 @@ void __pascal far guard_strike() {
 void __pascal far hurt_by_sword() {
 	short distance;
 	if (Char.alive >= 0) return;
-	if (Char.sword != 2) {
+	if (Char.sword != sword_2_drawn) {
 		// Being hurt when not in fighting pose means death.
 		take_hp(100);
 		seqtbl_offset_char(85); // dying (stabbed unarmed)
@@ -794,7 +796,7 @@ void __pascal far hurt_by_sword() {
 		Char.fall_y = 0;
 	}
 	// sound 13: Kid hurt (by sword), sound 12: Guard hurt (by sword)
-	play_sound(Char.charid == charid_0_kid ? 13 : 12);
+	play_sound(Char.charid == charid_0_kid ? sound_13_kid_hurt : sound_12_guard_hurt);
 	play_seq();
 }
 
@@ -834,8 +836,8 @@ void __pascal far check_sword_hurting() {
 
 // seg002:0D56
 void __pascal far check_hurting() {
-	short opp_frame, char_frame, distance, var_8;
-	if (Char.sword != 2) return;
+	short opp_frame, char_frame, distance, min_hurt_range;
+	if (Char.sword != sword_2_drawn) return;
 	if (Char.curr_row != Opp.curr_row) return;
 	char_frame = Char.frame;
 	// frames 153..154: poking with sword
@@ -850,13 +852,13 @@ void __pascal far check_hurting() {
 		// ... and Opp is not parrying
 		// frame 154: poking
 		if (Char.frame == 154) {
-			if (Opp.sword < 2) {
-				var_8 = 8;
+			if (Opp.sword < sword_2_drawn) {
+				min_hurt_range = 8;
 			} else {
-				var_8 = 12;
+				min_hurt_range = 12;
 			}
 			distance = char_opp_dist();
-			if (distance >= var_8 && distance < 29) {
+			if (distance >= min_hurt_range && distance < 29) {
 				Opp.action = actions_99_hurt;
 			}
 		}
@@ -871,7 +873,7 @@ void __pascal far check_hurting() {
 	// frame 154: poking
 	// frame 161: parrying
 	if (Char.frame == 154 && Opp.frame != 161 && Opp.action != actions_99_hurt) {
-		play_sound(11); // sword moving
+		play_sound(sound_11_sword_moving); // sword moving
 	}
 }
 
@@ -902,13 +904,13 @@ void __pascal far check_skel() {
 			Char.direction = dir_FF_left;
 			seqtbl_offset_char(88); // skel wake up
 			play_seq();
-			play_sound(44); // skel alive
+			play_sound(sound_44_skel_alive); // skel alive
 			guard_skill = 2;
 			Char.alive = -1;
 			guardhp_max = guardhp_curr = 3;
 			Char.fall_x = Char.fall_y = 0;
 			is_guard_notice = guard_refrac = 0;
-			Char.sword = 2;
+			Char.sword = sword_2_drawn;
 			Char.charid = charid_4_skeleton;
 			saveshad();
 		}
@@ -1026,7 +1028,7 @@ void __pascal far autocontrol_shadow_level12() {
 		}
 		word_1EFD0 = 1;
 	}
-	if (Char.sword >= 2) {
+	if (Char.sword >= sword_2_drawn) {
 		// if the Kid puts his sword away, the shadow does the same,
 		// but only if the shadow was already hurt (?)
 		if (word_1EFCE == 0 || guard_refrac == 0) {
@@ -1036,7 +1038,7 @@ void __pascal far autocontrol_shadow_level12() {
 		}
 		return;
 	}
-	if (Opp.sword >= 2 || word_1EFCE == 0) {
+	if (Opp.sword >= sword_2_drawn || word_1EFCE == 0) {
 		xdiff = 0x7000; // bugfix/workaround
 		// This behavior matches the DOS version but not the Apple II source.
 		if (can_guard_see_kid < 2 || (xdiff = char_opp_dist()) >= 90) {

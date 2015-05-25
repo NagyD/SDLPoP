@@ -173,7 +173,7 @@ void __pascal far check_bumped() {
 
 // seg004:02D2
 void __pascal far check_bumped_look_left() {
-	if ((Char.sword == 2 || Char.direction < dir_0_right) && // looking left
+	if ((Char.sword == sword_2_drawn || Char.direction < dir_0_right) && // looking left
 		is_obstacle_at_col(bump_col_right_of_wall)
 	) {
 		bumped(get_right_wall_xpos(curr_room, tile_col, tile_row) - char_x_left_coll, dir_0_right);
@@ -182,7 +182,7 @@ void __pascal far check_bumped_look_left() {
 
 // seg004:030A
 void __pascal far check_bumped_look_right() {
-	if ((Char.sword == 2 || Char.direction == dir_0_right) && // looking right
+	if ((Char.sword == sword_2_drawn || Char.direction == dir_0_right) && // looking right
 		is_obstacle_at_col(bump_col_left_of_wall)
 	) {
 		bumped(get_left_wall_xpos(curr_room, tile_col, tile_row) - char_x_right_coll, dir_FF_left);
@@ -288,7 +288,7 @@ void __pascal far bumped_fall() {
 void __pascal far bumped_floor(sbyte push_direction) {
 	short frame;
 	short seq_index;
-	if (Char.sword != 2 && (word)(y_land[Char.curr_row + 1] - Char.y) >= (word)15) {
+	if (Char.sword != sword_2_drawn && (word)(y_land[Char.curr_row + 1] - Char.y) >= (word)15) {
 		bumped_fall();
 	} else {
 		Char.y = y_land[Char.curr_row + 1];
@@ -297,7 +297,7 @@ void __pascal far bumped_floor(sbyte push_direction) {
 		} else {
 			Char.fall_y = 0;
 			if (Char.alive) {
-				if (Char.sword == 2) {
+				if (Char.sword == sword_2_drawn) {
 					if (push_direction == Char.direction) {
 						seqtbl_offset_char(65); // pushed forward with sword (Kid)
 						play_seq();
@@ -328,7 +328,7 @@ void __pascal far bumped_floor(sbyte push_direction) {
 // seg004:05F1
 void __pascal far bumped_sound() {
 	is_guard_notice = 1;
-	play_sound(8); // touching a wall
+	play_sound(sound_8_bumped); // touching a wall
 }
 
 // seg004:0601
@@ -441,7 +441,7 @@ void __pascal far chomped() {
 		Char.x = char_dx_forward(7 - !Char.direction);
 		Char.y = y_land[Char.curr_row + 1];
 		take_hp(100);
-		play_sound(46); // something chomped
+		play_sound(sound_46_chomped); // something chomped
 		seqtbl_offset_char(54); // chomped
 		play_seq();
 	}
@@ -479,7 +479,7 @@ void __pascal far check_guard_bumped() {
 		word_1F950 == 0 &&
 		Char.action == actions_1_run_jump &&
 		Char.alive < 0 &&
-		Char.sword >= 2
+		Char.sword >= sword_2_drawn
 	) {
 		if (
 			get_tile_at_char() == tiles_20_wall ||
