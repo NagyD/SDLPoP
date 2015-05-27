@@ -35,6 +35,7 @@ prince.hof
 *.x86_64
 *.hex
 *.bat
+prince
 
 # Debug files
 *.dSYM/
