@@ -583,9 +583,16 @@ void __pascal far draw_image_transp(image_type far *image,image_type far *mask,i
 // seg009:157E
 int __pascal far set_joy_mode() {
 	// stub
-	is_joyst_mode = 0;
+	if (SDL_NumJoysticks() < 1)
+		return 0;
+
+	sdl_controller_ = SDL_JoystickOpen( 0 );
+	if (sdl_controller_ == NULL)
+		return 0;
+
+	is_joyst_mode = 1;
 	is_keyboard_mode = !is_joyst_mode;
-	return 0;
+	return 1;
 }
 
 // seg009:178B
@@ -1738,7 +1745,7 @@ int __pascal far check_sound_playing() {
 
 // seg009:38ED
 void __pascal far set_gr_mode(byte grmode) {
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_NOPARACHUTE) != 0) {
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_NOPARACHUTE | SDL_INIT_JOYSTICK ) != 0) {
 		sdlperror("SDL_Init");
 		quit(1);
 	}
@@ -2318,6 +2325,39 @@ void idle() {
 			}
 			case SDL_KEYUP:
 				key_states[event.key.keysym.scancode] = 0;
+				break;
+
+			case SDL_JOYAXISMOTION:
+				if (event.jaxis.axis == 0) {
+
+					if (event.jaxis.value < -8000)
+						joy_states[0] = -1;	// left
+
+					else if (event.jaxis.value > 8000)
+						joy_states[0] = 1; // right
+
+					else
+						joy_states[0] = 0;
+				}
+
+				if (event.jaxis.axis == 1) {
+					if( event.jaxis.value < -8000 ) 
+						joy_states[1] = -1; // up
+					
+					else if (event.jaxis.value > 8000)
+						joy_states[1] = 1; // down
+
+					else
+						joy_states[1] = 0;
+				}
+
+				break;
+
+			case SDL_JOYBUTTONDOWN:
+				joy_states[2] = 1;
+				break;
+			case SDL_JOYBUTTONUP:
+				joy_states[2] = 0;
 				break;
 			case SDL_TEXTINPUT:
 				last_text_input = event.text.text[0]; // UTF-8 formatted char text input
