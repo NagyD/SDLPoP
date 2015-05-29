@@ -135,7 +135,7 @@ Windows:
 
 GNU/Linux:
 	The libraries can be installed with apt-get or a package manager.
-		sudo apt-get install libsdl-image1.2-dev libsdl-mixer1.2-dev
+		sudo apt-get install libsdl2-image-dev libsdl2-mixer-dev
 	Just type the command:
 		make all
 	and the game should compile.

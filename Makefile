@@ -8,8 +8,8 @@ HFILES = common.h config.h data.h proto.h types.h
 OBJ = main.o data.o seg000.o seg001.o seg002.o seg003.o seg004.o seg005.o seg006.o seg007.o seg008.o seg009.o
 BIN = prince
 
-LIBS := $(shell sdl-config --libs) -lSDL_image -lSDL_mixer
-INCS := $(shell sdl-config --cflags)
+LIBS := $(shell pkg-config --libs   sdl2 SDL2_image SDL2_mixer)
+INCS := $(shell pkg-config --cflags sdl2 SDL2_image SDL2_mixer)
 
 CFLAGS += $(INCS) -Wall -std=gnu99
 
