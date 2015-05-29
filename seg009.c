@@ -1754,11 +1754,16 @@ void __pascal far set_gr_mode(byte grmode) {
 	Uint32 flags = 0;
 	int fullscreen = check_param("full") != 0;
 	if (fullscreen) flags |= SDL_WINDOW_FULLSCREEN;
+	else			flags |= SDL_WINDOW_RESIZABLE;
+	
 	window_ = SDL_CreateWindow(WINDOW_TITLE,
 										  SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 										  POP_WINDOW_WIDTH, POP_WINDOW_HEIGHT, flags);
 	renderer_ = SDL_CreateRenderer(window_, -1 , 0);
     SDL_RenderPresent(renderer_); // this simply draws a black screen
+	
+	// Allow us to use a consistent set of screen co-ordinates, even if the screen size changes
+	SDL_RenderSetLogicalSize(renderer_, POP_WINDOW_WIDTH, POP_WINDOW_HEIGHT);
 
     /* Migration to SDL2: everything is still blitted to onscreen_surface_, however:
      * SDL2 renders textures to the screen instead of surfaces; so for now, every screen
