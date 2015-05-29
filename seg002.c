@@ -52,7 +52,7 @@ void __pascal far check_shadow() {
 			if (get_tile(15, 1, 0) == tiles_22_sword) {
 				return;
 			}
-			word_1EFD0 = 0;
+			shadow_initialized = 0;
 			do_init_shad(/*&*/init_shad_12, 7 /*fall*/);
 			return;
 		}
@@ -214,8 +214,8 @@ void __pascal far exit_room() {
 	word leave;
 	word kid_room_m1;
 	leave = 0;
-	if (word_2088A != 0) {
-		--word_2088A;
+	if (exit_room_timer != 0) {
+		--exit_room_timer;
 		return;
 	}
 	loadkid();
@@ -932,12 +932,6 @@ void __pascal far do_auto_moves(const auto_move_type *moves_ptr) {
 	curr_move = moves_ptr[demoindex].move;
 	switch (curr_move) {
 		case -1:
-			// this variable is not used anywhere else...
-			/*
-			if (word_1F9D6 != 0) {
-				word_1F9D6 = 0;
-			}
-			*/
 		break;
 		case 0:
 			move_0_nothing();
@@ -1021,12 +1015,12 @@ void __pascal far autocontrol_shadow_level6() {
 void __pascal far autocontrol_shadow_level12() {
 	short opp_frame;
 	short xdiff;
-	if (Char.room == 15 && word_1EFD0 == 0) {
+	if (Char.room == 15 && shadow_initialized == 0) {
 		if (Opp.x >= 150) {
 			do_init_shad(/*&*/init_shad_12, 7 /*fall*/);
 			return;
 		}
-		word_1EFD0 = 1;
+		shadow_initialized = 1;
 	}
 	if (Char.sword >= sword_2_drawn) {
 		// if the Kid puts his sword away, the shadow does the same,

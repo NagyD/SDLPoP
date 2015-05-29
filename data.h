@@ -34,27 +34,8 @@ extern word need_level1_music;
 // data:4380
 extern surface_type* offscreen_surface;
 
-//#if 0
-// data:3358
-//extern int __pascal (far * p_ask_disk_)(char far *) INIT(= NULL);
-// data:296A
-//extern int __pascal (far * p_ask_disk)(char far *diskname,int drive_num) /*INIT(= cant_find_2)*/;
-// data:2966
-//extern int __pascal (far * p_do_paused)() /*INIT(= key_test_quit)*/;
-// data:296E
-extern word word_1D64E INIT(= 0);
 // data:31E5
 extern byte sound_flags INIT(= 0);
-// data:00A0
-extern word word_1AD80 INIT(= 0);
-// data:2CD6
-//extern int __pascal far (* p_insuff_mem_err)() INIT(= 0);
-// data:2902
-//extern const byte cga_pattern_2[] INIT(= { }); // stub
-// seg009:24B4
-//extern const byte cga_pattern_1[] INIT(= { }); // stub
-// data:3008
-//extern const byte * cga_pattern_ptr INIT(= cga_pattern_1);
 // data:295E
 extern const rect_type screen_rect INIT(= {0, 0, 200, 320});
 // data:3D12
@@ -65,14 +46,6 @@ extern word start_level;
 extern byte * guard_palettes;
 // data:4338
 extern chtab_type *chtab_addrs[10];
-// data:4C92
-extern word one_disk;
-// data:4C60
-extern void * xlat_chtab_kid;
-// data:4F7C
-extern void * xlat_title_40;
-// data:588A
-extern void * xlat_title_50;
 
 
 #ifdef USE_COPYPROT
@@ -137,8 +110,6 @@ extern word room_AL;
 
 // data:4F84
 extern level_type level;
-// data:5966
-extern word loaded_room;
 
 
 // data:42AA
@@ -188,11 +159,6 @@ extern word is_blind_mode;
 
 // data:0F86
 extern const rect_type rect_top INIT(= {0, 0, 192, 320});
-// data:0F8E
-//extern const rect_type rect_bottom INIT(= {193, 0, 200, 320});
-
-// data:17AC
-extern byte kid_is_unpack_tbl[219] INIT(= {0});
 
 
 // data:4CB2
@@ -212,7 +178,6 @@ extern dword random_seed;
 
 // data:3010
 extern surface_type* current_target_surface INIT(= NULL);
-//extern surface_type* screen;
 
 // data:4C5C
 extern byte* doorlink2_ad;
@@ -307,7 +272,7 @@ extern short trobs_count;
 // data:4062
 extern short next_sound;
 // data:34AA
-extern word word_1E18A;
+extern word grab_timer;
 // data:594C
 extern short can_guard_see_kid;
 // data:594E
@@ -316,8 +281,6 @@ extern word holding_sword;
 extern short united_with_shadow;
 // data:409C
 extern word leveldoor_open;
-// data:4C70
-extern word word_1F950;
 // data:4610
 extern word demo_index;
 // data:4CD4
@@ -375,8 +338,6 @@ extern byte obj_id;
 extern byte obj_tilepos;
 // data:4604
 extern short obj_x;
-// data:460E
-extern byte byte_1F2EE;
 
 // data:658C
 extern frame_type cur_frame;
@@ -426,7 +387,7 @@ extern const word copyprot_tile[] INIT(= {1,  5,  7,  9, 11, 21,  1,  3,  7, 11,
 #endif
 
 // data:5BAA
-extern word word_2088A;
+extern word exit_room_timer;
 // data:4372
 extern short char_col_right;
 // data:5F86
@@ -477,8 +438,6 @@ extern byte through_tile;
 extern sbyte byte_20C62;
 // data:228E
 extern const sbyte dir_front[] INIT(= {-1, 1});
-// data:42F2
-extern sbyte byte_1EFD2;
 // data:2290
 extern const sbyte dir_behind[] INIT(= {1, -1});
 // data:4320
@@ -505,13 +464,11 @@ extern sbyte ctrl1_up;
 extern sbyte ctrl1_down;
 // data:42F8
 extern sbyte ctrl1_shift2;
-// data:432E
-extern sbyte byte_1F00E;
 
 
 
 // data:42F0
-extern word word_1EFD0;
+extern word shadow_initialized;
 
 // data:4330
 extern word guard_refrac;

@@ -86,7 +86,6 @@ const char* __pascal far check_param(const char *param) {
 
 // seg009:0EDF
 int __pascal far pop_wait(int timer_index,int time) {
-	//wait_time[timer_index] = time;
 	start_timer(timer_index, time);
 	return do_wait(timer_index);
 }
@@ -125,13 +124,6 @@ failed:
 	goto out;
 }
 
-// seg009:101B
-//int __pascal far file_exists(const char near *filename) ;
-
-// seg009:A172
-//int __pascal far load_from_opendats_to_area(int resource,void far *area,int length) {
-//}
-
 // seg009:9CAC
 void __pascal far set_loaded_palette(dat_pal_type far *palette_ptr) {
 	int si, di, current_row;
@@ -147,55 +139,7 @@ void __pascal far set_loaded_palette(dat_pal_type far *palette_ptr) {
 word chtab_palette_bits = 1;
 
 // seg009:104E
-chtab_type* __pascal load_sprites_from_file(int resource,int palette_bits/*,byte* pack,int shift*/, int quit_on_error) {
-#if 0
-	chtab_type* chtab_ptr;
-	dat_shpl_type area;
-	word curr_image_index;
-	dat_pal_type* pal_ptr;
-	word count;
-	void* xlat_buffer;
-	word var_2;
-	has_palette_bits = 1;
-	load_from_opendats_to_area(resource, &area, 0);
-	pal_ptr = &area.palette;
-	if (graphics_mode == gmMcgaVga) {
-		if (palette_bits == 0) {
-			palette_bits = add_palette_bits(area1_ptr->n_colors);
-			if (palette_bits == 0) {
-				quit(1);
-			}
-		} else {
-			chtab_palette_bits |= palette_bits;
-			has_palette_bits = 0;
-		}
-		area1_ptr->row_bits = palette_bits;
-	}
-	count = area.n_images;
-	if (graphics_mode != gmCga && graphics_mode != gmHgaHerc) {
-		shift = 0;
-	}
-	count <<= shift;
-	chtab_ptr = malloc_near(sizeof(chtab_type) + count * sizeof(image_type* far));
-	xlat_buffer = malloc_near(0x200);
-	process_palette(xlat_buffer, area1_ptr);
-	if (graphics_mode == gmMcgaVga) {
-		chtab_ptr->chtab_palette_bits = palette_bits;
-		chtab_ptr->has_palette_bits = has_palette_bits;
-	}
-	chtab_ptr->n_images = count;
-	for (curr_image_index = 0; curr_image_index < area.n_images; ++curr_image_index) {
-		chtab_ptr->images[curr_image_index] = load_image(
-			resource + curr_image_index + 1, xlat_buffer, shift,
-			chtab_ptr->images[curr_image_index + area.n_images],
-			(int)pack == -1 ? 1 : (int)pack == 0 ? 0 : pack[curr_image_index]
-		);
-	}
-	set_loaded_palette(area1_ptr);
-	free_near(xlat_buffer);
-	return chtab_ptr;
-#endif // 0
-
+chtab_type* __pascal load_sprites_from_file(int resource,int palette_bits, int quit_on_error) {
 	int i;
 	int n_images = 0;
 	//int has_palette_bits = 1;
@@ -264,7 +208,7 @@ void __pascal far free_chtab(chtab_type *chtab_ptr) {
 	for (id = 0; id < n_images; ++id) {
 		curr_image = chtab_ptr->images[id];
 		if (curr_image) {
-			/*free_far*/SDL_FreeSurface(curr_image);
+			SDL_FreeSurface(curr_image);
 		}
 	}
 	free_near(chtab_ptr);
@@ -496,14 +440,7 @@ image_type* decode_image(image_data_type* image_data, dat_pal_type* palette) {
 		memcpy((byte*)image->pixels + y*image->pitch, image_8bpp + y*width, width);
 	}
 	SDL_UnlockSurface(image);
-	/*
-	FILE* fp = fopen("decode_image.raw", "wb");
-	fwrite(image_8bpp,width*height,1,fp);
-	fclose(fp);
-	if (SDL_SaveBMP(image, "decode_image.bmp") != 0) { // debug
-		sdlperror("SDL_SaveBMP");
-	}
-//	*/
+
 	free(image_8bpp); image_8bpp = NULL;
 	SDL_Color colors[16];
 	int i;
@@ -518,7 +455,7 @@ image_type* decode_image(image_data_type* image_data, dat_pal_type* palette) {
 }
 
 // seg009:121A
-image_type* far __pascal far load_image(int resource_id, dat_pal_type* palette /*void* xlat_tbl,int use_global_xlat,void* target,int pack*/) {
+image_type* far __pascal far load_image(int resource_id, dat_pal_type* palette) {
 	// stub
 	data_location result;
 	int size;
@@ -530,7 +467,6 @@ image_type* far __pascal far load_image(int resource_id, dat_pal_type* palette /
 		break;
 		case data_DAT: { // DAT
 			image = decode_image((image_data_type*) image_data, palette);
-			//free(image_data);
 		} break;
 		case data_directory: { // directory
 			SDL_RWops* rw = SDL_RWFromConstMem(image_data, size);
@@ -542,7 +478,6 @@ image_type* far __pascal far load_image(int resource_id, dat_pal_type* palette /
 			if (SDL_RWclose(rw) != 0) {
 				sdlperror("SDL_RWclose");
 			}
-			//free(image_data);
 		} break;
 	}
 	if (image_data != NULL) free(image_data);
@@ -607,9 +542,7 @@ void __pascal far free_surface(surface_type *surface) {
 
 // seg009:17EA
 void __pascal far free_peel(peel_type *peel_ptr) {
-	//method_8_free(peel_ptr->peel);
 	SDL_FreeSurface(peel_ptr->peel);
-	//free_near(peel_ptr);
 }
 
 const rgb_type vga_palette[] = {
@@ -828,7 +761,7 @@ font_type load_font_from_data(/*const*/ rawfont_type* data) {
 void load_font() {
 	// Try to load font from a file.
 	dat_type* dathandle = open_dat("font", 0);
-	hc_font.chtab = load_sprites_from_file(1000, 1<<1/*, 0, 0*/,0);
+	hc_font.chtab = load_sprites_from_file(1000, 1<<1, 0);
 	close_dat(dathandle);
 	if (hc_font.chtab == NULL) {
 		// Use built-in font.
@@ -1284,7 +1217,7 @@ peel_type __pascal far read_peel_from_screen(const rect_type far *rect) {
 	}
 	result.peel = peel_surface;
 	rect_type target_rect = {0, 0, rect->right - rect->left, rect->bottom - rect->top};
-	method_1_blit_rect(result.peel, /*surface*/current_target_surface, &target_rect, rect, 0);
+	method_1_blit_rect(result.peel, current_target_surface, &target_rect, rect, 0);
 	return result;
 }
 
@@ -1645,7 +1578,6 @@ void __pascal far play_digi_sound(sound_buffer_type far *buffer) {
 	SDL_PauseAudio(0);
 #else
 	// Convert the DAT sound to WAV, so the Mixer can load it.
-//#error "What to put here?..."
 	int size = buffer->digi.sample_count;
 	int rounded_size = (size+1)&(~1);
 	int alloc_size = sizeof(WAV_header_type) + rounded_size;
@@ -1825,13 +1757,6 @@ int __pascal far add_palette_bits(byte n_colors) {
 	return 0;
 }
 
-// seg009:97E4
-void __pascal far process_palette(void *target,dat_pal_type far *source) {
-	// stub
-}
-
-// seg009:98F0 ; imghdr_type far *__pascal decode_image_(imghdr_type far *source,char near *xlat_tbl)
-
 // seg009:9C36
 int __pascal far find_first_pal_row(int which_rows_mask) {
 	word which_row = 0;
@@ -1856,11 +1781,6 @@ int __pascal far get_text_color(int cga_color,int low_half,int high_half_mask) {
 		return low_half;
 	}
 }
-
-// seg009:9CAC
-//void __pascal far set_loaded_palette(void far *area1_ptr) {
-//	// stub
-//}
 
 void load_from_opendats_metadata(int resource_id, const char* extension, FILE** out_fp, data_location* result, byte* checksum, int* size, dat_type** out_pointer) {
 	char image_filename[256];
@@ -2022,7 +1942,6 @@ void __pascal far method_1_blit_rect(surface_type near *target_surface,surface_t
 	if (target_surface == onscreen_surface_) {
 		request_screen_update();
 	}
-	//SDL_Delay(10);
 }
 
 image_type far * __pascal far method_3_blit_mono(image_type far *image,int xpos,int ypos,int blitter,byte color) {
@@ -2077,6 +1996,7 @@ const rect_type far * __pascal far method_5_rect(const rect_type far *rect,int b
 	rgb_type palette_color = palette[color];
 #ifndef USE_ALPHA
 	// @Hack: byte order (rgb) is reversed (otherwise the color is wrong) - why doesn't this work as expected?
+	// This is a bug in SDL2: https://bugzilla.libsdl.org/show_bug.cgi?id=2986
     uint32_t rgb_color = SDL_MapRGB(onscreen_surface_->format, palette_color.b<<2, palette_color.g<<2, palette_color.r<<2);
 #else
 	uint32_t rgb_color = SDL_MapRGBA(current_target_surface->format, palette_color.r<<2, palette_color.g<<2, palette_color.b<<2, color == 0 ? SDL_ALPHA_TRANSPARENT : SDL_ALPHA_OPAQUE);
@@ -2125,15 +2045,7 @@ void blit_xor(SDL_Surface* target_surface, SDL_Rect* dest_rect, SDL_Surface* ima
 	int i;
 	byte *p_src = (byte*) image_24->pixels;
 	byte *p_dest = (byte*) helper_surface->pixels;
-/*
-	int fd;
-	fd = creat("xor_src.raw", O_WRONLY);
-	write(fd, p_src, size);
-	close(fd);
-	fd = creat("xor_dst.raw", O_WRONLY);
-	write(fd, p_dest, size);
-	close(fd);
-*/
+
 	// Xor the old area with the image.
 	for (i = 0; i < size; ++i) {
 		*p_dest ^= *p_src;
@@ -2196,20 +2108,6 @@ image_type far * __pascal far method_6_blit_img_to_scr(image_type far *image,int
 	return image;
 }
 
-// seg009:68CC
-void far *__pascal method_7_alloc(int size) {
-	if (size >= 0xFFFE) {
-		return NULL;
-	} else {
-		return malloc_far(size);
-	}
-}
-
-// seg009:68E9
-void __pascal far method_8_free(void far *pointer) {
-	free_far(pointer);
-}
-
 #ifndef USE_COMPAT_TIMER
 int fps = 60;
 SDL_TimerID timer_handles[2] = {0,0};
@@ -2244,7 +2142,6 @@ Uint32 timer_callback(Uint32 interval, void *param) {
 
 
 #ifndef USE_COMPAT_TIMER
-//	remove_timer(timer_index);
 	return 0;
 #else
 	return interval;
@@ -2252,8 +2149,6 @@ Uint32 timer_callback(Uint32 interval, void *param) {
 }
 
 void __pascal start_timer(int timer_index, int length) {
-	//return; // debug
-	// stub
 #ifndef USE_COMPAT_TIMER
 	if (timer_handles[timer_index]) {
 		remove_timer(timer_index);
@@ -2373,30 +2268,18 @@ void idle() {
 word word_1D63A = 1;
 // seg009:0EA9
 int __pascal do_wait(int timer_index) {
-	//return; // debug
-	//if (timer_handles[timer_index] == 0) return;
-	/*
-	while (! timer_stopped[timer_index]) {
-		idle();
-		do_paused();
-	}
-	*/
-//	while (! timer_stopped[timer_index]) {
 	while (! has_timer_stopped(timer_index)) {
-	//do {
 		idle();
 		int key = do_paused();
 		if (key != 0 && (word_1D63A != 0 || key == 0x1B)) return 1;
-	} //while (! timer_stopped[timer_index]);
+	}
 	return 0;
 }
 
 void __pascal do_simple_wait(int timer_index) {
-//	while (! timer_stopped[timer_index]) {
 	while (! has_timer_stopped(timer_index)) {
-	//do {
 		idle();
-	} //while (! timer_stopped[timer_index]);
+	}
 }
 
 #ifdef USE_COMPAT_TIMER
@@ -2454,6 +2337,7 @@ void __pascal far set_bg_attr(int vga_pal_index,int hc_pal_index) {
 		rect.h = offscreen_surface->h;
 		rgb_type palette_color = palette[hc_pal_index];
         // @Hack: byte order is reversed (otherwise the color is wrong). Why doesn't this work as expected?
+		// This is a bug in SDL2: https://bugzilla.libsdl.org/show_bug.cgi?id=2986
 		uint32_t rgb_color = SDL_MapRGB(onscreen_surface_->format, palette_color.b<<2, palette_color.g<<2, palette_color.r<<2) /*& 0xFFFFFF*/;
 		//SDL_UpdateRect(onscreen_surface_, 0, 0, 0, 0);
 		// First clear the screen with the color of the flash.

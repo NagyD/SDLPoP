@@ -545,7 +545,7 @@ void __pascal far play_seq() {
 				}
 				// fallthrough!
 			case 0xFF: // jump
-				Char.curr_seq = *(word*)(SEQTBL_0 + Char.curr_seq)/*++*/;
+				Char.curr_seq = *(word*)(SEQTBL_0 + Char.curr_seq);
 				break;
 			case 0xFD: // up
 				--Char.curr_row;
@@ -687,17 +687,6 @@ int __pascal far get_tile_div_mod(int xpos) {
 	obj_xl = xl;
 	return xh;
 }
-
-// seg006:0406
-#if 0
-int __pascal far sub_70B6(int ypos) {
-	// This function is not used.
-	short row;
-	for (row = 3; row >= -1; --row) {
-		if (y_land[row + 1] <= ypos) return row;
-	}
-}
-#endif // 0
 
 // seg006:0433
 int __pascal far y_to_row_mod4(int ypos) {
@@ -1038,7 +1027,7 @@ void __pascal far check_grab() {
 			Char.fall_y = 0;
 			seqtbl_offset_char(15); // grab a ledge (after falling)
 			play_seq();
-			word_1E18A = 12;
+			grab_timer = 12;
 			play_sound(sound_9_grab); // grab
 			is_screaming = 0;
 		}
@@ -1080,7 +1069,7 @@ int __pascal far get_tile_infrontof2_char() {
 
 // seg006:0B66
 int __pascal far get_tile_behind_char() {
-	return get_tile(Char.room, byte_1EFD2 = dir_behind[Char.direction + 1] + Char.curr_col, Char.curr_row);
+	return get_tile(Char.room, dir_behind[Char.direction + 1] + Char.curr_col, Char.curr_row);
 }
 
 // seg006:0B8A
@@ -1161,8 +1150,8 @@ void __pascal far control_kid() {
 	if (Char.alive < 0 && hitp_curr == 0) {
 		Char.alive = 0;
 	}
-	if (word_1E18A != 0) {
-		--word_1E18A;
+	if (grab_timer != 0) {
+		--grab_timer;
 	}
 	if (current_level == 0) {
 		do_demo();
@@ -1296,16 +1285,9 @@ void __pascal far rest_ctrl_1() {
 	control_shift2 = ctrl1_shift2;
 }
 
-// seg006:0E50 ; void __pascal far save_ctrl_2()
-// This function is not used.
-
-// seg006:0E6F ; void __pascal far rest_ctrl_2()
-// This function is not used.
-
 // seg006:0E8E
 void __pascal far clear_saved_ctrl() {
-	ctrl1_forward = ctrl1_backward = ctrl1_up = ctrl1_down = ctrl1_shift2 =
-	/*ctrl2_forward = ctrl2_backward = ctrl2_up = ctrl2_down = ctrl2_shift2 =*/ 0;
+	ctrl1_forward = ctrl1_backward = ctrl1_up = ctrl1_down = ctrl1_shift2 = 0;
 }
 
 // seg006:0EAF
@@ -1397,17 +1379,17 @@ int __pascal far wall_type(byte tiletype) {
 
 // seg006:1005
 int __pascal far get_tile_above_char() {
-	return get_tile(Char.room, Char.curr_col, byte_1F00E = Char.curr_row - 1);
+	return get_tile(Char.room, Char.curr_col, Char.curr_row - 1);
 }
 
 // seg006:1020
 int __pascal far get_tile_behind_above_char() {
-	return get_tile(Char.room, byte_1EFD2 = dir_behind[Char.direction + 1] + Char.curr_col, byte_1F00E = Char.curr_row - 1);
+	return get_tile(Char.room, dir_behind[Char.direction + 1] + Char.curr_col, Char.curr_row - 1);
 }
 
 // seg006:1049
 int __pascal far get_tile_front_above_char() {
-	return get_tile(Char.room, byte_20C62 = dir_front[Char.direction + 1] + Char.curr_col, byte_1F00E = Char.curr_row - 1);
+	return get_tile(Char.room, byte_20C62 = dir_front[Char.direction + 1] + Char.curr_col, Char.curr_row - 1);
 }
 
 // seg006:1072
@@ -1424,8 +1406,6 @@ int __pascal far back_delta_x(int delta_x) {
 // seg006:108A
 void __pascal far do_pickup(int obj_type) {
 	pickup_obj_type = obj_type;
-	//word_1EFAC = curr_room; // not used anywhere else
-	//word_1EFDA = curr_tilepos; // not used anywhere else
 	control_shift2 = 1;
 	// erase picked up item
 	curr_room_tiles[curr_tilepos] = tiles_1_floor;
@@ -1656,9 +1636,6 @@ void __pascal far proc_get_object() {
 		}
 	}
 }
-
-// seg006:1567 ; int __pascal far sub_8217()
-// Not used.
 
 // seg006:1599
 int __pascal far is_dead() {

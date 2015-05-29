@@ -410,8 +410,7 @@ Possible values of trob_type:
 				play_sound(sound_14_leveldoor_closing); // level door closing
 			} else {
 				if (trob.type == 4 &&
-					(sound_flags & sfDigi) &&
-					word_1AD80 == 0
+					(sound_flags & sfDigi)
 				) {
 					sound_interruptible[15] = 1;
 					play_sound(sound_15_leveldoor_sliding); // level door sliding (closing)

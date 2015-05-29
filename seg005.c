@@ -532,7 +532,7 @@ void __pascal far jump_up() {
 // seg005:0968
 void __pascal far control_hanging() {
 	if (Char.alive < 0) {
-		if (word_1E18A == 0 && control_y < 0) {
+		if (grab_timer == 0 && control_y < 0) {
 			can_climb_up();
 		} else if (control_shift < 0) {
 			// hanging against a wall or a doortop
@@ -543,7 +543,7 @@ void __pascal far control_hanging() {
 					curr_tile2 == tiles_12_doortop
 				)))
 			) {
-				if (word_1E18A == 0) {
+				if (grab_timer == 0) {
 					play_sound(sound_8_bumped); // touching a wall (hang against wall)
 				}
 				seqtbl_offset_char(25); // hang against wall (straight)

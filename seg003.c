@@ -82,12 +82,11 @@ void __pascal far play_level(int level) {
 		trobs_count = 0;
 		next_sound = -1;
 		holding_sword = 0;
-		word_1E18A = 0;
+		grab_timer = 0;
 		can_guard_see_kid = 0;
 		united_with_shadow = 0;
 		flash_time = 0;
 		leveldoor_open = 0;
-		word_1F950 = 0;
 		demo_index = 0;
 		demo_time = 0;
 		guardhp_curr = 0;
@@ -169,7 +168,6 @@ void __pascal far set_start_pos() {
 	knock = 0;
 	upside_down = 0;
 	is_feather_fall = 0;
-	//word_1FB6E = 0; // this variable is not used anywhere else!
 	Char.fall_y = 0;
 	Char.fall_x = 0;
 	word_1EFCE = 0;
@@ -207,12 +205,7 @@ void __pascal far draw_level_first() {
 	redraw_screen(0);
 	draw_kid_hp(hitp_curr, hitp_max);
 	// Busy waiting!
-	//wait_time1 = 5;
 	start_timer(1, 5);
-	/*do {
-		clear_kbd_buf();
-	} while(wait_time1);*/
-	//do_wait(1);
 	do_simple_wait(1);
 }
 
@@ -278,7 +271,7 @@ void __pascal far redraw_screen(int drawing_different_room) {
 			clear_kbd_buf();
 		}
 	}
-	word_2088A = 2;
+	exit_room_timer = 2;
 
 	screen_updates_suspended--;
 	request_screen_update();
@@ -289,38 +282,34 @@ void __pascal far redraw_screen(int drawing_different_room) {
 // - The current level if it was restarted.
 // - The next level if the level was completed.
 int __pascal far play_level_2() {
-	again:
-	if (Kid.sword == sword_2_drawn) {
-		// speed when fighting (smaller is faster)
-		//wait_time1 = 6;
-		start_timer(1, 6);
-	} else {
-		// speed when not fighting (smaller is faster)
-		//wait_time1 = 5;
-		start_timer(1, 5);
-	}
-	guardhp_delta = 0;
-	hitp_delta = 0;
-	timers();
-	play_frame();
-	if (is_restart_level) {
-		is_restart_level = 0;
-		return current_level;
-	} else {
-		if (next_level == current_level || check_sound_playing()) {
-			draw_game_frame(); // changed order of draw and flash
-			flash_if_hurt();
-			remove_flash_if_hurt();
-			// Busy waiting!
-			//while (wait_time1 != 0);
-			//do_wait(1);
-			do_simple_wait(1);
-			goto again;
+	while (1) { // main loop
+		if (Kid.sword == sword_2_drawn) {
+			// speed when fighting (smaller is faster)
+			start_timer(1, 6);
 		} else {
-			stop_sounds();
-			hitp_beg_lev = hitp_max;
-			checkpoint = 0;
-			return next_level;
+			// speed when not fighting (smaller is faster)
+			start_timer(1, 5);
+		}
+		guardhp_delta = 0;
+		hitp_delta = 0;
+		timers();
+		play_frame();
+		if (is_restart_level) {
+			is_restart_level = 0;
+			return current_level;
+		} else {
+			if (next_level == current_level || check_sound_playing()) {
+				draw_game_frame(); // changed order of draw and flash
+				flash_if_hurt();
+				remove_flash_if_hurt();
+				// Busy waiting!
+				do_simple_wait(1);
+			} else {
+				stop_sounds();
+				hitp_beg_lev = hitp_max;
+				checkpoint = 0;
+				return next_level;
+			}
 		}
 	}
 }

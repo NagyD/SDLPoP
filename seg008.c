@@ -210,7 +210,6 @@ void __pascal far redraw_needed_above(int column) {
 // seg008:02FE
 int __pascal far get_tile_to_draw(int room, int column, int row, byte *ptr_tiletype, byte *ptr_modifier, byte tile_room0) {
 	word tilepos;
-	//byte unused[80];
 	if (column == -1) {
 		*ptr_tiletype = leftroom_[row].tiletype;
 		*ptr_modifier = leftroom_[row].modifier;
@@ -341,11 +340,9 @@ const byte doortop_fram_bot[] = {78, 80, 82, 0};
 
 // seg008:066A
 void __pascal far draw_tile_right() {
-	//word var_A;
 	byte id;
 	byte blit;
 	byte var_2;
-	//var_A = 0;
 	if (curr_tile == tiles_20_wall) return;
 	switch (tile_left) {
 		default:
@@ -853,18 +850,7 @@ void __pascal far draw_mid(int index) {
 		blit_flip = 0x8000;
 		blit &= 0x7F;
 	}
-#if 0
-	if (chtab_id == id_chtab_2_kid && 0 == kid_is_unpack_tbl[image_id]) {
-		image = decode_image_(image, xlat_chtab_kid);
-		need_free_image = 1;
-		if ((graphics_mode == gmCga || graphics_mode == gmHgaHerc) && 0 == chtab_shift[chtab_id] && (blit == blitters_9_black || blit == blitters_10h_transp)) {
-			mask = decode_image_(mask, &global_xlat_tbl);
-			need_free_mask = 1;
-		} else {
-			mask = image;
-		}
-	}
-#endif
+
 	if (chtab_flip_clip[chtab_id]) {
 		set_clip_rect(&midtable_entry->clip);
 		if (chtab_id != id_chtab_0_sword) {
@@ -877,25 +863,13 @@ void __pascal far draw_mid(int index) {
 		need_free_image = 1;
 		image = hflip(image);
 	}
-#if 0
-	image_flipped = image->stride & 0x8000;
-	image->stride &= 0x7FFF;
-	if (blit_flip != image_flipped) {
-		hflip(image, (!(blit & 0x40)) * 3 + 1);
-		if (mask != image) {
-			hflip(mask, (!(blit & 0x40)) * 3 + 1);
-		}
-		image_flipped ^= 0x8000;
-	}
-#endif
+
 	if (midtable_entry->peel) {
 		add_peel(round_xpos_to_byte(xpos, 0), round_xpos_to_byte(image->w/*width*/ + xpos, 1), ypos, image->h/*height*/);
 	}
 	//printf("Midtable: drawing (chtab %d, image %d) at (x=%d, y=%d)\n",chtab_id,image_id,xpos,ypos); // debug
 	draw_image(image, mask, xpos, ypos, blit);
-#if 0
-	image->stride |= image_flipped;
-#endif
+
 	if (chtab_flip_clip[chtab_id]) {
 		reset_clip_rect();
 	}
@@ -1107,7 +1081,6 @@ void __pascal far draw_moving() {
 // seg008:1B06
 void __pascal far redraw_needed_tiles() {
 	word saved_drawn_room;
-	// byte unused[122];
 	load_leftroom();
 	draw_objtable_items_at_tile(30);
 	for (drawn_row = 3; drawn_row--; ) {
@@ -1219,8 +1192,6 @@ void __pascal far draw_leveldoor() {
 
 // seg008:1E0C
 void __pascal far get_room_address(int room) {
-	//byte unused[80];
-	loaded_room = room;
 	if (room) {
 		curr_room_tiles = &level.fg[(room-1)*30];
 		curr_room_modif = &level.bg[(room-1)*30];
@@ -1383,7 +1354,7 @@ int __pascal far load_obj_from_objtable(int index) {
 	curr_obj = &objtable[index];
 	obj_xh = obj_x = curr_obj->xh;
 	obj_xl = curr_obj->xl;
-	byte_1F2EE = obj_y = curr_obj->y;
+	obj_y = curr_obj->y;
 	obj_id = curr_obj->id;
 	obj_chtab = curr_obj->chtab_id;
 	obj_direction = curr_obj->direction;

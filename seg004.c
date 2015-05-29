@@ -476,7 +476,6 @@ void __pascal far check_gate_push() {
 void __pascal far check_guard_bumped() {
 	short var_2;
 	if (
-		word_1F950 == 0 &&
 		Char.action == actions_1_run_jump &&
 		Char.alive < 0 &&
 		Char.sword >= sword_2_drawn

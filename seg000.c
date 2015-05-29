@@ -2,15 +2,6 @@
 #include <fcntl.h>
 #include <setjmp.h>
 
-//#if 0
-
-// data:0272
-const char * const tbl_video_mode[] = {"", "CGA", "HERCULES", "EGA", "TANDY", "MCGA/VGA"};
-// data:027E
-/*const*/ word tbl_video_rqmem[] = {0, 224, 226, 248, 264, 318};
-// data:028A
-const char * const tbl_with[] = {"w/o ", "w/"};
-
 // data:009C
 word cheats_enabled = 0;
 
@@ -24,53 +15,18 @@ word need_redraw_because_flipped;
 
 // seg000:0000
 void far pop_main() {
-	//word mem_avail;
-	//word is_dig_snd;
-
 	char sprintf_temp[100];
 	int i;
-	//word video_mode;
-	//word vid_reqmem;
-	word is_unpack;
-	//p_ask_disk_ = &ask_disk_;
-	//p_ask_disk = &ask_disk;
-	//p_do_paused = &do_paused;
-	//sub_15E92(0xFF);
+
 	dathandle = open_dat("PRINCE.DAT", 0);
 
 	/*video_mode =*/ parse_grmode();
 
-	//sub_DBEA(video_mode);
-	//change_int_vects();
 	init_timer(60);
 	parse_cmdline_sound();
-	word_1D64E = 1;
-/*
-	mem_avail = get_mem_avail();
-	is_dig_snd = (sound_flags & sfDigi) == sfDigi;
-	if (!is_dig_snd) tbl_video_rqmem[video_mode] -= 72;
-	again:
-	vid_reqmem = tbl_video_rqmem[video_mode] << 6;
-	if (mem_avail < vid_reqmem) {
-		if (!check_param("bypass")) {
-			if (is_dig_snd && graphics_mode == gmTga && !word_1AD80) {
-				tbl_video_rqmem[video_mode] -= 30; goto again;
-			}
-			restore_stuff();
-			snprintf(sprintf_temp, sizeof(sprintf_temp),"Requires %d KBytes Available Memory for %s Video Mode %sDigital Sound.",
-				tbl_video_rqmem[video_mode], tbl_video_mode[video_mode], tbl_with[is_dig_snd]);
-			puts(sprintf_temp);
-			snprintf(sprintf_temp, sizeof(sprintf_temp),"%d KBytes is Available.", mem_avail >> 6);
-			puts(sprintf_temp);
-			exit(1);
-		}
-	}
-*/
-	//sub_DCB1();
-	//p_insuff_mem_err = &insuff_mem_err;
+
 	set_hc_pal();
-//	cga_pattern_ptr = &cga_pattern_2;
-	//sub_DC5E();
+
 	current_target_surface = rect_sthg(onscreen_surface_, &screen_rect);
 	show_loading();
 	set_joy_mode();
@@ -79,8 +35,7 @@ void far pop_main() {
 	cheats_enabled = 1; // debug
 #endif
 	draw_mode = check_param("draw") && cheats_enabled;
-	//start_level = 1; // debug
-	//draw_mode = 1; // debug
+
 	if (cheats_enabled) {
 		for (i = 14; i >= 0; --i) {
 			snprintf(sprintf_temp, sizeof(sprintf_temp), "%d", i);
@@ -90,14 +45,7 @@ void far pop_main() {
 			}
 		}
 	}
-	is_unpack = graphics_mode != gmMcgaVga;
-	if (check_param("pack")) is_unpack = 0;
-	if (check_param("unpack")) is_unpack = 1;
-	memset(&kid_is_unpack_tbl, is_unpack, sizeof(kid_is_unpack_tbl));
-	for (i = 216; i <= 218; ++i) {
-		// last 3 images of Kid: full HP, empty HP, splash
-		kid_is_unpack_tbl[i] = 1;
-	}
+
 	init_game_main();
 }
 
@@ -115,19 +63,13 @@ void __pascal far init_game_main() {
 		set_pal( 6, 0x30, 0x26, 0x14, 0);
 	}
 	// PRINCE.DAT: sword
-	chtab_addrs[id_chtab_0_sword] = load_sprites_from_file(700, 1<<2/*, (void*)-1, 0*/,1);
+	chtab_addrs[id_chtab_0_sword] = load_sprites_from_file(700, 1<<2, 1);
 	// PRINCE.DAT: flame, sword on floor, potion
-	chtab_addrs[id_chtab_1_flameswordpotion] = load_sprites_from_file(150, 1<<3/*, (void*)-1, 1*/,1);
+	chtab_addrs[id_chtab_1_flameswordpotion] = load_sprites_from_file(150, 1<<3, 1);
 	close_dat(dathandle);
 	load_sounds(0, 43);
-	//if (file_exists("KID.DAT")) one_disk = 1;
-	xlat_chtab_kid = load_pal_from_dat("KID.DAT", 400, 1<<7);
-	xlat_title_40 = load_pal_from_dat("TITLE.DAT", 40, 1<<11);
-	xlat_title_50 = load_pal_from_dat("TITLE.DAT", 50, 1<<12);
+	load_opt_sounds(43, 56); //added
 	hof_read();
-	//sub_16C48();
-	//sub_16C1B();
-	method_7_alloc(-1);
 
 	start_game();
 }
@@ -181,26 +123,6 @@ void __pascal far start_game() {
 	} else {
 		init_game(start_level);
 	}
-}
-//#endif
-
-// seg000:046C
-void far *__pascal load_pal_from_dat(const char near *filename,int resource,int pal_row_bits) {
-#if 1
-	void* xlat_buffer;
-	dat_pal_type* source;
-	byte area[100];
-	dat_type* handle_ptr;
-	handle_ptr = open_dat(filename, 0);
-	load_from_opendats_to_area(resource, area, sizeof(area), "pal");
-	source = (dat_pal_type*)&(area[1]);
-	source -> row_bits = pal_row_bits;
-	xlat_buffer = malloc_near(0x200);
-	process_palette(xlat_buffer, source);
-	close_dat(handle_ptr);
-	return xlat_buffer;
-#endif
-//return NULL;
 }
 
 // seg000:04CD
@@ -631,6 +553,7 @@ void __pascal far load_sounds(int first,int last) {
 		midi_dat = open_dat("MIDISND1.DAT", 0);
 	}
 	for (current = first; current <= last; ++current) {
+		if (sound_pointers[current] != NULL) continue;
 		/*if (demo_mode) {
 			sound_pointers[current] = decompress_sound((sound_buffer_type*) load_from_opendats_alloc(current + 10000));
 		} else*/ {
@@ -665,6 +588,8 @@ void __pascal far load_opt_sounds(int first,int last) {
 		midi_dat = open_dat("MIDISND2.DAT", 0);
 	}
 	for (current = first; current <= last; ++current) {
+		//We don't free sounds, so load only once.
+		if (sound_pointers[current] != NULL) continue;
 		/*if (demo_mode) {
 			sound_pointers[current] = decompress_sound((sound_buffer_type*) load_from_opendats_alloc(current + 10000));
 		} else*/ {
@@ -697,20 +622,20 @@ void __pascal far load_lev_spr(int level) {
 		tbl_envir_gr[graphics_mode],
 		tbl_envir_ki[tbl_level_type[current_level]]
 	);
-	load_chtab_from_file(id_chtab_6_environment, 200, filename, 1<<5/*, (void*)-1*/);
+	load_chtab_from_file(id_chtab_6_environment, 200, filename, 1<<5);
 	load_more_opt_graf(filename);
 	guardtype = tbl_guard_type[current_level];
 	if (guardtype != -1) {
 		if (guardtype == 0) {
 			dathandle = open_dat(tbl_level_type[current_level] ? "GUARD1.DAT" : "GUARD2.DAT", 0);
 		}
-		load_chtab_from_file(id_chtab_5_guard, 750, tbl_guard_dat[guardtype], 1<<8/*, (void*)-1*/);
+		load_chtab_from_file(id_chtab_5_guard, 750, tbl_guard_dat[guardtype], 1<<8);
 		if (dathandle) {
 			close_dat(dathandle);
 		}
 	}
 	curr_guard_color = 0;
-	load_chtab_from_file(id_chtab_7_environmentwall, 360, filename, 1<<6/*, (void*)-1*/);
+	load_chtab_from_file(id_chtab_7_environmentwall, 360, filename, 1<<6);
 	/*if (comp_skeleton[current_level])*/ {
 		load_opt_sounds(44, 44); // skel alive
 	}
@@ -727,55 +652,11 @@ void __pascal far load_lev_spr(int level) {
 
 // seg000:0E6C
 void __pascal far load_level() {
-#if 1
 	dat_type* dathandle;
 	dathandle = open_dat("LEVELS.DAT", 0);
 	load_from_opendats_to_area(current_level + 2000, &level, sizeof(level), "bin");
 	close_dat(dathandle);
-#else
-	FILE* fp = fopen("LEVELS.DAT","rb");
-	if (fp != NULL) {
-		printf("Loading level %d from LEVELS.DAT\n",current_level);
-		int id = current_level + 2000;
-		// load level from LEVELS.DAT
-		long table_offset;
-		fread(&table_offset, 4, 1, fp);
-		fseek(fp, table_offset, SEEK_SET);
-		short res_count;
-		fread(&res_count, 2, 1, fp);
-		int i;
-		dat_res_type dat_res;
-		for (i = 0; i < res_count; ++i) {
-			fread(&dat_res, 8, 1, fp);
-			if (dat_res.id == id) {
-				break;
-			}
-		}
-		if (i < res_count) {
-			fseek(fp, dat_res.offset, SEEK_SET);
-			byte checksum;
-			fread(&checksum, 1, 1, fp);
-			fread(&level, MIN(sizeof(level), dat_res.size), 1, fp);
-		} else {
-			printf("Can't load level\n");
-			exit(1);
-		}
-		fclose(fp);
-	} else {
-		// load level from a separate file
-		char level_filename[256];
-		snprintf(level_filename,sizeof(level_filename),"data/LEVELS.DAT/%02d",current_level);
-		printf("Loading level: %d from %s\n",current_level,level_filename);
-		FILE* fp;
-		fp = fopen(level_filename,"rb");
-		if (!fp) {
-			printf("Can't load level\n");
-			exit(1);
-		}
-		fread(&level,sizeof(level),1,fp);
-		fclose(fp);
-	}
-#endif
+
 	alter_mods_allrm();
 }
 
@@ -1008,12 +889,12 @@ void __pascal far check_sword_vs_sword() {
 }
 
 // seg000:136A
-void __pascal far load_chtab_from_file(int chtab_id,int resource,const char near *filename,int palette_bits/*,byte* is_pack*/) {
+void __pascal far load_chtab_from_file(int chtab_id,int resource,const char near *filename,int palette_bits) {
 	//printf("Loading chtab %d, id %d from %s\n",chtab_id,resource,filename);
 	dat_type* dathandle;
 	if (chtab_addrs[chtab_id] != NULL) return;
 	dathandle = open_dat(filename, 0);
-	chtab_addrs[chtab_id] = load_sprites_from_file(resource, palette_bits/*, is_pack, chtab_shift[chtab_id]*/,1);
+	chtab_addrs[chtab_id] = load_sprites_from_file(resource, palette_bits, 1);
 	close_dat(dathandle);
 }
 
@@ -1156,13 +1037,13 @@ int __pascal far parse_grmode() {
 
 // seg000:172C
 void __pascal far gen_palace_wall_colors() {
-	dword old_randseed; /*var_4*/
-	word prev_color; /*var_6*/
-	short row; /*var_8*/
-	short subrow; /*var_A*/
-	word color_base; /*var_C*/
-	short column; /*var_E*/
-	word color; /*var_10*/
+	dword old_randseed;
+	word prev_color;
+	short row;
+	short subrow;
+	word color_base;
+	short column;
+	word color;
 
 	old_randseed = random_seed;
 	random_seed = drawn_room;
@@ -1203,45 +1084,40 @@ void __pascal far show_title() {
 	current_target_surface = offscreen_surface;
 	do_wait(0);
 
-	draw_image_2(0 /*main title image*/, chtab_title50, xlat_title_50, 0, 0, blitters_0_no_transp);
+	draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, blitters_0_no_transp);
 	fade_in_2(offscreen_surface, 0x1000); //STUB
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, &screen_rect, &screen_rect, blitters_0_no_transp);
 	play_sound_from_buffer(sound_pointers[54]); // main theme
-	//wait_time0 = 0x82;
 	start_timer(0, 0x82);
-	draw_image_2(1 /*Broderbund Software presents*/, chtab_title50, xlat_title_50, 96, 106, blitters_0_no_transp);
+	draw_image_2(1 /*Broderbund Software presents*/, chtab_title50, 96, 106, blitters_0_no_transp);
 	do_wait(0);
 
-	//wait_time0 = 0xCD;
 	start_timer(0,0xCD);
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, &rect_titles, &rect_titles, blitters_0_no_transp);
-	draw_image_2(0 /*main title image*/, chtab_title50, xlat_title_50, 0, 0, blitters_0_no_transp);
+	draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, blitters_0_no_transp);
 	do_wait(0);
 	
-	//wait_time0 = 0x41;
 	start_timer(0,0x41);
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, &rect_titles, &rect_titles, blitters_0_no_transp);
-	draw_image_2(0 /*main title image*/, chtab_title50, xlat_title_50, 0, 0, blitters_0_no_transp);
-	draw_image_2(2 /*a game by Jordan Mechner*/, chtab_title50, xlat_title_50, 96, 122, blitters_0_no_transp);
+	draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, blitters_0_no_transp);
+	draw_image_2(2 /*a game by Jordan Mechner*/, chtab_title50, 96, 122, blitters_0_no_transp);
 	do_wait(0);
 	
-	//wait_time0 = 0x10E;
 	start_timer(0,0x10E);
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, &rect_titles, &rect_titles, blitters_0_no_transp);
-	draw_image_2(0 /*main title image*/, chtab_title50, xlat_title_50, 0, 0, blitters_0_no_transp);
+	draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, blitters_0_no_transp);
 	do_wait(0);
 	
-	//wait_time0 = 0xEB;
 	start_timer(0,0xEB);
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, &rect_titles, &rect_titles, blitters_0_no_transp);
-	draw_image_2(0 /*main title image*/, chtab_title50, xlat_title_50, 0, 0, blitters_0_no_transp);
-	draw_image_2(3 /*Prince Of Persia*/, chtab_title50, xlat_title_50, 24, 107, blitters_10h_transp);
-	draw_image_2(4 /*Copyright 1990 Jordan Mechner*/, chtab_title50, xlat_title_50, 48, 184, blitters_0_no_transp);
+	draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, blitters_0_no_transp);
+	draw_image_2(3 /*Prince Of Persia*/, chtab_title50, 24, 107, blitters_10h_transp);
+	draw_image_2(4 /*Copyright 1990 Jordan Mechner*/, chtab_title50, 48, 184, blitters_0_no_transp);
 	do_wait(0);
 
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, &rect_titles, &rect_titles, blitters_0_no_transp);
-	draw_image_2(0 /*story frame*/, chtab_title40, xlat_title_40, 0, 0, blitters_0_no_transp);
-	draw_image_2(1 /*In the Sultan's absence*/, chtab_title40, NULL, 24, 25, textcolor);
+	draw_image_2(0 /*story frame*/, chtab_title40, 0, 0, blitters_0_no_transp);
+	draw_image_2(1 /*In the Sultan's absence*/, chtab_title40, 24, 25, textcolor);
 	current_target_surface = onscreen_surface_;
 	while (check_sound_playing()) {
 		idle();
@@ -1258,25 +1134,25 @@ void __pascal far show_title() {
 	
 	load_title_images(1);
 	current_target_surface = offscreen_surface;
-	draw_image_2(0 /*story frame*/, chtab_title40, xlat_title_40, 0, 0, blitters_0_no_transp);
-	draw_image_2(2 /*Marry Jaffar*/, chtab_title40, NULL, 24, 25, textcolor);
+	draw_image_2(0 /*story frame*/, chtab_title40, 0, 0, blitters_0_no_transp);
+	draw_image_2(2 /*Marry Jaffar*/, chtab_title40, 24, 25, textcolor);
 	fade_in_2(offscreen_surface, 0x800);
-	draw_image_2(0 /*main title image*/, chtab_title50, xlat_title_50, 0, 0, blitters_0_no_transp);
-	draw_image_2(3 /*Prince Of Persia*/, chtab_title50, xlat_title_50, 24, 107, blitters_10h_transp);
-	draw_image_2(4 /*Copyright 1990 Jordan Mechner*/, chtab_title50, xlat_title_50, 48, 184, blitters_0_no_transp);
+	draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, blitters_0_no_transp);
+	draw_image_2(3 /*Prince Of Persia*/, chtab_title50, 24, 107, blitters_10h_transp);
+	draw_image_2(4 /*Copyright 1990 Jordan Mechner*/, chtab_title50, 48, 184, blitters_0_no_transp);
 	while (check_sound_playing()) {
 		idle();
 		do_paused();
 	}
 	transition_ltr();
 	pop_wait(0, 0x78);
-	draw_image_2(0 /*story frame*/, chtab_title40, xlat_title_40, 0, 0, blitters_0_no_transp);
-	draw_image_2(4 /*credits*/, chtab_title40, NULL, 24, 26, textcolor);
+	draw_image_2(0 /*story frame*/, chtab_title40, 0, 0, blitters_0_no_transp);
+	draw_image_2(4 /*credits*/, chtab_title40, 24, 26, textcolor);
 	transition_ltr();
 	pop_wait(0, 0x168);
 	if (hof_count) {
-		draw_image_2(0 /*story frame*/, chtab_title40, xlat_title_40, 0, 0, blitters_0_no_transp);
-		draw_image_2(3 /*Prince Of Persia*/, chtab_title50, xlat_title_50, 24, 24, blitters_10h_transp);
+		draw_image_2(0 /*story frame*/, chtab_title40, 0, 0, blitters_0_no_transp);
+		draw_image_2(3 /*Prince Of Persia*/, chtab_title50, 24, 24, blitters_10h_transp);
 		show_hof();
 		transition_ltr();
 		pop_wait(0, 0xF0);
@@ -1319,63 +1195,43 @@ void __pascal far release_title_images() {
 		free_chtab(chtab_title40);
 		chtab_title40 = NULL;
 	}
-	if (xlat_title_40) {
-		free_near(xlat_title_40);
-		xlat_title_40 = NULL;
-	}
-	if (xlat_title_50) {
-		free_near(xlat_title_50);
-		xlat_title_50 = NULL;
-	}
 }
 
 // seg000:1C3A
-void __pascal far draw_image_2(int id, chtab_type* chtab_ptr, void *xlat_tbl, int xpos, int ypos, int blit) {
+void __pascal far draw_image_2(int id, chtab_type* chtab_ptr, int xpos, int ypos, int blit) {
 	image_type* source;
 	image_type* decoded_image;
-	//word stride;
-	//word* stride_ptr;
 	image_type* mask;
 	mask = NULL;
 	source = chtab_ptr->images[id];
-	//stride = source->stride;
-	//stride_ptr = &stride;
-	decoded_image = source;//decode_image_(source, xlat_tbl);
-	if (/* *stride_ptr & 0xF000*/ blit != blitters_0_no_transp && blit != blitters_10h_transp) {
+	decoded_image = source;
+	if (blit != blitters_0_no_transp && blit != blitters_10h_transp) {
 		method_3_blit_mono(decoded_image, xpos, ypos, blitters_0_no_transp, blit);
 	} else if (blit == blitters_10h_transp) {
-
-			if (graphics_mode == gmCga || graphics_mode == gmHgaHerc) {
-				//mask = decode_image_(source, global_xlat_tbl);
-			} else {
-				mask = decoded_image;
-			}
-			draw_image_transp(decoded_image, mask, xpos, ypos);
-			if (graphics_mode == gmCga || graphics_mode == gmHgaHerc) {
-				free_far(mask);
-			}
+		if (graphics_mode == gmCga || graphics_mode == gmHgaHerc) {
+			//...
+		} else {
+			mask = decoded_image;
 		}
-    else {
-			method_6_blit_img_to_scr(decoded_image, xpos, ypos, blit);
+		draw_image_transp(decoded_image, mask, xpos, ypos);
+		if (graphics_mode == gmCga || graphics_mode == gmHgaHerc) {
+			free_far(mask);
+		}
+	} else {
+		method_6_blit_img_to_scr(decoded_image, xpos, ypos, blit);
 	}
 }
 
 // seg000:1D2C
 void __pascal far load_kid_sprite() {
-	load_chtab_from_file(id_chtab_2_kid, 400, "KID.DAT", 1<<7/*, &kid_is_unpack_tbl*/);
+	load_chtab_from_file(id_chtab_2_kid, 400, "KID.DAT", 1<<7);
 }
 
 // seg000:1D45
 void __pascal far save_game() {
 	word success;
 	int handle;
-	//void* dathandle;
 	success = 0;
-	// make sure that disk 2 is inserted
-	/*
-	dathandle = open_dat_2("LEVELS.DAT", 0);
-	close_dat(dathandle);
-	*/
 	// no O_TRUNC
 	handle = open("PRINCE.SAV", O_WRONLY | O_CREAT | O_BINARY, 0600);
 	if (handle == -1) goto loc_1DB8;
@@ -1406,13 +1262,7 @@ void __pascal far save_game() {
 short __pascal far load_game() {
 	int handle;
 	word success;
-	//void* dathandle;
 	success = 0;
-	// make sure that disk 2 is inserted
-	/*
-	dathandle = open_dat_2("LEVELS.DAT", 0);
-	close_dat(dathandle);
-	*/
 	handle = open("PRINCE.SAV", O_RDONLY | O_BINARY);
 	if (handle == -1) goto loc_1E99;
 	if (read(handle, &rem_min, 2) == 2) goto loc_1E9E;
@@ -1439,9 +1289,7 @@ void __pascal far clear_screen_and_sounds() {
 	short index;
 	stop_sounds();
 	current_target_surface = rect_sthg(onscreen_surface_, &screen_rect);
-//	sub_16C37();
-//	sub_16BFC();
-	method_7_alloc(0xFFFE);
+
 	word_1EFAA = 0;
 	peels_count = 0;
 	// should these be freed?
@@ -1452,10 +1300,12 @@ void __pascal far clear_screen_and_sounds() {
 			chtab_addrs[index] = NULL;
 		}
 	}
+	/* //Don't free sounds.
 	for (index = 44; index < 57; ++index) {
 		free_sound(sound_pointers[index]); // added
 		sound_pointers[index] = NULL;
 	}
+	*/
 	current_level = -1;
 }
 
@@ -1465,17 +1315,15 @@ void __pascal far parse_cmdline_sound() {
 	sound_flags |= sfDigi;
 }
 
-// seg000:213C ; int __pascal far ask_disk_?(char far *)
-
-// seg000:21C8 ; int __pascal far ask_disk(char far *diskname,int drive_num)
-
 // seg000:226D
 void __pascal far free_optional_sounds() {
+	/* //Don't free sounds.
 	int sound_id;
 	for (sound_id = 44; sound_id < 57; ++sound_id) {
 		free_sound(sound_pointers[sound_id]);
 		sound_pointers[sound_id] = NULL;
 	}
+	*/
 	// stub
 }
 
@@ -1487,16 +1335,10 @@ void __pascal far free_optsnd_chtab() {
 
 // seg000:22C8
 void __pascal far load_title_images(int bgcolor) {
-	/*byte var_2;
-	word var_4;
-	word var_6;
-	word var_8;*/
-	//byte var_A;
 	dat_type* dathandle;
-	//var_A = 4;
 	dathandle = open_dat("TITLE.DAT", 0);
-	chtab_title40 = load_sprites_from_file(40, 1<<11/*, 0, 0*/,1);
-	chtab_title50 = load_sprites_from_file(50, 1<<12/*, 0, 0*/,1);
+	chtab_title40 = load_sprites_from_file(40, 1<<11, 1);
+	chtab_title50 = load_sprites_from_file(50, 1<<12, 1);
 	close_dat(dathandle);
 	if (graphics_mode == gmMcgaVga) {
 		// background of text frame
@@ -1565,13 +1407,11 @@ char const * const tbl_quotes[2] = {
 
 // seg000:249D
 void __pascal far show_quotes() {
-	//wait_time0 = 0;
 	start_timer(0,0);
 	if (demo_mode && word_1F05E) {
 		draw_rect(&screen_rect, 0);
 		show_text(&screen_rect, -1, 0, tbl_quotes[which_quote]);
 		which_quote = !which_quote;
-		//wait_time0 = 0x384;
 		start_timer(0,0x384);
 	}
 	word_1F05E = 0;

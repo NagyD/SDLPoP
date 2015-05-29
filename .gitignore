@@ -3,7 +3,10 @@ data/music/*.ogg
 data/music/*.mp3
 
 # PoP Hall of Fame file
-prince.hof
+PRINCE.HOF
+
+# PoP saved game file
+PRINCE.SAV
 
 # Object files
 *.o

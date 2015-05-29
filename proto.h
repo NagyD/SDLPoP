@@ -2,7 +2,6 @@
 void far pop_main();
 void __pascal far init_game_main();
 void __pascal far start_game();
-void far *__pascal load_pal_from_dat(const char near *filename,int resource,int pal_row_bits);
 int __pascal far process_key();
 void __pascal far play_frame();
 void __pascal far draw_game_frame();
@@ -26,7 +25,7 @@ void __pascal far do_delta_hp();
 void __pascal far play_sound(int sound_id);
 void __pascal far play_next_sound();
 void __pascal far check_sword_vs_sword();
-void __pascal far load_chtab_from_file(int chtab_id,int resource,const char near *filename,int palette_bits/*,byte* is_pack*/);
+void __pascal far load_chtab_from_file(int chtab_id,int resource,const char near *filename,int palette_bits);
 void __pascal far free_all_chtabs_from(int first);
 void __pascal far load_more_opt_graf(const char *filename);
 int __pascal far do_paused();
@@ -39,14 +38,12 @@ void __pascal far gen_palace_wall_colors();
 void __pascal far show_title();
 void __pascal far transition_ltr();
 void __pascal far release_title_images();
-void __pascal far draw_image_2(int id,chtab_type* chtab_ptr,void *xlat_tbl,int xpos,int ypos,int blit);
+void __pascal far draw_image_2(int id,chtab_type* chtab_ptr,int xpos,int ypos,int blit);
 void __pascal far load_kid_sprite();
 void __pascal far save_game();
 short __pascal far load_game();
 void __pascal far clear_screen_and_sounds();
 void __pascal far parse_cmdline_sound();
-// seg000:213C ; int __pascal far ask_disk_?(char far *)
-// seg000:21C8 ; int __pascal far ask_disk(char far *diskname,int drive_num)
 void __pascal far free_optional_sounds();
 void __pascal far free_optsnd_chtab();
 void __pascal far load_title_images(int bgcolor);
@@ -300,8 +297,6 @@ void __pascal far flip_control_x();
 int __pascal far release_arrows();
 void __pascal far save_ctrl_1();
 void __pascal far rest_ctrl_1();
-// seg006:0E50 ; void __pascal far save_ctrl_2()
-// seg006:0E6F ; void __pascal far rest_ctrl_2()
 void __pascal far clear_saved_ctrl();
 void __pascal far read_user_control();
 int __pascal far can_grab();
@@ -317,7 +312,6 @@ void __pascal far clip_char();
 void __pascal far stuck_lower();
 void __pascal far set_objtile_at_char();
 void __pascal far proc_get_object();
-// seg006:1567 ; int __pascal far sub_8217()
 int __pascal far is_dead();
 void __pascal far play_death_music();
 void __pascal far on_guard_killed();
@@ -409,8 +403,6 @@ void __pascal far check_loose_fall_on_kid();
 void __pascal far fell_on_your_head();
 void __pascal far play_door_sound_if_visible(int sound_id);
 
-
-
 // SEG008.C
 void __pascal far redraw_room();
 void __pascal far load_room_links();
@@ -499,12 +491,10 @@ int __pascal far key_test_quit();
 const char* __pascal far check_param(const char *param);
 int __pascal far pop_wait(int timer_index,int time);
 dat_type *__pascal open_dat(const char *file,int drive);
-//int __pascal far file_exists(const char near *filename) ;
-//int __pascal far load_from_opendats_to_area(int resource,void far *area,int length);
 void __pascal far set_loaded_palette(dat_pal_type far *palette_ptr);
-chtab_type* __pascal load_sprites_from_file(int resource,int palette_bits/*,byte* pack,int shift*/, int quit_on_error);
+chtab_type* __pascal load_sprites_from_file(int resource,int palette_bits, int quit_on_error);
 void __pascal far free_chtab(chtab_type *chtab_ptr);
-image_type*far __pascal far load_image(int index, dat_pal_type* palette/*,void* xlat_tbl,int use_global_xlat,void* target,int pack*/);
+image_type*far __pascal far load_image(int index, dat_pal_type* palette);
 void __pascal far draw_image_transp(image_type far *image,image_type far *mask,int xpos,int ypos);
 int __pascal far set_joy_mode();
 surface_type far *__pascal make_offscreen_buffer(const rect_type far *rect);
@@ -536,12 +526,9 @@ void __pascal far set_pal_arr(int start,int count,const rgb_type far *array,int 
 void __pascal far set_pal(int index,int red,int green,int blue,int vsync);
 int __pascal far add_palette_bits(byte n_colors);
 void __pascal far process_palette(void *target,dat_pal_type far *source);
-// seg009:98F0 ; imghdr_type far *__pascal decode_image_(imghdr_type far *source,char near *xlat_tbl)
 int __pascal far find_first_pal_row(int which_rows_mask);
 int __pascal far get_text_color(int cga_color,int low_half,int high_half_mask);
-//void __pascal far set_loaded_palette(void far *area1_ptr);
 void __pascal far close_dat(dat_type far *pointer);
-//void far *__pascal load_from_opendats_alloc(int id, const char* ext);
 void far *__pascal load_from_opendats_alloc(int resource, const char* extension, data_location* out_result, int* out_size);
 int __pascal far load_from_opendats_to_area(int resource,void far *area,int length, const char* extension);
 void rect_to_sdlrect(const rect_type* rect, SDL_Rect* sdlrect);
@@ -549,8 +536,6 @@ void __pascal far method_1_blit_rect(surface_type near *target_surface,surface_t
 image_type far * __pascal far method_3_blit_mono(image_type far *image,int xpos,int ypos,int blitter,byte color);
 const rect_type far * __pascal far method_5_rect(const rect_type far *rect,int blit,byte color);
 image_type far * __pascal far method_6_blit_img_to_scr(image_type far *image,int xpos,int ypos,int blit);
-void far *__pascal method_7_alloc(int size);
-void __pascal far method_8_free(void far *pointer);
 void __pascal start_timer(int timer_index, int length);
 int __pascal do_wait(int timer_index);
 void __pascal far init_timer(int frequency);

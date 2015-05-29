@@ -1,7 +1,17 @@
 Name of program: SDLPoP
 (Earlier name: David's open-source port of PoP)
 Author: David from forum.princed.org
+Contributors:
+* Andrew (bug reports)
+* htamas (bug reports)
+* Norbert (bug reports)
+* musa (bug reports)
+* Eugene (bug reports)
+* StaticReturn (Mac OS X: Makefile, bug reports)
+* kees (bugfixes)
+* Falcury (porting to SDL2, bugfixes)
 Topic in forum: http://forum.princed.org/viewtopic.php?f=69&t=3512
+GitHub: https://github.com/NagyD/SDLPoP
 
 === GENERAL
 
@@ -54,6 +64,7 @@ Ctrl-R: return to intro
 Ctrl-S: sound on/off
 Ctrl-V: show version
 Ctrl-Q: quit game
+Alt-Enter: toggle fullscreen
 
 Cheats:
 Shift-L: go to next level
@@ -99,6 +110,8 @@ This is useful if you want to compare the behavior of this port and the original
 Note that this port does not recognize if the PRINCE.EXE of the mod was changed.
 
 === DEVELOPING
+
+[TODO: Update this for SDL2.]
 
 Q: How do I (re)compile it?
 A:

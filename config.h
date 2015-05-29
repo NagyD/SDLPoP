@@ -19,8 +19,6 @@
 
 //#define USE_ALPHA
 
-//USE_DATS not ready
-
 // Enable or disable texts.
 #define USE_TEXT
 

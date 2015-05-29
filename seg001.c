@@ -58,7 +58,6 @@ int __pascal far proc_cutscene_frame(int wait_frames) {
 			play_next_sound();
 		}
 		do {
-			//idle();
 			if (!disable_keys && do_paused()) {
 				stop_sounds();
 				draw_rect(&screen_rect, 0);
@@ -83,9 +82,7 @@ int __pascal far proc_cutscene_frame(int wait_frames) {
 #else
 			idle();
 #endif
-//			idle();
-//		} while(/*wait_time0*/ !timer_stopped[0]); // busy waiting?
-		} while(/*wait_time0*/ !has_timer_stopped(0)); // busy waiting?
+		} while(!has_timer_stopped(0)); // busy waiting?
 	} while(--cutscene_wait_frames);
 	return 0;
 }
@@ -540,8 +537,7 @@ void __pascal far end_sequence() {
 	short color;
 	rect_type rect;
 	short hof_index;
-	short var_12;
-	// byte unused[50];
+	short i;
 	color = 0;
 	bgcolor = 15;
 	load_intro(1, &end_sequence_anim, 1);
@@ -552,12 +548,12 @@ void __pascal far end_sequence() {
 	offscreen_surface = make_offscreen_buffer(&screen_rect);
 	load_title_images(0);
 	current_target_surface = offscreen_surface;
-	draw_image_2(0 /*story frame*/, chtab_title40, xlat_title_40, 0, 0, 0);
-	draw_image_2(3 /*The tyrant Jaffar*/, chtab_title40, 0, 24, 25, get_text_color(15, 15, 0x800));
+	draw_image_2(0 /*story frame*/, chtab_title40, 0, 0, 0);
+	draw_image_2(3 /*The tyrant Jaffar*/, chtab_title40, 24, 25, get_text_color(15, 15, 0x800));
 	fade_in_2(offscreen_surface, 0x800);
 	pop_wait(0, 900);
 	start_timer(0, 240);
-	draw_image_2(0 /*main title image*/, chtab_title50, xlat_title_50, 0, 0, 0);
+	draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, 0);
 	transition_ltr();
 	do_wait(0);
 	for (hof_index = 0; hof_index < hof_count; ++hof_index) {
@@ -567,17 +563,17 @@ void __pascal far end_sequence() {
 	}
 	if (hof_index < MAX_HOF_COUNT && hof_index <= hof_count) {
 		fade_out_2(0x1000);
-		for (var_12 = 5; hof_index + 1 <= var_12; --var_12) {
-			hof[var_12] = hof[var_12 - 1];
+		for (i = 5; hof_index + 1 <= i; --i) {
+			hof[i] = hof[i - 1];
 		}
-		hof[var_12].name[0] = 0;
-		hof[var_12].min = rem_min;
-		hof[var_12].tick = rem_tick;
+		hof[i].name[0] = 0;
+		hof[i].min = rem_min;
+		hof[i].tick = rem_tick;
 		if (hof_count < MAX_HOF_COUNT) {
 			++hof_count;
 		}
-		draw_image_2(0 /*story frame*/, chtab_title40, xlat_title_40, 0, 0, 0);
-		draw_image_2(3 /*Prince Of Persia*/, chtab_title50, xlat_title_50, 24, 24, blitters_10h_transp);
+		draw_image_2(0 /*story frame*/, chtab_title40, 0, 0, 0);
+		draw_image_2(3 /*Prince Of Persia*/, chtab_title50, 24, 24, blitters_10h_transp);
 		show_hof();
 		offset4_rect_add(&rect, &hof_rects[hof_index], -4, -1, -40, -1);
 		peel = read_peel_from_screen(&rect);
@@ -594,7 +590,7 @@ void __pascal far end_sequence() {
 		hof_write();
 		pop_wait(0, 120);
 		current_target_surface = offscreen_surface;
-		draw_image_2(0 /*main title image*/, chtab_title50, xlat_title_50, 0, 0, blitters_0_no_transp);
+		draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, blitters_0_no_transp);
 		transition_ltr();
 	}
 	while (check_sound_playing() && !key_test_quit()) idle();
@@ -624,8 +620,8 @@ void __pascal far load_intro(int which_imgs,cutscene_ptr_type func,int free_soun
 		free_optional_sounds();
 	}
 	free_all_chtabs_from(id_chtab_3_princessinstory);
-	load_chtab_from_file(id_chtab_8_princessroom, 950, "PV.DAT", 1<<13/*, (void*)-1*/);
-	load_chtab_from_file(id_chtab_9_princessbed, 980, "PV.DAT", 1<<14/*, (void*)-1*/);
+	load_chtab_from_file(id_chtab_8_princessroom, 950, "PV.DAT", 1<<13);
+	load_chtab_from_file(id_chtab_9_princessbed, 980, "PV.DAT", 1<<14);
 	current_target_surface = offscreen_surface;
 	method_6_blit_img_to_scr(chtab_addrs[id_chtab_8_princessroom]->images[0], 0, 0, 0);
 	method_6_blit_img_to_scr(chtab_addrs[id_chtab_9_princessbed]->images[0], 0, 142, blitters_2_or);
@@ -635,9 +631,9 @@ void __pascal far load_intro(int which_imgs,cutscene_ptr_type func,int free_soun
 	SDL_FreeSurface(chtab_addrs[id_chtab_8_princessroom]->images[0]);
 	chtab_addrs[id_chtab_8_princessroom]->images[0] = NULL;
 	
-	load_chtab_from_file(id_chtab_3_princessinstory, 800, "PV.DAT", 1<<9/*, (void*)-1*/);
+	load_chtab_from_file(id_chtab_3_princessinstory, 800, "PV.DAT", 1<<9);
 	load_chtab_from_file(id_chtab_4_jaffarinstory_princessincutscenes,
-                         50*which_imgs + 850, "PV.DAT", 1<<10/*, (void*)-1*/);
+                         50*which_imgs + 850, "PV.DAT", 1<<10);
 	for (current_star = 0; current_star < N_STARS; ++current_star) {
 		draw_star(current_star, 0);
 	}
