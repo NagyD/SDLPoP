@@ -160,3 +160,5 @@ FIXED: Ctrl-S did not turn off mixer sounds.
 FIXED: Ctrl-S did not stop currently playing sounds.
 DONE: Toggle fullscreen with alt-enter.
 FIXED: If the game is in full screen, and I switch away (alt-tab) and back, most of the screen will be black, until it is redrawn.
+
+For recent changes, look at GitHub: https://github.com/NagyD/SDLPoP/commits/master

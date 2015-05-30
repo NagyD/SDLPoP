@@ -1,5 +1,6 @@
 Name of program: SDLPoP
 (Earlier name: David's open-source port of PoP)
+
 Author: David from forum.princed.org
 Contributors:
 * Andrew (bug reports)
@@ -10,6 +11,8 @@ Contributors:
 * StaticReturn (Mac OS X: Makefile, bug reports)
 * kees (bugfixes)
 * Falcury (porting to SDL2, bugfixes)
+* segrax (Robert Crossfield) (Joystick support, resizable window)
+
 Topic in forum: http://forum.princed.org/viewtopic.php?f=69&t=3512
 GitHub: https://github.com/NagyD/SDLPoP
 
