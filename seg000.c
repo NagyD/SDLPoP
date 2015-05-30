@@ -134,8 +134,8 @@ int __pascal far process_key() {
 	need_show_text = 0;
 	key = key_test_quit();
 
-	sbyte is_shift_pressed = key_states[SDL_SCANCODE_LSHIFT] || key_states[SDL_SCANCODE_RSHIFT];
-	sbyte is_ctrl_pressed = key_states[SDL_SCANCODE_LCTRL] || key_states[SDL_SCANCODE_RCTRL];
+	sbyte is_shift_pressed = key_states[SDL_SCANCODE_LSHIFT] || key_states[SDL_SCANCODE_RSHIFT] | joy_states[2];
+	sbyte is_ctrl_pressed = (key_states[SDL_SCANCODE_LCTRL] || key_states[SDL_SCANCODE_RCTRL]) | joy_states[2];
 
 	if (start_level == 0) {
 		if (key || is_shift_pressed) {
@@ -757,6 +757,20 @@ void __pascal far check_fall_flo() {
 // seg000:1051
 void __pascal far read_joyst_control() {
 	// stub
+	if (joy_states[0] == -1) 
+		control_x = -1;
+	
+	if (joy_states[0] == 1)
+		control_x = 1;
+
+	if (joy_states[1] == -1)
+		control_y = -1;
+
+	if (joy_states[1] == 1)
+		control_y = 1;
+
+	if (joy_states[2])
+		control_shift = -1;
 }
 
 // seg000:10EA

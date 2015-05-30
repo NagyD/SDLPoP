@@ -484,6 +484,10 @@ extern SDL_Surface* onscreen_surface_;
 extern SDL_Renderer* renderer_;
 extern SDL_Window* window_;
 extern SDL_Texture* sdl_texture_;
+extern SDL_Joystick* sdl_controller_ INIT( = 0 );
+
+extern int joy_states[3] INIT( = { 0, 0, 0 } );
+
 extern int screen_updates_suspended;
 
 #ifndef USE_COMPAT_TIMER
