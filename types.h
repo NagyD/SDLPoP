@@ -507,6 +507,8 @@ typedef struct WAV_header_type {
 } WAV_header_type;
 #endif
 
+#pragma pack(pop)
+
 enum soundids {
     sound_0_fell_to_death = 0,
     sound_1_falling = 1,
@@ -564,8 +566,13 @@ enum soundids {
     sound_53_story_3_Jaffar_comes = 53,
 };
 
-#pragma pack(pop)
-
 #define COUNT(array) (sizeof(array)/sizeof(array[0]))
+
+// These are or'ed with SDL_SCANCODE_* constants in last_key_scancode.
+enum key_modifiers {
+	WITH_SHIFT = 0x8000,
+	WITH_CTRL  = 0x4000,
+	WITH_ALT   = 0x2000,
+};
 
 #endif

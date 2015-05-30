@@ -368,7 +368,6 @@ extern const short tbl_guard_type[] INIT(= {0, 0, 0, 2, 0, 0, 1, 0, 0, 0, 0, 0, 
 // data:5888
 extern word curr_guard_color;
 // data:288C
-//extern byte key_states[SDLK_LAST];
 extern byte key_states[SDL_NUM_SCANCODES];
 // data:24A6
 extern const byte x_bump[] INIT(= {-12, 2, 16, 30, 44, 58, 72, 86, 100, 114, 128, 142, 156, 170, 184, 198, 212, 226, 240, 254});

@@ -65,8 +65,7 @@ void __pascal far restore_stuff() {
 int __pascal far key_test_quit() {
 	word key;
 	key = read_key();
-	if (key == SDL_SCANCODE_Q && (key_states[SDL_SCANCODE_LCTRL] || key_states[SDL_SCANCODE_RCTRL])) { // ctrl-q
-//	if (key == 0x11) { // ctrl-q
+	if (key == (SDL_SCANCODE_Q | WITH_CTRL)) { // ctrl-q
 		quit(0);
 	}
 	return key;
@@ -518,16 +517,18 @@ void __pascal far draw_image_transp(image_type far *image,image_type far *mask,i
 // seg009:157E
 int __pascal far set_joy_mode() {
 	// stub
-	if (SDL_NumJoysticks() < 1)
-		return 0;
-
-	sdl_controller_ = SDL_JoystickOpen( 0 );
-	if (sdl_controller_ == NULL)
-		return 0;
-
-	is_joyst_mode = 1;
+	if (SDL_NumJoysticks() < 1) {
+		is_joyst_mode = 0;
+	} else {
+		sdl_controller_ = SDL_JoystickOpen( 0 );
+		if (sdl_controller_ == NULL) {
+			is_joyst_mode = 0;
+		} else {
+			is_joyst_mode = 1;
+		}
+	}
 	is_keyboard_mode = !is_joyst_mode;
-	return 1;
+	return is_joyst_mode;
 }
 
 // seg009:178B
@@ -1090,7 +1091,6 @@ int __pascal far input_str(const rect_type far *rect,char *buffer,int max_length
 					cursor_visible = !cursor_visible;
 				}
 				if (key == SDL_SCANCODE_RETURN) { // enter
-//				if (key == 0x0D) { // enter
 					buffer[length] = 0;
 					return length;
 				} else break;
@@ -1104,14 +1104,12 @@ int __pascal far input_str(const rect_type far *rect,char *buffer,int max_length
 		clear_kbd_buf();
 
 		if (key == SDL_SCANCODE_ESCAPE) { // esc
-//		if (key == 0x1B) { // esc
 			draw_rect(rect, bgcolor);
 			buffer[0] = 0;
 			return -1;
 		}
 		if (length != 0 && (key == SDL_SCANCODE_BACKSPACE ||
 				key == SDL_SCANCODE_DELETE)) { // backspace, delete
-//		if (length != 0 && (key == 8 || key == 0x5300)) { // backspace, delete
 			--length;
 			draw_text_cursor(current_xpos, ypos, bgcolor);
 			current_xpos -= get_char_width(buffer[length]);
@@ -1494,6 +1492,7 @@ sound_buffer_type* load_sound(int index) {
 				struct stat info;
 
 				snprintf(filename, sizeof(filename), "data/music/%s.%s", sound_names[index], ext);
+				// Skip nonexistent files:
 				if (stat(filename, &info))
 					continue;
 				//printf("Trying to load %s\n", filename);
@@ -2208,17 +2207,34 @@ void idle() {
 				int modifier = event.key.keysym.mod;
 				int scancode = event.key.keysym.scancode;
 
-				if ((modifier & (KMOD_LALT | KMOD_RALT)) &&
+				if ((modifier & KMOD_ALT) &&
 					scancode == SDL_SCANCODE_RETURN) {
 					// Alt-Enter: toggle fullscreen mode
 					toggle_fullscreen();
 				} else {
 					key_states[scancode] = 1;
-					last_key_scancode = scancode;
-					if (!last_key_scancode) {
-						if (scancode < SDL_SCANCODE_NUMLOCKCLEAR) {
-							//last_key_scancode = event.key.keysym.scancode << 8;
-						}
+					switch (scancode) {
+						// Keys that are ignored by themselves:
+						case SDL_SCANCODE_LCTRL:
+						case SDL_SCANCODE_LSHIFT:
+						case SDL_SCANCODE_LALT:
+						case SDL_SCANCODE_LGUI:
+						case SDL_SCANCODE_RCTRL:
+						case SDL_SCANCODE_RSHIFT:
+						case SDL_SCANCODE_RALT:
+						case SDL_SCANCODE_RGUI:
+						case SDL_SCANCODE_CAPSLOCK:
+						case SDL_SCANCODE_SCROLLLOCK:
+						case SDL_SCANCODE_NUMLOCKCLEAR:
+						case SDL_SCANCODE_APPLICATION:
+						case SDL_SCANCODE_PRINTSCREEN:
+						case SDL_SCANCODE_PAUSE:
+						break;
+						default:
+						last_key_scancode = scancode;
+						if (modifier & KMOD_SHIFT) last_key_scancode |= WITH_SHIFT;
+						if (modifier & KMOD_CTRL ) last_key_scancode |= WITH_CTRL ;
+						if (modifier & KMOD_ALT  ) last_key_scancode |= WITH_ALT  ;
 					}
 				}
 				break;
@@ -2241,7 +2257,7 @@ void idle() {
 				}
 
 				if (event.jaxis.axis == 1) {
-					if( event.jaxis.value < -8000 ) 
+					if (event.jaxis.value < -8000)
 						joy_states[1] = -1; // up
 					
 					else if (event.jaxis.value > 8000)

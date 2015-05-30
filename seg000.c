@@ -134,13 +134,9 @@ int __pascal far process_key() {
 	need_show_text = 0;
 	key = key_test_quit();
 
-	sbyte is_shift_pressed = key_states[SDL_SCANCODE_LSHIFT] || key_states[SDL_SCANCODE_RSHIFT] | joy_states[2];
-	sbyte is_ctrl_pressed = (key_states[SDL_SCANCODE_LCTRL] || key_states[SDL_SCANCODE_RCTRL]) | joy_states[2];
-
 	if (start_level == 0) {
-		if (key || is_shift_pressed) {
-			if (key == SDL_SCANCODE_L && is_ctrl_pressed) { // ctrl-L
-//			if (key == 12) { // ctrl-L
+		if (key || control_shift) {
+			if (key == (SDL_SCANCODE_L | WITH_CTRL)) { // ctrl-L
 				if (!load_game()) return 0;
 			} else {
 				start_level = 1;
@@ -157,43 +153,31 @@ int __pascal far process_key() {
 	}
 	// If the Kid died, enter or shift will restart the level.
 	if (rem_min != 0 && Kid.alive > 6 && (control_shift || key == SDL_SCANCODE_RETURN)) {
-//		key = 1; // ctrl-a
-		if (current_level != 15) { // restart the level
-			stop_sounds();
-			is_restart_level = 1;
-		}
+		key = SDL_SCANCODE_A | WITH_CTRL; // ctrl-a
 	}
 	if (key == 0) return 0;
 	if (is_keyboard_mode) clear_kbd_buf();
 
 	switch(key) {
 		case SDL_SCANCODE_ESCAPE: // esc
-//		case 27: // esc
 			is_paused = 1;
 		break;
 		case SDL_SCANCODE_SPACE: // space
-//		case ' ': // space
 			is_show_time = 1;
 		break;
-		case SDL_SCANCODE_A: // ctrl-a
-//		case 1: // ctrl-a
-			if (!is_ctrl_pressed) break;
+		case SDL_SCANCODE_A | WITH_CTRL: // ctrl-a
 			if (current_level != 15) {
 				stop_sounds();
 				is_restart_level = 1;
 			}
 		break;
-		case SDL_SCANCODE_G: // ctrl-g
-//		case 7: // ctrl-g
-			if (!is_ctrl_pressed) break;
+		case SDL_SCANCODE_G | WITH_CTRL: // ctrl-g
 			if (current_level > 2 && current_level < 14) {
 				save_game();
 			}
 		break;
-		case SDL_SCANCODE_J: // ctrl-j
-//		case 10: // ctrl-j
-			if (!is_ctrl_pressed) break;
-			if (sound_flags & sfDigi && sound_mode == smTandy) {
+		case SDL_SCANCODE_J | WITH_CTRL: // ctrl-j
+			if ((sound_flags & sfDigi) && sound_mode == smTandy) {
 				answer_text = "JOYSTICK UNAVAILABLE";
 			} else {
 				if (set_joy_mode()) {
@@ -204,23 +188,17 @@ int __pascal far process_key() {
 			}
 			need_show_text = 1;
 		break;
-		case SDL_SCANCODE_K: // ctrl-k
-//		case 11: // ctrl-k
-			if (!is_ctrl_pressed) break;
+		case SDL_SCANCODE_K | WITH_CTRL: // ctrl-k
 			answer_text = "KEYBOARD MODE";
 			is_joyst_mode = 0;
 			is_keyboard_mode = 1;
 			need_show_text = 1;
 		break;
-		case SDL_SCANCODE_R: // ctrl-r
-//		case 18: // ctrl-r
-			if (!is_ctrl_pressed) break;
+		case SDL_SCANCODE_R | WITH_CTRL: // ctrl-r
 			start_level = 0;
 			start_game();
 		break;
-		case SDL_SCANCODE_S: // ctrl-s
-//		case 19: // ctrl-s
-			if (!is_ctrl_pressed) break;
+		case SDL_SCANCODE_S | WITH_CTRL: // ctrl-s
 			turn_sound_on_off((!is_sound_on) * 15);
 			answer_text = "SOUND OFF";
 			if (is_sound_on) {
@@ -229,15 +207,11 @@ int __pascal far process_key() {
 			//
 			need_show_text = 1;
 		break;
-		case SDL_SCANCODE_V: // ctrl-v
-//		case 22: // ctrl-v
-			if (!is_ctrl_pressed) break;
+		case SDL_SCANCODE_V | WITH_CTRL: // ctrl-v
 			answer_text = "PRINCE OF PERSIA  V1.0";
 			need_show_text = 1;
 		break;
-		case SDL_SCANCODE_L: // shift-l
-//		case 'L': // shift-l
-			if (!is_shift_pressed) break;
+		case SDL_SCANCODE_L | WITH_SHIFT: // shift-l
 			if (current_level <= 3 || cheats_enabled) {
 				if (current_level == 14) {
 					next_level = 1;
@@ -258,48 +232,34 @@ int __pascal far process_key() {
 				stop_sounds();
 			}
 		break;
-		//...
 	}
 	if (cheats_enabled) {
 		switch (key) {
-			case SDL_SCANCODE_C:
-//			case 'c':
-				if (is_shift_pressed) { //shift+c
-					snprintf(sprintf_temp, sizeof(sprintf_temp), "AL%d AR%d BL%d BR%d", room_BR, room_BL, room_AR, room_AL);
-					answer_text = /*&*/sprintf_temp;
-					need_show_text = 1;
-				}
-				else { // 'c'
-					snprintf(sprintf_temp, sizeof(sprintf_temp), "S%d L%d R%d A%d B%d", drawn_room, room_L, room_R, room_A, room_B);
-					answer_text = /*&*/sprintf_temp;
-					need_show_text = 1;
-				}
-
+			case SDL_SCANCODE_C: // c
+				snprintf(sprintf_temp, sizeof(sprintf_temp), "S%d L%d R%d A%d B%d", drawn_room, room_L, room_R, room_A, room_B);
+				answer_text = /*&*/sprintf_temp;
+				need_show_text = 1;
 			break;
-//			case 'C': // shift-c
-//				snprintf(sprintf_temp, sizeof(sprintf_temp), "AL%d AR%d BL%d BR%d", room_BR, room_BL, room_AR, room_AL);
-//				answer_text = /*&*/sprintf_temp;
-//				need_show_text = 1;
-//			break;
+			case SDL_SCANCODE_C | WITH_SHIFT: // shift-c
+				snprintf(sprintf_temp, sizeof(sprintf_temp), "AL%d AR%d BL%d BR%d", room_BR, room_BL, room_AR, room_AL);
+				answer_text = /*&*/sprintf_temp;
+				need_show_text = 1;
+			break;
 			case SDL_SCANCODE_MINUS:
 			case SDL_SCANCODE_KP_MINUS:		// '-' --> subtract time cheat
-//			case '-':
 				if (rem_min > 1) --rem_min;
 				text_time_total = 0;
 				text_time_remaining = 0;
 				is_show_time = 1;
 			break;
-			case SDL_SCANCODE_EQUALS:
-				if (!is_shift_pressed) break; // '+'
+			case SDL_SCANCODE_EQUALS | WITH_SHIFT: // '+'
 			case SDL_SCANCODE_KP_PLUS:	   // '+' --> add time cheat
-//			case '+':
 				++rem_min;
 				text_time_total = 0;
 				text_time_remaining = 0;
 				is_show_time = 1;
 			break;
 			case SDL_SCANCODE_R: // R --> revive kid cheat
-//			case 'r':
 				if (Kid.alive > 0) {
 					resurrect_time = 20;
 					Kid.alive = -1;
@@ -307,43 +267,32 @@ int __pascal far process_key() {
 				}
 			break;
 			case SDL_SCANCODE_K: // K --> kill guard cheat
-//			case 'k':
 				guardhp_delta = -guardhp_curr;
 				Guard.alive = 0;
 			break;
-			case SDL_SCANCODE_I: // shift-i
-//			case 'I': // shift-i
-				if (!is_shift_pressed) break; // shift+I --> invert cheat
+			case SDL_SCANCODE_I | WITH_SHIFT: // shift+I --> invert cheat
 				toggle_upside();
 			break;
-			case SDL_SCANCODE_W: // shift-w
-//			case 'W': // shift-w
-				if (!is_shift_pressed) break; // shift+W --> feather fall cheat
+			case SDL_SCANCODE_W | WITH_SHIFT: // shift+W --> feather fall cheat
 				feather_fall();
 			break;
 			case SDL_SCANCODE_H: // H --> view room to the left
-//			case 'h':
 				draw_guard_hp(0, 10);
 				next_room = room_L;
 			break;
 			case SDL_SCANCODE_J: // J --> view room to the right
-//			case 'j':
 				draw_guard_hp(0, 10);
 				next_room = room_R;
 			break;
 			case SDL_SCANCODE_U: // U --> view room above
-//			case 'u':
 				draw_guard_hp(0, 10);
 				next_room = room_A;
 			break;
 			case SDL_SCANCODE_N: // N --> view room below
-//			case 'n':
 				draw_guard_hp(0, 10);
 				next_room = room_B;
 			break;
-			case SDL_SCANCODE_B: // shift-b
-//			case 'B': // shift-b
-				if (!is_shift_pressed) break;
+			case SDL_SCANCODE_B | WITH_SHIFT: // shift-b
 				is_blind_mode = !is_blind_mode;
 				if (is_blind_mode) {
 					draw_rect(&rect_top, 0);
@@ -351,9 +300,7 @@ int __pascal far process_key() {
 					need_full_redraw = 1;
 				}
 			break;
-			case SDL_SCANCODE_S: // shift-s
-//			case 'S': // shift-s
-				if (!is_shift_pressed) break;
+			case SDL_SCANCODE_S | WITH_SHIFT: // shift-s
 				if (hitp_curr != hitp_max) {
 					play_sound(sound_33_small_potion); // small potion (cheat)
 					hitp_delta = 1;
@@ -361,9 +308,7 @@ int __pascal far process_key() {
 					flash_time = 2;
 				}
 			break;
-			case SDL_SCANCODE_T: // shift-t
-//			case 'T': // shift-t
-				if (!is_shift_pressed) break;
+			case SDL_SCANCODE_T | WITH_SHIFT: // shift-t
 				play_sound(sound_30_big_potion); // big potion (cheat)
 				flash_color = 4; // red
 				flash_time = 4;
@@ -371,15 +316,6 @@ int __pascal far process_key() {
 			break;
 		}
 	}
-
-	// function should return 0 if ONLY modifier keys are pressed and nothing else
-	// this ensures that these keys not unpause the game
-	if (key == SDL_SCANCODE_LSHIFT || key == SDL_SCANCODE_RSHIFT ||
-			key == SDL_SCANCODE_LCTRL ||key == SDL_SCANCODE_RCTRL ||
-			key == SDL_SCANCODE_LALT ||key == SDL_SCANCODE_RALT ||
-			key == SDL_SCANCODE_CAPSLOCK ||key == SDL_SCANCODE_SCROLLLOCK ||
-			key == SDL_SCANCODE_NUMLOCKCLEAR || key == SDL_SCANCODE_APPLICATION)
-		return 0;
 
 	if (need_show_text) {
 		display_text_bottom(answer_text);
