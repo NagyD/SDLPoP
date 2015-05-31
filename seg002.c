@@ -16,8 +16,6 @@ const word refractimer [] = { 16, 16, 16, 16,  8,  8,  8,  8,  0,  8,  0,  0};
 const word extrastrength[] = {0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0};
 // data:0EDA
 const byte tbl_guard_hp[] = {4, 3, 3, 3, 3, 4, 5, 4, 4, 5, 5, 5, 4, 6, 0, 0};
-// data:34CA
-word word_1E1AA;
 
 // seg002:0000
 void __pascal far do_init_shad(const byte *source,int seq_index) {

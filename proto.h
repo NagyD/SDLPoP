@@ -50,6 +50,9 @@ void __pascal far load_title_images(int bgcolor);
 void __pascal far show_copyprot(int where);
 void __pascal far show_loading();
 void __pascal far show_quotes();
+#ifdef USE_QUICKSAVE
+void check_quick_op();
+#endif // USE_QUICKSAVE
 
 // SEG001.C
 int __pascal far proc_cutscene_frame(int wait_frames);

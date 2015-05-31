@@ -283,6 +283,9 @@ void __pascal far redraw_screen(int drawing_different_room) {
 // - The next level if the level was completed.
 int __pascal far play_level_2() {
 	while (1) { // main loop
+#ifdef USE_QUICKSAVE
+		check_quick_op();
+#endif // USE_QUICKSAVE
 		if (Kid.sword == sword_2_drawn) {
 			// speed when fighting (smaller is faster)
 			start_timer(1, 6);

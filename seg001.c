@@ -725,7 +725,7 @@ void __pascal far hof_read() {
 	if (handle < 0)
 		return;
 	if (read(handle, &hof_count, 2) != 2 ||
-	    read(handle, &hof, sizeof(hof) != sizeof(hof))) {
+	    read(handle, &hof, sizeof(hof)) != sizeof(hof)) {
 		perror(hof_path);
 		hof_count = 0;
 	}

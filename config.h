@@ -30,6 +30,9 @@
 // Use mixer and enable music.
 #define USE_MIXER
 
+// Enable quicksave/load feature.
+#define USE_QUICKSAVE
+
 // Bugfixes:
 
 // If a room is linked to itself on the left, the closing sounds of the gates in that room can't be heard.

@@ -2293,6 +2293,14 @@ void idle() {
 				request_screen_update();
 			}
 */
+				switch (event.window.event) {
+					case SDL_WINDOWEVENT_SIZE_CHANGED:
+					//case SDL_WINDOWEVENT_MOVED:
+					//case SDL_WINDOWEVENT_RESTORED:
+					case SDL_WINDOWEVENT_EXPOSED:
+						request_screen_update();
+						break;
+				}
 				break;
 			case SDL_USEREVENT:
 				if (event.user.code == userevent_TIMER /*&& event.user.data1 == (void*)timer_index*/) {

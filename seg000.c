@@ -125,6 +125,165 @@ void __pascal far start_game() {
 	}
 }
 
+#ifdef USE_QUICKSAVE
+// All these functions return true on success, false otherwise.
+
+typedef int process_func_type(void* data, size_t data_size);
+
+int quick_process(process_func_type process_func) {
+	int ok = 1;
+#define process(x) ok = ok && process_func(&(x), sizeof(x))
+	// level
+	process(level);
+	process(checkpoint);
+	process(upside_down);
+	process(drawn_room);
+	process(current_level);
+	process(next_level);
+	process(mobs_count);
+	process(mobs);
+	process(trobs_count);
+	process(trobs);
+	process(leveldoor_open);
+	//process(exit_room_timer);
+	// kid
+	process(Kid);
+	process(hitp_curr);
+	process(hitp_max);
+	process(hitp_beg_lev);
+	process(grab_timer);
+	process(holding_sword);
+	process(united_with_shadow);
+	process(have_sword);
+	/*process(ctrl1_forward);
+	process(ctrl1_backward);
+	process(ctrl1_up);
+	process(ctrl1_down);
+	process(ctrl1_shift2);*/
+	process(kid_sword_strike);
+	process(pickup_obj_type);
+	process(word_1EFCE);
+	// guard
+	process(Guard);
+	process(guardhp_curr);
+	process(guardhp_max);
+	process(demo_index);
+	process(demo_time);
+	process(curr_guard_color);
+	process(guard_notice_timer);
+	process(guard_skill);
+	process(shadow_initialized);
+	process(guard_refrac);
+	process(word_1E1AA);
+	process(word_1EA12);
+	// collision
+	/*process(curr_row_coll_room);
+	process(curr_row_coll_flags);
+	process(below_row_coll_room);
+	process(below_row_coll_flags);
+	process(above_row_coll_room);
+	process(above_row_coll_flags);
+	process(prev_collision_row);*/
+	// flash
+	process(flash_color);
+	process(flash_time);
+	// sounds
+	process(need_level1_music);
+	process(is_screaming);
+	process(is_feather_fall);
+	process(last_loose_sound);
+	//process(next_sound);
+	//process(current_sound);
+	// random
+	process(random_seed);
+#undef process
+	return ok;
+}
+
+FILE* quick_fp;
+
+int process_save(void* data, size_t data_size) {
+	return fwrite(data, data_size, 1, quick_fp) == 1;
+}
+
+int process_load(void* data, size_t data_size) {
+	return fread(data, data_size, 1, quick_fp) == 1;
+}
+
+const char* const quick_file = "QUICKSAVE.SAV";
+
+int quick_save() {
+	int ok = 0;
+	quick_fp = fopen(quick_file, "wb");
+	if (quick_fp != NULL) {
+		ok = quick_process(process_save);
+		fclose(quick_fp);
+		quick_fp = NULL;
+	}
+	return ok;
+}
+
+int quick_load() {
+	stop_sounds();
+	int ok = 0;
+	quick_fp = fopen(quick_file, "rb");
+	if (quick_fp != NULL) {
+		ok = quick_process(process_load);
+		fclose(quick_fp);
+		quick_fp = NULL;
+	}
+	int temp1 = curr_guard_color;
+	int temp2 = next_level;
+	load_lev_spr(current_level);
+	curr_guard_color = temp1;
+	next_level = temp2;
+	
+	//need_full_redraw = 1;
+	different_room = 1;
+	next_room = drawn_room;
+	load_room_links();
+	//draw_level_first();
+	//gen_palace_wall_colors();
+	draw_game_frame(); // for falling
+	//redraw_screen(1); // for room_L
+	
+	hitp_delta = guardhp_delta = 1; // force HP redraw
+	draw_hp();
+	// Get rid of "press button" message if kid was dead before quickload.
+	text_time_total = text_time_remaining = 0;
+	//next_sound = current_sound = -1;
+	exit_room_timer = 0;
+	return ok;
+}
+
+int need_quick_save = 0;
+int need_quick_load = 0;
+
+void check_quick_op() {
+	if (need_quick_save) {
+		if (quick_save()) {
+			display_text_bottom("QUICKSAVE");
+		} else {
+			display_text_bottom("NO QUICKSAVE");
+		}
+		need_quick_save = 0;
+		text_time_total = 24;
+		text_time_remaining = 24;
+	}
+	if (need_quick_load) {
+		if (quick_load()) {
+			display_text_bottom("QUICKLOAD");
+		} else {
+			display_text_bottom("NO QUICKLOAD");
+		}
+		need_quick_load = 0;
+		text_time_total = 24;
+		text_time_remaining = 24;
+	}
+}
+
+#endif // USE_QUICKSAVE
+
 // seg000:04CD
 int __pascal far process_key() {
 	char sprintf_temp[80];
@@ -160,6 +319,7 @@ int __pascal far process_key() {
 
 	switch(key) {
 		case SDL_SCANCODE_ESCAPE: // esc
+		case SDL_SCANCODE_ESCAPE | WITH_SHIFT: // allow pause while grabbing
 			is_paused = 1;
 		break;
 		case SDL_SCANCODE_SPACE: // space
@@ -232,6 +392,14 @@ int __pascal far process_key() {
 				stop_sounds();
 			}
 		break;
+#ifdef USE_QUICKSAVE
+		case SDL_SCANCODE_F6:
+			need_quick_save = 1;
+		break;
+		case SDL_SCANCODE_F9:
+			need_quick_load = 1;
+		break;
+#endif // USE_QUICKSAVE
 	}
 	if (cheats_enabled) {
 		switch (key) {
@@ -913,7 +1081,7 @@ int __pascal far do_paused() {
 		// busy waiting?
 		do {
 			idle();
-			request_screen_update();
+			//request_screen_update();
 		} while (! process_key());
 		erase_bottom_text(1);
 	}

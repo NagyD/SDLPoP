@@ -4,31 +4,11 @@
 sbyte bump_col_left_of_wall;
 // data:436E
 sbyte bump_col_right_of_wall;
-// data:405A
-sbyte collision_row;
-// data:42C2
-sbyte prev_collision_row;
 // data:4C0A
 sbyte right_checked_col;
 // data:408A
 sbyte left_checked_col;
 
-// data:4C10
-sbyte prev_coll_room[10];
-// data:4374
-sbyte curr_row_coll_room[10];
-// data:3D06
-sbyte below_row_coll_room[10];
-// data:42D2
-sbyte above_row_coll_room[10];
-// data:5890
-byte curr_row_coll_flags[10];
-// data:4CEA
-byte above_row_coll_flags[10];
-// data:4C4C
-byte below_row_coll_flags[10];
-// data:5BA0
-byte prev_coll_flags[10];
 
 // data:4C0C
 short coll_tile_left_xpos;

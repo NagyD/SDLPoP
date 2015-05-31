@@ -502,6 +502,42 @@ extern char** sound_names;
 extern int g_argc;
 extern char** g_argv;
 
+
+// data:405A
+sbyte collision_row;
+// data:42C2
+sbyte prev_collision_row;
+
+// data:4C10
+sbyte prev_coll_room[10];
+// data:4374
+sbyte curr_row_coll_room[10];
+// data:3D06
+sbyte below_row_coll_room[10];
+// data:42D2
+sbyte above_row_coll_room[10];
+// data:5890
+byte curr_row_coll_flags[10];
+// data:4CEA
+byte above_row_coll_flags[10];
+// data:4C4C
+byte below_row_coll_flags[10];
+// data:5BA0
+byte prev_coll_flags[10];
+
+
+// data:4F80
+short pickup_obj_type;
+
+
+// data:34CA
+word word_1E1AA;
+
+
+// data:5F84
+word last_loose_sound;
+
+
 #undef INIT
 #undef extern
 

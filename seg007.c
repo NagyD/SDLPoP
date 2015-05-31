@@ -831,8 +831,6 @@ void __pascal far animate_loose() {
 
 // data:2734
 const byte loose_sound[] = {0, 1, 1, 1, 0, 1, 0, 0, 1, 0, 0, 0};
-// data:5F84
-word last_loose_sound;
 // seg007:0E55
 void __pascal far loose_shake(int arg_0) {
 	word sound_id;

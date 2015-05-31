@@ -68,6 +68,8 @@ Ctrl-S: sound on/off
 Ctrl-V: show version
 Ctrl-Q: quit game
 Alt-Enter: toggle fullscreen
+F6: quicksave
+F9: quickload
 
 Cheats:
 Shift-L: go to next level
