@@ -548,7 +548,7 @@ enum soundids {
     sound_35_cutscene_8_9 = 35,
     sound_36_out_of_time = 36,
     sound_37_victory = 37,
-    //sound_38 = 38, // = silent
+    sound_38_blink = 38,
     sound_39_low_weight = 39,
     sound_40_cutscene_12_short_time = 40,
     sound_41_end_level_music = 41,
@@ -564,6 +564,14 @@ enum soundids {
     sound_51_princess_door_opening = 51,
     sound_52_story_4_Jaffar_leaves = 52,
     sound_53_story_3_Jaffar_comes = 53,
+    sound_54_intro_music = 54,
+    sound_55_story_1_absence = 55,
+    sound_56_ending_music = 56,
+};
+
+enum timerids {
+	timer_0 = 0,
+	timer_1 = 1,
 };
 
 #define COUNT(array) (sizeof(array)/sizeof(array[0]))

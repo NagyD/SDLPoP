@@ -464,7 +464,8 @@ extern sbyte ctrl1_down;
 // data:42F8
 extern sbyte ctrl1_shift2;
 
-
+extern sbyte is_shift_pressed;
+extern sbyte is_ctrl_pressed;
 
 // data:42F0
 extern word shadow_initialized;

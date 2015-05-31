@@ -1084,7 +1084,7 @@ int __pascal far input_str(const rect_type far *rect,char *buffer,int max_length
 				draw_text_cursor(current_xpos, ypos, bgcolor);
 			}
 			cursor_visible = !cursor_visible;
-			start_timer(0, 6);
+			start_timer(timer_0, 6);
 			if (key) {
 				if (cursor_visible) {
 					draw_text_cursor(current_xpos, ypos, color);
@@ -1421,7 +1421,6 @@ void init_digi() {
 	desired->freq = digi_samplerate; //buffer->digi.sample_rate;
 	desired->format = AUDIO_U8;
 	desired->channels = 1;
-	//desired->samples = buffer->digi.sample_count;
 	desired->samples = /*4096*/ /*512*/ 256;
 #ifndef USE_MIXER
 	desired->callback = digi_callback;
@@ -1484,7 +1483,7 @@ sound_buffer_type* load_sound(int index) {
 		//load_sound_names();  // Moved to load_sounds()
 		if (sound_names != NULL && sound_names[index] != NULL) {
 			//printf("Loading from music folder\n");
-			const char* exts[]={"mp3","ogg","flac","wav"};
+			const char* exts[]={"ogg","mp3","flac","wav"};
 			int i;
 			for (i = 0; i < COUNT(exts); ++i) {
 				char filename[256];
@@ -1690,8 +1689,7 @@ void __pascal far set_gr_mode(byte grmode) {
 	window_ = SDL_CreateWindow(WINDOW_TITLE,
 										  SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 										  POP_WINDOW_WIDTH, POP_WINDOW_HEIGHT, flags);
-	renderer_ = SDL_CreateRenderer(window_, -1 , 0);
-    SDL_RenderPresent(renderer_); // this simply draws a black screen
+	renderer_ = SDL_CreateRenderer(window_, -1 , SDL_RENDERER_ACCELERATED );
 	
 	// Allow us to use a consistent set of screen co-ordinates, even if the screen size changes
 	SDL_RenderSetLogicalSize(renderer_, POP_WINDOW_WIDTH, POP_WINDOW_HEIGHT);
@@ -1703,7 +1701,7 @@ void __pascal far set_gr_mode(byte grmode) {
      * The function handling the screen updates is request_screen_update()
      * */
     onscreen_surface_ = SDL_CreateRGBSurface(0, 320, 200, 24, 0xFF, 0xFF<<8, 0xFF<<16, 0) ;
-	sdl_texture_ = SDL_CreateTexture(renderer_, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,
+	sdl_texture_ = SDL_CreateTexture(renderer_, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING,
 												 320, 200);
 	screen_updates_suspended = 0;
 
@@ -1729,12 +1727,10 @@ void __pascal far set_gr_mode(byte grmode) {
 
 void request_screen_update() {
 	if (!screen_updates_suspended) {
-		SDL_Surface *surface_32bpp = SDL_ConvertSurfaceFormat(onscreen_surface_, SDL_PIXELFORMAT_ARGB8888, 0);
-		SDL_UpdateTexture(sdl_texture_, NULL, surface_32bpp->pixels, surface_32bpp->pitch);
+		SDL_UpdateTexture(sdl_texture_, NULL, onscreen_surface_->pixels, onscreen_surface_->pitch);
 		SDL_RenderClear(renderer_);
 		SDL_RenderCopy(renderer_, sdl_texture_, NULL, NULL);
 		SDL_RenderPresent(renderer_);
-		SDL_FreeSurface(surface_32bpp);
 	}
 }
 
@@ -2140,7 +2136,16 @@ void remove_timer(int timer_index) {
 #endif
 }
 
+int target_time;
+
 Uint32 timer_callback(Uint32 interval, void *param) {
+	int now = SDL_GetTicks();
+
+	// let the timer finish 5 ms earlier to allow for overhead before the next frame is displayed
+	// this is somewhat ugly and may cause the game to run slightly too fast on fast systems (not tested)
+	int residual_wait_time = target_time - now - 5;
+	if (residual_wait_time > 0 && residual_wait_time <= 40) SDL_Delay(residual_wait_time);
+
 	SDL_Event event;
 	memset(&event, 0, sizeof(event));
 	event.type = SDL_USEREVENT;
@@ -2167,7 +2172,18 @@ void __pascal start_timer(int timer_index, int length) {
 	}
 	timer_stopped[timer_index] = length<=0;
 	if (length <= 0) return;
-	SDL_TimerID timer = SDL_AddTimer(length*1000/fps, timer_callback, (void*)(uintptr_t)timer_index);
+
+	int now = SDL_GetTicks();
+	double frametime = 1000.0 / 60.0;
+//	double frametime = (timer_index == 1) ? 16.60 : 1000.0 / 60.0;
+	int target_length = (int) (length * frametime);
+
+	// subtract 40ms to allow for variable lag; correct for this when the timer ends
+	target_time = now + target_length;
+	int modified_length = target_length - 40;
+
+	SDL_TimerID timer = SDL_AddTimer(modified_length, timer_callback, (void*)(uintptr_t)timer_index);
+
 	if (timer == 0) {
 		sdlperror("SDL_AddTimer");
 		quit(1);
@@ -2237,10 +2253,14 @@ void idle() {
 						if (modifier & KMOD_ALT  ) last_key_scancode |= WITH_ALT  ;
 					}
 				}
+				is_shift_pressed = (key_states[SDL_SCANCODE_LSHIFT] || key_states[SDL_SCANCODE_RSHIFT]);
+				is_ctrl_pressed = (key_states[SDL_SCANCODE_LCTRL] || key_states[SDL_SCANCODE_RCTRL]);
 				break;
 			}
 			case SDL_KEYUP:
 				key_states[event.key.keysym.scancode] = 0;
+				is_shift_pressed = (key_states[SDL_SCANCODE_LSHIFT] || key_states[SDL_SCANCODE_RSHIFT]);
+				is_ctrl_pressed = (key_states[SDL_SCANCODE_LCTRL] || key_states[SDL_SCANCODE_RCTRL]);
 				break;
 
 			case SDL_JOYAXISMOTION:
@@ -2424,7 +2444,7 @@ void __pascal far set_bg_attr(int vga_pal_index,int hc_pal_index) {
 		request_screen_update();
 		// Give some time to show the flash.
 		//SDL_Flip(onscreen_surface_);
-		if (hc_pal_index != 0) SDL_Delay(2*1000/60);
+//		if (hc_pal_index != 0) SDL_Delay(2*(1000/60));
 		//SDL_Flip(onscreen_surface_);
 		/*
 		if (SDL_SetAlpha(offscreen_surface, 0, 0) != 0) {
@@ -2466,7 +2486,7 @@ void __pascal far fade_in_2(surface_type near *source_surface,int which_rows) {
 	if (graphics_mode == gmMcgaVga) {
 		palette_buffer = make_pal_buffer_fadein(source_surface, which_rows, 2);
 		while (fade_in_frame(palette_buffer) == 0) {
-			pop_wait(1, 0); // modified
+			pop_wait(timer_1, 0); // modified
 		}
 		pal_restore_free_fadein(palette_buffer);
 	} else {
@@ -2517,7 +2537,7 @@ int __pascal far fade_in_frame(palette_fade_type far *palette_buffer) {
 	rgb_type* original_pal_ptr;
 	word current_row_mask;
 //	void* var_12;
-	/**/start_timer(1, palette_buffer->wait_time); // too slow?
+	/**/start_timer(timer_1, palette_buffer->wait_time); // too slow?
 	//printf("start ticks = %u\n",SDL_GetTicks());
 	--palette_buffer->fade_pos;
 	for (start=0,current_row_mask=1; start<0x100; start+=0x10, current_row_mask<<=1) {
@@ -2576,7 +2596,7 @@ int __pascal far fade_in_frame(palette_fade_type far *palette_buffer) {
 	request_screen_update();
 		
 //	/**/do_simple_wait(1); // too slow?
-	do_wait(1);
+	do_wait(timer_1);
 	//printf("end ticks = %u\n",SDL_GetTicks());
 	return palette_buffer->fade_pos == 0;
 }
@@ -2587,7 +2607,7 @@ void __pascal far fade_out_2(int rows) {
 	if (graphics_mode == gmMcgaVga) {
 		palette_buffer = make_pal_buffer_fadeout(rows, 2);
 		while (fade_out_frame(palette_buffer) == 0) {
-			pop_wait(1, 0); // modified
+			pop_wait(timer_1, 0); // modified
 		}
 		pal_restore_free_fadeout(palette_buffer);
 	} else {
@@ -2634,7 +2654,7 @@ int __pascal far fade_out_frame(palette_fade_type far *palette_buffer) {
 	byte* curr_color_ptr;
 	var_8 = 1;
 	++palette_buffer->fade_pos; // modified
-	/**/start_timer(1, palette_buffer->wait_time); // too slow?
+	/**/start_timer(timer_1, palette_buffer->wait_time); // too slow?
 	for (start=0,current_row_mask=1; start<0x100; start+=0x10, current_row_mask<<=1) {
 		if (palette_buffer->which_rows & current_row_mask) {
 			//var_12 = palette_buffer->
@@ -2696,7 +2716,7 @@ int __pascal far fade_out_frame(palette_fade_type far *palette_buffer) {
 	request_screen_update();
 	
 //	/**/do_simple_wait(1); // too slow?
-	do_wait(1);
+	do_wait(timer_1);
 	return var_8;
 }
 

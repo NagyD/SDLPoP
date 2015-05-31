@@ -1068,14 +1068,9 @@ void __pascal far load_alter_mod(int tilepos) {
 
 // seg008:1AF8
 void __pascal far draw_moving() {
-	screen_updates_suspended++;
-
 	draw_mobs();
 	draw_people();
 	redraw_needed_tiles();
-
-	screen_updates_suspended--;
-	request_screen_update();
 }
 
 // seg008:1B06
@@ -1116,8 +1111,6 @@ void __pascal far draw_tile_wipe(byte height) {
 
 // seg008:1BEB
 void __pascal far draw_tables() {
-	screen_updates_suspended++;
-
 	drects_count = 0;
 	current_target_surface = offscreen_surface;
 	if (is_blind_mode) {
@@ -1132,9 +1125,6 @@ void __pascal far draw_tables() {
 	draw_table(1); // foretable
 	current_target_surface = onscreen_surface_;
 	show_copyprot(1);
-
-	screen_updates_suspended--;
-	request_screen_update();
 }
 
 // seg008:1C4E

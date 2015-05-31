@@ -44,7 +44,7 @@ rect_type hof_rects[MAX_HOF_COUNT] = {
 int __pascal far proc_cutscene_frame(int wait_frames) {
 	cutscene_wait_frames = wait_frames;
 	do {
-		start_timer(0, cutscene_frame_time);
+		start_timer(timer_0, cutscene_frame_time);
 		play_both_seq();
 		draw_proom_drects(); // changed order of drects and flash
 		if (flash_time) {
@@ -514,10 +514,20 @@ void __pascal far do_flash(short color) {
 	if (color) {
 		if (graphics_mode == gmMcgaVga) {
 			set_bg_attr(0, color);
+			if (color != 0) delay_ticks(2); // give some time to show the flash
 		} else {
 			// ...
 		}
 	}
+}
+
+void delay_ticks(Uint32 ticks) {
+	SDL_Delay(ticks *(1000/60));
+}
+
+// This flashes the background with the color specified, but does not add delay to show the flash
+void do_flash_no_delay(short color) {
+	if (color) set_bg_attr(0, color);
 }
 
 // seg001:0981
@@ -542,8 +552,8 @@ void __pascal far end_sequence() {
 	bgcolor = 15;
 	load_intro(1, &end_sequence_anim, 1);
 	clear_screen_and_sounds();
-	load_opt_sounds(56, 56); // winning theme
-	play_sound_from_buffer(sound_pointers[56]); // winning theme
+	load_opt_sounds(sound_56_ending_music, sound_56_ending_music); // winning theme
+	play_sound_from_buffer(sound_pointers[sound_56_ending_music]); // winning theme
 	if(offscreen_surface) free_surface(offscreen_surface); // missing in original
 	offscreen_surface = make_offscreen_buffer(&screen_rect);
 	load_title_images(0);
@@ -552,10 +562,10 @@ void __pascal far end_sequence() {
 	draw_image_2(3 /*The tyrant Jaffar*/, chtab_title40, 24, 25, get_text_color(15, 15, 0x800));
 	fade_in_2(offscreen_surface, 0x800);
 	pop_wait(0, 900);
-	start_timer(0, 240);
+	start_timer(timer_0, 240);
 	draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, 0);
 	transition_ltr();
-	do_wait(0);
+	do_wait(timer_0);
 	for (hof_index = 0; hof_index < hof_count; ++hof_index) {
 		if (hof[hof_index].min < rem_min ||
 			(hof[hof_index].min == rem_min && hof[hof_index].tick < rem_tick)
@@ -588,7 +598,7 @@ void __pascal far end_sequence() {
 		restore_peel(peel);
 		show_hof_text(&hof_rects[hof_index], -1, 0, hof[hof_index].name);
 		hof_write();
-		pop_wait(0, 120);
+		pop_wait(timer_0, 120);
 		current_target_surface = offscreen_surface;
 		draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, blitters_0_no_transp);
 		transition_ltr();

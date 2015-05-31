@@ -1,12 +1,17 @@
 cmake_minimum_required(VERSION 3.1)
 project(SDLPoP)
 
-# Use C++11
+# Use C++11 when using the C++ compiler
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-# Use the -mwindows compiler flag when compiling with MinGW to hide the console window
+
 if (WIN32)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mwindows")
+    # Use the -mwindows compiler flag when compiling with MinGW to hide the console window
+    # Only do this in debug mode
+    if (NOT (CMAKE_BUILD_TYPE STREQUAL "Debug"))
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mwindows")
+        set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -mwindows")
+    endif (NOT (CMAKE_BUILD_TYPE STREQUAL "Debug"))
 endif(WIN32)
 
 # have CMake output binaries to the directory that contains the source files
@@ -19,7 +24,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${SDLPoP_SOURCE_DIR}")
 #link_directories(${DIR_SDL2}/lib)
 
 set(SOURCE_FILES
-    main.c
+    main.cpp # replace with main.c when using the C instead of the C++ compiler
     common.h
     config.h
     data.c

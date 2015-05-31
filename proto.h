@@ -89,6 +89,8 @@ void __pascal far princess_room_torch();
 void __pascal far draw_hourglass();
 void __pascal far reset_cutscene();
 void __pascal far do_flash(short color);
+void delay_ticks(Uint32 ticks);
+void do_flash_no_delay(short color);
 void __pascal far remove_flash();
 void __pascal far end_sequence();
 void __pascal far expired();
@@ -175,7 +177,7 @@ void __pascal far pos_guards();
 void __pascal far check_can_guard_see_kid();
 byte __pascal far get_tile_at_kid(int xpos);
 void __pascal far do_mouse();
-void __pascal far flash_if_hurt();
+int __pascal far flash_if_hurt();
 void __pascal far remove_flash_if_hurt();
 
 // SEG004.C

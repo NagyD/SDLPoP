@@ -87,6 +87,7 @@ void __pascal far start_game() {
 	word entry_used[40];
 	byte letts_used[26];
 #endif
+	screen_updates_suspended = 0;
 	// Prevent filling of stack.
 	// start_game is called from many places to restart the game, for example:
 	// process_key, play_frame, draw_game_frame, play_level, control_kid, end_sequence, expired
@@ -282,7 +283,17 @@ void check_quick_op() {
 	}
 }
 
+
 #endif // USE_QUICKSAVE
+
+Uint32 skip_cutscene_callback(Uint32 interval, void *param) {
+	SDL_RemoveTimer(*(SDL_TimerID*) param);
+	const Uint8* state = SDL_GetKeyboardState(NULL);
+	if (state[SDL_SCANCODE_LSHIFT]) key_states[SDL_SCANCODE_LSHIFT] = 1;
+	if (state[SDL_SCANCODE_RSHIFT]) key_states[SDL_SCANCODE_RSHIFT] = 1;
+//	if (state[SDL_SCANCODE_LCTRL]) key_states[SDL_SCANCODE_LCTRL] = 1;
+//	if (state[SDL_SCANCODE_RCTRL]) key_states[SDL_SCANCODE_RCTRL] = 1;
+}
 
 // seg000:04CD
 int __pascal far process_key() {
@@ -292,6 +303,9 @@ int __pascal far process_key() {
 	word need_show_text;
 	need_show_text = 0;
 	key = key_test_quit();
+
+//	sbyte is_shift_pressed = key_states[SDL_SCANCODE_LSHIFT] || key_states[SDL_SCANCODE_RSHIFT];
+//	sbyte is_ctrl_pressed = key_states[SDL_SCANCODE_LCTRL] || key_states[SDL_SCANCODE_RCTRL];
 
 	if (start_level == 0) {
 		if (key || control_shift) {
@@ -373,6 +387,16 @@ int __pascal far process_key() {
 		break;
 		case SDL_SCANCODE_L | WITH_SHIFT: // shift-l
 			if (current_level <= 3 || cheats_enabled) {
+				// if shift is not released within the delay, the cutscene is skipped
+				Uint32 delay = 250;
+				key_states[SDL_SCANCODE_LSHIFT] = 0;
+				key_states[SDL_SCANCODE_RSHIFT] = 0;
+				SDL_TimerID timer;
+				timer = SDL_AddTimer(delay, skip_cutscene_callback, &timer);
+				if (timer == 0) {
+					sdlperror("SDL_AddTimer");
+					quit(1);
+				}
 				if (current_level == 14) {
 					next_level = 1;
 				} else {
@@ -544,8 +568,6 @@ void __pascal far play_frame() {
 
 // seg000:09B6
 void __pascal far draw_game_frame() {
-	screen_updates_suspended = 1;
-
 	short var_2;
 	if (need_full_redraw) {
 		redraw_screen(0);
@@ -581,8 +603,6 @@ void __pascal far draw_game_frame() {
 			}
 		}
 	}
-	screen_updates_suspended = 0;
-	request_screen_update();
 
 	play_next_sound();
 	// Note: texts are identified by their total time!
@@ -612,7 +632,7 @@ void __pascal far draw_game_frame() {
 				} else {
 					if (var_2 == 3) {
 						display_text_bottom("Press Button to Continue");
-						play_sound_from_buffer(sound_pointers[38]); // press button blink
+						play_sound_from_buffer(sound_pointers[sound_38_blink]); // press button blink
 					}
 				}
 			}
@@ -643,19 +663,24 @@ void __pascal far anim_tile_modif() {
 void __pascal far load_sounds(int first,int last) {
 	dat_type* ibm_dat = NULL;
 	dat_type* digi1_dat = NULL;
-	//dat_type* digi2_dat = NULL;
+//	dat_type* digi2_dat = NULL;
 	dat_type* digi3_dat = NULL;
 	dat_type* midi_dat = NULL;
 	short current;
 	ibm_dat = open_dat("IBM_SND1.DAT", 0);
 	if (sound_flags & sfDigi) {
 		digi1_dat = open_dat("DIGISND1.DAT", 0);
-		//digi2_dat = open_dat("DIGISND2.DAT", 0);
+//		digi2_dat = open_dat("DIGISND2.DAT", 0);
 		digi3_dat = open_dat("DIGISND3.DAT", 0);
 	}
 	if (sound_flags & sfMidi) {
 		midi_dat = open_dat("MIDISND1.DAT", 0);
 	}
+
+	#ifdef USE_MIXER
+	load_sound_names();
+	#endif
+
 	for (current = first; current <= last; ++current) {
 		if (sound_pointers[current] != NULL) continue;
 		/*if (demo_mode) {
@@ -663,16 +688,14 @@ void __pascal far load_sounds(int first,int last) {
 		} else*/ {
 			//sound_pointers[current] = (sound_buffer_type*) load_from_opendats_alloc(current + 10000, "bin", NULL, NULL);
 			//printf("overwriting sound_pointers[%d] = %p\n", current, sound_pointers[current]);
-			#ifdef USE_MIXER
-			load_sound_names();
-			#endif
+
 
 			sound_pointers[current] = load_sound(current);
 		}
 	}
 	if (midi_dat) close_dat(midi_dat);
 	if (digi1_dat) close_dat(digi1_dat);
-	//if (digi2_dat) close_dat(digi2_dat);
+//	if (digi2_dat) close_dat(digi2_dat);
 	if (digi3_dat) close_dat(digi3_dat);
 	close_dat(ibm_dat);
 }
@@ -1193,40 +1216,40 @@ const rect_type rect_titles = {106,24,195,296};
 // seg000:17E6
 void __pascal far show_title() {
 	word textcolor;
-	load_opt_sounds(50, 55); // main theme, story, princess door
+	load_opt_sounds(sound_50_story_2_princess, sound_55_story_1_absence); // main theme, story, princess door
 	textcolor = get_text_color(15, 15, 0x800);
 	dont_reset_time = 0;
 	if(offscreen_surface) free_surface(offscreen_surface); // missing in original
 	offscreen_surface = make_offscreen_buffer(&screen_rect);
 	load_title_images(1);
 	current_target_surface = offscreen_surface;
-	do_wait(0);
+	do_wait(timer_0);
 
 	draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, blitters_0_no_transp);
 	fade_in_2(offscreen_surface, 0x1000); //STUB
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, &screen_rect, &screen_rect, blitters_0_no_transp);
 	play_sound_from_buffer(sound_pointers[54]); // main theme
-	start_timer(0, 0x82);
+	start_timer(timer_0, 0x82);
 	draw_image_2(1 /*Broderbund Software presents*/, chtab_title50, 96, 106, blitters_0_no_transp);
 	do_wait(0);
 
-	start_timer(0,0xCD);
+	start_timer(timer_0,0xCD);
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, &rect_titles, &rect_titles, blitters_0_no_transp);
 	draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, blitters_0_no_transp);
 	do_wait(0);
 	
-	start_timer(0,0x41);
+	start_timer(timer_0,0x41);
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, &rect_titles, &rect_titles, blitters_0_no_transp);
 	draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, blitters_0_no_transp);
 	draw_image_2(2 /*a game by Jordan Mechner*/, chtab_title50, 96, 122, blitters_0_no_transp);
 	do_wait(0);
 	
-	start_timer(0,0x10E);
+	start_timer(timer_0,0x10E);
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, &rect_titles, &rect_titles, blitters_0_no_transp);
 	draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, blitters_0_no_transp);
 	do_wait(0);
 	
-	start_timer(0,0xEB);
+	start_timer(timer_0,0xEB);
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, &rect_titles, &rect_titles, blitters_0_no_transp);
 	draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, blitters_0_no_transp);
 	draw_image_2(3 /*Prince Of Persia*/, chtab_title50, 24, 107, blitters_10h_transp);
@@ -1242,9 +1265,9 @@ void __pascal far show_title() {
 		do_paused();
 	}
 //	method_1_blit_rect(onscreen_surface_, offscreen_surface, &screen_rect, &screen_rect, blitters_0_no_transp);
-	play_sound_from_buffer(sound_pointers[55]); // story 1: In the absence
+	play_sound_from_buffer(sound_pointers[sound_55_story_1_absence]); // story 1: In the absence
 	transition_ltr();
-	pop_wait(0, 0x258);
+	pop_wait(timer_0, 0x258);
 	fade_out_2(0x800);
 	release_title_images();
 	
@@ -1267,13 +1290,13 @@ void __pascal far show_title() {
 	draw_image_2(0 /*story frame*/, chtab_title40, 0, 0, blitters_0_no_transp);
 	draw_image_2(4 /*credits*/, chtab_title40, 24, 26, textcolor);
 	transition_ltr();
-	pop_wait(0, 0x168);
+	pop_wait(timer_0, 0x168);
 	if (hof_count) {
 		draw_image_2(0 /*story frame*/, chtab_title40, 0, 0, blitters_0_no_transp);
 		draw_image_2(3 /*Prince Of Persia*/, chtab_title50, 24, 24, blitters_10h_transp);
 		show_hof();
 		transition_ltr();
-		pop_wait(0, 0xF0);
+		pop_wait(timer_0, 0xF0);
 	}
 	current_target_surface = onscreen_surface_;
 	while (check_sound_playing()) {
@@ -1299,7 +1322,7 @@ void __pascal far transition_ltr() {
 		method_1_blit_rect(onscreen_surface_, offscreen_surface, &rect, &rect, 0);
 		rect.left += 2;
 		rect.right += 2;
-		pop_wait(1, 0);
+		pop_wait(timer_1, 0);
 	}
 }
 
@@ -1420,6 +1443,7 @@ void __pascal far clear_screen_and_sounds() {
 	}
 	/* //Don't free sounds.
 	for (index = 44; index < 57; ++index) {
+		//continue; // don't release sounds? modern machines have enough memory
 		free_sound(sound_pointers[index]); // added
 		sound_pointers[index] = NULL;
 	}
@@ -1525,12 +1549,12 @@ char const * const tbl_quotes[2] = {
 
 // seg000:249D
 void __pascal far show_quotes() {
-	start_timer(0,0);
+	start_timer(timer_0,0);
 	if (demo_mode && word_1F05E) {
 		draw_rect(&screen_rect, 0);
 		show_text(&screen_rect, -1, 0, tbl_quotes[which_quote]);
 		which_quote = !which_quote;
-		start_timer(0,0x384);
+		start_timer(timer_0,0x384);
 	}
 	word_1F05E = 0;
 }

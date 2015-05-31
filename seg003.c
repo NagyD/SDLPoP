@@ -195,6 +195,8 @@ void __pascal far find_start_level_door() {
 
 // seg003:0326
 void __pascal far draw_level_first() {
+	screen_updates_suspended = 1;
+
 	next_room = Kid.room;
 	check_the_end();
 	if (tbl_level_type[current_level]) {
@@ -204,15 +206,16 @@ void __pascal far draw_level_first() {
 	show_level();
 	redraw_screen(0);
 	draw_kid_hp(hitp_curr, hitp_max);
+
+	screen_updates_suspended = 0;
+	request_screen_update();
 	// Busy waiting!
-	start_timer(1, 5);
+	start_timer(timer_1, 5);
 	do_simple_wait(1);
 }
 
 // seg003:037B
 void __pascal far redraw_screen(int drawing_different_room) {
-	screen_updates_suspended++;
-
 	//remove_flash();
 	if (drawing_different_room) {
 		draw_rect(&rect_top, 0);
@@ -272,9 +275,6 @@ void __pascal far redraw_screen(int drawing_different_room) {
 		}
 	}
 	exit_room_timer = 2;
-
-	screen_updates_suspended--;
-	request_screen_update();
 }
 
 // seg003:04F8
@@ -288,10 +288,10 @@ int __pascal far play_level_2() {
 #endif // USE_QUICKSAVE
 		if (Kid.sword == sword_2_drawn) {
 			// speed when fighting (smaller is faster)
-			start_timer(1, 6);
+			start_timer(timer_1, 6);
 		} else {
 			// speed when not fighting (smaller is faster)
-			start_timer(1, 5);
+			start_timer(timer_1, 5);
 		}
 		guardhp_delta = 0;
 		hitp_delta = 0;
@@ -302,10 +302,16 @@ int __pascal far play_level_2() {
 			return current_level;
 		} else {
 			if (next_level == current_level || check_sound_playing()) {
-				draw_game_frame(); // changed order of draw and flash
-				flash_if_hurt();
+				screen_updates_suspended = 1;
+				draw_game_frame();
+				if (flash_if_hurt()) {
+					screen_updates_suspended = 0;
+					request_screen_update(); // display the flash
+					delay_ticks(2);          // and add a short delay
+				}
+				screen_updates_suspended = 0;
 				remove_flash_if_hurt();
-				// Busy waiting!
+				request_screen_update(); // request screen update manually
 				do_simple_wait(1);
 			} else {
 				stop_sounds();
@@ -589,12 +595,15 @@ void __pascal far do_mouse() {
 }
 
 // seg003:0AFC
-void __pascal far flash_if_hurt() {
+int __pascal far flash_if_hurt() {
 	if (flash_time != 0) {
-		do_flash(flash_color);
+		do_flash_no_delay(flash_color); // don't add delay to the flash
+		return 1;
 	} else if (hitp_delta < 0) {
-		do_flash(12); // red
+		do_flash_no_delay(12); // red
+		return 1;
 	}
+	return 0; // not flashed
 }
 
 // seg003:0B1A
