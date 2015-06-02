@@ -286,13 +286,11 @@ void check_quick_op() {
 
 #endif // USE_QUICKSAVE
 
-Uint32 skip_cutscene_callback(Uint32 interval, void *param) {
-	SDL_RemoveTimer(*(SDL_TimerID*) param);
+Uint32 temp_shift_release_callback(Uint32 interval, void *param) {
 	const Uint8* state = SDL_GetKeyboardState(NULL);
 	if (state[SDL_SCANCODE_LSHIFT]) key_states[SDL_SCANCODE_LSHIFT] = 1;
 	if (state[SDL_SCANCODE_RSHIFT]) key_states[SDL_SCANCODE_RSHIFT] = 1;
-//	if (state[SDL_SCANCODE_LCTRL]) key_states[SDL_SCANCODE_LCTRL] = 1;
-//	if (state[SDL_SCANCODE_RCTRL]) key_states[SDL_SCANCODE_RCTRL] = 1;
+	return 0; // causes the timer to be removed
 }
 
 // seg000:04CD
@@ -303,9 +301,6 @@ int __pascal far process_key() {
 	word need_show_text;
 	need_show_text = 0;
 	key = key_test_quit();
-
-//	sbyte is_shift_pressed = key_states[SDL_SCANCODE_LSHIFT] || key_states[SDL_SCANCODE_RSHIFT];
-//	sbyte is_ctrl_pressed = key_states[SDL_SCANCODE_LCTRL] || key_states[SDL_SCANCODE_RCTRL];
 
 	if (start_level == 0) {
 		if (key || control_shift) {
@@ -392,7 +387,7 @@ int __pascal far process_key() {
 				key_states[SDL_SCANCODE_LSHIFT] = 0;
 				key_states[SDL_SCANCODE_RSHIFT] = 0;
 				SDL_TimerID timer;
-				timer = SDL_AddTimer(delay, skip_cutscene_callback, &timer);
+				timer = SDL_AddTimer(delay, temp_shift_release_callback, NULL);
 				if (timer == 0) {
 					sdlperror("SDL_AddTimer");
 					quit(1);

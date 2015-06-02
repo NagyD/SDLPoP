@@ -2253,14 +2253,10 @@ void idle() {
 						if (modifier & KMOD_ALT  ) last_key_scancode |= WITH_ALT  ;
 					}
 				}
-				is_shift_pressed = (key_states[SDL_SCANCODE_LSHIFT] || key_states[SDL_SCANCODE_RSHIFT]);
-				is_ctrl_pressed = (key_states[SDL_SCANCODE_LCTRL] || key_states[SDL_SCANCODE_RCTRL]);
 				break;
 			}
 			case SDL_KEYUP:
 				key_states[event.key.keysym.scancode] = 0;
-				is_shift_pressed = (key_states[SDL_SCANCODE_LSHIFT] || key_states[SDL_SCANCODE_RSHIFT]);
-				is_ctrl_pressed = (key_states[SDL_SCANCODE_LCTRL] || key_states[SDL_SCANCODE_RCTRL]);
 				break;
 
 			case SDL_JOYAXISMOTION:

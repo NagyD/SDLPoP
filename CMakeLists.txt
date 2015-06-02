@@ -7,10 +7,10 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 if (WIN32)
     # Use the -mwindows compiler flag when compiling with MinGW to hide the console window
-    # Only do this in debug mode
+    # Only do this when not in debug mode
     if (NOT (CMAKE_BUILD_TYPE STREQUAL "Debug"))
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mwindows")
-        set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -mwindows")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mwindows")
     endif (NOT (CMAKE_BUILD_TYPE STREQUAL "Debug"))
 endif(WIN32)
 
@@ -43,6 +43,8 @@ set(SOURCE_FILES
     types.h
 )
 add_executable(SDLPoP ${SOURCE_FILES})
+
+# @Todo: add a configuration for Mac OS X
 
 target_link_libraries(SDLPoP mingw32 SDL2main SDL2 SDL2.dll SDL2_image SDL2_mixer)
 
