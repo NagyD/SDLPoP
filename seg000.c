@@ -226,6 +226,13 @@ int quick_save() {
 
 int quick_load() {
 	stop_sounds();
+
+	start_timer(timer_0, 5); // briefly display a black screen as a visual cue
+	draw_rect(&screen_rect, 0);
+	screen_updates_suspended = 0;
+	request_screen_update();
+	screen_updates_suspended = 1;
+
 	int ok = 0;
 	quick_fp = fopen(quick_file, "rb");
 	if (quick_fp != NULL) {
@@ -250,6 +257,11 @@ int quick_load() {
 	
 	hitp_delta = guardhp_delta = 1; // force HP redraw
 	draw_hp();
+
+	do_wait(timer_0);
+	screen_updates_suspended = 0;
+	request_screen_update();
+
 	// Get rid of "press button" message if kid was dead before quickload.
 	text_time_total = text_time_remaining = 0;
 	//next_sound = current_sound = -1;
