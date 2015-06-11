@@ -188,6 +188,7 @@ void __pascal far set_start_pos() {
 	knock = 0;
 	upside_down = 0;
 	is_feather_fall = 0;
+	is_shadow_effect = 0;
 	Char.fall_y = 0;
 	Char.fall_x = 0;
 	word_1EFCE = 0;
@@ -435,6 +436,11 @@ void __pascal far timers() {
 	}
 	if (is_feather_fall && !check_sound_playing()) {
 		is_feather_fall = 0;
+	}
+	if (is_shadow_effect > 0) {
+		--is_shadow_effect;
+		if (is_shadow_effect == 0)
+			united_with_shadow = 10; // blink before the effect wears off completely
 	}
 	// Special event: mouse
 	if (current_level == 8 && Char.room == 16 && leveldoor_open) {

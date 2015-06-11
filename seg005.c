@@ -96,7 +96,7 @@ void __pascal far land() {
 			}
 		}
 		{
-			if (Char.fall_y < 22) {
+			if (Char.fall_y < 22 || is_shadow_effect) {
 				loc_5EFD:
 				if (Char.charid >= charid_2_guard || Char.sword == sword_2_drawn) {
 					Char.sword = sword_2_drawn;
@@ -589,9 +589,10 @@ void __pascal far can_climb_up() {
 	control_up = control_shift2 = release_arrows();
 	get_tile_above_char();
 	if (((curr_tile2 == tiles_13_mirror || curr_tile2 == tiles_18_chomper) &&
-		Char.direction == dir_0_right) ||
-		(curr_tile2 == tiles_4_gate && Char.direction != dir_0_right &&
-		curr_room_modif[curr_tilepos] >> 2 < 6)
+			Char.direction == dir_0_right) ||
+			(curr_tile2 == tiles_4_gate && Char.direction != dir_0_right &&
+					!is_shadow_effect &&
+					curr_room_modif[curr_tilepos] >> 2 < 6)
 	) {
 		seq_id = 73; // climb up to closed gate and down
 	}
