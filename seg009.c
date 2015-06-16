@@ -2431,10 +2431,16 @@ void __pascal far set_bg_attr(int vga_pal_index,int hc_pal_index) {
 			quit(1);
 		}
 		//SDL_UpdateRect(onscreen_surface_, 0, 0, 0, 0);
+		if (upside_down) {
+			flip_screen(offscreen_surface);
+		}
 		// Then draw the offscreen image onto it.
 		if (SDL_BlitSurface(offscreen_surface, &rect, onscreen_surface_, &rect) != 0) {
 			sdlperror("SDL_BlitSurface");
 			quit(1);
+		}
+		if (upside_down) {
+			flip_screen(offscreen_surface);
 		}
 		// And show it!
 		request_screen_update();
