@@ -43,6 +43,7 @@ void __pascal far init_game(int level) {
 		hitp_beg_lev = 3;
 	}
 	need_level1_music = (level == 1);
+	reset_room_script_overrides();
 	play_level(level);
 }
 
@@ -86,6 +87,7 @@ void __pascal far play_level(int level) {
 				quit(1);
 			}
 			cutscene_func = tbl_cutscenes[level];
+			do_scripted_cutscene_override(&cutscene_func);
 			if (cutscene_func != NULL) {
 				load_intro(level > 2, cutscene_func, 1);
 			}
@@ -140,6 +142,10 @@ void __pascal far play_level(int level) {
 // seg003:01A3
 void __pascal far do_startpos() {
 	word x;
+
+	do_scripted_start_pos_override(&level.start_room, &level.start_pos);
+	do_scripted_start_dir_override(&level.start_dir);
+
 	// Special event: start at checkpoint
 	if (current_level == 3 && checkpoint) {
 		level.start_dir = dir_FF_left;
@@ -337,6 +343,7 @@ int __pascal far play_level_2() {
 				stop_sounds();
 				hitp_beg_lev = hitp_max;
 				checkpoint = 0;
+				do_scripted_next_level_override(&next_level);
 				return next_level;
 			}
 		}
