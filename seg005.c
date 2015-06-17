@@ -264,11 +264,13 @@ void __pascal far control_standing() {
 
 // seg005:0482
 void __pascal far up_pressed() {
-	if ((get_tile_at_char() == tiles_16_level_door_left ||
-		get_tile_behind_char() == tiles_16_level_door_left ||
-		get_tile_infrontof_char() == tiles_16_level_door_left) &&
+	int leveldoor_tilepos = -1;
+	if (get_tile_at_char() == tiles_16_level_door_left) leveldoor_tilepos = curr_tilepos;
+	else if (get_tile_behind_char() == tiles_16_level_door_left) leveldoor_tilepos = curr_tilepos;
+	else if (get_tile_infrontof_char() == tiles_16_level_door_left) leveldoor_tilepos = curr_tilepos;
+	if ((leveldoor_tilepos != -1) &&
 		level.start_room != drawn_room &&
-		leveldoor_open
+		curr_room_modif[leveldoor_tilepos] >= 43 // this door must be fully open
 	){
 		go_up_leveldoor();
 	} else {
