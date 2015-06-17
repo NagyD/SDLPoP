@@ -262,6 +262,8 @@ int quick_load() {
 	screen_updates_suspended = 0;
 	request_screen_update();
 
+	// Kid should not move immediately after quickload
+	clear_saved_ctrl();
 	// Get rid of "press button" message if kid was dead before quickload.
 	text_time_total = text_time_remaining = 0;
 	//next_sound = current_sound = -1;
