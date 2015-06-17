@@ -1167,8 +1167,11 @@ void __pascal far draw_leveldoor() {
 	leveldoor_right = (draw_xh<<3)+48;
 	if (tbl_level_type[current_level]) leveldoor_right += 8;
 	add_backtable(id_chtab_6_environment, 99 /*leveldoor stairs bottom*/, draw_xh + 1, 0, ybottom, blitters_0_no_transp, 0);
-	if (level.start_room != drawn_room && modifier_left) {
+	if (modifier_left) {
 		add_backtable(id_chtab_6_environment, 144 /*level door stairs*/, draw_xh + 1, 0, ybottom - 4, blitters_0_no_transp, 0);
+		// In the starting room, black out the stairs again
+		if (level.start_room == drawn_room)
+			add_backtable(id_chtab_6_environment, 144 /*level door stairs*/, draw_xh + 1, 0, ybottom - 4, blitters_9_black, 0);
 	}
 	leveldoor_ybottom = ybottom - (modifier_left & 3) - 48;
 	for (var_6 = ybottom - modifier_left;
