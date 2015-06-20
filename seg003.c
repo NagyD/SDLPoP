@@ -43,7 +43,7 @@ void __pascal far init_game(int level) {
 		hitp_beg_lev = 3;
 	}
 	need_level1_music = (level == 1);
-	reset_room_script_overrides();
+	reset_room_script();
 	play_level(level);
 }
 
@@ -68,7 +68,7 @@ const cutscene_ptr_type tbl_cutscenes[16] = {
 };
 
 // seg003:005C
-void __pascal far play_level(int level) {
+void __pascal far play_level(int level_number) {
 	cutscene_ptr_type cutscene_func;
 #ifdef USE_COPYPROT
 	if (level == copyprot_level) {
@@ -76,29 +76,34 @@ void __pascal far play_level(int level) {
 	}
 #endif
 	for (;;) {
-		if (demo_mode && level > 2) {
+		if (demo_mode && level_number > 2) {
 			start_level = 0;
 			word_1F05E = 1;
 			start_game();
 		}
-		if (level != current_level) {
-			if (level<0 || level>15) {
-				printf("Tried to load cutscene for level %d, not in 0..15", level);
+		if (level_number != current_level) {
+			if (level_number <0 || level_number >15) {
+				printf("Tried to load cutscene for level %d, not in 0..15", level_number);
 				quit(1);
 			}
-			cutscene_func = tbl_cutscenes[level];
+			cutscene_func = tbl_cutscenes[level_number];
 			do_scripted_cutscene_override(&cutscene_func);
 			if (cutscene_func != NULL) {
-				load_intro(level > 2, cutscene_func, 1);
+				load_intro(level_number > 2, cutscene_func, 1);
 			}
 		}
-		if (level != current_level) {
-			load_lev_spr(level);
+		if (level_number != current_level) {
+			load_lev_spr(level_number);
 		}
 		load_level();
 		pos_guards();
 		clear_coll_rooms();
 		clear_saved_ctrl();
+
+		do_scripted_start_pos_override(&level.start_room, &level.start_pos);
+		do_scripted_start_dir_override(&level.start_dir);
+		check_room_script(level.start_room);
+
 		drawn_room = 0;
 		mobs_count = 0;
 		trobs_count = 0;
@@ -116,14 +121,14 @@ void __pascal far play_level(int level) {
 		Guard.charid = charid_2_guard;
 		Guard.direction = dir_56_none;
 		do_startpos();
-		have_sword = (level != 1);
+		have_sword = (level_number != 1);
 		find_start_level_door();
 		// busy waiting?
 		while (check_sound_playing() && !do_paused()) idle();
 		stop_sounds();
 		draw_level_first();
 		show_copyprot(0);
-		level = play_level_2();
+		level_number = play_level_2();
 		// hacked...
 #ifdef USE_COPYPROT
 		if (level == copyprot_level && !demo_mode) {
@@ -142,9 +147,6 @@ void __pascal far play_level(int level) {
 // seg003:01A3
 void __pascal far do_startpos() {
 	word x;
-
-	do_scripted_start_pos_override(&level.start_room, &level.start_pos);
-	do_scripted_start_dir_override(&level.start_dir);
 
 	// Special event: start at checkpoint
 	if (current_level == 3 && checkpoint) {
@@ -171,7 +173,7 @@ void __pascal far do_startpos() {
 		}
 		hitp_max = hitp_curr = x;
 	}
-	if (current_level == 1) {
+	if (current_level == 1 && !override_lvl1_falling_entry) {
 		// Special event: press tile + falling entry
 		get_tile(5, 2, 0);
 		trigger(0, 0, -1);
@@ -428,6 +430,13 @@ void __pascal far check_knock() {
 
 // seg003:0735
 void __pascal far timers() {
+	if (need_level1_music > 2 && override_lvl1_falling_entry) {
+		--need_level1_music;
+		if (need_level1_music == 2) {
+			stop_sounds();
+			play_sound(sound_25_presentation);
+		}
+	}
 	if (united_with_shadow > 0) {
 		--united_with_shadow;
 		if (united_with_shadow == 0) {

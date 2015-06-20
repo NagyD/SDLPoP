@@ -132,7 +132,6 @@ void __pascal far draw_room() {
 		draw_bottom_y = 63 * drawn_row + 65;
 		draw_main_y = draw_bottom_y - 3;
 		for (drawn_col = 0; drawn_col < 10; drawn_col++) {
-			check_room_script(drawn_room, drawn_row * 10 + drawn_col);
 			load_curr_and_left_tile();
 			draw_tile();
 		}

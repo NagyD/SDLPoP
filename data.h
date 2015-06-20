@@ -507,6 +507,9 @@ extern int joy_states[3] INIT( = { 0, 0, 0 } );
 
 extern int screen_updates_suspended;
 
+extern word is_remaining_time_overridden;
+extern byte override_lvl1_falling_entry;
+
 #ifndef USE_COMPAT_TIMER
 extern int timer_stopped[2];
 #else

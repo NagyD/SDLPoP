@@ -428,6 +428,10 @@ Possible values of trob_type:
 				curr_modifier = 0;
 				trob.type = -1;
 				play_sound(sound_14_leveldoor_closing); // level door closing
+				if (current_level == 1 && need_level1_music == 1 && override_lvl1_falling_entry) {
+					// Special event: presentation using level door instead of falling entry
+					need_level1_music = 8; // variable reused as a timer
+				}
 			} else {
 				if (trob.type == 4 &&
 					(sound_flags & sfDigi)

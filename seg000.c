@@ -896,6 +896,7 @@ void __pascal far check_the_end() {
 		start_chompers();
 		check_fall_flo();
 		check_shadow();
+		check_room_script(drawn_room);
 	}
 }
 

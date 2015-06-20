@@ -15,81 +15,93 @@ enum script_op_ids {
     op_75_set_next_cutscene = 75,
     op_76_set_guard_dir_left = 76,
     op_77_set_guard_dir_right = 77,
+    op_78_cancel_falling_entry = 78,
 };
 
-void reset_room_script_overrides(){
+void reset_room_script(){
     override_next_level = 0;
     override_next_start_pos_doorlink = 0;
     override_next_start_dir_right = 0;
     override_next_start_dir_left = 0;
     override_cutscene = 0;
+    override_lvl1_falling_entry = 0;
+    is_remaining_time_overridden = 0;
 }
 
 
-void check_room_script(byte room, byte tilepos) {
+void check_room_script(byte room) {
+//    printf("Checking for script tiles in room %d...\n", room);
 
     // get the address of the tiles and modifiers in this room
     byte* room_tiles = &level.fg[(room-1)*30];
     byte* room_modif = &level.bg[(room-1)*30];
 
-    byte modifier = room_modif[tilepos];
-    byte tile = room_tiles[tilepos] & 0x1F;
-    //if (modifier == 77) printf("Detected something in room %d, tilepos %d, tile %d\n", room, tilepos, tile);
-    if (tile != tiles_0_empty) return; // ignore all but empty tiles
+    byte tilepos;
+    for(tilepos = 0; tilepos < 30; ++tilepos) {
+        byte tile = room_tiles[tilepos] & 0x1F;
+        if (tile != tiles_0_empty) continue; // only empty tiles can be script tiles
 
-    if (modifier >= 70) printf("Detected script tile in room %d, tilepos %d, modifier %d\n", room, tilepos, modifier);
+        byte modifier = room_modif[tilepos]; // modifier is the opcode
 
-    // Set time remaining (runs only once)
-    if (modifier == op_70_set_remaining_time) {
-        room_modif[tilepos] = 0;
-        if (tilepos >= 29) return; // cannot use last tile in the room, leave room for a parameter!
-        rem_min = room_modif[tilepos+1];
-        rem_tick = 719;
-        is_show_time = 1;
-        room_modif[tilepos+1] = 0;
-    }
+        byte adjacent_modifier;
+        if (tilepos < 29) adjacent_modifier = room_modif[tilepos+1]; // adjacent tile
+        else adjacent_modifier = 0; // the last tile in the room defaults to parameter 0
 
-    // Override next level (checked right before the next level is loaded)
-    if (modifier == op_71_set_next_level) {
-        if (tilepos >= 29) return;
-        override_next_level = room_modif[tilepos+1];
-    }
+//        if (modifier >= 70 && modifier <= 78)
+//            printf("Detected script tile in room %d, tilepos %d, modifier %d\n", room, tilepos, modifier);
 
-    // Override start position of next level (checked AFTER next level is loaded)
-    if (modifier == op_72_set_next_start_pos) {
-        if (tilepos >= 29) return;
-        override_next_start_pos_doorlink = room_modif[tilepos+1];
-    }
-
-    // Override start direction of next level (checked AFTER next level is loaded)
-    if (modifier == op_73_set_next_start_dir_left) {
-        override_next_start_dir_left = 1;
-        override_next_start_dir_right = 0;
-    }
-    if (modifier == op_74_set_next_start_dir_right) {
-        override_next_start_dir_left = 0;
-        override_next_start_dir_right = 1;
-    }
-
-    // Set which cutscene will be played before the next level
-    if (modifier == op_75_set_next_cutscene) {
-        if (tilepos >= 29) return;
-        byte par = room_modif[tilepos+1];
-        override_cutscene = (par == 0) ? 255 : par; // parameter 0 will cancel the cutscene (equivalent to 255)
-    }
-
-    // Set the direction of a guard in a specific room
-    if (modifier == op_76_set_guard_dir_left || modifier == op_77_set_guard_dir_right) {
-        if (tilepos >= 29) return;
-        byte dir = (modifier == op_76_set_guard_dir_left) ? dir_FF_left : dir_0_right;
-        int guard_room = room_modif[tilepos+1];
-        if (guard_room == 0) {
-            Char.direction = dir;
-            level.guards_dir[room-1] = dir;
-            return;
+        // Set time remaining (runs only once per game session)
+        if (modifier == op_70_set_remaining_time && !is_remaining_time_overridden) {
+            rem_min = adjacent_modifier;
+            rem_tick = 719;
+            is_show_time = 1;
+            is_remaining_time_overridden = 1;
         }
-        level.guards_dir[guard_room-1] = dir;
-        //printf("Setting guard direction %d in room %d, current room = %d\n", dir, guard_room, room);
+
+        // Override next level (checked right before the next level is loaded)
+        if (modifier == op_71_set_next_level) {
+            override_next_level = adjacent_modifier;
+        }
+
+        // Override start position of next level (checked AFTER next level is loaded)
+        if (modifier == op_72_set_next_start_pos) {
+            override_next_start_pos_doorlink = adjacent_modifier;
+        }
+
+        // Override start direction of next level (checked AFTER next level is loaded)
+        if (modifier == op_73_set_next_start_dir_left) {
+            override_next_start_dir_left = 1;
+            override_next_start_dir_right = 0;
+        }
+        if (modifier == op_74_set_next_start_dir_right) {
+            override_next_start_dir_left = 0;
+            override_next_start_dir_right = 1;
+        }
+
+        // Set which cutscene will be played before the next level
+        if (modifier == op_75_set_next_cutscene) {
+            byte par = adjacent_modifier;
+            override_cutscene = (adjacent_modifier == 0) ? 255 : adjacent_modifier; // par 0 or 255 cancels the cutscene
+        }
+
+        // Set the direction of a guard in a specific room
+        if (modifier == op_76_set_guard_dir_left || modifier == op_77_set_guard_dir_right) {
+            byte dir = (modifier == op_76_set_guard_dir_left) ? dir_FF_left : dir_0_right;
+            int guard_room = adjacent_modifier;
+            if (guard_room == 0) {
+                if (Guard.direction != dir) Guard.curr_seq = 0x1A8B; // flip direction
+                //level.guards_dir[room-1] = dir;
+                return;
+            }
+            level.guards_dir[guard_room-1] = dir;
+            //printf("Setting guard direction %d in room %d, current room = %d\n", dir, guard_room, room);
+        }
+
+        if (modifier == op_78_cancel_falling_entry) {
+            override_lvl1_falling_entry = 1;
+        }
+
+        ++tilepos; // skip parameter tiles (we could mistake them for script tiles), so don't iterate over them
     }
 }
 
@@ -109,16 +121,10 @@ void do_scripted_start_dir_override(sbyte* start_dir) {
 }
 
 void do_scripted_next_level_override(word* next_level) {
-    if (override_next_level == 255) {
-        override_next_level = 0;
-        end_sequence();
-        return;
-    }
     if (override_next_level != 0) {
         *next_level = override_next_level;
         override_next_level = 0;
     }
-    // use parameter 255 to skip to the ending sequence
 }
 
 void do_scripted_cutscene_override(cutscene_ptr_type* cutscene_ptr) {
