@@ -1168,10 +1168,17 @@ void __pascal far draw_leveldoor() {
 	if (tbl_level_type[current_level]) leveldoor_right += 8;
 	add_backtable(id_chtab_6_environment, 99 /*leveldoor stairs bottom*/, draw_xh + 1, 0, ybottom, blitters_0_no_transp, 0);
 	if (modifier_left) {
-		add_backtable(id_chtab_6_environment, 144 /*level door stairs*/, draw_xh + 1, 0, ybottom - 4, blitters_0_no_transp, 0);
+		// In VDUNGEON.DAT: use dungeon stairs PNG with 2 leftmost pixels removed (res344.png)
+		// This fixes part of the side of the door being overwitten with black pixels (only relevant for entry doors!)
+		sbyte xl = 0;
+		if (tbl_level_type[current_level] == 0) xl = 2;
+		add_backtable(id_chtab_6_environment, 144 /*level door stairs*/, draw_xh + 1, xl, ybottom - 4, blitters_0_no_transp, 0);
 		// In the starting room, black out the stairs again
-		if (level.start_room == drawn_room)
-			add_backtable(id_chtab_6_environment, 144 /*level door stairs*/, draw_xh + 1, 0, ybottom - 4, blitters_9_black, 0);
+		// This prevents a graphical bug occurring when a start door is raised from within the same room
+		// @Hack: there seems to be no way to add a black rectangle to the backtable instead of an image?
+		if (level.start_room == drawn_room) {
+			add_backtable(id_chtab_6_environment, 144 /*level door stairs*/, draw_xh + 1, xl, ybottom - 4, blitters_9_black, 0);
+		}
 	}
 	leveldoor_ybottom = ybottom - (modifier_left & 3) - 48;
 	for (var_6 = ybottom - modifier_left;
