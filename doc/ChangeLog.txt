@@ -161,4 +161,50 @@ FIXED: Ctrl-S did not stop currently playing sounds.
 DONE: Toggle fullscreen with alt-enter.
 FIXED: If the game is in full screen, and I switch away (alt-tab) and back, most of the screen will be black, until it is redrawn.
 
+2015 June 24
+(version 1.15 changelist)
+
+General changes:
+DONE: Migration from SDL1 to SDL2. 
+DONE: Game is now displayed at full resolution in fullscreen mode.
+DONE: Window can now be resized.
+DONE: Basic joystick support added.
+CHANGE: Window is now displayed at 640 by 400 pixels by default.
+CHANGE: Cleaned up harmless sound load errors.
+CHANGE: Sound names are now read from file only once when sounds are loaded.
+CHANGE: During loading of DAT files, read failures are now checked and reported.
+CHANGE: More cleanly handle failures to read/write HOF file.
+CHANGE: Improved reporting for known-failing loads.
+CHANGE: Pass size of resource area instead of letting it get overridden.
+CHANGE: The screen is now updated less frequently.
+CHANGE: Tweaked timer behaviour. The game now attempts to correct for timer-related overhead somewhat, preventing screen updates lagging behind the monitor's refresh rate.
+FIXED: Flashes are now displayed with a more consistent duration.
+FIXED: Shift+L skipping cutscenes immediately is now prevented by a short delay timer.
+FIXED: Fixed bug with flashes not repainting the screen upside down in flipped mode.
+
+New game additions and bug fixes:
+DONE: Added quicksaving and quickloading (F6 to quicksave anywhere in a level, F9 to quickload).
+FIXED: Prevented index to redraw_frames_above[] going out of bounds in set_redraw2(), triggered by loose tiles dropping out of the room from the rightmost column. This caused unpredictable behaviour, depending on the compiler.
+FIXED: Fixed a bug where level doors would continue to open infinitely far when the global variable leveldoor_open has been modified due to special events or due to another level door being already open.
+FIXED: Fixed the kid being able to enter closed level doors when there is another one open.
+FIXED: Fixed a graphical bug occurring when the level start door is raised from the same room.
+
+Build changes:
+DONE: Source code of the project has been added to GitHub.
+CHANGE: Cleaned up and updated Makefile.
+CHANGE: Added CMakeLists.txt for building using a CMake-based project model.
+CHANGE: Added main.cpp and "extern C" declarations to allow compilation with a C++ compiler.
+FIXED: Resolved warnings about multi-string literals by using an enum instead.
+
+Refactorings:
+CHANGE: Lots of things have changed with the switch to SDL2. To read about game migration from SDL1 to SDL2 in general, the SDL wiki provides a good overview at https://wiki.libsdl.org/MigrationGuide
+CHANGE: The key_states[] array now has a size of SDL_NUM_SCANCODES and is indexed by SDL scancodes.
+CHANGE: Modifier keys are now handled cleanly.
+CHANGE: Added named enum for sound IDs.
+CHANGE: Added named enum for char_type.sword.
+CHANGE: Renamed chtab->pointers to chtab->images.
+CHANGE: Replaced a number of magic numbers in the code with their enum equivalents.
+CHANGE: Removed unnecessary stuff (leftovers from the disassembly, or debug statements)
+CHANGE: Added a named enum for timer IDs.
+
 For recent changes, look at GitHub: https://github.com/NagyD/SDLPoP/commits/master

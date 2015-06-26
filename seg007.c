@@ -412,7 +412,7 @@ Possible values of trob_type:
 				if (trob.type == 4 &&
 					(sound_flags & sfDigi)
 				) {
-					sound_interruptible[15] = 1;
+					sound_interruptible[sound_15_leveldoor_sliding] = 1;
 					play_sound(sound_15_leveldoor_sliding); // level door sliding (closing)
 				}
 			}
@@ -420,9 +420,9 @@ Possible values of trob_type:
 			// opening
 			++curr_modifier;
 			if (curr_modifier >= 43) {
+				trob.type = -1;
+				stop_sounds();
 				if (leveldoor_open == 0 || leveldoor_open == 2) {
-					trob.type = -1;
-					stop_sounds();
 					leveldoor_open = 1;
 					if (current_level == 4) {
 						// Special event: place mirror
