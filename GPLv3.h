@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2015  DÃ¡vid Nagy
+Copyright (C) 2013-2015  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -17,14 +17,3 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 The authors of this program may be contacted at http://forum.princed.org
 */
-
-#include "common.h"
-
-int main(int argc, char *argv[])
-{
-	g_argc = argc;
-	g_argv = argv;
-	pop_main();
-	return 0;
-}
-

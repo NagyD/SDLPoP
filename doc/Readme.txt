@@ -22,6 +22,10 @@ Q: What is this?
 A: This is an open-source port/conversion of the DOS game Prince of Persia.
 It is based on the disassembly of the original PoP1 for DOS.
 
+=== LICENSE
+
+This program is open source under the GNU General Public License terms, see gpl-3.0.txt.
+
 === USAGE
 
 Q: How do I run it?

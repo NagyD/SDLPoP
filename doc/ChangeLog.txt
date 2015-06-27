@@ -207,4 +207,7 @@ CHANGE: Replaced a number of magic numbers in the code with their enum equivalen
 CHANGE: Removed unnecessary stuff (leftovers from the disassembly, or debug statements)
 CHANGE: Added a named enum for timer IDs.
 
+2015 June 27
+Added GPLv3 license.
+
 For recent changes, look at GitHub: https://github.com/NagyD/SDLPoP/commits/master
