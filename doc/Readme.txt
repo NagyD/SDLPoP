@@ -120,8 +120,6 @@ Note that this port does not recognize if the PRINCE.EXE of the mod was changed.
 
 === DEVELOPING
 
-[TODO: Update this for SDL2.]
-
 Q: How do I (re)compile it?
 A:
 Prerequisites for all platforms:
@@ -131,16 +129,18 @@ Prerequisites for all platforms:
 Windows:
 	If you are using Dev-C++:
 		I use Dev-C++ version 4.9.9.2 from here: http://sourceforge.net/projects/dev-cpp/files/Binaries/
-		You can download the libraries from: http://sourceforge.net/projects/devpaks/files/
+		You can download the libraries (except SDL2) from: http://sourceforge.net/projects/devpaks/files/
 		I used these files:
 			libjpeg-6b_4-1spec.DevPak
 			libpng-1.2.7-1spec.DevPak
-			SDL_image-1.2.4notiff.DevPak
-			SDL-1.2.8-2spec.DevPak
 			zlib-1.2.3-1cm.DevPak
-			SDL_mixer-1.2.6-2mol.DevPak
 		You can install the libraries at Tools -> Package Manager.
-		Open one of the .dev files and click the compile icon.
+		For Dev-C++ you need the MinGW Development Libraries of SDL2:
+			http://libsdl.org/download-2.0.php
+			http://libsdl.org/projects/SDL_image/
+			http://libsdl.org/projects/SDL_mixer/
+		To install these, just extract the contents of the i686-w64-mingw32 folder from each archive to the Dev-Cpp folder.
+		To compile, open one of the .dev files and click the compile icon.
 
 GNU/Linux:
 	The libraries can be installed with apt-get or a package manager.
@@ -151,3 +151,4 @@ GNU/Linux:
 
 Mac OS X:
 	See the MAC_INSTALL.txt written by StaticReturn.
+	[TODO: Update this for SDL2.]
