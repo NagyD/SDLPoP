@@ -2147,7 +2147,7 @@ void remove_timer(int timer_index) {
 #ifndef USE_COMPAT_TIMER
 	if (timer_handles[timer_index]) {
 		if (!SDL_RemoveTimer(timer_handles[timer_index])) {
-			printf("timer_handles[%d] = %p\n", timer_index, (void*) timer_handles[timer_index]);
+			printf("timer_handles[%d] = %d\n", timer_index, timer_handles[timer_index]);
 			sdlperror("SDL_RemoveTimer in remove_timer");
 			//quit(1);
 		}

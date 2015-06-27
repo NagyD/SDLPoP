@@ -1,4 +1,5 @@
-fixed bugs:
+Fixed bugs:
+===========
 
 signed vs. unsigned
 same thing with multiple names (kid_room vs. kid.room)
@@ -536,22 +537,27 @@ idle():
 +	}
 Note: In this case, DOSBox switches to windowed mode.
 
-not fixed yet:
-# game speed is a bit off (delay is longer than it should be) -- you can see this best with chompers
 # GNU/Linux: Full screen resolution is 640*480 instead of 320*200.
 	Also on Windows, depending on video card.
 # GNU/Linux: After quitting (from full screen), the resolution is not restored, and an error message appears on the console. (X-error.txt)
 	It seems that this bug disappeared, even from the old versions. It was probably caused by something outside the game.
+# "Shift" of Shift-L interrupts cutscene too soon.
+# Keys other than Shift won't interrupt fading of cutscene.
+
+Not fixed yet:
+==============
+
+# game speed is a bit off (delay is longer than it should be) -- you can see this best with chompers
 # Sometimes when jumping right to room 0: bounces back
 	# also present in original
-# "Shift" of Shift-L interrupts cutscene too soon.
 # shadow is invisible on level 12 if kid enters from left, or starts in the left half ... until kid pokes shadow
 	Wrong ypos, you can see that when kid unites with shadow.
 	# "enters from left": could not reproduce
 	# "starts in the left half": also present in original
-# Keys other than Shift won't interrupt fading of cutscene.
 
-leaks:
+Leaks:
+======
+
 # LEAK: Going to new level allocates memory (~ 500 kB) that is never freed.
 	free_chtab(): free_far -> SDL_FreeSurface
 # LEAK: Switching between playing and intro allocates memory that is never freed. (play->intro: ~ 500 kB, intro->play: ~ 1 MB)
@@ -582,7 +588,8 @@ Level 1: 28204 K
 28204-28188 = 16
 Level 1->2->...->14->1 : 28188 -> 28296 -> 28304 ~ 108 or 8
 
-formerly not implemented:
+Formerly not implemented:
+=========================
 
 DONE: # Coloring monochrome images (bubbles, chomper blood, story texts, gate top mask) and black blitter
 	FIXED: # Top of gate looks weird (mask is drawn)
@@ -620,6 +627,8 @@ DONE: Added support for music.
 DONE: Toggle fullscreen with alt-enter.
 
 Not (yet) implemented:
+======================
+
 # Digi sounds from wav files
 # speaker and midi sounds
 # stretch image to 2x, 3x (you can use fullscreen instead)

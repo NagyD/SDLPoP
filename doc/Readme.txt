@@ -5,7 +5,7 @@ Author: David from forum.princed.org
 Contributors:
 * Andrew (bug reports)
 * htamas (bug reports)
-* Norbert (bug reports)
+* Norbert (bug reports, suggestions)
 * musa (bug reports)
 * Eugene (bug reports)
 * StaticReturn (Mac OS X: Makefile, bug reports)
@@ -16,17 +16,20 @@ Contributors:
 Topic in forum: http://forum.princed.org/viewtopic.php?f=69&t=3512
 GitHub: https://github.com/NagyD/SDLPoP
 
-=== GENERAL
+GENERAL
+=======
 
 Q: What is this?
 A: This is an open-source port/conversion of the DOS game Prince of Persia.
 It is based on the disassembly of the original PoP1 for DOS.
 
-=== LICENSE
+LICENSE
+=======
 
 This program is open source under the GNU General Public License terms, see gpl-3.0.txt.
 
-=== USAGE
+USAGE
+=====
 
 Q: How do I run it?
 A:
@@ -102,7 +105,8 @@ You need to get the music from here: (38MB)
 It's the last link here: http://www.popot.org/get_the_games.php?game=1
 Copy the ogg files to the data/music folder. (The mp3 and flac files don't seem to work.)
 
-=== MODS
+MODS
+====
 
 Q: Can I play mods?
 A:
@@ -118,7 +122,8 @@ This is useful if you want to compare the behavior of this port and the original
 
 Note that this port does not recognize if the PRINCE.EXE of the mod was changed.
 
-=== DEVELOPING
+DEVELOPING
+==========
 
 Q: How do I (re)compile it?
 A:

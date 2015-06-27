@@ -563,7 +563,7 @@ void __pascal far play_seq() {
 				}
 				// fallthrough!
 			case 0xFF: // jump
-				Char.curr_seq = *(word*)(SEQTBL_0 + Char.curr_seq);
+				Char.curr_seq = *(const word*)(SEQTBL_0 + Char.curr_seq);
 				break;
 			case 0xFD: // up
 				--Char.curr_row;
