@@ -217,7 +217,10 @@ int quick_process(process_func_type process_func) {
 	//process(current_sound);
 	// random
 	process(random_seed);
-	// special potion
+	// remaining time
+	process(rem_min);
+	process(rem_tick);
+	// special potions (shadow, extra time)
 	process(is_shadow_effect);
 #undef process
 	return ok;
