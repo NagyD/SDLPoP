@@ -1664,6 +1664,18 @@ void __pascal far proc_get_object() {
 				draw_kid_hp(hitp_curr-1, hitp_max+1); // erase one hp box
 				play_sound(sound_39_low_weight); // low weight
 				break;
+			case 7: // extra time potion
+				stop_sounds();
+				play_sound(sound_37_victory);
+				flash_color = 7; // grey
+				flash_time = 4;
+				extra_minutes_to_be_added = 15;
+				if (hitp_curr >= hitp_max) hitp_curr--;
+				hitp_max--;
+				draw_kid_hp(0, hitp_max+1); // erase one hp box
+				draw_kid_hp(hitp_curr, hitp_max); // erase one hp box
+				is_show_time = 1;
+				break;
 		}
 	}
 }

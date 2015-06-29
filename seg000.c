@@ -222,6 +222,8 @@ int quick_process(process_func_type process_func) {
 	process(rem_tick);
 	// special potions (shadow, extra time)
 	process(is_shadow_effect);
+	process(extra_minutes_to_be_added);
+	process(minutes_added_in_curr_level);
 #undef process
 	return ok;
 }
