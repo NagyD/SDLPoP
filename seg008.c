@@ -545,7 +545,7 @@ void __pascal far draw_tile_anim() {
 //					pot_size = 1;
 //					break;
 //			}
-			switch((curr_modifier & 0xE0) >> 5) {
+			switch((curr_modifier & 0xF0) >> 4) {
 				case 0:
 					return; //empty
 				case 5: // hurt
@@ -622,7 +622,7 @@ void __pascal far draw_tile_fore() {
 //				if (potion_type < 0xA0 && potion_type >= 0x40) id = 13;
 
 				// large pots are drawn for potion types 2, 3, 4
-				potion_type = (curr_modifier & 0xE0) >> 5;
+				potion_type = (curr_modifier & 0xF0) >> 4;
 				if (potion_type < 5 && potion_type >= 2) id = 13;
 				if (potion_type == 7) id = 13; // shadow potion
 			}
@@ -1065,7 +1065,7 @@ void __pascal far load_alter_mod(int tilepos) {
 			*curr_tile_modif = 0;
 			break;
 		case tiles_10_potion:
-			*curr_tile_modif <<= 5;
+			*curr_tile_modif <<= 4;
 #ifdef USE_COPYPROT
 			if (current_level == 15) {
 				// Copy protection
