@@ -217,6 +217,8 @@ int quick_process(process_func_type process_func) {
 	//process(current_sound);
 	// random
 	process(random_seed);
+	// special potion
+	process(is_shadow_effect);
 #undef process
 	return ok;
 }
