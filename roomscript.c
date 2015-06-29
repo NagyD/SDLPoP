@@ -1,11 +1,5 @@
 #include "common.h"
 
-word override_next_level;
-byte override_next_start_pos_doorlink;
-byte override_next_start_dir_left;
-byte override_next_start_dir_right;
-byte override_cutscene;
-
 enum script_op_ids {
     op_70_set_remaining_time = 70,
     op_71_set_next_level = 71,
