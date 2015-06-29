@@ -1196,7 +1196,7 @@ void __pascal far draw_leveldoor() {
 		// In the starting room, black out the stairs again
 		// This prevents a graphical bug occurring when a start door is raised from within the same room
 		// @Hack: there seems to be no way to add a black rectangle to the backtable instead of an image?
-		if (level.start_room == drawn_room) {
+		if (level.start_room == drawn_room && !override_start_door_is_exit) {
 			add_backtable(id_chtab_6_environment, 144 /*level door stairs*/, draw_xh + 1, xl, ybottom - 4, blitters_9_black, 0);
 		}
 	}

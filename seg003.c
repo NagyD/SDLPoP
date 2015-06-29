@@ -102,6 +102,7 @@ void __pascal far play_level(int level_number) {
 
 		do_scripted_start_pos_override(&level.start_room, &level.start_pos);
 		do_scripted_start_dir_override(&level.start_dir);
+		override_start_door_is_exit = 0; // reset each level (do not carry over into the next level)
 		check_room_script(level.start_room);
 
 		drawn_room = 0;
