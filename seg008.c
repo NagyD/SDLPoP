@@ -739,7 +739,7 @@ void __pascal far add_peel(int left,int right,int top,int height) {
 }
 
 // seg008:1254
-void __pascal far add_wipetable(sbyte layer,sbyte left_high,short bottom,sbyte height,sbyte width_high,sbyte color) {
+void __pascal far add_wipetable(sbyte layer,short left,short bottom,sbyte height,short width,sbyte color) {
 	word index;
 	index = wipetable_count;
 	if (index >= 300) {
@@ -747,10 +747,10 @@ void __pascal far add_wipetable(sbyte layer,sbyte left_high,short bottom,sbyte h
 		return /*0*/; // added
 	}
 	wipetable_type* wipetable_item = &wipetable[index];
-	wipetable_item->left_high = left_high;
+	wipetable_item->left = left;
 	wipetable_item->bottom = bottom + 1;
 	wipetable_item->height = height;
-	wipetable_item->width_high = width_high;
+	wipetable_item->width = width;
 	wipetable_item->color = color;
 	wipetable_item->layer = layer;
 	if (draw_mode) {
@@ -935,8 +935,8 @@ void __pascal far draw_wipe(int index) {
 	rect_type rect;
 	wipetable_type* ptr;
 	ptr = &wipetable[index];
-	rect.left = rect.right = ptr->left_high * 8;
-	rect.right += ptr->width_high * 8;
+	rect.left = rect.right = ptr->left;
+	rect.right += ptr->width;
 	rect.bottom = rect.top = ptr->bottom;
 	rect.top -= ptr->height;
 	draw_rect(&rect, ptr->color);
@@ -1126,7 +1126,7 @@ void __pascal far redraw_needed_tiles() {
 
 // seg008:1BCB
 void __pascal far draw_tile_wipe(byte height) {
-	add_wipetable(0, draw_xh, draw_bottom_y, height, 4, 0);
+	add_wipetable(0, draw_xh*8, draw_bottom_y, height, 4*8, 0);
 }
 
 // seg008:1BEB
@@ -1188,16 +1188,13 @@ void __pascal far draw_leveldoor() {
 	if (tbl_level_type[current_level]) leveldoor_right += 8;
 	add_backtable(id_chtab_6_environment, 99 /*leveldoor stairs bottom*/, draw_xh + 1, 0, ybottom, blitters_0_no_transp, 0);
 	if (modifier_left) {
-		// In VDUNGEON.DAT: use dungeon stairs PNG with 2 leftmost pixels removed (res344.png)
-		// This fixes part of the side of the door being overwitten with black pixels (only relevant for entry doors!)
-		sbyte xl = 0;
-		if (tbl_level_type[current_level] == 0) xl = 2;
-		add_backtable(id_chtab_6_environment, 144 /*level door stairs*/, draw_xh + 1, xl, ybottom - 4, blitters_0_no_transp, 0);
-		// In the starting room, black out the stairs again
-		// This prevents a graphical bug occurring when a start door is raised from within the same room
-		// @Hack: there seems to be no way to add a black rectangle to the backtable instead of an image?
-		if (level.start_room == drawn_room) {
-			add_backtable(id_chtab_6_environment, 144 /*level door stairs*/, draw_xh + 1, xl, ybottom - 4, blitters_9_black, 0);
+		if (level.start_room != drawn_room) {
+			add_backtable(id_chtab_6_environment, 144 /*level door stairs*/, draw_xh + 1, 0, ybottom - 4, blitters_0_no_transp, 0);
+		}
+		else {
+			short leveldoor_width = (tbl_level_type[current_level] == 0) ? 39 : 48;
+			sbyte x_low = (tbl_level_type[current_level] == 0) ? 2 : 0; // dungeon level doors are shifted 2px to the right
+			add_wipetable(0, 8*(draw_xh + 1) + x_low, ybottom - 4, 45, leveldoor_width, 0);
 		}
 	}
 	leveldoor_ybottom = ybottom - (modifier_left & 3) - 48;
@@ -1676,17 +1673,17 @@ void __pascal far wall_pattern(int which_part,int which_table) {
 		// I haven't traced the palace WDA
 		//[...]
 		if (which_part) {
-			add_wipetable(which_table, draw_xh    , draw_main_y - 40, 20, 4, palace_wall_colors[44 * drawn_row +      drawn_col]);
-			add_wipetable(which_table, draw_xh    , draw_main_y - 19, 21, 2, palace_wall_colors[44 * drawn_row + 11 + drawn_col]);
-			add_wipetable(which_table, draw_xh + 2, draw_main_y - 19, 21, 2, palace_wall_colors[44 * drawn_row + 12 + drawn_col]);
-			add_wipetable(which_table, draw_xh    , draw_main_y     , 19, 1, palace_wall_colors[44 * drawn_row + 22 + drawn_col]);
-			add_wipetable(which_table, draw_xh + 1, draw_main_y     , 19, 3, palace_wall_colors[44 * drawn_row + 23 + drawn_col]);
+			add_wipetable(which_table, 8*(draw_xh)    , draw_main_y - 40, 20, 4*8, palace_wall_colors[44 * drawn_row +      drawn_col]);
+			add_wipetable(which_table, 8*(draw_xh)    , draw_main_y - 19, 21, 2*8, palace_wall_colors[44 * drawn_row + 11 + drawn_col]);
+			add_wipetable(which_table, 8*(draw_xh + 2), draw_main_y - 19, 21, 2*8, palace_wall_colors[44 * drawn_row + 12 + drawn_col]);
+			add_wipetable(which_table, 8*(draw_xh)    , draw_main_y     , 19, 1*8, palace_wall_colors[44 * drawn_row + 22 + drawn_col]);
+			add_wipetable(which_table, 8*(draw_xh + 1), draw_main_y     , 19, 3*8, palace_wall_colors[44 * drawn_row + 23 + drawn_col]);
 			ptr_add_table(id_chtab_7_environmentwall, prandom(2) +  3, draw_xh + 3, 0, draw_main_y - 53, blitters_46h_mono_6, 0);
 			ptr_add_table(id_chtab_7_environmentwall, prandom(2) +  6, draw_xh    , 0, draw_main_y - 34, blitters_46h_mono_6, 0);
 			ptr_add_table(id_chtab_7_environmentwall, prandom(2) +  9, draw_xh    , 0, draw_main_y - 13, blitters_46h_mono_6, 0);
 			ptr_add_table(id_chtab_7_environmentwall, prandom(2) + 12, draw_xh    , 0, draw_main_y     , blitters_46h_mono_6, 0);
 		}
-		add_wipetable(which_table, draw_xh    , draw_bottom_y   ,  3, 4, palace_wall_colors[44 * drawn_row + 33 + drawn_col]);
+		add_wipetable(which_table, 8*draw_xh    , draw_bottom_y   ,  3, 4*8, palace_wall_colors[44 * drawn_row + 33 + drawn_col]);
 		ptr_add_table(id_chtab_7_environmentwall, prandom(2) + 15, draw_xh    , 0, draw_bottom_y   , blitters_46h_mono_6, 0);
 	} else {
 		v3 = prandom(1);

@@ -101,10 +101,10 @@ typedef struct midtable_type {
 } midtable_type;
 
 typedef struct wipetable_type {
-	sbyte left_high;
+	short left;
 	short bottom;
 	sbyte height;
-	sbyte width_high;
+	short width;
 	sbyte color;
 	sbyte layer;
 } wipetable_type;
