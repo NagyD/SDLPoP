@@ -1233,7 +1233,7 @@ void __pascal far draw_floor_overlay() {
 	) {
 		// frames 137..144: climb
 		// index overflow here?
-		if (Kid.frame >= 137 && Kid.frame <= 144) {
+		if (Kid.frame >= frame_137_climbing_3 && Kid.frame <= frame_144_climbing_10) {
 			add_midtable(id_chtab_6_environment, floor_left_overlay[Kid.frame - 137], draw_xh, 0, (curr_tile == tiles_5_stuck) + draw_main_y, blitters_10h_transp, 0);
 		} else {
 			// triggered by 02-random-broken
