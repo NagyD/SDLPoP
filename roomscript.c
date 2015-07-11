@@ -43,13 +43,14 @@ void check_room_script(byte room) {
         if (tilepos < 29) adjacent_modifier = room_modif[tilepos+1]; // adjacent tile
         else adjacent_modifier = 0; // the last tile in the room defaults to parameter 0
 
-        byte num_pars = 1; // default; however, some script tiles do not need a parameter or may need >1
+        byte num_pars = 0; // default; script tiles will specify how many parameters they need
 
 //        if (modifier >= 70 && modifier <= 78)
 //            printf("Detected script tile in room %d, tilepos %d, modifier %d\n", room, tilepos, modifier);
 
         // Set time remaining (runs only once per game session)
         if (modifier == op_70_set_remaining_time && !is_remaining_time_overridden) {
+            num_pars = 1;
             rem_min = adjacent_modifier;
             rem_tick = 719;
             is_show_time = 1;
@@ -58,33 +59,35 @@ void check_room_script(byte room) {
 
         // Override next level (checked right before the next level is loaded)
         if (modifier == op_71_set_next_level) {
+            num_pars = 1;
             override_next_level = adjacent_modifier;
         }
 
         // Override start position of next level (checked AFTER next level is loaded)
         if (modifier == op_72_set_next_start_pos) {
+            num_pars = 1;
             override_next_start_pos_doorlink = adjacent_modifier;
         }
 
         // Override start direction of next level (checked AFTER next level is loaded)
         if (modifier == op_73_set_next_start_dir_left) {
-            num_pars = 0;
             override_next_start_dir_left = 1;
             override_next_start_dir_right = 0;
         }
         if (modifier == op_74_set_next_start_dir_right) {
-            num_pars = 0;
             override_next_start_dir_left = 0;
             override_next_start_dir_right = 1;
         }
 
         // Set which cutscene will be played before the next level
         if (modifier == op_75_set_next_cutscene) {
+            num_pars = 1;
             override_cutscene = (adjacent_modifier == 0) ? 255 : adjacent_modifier; // par 0 or 255 cancels the cutscene
         }
 
         // Set the direction of a guard in a specific room
         if (modifier == op_76_set_guard_dir_left || modifier == op_77_set_guard_dir_right) {
+            num_pars = 1;
             byte dir = (modifier == op_76_set_guard_dir_left) ? dir_FF_left : dir_0_right;
             int guard_room = adjacent_modifier;
             if (guard_room == 0) {
@@ -97,12 +100,10 @@ void check_room_script(byte room) {
         }
 
         if (modifier == op_78_cancel_falling_entry) {
-            num_pars = 0;
             override_lvl1_falling_entry = 1;
         }
 
         if (modifier == op_79_start_door_is_exit) {
-            num_pars = 0;
             override_start_door_is_exit = 1;
         }
 
