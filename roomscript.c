@@ -43,6 +43,8 @@ void check_room_script(byte room) {
         if (tilepos < 29) adjacent_modifier = room_modif[tilepos+1]; // adjacent tile
         else adjacent_modifier = 0; // the last tile in the room defaults to parameter 0
 
+        byte num_pars = 1; // default; however, some script tiles do not need a parameter or may need >1
+
 //        if (modifier >= 70 && modifier <= 78)
 //            printf("Detected script tile in room %d, tilepos %d, modifier %d\n", room, tilepos, modifier);
 
@@ -66,17 +68,18 @@ void check_room_script(byte room) {
 
         // Override start direction of next level (checked AFTER next level is loaded)
         if (modifier == op_73_set_next_start_dir_left) {
+            num_pars = 0;
             override_next_start_dir_left = 1;
             override_next_start_dir_right = 0;
         }
         if (modifier == op_74_set_next_start_dir_right) {
+            num_pars = 0;
             override_next_start_dir_left = 0;
             override_next_start_dir_right = 1;
         }
 
         // Set which cutscene will be played before the next level
         if (modifier == op_75_set_next_cutscene) {
-            byte par = adjacent_modifier;
             override_cutscene = (adjacent_modifier == 0) ? 255 : adjacent_modifier; // par 0 or 255 cancels the cutscene
         }
 
@@ -94,14 +97,16 @@ void check_room_script(byte room) {
         }
 
         if (modifier == op_78_cancel_falling_entry) {
+            num_pars = 0;
             override_lvl1_falling_entry = 1;
         }
 
         if (modifier == op_79_start_door_is_exit) {
+            num_pars = 0;
             override_start_door_is_exit = 1;
         }
 
-        ++tilepos; // skip parameter tiles (we could mistake them for script tiles), so don't iterate over them
+        tilepos += num_pars; // skip parameter tiles; we could mistake them for script tiles, so don't iterate over them
     }
 }
 
