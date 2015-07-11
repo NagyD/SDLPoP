@@ -526,7 +526,7 @@ surface_type far *__pascal make_offscreen_buffer(const rect_type far *rect);
 void __pascal far free_surface(surface_type *surface);
 void __pascal far free_peel(peel_type *peel_ptr);
 void __pascal far set_hc_pal();
-void __pascal far flip_not_ega(byte far *memory,int bottom,int stride);
+void __pascal far flip_not_ega(byte far *memory,int height,int stride);
 void __pascal far flip_screen(surface_type far *surface);
 void __pascal far fade_in_2(surface_type near *source_surface,int which_rows);
 void __pascal far fade_out_2(int rows);
@@ -538,7 +538,7 @@ rect_type far *__pascal shrink2_rect(rect_type far *target_rect,const rect_type 
 void __pascal far set_curr_pos(int xpos,int ypos);
 void __pascal far restore_peel(peel_type peel_ptr);
 peel_type __pascal far read_peel_from_screen(const rect_type far *rect);
-void __pascal far show_text(const rect_type far *rect_ptr,int x_align_or_break,int y_align,const char far *text);
+void __pascal far show_text(const rect_type far *rect_ptr,int x_align,int y_align,const char far *text);
 int __pascal far intersect_rect(rect_type far *output,const rect_type far *input1,const rect_type far *input2);
 rect_type far * __pascal far union_rect(rect_type far *output,const rect_type far *input1,const rect_type far *input2);
 void __pascal far stop_sounds();

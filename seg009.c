@@ -145,11 +145,11 @@ failed:
 
 // seg009:9CAC
 void __pascal far set_loaded_palette(dat_pal_type far *palette_ptr) {
-	int si, di, current_row;
-	for (si = di = current_row = 0; si < 16; ++si, di += 0x10) {
-		if (palette_ptr->row_bits & (1 << si)) {
-			set_pal_arr(di, 16, palette_ptr->vga + current_row*0x10, 1);
-			++current_row;
+	int dest_row, dest_index, source_row;
+	for (dest_row = dest_index = source_row = 0; dest_row < 16; ++dest_row, dest_index += 0x10) {
+		if (palette_ptr->row_bits & (1 << dest_row)) {
+			set_pal_arr(dest_index, 16, palette_ptr->vga + source_row*0x10, 1);
+			++source_row;
 		}
 	}
 }
@@ -234,95 +234,93 @@ void __pascal far free_chtab(chtab_type *chtab_ptr) {
 }
 
 // seg009:8CE6
-void __pascal far unrle_lr(byte far *destination,const byte far *source,int length) {
-	const byte* si = source;
-	byte* di = destination;
-	short bp = length;
-	while (bp) {
-		sbyte al = *(si++);
-		sbyte cl = al;
-		if (cl >= 0) {
-			++cl;
+void __pascal far decompress_rle_lr(byte far *destination,const byte far *source,int dest_length) {
+	const byte* src_pos = source;
+	byte* dest_pos = destination;
+	short rem_length = dest_length;
+	while (rem_length) {
+		sbyte count = *(src_pos++);
+		if (count >= 0) { // copy
+			++count;
 			do {
-				*(di++) = *(si++);
-				--bp;
-			} while (--cl);
-		} else {
-			al = *(si++);
-			cl = -cl;
+				*(dest_pos++) = *(src_pos++);
+				--rem_length;
+			} while (--count);
+		} else { // repeat
+			byte al = *(src_pos++);
+			count = -count;
 			do {
-				*(di++) = al;
-				--bp;
-			} while (--cl);
+				*(dest_pos++) = al;
+				--rem_length;
+			} while (--count);
 		}
 	}
 }
 
 // seg009:8D1C
-void __pascal far unrle_ud(byte far *destination,const byte far *source,int size,int width,int height) {
-	short bx = height;
-	const byte* si = source;
-	byte* di = destination;
-	short dx = size;
-	--size;
+void __pascal far decompress_rle_ud(byte far *destination,const byte far *source,int dest_length,int width,int height) {
+	short rem_height = height;
+	const byte* src_pos = source;
+	byte* dest_pos = destination;
+	short rem_length = dest_length;
+	--dest_length;
 	--width;
-	while (dx) {
-		sbyte al = *(si++);
-		sbyte cl = al;
-		if (cl >= 0) {
-			++cl;
+	while (rem_length) {
+		sbyte count = *(src_pos++);
+		if (count >= 0) { // copy
+			++count;
 			do {
-				*(di++) = *(si++);
-				di += width;
-				if (--bx == 0) {
-					di -= size;
-					bx = height;
+				*(dest_pos++) = *(src_pos++);
+				dest_pos += width;
+				if (--rem_height == 0) {
+					dest_pos -= dest_length;
+					rem_height = height;
 				}
-				--dx;
-			} while (--cl);
-		} else {
-			al = *(si++);
-			cl = -cl;
+				--rem_length;
+			} while (--count);
+		} else { // repeat
+			byte al = *(src_pos++);
+			count = -count;
 			do {
-				*(di++) = al;
-				di += width;
-				if (--bx == 0) {
-					di -= size;
-					bx = height;
+				*(dest_pos++) = al;
+				dest_pos += width;
+				if (--rem_height == 0) {
+					dest_pos -= dest_length;
+					rem_height = height;
 				}
-				--dx;
-			} while (--cl);
+				--rem_length;
+			} while (--count);
 		}
 	}
 }
 
 // seg009:90FA
-byte far* __pascal far unlz_lr(byte far *dest,const byte far *source,int length) {
+byte far* __pascal far decompress_lzg_lr(byte far *dest,const byte far *source,int dest_length) {
 	byte* window = (byte*) malloc_near(0x400);
 	if (window == NULL) return NULL;
 	memset(window, 0, 0x400);
 	byte* window_pos = window + 0x400 - 0x42; // bx
-	short remaining = length; // cx
+	short remaining = dest_length; // cx
 	byte* window_end = window + 0x400; // dx
-	const byte* si = source;
-	byte* di = dest;
+	const byte* source_pos = source;
+	byte* dest_pos = dest;
 	word mask = 0;
 	do {
 		mask >>= 1;
 		if ((mask & 0xFF00) == 0) {
-			mask = *(si++) | 0xFF00;
+			mask = *(source_pos++) | 0xFF00;
 		}
 		if (mask & 1) {
-			*(window_pos++) = *(di++) = *(si++);
+			*(window_pos++) = *(dest_pos++) = *(source_pos++);
 			if (window_pos >= window_end) window_pos = window;
 			--remaining;
 		} else {
-			word ax = *(si++);
-			ax = (ax << 8) | *(si++);
-			byte* copy_source = window + (ax & 0x3FF);
-			byte copy_length = (ax >> 10) + 3;
+			word copy_info = *(source_pos++);
+			copy_info = (copy_info << 8) | *(source_pos++);
+			byte* copy_source = window + (copy_info & 0x3FF);
+			byte copy_length = (copy_info >> 10) + 3;
 			do {
-				*(window_pos++) = *(di++) = *(copy_source++);
+				*(window_pos++) = *(dest_pos++) = *(copy_source++);
 				if (copy_source >= window_end) copy_source = window;
 				if (window_pos >= window_end) window_pos = window;
 			} while (--remaining && --copy_length);
@@ -334,48 +332,48 @@ byte far* __pascal far unlz_lr(byte far *dest,const byte far *source,int length)
 }
 
 // seg009:91AD
-byte far* __pascal far unlz_ud(byte far *dest,const byte far *source,int length,int stride,int height) {
+byte far* __pascal far decompress_lzg_ud(byte far *dest,const byte far *source,int dest_length,int stride,int height) {
 	byte* window = (byte*) malloc_near(0x400);
 	if (window == NULL) return NULL;
 	memset(window, 0, 0x400);
 	byte* window_pos = window + 0x400 - 0x42; // bx
 	short remaining = height; // cx
 	byte* window_end = window + 0x400; // dx
-	const byte* si = source;
-	byte* di = dest;
+	const byte* source_pos = source;
+	byte* dest_pos = dest;
 	word mask = 0;
-	short var_6 = length - 1;
+	short var_6 = dest_length - 1;
 	do {
 		mask >>= 1;
 		if ((mask & 0xFF00) == 0) {
-			mask = *(si++) | 0xFF00;
+			mask = *(source_pos++) | 0xFF00;
 		}
 		if (mask & 1) {
-			*(window_pos++) = *di = *(si++);
-			di += stride;
+			*(window_pos++) = *dest_pos = *(source_pos++);
+			dest_pos += stride;
 			if (--remaining == 0) {
-				di -= var_6;
+				dest_pos -= var_6;
 				remaining = height;
 			}
 			if (window_pos >= window_end) window_pos = window;
-			--length;
+			--dest_length;
 		} else {
-			word ax = *(si++);
-			ax = (ax << 8) | *(si++);
-			byte* copy_source = window + (ax & 0x3FF);
-			byte copy_length = (ax >> 10) + 3;
+			word copy_info = *(source_pos++);
+			copy_info = (copy_info << 8) | *(source_pos++);
+			byte* copy_source = window + (copy_info & 0x3FF);
+			byte copy_length = (copy_info >> 10) + 3;
 			do {
-				*(window_pos++) = *di = *(copy_source++);
-				di += stride;
+				*(window_pos++) = *dest_pos = *(copy_source++);
+				dest_pos += stride;
 				if (--remaining == 0) {
-						di -= var_6;
-						remaining = height;
+					dest_pos -= var_6;
+					remaining = height;
 				}
 				if (copy_source >= window_end) copy_source = window;
 				if (window_pos >= window_end) window_pos = window;
-			} while (--length && --copy_length);
+			} while (--dest_length && --copy_length);
 		}
-	} while (length);
+	} while (dest_length);
 //	end:
 	free(window);
 	return dest;
@@ -384,20 +382,20 @@ byte far* __pascal far unlz_ud(byte far *dest,const byte far *source,int length,
 // seg009:938E
 void __pascal far decompr_img(byte far *dest,const image_data_type far *source,int decomp_size,int cmeth, int stride) {
 	switch (cmeth) {
-		case 0: // RAW
+		case 0: // RAW left-to-right
 			memcpy_far(dest, &source->data, decomp_size);
 		break;
 		case 1: // RLE left-to-right
-			unrle_lr(dest, source->data, decomp_size);
+			decompress_rle_lr(dest, source->data, decomp_size);
 		break;
 		case 2: // RLE up-to-down
-			unrle_ud(dest, source->data, decomp_size, stride, source->height);
+			decompress_rle_ud(dest, source->data, decomp_size, stride, source->height);
 		break;
-		case 3: // LZ left-to-right
-			unlz_lr(dest, source->data, decomp_size);
+		case 3: // LZG left-to-right
+			decompress_lzg_lr(dest, source->data, decomp_size);
 		break;
-		case 4: // LZ up-to-down
-			unlz_ud(dest, source->data, decomp_size, stride, source->height);
+		case 4: // LZG up-to-down
+			decompress_lzg_ud(dest, source->data, decomp_size, stride, source->height);
 		break;
 	}
 }
@@ -411,21 +409,21 @@ int calc_stride(image_data_type* image_data) {
 
 byte* conv_to_8bpp(byte* in_data, int width, int height, int stride, int depth) {
 	byte* out_data = (byte*) malloc(width * height);
-	int y,x,bx,b;
-	int px_per_byte = 8 / depth;
+	int y, x_pixel, x_byte, pixel_in_byte;
+	int pixels_per_byte = 8 / depth;
 	int mask = (1 << depth) - 1;
 	for (y = 0; y < height; ++y) {
-		byte* in_p = in_data + y*stride;
-		byte* out_p = out_data + y*width;
-		for (x = bx = 0; bx < stride; ++bx) {
-			byte v = *in_p;
-			int sh = 8;
-			for (b = 0; b < px_per_byte && x < width; ++b, ++x) {
-				sh -= depth;
-				*out_p = (v >> sh) & mask;
-				++out_p;
+		byte* in_pos = in_data + y*stride;
+		byte* out_pos = out_data + y*width;
+		for (x_pixel = x_byte = 0; x_byte < stride; ++x_byte) {
+			byte v = *in_pos;
+			int shift = 8;
+			for (pixel_in_byte = 0; pixel_in_byte < pixels_per_byte && x_pixel < width; ++pixel_in_byte, ++x_pixel) {
+				shift -= depth;
+				*out_pos = (v >> shift) & mask;
+				++out_pos;
 			}
-			++in_p;
+			++in_pos;
 		}
 	}
 	return out_data;
@@ -603,22 +601,21 @@ void __pascal far set_hc_pal() {
 }
 
 // seg009:2446
-void __pascal far flip_not_ega(byte far *memory,int bottom,int stride) {
+void __pascal far flip_not_ega(byte far *memory,int height,int stride) {
 	byte* row_buffer = (byte*) malloc(stride);
 	byte* top_ptr;
 	byte* bottom_ptr;
-	short cx = bottom;
 	bottom_ptr = top_ptr = memory;
-	bottom_ptr += (bottom - 1) * stride;
-	cx = bottom >> 1;
+	bottom_ptr += (height - 1) * stride;
+	short rem_rows = height >> 1;
 	do {
 		memcpy(row_buffer, top_ptr, stride);
 		memcpy(top_ptr, bottom_ptr, stride);
 		memcpy(bottom_ptr, row_buffer, stride);
 		top_ptr += stride;
 		bottom_ptr -= stride;
-		--cx;
-	} while (cx);
+		--rem_rows;
+	} while (rem_rows);
 	free(row_buffer);
 }
 
@@ -800,101 +797,101 @@ void load_font() {
 // seg009:35C5
 int __pascal far get_char_width(byte character) {
 	font_type* font = textstate.ptr_font;
-	int ax = 0;
+	int width = 0;
 	if (character <= font->last_char && character >= font->first_char) {
-		ax += font->chtab->images[character - font->first_char]->w; //char_ptrs[character - font->first_char]->width;
-		if (ax) ax += font->space_between_chars;
+		width += font->chtab->images[character - font->first_char]->w; //char_ptrs[character - font->first_char]->width;
+		if (width) width += font->space_between_chars;
 	}
-	return ax;
+	return width;
 }
 
 // seg009:3E99
-int __pascal far measure_text_line(const char far *text,int length,int break_width,int x_align) {
-	short curr_line_width;
-	short curr_line_length;
-	int di = 0;
-	curr_line_length = 0;
+int __pascal far find_linebreak(const char far *text,int length,int break_width,int x_align) {
+	short curr_line_width; // in pixels
+	short last_break_pos; // in characters
+	int curr_char_pos = 0;
+	last_break_pos = 0;
 	curr_line_width = 0;
-	const char* si = text;
-	while (di < length) {
-		curr_line_width += get_char_width(*si);
+	const char* text_pos = text;
+	while (curr_char_pos < length) {
+		curr_line_width += get_char_width(*text_pos);
 		if (curr_line_width <= break_width) {
-			++di;
-			char al = *(si++);
-			if (al == '\r') {
-				return di;
+			++curr_char_pos;
+			char curr_char = *(text_pos++);
+			if (curr_char == '\r') {
+				return curr_char_pos;
 			}
-			if (al == '-' ||
-				(x_align <= 0 && (al == ' ' || *si == ' ')) ||
-				(*si == ' ' && al == ' ')
+			if (curr_char == '-' ||
+				(x_align <= 0 && (curr_char == ' ' || *text_pos == ' ')) ||
+				(*text_pos == ' ' && curr_char == ' ')
 			) {
-				// May break here
-				curr_line_length = di;
+				// May break here.
+				last_break_pos = curr_char_pos;
 			}
 		} else {
-			if (curr_line_length == 0) {
-				// If the first word is wider than the rect then break it.
-				return di;
+			if (last_break_pos == 0) {
+				// If the first word is wider than break_width then break it.
+				return curr_char_pos;
 			} else {
 				// Otherwise break at the last space.
-				return curr_line_length;
+				return last_break_pos;
 			}
 		}
 	}
-	return di;
+	return curr_char_pos;
 }
 
 // seg009:403F
 int __pascal far get_line_width(const char far *text,int length) {
-	int di = 0;
-	const char* si = text;
+	int width = 0;
+	const char* text_pos = text;
 	while (--length >= 0) {
-		di += get_char_width(*(si++));
+		width += get_char_width(*(text_pos++));
 	}
-	return di;
+	return width;
 }
 
 // seg009:3706
 int __pascal far draw_text_character(byte character) {
 	//printf("going to do draw_text_character...\n");
 	font_type* font = textstate.ptr_font;
-	int ax = 0;
+	int width = 0;
 	if (character <= font->last_char && character >= font->first_char) {
 		image_type* image = font->chtab->images[character - font->first_char]; //char_ptrs[character - font->first_char];
 		method_3_blit_mono(image, textstate.current_x, textstate.current_y - font->height_above_baseline, textstate.textblit, textstate.textcolor);
-		ax = font->space_between_chars + image->w;
+		width = font->space_between_chars + image->w;
 	}
-	textstate.current_x += ax;
-	return ax;
+	textstate.current_x += width;
+	return width;
 }
 
 // seg009:377F
 int __pascal far draw_text_line(const char far *text,int length) {
 	//hide_cursor();
-	int di = 0;
-	const char* si = text;
+	int width = 0;
+	const char* text_pos = text;
 	while (--length >= 0) {
-		di += draw_text_character(*(si++));
+		width += draw_text_character(*(text_pos++));
 	}
 	//show_cursor();
-	return di;
+	return width;
 }
 
 // seg009:3755
 int __pascal far draw_cstring(const char far *string) {
 	//hide_cursor();
-	int di = 0;
-	const char* si = string;
-	while (*si) {
-		di += draw_text_character(*(si++));
+	int width = 0;
+	const char* text_pos = string;
+	while (*text_pos) {
+		width += draw_text_character(*(text_pos++));
 	}
 	//show_cursor();
 	request_screen_update();
-	return di;
+	return width;
 }
 
 // seg009:3F01
-const rect_type far *__pascal draw_text(const rect_type far *rect_ptr,int x_align_or_break,int y_align,const char far *text_ptr,int length) {
+const rect_type far *__pascal draw_text(const rect_type far *rect_ptr,int x_align,int y_align,const char far *text,int length) {
 	//printf("going to do draw_text()...\n");
 	short rect_top;
 	short rect_height;
@@ -909,25 +906,25 @@ const rect_type far *__pascal draw_text(const rect_type far *rect_ptr,int x_alig
 	rect_top = rect_ptr->top;
 	rect_height = rect_ptr->bottom - rect_ptr->top;
 	num_lines = 0;
-	int di = length;
-	const char* si = text_ptr;
+	int rem_length = length;
+	const char* line_start = text;
 	static const int max_lines = 100;
 	const char* line_starts[max_lines];
 	int line_lengths[max_lines];
 	do {
-		int ax = measure_text_line(si, di, rect_width, x_align_or_break);
-		if (ax == 0) break;
+		int line_length = find_linebreak(line_start, rem_length, rect_width, x_align);
+		if (line_length == 0) break;
 		if (num_lines >= max_lines) {
 			//... ERROR!
 			printf("draw_text(): Too many lines!\n");
 			quit(1);
 		}
-		line_starts[num_lines] = si;
-		line_lengths[num_lines] = ax;
+		line_starts[num_lines] = line_start;
+		line_lengths[num_lines] = line_length;
 		++num_lines;
-		si += ax;
-		di -= ax;
-	} while(di);
+		line_start += line_length;
+		rem_length -= line_length;
+	} while(rem_length);
 	font_type* font = textstate.ptr_font;
 	font_line_distance = font->height_above_baseline + font->height_below_baseline + font->space_between_lines;
 	int text_height = font_line_distance * num_lines - font->space_between_lines;
@@ -944,39 +941,39 @@ const rect_type far *__pascal draw_text(const rect_type far *rect_ptr,int x_alig
 	textstate.current_y = text_top + font->height_above_baseline;
 	int i;
 	for (i = 0; i < num_lines; ++i) {
-		const char* bx = line_starts[i];
-		int dx = line_lengths[i];
-		if (x_align_or_break < 0 &&
-			*bx == ' ' &&
+		const char* line_pos = line_starts[i];
+		int line_length = line_lengths[i];
+		if (x_align < 0 &&
+			*line_pos == ' ' &&
 			i != 0 &&
-			*(bx-1) != '\r'
+			*(line_pos-1) != '\r'
 		) {
 			// Skip over space if it's not at the beginning of a line.
-			++bx;
-			--dx;
-			if (dx != 0 &&
-				*bx == ' ' &&
-				*(bx-2) == '.'
+			++line_pos;
+			--line_length;
+			if (line_length != 0 &&
+				*line_pos == ' ' &&
+				*(line_pos-2) == '.'
 			) {
 				// Skip over second space after point.
-				++bx;
-				--dx;
+				++line_pos;
+				--line_length;
 			}
 		}
-		int ax = get_line_width(bx,dx);
+		int line_width = get_line_width(line_pos,line_length);
 		int text_left = rect_ptr->left;
-		if (x_align_or_break >= 0) {
-			if (x_align_or_break <= 0) {
+		if (x_align >= 0) {
+			if (x_align <= 0) {
 				// center
-				text_left += rect_width/2 - ax/2;
+				text_left += rect_width/2 - line_width/2;
 			} else {
 				// right
-				text_left += rect_width - ax;
+				text_left += rect_width - line_width;
 			}
 		}
 		textstate.current_x = text_left;
 		//printf("going to draw text line...\n");
-		draw_text_line(bx,dx);
+		draw_text_line(line_pos,line_length);
 		textstate.current_y += font_line_distance;
 	}
 	reset_clip_rect();
@@ -986,10 +983,10 @@ const rect_type far *__pascal draw_text(const rect_type far *rect_ptr,int x_alig
 }
 
 // seg009:3E4F
-void __pascal far show_text(const rect_type far *rect_ptr,int x_align_or_break,int y_align,const char far *text) {
+void __pascal far show_text(const rect_type far *rect_ptr,int x_align,int y_align,const char far *text) {
 	// stub
 	//printf("show_text: %s\n",text);
-	draw_text(rect_ptr, x_align_or_break, y_align, text, strlen(text));
+	draw_text(rect_ptr, x_align, y_align, text, strlen(text));
 	request_screen_update();
 }
 
@@ -1046,21 +1043,21 @@ void __pascal far show_dialog(const char *text) {
 // seg009:0791
 int __pascal far get_text_center_y(const rect_type far *rect) {
 	const font_type far* font;
-	short var_6;
+	short empty_height; // height of empty space above+below the line of text
 	font = &hc_font;//current_target_surface->ptr_font;
-	var_6 = rect->bottom - font->height_above_baseline - font->height_below_baseline - rect->top;
-	return ((var_6 - var_6 % 2) >> 1) + font->height_above_baseline + var_6 % 2 + rect->top;
+	empty_height = rect->bottom - font->height_above_baseline - font->height_below_baseline - rect->top;
+	return ((empty_height - empty_height % 2) >> 1) + font->height_above_baseline + empty_height % 2 + rect->top;
 }
 
 // seg009:3E77
 int __pascal far get_cstring_width(const char far *text) {
-	int di = 0;
-	const char* si = text;
-	char al;
-	while (0 != (al = *(si++))) {
-		di += get_char_width(al);
+	int width = 0;
+	const char* text_pos = text;
+	char curr_char;
+	while (0 != (curr_char = *(text_pos++))) {
+		width += get_char_width(curr_char);
 	}
-	return di;
+	return width;
 }
 
 // seg009:0767
@@ -1162,7 +1159,7 @@ int __pascal far draw_text_character(byte character) {
 }
 
 // seg009:3E4F
-void __pascal far show_text(const rect_type far *rect_ptr,int x_align_or_break,int y_align,const char far *text) {
+void __pascal far show_text(const rect_type far *rect_ptr,int x_align,int y_align,const char far *text) {
 	// stub
 	printf("show_text: %s\n",text);
 }
