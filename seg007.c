@@ -1203,21 +1203,21 @@ void __pascal far fell_on_your_head() {
 	action = Char.action;
 	// loose floors hurt you in frames 5..14 (running) only on level 13
 	if (
-		(current_level == 13 || (frame < 5 || frame >= 15)) &&
+		(current_level == 13 || (frame < frame_5_run || frame >= 15)) &&
 		(action < actions_2_hang_climb || action == actions_7_turn)
 	) {
 		Char.y = y_land[Char.curr_row + 1];
 		if (take_hp(1)) {
-			seqtbl_offset_char(22); // dead (because of loose floor)
-			if (frame == 177) { // spiked
+			seqtbl_offset_char(seq_22_crushed); // dead (because of loose floor)
+			if (frame == frame_177_spiked) { // spiked
 				Char.x = char_dx_forward(-12);
 			}
 		} else {
-			if (frame != 109) { // crouching
+			if (frame != frame_109_crouch) { // crouching
 				if (get_tile_behind_char() == 0) {
 					Char.x = char_dx_forward(-2);
 				}
-				seqtbl_offset_char(52); // loose floor fell on Kid
+				seqtbl_offset_char(seq_52_loose_floor_fell_on_kid); // loose floor fell on Kid
 			}
 		}
 	}

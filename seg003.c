@@ -178,12 +178,12 @@ void __pascal far do_startpos() {
 		// Special event: press tile + falling entry
 		get_tile(5, 2, 0);
 		trigger(0, 0, -1);
-		seqtbl_offset_char(7); // fall
+		seqtbl_offset_char(seq_7_fall); // fall
 	} else if (current_level == 13) {
 		// Special event: running entry
-		seqtbl_offset_char(84); // run
+		seqtbl_offset_char(seq_84_run); // run
 	} else {
-		seqtbl_offset_char(5); // turn
+		seqtbl_offset_char(seq_5_turn); // turn
 	}
 	set_start_pos();
 }
@@ -400,13 +400,15 @@ void __pascal far redraw_at_char2() {
 	char_frame = Char.frame;
 	redraw_func = &set_redraw2;
 	// frames 78..80: grab
-	if (char_frame < 78 || char_frame >= 80) {
+	if (char_frame < frame_78_grab_1 || char_frame >= frame_80_jump_up_2) {
 		// frames 135..149: climb up
-		if (char_frame >= 137 && char_frame < 145) {
+		if (char_frame >= frame_137_climbing_3 && char_frame < frame_145_climbing_11) {
 			redraw_func = &set_redraw_floor_overlay;
 		} else {
 			// frames 102..106: fall
-			if (char_action != 2 && char_action != 3 && char_action != 4 && char_action != 6 && (char_action != 5 || char_frame < 102 || char_frame > 106)) {
+			if (char_action != actions_2_hang_climb && char_action != actions_3_in_midair &&
+					char_action != actions_4_in_freefall && char_action != actions_6_hang_straight &&
+					(char_action != actions_5_bumped || char_frame < frame_102_start_fall_1 || char_frame > frame_106_fall)) {
 				return;
 			}
 		}
@@ -530,7 +532,7 @@ void __pascal far bump_into_opponent() {
 		if (ABS(distance) <= 15) {
 			Char.y = y_land[Char.curr_row + 1];
 			Char.fall_y = 0;
-			seqtbl_offset_char(47); // bump into opponent
+			seqtbl_offset_char(seq_47_bump); // bump into opponent
 			play_seq();
 		}
 	}
@@ -567,7 +569,7 @@ Possible results in can_guard_see_kid:
 	}
 	if ((Guard.charid != charid_1_shadow || current_level == 12) &&
 		// frames 217..228: going up on stairs
-		kid_frame != 0 && (kid_frame < 219 || kid_frame >= 229) &&
+		kid_frame != 0 && (kid_frame < frame_219_exit_stairs_3 || kid_frame >= 229) &&
 		Guard.direction != dir_56_none && Kid.alive < 0 && Guard.alive < 0 && Kid.room == Guard.room && Kid.curr_row == Guard.curr_row
 	) {
 		can_guard_see_kid = 2;
@@ -626,7 +628,7 @@ void __pascal far do_mouse() {
 	Char.alive = -1;
 	Char.direction = dir_FF_left;
 	guardhp_curr = 1;
-	seqtbl_offset_char(105); // mouse forward
+	seqtbl_offset_char(seq_105_mouse_forward); // mouse forward
 	play_seq();
 	saveshad();
 }
@@ -637,7 +639,7 @@ int __pascal far flash_if_hurt() {
 		do_flash_no_delay(flash_color); // don't add delay to the flash
 		return 1;
 	} else if (hitp_delta < 0) {
-		do_flash_no_delay(12); // red
+		do_flash_no_delay(color_12_red); // red
 		return 1;
 	}
 	return 0; // not flashed
