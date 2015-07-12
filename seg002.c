@@ -134,10 +134,10 @@ void __pascal far enter_guard() {
 	if (seq_hi == 0) {
 		if (Char.charid == charid_4_skeleton) {
 			Char.sword = sword_2_drawn;
-			seqtbl_offset_char(63); // stand active (when entering room) (skeleton)
+			seqtbl_offset_char(seq_63_guard_stand_active); // stand active (when entering room) (skeleton)
 		} else {
 			Char.sword = sword_0_sheathed;
-			seqtbl_offset_char(77); // stand inactive (when entering room)
+			seqtbl_offset_char(seq_77_guard_stand_inactive); // stand inactive (when entering room)
 		}
 	} else {
 		Char.curr_seq = level.guards_seq_lo[room_minus_1] + (seq_hi << 8);
@@ -148,7 +148,7 @@ void __pascal far enter_guard() {
 		guard_skill = 3;
 	}
 	frame = Char.frame;
-	if (frame == 185 /*dead*/ || frame == 177 /*spiked*/ || frame == 178 /*chomped*/) {
+	if (frame == frame_185_dead || frame == frame_177_spiked || frame == frame_178_chomped) {
 		Char.alive = 1;
 		draw_guard_hp(0, guardhp_curr);
 		guardhp_curr = 0;
@@ -171,7 +171,7 @@ void __pascal far check_guard_fallout() {
 		return;
 	}
 	if (Guard.charid == charid_1_shadow) {
-		if (Guard.action != 4) {
+		if (Guard.action != actions_4_in_freefall) {
 			return;
 		}
 		loadshad();
@@ -322,13 +322,13 @@ short __pascal far leave_room() {
 		leave_dir = 3; // down
 	} else if (
 		// frames 135..149: climb up
-		(frame >= 135 && frame < 150) ||
+		(frame >= frame_135_climbing_1 && frame < 150) ||
 		// frames 110..119: standing up from crouch
-		(frame >= 110 && frame < 120) ||
+		(frame >= frame_110_stand_up_from_crouch_1 && frame < 120) ||
 		// frames 150..162: with sword
-		(frame >= 150 && frame < 163) ||
+		(frame >= frame_150_parry && frame < 163) ||
 		// frames 166..168: with sword
-		(frame >= 166 && frame < 169) ||
+		(frame >= frame_166_stand_inactive && frame < 169) ||
 		action == actions_7_turn // turn
 	) {
 		return -1;
@@ -529,7 +529,7 @@ void __pascal far autocontrol_mouse() {
 		}
 	} else {
 		if (Char.x < 166) {
-			seqtbl_offset_char(107); // mouse
+			seqtbl_offset_char(seq_107_mouse_stand_up_and_go); // mouse
 			play_seq();
 		}
 	}
@@ -607,7 +607,7 @@ void __pascal far autocontrol_guard_active() {
 	short char_frame;
 	short distance;
 	char_frame = Char.frame;
-	if (char_frame != 166 && char_frame >= 150 && can_guard_see_kid != 1) {
+	if (char_frame != frame_166_stand_inactive && char_frame >= 150 && can_guard_see_kid != 1) {
 		if (can_guard_see_kid == 0) {
 			if (word_1EA12 != 0) {
 				guard_follows_kid_down();
@@ -621,7 +621,7 @@ void __pascal far autocontrol_guard_active() {
 			distance = char_opp_dist();
 			if (distance >= 12 &&
 				// frames 102..117: falling and landing
-				opp_frame >= 102 && opp_frame < 118 &&
+				opp_frame >= frame_102_start_fall_1 && opp_frame < frame_118_stand_up_from_crouch_9 &&
 				Opp.action == actions_5_bumped
 			) {
 				return;
@@ -645,10 +645,10 @@ void __pascal far autocontrol_guard_active() {
 				if (Char.direction != Opp.direction) {
 					// frames 7..14: running
 					// frames 34..43: run-jump
-					if (opp_frame >= 7 && opp_frame < 15) {
+					if (opp_frame >= frame_7_run && opp_frame < 15) {
 						if (distance < 40) move_6_shift();
 						return;
-					} else if (opp_frame >= 34 && opp_frame < 44) {
+					} else if (opp_frame >= frame_34_start_run_jump_1 && opp_frame < 44) {
 						if (distance < 50) move_6_shift();
 						return;
 						//return;
@@ -745,7 +745,7 @@ void __pascal far guard_advance() {
 void __pascal far guard_block() {
 	word opp_frame;
 	opp_frame = Opp.frame;
-	if (opp_frame == 152 || opp_frame == 153 || opp_frame == 162) {
+	if (opp_frame == frame_152_strike_1 || opp_frame == frame_153_strike_2 || opp_frame == frame_162_fighting) {
 		if (word_1E1AA != 0) {
 			if (impblockprob[guard_skill] > prandom(255)) {
 				move_3_up();
@@ -763,9 +763,9 @@ void __pascal far guard_strike() {
 	word opp_frame;
 	word char_frame;
 	opp_frame = Opp.frame;
-	if (opp_frame == 169 || opp_frame == 151) return;
+	if (opp_frame == frame_169_fighting || opp_frame == frame_151_fighting) return;
 	char_frame = Char.frame;
-	if (char_frame == 161 || char_frame == 150) {
+	if (char_frame == frame_161_parry || char_frame == frame_150_parry) {
 		if (restrikeprob[guard_skill] > prandom(255)) {
 			move_6_shift();
 		}
@@ -783,12 +783,12 @@ void __pascal far hurt_by_sword() {
 	if (Char.sword != sword_2_drawn) {
 		// Being hurt when not in fighting pose means death.
 		take_hp(100);
-		seqtbl_offset_char(85); // dying (stabbed unarmed)
+		seqtbl_offset_char(seq_85_stabbed_to_death); // dying (stabbed unarmed)
 		loc_4276:
 		if (get_tile_behind_char() != 0 ||
 			(distance = distance_to_edge_weight()) < 4
 		) {
-			seqtbl_offset_char(85); // dying (stabbed)
+			seqtbl_offset_char(seq_85_stabbed_to_death); // dying (stabbed)
 			if (Char.charid != charid_0_kid &&
 				Char.direction < dir_0_right && // looking left
 				(curr_tile2 == tiles_4_gate || get_tile_at_char() == tiles_4_gate)
@@ -802,14 +802,14 @@ void __pascal far hurt_by_sword() {
 			Char.x = char_dx_forward(distance - 20);
 			load_fram_det_col();
 			inc_curr_row();
-			seqtbl_offset_char(81); // Kid/Guard is killed and pushed off the ledge
+			seqtbl_offset_char(seq_81_kid_pushed_off_ledge); // Kid/Guard is killed and pushed off the ledge
 		}
 	} else {
 		// You can't hurt skeletons
 		if (Char.charid != charid_4_skeleton) {
 			if (take_hp(1)) goto loc_4276;
 		}
-		seqtbl_offset_char(74); // being hit with sword
+		seqtbl_offset_char(seq_74_hit_by_sword); // being hit with sword
 		Char.y = y_land[Char.curr_row + 1];
 		Char.fall_y = 0;
 	}
@@ -842,7 +842,7 @@ void __pascal far check_sword_hurting() {
 	short kid_frame;
 	kid_frame = Kid.frame;
 	// frames 217..228: go up on stairs
-	if (kid_frame != 0 && (kid_frame < 219 || kid_frame >= 229)) {
+	if (kid_frame != 0 && (kid_frame < frame_219_exit_stairs_3 || kid_frame >= 229)) {
 		loadshad_and_opp();
 		check_hurting();
 		saveshad_and_opp();
@@ -859,17 +859,17 @@ void __pascal far check_hurting() {
 	if (Char.curr_row != Opp.curr_row) return;
 	char_frame = Char.frame;
 	// frames 153..154: poking with sword
-	if (char_frame != 153 && char_frame != 154) return;
+	if (char_frame != frame_153_strike_2 && char_frame != frame_154_poking) return;
 	// If char is poking ...
 	distance = char_opp_dist();
 	opp_frame = Opp.frame;
 	// frames 161 and 150: parrying
 	if (distance < 0 || distance >= 29 ||
-		(opp_frame != 161 && opp_frame != 150)
+		(opp_frame != frame_161_parry && opp_frame != frame_150_parry)
 	) {
 		// ... and Opp is not parrying
 		// frame 154: poking
-		if (Char.frame == 154) {
+		if (Char.frame == frame_154_poking) {
 			if (Opp.sword < sword_2_drawn) {
 				min_hurt_range = 8;
 			} else {
@@ -881,16 +881,16 @@ void __pascal far check_hurting() {
 			}
 		}
 	} else {
-		Opp.frame = 161;
+		Opp.frame = frame_161_parry;
 		if (Char.charid != charid_0_kid) {
 			word_1E1AA = 4;
 		}
-		seqtbl_offset_char(69); // attack was parried
+		seqtbl_offset_char(seq_69_attack_was_parried); // attack was parried
 		play_seq();
 	}
 	// frame 154: poking
 	// frame 161: parrying
-	if (Char.frame == 154 && Opp.frame != 161 && Opp.action != actions_99_hurt) {
+	if (Char.frame == frame_154_poking && Opp.frame != frame_161_parry && Opp.action != actions_99_hurt) {
 		play_sound(sound_11_sword_moving); // sword moving
 	}
 }
@@ -920,7 +920,7 @@ void __pascal far check_skel() {
 			Char.curr_col = 5;
 			Char.x = x_bump[Char.curr_col + 5] + 14;
 			Char.direction = dir_FF_left;
-			seqtbl_offset_char(88); // skel wake up
+			seqtbl_offset_char(seq_88_skel_wake_up); // skel wake up
 			play_seq();
 			play_sound(sound_44_skel_alive); // skel alive
 			guard_skill = 2;
@@ -1021,7 +1021,7 @@ void __pascal far autocontrol_shadow_level5() {
 // seg002:1064
 void __pascal far autocontrol_shadow_level6() {
 	if (Char.room == 1 &&
-		Kid.frame == 43 && // a frame in run-jump
+		Kid.frame == frame_43_running_jump_4 && // a frame in run-jump
 		Kid.x < 128
 	) {
 		move_6_shift();
@@ -1067,7 +1067,7 @@ void __pascal far autocontrol_shadow_level12() {
 	}
 	if (char_opp_dist() < 10) {
 		// unite with the shadow
-		flash_color = 15; // white
+		flash_color = color_15_white; // white
 		flash_time = 18;
 		// get an extra HP for uniting the shadow
 		add_life();
@@ -1085,8 +1085,8 @@ void __pascal far autocontrol_shadow_level12() {
 		opp_frame = Opp.frame;
 		// frames 1..14: running
 		// frames 121..132: stepping
-		if ((opp_frame >= 3 && opp_frame < 15) ||
-			(opp_frame >= 127 && opp_frame < 133)
+		if ((opp_frame >= frame_3_start_run && opp_frame < frame_15_stand) ||
+			(opp_frame >= frame_127_stepping_7 && opp_frame < 133)
 		) {
 			move_1_forward();
 		}

@@ -189,7 +189,7 @@ void __pascal far seqtbl_offset_kid_char(int seq_index) {
 void __pascal far init_mouse_cu8() {
 	init_mouse_go();
 	Char.x = 144;
-	seqtbl_offset_char(106); // mouse
+	seqtbl_offset_char(seq_106_mouse); // mouse
 	play_seq();
 }
 
@@ -199,7 +199,7 @@ void __pascal far init_mouse_go() {
 	Char.x = 199;
 	Char.y = 167;
 	Char.direction = dir_FF_left;
-	seqtbl_offset_char(105); // mouse go
+	seqtbl_offset_char(seq_105_mouse_forward); // mouse go
 	play_seq();
 }
 
@@ -208,7 +208,7 @@ void __pascal far princess_crouching() {
 	init_princess();
 	Char.x = 131;
 	Char.y = 169;
-	seqtbl_offset_char(110); // princess crouching [PV2]
+	seqtbl_offset_char(seq_110_princess_crouching_PV2); // princess crouching [PV2]
 	play_seq();
 }
 
@@ -217,7 +217,7 @@ void __pascal far princess_stand() {
 	init_princess_right();
 	Char.x = 144;
 	Char.y = 169;
-	seqtbl_offset_char(94); // princess stand [PV1]
+	seqtbl_offset_char(seq_94_princess_stand_PV1); // princess stand [PV1]
 	play_seq();
 }
 
@@ -232,7 +232,7 @@ void __pascal far princess_lying() {
 	init_princess();
 	Char.x = 92;
 	Char.y = 162;
-	seqtbl_offset_char(103); // princess lying [PV2]
+	seqtbl_offset_char(seq_103_princess_lying_PV2); // princess lying [PV2]
 	play_seq();
 }
 
@@ -247,7 +247,7 @@ void __pascal far init_ending_princess() {
 	init_princess();
 	Char.x = 136;
 	Char.y = 164;
-	seqtbl_offset_char(109); // princess standing [PV2]
+	seqtbl_offset_char(seq_109_princess_stand_PV2); // princess standing [PV2]
 	play_seq();
 }
 
@@ -264,7 +264,7 @@ void __pascal far init_princess() {
 	Char.x = 120;
 	Char.y = 166;
 	Char.direction = dir_FF_left;
-	seqtbl_offset_char(94); // princess stand [PV1]
+	seqtbl_offset_char(seq_94_princess_stand_PV1); // princess stand [PV1]
 	play_seq();
 }
 
@@ -274,7 +274,7 @@ void __pascal far init_vizier() {
 	Char.x = 198;
 	Char.y = 166;
 	Char.direction = dir_FF_left;
-	seqtbl_offset_char(95); // Jaffar stand [PV1]
+	seqtbl_offset_char(seq_95_Jaffar_stand_PV1); // Jaffar stand [PV1]
 	play_seq();
 }
 
@@ -284,7 +284,7 @@ void __pascal far init_ending_kid() {
 	Char.x = 198;
 	Char.y = 164;
 	Char.direction = dir_FF_left;
-	seqtbl_offset_char(1); // start run
+	seqtbl_offset_char(seq_1_start_run); // start run
 	play_seq();
 }
 
@@ -298,9 +298,9 @@ void __pascal far cutscene_8() {
 	saveshad();
 	if (fade_in_1()) return;
 	if (proc_cutscene_frame(20)) return;
-	seqtbl_offset_kid_char(107); // mouse stand up and go
+	seqtbl_offset_kid_char(seq_107_mouse_stand_up_and_go); // mouse stand up and go
 	if (proc_cutscene_frame(20)) return;
-	seqtbl_offset_shad_char(111); // princess stand up [PV2]
+	seqtbl_offset_shad_char(seq_111_princess_stand_up_PV2); // princess stand up [PV2]
 	if (proc_cutscene_frame(20)) return;
 	Kid.frame = 0;
 	fade_out_1();
@@ -316,9 +316,9 @@ void __pascal far cutscene_9() {
 	init_mouse_go();
 	savekid();
 	if (proc_cutscene_frame(5)) return;
-	seqtbl_offset_shad_char(112); // princess crouch down [PV2]
+	seqtbl_offset_shad_char(seq_112_princess_crouch_down_PV2); // princess crouch down [PV2]
 	if (proc_cutscene_frame(9)) return;
-	seqtbl_offset_kid_char(114); // mouse stand
+	seqtbl_offset_kid_char(seq_114_mouse_stand); // mouse stand
 	if (proc_cutscene_frame(58)) return;
 	fade_out_1();
 }
@@ -336,16 +336,16 @@ void __pascal far end_sequence_anim() {
 	init_ending_kid();
 	savekid();
 	if (proc_cutscene_frame(8)) return;
-	seqtbl_offset_shad_char(108); // princess turn and hug [PV2]
+	seqtbl_offset_shad_char(seq_108_princess_turn_and_hug); // princess turn and hug [PV2]
 	if (proc_cutscene_frame(5)) return;
-	seqtbl_offset_kid_char(13); // stop run
+	seqtbl_offset_kid_char(seq_13_stop_run); // stop run
 	if (proc_cutscene_frame(2)) return;
 	Kid.frame = 0;
 	if (proc_cutscene_frame(39)) return;
 	init_mouse_1();
 	savekid();
 	if (proc_cutscene_frame(9)) return;
-	seqtbl_offset_kid_char(101); // mouse stands up
+	seqtbl_offset_kid_char(seq_101_mouse_stands_up); // mouse stands up
 	if (proc_cutscene_frame(41)) return;
 	fade_out_1();
 	while (check_sound_playing()) idle();

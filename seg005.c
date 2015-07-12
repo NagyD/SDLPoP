@@ -100,9 +100,9 @@ void __pascal far land() {
 				loc_5EFD:
 				if (Char.charid >= charid_2_guard || Char.sword == sword_2_drawn) {
 					Char.sword = sword_2_drawn;
-					seq_id = 63; // stand active after landing
+					seq_id = seq_63_guard_stand_active; // stand active after landing
 				} else {
-					seq_id = 17; // crouch (soft land)
+					seq_id = seq_17_soft_land; // crouch (soft land)
 				}
 				if (Char.charid == charid_0_kid) {
 					play_sound(sound_17_soft_land); // soft land (crouch)
@@ -114,7 +114,7 @@ void __pascal far land() {
 				if (! take_hp(1)) {
 					play_sound(sound_16_medium_land); // medium land
 					is_guard_notice = 1;
-					seq_id = 20; // medium land (lose 1 HP, crouch)
+					seq_id = seq_20_medium_land; // medium land (lose 1 HP, crouch)
 				} else {
 					goto loc_5F75;
 				}
@@ -127,7 +127,7 @@ void __pascal far land() {
 		take_hp(100);
 		loc_5F75:
 		play_sound(sound_0_fell_to_death); // prince crashing into the floor
-		seq_id = 22; // dead (after falling)
+		seq_id = seq_22_crushed; // dead (after falling)
 	}
 	seqtbl_offset_char(seq_id);
 	play_seq();
@@ -144,7 +144,7 @@ void __pascal far spiked() {
 	Char.fall_y = 0;
 	play_sound(sound_48_spiked); // something spiked
 	take_hp(100);
-	seqtbl_offset_char(51); // spiked
+	seqtbl_offset_char(seq_51_spiked); // spiked
 	play_seq();
 }
 
@@ -154,12 +154,12 @@ void __pascal far control() {
 	short char_action;
 	char_frame = Char.frame;
 	if (Char.alive >= 0) {
-		if (char_frame == 15 || // stand
-			char_frame == 166 || // stand
-			char_frame == 158 || // stand with sword
-			char_frame == 171 // stand with sword
+		if (char_frame == frame_15_stand || // stand
+			char_frame == frame_166_stand_inactive || // stand
+			char_frame == frame_158_stand_with_sword || // stand with sword
+			char_frame == frame_171_stand_with_sword // stand with sword
 		) {
-			seqtbl_offset_char(71); // dying (not stabbed)
+			seqtbl_offset_char(seq_71_dying); // dying (not stabbed)
 		}
 	} else {
 		char_action = Char.action;
@@ -171,21 +171,21 @@ void __pascal far control() {
 			control_with_sword();
 		} else if (Char.charid >= charid_2_guard) {
 			control_guard_inactive();
-		} else if (char_frame == 15 || // standing
-			(char_frame>=50 && char_frame<53) // end of turning
+		} else if (char_frame == frame_15_stand || // standing
+			(char_frame>=frame_50_turning && char_frame<53) // end of turning
 		) {
 			control_standing();
-		} else if (char_frame == 48) { // a frame in turning
+		} else if (char_frame == frame_48_turning) { // a frame in turning
 			control_turning();
 		} else if (char_frame < 4) { // start run
 			control_startrun();
-		} else if (char_frame >= 67 && char_frame < 70) { // start jump up
+		} else if (char_frame >= frame_67_start_jump_up_1 && char_frame < 70) { // start jump up
 			control_jumpup();
 		} else if (char_frame < 15) { // running
 			control_running();
-		} else if (char_frame >= 87 && char_frame < 100) { // hanging
+		} else if (char_frame >= frame_87_hanging_1 && char_frame < 100) { // hanging
 			control_hanging();
-		} else if (char_frame == 109) { // crouching
+		} else if (char_frame == frame_109_crouch) { // crouching
 			control_crouched();
 		}
 	}
@@ -207,11 +207,11 @@ void __pascal far control_crouched() {
 		need_level1_music = 0;
 		if (control_shift2 < 0 && check_get_item()) return;
 		if (control_y != 1) {
-			seqtbl_offset_char(49); // stand up from crouch
+			seqtbl_offset_char(seq_49_stand_up_from_crouch); // stand up from crouch
 		} else {
 			if (control_forward < 0) {
 				control_forward = 1; // disable automatic repeat
-				seqtbl_offset_char(79); // crouch-hop
+				seqtbl_offset_char(seq_79_crouch_hop); // crouch-hop
 			}
 		}
 	}
@@ -235,7 +235,7 @@ void __pascal far control_standing() {
 				holding_sword = 1;
 				if ((word)var_2 < (word)-6) {
 					if (Opp.charid == charid_1_shadow &&
-						(Opp.action == actions_3_in_midair || (Opp.frame >= 107 && Opp.frame < 118))
+						(Opp.action == actions_3_in_midair || (Opp.frame >= frame_107_fall_land_1 && Opp.frame < 118))
 					) {
 						word_1EFCE = 0;
 					} else {
@@ -290,7 +290,7 @@ void __pascal far up_pressed() {
 	else if (get_tile_infrontof_char() == tiles_16_level_door_left) leveldoor_tilepos = curr_tilepos;
 	if ((leveldoor_tilepos != -1) &&
 		level.start_room != drawn_room &&
-		curr_room_modif[leveldoor_tilepos] >= 43 // this door must be fully open
+		curr_room_modif[leveldoor_tilepos] >= 42 // this door must be fully open
 	){
 		go_up_leveldoor();
 	} else {
@@ -322,7 +322,7 @@ void __pascal far down_pressed() {
 				curr_room_modif[curr_tilepos] >> 2 >= 6)
 			) {
 				Char.x = char_dx_forward(distance_to_edge_weight() - 9);
-				seqtbl_offset_char(68); // climb down
+				seqtbl_offset_char(seq_68_climb_down); // climb down
 			} else {
 				crouch();
 			}
@@ -336,19 +336,19 @@ void __pascal far down_pressed() {
 void __pascal far go_up_leveldoor() {
 	Char.x = x_bump[tile_col + 5] + 10;
 	Char.direction = dir_FF_left; // right
-	seqtbl_offset_char(70); // go up on level door
+	seqtbl_offset_char(seq_70_go_up_on_level_door); // go up on level door
 }
 
 // seg005:058F
 void __pascal far control_turning() {
 	if (control_shift >= 0 && control_x < 0 && control_y >= 0) {
-		seqtbl_offset_char(43); // start run and run (after turning)
+		seqtbl_offset_char(seq_43_start_run_after_turn); // start run and run (after turning)
 	}
 }
 
 // seg005:05AD
 void __pascal far crouch() {
-	seqtbl_offset_char(50); // crouch
+	seqtbl_offset_char(seq_50_crouch); // crouch
 	control_down = release_arrows();
 }
 
@@ -362,11 +362,11 @@ void __pascal far back_pressed() {
 		char_opp_dist() > 0 || // and Guard was behind him
 		distance_to_edge_weight() < 2
 	) {
-		seq_id = 5; // turn
+		seq_id = seq_5_turn; // turn
 	} else {
 		Char.sword = sword_2_drawn;
 		word_1EFCE = 0;
-		seq_id = 89; // turn and draw sword
+		seq_id = seq_89_turn_draw_sword; // turn and draw sword
 	}
 	seqtbl_offset_char(seq_id);
 }
@@ -381,23 +381,23 @@ void __pascal far forward_pressed() {
 			safe_step();
 		}
 	} else {
-		seqtbl_offset_char(1); // start run and run
+		seqtbl_offset_char(seq_1_start_run); // start run and run
 	}
 }
 
 // seg005:0649
 void __pascal far control_running() {
-	if (control_x == 0 && (Char.frame == 7 || Char.frame == 11)) {
+	if (control_x == 0 && (Char.frame == frame_7_run || Char.frame == frame_11_run_step)) {
 		control_forward = release_arrows();
-		seqtbl_offset_char(13); // stop run
+		seqtbl_offset_char(seq_13_stop_run); // stop run
 	} else if (control_x > 0) {
 		control_backward = release_arrows();
-		seqtbl_offset_char(6); // run-turn
+		seqtbl_offset_char(seq_6_run_turn); // run-turn
 	} else if (control_y < 0 && control_up < 0) {
 		run_jump();
 	} else if (control_down < 0) {
 		control_down = 1; // disable automatic repeat
-		seqtbl_offset_char(26); // crouch while running
+		seqtbl_offset_char(seq_26_crouch_while_running); // crouch while running
 	}
 }
 
@@ -412,9 +412,9 @@ void __pascal far safe_step() {
 		seqtbl_offset_char(distance + 28); // 29..42: safe step to edge
 	} else if (edge_type != 1 && Char.repeat != 0) {
 		Char.repeat = 0;
-		seqtbl_offset_char(44); // step on edge
+		seqtbl_offset_char(seq_44_step_on_edge); // step on edge
 	} else {
-		seqtbl_offset_char(39); // unsafe step (off ledge)
+		seqtbl_offset_char(seq_39_safe_step_11); // unsafe step (off ledge)
 	}
 }
 
@@ -441,7 +441,7 @@ int __pascal far check_get_item() {
 // seg005:073E
 void __pascal far get_item() {
 	short distance;
-	if (Char.frame != 109) { // crouching
+	if (Char.frame != frame_109_crouch) { // crouching
 		distance = get_edge_distance();
 		if (edge_type != 2) {
 			Char.x = char_dx_forward(distance);
@@ -452,10 +452,10 @@ void __pascal far get_item() {
 		crouch();
 	} else if (curr_tile2 == tiles_22_sword) {
 		do_pickup(-1);
-		seqtbl_offset_char(91); // get sword
+		seqtbl_offset_char(seq_91_get_sword); // get sword
 	} else { // potion
 		do_pickup(curr_room_modif[curr_tilepos] >> 4);
-		seqtbl_offset_char(78); // drink
+		seqtbl_offset_char(seq_78_drink); // drink
 #ifdef USE_COPYPROT
 		if (current_level == 15) {
 			short index;
@@ -490,7 +490,7 @@ void __pascal far control_jumpup() {
 // seg005:0825
 void __pascal far standing_jump() {
 	control_up = control_forward = 1; // disable automatic repeat
-	seqtbl_offset_char(3); // standing jump
+	seqtbl_offset_char(seq_3_standing_jump); // standing jump
 }
 
 // seg005:0836
@@ -532,7 +532,7 @@ void __pascal far jump_up_or_grab() {
 void __pascal far grab_up_no_floor_behind() {
 	get_tile_above_char();
 	Char.x = char_dx_forward(distance_to_edge_weight() - 10);
-	seqtbl_offset_char(16); // jump up and grab (no floor behind)
+	seqtbl_offset_char(seq_16_jump_up_and_grab); // jump up and grab (no floor behind)
 }
 
 // seg005:08E6
@@ -545,9 +545,9 @@ void __pascal far jump_up() {
 	}
 	get_tile(Char.room, get_tile_div_mod(back_delta_x(0) + dx_weight() - 6), Char.curr_row - 1);
 	if (curr_tile2 != tiles_20_wall && ! tile_is_floor(curr_tile2)) {
-		seqtbl_offset_char(28); // jump up with nothing above
+		seqtbl_offset_char(seq_28_jump_up_with_nothing_above); // jump up with nothing above
 	} else {
-		seqtbl_offset_char(14); // jump up with wall or floor above
+		seqtbl_offset_char(seq_14_jump_up_into_ceiling); // jump up with wall or floor above
 	}
 }
 
@@ -568,7 +568,7 @@ void __pascal far control_hanging() {
 				if (grab_timer == 0) {
 					play_sound(sound_8_bumped); // touching a wall (hang against wall)
 				}
-				seqtbl_offset_char(25); // hang against wall (straight)
+				seqtbl_offset_char(seq_25_hang_against_wall); // hang against wall (straight)
 			} else {
 				if (! tile_is_floor(get_tile_above_char())) {
 					hang_fall();
@@ -585,7 +585,7 @@ void __pascal far control_hanging() {
 // seg005:09DF
 void __pascal far can_climb_up() {
 	short seq_id;
-	seq_id = 10; // climb up
+	seq_id = seq_10_climb_up; // climb up
 	control_up = control_shift2 = release_arrows();
 	get_tile_above_char();
 	if (((curr_tile2 == tiles_13_mirror || curr_tile2 == tiles_18_chomper) &&
@@ -594,7 +594,7 @@ void __pascal far can_climb_up() {
 					!is_shadow_effect &&
 					curr_room_modif[curr_tilepos] >> 2 < 6)
 	) {
-		seq_id = 73; // climb up to closed gate and down
+		seq_id = seq_73_climb_up_to_closed_gate; // climb up to closed gate and down
 	}
 	seqtbl_offset_char(seq_id);
 }
@@ -605,7 +605,7 @@ void __pascal far hang_fall() {
 	if (! tile_is_floor(get_tile_behind_char()) &&
 		! tile_is_floor(get_tile_at_char())
 	) {
-		seqtbl_offset_char(23); // release ledge and fall
+		seqtbl_offset_char(seq_23_release_ledge_and_fall); // release ledge and fall
 	} else {
 		if (get_tile_at_char() == tiles_20_wall ||
 			(Char.direction < dir_0_right && ( // looking left
@@ -615,7 +615,7 @@ void __pascal far hang_fall() {
 		) {
 			Char.x = char_dx_forward(-7);
 		}
-		seqtbl_offset_char(11); // end of climb down
+		seqtbl_offset_char(seq_11_release_ledge_and_land); // end of climb down
 	}
 }
 
@@ -625,10 +625,10 @@ void __pascal far grab_up_with_floor_behind() {
 	distance = distance_to_edge_weight();
 	if (distance < 4 && get_edge_distance() < 4 && edge_type != 1) {
 		Char.x = char_dx_forward(distance);
-		seqtbl_offset_char(8); // jump up and grab (when?)
+		seqtbl_offset_char(seq_8_jump_up_and_grab_straight); // jump up and grab (when?)
 	} else {
 		Char.x = char_dx_forward(distance - 4);
-		seqtbl_offset_char(24); // jump up and grab (with floor behind)
+		seqtbl_offset_char(seq_24_jump_up_and_grab_forward); // jump up and grab (with floor behind)
 	}
 }
 
@@ -638,7 +638,7 @@ void __pascal far run_jump() {
 	short xpos;
 	short col;
 	short var_8;
-	if (Char.frame >= 7) {
+	if (Char.frame >= frame_7_run) {
 		// Align Kid to edge of floor.
 		xpos = char_dx_forward(4);
 		col = get_tile_div_mod_m7(xpos);
@@ -656,7 +656,7 @@ void __pascal far run_jump() {
 			}
 		}
 		control_up = release_arrows(); // disable automatic repeat
-		seqtbl_offset_char(4); // run-jump
+		seqtbl_offset_char(seq_4_run_jump); // run-jump
 	}
 }
 
@@ -664,9 +664,9 @@ void __pascal far run_jump() {
 void __pascal far back_with_sword() {
 	short frame;
 	frame = Char.frame;
-	if (frame == 158 || frame == 170 || frame == 171) {
+	if (frame == frame_158_stand_with_sword || frame == frame_170_stand_with_sword || frame == frame_171_stand_with_sword) {
 		control_backward = 1; // disable automatic repeat
-		seqtbl_offset_char(57); // back with sword
+		seqtbl_offset_char(seq_57_back_with_sword); // back with sword
 	}
 }
 
@@ -674,12 +674,12 @@ void __pascal far back_with_sword() {
 void __pascal far forward_with_sword() {
 	short frame;
 	frame = Char.frame;
-	if (frame == 158 || frame == 170 || frame == 171) {
+	if (frame == frame_158_stand_with_sword || frame == frame_170_stand_with_sword || frame == frame_171_stand_with_sword) {
 		control_forward = 1; // disable automatic repeat
 		if (Char.charid != charid_0_kid) {
-			seqtbl_offset_char(56); // forward with sword (Guard)
+			seqtbl_offset_char(seq_56_guard_forward_with_sword); // forward with sword (Guard)
 		} else {
-			seqtbl_offset_char(86); // forward with sword (Kid)
+			seqtbl_offset_char(seq_86_forward_with_sword); // forward with sword (Kid)
 		}
 	}
 }
@@ -687,13 +687,13 @@ void __pascal far forward_with_sword() {
 // seg005:0C1D
 void __pascal far draw_sword() {
 	word seq_id;
-	seq_id = 55; // draw sword
+	seq_id = seq_55_draw_sword; // draw sword
 	control_forward = control_shift2 = release_arrows();
 	if (Char.charid == charid_0_kid) {
 		play_sound(sound_19_draw_sword); // taking out the sword
 		word_1EFCE = 0;
 	} else if (Char.charid != charid_1_shadow) {
-		seq_id = 90; // stand active
+		seq_id = seq_90_en_garde; // stand active
 	}
 	Char.sword = sword_2_drawn;
 	seqtbl_offset_char(seq_id);
@@ -710,7 +710,7 @@ void __pascal far control_with_sword() {
 				return;
 			} else if (distance < 0) {
 				if ((word)distance < (word)-4) {
-					seqtbl_offset_char(60); // turn with sword (after switching places)
+					seqtbl_offset_char(seq_60_turn_with_sword); // turn with sword (after switching places)
 					return;
 				} else {
 					swordfight();
@@ -723,9 +723,9 @@ void __pascal far control_with_sword() {
 			}
 			if (Char.charid < charid_2_guard) {
 				// frame 171: stand with sword
-				if (Char.frame == 171) {
+				if (Char.frame == frame_171_stand_with_sword) {
 					Char.sword = sword_0_sheathed;
-					seqtbl_offset_char(92); // put sword away (Guard died)
+					seqtbl_offset_char(seq_92_put_sword_away); // put sword away (Guard died)
 				}
 			} else {
 				swordfight();
@@ -742,8 +742,8 @@ void __pascal far swordfight() {
 	frame = Char.frame;
 	charid = Char.charid;
 	// frame 161: parry
-	if (frame == 161 && control_shift2 >= 0) {
-		seqtbl_offset_char(57); // back with sword (when parrying)
+	if (frame == frame_161_parry && control_shift2 >= 0) {
+		seqtbl_offset_char(seq_57_back_with_sword); // back with sword (when parrying)
 		return;
 	} else if (control_shift2 < 0) {
 		if (charid == charid_0_kid) {
@@ -753,18 +753,18 @@ void __pascal far swordfight() {
 		if (control_shift2 == 1) return;
 	}
 	if (control_down < 0) {
-		if (frame == 158 || frame == 170 || frame == 171) {
+		if (frame == frame_158_stand_with_sword || frame == frame_170_stand_with_sword || frame == frame_171_stand_with_sword) {
 			control_down = 1; // disable automatic repeat
 			Char.sword = sword_0_sheathed;
 			if (charid == charid_0_kid) {
 				word_1EFCE = 1;
 				guard_refrac = 9;
 				holding_sword = 0;
-				seq_id = 93; // put sword away fast (down pressed)
+				seq_id = seq_93_put_sword_away_fast; // put sword away fast (down pressed)
 			} else if (charid == charid_1_shadow) {
-				seq_id = 92; // put sword away
+				seq_id = seq_92_put_sword_away; // put sword away
 			} else {
-				seq_id = 87; // stand inactive (when Kid leaves sight)
+				seq_id = seq_87_guard_become_inactive; // stand inactive (when Kid leaves sight)
 			}
 			seqtbl_offset_char(seq_id);
 		}
@@ -782,19 +782,19 @@ void __pascal far sword_strike() {
 	short frame;
 	short seq_id;
 	frame = Char.frame;
-	if (frame == 157 || // walk with sword
-		frame == 158 || // stand with sword
-		frame == 170 || // stand with sword
-		frame == 171 || // stand with sword
-		frame == 165 // walk with sword
+	if (frame == frame_157_walk_with_sword || // walk with sword
+		frame == frame_158_stand_with_sword || // stand with sword
+		frame == frame_170_stand_with_sword || // stand with sword
+		frame == frame_171_stand_with_sword || // stand with sword
+		frame == frame_165_walk_with_sword // walk with sword
 	) {
 		if (Char.charid == charid_0_kid) {
-			seq_id = 75; // strike with sword (Kid)
+			seq_id = seq_75_strike; // strike with sword (Kid)
 		} else {
-			seq_id = 58; // strike with sword (Guard)
+			seq_id = seq_58_guard_strike; // strike with sword (Guard)
 		}
-	} else if (frame == 150 || frame == 161) { // parry
-		seq_id = 66; // strike with sword after parrying
+	} else if (frame == frame_150_parry || frame == frame_161_parry) { // parry
+		seq_id = seq_66_strike_after_parry; // strike with sword after parrying
 	} else {
 		return;
 	}
@@ -812,25 +812,25 @@ void __pascal far parry() {
 	char_frame = Char.frame;
 	opp_frame = Opp.frame;
 	char_charid = Char.charid;
-	seq_id = 62; // defend (parry) with sword
+	seq_id = seq_62_parry; // defend (parry) with sword
 	var_6 = 0;
 	if (
-		char_frame == 158 || // stand with sword
-		char_frame == 170 || // stand with sword
-		char_frame == 171 || // stand with sword
-		char_frame == 168 || // back?
-		char_frame == 165 // walk with sword
+		char_frame == frame_158_stand_with_sword || // stand with sword
+		char_frame == frame_170_stand_with_sword || // stand with sword
+		char_frame == frame_171_stand_with_sword || // stand with sword
+		char_frame == frame_168_back || // back?
+		char_frame == frame_165_walk_with_sword // walk with sword
 	) {
 		if (char_opp_dist() >= 32 && char_charid != charid_0_kid) {
 			back_with_sword();
 			return;
 		} else if (char_charid == charid_0_kid) {
-			if (opp_frame == 168) return;
-			if (opp_frame != 151 &&
-				opp_frame != 152 &&
-				opp_frame != 162
+			if (opp_frame == frame_168_back) return;
+			if (opp_frame != frame_151_fighting &&
+				opp_frame != frame_152_strike_1 &&
+				opp_frame != frame_162_fighting
 			) {
-				if (opp_frame == 153) { // strike
+				if (opp_frame == frame_153_strike_2) { // strike
 					var_6 = 1;
 				} else
 				if (char_charid != charid_0_kid) {
@@ -839,11 +839,11 @@ void __pascal far parry() {
 				}
 			}
 		} else {
-			if (opp_frame != 152) return;
+			if (opp_frame != frame_152_strike_1) return;
 		}
 	} else {
-		if (char_frame != 167) return;
-		seq_id = 61; // parry after striking with sword
+		if (char_frame != frame_167_fighting) return;
+		seq_id = seq_61_parry_after_strike; // parry after striking with sword
 	}
 	control_up = 1; // disable automatic repeat
 	seqtbl_offset_char(seq_id);

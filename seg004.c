@@ -157,7 +157,7 @@ void __pascal far check_bumped() {
 		Char.action != actions_2_hang_climb &&
 		Char.action != actions_6_hang_straight &&
 		// frames 135..149: climb up
-		(Char.frame < 135 || Char.frame >= 149)
+		(Char.frame < frame_135_climbing_1 || Char.frame >= 149)
 	) {
 		if (bump_col_left_of_wall >= 0) {
 			check_bumped_look_right();
@@ -215,7 +215,7 @@ int __pascal far is_obstacle() {
 	} else if (
 		curr_tile2 == tiles_13_mirror &&
 		Char.charid == charid_0_kid &&
-		Char.frame >= 39 && Char.frame < 44 && // run-jump
+		Char.frame >= frame_39_start_run_jump_6 && Char.frame < frame_44_land_after_running_jump && // run-jump
 		Char.direction < dir_0_right // right-to-left only
 	) {
 		curr_room_modif[curr_tilepos] = 0x56; // broken mirror or what?
@@ -241,7 +241,7 @@ int __pascal far xpos_in_drawn_room(int xpos) {
 // seg004:0448
 void __pascal far bumped(sbyte delta_x,sbyte push_direction) {
 	// frame 177: spiked
-	if (Char.alive < 0 && Char.frame != 177) {
+	if (Char.alive < 0 && Char.frame != frame_177_spiked) {
 		Char.x += delta_x;
 		if (push_direction < dir_0_right) {
 			// pushing left
@@ -278,7 +278,7 @@ void __pascal far bumped_fall() {
 	if (action == actions_4_in_freefall) {
 		Char.fall_x = 0;
 	} else {
-		seqtbl_offset_char(45); // fall after bumped
+		seqtbl_offset_char(seq_45_fall_after_bumped); // fall after bumped
 		play_seq();
 	}
 	bumped_sound();
@@ -299,22 +299,22 @@ void __pascal far bumped_floor(sbyte push_direction) {
 			if (Char.alive) {
 				if (Char.sword == sword_2_drawn) {
 					if (push_direction == Char.direction) {
-						seqtbl_offset_char(65); // pushed forward with sword (Kid)
+						seqtbl_offset_char(seq_65_bump_forward_with_sword); // pushed forward with sword (Kid)
 						play_seq();
 						Char.x = char_dx_forward(1);
 						return;
 					} else {
-						seq_index = 64; // pushed back with sword
+						seq_index = seq_64_pushed_back_with_sword; // pushed back with sword
 					}
 				} else {
 					frame = Char.frame;
 					if (frame == 24 || frame == 25 ||
 						(frame >= 40 && frame < 43) ||
-						(frame >= 102 && frame < 107)
+						(frame >= frame_102_start_fall_1 && frame < 107)
 					) {
-						seq_index = 46; // bump into wall after run-jump (crouch)
+						seq_index = seq_46_bump_with_fall; // bump into wall after run-jump (crouch)
 					} else {
-						seq_index = 47; // bump into wall
+						seq_index = seq_47_bump; // bump into wall
 					}
 				}
 				seqtbl_offset_char(seq_index);
@@ -437,13 +437,13 @@ void __pascal far check_chomped_kid() {
 // seg004:07BF
 void __pascal far chomped() {
 	curr_room_modif[curr_tilepos] |= 0x80; // put blood
-	if (Char.frame != 178 && Char.room == curr_room) {
+	if (Char.frame != frame_178_chomped && Char.room == curr_room) {
 		Char.x = x_bump[tile_col + 5] + 7;
 		Char.x = char_dx_forward(7 - !Char.direction);
 		Char.y = y_land[Char.curr_row + 1];
 		take_hp(100);
 		play_sound(sound_46_chomped); // something chomped
-		seqtbl_offset_char(54); // chomped
+		seqtbl_offset_char(seq_54_chomped); // chomped
 		play_seq();
 	}
 }
@@ -455,8 +455,8 @@ void __pascal far check_gate_push() {
 	short var_4;
 	frame = Char.frame;
 	if (Char.action == actions_7_turn ||
-		frame == 15 || // stand
-		(frame >= 108 && frame < 111) // crouch
+		frame == frame_15_stand || // stand
+		(frame >= frame_108_fall_land_2 && frame < 111) // crouch
 	) {
 		get_tile_at_char();
 		var_4 = tile_col;
@@ -496,7 +496,7 @@ void __pascal far check_guard_bumped() {
 				var_2 = dist_from_wall_behind(curr_tile2);
 				if (var_2 < 0 && var_2 > -13) {
 					Char.x = char_dx_forward(-var_2);
-					seqtbl_offset_char(65); // pushed to wall with sword (Guard)
+					seqtbl_offset_char(seq_65_bump_forward_with_sword); // pushed to wall with sword (Guard)
 					play_seq();
 					load_fram_det_col();
 				}

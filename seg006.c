@@ -806,14 +806,14 @@ void __pascal far check_action() {
 	if (action == actions_6_hang_straight ||
 		action == actions_5_bumped
 	) {
-		if (frame == 109) {
+		if (frame == frame_109_crouch) {
 			check_on_floor();
 		}
 	} else if (action == actions_4_in_freefall) {
 		do_fall();
 	} else if (action == actions_3_in_midair) {
 		// frame 102..106: start fall + fall
-		if (frame >= 102 && frame < 106) {
+		if (frame >= frame_102_start_fall_1 && frame < frame_106_fall) {
 			check_grab();
 		}
 	} else if (action != actions_2_hang_climb) {
@@ -850,8 +850,8 @@ void __pascal far check_spiked() {
 		// frame 43: land from run-jump
 		// frame 26: lang from standing jump
 		if (
-			(harmful >= 2 && ((frame>=7 && frame<15) || (frame>=34 && frame<40))) ||
-			((frame == 43 || frame == 26) && harmful != 0)
+			(harmful >= 2 && ((frame>= frame_7_run && frame<15) || (frame>=frame_34_start_run_jump_1 && frame<40))) ||
+			((frame == frame_43_running_jump_4 || frame == frame_26_land_after_standing_jump) && harmful != 0)
 		) {
 			spiked();
 		}
@@ -965,21 +965,21 @@ void __pascal far start_fall() {
 	inc_curr_row();
 	start_chompers();
 	fall_frame = frame;
-	if (frame == 9) {
+	if (frame == frame_9_run_land) {
 		// frame 9: run
-		seq_id = 7; // fall (when?)
-	} else if (frame == 13) {
+		seq_id = seq_7_fall; // fall (when?)
+	} else if (frame == frame_13_run_land) {
 		// frame 13: run
-		seq_id = 19; // fall (when?)
-	} else if (frame == 26) {
+		seq_id = seq_19_fall; // fall (when?)
+	} else if (frame == frame_26_land_after_standing_jump) {
 		// frame 26: land after standing jump
-		seq_id = 18; // fall after standing jump
-	} else if (frame == 44) {
+		seq_id = seq_18_fall_after_standing_jump; // fall after standing jump
+	} else if (frame == frame_44_land_after_running_jump) {
 		// frame 44: land after running jump
-		seq_id = 21; // fall after running jump
-	} else if (frame >= 81 && frame < 86) {
+		seq_id = seq_21_fall_after_running_jump; // fall after running jump
+	} else if (frame >= frame_81_jump_up_3 && frame < 86) {
 		// frame 81..85: land after jump up
-		seq_id = 19; // fall after jumping up
+		seq_id = seq_19_fall; // fall after jumping up
 		Char.x = char_dx_forward(5);
 		load_fram_det_col();
 	} else if (frame >= 150 && frame < 180) {
@@ -990,23 +990,23 @@ void __pascal far start_fall() {
 				return;
 			}
 			if (Char.fall_x < 0) {
-				seq_id = 82; // Guard is pushed off the ledge
+				seq_id = seq_82_guard_pushed_off_ledge; // Guard is pushed off the ledge
 				if (Char.direction < dir_0_right && distance_to_edge_weight() <= 7) {
 					Char.x = char_dx_forward(-5);
 				}
 			} else {
 				word_1EA12 = 0;
-				seq_id = 83; // fall after forwarding with sword
+				seq_id = seq_83_guard_fall; // fall after forwarding with sword
 			}
 		} else {
 			word_1EA12 = 1;
 			if (Char.direction < dir_0_right && distance_to_edge_weight() <= 7) {
 				Char.x = char_dx_forward(-5);
 			}
-			seq_id = 81; // fall after backing with sword / Kid is pushed off the ledge
+			seq_id = seq_81_kid_pushed_off_ledge; // fall after backing with sword / Kid is pushed off the ledge
 		}
 	} else {
-		seq_id = 7; // fall after stand, run, step, crouch
+		seq_id = seq_7_fall; // fall after stand, run, step, crouch
 	}
 	seqtbl_offset_char(seq_id);
 	play_seq();
@@ -1019,7 +1019,7 @@ void __pascal far start_fall() {
 		if (fall_frame != 44 || distance_to_edge_weight() >= 6) {
 			Char.x = char_dx_forward(-1);
 		} else {
-			seqtbl_offset_char(104); // start fall (when?)
+			seqtbl_offset_char(seq_104_start_fall_in_front_of_wall); // start fall (when?)
 			play_seq();
 		}
 		load_fram_det_col();
@@ -1043,7 +1043,7 @@ void __pascal far check_grab() {
 			Char.x = char_dx_forward(distance_to_edge_weight());
 			Char.y = y_land[Char.curr_row + 1];
 			Char.fall_y = 0;
-			seqtbl_offset_char(15); // grab a ledge (after falling)
+			seqtbl_offset_char(seq_15_grab_ledge_midair); // grab a ledge (after falling)
 			play_seq();
 			grab_timer = 12;
 			play_sound(sound_9_grab); // grab
@@ -1112,7 +1112,7 @@ void __pascal far fell_out() {
 		take_hp(100);
 		Char.alive = 0;
 		erase_bottom_text(1);
-		Char.frame = 185; // dead
+		Char.frame = frame_185_dead; // dead
 	}
 }
 
@@ -1125,7 +1125,7 @@ void __pascal far play_kid() {
 			stop_sounds();
 			loadkid();
 			hitp_delta = hitp_max;
-			seqtbl_offset_char(2); // stand
+			seqtbl_offset_char(seq_2_stand); // stand
 			Char.x += 8;
 			play_seq();
 			load_fram_det_col();
@@ -1441,12 +1441,12 @@ void __pascal far check_press() {
 	action = Char.action;
 	// frames 87..99: hanging
 	// frames 135..140: start climb up
-	if ((frame >= 87 && frame < 100) || (frame >= 135 && frame < 141)) {
+	if ((frame >= frame_87_hanging_1 && frame < 100) || (frame >= frame_135_climbing_1 && frame < frame_141_climbing_7)) {
 		// the pressed tile is the one that the char is grabbing
 		get_tile_above_char();
 	} else if (action == actions_7_turn || action == actions_5_bumped || action < actions_2_hang_climb) {
 		// frame 79: jumping up
-		if (frame == 79 && get_tile_above_char() == tiles_11_loose) {
+		if (frame == frame_79_grab_2 && get_tile_above_char() == tiles_11_loose) {
 			// break a loose floor from above
 			make_loose_fall(1);
 		} else {
@@ -1519,7 +1519,7 @@ void __pascal far clip_char() {
 	row = Char.curr_row;
 	reset_obj_clip();
 	// frames 217..228: going up the level door
-	if (frame >= 224 && frame < 229) {
+	if (frame >= frame_224_exit_stairs_8 && frame < 229) {
 		obj_clip_top = leveldoor_ybottom + 1;
 		obj_clip_right = leveldoor_right;
 	} else {
@@ -1528,7 +1528,7 @@ void __pascal far clip_char() {
 			tile_is_floor(curr_tile2)
 		) {
 			// frame 79: jump up, frame 81: grab
-			if ((action == actions_0_stand && (frame == 79 || frame == 81)) ||
+			if ((action == actions_0_stand && (frame == frame_79_grab_2 || frame == frame_81_jump_up_3)) ||
 				get_tile(room, char_col_right, char_top_row) == tiles_20_wall ||
 				tile_is_floor(curr_tile2)
 			) {
@@ -1549,13 +1549,13 @@ void __pascal far clip_char() {
 			if ((get_tile(room, col, row) != tiles_7_doortop_with_floor &&
 				curr_tile2 != tiles_12_doortop) ||
 				action == actions_3_in_midair ||
-				(action == actions_4_in_freefall && frame == 106) ||
-				(action == actions_5_bumped && frame == 107) ||
+				(action == actions_4_in_freefall && frame == frame_106_fall) ||
+				(action == actions_5_bumped && frame == frame_107_fall_land_1) ||
 				(Char.direction < dir_0_right && (
 					action == actions_2_hang_climb ||
 					action == actions_6_hang_straight ||
 					(action == actions_1_run_jump &&
-					frame >= 137 && frame < 140)
+					frame >= frame_137_climbing_3 && frame < frame_140_climbing_6)
 				))
 			) {
 				if (
@@ -1595,7 +1595,7 @@ void __pascal far set_objtile_at_char() {
 		tile_col = Char.curr_col;
 	}
 	// frame 135..148: climbing
-	if ((char_frame >= 135 && char_frame < 149) ||
+	if ((char_frame >= frame_135_climbing_1 && char_frame < 149) ||
 		char_action == actions_2_hang_climb ||
 		char_action == actions_3_in_midair ||
 		char_action == actions_4_in_freefall ||
@@ -1613,7 +1613,7 @@ void __pascal far proc_get_object() {
 	if (pickup_obj_type == -1) {
 		have_sword = -1;
 		play_sound(sound_37_victory); // get sword
-		flash_color = 14; // yellow
+		flash_color = color_14_yellow;
 		flash_time = 8;
 	} else {
 		switch (--pickup_obj_type) {
@@ -1622,14 +1622,14 @@ void __pascal far proc_get_object() {
 					stop_sounds();
 					play_sound(sound_33_small_potion); // small potion
 					hitp_delta = 1;
-					flash_color = 4; // red
+					flash_color = color_4_red;
 					flash_time = 2;
 				}
 			break;
 			case 1: // life
 				stop_sounds();
 				play_sound(sound_30_big_potion); // big potion
-				flash_color = 4; // red
+				flash_color = color_4_red;
 				flash_time = 4;
 				add_life();
 			break;
@@ -1684,7 +1684,7 @@ void __pascal far proc_get_object() {
 int __pascal far is_dead() {
 	// 177: spiked, 178: chomped, 185: dead
 	// or maybe this was a switch-case?
-	return Char.frame >= 177 && (Char.frame <= 178 || Char.frame == 185);
+	return Char.frame >= frame_177_spiked && (Char.frame <= frame_178_chomped || Char.frame == frame_185_dead);
 }
 
 // seg006:15B5
@@ -1708,7 +1708,7 @@ void __pascal far on_guard_killed() {
 		demo_index = demo_time = 0;
 	} else if (current_level == 13) {
 		// Jaffar's level: flash
-		flash_color = 15; // white
+		flash_color = color_15_white; // white
 		flash_time = 18;
 		is_show_time = 1;
 		leveldoor_open = 2;
@@ -1780,15 +1780,15 @@ void __pascal far load_obj() {
 void __pascal far draw_hurt_splash() {
 	short frame;
 	frame = Char.frame;
-	if (frame != 178) { // chomped
+	if (frame != frame_178_chomped) { // chomped
 		save_obj();
 		obj_tilepos = -1;
 		// frame 185: dead
 		// frame 106..110: fall + land
-		if (frame == 185 || (frame>=106 && frame<111)) {
+		if (frame == frame_185_dead || (frame>= frame_106_fall && frame<111)) {
 			obj_y += 4;
 			obj_dx_forward(5);
-		} else if (frame == 177) { // spiked
+		} else if (frame == frame_177_spiked) { // spiked
 			obj_dx_forward(-5);
 		} else {
 			obj_y -= ((Char.charid == charid_0_kid) << 2) + 11;
@@ -1814,7 +1814,7 @@ void __pascal far check_killed_shadow() {
 		if ((Char.charid | Opp.charid) == charid_1_shadow &&
 			Char.alive < 0 && Opp.alive >= 0
 		) {
-			flash_color = 15; // white
+			flash_color = color_15_white; // white
 			flash_time = 5;
 			take_hp(100);
 		}
@@ -1881,7 +1881,7 @@ void __pascal far add_sword_to_objtable() {
 	short frame;
 	short sword_frame;
 	frame = Char.frame;
-	if ((frame >= 229 && frame < 238) || // found sword + put sword away
+	if ((frame >= frame_229_found_sword && frame < 238) || // found sword + put sword away
 		Char.sword != sword_0_sheathed ||
 		(Char.charid == charid_2_guard && Char.alive < 0)
 	) {
@@ -1901,12 +1901,12 @@ void __pascal far add_sword_to_objtable() {
 
 // seg006:1827
 void __pascal far control_guard_inactive() {
-	if (Char.frame == 166 && control_down < 0) {
+	if (Char.frame == frame_166_stand_inactive && control_down < 0) {
 		if (control_forward < 0) {
 			draw_sword();
 		} else {
 			control_down = 1;
-			seqtbl_offset_char(80); // stand flipped
+			seqtbl_offset_char(seq_80_stand_flipped); // stand flipped
 		}
 	}
 }
