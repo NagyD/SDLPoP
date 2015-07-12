@@ -457,7 +457,7 @@ int __pascal far add_backtable(short chtab_id, int id, sbyte xh, sbyte xl, int y
 int __pascal far add_foretable(short chtab_id, int id, sbyte xh, sbyte xl, int ybottom, byte blit, byte peel);
 int __pascal far add_midtable(short chtab_id, int id, sbyte xh, sbyte xl, int ybottom, byte blit, byte peel);
 void __pascal far add_peel(int left,int right,int top,int height);
-void __pascal far add_wipetable(sbyte layer,sbyte left_high,short bottom,sbyte height,sbyte width_high,sbyte color);
+void __pascal far add_wipetable(sbyte layer,short left,short bottom,sbyte height,short width,sbyte color);
 void __pascal far draw_table(int which_table);
 void __pascal far draw_wipes(int which);
 void __pascal far draw_back_fore(int which_table,int index);
