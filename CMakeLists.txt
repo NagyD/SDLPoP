@@ -24,7 +24,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${SDLPoP_SOURCE_DIR}")
 #link_directories(${DIR_SDL2}/lib)
 
 set(SOURCE_FILES
-    main.cpp # replace with main.c when using the C instead of the C++ compiler
+    main.c
     common.h
     config.h
     data.c
