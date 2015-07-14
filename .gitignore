@@ -1,7 +1,3 @@
-# PoP music files
-data/music/*.ogg
-data/music/*.mp3
-
 # PoP Hall of Fame file
 PRINCE.HOF
 
