@@ -193,7 +193,7 @@ void __pascal far control() {
 
 // seg005:02EB
 void __pascal far control_crouched() {
-	if (need_level1_music != 0 && current_level == 1) {
+	if (need_level1_music != 0 && current_level == 1 && !override_lvl1_falling_entry) {
 		// Special event: music when crouching
 		if (! check_sound_playing()) {
 			if (need_level1_music == 1) {
@@ -289,7 +289,7 @@ void __pascal far up_pressed() {
 	else if (get_tile_behind_char() == tiles_16_level_door_left) leveldoor_tilepos = curr_tilepos;
 	else if (get_tile_infrontof_char() == tiles_16_level_door_left) leveldoor_tilepos = curr_tilepos;
 	if ((leveldoor_tilepos != -1) &&
-		level.start_room != drawn_room &&
+		(level.start_room != drawn_room || override_start_door_is_exit) &&
 		curr_room_modif[leveldoor_tilepos] >= 42 // this door must be fully open
 	){
 		go_up_leveldoor();

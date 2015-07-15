@@ -1188,7 +1188,7 @@ void __pascal far draw_leveldoor() {
 	if (tbl_level_type[current_level]) leveldoor_right += 8;
 	add_backtable(id_chtab_6_environment, 99 /*leveldoor stairs bottom*/, draw_xh + 1, 0, ybottom, blitters_0_no_transp, 0);
 	if (modifier_left) {
-		if (level.start_room != drawn_room) {
+		if (level.start_room != drawn_room || override_start_door_is_exit) {
 			add_backtable(id_chtab_6_environment, 144 /*level door stairs*/, draw_xh + 1, 0, ybottom - 4, blitters_0_no_transp, 0);
 		}
 		else {

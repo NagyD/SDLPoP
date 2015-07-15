@@ -217,6 +217,15 @@ int quick_process(process_func_type process_func) {
 	//process(current_sound);
 	// random
 	process(random_seed);
+	// script
+	process(override_next_level);
+	process(override_next_start_pos_doorlink);
+	process(override_next_start_dir_left);
+	process(override_next_start_dir_right);
+	process(override_cutscene);
+	process(is_remaining_time_overridden);
+	process(override_lvl1_falling_entry);
+	process(override_start_door_is_exit);
 #undef process
 	return ok;
 }
@@ -896,6 +905,7 @@ void __pascal far check_the_end() {
 		start_chompers();
 		check_fall_flo();
 		check_shadow();
+		check_room_script(drawn_room);
 	}
 }
 

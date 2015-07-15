@@ -178,7 +178,7 @@ void __pascal far autocontrol_shadow_level12();
 
 // SEG003.C
 void __pascal far init_game(int level);
-void __pascal far play_level(int level);
+void __pascal far play_level(int level_number);
 void __pascal far do_startpos();
 void __pascal far set_start_pos();
 void __pascal far find_start_level_door();
@@ -589,3 +589,13 @@ void set_chtab_palette(chtab_type* chtab, byte* colors, int n_colors);
 int has_timer_stopped(int index);
 sound_buffer_type* load_sound(int index);
 void free_sound(sound_buffer_type far *buffer);
+
+
+// roomscript.c
+
+void reset_room_script();
+void check_room_script(byte room);
+void do_scripted_start_pos_override(byte* room, byte* tilepos);
+void do_scripted_start_dir_override(sbyte* start_dir);
+void do_scripted_next_level_override(word* next_level);
+void do_scripted_cutscene_override(cutscene_ptr_type* cutscene_ptr);
