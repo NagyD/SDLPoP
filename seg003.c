@@ -390,7 +390,7 @@ void __pascal far redraw_at_char2() {
 	char_frame = Char.frame;
 	redraw_func = &set_redraw2;
 	// frames 78..80: grab
-	if (char_frame < frame_78_grab_1 || char_frame >= frame_80_jump_up_2) {
+	if (char_frame < frame_78_jumphang || char_frame >= frame_80_jumphang) {
 		// frames 135..149: climb up
 		if (char_frame >= frame_137_climbing_3 && char_frame < frame_145_climbing_11) {
 			redraw_func = &set_redraw_floor_overlay;

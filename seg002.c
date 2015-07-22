@@ -745,7 +745,7 @@ void __pascal far guard_advance() {
 void __pascal far guard_block() {
 	word opp_frame;
 	opp_frame = Opp.frame;
-	if (opp_frame == frame_152_strike_1 || opp_frame == frame_153_strike_2 || opp_frame == frame_162_fighting) {
+	if (opp_frame == frame_152_strike_2 || opp_frame == frame_153_strike_3 || opp_frame == frame_162_block_to_strike) {
 		if (word_1E1AA != 0) {
 			if (impblockprob[guard_skill] > prandom(255)) {
 				move_3_up();
@@ -763,7 +763,7 @@ void __pascal far guard_strike() {
 	word opp_frame;
 	word char_frame;
 	opp_frame = Opp.frame;
-	if (opp_frame == frame_169_fighting || opp_frame == frame_151_fighting) return;
+	if (opp_frame == frame_169_begin_block || opp_frame == frame_151_strike_1) return;
 	char_frame = Char.frame;
 	if (char_frame == frame_161_parry || char_frame == frame_150_parry) {
 		if (restrikeprob[guard_skill] > prandom(255)) {
@@ -859,7 +859,7 @@ void __pascal far check_hurting() {
 	if (Char.curr_row != Opp.curr_row) return;
 	char_frame = Char.frame;
 	// frames 153..154: poking with sword
-	if (char_frame != frame_153_strike_2 && char_frame != frame_154_poking) return;
+	if (char_frame != frame_153_strike_3 && char_frame != frame_154_poking) return;
 	// If char is poking ...
 	distance = char_opp_dist();
 	opp_frame = Opp.frame;

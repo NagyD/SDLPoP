@@ -72,4 +72,9 @@ The authors of this program may be contacted at http://forum.princed.org
 // The current fix causes glitches you can see on bug_chomper.PNG and bug_climb.PNG .
 //#define FIX_BIGPILLAR_CLIMB
 
+// Debug features:
+
+// When the program starts, check whether the deobfuscated sequence table (seqtbl.c) is correct.
+//#define CHECK_SEQTABLE_MATCHES_ORIGINAL
+
 #endif
