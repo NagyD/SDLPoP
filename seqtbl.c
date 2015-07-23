@@ -459,8 +459,14 @@ const byte seqtbl[] = {
         frame_51_turn, frame_52_turn,
         SEQ_JMP, DW(0x19A0), // goto "stand"
 
+        #ifdef FIX_WALL_BUMP_TRIGGERS_TILE_BELOW
+        #define BUMPFALL_ACTION actions_3_in_midair
+        #else
+        #define BUMPFALL_ACTION actions_5_bumped
+        #endif
+
         // bumpfall
-        SEQ_ACTION, actions_5_bumped, SEQ_DX, 1, SEQ_DY, 3, SEQ_JMP_IF_FEATHER, 0x25, 0x1E,
+        SEQ_ACTION, BUMPFALL_ACTION, SEQ_DX, 1, SEQ_DY, 3, SEQ_JMP_IF_FEATHER, 0x25, 0x1E,
         frame_102_start_fall_1,
         SEQ_DX, 2, SEQ_DY, 6, frame_103_start_fall_2,
         SEQ_DX, (byte)-1, SEQ_DY, 9, frame_104_start_fall_3,

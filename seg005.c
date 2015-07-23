@@ -543,6 +543,13 @@ void __pascal far jump_up() {
 	if (distance < 4 && edge_type == 1) {
 		Char.x = char_dx_forward(distance - 3);
 	}
+	#ifdef FIX_JUMP_DISTANCE_AT_EDGE
+	// When climbing up two floors, turning around and jumping upward, the kid falls down.
+	// This fix makes the workaround of Trick 25 unnecessary.
+	if (distance == 3 && edge_type == 0) {
+		Char.x = char_dx_forward(-1);
+	}
+	#endif
 	get_tile(Char.room, get_tile_div_mod(back_delta_x(0) + dx_weight() - 6), Char.curr_row - 1);
 	if (curr_tile2 != tiles_20_wall && ! tile_is_floor(curr_tile2)) {
 		seqtbl_offset_char(seq_28_jump_up_with_nothing_above); // jump up with nothing above
@@ -622,7 +629,16 @@ void __pascal far hang_fall() {
 void __pascal far grab_up_with_floor_behind() {
 	short distance;
 	distance = distance_to_edge_weight();
-	if (distance < 4 && get_edge_distance() < 4 && edge_type != 1) {
+
+	#ifdef FIX_EDGE_DISTANCE_CHECK_WHEN_CLIMBING
+	// When climbing to a higher floor, the game unnecessarily checks how far away the edge below is;
+	// This contributes to sometimes "teleporting" considerable distances when climbing from firm ground
+	#define JUMP_STRAIGHT_CONDITION distance < 4 /* && get_edge_distance() < 4 */ && edge_type != 1
+	#else
+	#define JUMP_STRAIGHT_CONDITION distance < 4 && get_edge_distance() < 4 && edge_type != 1
+	#endif
+
+	if (JUMP_STRAIGHT_CONDITION) {
 		Char.x = char_dx_forward(distance);
 		seqtbl_offset_char(seq_8_jump_up_and_grab_straight); // jump up and grab (when?)
 	} else {

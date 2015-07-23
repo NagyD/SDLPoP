@@ -513,6 +513,15 @@ void __pascal far bump_into_opponent() {
 	) {
 		distance = char_opp_dist();
 		if (ABS(distance) <= 15) {
+
+			#ifdef FIX_PAINLESS_FALL_ON_GUARD
+			if (Char.fall_y >= 33) return; // don't bump; dead
+			else if (Char.fall_y >= 22) { // medium land
+				take_hp(1);
+				play_sound(sound_16_medium_land);
+			}
+			#endif
+
 			Char.y = y_land[Char.curr_row + 1];
 			Char.fall_y = 0;
 			seqtbl_offset_char(seq_47_bump); // bump into opponent
