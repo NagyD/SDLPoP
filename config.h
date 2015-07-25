@@ -56,13 +56,13 @@ The authors of this program may be contacted at http://forum.princed.org
 // Bugfixes:
 
 // If a room is linked to itself on the left, the closing sounds of the gates in that room can't be heard.
-//#define FIX_GATE_SOUNDS
+#define FIX_GATE_SOUNDS
 
 // An open gate or chomper may enable the Kid to go through walls. (Trick 7, 37, 62)
-//#define FIX_TWO_COLL_BUG
+#define FIX_TWO_COLL_BUG
 
 // If a room is linked to itself at the bottom, and the Kid's column has no floors, the game hangs.
-//#define FIX_INFINITE_DOWN_BUG
+#define FIX_INFINITE_DOWN_BUG
 
 // When a gate is under another gate, the top of the bottom gate is not visible.
 // But this fix causes a drawing bug when a gate opens.
@@ -71,6 +71,20 @@ The authors of this program may be contacted at http://forum.princed.org
 // When climbing up to a floor with a big pillar top behind, turned right, Kid sees through floor.
 // The current fix causes glitches you can see on bug_chomper.PNG and bug_climb.PNG .
 //#define FIX_BIGPILLAR_CLIMB
+
+// When climbing up two floors, turning around and jumping upward, the kid falls down.
+// This fix makes the workaround of Trick 25 unnecessary.
+#define FIX_JUMP_DISTANCE_AT_EDGE
+
+// When climbing to a higher floor, the game unnecessarily checks how far away the edge below is;
+// This contributes to sometimes "teleporting" considerable distances when climbing from firm ground
+#define FIX_EDGE_DISTANCE_CHECK_WHEN_CLIMBING
+
+// Falling from a great height directly on top of guards does not hurt.
+#define FIX_PAINLESS_FALL_ON_GUARD
+
+// Bumping against a wall may cause a loose floor below to drop, even though it has not been touched (Trick 18, 34)
+#define FIX_WALL_BUMP_TRIGGERS_TILE_BELOW
 
 // Debug features:
 
