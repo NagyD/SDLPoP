@@ -1,3 +1,23 @@
+/*
+SDLPoP, a port/conversion of the DOS game Prince of Persia.
+Copyright (C) 2013-2015  Dávid Nagy
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+The authors of this program may be contacted at http://forum.princed.org
+*/
+
 #include "common.h"
 
 #define SEQTBL_BASE 0x196E
@@ -930,11 +950,11 @@ void check_seqtable_matches_original() {
         printf("Checking that the sequence table matches the original DOS version...\n");
         int different = 0;
         int i;
-        for(i = 0; i < 2310; ++i) {
+        for(i = 0; i < COUNT(original_seqtbl); ++i) {
                 if (seqtbl[i] != original_seqtbl[i]) {
                         different = 1;
                         printf("Seqtbl difference at index %d (%#x; shifted offset %#x): value is %d, should be %d\n"
-                                , i, i, i + 0x196E, seqtbl[i], original_seqtbl[i]);
+                                , i, i, i + SEQTBL_BASE, seqtbl[i], original_seqtbl[i]);
                 }
         }
         if (!different) printf("All good, no differences found!\n");

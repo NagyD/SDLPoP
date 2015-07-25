@@ -55,6 +55,8 @@ The authors of this program may be contacted at http://forum.princed.org
 
 // Bugfixes:
 
+// The mentioned tricks can be found here: http://www.popot.org/documentation.php?doc=Tricks
+
 // If a room is linked to itself on the left, the closing sounds of the gates in that room can't be heard.
 #define FIX_GATE_SOUNDS
 

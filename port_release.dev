@@ -1,7 +1,7 @@
 [Project]
 FileName=port_release.dev
 Name=SDLPoP
-UnitCount=17
+UnitCount=18
 Type=0
 Ver=1
 ObjFiles=
@@ -211,6 +211,16 @@ BuildCmd=
 FileName=config.h
 CompileCpp=0
 Folder=
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit18]
+FileName=seqtbl.c
+CompileCpp=0
+Folder=SDLPoP
 Compile=1
 Link=1
 Priority=1000
