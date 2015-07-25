@@ -215,7 +215,7 @@ int __pascal far is_obstacle() {
 	} else if (
 		curr_tile2 == tiles_13_mirror &&
 		Char.charid == charid_0_kid &&
-		Char.frame >= frame_39_start_run_jump_6 && Char.frame < frame_44_land_after_running_jump && // run-jump
+		Char.frame >= frame_39_start_run_jump_6 && Char.frame < frame_44_running_jump_5 && // run-jump
 		Char.direction < dir_0_right // right-to-left only
 	) {
 		curr_room_modif[curr_tilepos] = 0x56; // broken mirror or what?

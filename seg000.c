@@ -35,6 +35,11 @@ word need_redraw_because_flipped;
 
 // seg000:0000
 void far pop_main() {
+	// debug only: check that the sequence table deobfuscation did not mess things up
+	#ifdef CHECK_SEQTABLE_MATCHES_ORIGINAL
+	check_seqtable_matches_original();
+	#endif
+
 	char sprintf_temp[100];
 	int i;
 

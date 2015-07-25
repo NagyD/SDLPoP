@@ -1199,7 +1199,7 @@ void __pascal far fell_on_your_head() {
 	action = Char.action;
 	// loose floors hurt you in frames 5..14 (running) only on level 13
 	if (
-		(current_level == 13 || (frame < frame_5_run || frame >= 15)) &&
+		(current_level == 13 || (frame < frame_5_start_run || frame >= 15)) &&
 		(action < actions_2_hang_climb || action == actions_7_turn)
 	) {
 		Char.y = y_land[Char.curr_row + 1];

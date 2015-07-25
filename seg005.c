@@ -172,10 +172,10 @@ void __pascal far control() {
 		} else if (Char.charid >= charid_2_guard) {
 			control_guard_inactive();
 		} else if (char_frame == frame_15_stand || // standing
-			(char_frame>=frame_50_turning && char_frame<53) // end of turning
+			(char_frame>= frame_50_turn && char_frame<53) // end of turning
 		) {
 			control_standing();
-		} else if (char_frame == frame_48_turning) { // a frame in turning
+		} else if (char_frame == frame_48_turn) { // a frame in turning
 			control_turning();
 		} else if (char_frame < 4) { // start run
 			control_startrun();
@@ -387,7 +387,7 @@ void __pascal far forward_pressed() {
 
 // seg005:0649
 void __pascal far control_running() {
-	if (control_x == 0 && (Char.frame == frame_7_run || Char.frame == frame_11_run_step)) {
+	if (control_x == 0 && (Char.frame == frame_7_run || Char.frame == frame_11_run)) {
 		control_forward = release_arrows();
 		seqtbl_offset_char(seq_13_stop_run); // stop run
 	} else if (control_x > 0) {
@@ -825,11 +825,11 @@ void __pascal far parry() {
 			return;
 		} else if (char_charid == charid_0_kid) {
 			if (opp_frame == frame_168_back) return;
-			if (opp_frame != frame_151_fighting &&
-				opp_frame != frame_152_strike_1 &&
-				opp_frame != frame_162_fighting
+			if (opp_frame != frame_151_strike_1 &&
+				opp_frame != frame_152_strike_2 &&
+				opp_frame != frame_162_block_to_strike
 			) {
-				if (opp_frame == frame_153_strike_2) { // strike
+				if (opp_frame == frame_153_strike_3) { // strike
 					var_6 = 1;
 				} else
 				if (char_charid != charid_0_kid) {
@@ -838,10 +838,10 @@ void __pascal far parry() {
 				}
 			}
 		} else {
-			if (opp_frame != frame_152_strike_1) return;
+			if (opp_frame != frame_152_strike_2) return;
 		}
 	} else {
-		if (char_frame != frame_167_fighting) return;
+		if (char_frame != frame_167_blocked) return;
 		seq_id = seq_61_parry_after_strike; // parry after striking with sword
 	}
 	control_up = 1; // disable automatic repeat
