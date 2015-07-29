@@ -507,6 +507,10 @@ extern int joy_states[3] INIT( = { 0, 0, 0 } );
 
 extern int screen_updates_suspended;
 
+extern int is_shadow_effect;
+extern int extra_minutes_to_be_added;
+extern int minutes_added_in_curr_level;
+
 #ifndef USE_COMPAT_TIMER
 extern int timer_stopped[2];
 #else

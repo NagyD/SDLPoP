@@ -37,6 +37,7 @@ void __pascal far init_game(int level) {
 	checkpoint = 0;
 	upside_down = 0;
 	resurrect_time = 0;
+	extra_minutes_to_be_added = 0;
 	if (!dont_reset_time) {
 		rem_min = 60;
 		rem_tick = 719;
@@ -188,6 +189,7 @@ void __pascal far set_start_pos() {
 	knock = 0;
 	upside_down = 0;
 	is_feather_fall = 0;
+	is_shadow_effect = 0;
 	Char.fall_y = 0;
 	Char.fall_x = 0;
 	word_1EFCE = 0;
@@ -319,6 +321,8 @@ int __pascal far play_level_2() {
 		play_frame();
 		if (is_restart_level) {
 			is_restart_level = 0;
+			rem_min -= minutes_added_in_curr_level;
+			minutes_added_in_curr_level = 0;
 			return current_level;
 		} else {
 			if (next_level == current_level || check_sound_playing()) {
@@ -337,6 +341,7 @@ int __pascal far play_level_2() {
 				stop_sounds();
 				hitp_beg_lev = hitp_max;
 				checkpoint = 0;
+				minutes_added_in_curr_level = 0;
 				return next_level;
 			}
 		}
@@ -437,6 +442,19 @@ void __pascal far timers() {
 	}
 	if (is_feather_fall && !check_sound_playing()) {
 		is_feather_fall = 0;
+	}
+	if (is_shadow_effect > 0) {
+		--is_shadow_effect;
+		if (is_shadow_effect == 0)
+			united_with_shadow = 10; // blink before the effect wears off completely
+	}
+	if (extra_minutes_to_be_added > 0) {
+		--extra_minutes_to_be_added;
+		++rem_min;
+		++minutes_added_in_curr_level;
+		text_time_total = 0;
+		text_time_remaining = 0;
+		is_show_time = 1;
 	}
 	// Special event: mouse
 	if (current_level == 8 && Char.room == 16 && leveldoor_open) {

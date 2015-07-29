@@ -530,19 +530,41 @@ void __pascal far draw_tile_anim() {
 			ptr_add_table(id_chtab_6_environment, spikes_fram_left[get_spike_frame(curr_modifier)], draw_xh, 0, draw_main_y - 2, blitters_10h_transp, 0);
 			break;
 		case tiles_10_potion:
-			switch (curr_modifier & 0xE0) {
-				case 0x00: // empty
-					return;
-				case 0xA0: // hurt
-				case 0xC0: // open
+//			switch (curr_modifier & 0xE0) {
+//				case 0x00: // empty
+//					return;
+//				case 0xA0: // hurt
+//				case 0xC0: // open
+//					color = 9; // blue
+//					break;
+//				case 0x60: // slow fall
+//				case 0x80: // upside down
+//					color = 10; // green
+//					// fallthrough!
+//				case 0x40: // life
+//					pot_size = 1;
+//					break;
+//			}
+			switch((curr_modifier & 0xF0) >> 4) {
+				case 0:
+					return; //empty
+				case 5: // hurt
+				case 6: // open
 					color = 9; // blue
 					break;
-				case 0x60: // slow fall
-				case 0x80: // upside down
+				case 3: // slow fall
+				case 4: // upside down
 					color = 10; // green
 					// fallthrough!
-				case 0x40: // life
+				case 2: // life
 					pot_size = 1;
+					break;
+				case 7: // shadow potion
+					color = 7;
+					pot_size = 1;
+					break;
+				case 8: // extra time potion
+					color = 7;
 					break;
 			}
 			add_backtable(id_chtab_1_flameswordpotion, 23 /*bubble mask*/, draw_xh + 3, 1, draw_main_y - (pot_size << 2) - 14, blitters_40h_mono, 0);
@@ -570,7 +592,7 @@ const byte wall_fram_main[] = {8, 10, 6, 4};
 void __pascal far draw_tile_fore() {
 	word ybottom;
 	byte xh;
-	word var_6;
+	word potion_type;
 	word id;
 	word var_2;
 	if (tile_left == tiles_4_gate && Kid.curr_row == drawn_row && Kid.curr_col == drawn_col - 1 && Kid.room != room_R) {
@@ -599,8 +621,13 @@ void __pascal far draw_tile_fore() {
 			id = tile_table[curr_tile].fore_id;
 			if (id == 0) return;
 			if (curr_tile == tiles_10_potion) {
-				var_6 = curr_modifier & 0xE0;
-				if (var_6 < 0xA0 && var_6 >= 0x40) id = 13;
+//				potion_type = curr_modifier & 0xE0;
+//				if (potion_type < 0xA0 && potion_type >= 0x40) id = 13;
+
+				// large pots are drawn for potion types 2, 3, 4
+				potion_type = (curr_modifier & 0xF0) >> 4;
+				if (potion_type < 5 && potion_type >= 2) id = 13;
+				if (potion_type == 7) id = 13; // shadow potion
 			}
 			xh = tile_table[curr_tile].fore_x + draw_xh;
 			ybottom = tile_table[curr_tile].fore_y + draw_main_y;
@@ -1041,7 +1068,7 @@ void __pascal far load_alter_mod(int tilepos) {
 			*curr_tile_modif = 0;
 			break;
 		case tiles_10_potion:
-			*curr_tile_modif <<= 5;
+			*curr_tile_modif <<= 4;
 #ifdef USE_COPYPROT
 			if (current_level == 15) {
 				// Copy protection
@@ -1343,6 +1370,7 @@ void __pascal far draw_objtable_item(int index) {
 			if (obj_id == 0xFF) return;
 			// the Kid blinks a bit after uniting with shadow
 			if (united_with_shadow && (united_with_shadow % 2) == 0) goto shadow;
+			if (is_shadow_effect && united_with_shadow <= 0) goto shadow;
 		case 2: // Guard
 		case 3: // sword
 		case 5: // hurt splash
@@ -1350,7 +1378,7 @@ void __pascal far draw_objtable_item(int index) {
 		break;
 		case 1: // shadow
 		shadow:
-			if (united_with_shadow == 2) {
+			if (united_with_shadow == 2 && current_level == 12) {
 				play_sound(sound_41_end_level_music); // united with shadow
 			}
 			add_midtable(obj_chtab, obj_id + 1, obj_xh, obj_xl, obj_y, blitters_2_or, 1);

@@ -222,6 +222,13 @@ int quick_process(process_func_type process_func) {
 	//process(current_sound);
 	// random
 	process(random_seed);
+	// remaining time
+	process(rem_min);
+	process(rem_tick);
+	// special potions (shadow, extra time)
+	process(is_shadow_effect);
+	process(extra_minutes_to_be_added);
+	process(minutes_added_in_curr_level);
 #undef process
 	return ok;
 }
@@ -939,7 +946,10 @@ void __pascal far draw_kid_hp(short curr_hp,short max_hp) {
 	short drawn_hp_index;
 	for (drawn_hp_index = curr_hp; drawn_hp_index < max_hp; ++drawn_hp_index) {
 		// empty HP
-		method_6_blit_img_to_scr(chtab_addrs[id_chtab_2_kid]->images[217], drawn_hp_index * 7, 194, blitters_0_no_transp);
+		if (drawn_hp_index <= hitp_max-1)
+			method_6_blit_img_to_scr(chtab_addrs[id_chtab_2_kid]->images[217], drawn_hp_index * 7, 194, blitters_0_no_transp);
+		else // erase any "surplus" of fake hp boxes
+			method_6_blit_img_to_scr(chtab_addrs[id_chtab_2_kid]->images[217], drawn_hp_index * 7, 194, blitters_9_black);
 	}
 	for (drawn_hp_index = 0; drawn_hp_index < curr_hp; ++drawn_hp_index) {
 		// full HP
