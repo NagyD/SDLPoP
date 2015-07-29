@@ -435,7 +435,10 @@ void __pascal far check_chomped_kid() {
 
 // seg004:07BF
 void __pascal far chomped() {
-	curr_room_modif[curr_tilepos] |= 0x80; // put blood
+	#ifdef FIX_SKELETON_CHOMPER_BLOOD
+	if (Char.charid != charid_4_skeleton)
+	#endif
+		curr_room_modif[curr_tilepos] |= 0x80; // put blood
 	if (Char.frame != frame_178_chomped && Char.room == curr_room) {
 		Char.x = x_bump[tile_col + 5] + 7;
 		Char.x = char_dx_forward(7 - !Char.direction);

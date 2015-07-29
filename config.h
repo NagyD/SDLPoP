@@ -53,6 +53,10 @@ The authors of this program may be contacted at http://forum.princed.org
 // Enable quicksave/load feature.
 #define USE_QUICKSAVE
 
+// Adds a way to crouch immediately after climbing up: press down and forward simultaneously
+// In the original game, this could not be done (pressing down always causes the kid to climb down).
+#define ALLOW_CROUCH_AFTER_CLIMBING
+
 // Bugfixes:
 
 // The mentioned tricks can be found here: http://www.popot.org/documentation.php?doc=Tricks
@@ -87,6 +91,21 @@ The authors of this program may be contacted at http://forum.princed.org
 
 // Bumping against a wall may cause a loose floor below to drop, even though it has not been touched (Trick 18, 34)
 #define FIX_WALL_BUMP_TRIGGERS_TILE_BELOW
+
+// When pressing a loose tile, you can temporarily stand on thin air by standing up from crouching.
+#define FIX_STAND_ON_THIN_AIR
+
+// Buttons directly to the right of gates can be pressed even though the gate is closed (Trick 1)
+#define FIX_PRESS_THROUGH_CLOSED_GATES
+
+// By jumping and bumping into a wall, you can sometimes grab a ledge two stories down (which should not be possible).
+#define FIX_GRAB_FALLING_SPEED
+
+// When chomped, skeletons cause the chomper to become bloody even though skeletons do not have blood.
+#define FIX_SKELETON_CHOMPER_BLOOD
+
+// Controls do not get released properly when drinking a potion, sometimes causing unintended movements.
+#define FIX_MOVE_AFTER_DRINK
 
 // Debug features:
 
