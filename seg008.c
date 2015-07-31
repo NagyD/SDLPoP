@@ -242,13 +242,18 @@ int __pascal far get_tile_to_draw(int room, int column, int row, byte *ptr_tilet
 		*ptr_tiletype = tile_room0;
 	}
 	// Is this a pressed button?
-	if (*ptr_tiletype == tiles_6_closer) {
+	byte tiletype = *ptr_tiletype;
+	if (tiletype == tiles_6_closer) {
 		if (get_doorlink_timer(*ptr_modifier) > 1) {
 			*ptr_tiletype = tiles_5_stuck;
 		}
-	} else if (*ptr_tiletype == tiles_15_opener) {
+	} else if (tiletype == tiles_15_opener) {
 		if (get_doorlink_timer(*ptr_modifier) > 1) {
 			*ptr_modifier = 0;
+			*ptr_tiletype = tiles_1_floor;
+		}
+	} else if (tiletype == tiles_11_loose) {
+		if (*ptr_modifier == 0) {
 			*ptr_tiletype = tiles_1_floor;
 		}
 	}
