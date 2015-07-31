@@ -53,6 +53,9 @@ The authors of this program may be contacted at http://forum.princed.org
 // Enable quicksave/load feature.
 #define USE_QUICKSAVE
 
+// Enable one-minute penalty for quickloading
+#define USE_QUICKLOAD_PENALTY
+
 // Bugfixes:
 
 // The mentioned tricks can be found here: http://www.popot.org/documentation.php?doc=Tricks

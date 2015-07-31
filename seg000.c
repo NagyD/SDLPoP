@@ -154,6 +154,16 @@ void __pascal far start_game() {
 #ifdef USE_QUICKSAVE
 // All these functions return true on success, false otherwise.
 
+FILE* quick_fp;
+
+int process_save(void* data, size_t data_size) {
+	return fwrite(data, data_size, 1, quick_fp) == 1;
+}
+
+int process_load(void* data, size_t data_size) {
+	return fread(data, data_size, 1, quick_fp) == 1;
+}
+
 typedef int process_func_type(void* data, size_t data_size);
 
 int quick_process(process_func_type process_func) {
@@ -222,26 +232,22 @@ int quick_process(process_func_type process_func) {
 	//process(current_sound);
 	// random
 	process(random_seed);
+	// remaining time
+	process(rem_min);
+	process(rem_tick);
 #undef process
 	return ok;
 }
 
-FILE* quick_fp;
-
-int process_save(void* data, size_t data_size) {
-	return fwrite(data, data_size, 1, quick_fp) == 1;
-}
-
-int process_load(void* data, size_t data_size) {
-	return fread(data, data_size, 1, quick_fp) == 1;
-}
-
 const char* const quick_file = "QUICKSAVE.SAV";
+const char const quick_version[] = "V1.16   ";
+char quick_control[] = "........";
 
 int quick_save() {
 	int ok = 0;
 	quick_fp = fopen(quick_file, "wb");
 	if (quick_fp != NULL) {
+		process_save((void*) quick_version, COUNT(quick_version));
 		ok = quick_process(process_save);
 		fclose(quick_fp);
 		quick_fp = NULL;
@@ -250,49 +256,64 @@ int quick_save() {
 }
 
 int quick_load() {
-	stop_sounds();
-
-	start_timer(timer_0, 5); // briefly display a black screen as a visual cue
-	draw_rect(&screen_rect, 0);
-	screen_updates_suspended = 0;
-	request_screen_update();
-	screen_updates_suspended = 1;
 
 	int ok = 0;
 	quick_fp = fopen(quick_file, "rb");
 	if (quick_fp != NULL) {
+		// check quicksave version is compatible
+		process_load(quick_control, COUNT(quick_control));
+		if (strcmp(quick_control, quick_version) != 0) {
+			fclose(quick_fp);
+			quick_fp = NULL;
+			return 0;
+		}
+
+		stop_sounds();
+		start_timer(timer_0, 5); // briefly display a black screen as a visual cue
+		draw_rect(&screen_rect, 0);
+		screen_updates_suspended = 0;
+		request_screen_update();
+		screen_updates_suspended = 1;
+
 		ok = quick_process(process_load);
 		fclose(quick_fp);
 		quick_fp = NULL;
+
+		int temp1 = curr_guard_color;
+		int temp2 = next_level;
+		load_lev_spr(current_level);
+		curr_guard_color = temp1;
+		next_level = temp2;
+
+		//need_full_redraw = 1;
+		different_room = 1;
+		next_room = drawn_room;
+		load_room_links();
+		//draw_level_first();
+		//gen_palace_wall_colors();
+		draw_game_frame(); // for falling
+		//redraw_screen(1); // for room_L
+
+		hitp_delta = guardhp_delta = 1; // force HP redraw
+		draw_hp();
+
+		do_wait(timer_0);
+		screen_updates_suspended = 0;
+		request_screen_update();
+
+		// Kid should not move immediately after quickload
+		clear_saved_ctrl();
+		// Get rid of "press button" message if kid was dead before quickload.
+		text_time_total = text_time_remaining = 0;
+		//next_sound = current_sound = -1;
+		exit_room_timer = 0;
+
+		#ifdef USE_QUICKLOAD_PENALTY
+		// Subtract one minute from the remaining time (if it is above 5 minutes)
+		if (rem_min == 6) rem_tick = 719; // crop to "5 minutes" exactly, if hitting the threshold in <1 minute
+		if (rem_min > 5) --rem_min;
+		#endif
 	}
-	int temp1 = curr_guard_color;
-	int temp2 = next_level;
-	load_lev_spr(current_level);
-	curr_guard_color = temp1;
-	next_level = temp2;
-	
-	//need_full_redraw = 1;
-	different_room = 1;
-	next_room = drawn_room;
-	load_room_links();
-	//draw_level_first();
-	//gen_palace_wall_colors();
-	draw_game_frame(); // for falling
-	//redraw_screen(1); // for room_L
-	
-	hitp_delta = guardhp_delta = 1; // force HP redraw
-	draw_hp();
-
-	do_wait(timer_0);
-	screen_updates_suspended = 0;
-	request_screen_update();
-
-	// Kid should not move immediately after quickload
-	clear_saved_ctrl();
-	// Get rid of "press button" message if kid was dead before quickload.
-	text_time_total = text_time_remaining = 0;
-	//next_sound = current_sound = -1;
-	exit_room_timer = 0;
 	return ok;
 }
 
