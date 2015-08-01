@@ -256,8 +256,8 @@ void __pascal far animate_torch() {
 void __pascal far animate_potion() {
 	word type;
 	if (trob.type >= 0 && is_trob_in_drawn_room()) {
-		type = curr_modifier & 0xE0;
-		curr_modifier = bubble_next_frame(curr_modifier & 0x1F) | type;
+		type = curr_modifier & 0xF8;
+		curr_modifier = bubble_next_frame(curr_modifier & 0x07) | type;
 		set_redraw_anim_curr();
 	}
 }
@@ -564,7 +564,7 @@ void __pascal far start_anim_torch(short room,short tilepos) {
 
 // seg007:0847
 void __pascal far start_anim_potion(short room,short tilepos) {
-	curr_room_modif[tilepos] &= 0xE0;
+	curr_room_modif[tilepos] &= 0xF8;
 	curr_room_modif[tilepos] |= prandom(6) + 1;
 	add_trob(room, tilepos, 1);
 }

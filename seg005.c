@@ -461,7 +461,7 @@ void __pascal far get_item() {
 		do_pickup(-1);
 		seqtbl_offset_char(seq_91_get_sword); // get sword
 	} else { // potion
-		do_pickup(curr_room_modif[curr_tilepos] >> 5);
+		do_pickup(curr_room_modif[curr_tilepos] >> 3);
 		seqtbl_offset_char(seq_78_drink); // drink
 #ifdef USE_COPYPROT
 		if (current_level == 15) {
