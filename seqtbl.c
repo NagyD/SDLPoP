@@ -855,14 +855,22 @@ const byte seqtbl[] = {
         /* ":crouch" */ LABEL(stoop_crouch) frame_109_crouch,
         jmp(stoop_crouch), // goto ":crouch"
 
+        #ifdef FIX_STAND_ON_THIN_AIR
+        // The fix in seg006.c prevents the kid from "standing on thin air" (by standing up when a loose tile falls)
+        // However, this makes it easier to step off ledges by standing up. This adjustment remedies that somewhat.
+        #define STANDUP_FIX_ADJUST 1
+        #else
+        #define STANDUP_FIX_ADJUST 0
+        #endif
+
         LABEL(standup) // stand up
         act(actions_5_bumped), dx(1), frame_110_stand_up_from_crouch_1,
         frame_111_stand_up_from_crouch_2,
         dx(2), frame_112_stand_up_from_crouch_3,
         frame_113_stand_up_from_crouch_4,
-        dx(1), frame_114_stand_up_from_crouch_5,
+        dx(1 - STANDUP_FIX_ADJUST), frame_114_stand_up_from_crouch_5,
         frame_115_stand_up_from_crouch_6, frame_116_stand_up_from_crouch_7,
-        dx(-4), frame_117_stand_up_from_crouch_8,
+        dx(-4 + STANDUP_FIX_ADJUST), frame_117_stand_up_from_crouch_8,
         frame_118_stand_up_from_crouch_9, frame_119_stand_up_from_crouch_10,
         jmp(stand), // goto "stand"
 

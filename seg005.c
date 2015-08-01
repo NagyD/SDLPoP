@@ -163,7 +163,7 @@ void __pascal far control() {
 			control_turning();
 		} else if (char_frame < 4) { // start run
 			control_startrun();
-		} else if (char_frame >= frame_67_start_jump_up_1 && char_frame < 70) { // start jump up
+		} else if (char_frame >= frame_67_start_jump_up_1 && char_frame < frame_70_jumphang) { // start jump up
 			control_jumpup();
 		} else if (char_frame < 15) { // running
 			control_running();
@@ -172,6 +172,18 @@ void __pascal far control() {
 		} else if (char_frame == frame_109_crouch) { // crouching
 			control_crouched();
 		}
+
+		#ifdef ALLOW_CROUCH_AFTER_CLIMBING
+		// When ducking with down+forward, give time to release the forward control (prevents unintended crouch-hops)
+		else if (Char.curr_seq >= seqtbl_offsets[seq_50_crouch] &&
+				Char.curr_seq < seqtbl_offsets[seq_49_stand_up_from_crouch]) // while stooping
+			if (control_forward < 1) control_forward = 0;
+		#endif
+
+		#ifdef FIX_MOVE_AFTER_DRINK
+		if (char_frame >= frame_191_drink && char_frame <= frame_205_drink)
+			release_arrows();
+		#endif
 	}
 }
 
@@ -301,6 +313,9 @@ void __pascal far down_pressed() {
 			through_tile = get_tile_behind_char();
 			get_tile_at_char();
 			if (can_grab() &&
+				#ifdef ALLOW_CROUCH_AFTER_CLIMBING
+				control_forward != -1 &&
+				#endif
 				(Char.direction >= dir_0_right ||
 				get_tile_at_char() != tiles_4_gate ||
 				curr_room_modif[curr_tilepos] >> 2 >= 6)
@@ -359,6 +374,14 @@ void __pascal far back_pressed() {
 void __pascal far forward_pressed() {
 	short distance;
 	distance = get_edge_distance();
+	#ifdef ALLOW_CROUCH_AFTER_CLIMBING
+	if (control_down < 0) {
+		down_pressed();
+		control_forward = 0;
+		return;
+	}
+	#endif
+
 	if (edge_type == 1 && curr_tile2 != tiles_18_chomper && distance < 8) {
 		// If char is near a wall, step instead of run.
 		if (control_forward < 0) {
@@ -614,12 +637,16 @@ void __pascal far grab_up_with_floor_behind() {
 	short distance;
 	distance = distance_to_edge_weight();
 
+	// The global variable edge_type (which we need!) gets set as a side effect of get_edge_distance()
+	short edge_distance = get_edge_distance();
+	//printf("Distance to edge weight: %d\tedge type: %d\tedge distance: %d\n", distance, edge_type, edge_distance);
+
 	#ifdef FIX_EDGE_DISTANCE_CHECK_WHEN_CLIMBING
 	// When climbing to a higher floor, the game unnecessarily checks how far away the edge below is;
 	// This contributes to sometimes "teleporting" considerable distances when climbing from firm ground
-	#define JUMP_STRAIGHT_CONDITION distance < 4 /* && get_edge_distance() < 4 */ && edge_type != 1
+	#define JUMP_STRAIGHT_CONDITION distance < 4 && edge_type != 1
 	#else
-	#define JUMP_STRAIGHT_CONDITION distance < 4 && get_edge_distance() < 4 && edge_type != 1
+	#define JUMP_STRAIGHT_CONDITION distance < 4 && edge_distance < 4 && edge_type != 1
 	#endif
 
 	if (JUMP_STRAIGHT_CONDITION) {

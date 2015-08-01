@@ -805,7 +805,13 @@ void __pascal far check_action() {
 	if (action == actions_6_hang_straight ||
 		action == actions_5_bumped
 	) {
-		if (frame == frame_109_crouch) {
+		if (frame == frame_109_crouch
+
+			#ifdef FIX_STAND_ON_THIN_AIR
+			|| (frame >= frame_110_stand_up_from_crouch_1 && frame <= frame_119_stand_up_from_crouch_10)
+			#endif
+
+				) {
 			check_on_floor();
 		}
 	} else if (action == actions_4_in_freefall) {
@@ -1028,11 +1034,19 @@ void __pascal far start_fall() {
 // seg006:0A19
 void __pascal far check_grab() {
 	word old_x;
+
+	#ifdef FIX_GRAB_FALLING_SPEED
+	#define MAX_GRAB_FALLING_SPEED 30
+	#else
+	#define MAX_GRAB_FALLING_SPEED 32
+	#endif
+
 	if (control_shift < 0 && // press shift to grab
-		Char.fall_y < 32 && // you can't grab if you're falling too fast ...
+		Char.fall_y < MAX_GRAB_FALLING_SPEED && // you can't grab if you're falling too fast ...
 		Char.alive < 0 && // ... or dead
 		(word)y_land[Char.curr_row + 1] <= (word)(Char.y + 25)
 	) {
+		//printf("Falling speed: %d\t x: %d\n", Char.fall_y, Char.x);
 		old_x = Char.x;
 		Char.x = char_dx_forward(-8);
 		load_fram_det_col();
@@ -1451,6 +1465,9 @@ void __pascal far check_press() {
 		} else {
 			// the pressed tile is the one that the char is standing on
 			if (! (cur_frame.flags & FRAME_NEEDS_FLOOR)) return;
+			#ifdef FIX_PRESS_THROUGH_CLOSED_GATES
+			determine_col();
+			#endif
 			get_tile_at_char();
 		}
 	} else {
