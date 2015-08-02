@@ -111,6 +111,10 @@ The authors of this program may be contacted at http://forum.princed.org
 // Controls do not get released properly when drinking a potion, sometimes causing unintended movements.
 #define FIX_MOVE_AFTER_DRINK
 
+// Guards may "follow" the kid to the room on the left, even though there is a closed gate in between.
+#define FIX_GUARD_FOLLOWING_THROUGH_CLOSED_GATES
+
+
 // Debug features:
 
 // When the program starts, check whether the deobfuscated sequence table (seqtbl.c) is correct.
