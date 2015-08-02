@@ -322,7 +322,7 @@ int need_quick_load = 0;
 
 void check_quick_op() {
 	if (need_quick_save) {
-		if (quick_save()) {
+		if (!is_feather_fall && quick_save()) {
 			display_text_bottom("QUICKSAVE");
 		} else {
 			display_text_bottom("NO QUICKSAVE");
@@ -364,6 +364,9 @@ int __pascal far process_key() {
 
 	if (start_level == 0) {
 		if (key || control_shift) {
+			#ifdef USE_QUICKSAVE
+			if (key == SDL_SCANCODE_F9) need_quick_load = 1;
+			#endif
 			if (key == (SDL_SCANCODE_L | WITH_CTRL)) { // ctrl-L
 				if (!load_game()) return 0;
 			} else {
@@ -473,9 +476,11 @@ int __pascal far process_key() {
 		break;
 #ifdef USE_QUICKSAVE
 		case SDL_SCANCODE_F6:
-			need_quick_save = 1;
+		case SDL_SCANCODE_F6 | WITH_SHIFT:
+			if (Kid.alive < 0) need_quick_save = 1;
 		break;
 		case SDL_SCANCODE_F9:
+		case SDL_SCANCODE_F9 | WITH_SHIFT:
 			need_quick_load = 1;
 		break;
 #endif // USE_QUICKSAVE
