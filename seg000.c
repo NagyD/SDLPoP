@@ -561,6 +561,14 @@ int __pascal far process_key() {
 				flash_time = 4;
 				add_life();
 			break;
+			#ifdef USE_DEBUG_CHEATS
+			case SDL_SCANCODE_T:
+				printf("Remaining minutes: %d\tticks:%d\n", rem_min, rem_tick);
+				snprintf(sprintf_temp, sizeof(sprintf_temp), "M:%d S:%d T:%d", rem_min, rem_tick / 12, rem_tick);
+				answer_text = sprintf_temp;
+				need_show_text = 1;
+			break;
+			#endif
 		}
 	}
 
@@ -1192,6 +1200,13 @@ void __pascal far read_keyb_control() {
 		control_x = 1;
 	}
 	control_shift = -(key_states[SDL_SCANCODE_LSHIFT] || key_states[SDL_SCANCODE_RSHIFT]);
+
+	#ifdef USE_DEBUG_CHEATS
+	if (cheats_enabled) {
+		if (key_states[SDL_SCANCODE_RIGHTBRACKET]) ++Char.x;
+		else if (key_states[SDL_SCANCODE_LEFTBRACKET]) --Char.x;
+	}
+	#endif
 }
 
 // seg000:156D
