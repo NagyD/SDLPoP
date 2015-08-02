@@ -10,7 +10,7 @@ Contributors:
 * Eugene (bug reports)
 * StaticReturn (Mac OS X: Makefile, bug reports)
 * kees (bugfixes)
-* Falcury (porting to SDL2, bugfixes)
+* Falcury (porting to SDL2, bugfixes, improvements, additions)
 * segrax (Robert Crossfield) (Joystick support, resizable window)
 
 Topic in forum: http://forum.princed.org/viewtopic.php?f=69&t=3512
@@ -68,12 +68,13 @@ Esc: pause game
 space: show time left
 Ctrl-A: restart level
 Ctrl-G: save game (on levels 3..13)
-Ctrl-J: joystick mode (not implemented)
+Ctrl-J: joystick mode (implemented by segrax)
 Ctrl-K: keyboard mode
 Ctrl-R: return to intro
 Ctrl-S: sound on/off
 Ctrl-V: show version
 Ctrl-Q: quit game
+Ctrl-L: load game (when in the intro)
 Alt-Enter: toggle fullscreen
 F6: quicksave
 F9: quickload
@@ -105,6 +106,8 @@ You need to get the music from here: (38MB)
 It's the last link here: http://www.popot.org/get_the_games.php?game=1
 Copy the ogg files to the data/music folder. (The mp3 and flac files don't seem to work.)
 
+Since version 1.15, music is included.
+
 MODS
 ====
 
@@ -121,6 +124,11 @@ This is useful if you want to compare the behavior of this port and the original
 	Since 1.11, the data/font folder is no longer required.
 
 Note that this port does not recognize if the PRINCE.EXE of the mod was changed.
+
+Furthermore, SDLPoP opens up new possibilities for mod making.
+For example:
+Falcury released a mod, called "Secrets of the Citadel" that "has been designed to be played using a modified version of SDLPoP".
+Description and download: http://forum.princed.org/viewtopic.php?f=73&t=3664
 
 DEVELOPING
 ==========
