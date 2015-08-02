@@ -60,6 +60,9 @@ The authors of this program may be contacted at http://forum.princed.org
 // Enable one-minute penalty for quickloading
 #define USE_QUICKLOAD_PENALTY
 
+// Time passes while the level ending music plays; however, this can be skipped by disabling sound.
+// This disables time passing while the ending music is playing, so you can leave sounds on.
+#define DISABLE_TIME_DURING_END_MUSIC
 
 // Bugfixes:
 

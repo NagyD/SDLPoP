@@ -1510,6 +1510,9 @@ void __pascal far show_time() {
 	char sprintf_temp[40];
 	word rem_sec;
 	if (Kid.alive < 0 &&
+		#ifdef DISABLE_TIME_DURING_END_MUSIC
+		next_level == current_level &&
+		#endif
 		rem_min != 0 &&
 		(current_level < 13 || (current_level == 13 && leveldoor_open == 0)) &&
 		current_level < 15
