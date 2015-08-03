@@ -60,6 +60,9 @@ The authors of this program may be contacted at http://forum.princed.org
 // Enable one-minute penalty for quickloading
 #define USE_QUICKLOAD_PENALTY
 
+// Time passes while the level ending music plays; however, this can be skipped by disabling sound.
+// This disables time passing while the ending music is playing, so you can leave sounds on.
+#define DISABLE_TIME_DURING_END_MUSIC
 
 // Bugfixes:
 
@@ -111,9 +114,18 @@ The authors of this program may be contacted at http://forum.princed.org
 // Controls do not get released properly when drinking a potion, sometimes causing unintended movements.
 #define FIX_MOVE_AFTER_DRINK
 
+// Guards may "follow" the kid to the room on the left, even though there is a closed gate in between.
+#define FIX_GUARD_FOLLOWING_THROUGH_CLOSED_GATES
+
+
 // Debug features:
 
 // When the program starts, check whether the deobfuscated sequence table (seqtbl.c) is correct.
 //#define CHECK_SEQTABLE_MATCHES_ORIGINAL
+
+// Enable debug cheats
+// "[" and "]" : nudge x position by one pixel
+// "T" : display remaining time in minutes, seconds and ticks
+//#define USE_DEBUG_CHEATS
 
 #endif

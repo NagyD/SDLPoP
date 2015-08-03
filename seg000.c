@@ -322,7 +322,7 @@ int need_quick_load = 0;
 
 void check_quick_op() {
 	if (need_quick_save) {
-		if (quick_save()) {
+		if (!is_feather_fall && quick_save()) {
 			display_text_bottom("QUICKSAVE");
 		} else {
 			display_text_bottom("NO QUICKSAVE");
@@ -364,6 +364,9 @@ int __pascal far process_key() {
 
 	if (start_level == 0) {
 		if (key || control_shift) {
+			#ifdef USE_QUICKSAVE
+			if (key == SDL_SCANCODE_F9) need_quick_load = 1;
+			#endif
 			if (key == (SDL_SCANCODE_L | WITH_CTRL)) { // ctrl-L
 				if (!load_game()) return 0;
 			} else {
@@ -473,9 +476,11 @@ int __pascal far process_key() {
 		break;
 #ifdef USE_QUICKSAVE
 		case SDL_SCANCODE_F6:
-			need_quick_save = 1;
+		case SDL_SCANCODE_F6 | WITH_SHIFT:
+			if (Kid.alive < 0) need_quick_save = 1;
 		break;
 		case SDL_SCANCODE_F9:
+		case SDL_SCANCODE_F9 | WITH_SHIFT:
 			need_quick_load = 1;
 		break;
 #endif // USE_QUICKSAVE
@@ -561,6 +566,14 @@ int __pascal far process_key() {
 				flash_time = 4;
 				add_life();
 			break;
+			#ifdef USE_DEBUG_CHEATS
+			case SDL_SCANCODE_T:
+				printf("Remaining minutes: %d\tticks:%d\n", rem_min, rem_tick);
+				snprintf(sprintf_temp, sizeof(sprintf_temp), "M:%d S:%d T:%d", rem_min, rem_tick / 12, rem_tick);
+				answer_text = sprintf_temp;
+				need_show_text = 1;
+			break;
+			#endif
 		}
 	}
 
@@ -1192,6 +1205,13 @@ void __pascal far read_keyb_control() {
 		control_x = 1;
 	}
 	control_shift = -(key_states[SDL_SCANCODE_LSHIFT] || key_states[SDL_SCANCODE_RSHIFT]);
+
+	#ifdef USE_DEBUG_CHEATS
+	if (cheats_enabled) {
+		if (key_states[SDL_SCANCODE_RIGHTBRACKET]) ++Char.x;
+		else if (key_states[SDL_SCANCODE_LEFTBRACKET]) --Char.x;
+	}
+	#endif
 }
 
 // seg000:156D
