@@ -111,6 +111,9 @@ The authors of this program may be contacted at http://forum.princed.org
 // Controls do not get released properly when drinking a potion, sometimes causing unintended movements.
 #define FIX_MOVE_AFTER_DRINK
 
+// A drawing bug occurs when a loose tile is placed to the left of a potion (or sword).
+#define FIX_LOOSE_LEFT_OF_POTION
+
 // Debug features:
 
 // When the program starts, check whether the deobfuscated sequence table (seqtbl.c) is correct.

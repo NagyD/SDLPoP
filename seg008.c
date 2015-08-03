@@ -253,11 +253,14 @@ int __pascal far get_tile_to_draw(int room, int column, int row, byte *ptr_tilet
 			*ptr_modifier = 0;
 			*ptr_tiletype = tiles_1_floor;
 		}
-	} else if (tiletype == tiles_11_loose) {
+	}
+#ifdef FIX_LOOSE_LEFT_OF_POTION
+	else if (tiletype == tiles_11_loose) {
 		if ((*ptr_modifier & 0x7F) == 0) {
 			*ptr_tiletype = tiles_1_floor;
 		}
 	}
+#endif
 	return *ptr_tiletype;
 }
 

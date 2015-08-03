@@ -241,6 +241,7 @@ FIXED: Added optional fixes for a few gameplay quirks:
 DONE: Increase the number of supported potion types to 32
 - Quickloading is cancelled when a version string saved in QUICKSAVE.SAV does not match.
 - Added rem_min and rem_tick to the quicksaved variables. The proposed penalty for quickloading is one minute subtracted from the saved remaining time.
+FIXED: A drawing bug occurs when a loose tile is placed to the left of a potion (or sword).
 
 Build changes:
 DONE: Source code of the project has been added to GitHub.
