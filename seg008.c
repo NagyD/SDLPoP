@@ -184,12 +184,13 @@ void __pascal far redraw_needed(short tilepos) {
 	if (redraw_frames_full[tilepos]) {
 		--redraw_frames_full[tilepos];
 		draw_tile();
-	}
-	if (redraw_frames_anim[tilepos]) {
-		--redraw_frames_anim[tilepos];
-		draw_tile_anim_topright();
-		draw_tile_anim_right();
-		draw_tile_anim();
+	} else {
+		if (redraw_frames_anim[tilepos]) {
+			--redraw_frames_anim[tilepos];
+			draw_tile_anim_topright();
+			draw_tile_anim_right();
+			draw_tile_anim();
+		}
 	}
 	if (redraw_frames2[tilepos]) {
 		--redraw_frames2[tilepos];
@@ -253,7 +254,7 @@ int __pascal far get_tile_to_draw(int room, int column, int row, byte *ptr_tilet
 			*ptr_tiletype = tiles_1_floor;
 		}
 	} else if (tiletype == tiles_11_loose) {
-		if (*ptr_modifier == 0) {
+		if ((*ptr_modifier & 0x7F) == 0) {
 			*ptr_tiletype = tiles_1_floor;
 		}
 	}
