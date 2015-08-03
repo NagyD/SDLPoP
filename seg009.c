@@ -465,8 +465,9 @@ image_type* decode_image(image_data_type* image_data, dat_pal_type* palette) {
 		colors[i].r = palette->vga[i].r << 2;
 		colors[i].g = palette->vga[i].g << 2;
 		colors[i].b = palette->vga[i].b << 2;
-		colors[i].a = 0xFF;   // SDL2's SDL_Color has a fourth alpha component
+		colors[i].a = SDL_ALPHA_OPAQUE;   // SDL2's SDL_Color has a fourth alpha component
 	}
+	colors[0].a = SDL_ALPHA_TRANSPARENT;
 	SDL_SetPaletteColors(image->format->palette, colors, 0, 16); // SDL_SetColors = deprecated
 	return image;
 }
@@ -774,10 +775,15 @@ font_type load_font_from_data(/*const*/ rawfont_type* data) {
 	memset(&dat_pal, 0, sizeof(dat_pal));
 	dat_pal.vga[1].r = dat_pal.vga[1].g = dat_pal.vga[1].b = 0x3F; // white
 	for (index = 0, chr = data->first_char; chr <= data->last_char; ++index, ++chr) {
-		/*const*/ image_data_type* image = (/*const*/ image_data_type*)((/*const*/ byte*)data + data->offsets[index]);
-		//image->flags=0;
-		if (image->height == 0) image->height = 1; // HACK: decode_image() returns NULL if height==0.
-		chtab->images[index] = decode_image(image, &dat_pal);
+		/*const*/ image_data_type* image_data = (/*const*/ image_data_type*)((/*const*/ byte*)data + data->offsets[index]);
+		//image_data->flags=0;
+		if (image_data->height == 0) image_data->height = 1; // HACK: decode_image() returns NULL if height==0.
+		image_type* image;
+		chtab->images[index] = image = decode_image(image_data, &dat_pal);
+		if (SDL_SetColorKey(image, SDL_TRUE, 0) != 0) {
+			sdlperror("SDL_SetColorKey");
+			quit(1);
+		}
 	}
 	font.chtab = chtab;
 	return font;
@@ -1971,6 +1977,10 @@ void __pascal far method_1_blit_rect(surface_type near *target_surface,surface_t
 image_type far * __pascal far method_3_blit_mono(image_type far *image,int xpos,int ypos,int blitter,byte color) {
 	int w = image->w;
     int h = image->h;
+	if (SDL_SetColorKey(image, SDL_TRUE, 0) != 0) {
+		sdlperror("SDL_SetColorKey");
+		quit(1);
+	}
     SDL_Surface* colored_image = SDL_ConvertSurfaceFormat(image, SDL_PIXELFORMAT_ARGB8888, 0);
 
     SDL_SetSurfaceBlendMode(colored_image, SDL_BLENDMODE_NONE);

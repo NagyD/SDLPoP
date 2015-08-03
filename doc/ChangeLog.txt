@@ -218,6 +218,7 @@ CHANGE: Tweaked timer behaviour. The game now attempts to correct for timer-rela
 FIXED: Flashes are now displayed with a more consistent duration.
 FIXED: Shift+L skipping cutscenes immediately is now prevented by a short delay timer.
 FIXED: Fixed bug with flashes not repainting the screen upside down in flipped mode.
+FIXED: Hardcoded font (hc_font) appeared as white rectangles.
 
 New game additions and bug fixes:
 DONE: Added quicksaving and quickloading (F6 to quicksave anywhere in a level, F9 to quickload).
