@@ -254,6 +254,13 @@ void __pascal far exit_room() {
 			if (roomleave_result == 0) {
 				// left
 				if (Guard.x >= 91) leave = 1;
+				#ifdef FIX_GUARD_FOLLOWING_THROUGH_CLOSED_GATES
+				else if (Guard.x > 0) {
+					get_tile(Kid.room, Kid.curr_row * 10 + 9, Kid.curr_row);
+					if (curr_tile == tiles_4_gate && can_bump_into_gate())
+							leave = 1;
+				}
+				#endif
 			} else if (roomleave_result == 1) {
 				// right
 				if (Guard.x < 165) leave = 1;
