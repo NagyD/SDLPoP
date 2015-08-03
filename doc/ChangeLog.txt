@@ -196,7 +196,7 @@ FIXED: Ctrl-S did not stop currently playing sounds.
 DONE: Toggle fullscreen with alt-enter.
 FIXED: If the game is in full screen, and I switch away (alt-tab) and back, most of the screen will be black, until it is redrawn.
 
-2015 August 2
+2015 August 3
 =============
 (version 1.15)
 
@@ -222,6 +222,10 @@ FIXED: Hardcoded font (hc_font) appeared as white rectangles.
 
 New game additions and bug fixes:
 DONE: Added quicksaving and quickloading (F6 to quicksave anywhere in a level, F9 to quickload).
+- Also quicksave/quickload when shift is pressed
+- Do not even attempt to quicksave after the kid has died
+- Deny quicksave during the feather fall effect
+- Allow quickloading from the title screen
 FIXED: Prevented index to redraw_frames_above[] going out of bounds in set_redraw2(), triggered by loose tiles dropping out of the room from the rightmost column. This caused unpredictable behaviour, depending on the compiler.
 FIXED: Fixed a bug where level doors would continue to open infinitely far when the global variable leveldoor_open has been modified due to special events or due to another level door being already open.
 FIXED: Fixed the kid being able to enter closed level doors when there is another one open.
@@ -242,6 +246,9 @@ DONE: Increase the number of supported potion types to 32
 - Quickloading is cancelled when a version string saved in QUICKSAVE.SAV does not match.
 - Added rem_min and rem_tick to the quicksaved variables. The proposed penalty for quickloading is one minute subtracted from the saved remaining time.
 FIXED: A drawing bug occurs when a loose tile is placed to the left of a potion (or sword).
+- Fix guards following through closed gates
+- Freeze time during the end level music
+- Add option for debug cheats
 
 Build changes:
 DONE: Source code of the project has been added to GitHub.
@@ -259,6 +266,7 @@ CHANGE: Many identifiers have been changed to better ones.
 CHANGE: Added named enums for sound IDs, char_type.sword, timer IDs, colors, character frames and sequences.
 CHANGE: Replaced a number of magic numbers in the code with their enum equivalents.
 CHANGE: Sequence table deobfuscation.
+- Fix seqtbl not compiling correctly in release mode
 
 License:
 Added GPLv3 license (2015 June 27).

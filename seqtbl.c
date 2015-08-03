@@ -24,7 +24,7 @@ The authors of this program may be contacted at http://forum.princed.org
 #define SEQTBL_0 (seqtbl - SEQTBL_BASE)
 
 // This expands a two-byte number into two comma-separated bytes, used for the JMP destinations
-#define DW(data_word) data_word & 0x00FF, ((data_word & 0xFF00) >> 8)
+#define DW(data_word) (data_word) & 0x00FF, (((data_word) & 0xFF00) >> 8)
 
 // Shorter notation for the sequence table instructions
 #define act(action) SEQ_ACTION, action
