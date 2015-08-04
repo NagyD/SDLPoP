@@ -1,18 +1,18 @@
 # Project: SDLPoP
 # Makefile created by Dev-C++ 4.9.9.2
 
-CPP  = g++.exe -D__DEBUG__
-CC   = gcc.exe -D__DEBUG__
+CPP  = g++.exe
+CC   = gcc.exe
 WINDRES = windres.exe
 RES  = 
 OBJ  = main.o seg008.o seg007.o seg009.o seg000.o seg003.o seg006.o data.o seg001.o seg002.o seg004.o seg005.o seqtbl.o $(RES)
 LINKOBJ  = main.o seg008.o seg007.o seg009.o seg000.o seg003.o seg006.o data.o seg001.o seg002.o seg004.o seg005.o seqtbl.o $(RES)
-LIBS =  -L"L:/Dev-Cpp/lib" -l"mingw32" -l"winmm" -l"gdi32" -l"SDL2main" -l"SDL2.dll" -l"SDL2_Image" -l"SDL2_mixer"  -g3 
+LIBS =  -L"L:/Dev-Cpp/lib" -mwindows -l"mingw32" -l"winmm" -l"gdi32" -l"SDL2main" -l"SDL2.dll" -l"SDL2_Image" -l"SDL2_mixer"  -s 
 INCS =  -I"L:/Dev-Cpp/include" 
 CXXINCS =  -I"L:/Dev-Cpp/lib/gcc/mingw32/3.4.2/include"  -I"L:/Dev-Cpp/include/c++/3.4.2/backward"  -I"L:/Dev-Cpp/include/c++/3.4.2/mingw32"  -I"L:/Dev-Cpp/include/c++/3.4.2"  -I"L:/Dev-Cpp/include" 
 BIN  = prince.exe
-CXXFLAGS = $(CXXINCS) -Wall   -g3
-CFLAGS = $(INCS) -Wall   -g3
+CXXFLAGS = $(CXXINCS) -Wall  
+CFLAGS = $(INCS) -Wall  
 RM = rm -f
 
 .PHONY: all all-before all-after clean clean-custom

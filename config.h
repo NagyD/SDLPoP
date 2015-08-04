@@ -55,27 +55,27 @@ The authors of this program may be contacted at http://forum.princed.org
 
 // Adds a way to crouch immediately after climbing up: press down and forward simultaneously
 // In the original game, this could not be done (pressing down always causes the kid to climb down).
-#define ALLOW_CROUCH_AFTER_CLIMBING
+//#define ALLOW_CROUCH_AFTER_CLIMBING
 
 // Enable one-minute penalty for quickloading
 #define USE_QUICKLOAD_PENALTY
 
 // Time passes while the level ending music plays; however, this can be skipped by disabling sound.
 // This disables time passing while the ending music is playing, so you can leave sounds on.
-#define DISABLE_TIME_DURING_END_MUSIC
+//#define DISABLE_TIME_DURING_END_MUSIC
 
 // Bugfixes:
 
 // The mentioned tricks can be found here: http://www.popot.org/documentation.php?doc=Tricks
 
 // If a room is linked to itself on the left, the closing sounds of the gates in that room can't be heard.
-#define FIX_GATE_SOUNDS
+//#define FIX_GATE_SOUNDS
 
 // An open gate or chomper may enable the Kid to go through walls. (Trick 7, 37, 62)
-#define FIX_TWO_COLL_BUG
+//#define FIX_TWO_COLL_BUG
 
 // If a room is linked to itself at the bottom, and the Kid's column has no floors, the game hangs.
-#define FIX_INFINITE_DOWN_BUG
+//#define FIX_INFINITE_DOWN_BUG
 
 // When a gate is under another gate, the top of the bottom gate is not visible.
 // But this fix causes a drawing bug when a gate opens.
@@ -87,38 +87,38 @@ The authors of this program may be contacted at http://forum.princed.org
 
 // When climbing up two floors, turning around and jumping upward, the kid falls down.
 // This fix makes the workaround of Trick 25 unnecessary.
-#define FIX_JUMP_DISTANCE_AT_EDGE
+//#define FIX_JUMP_DISTANCE_AT_EDGE
 
 // When climbing to a higher floor, the game unnecessarily checks how far away the edge below is;
 // This contributes to sometimes "teleporting" considerable distances when climbing from firm ground
-#define FIX_EDGE_DISTANCE_CHECK_WHEN_CLIMBING
+//#define FIX_EDGE_DISTANCE_CHECK_WHEN_CLIMBING
 
 // Falling from a great height directly on top of guards does not hurt.
-#define FIX_PAINLESS_FALL_ON_GUARD
+//#define FIX_PAINLESS_FALL_ON_GUARD
 
 // Bumping against a wall may cause a loose floor below to drop, even though it has not been touched (Trick 18, 34)
-#define FIX_WALL_BUMP_TRIGGERS_TILE_BELOW
+//#define FIX_WALL_BUMP_TRIGGERS_TILE_BELOW
 
 // When pressing a loose tile, you can temporarily stand on thin air by standing up from crouching.
-#define FIX_STAND_ON_THIN_AIR
+//#define FIX_STAND_ON_THIN_AIR
 
 // Buttons directly to the right of gates can be pressed even though the gate is closed (Trick 1)
-#define FIX_PRESS_THROUGH_CLOSED_GATES
+//#define FIX_PRESS_THROUGH_CLOSED_GATES
 
 // By jumping and bumping into a wall, you can sometimes grab a ledge two stories down (which should not be possible).
-#define FIX_GRAB_FALLING_SPEED
+//#define FIX_GRAB_FALLING_SPEED
 
 // When chomped, skeletons cause the chomper to become bloody even though skeletons do not have blood.
-#define FIX_SKELETON_CHOMPER_BLOOD
+//#define FIX_SKELETON_CHOMPER_BLOOD
 
 // Controls do not get released properly when drinking a potion, sometimes causing unintended movements.
-#define FIX_MOVE_AFTER_DRINK
+//#define FIX_MOVE_AFTER_DRINK
 
 // A drawing bug occurs when a loose tile is placed to the left of a potion (or sword).
-#define FIX_LOOSE_LEFT_OF_POTION
+//#define FIX_LOOSE_LEFT_OF_POTION
 
 // Guards may "follow" the kid to the room on the left, even though there is a closed gate in between.
-#define FIX_GUARD_FOLLOWING_THROUGH_CLOSED_GATES
+//#define FIX_GUARD_FOLLOWING_THROUGH_CLOSED_GATES
 
 
 // Debug features:
