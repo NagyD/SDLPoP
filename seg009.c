@@ -86,6 +86,11 @@ int __pascal far key_test_quit() {
 	word key;
 	key = read_key();
 	if (key == (SDL_SCANCODE_Q | WITH_CTRL)) { // ctrl-q
+
+		#ifdef USE_REPLAY
+		if (recording) save_recorded_replay();
+		#endif
+
 		quit(0);
 	}
 	return key;

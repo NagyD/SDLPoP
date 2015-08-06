@@ -555,6 +555,11 @@ word word_1E1AA;
 // data:5F84
 word last_loose_sound;
 
+#ifdef USE_REPLAY
+byte recording INIT(= 0);
+byte replaying INIT(= 0);
+dword num_replay_ticks INIT(= 0);
+#endif // USE_REPLAY
 
 #undef INIT
 #undef extern
