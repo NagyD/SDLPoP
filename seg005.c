@@ -78,6 +78,13 @@ void __pascal far land() {
 				spiked();
 				return;
 			}
+			#ifdef FIX_SAFE_LANDING_ON_SPIKES
+			else if (curr_room_modif[curr_tilepos] == 0) {
+				// spikes ARE dangerous, just not out yet.
+				spiked();
+				return;
+			}
+			#endif // FIX_SAFE_LANDING_ON_SPIKES
 		}
 		{
 			if (Char.fall_y < 22) {
