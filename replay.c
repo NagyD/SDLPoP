@@ -45,7 +45,9 @@ dword saved_random_seed;
 byte special_move = 0;
 
 FILE* replay_fp;
-const char* const replay_file = "REPLAY.SAV";
+#define REPLAY_DEFAULT_FILENAME "REPLAY_001.P1R"
+byte replay_file_open = 0;
+word current_replay_number = 0;
 
 byte* savestate_buffer = NULL;
 size_t savestate_offset = 0;
@@ -58,7 +60,28 @@ extern int quick_process(process_func_type process_func);
 extern const char const quick_version[];
 extern char quick_control[];
 
+byte open_replay_file(const char *filename) {
+    if (replay_file_open) fclose(replay_fp);
+    replay_fp = fopen(filename, "rb");
+    if (replay_fp != NULL) {
+        replay_file_open = 1;
+        return 1;
+    }
+    else {
+        replay_file_open = 0;
+        return 0;
+    }
+}
+
 void init_record_replay() {
+    if (g_argc > 1) {
+        char *filename = g_argv[1]; // file dragged on top of executable or double clicked
+        char *e = strrchr(filename, '.');
+        if (e != NULL && strncasecmp(e, ".P1R", 4) == 0) { // valid replay filename passed as first arg
+            open_replay_file(filename);
+            start_replay();
+        }
+    }
     if (check_param("record")) {
         start_recording();
     }
@@ -102,7 +125,6 @@ int savestate_to_buffer() {
     }
     return ok;
 }
-
 
 int restore_savestate_from_buffer() {
     int ok = 0;
@@ -160,7 +182,7 @@ void stop_recording() {
 void start_replay() {
     replaying = 1;
     curr_tick = 0;
-    load_recorded_replay();
+    load_replay();
 }
 
 void do_replay_move() {
@@ -192,7 +214,13 @@ void do_replay_move() {
 }
 
 void save_recorded_replay() {
-    replay_fp = fopen(replay_file, "wb");
+    char filename[] = REPLAY_DEFAULT_FILENAME;
+    word replay_number = 1;
+    while (access(filename, F_OK) != -1) { // file already exists
+        ++replay_number;
+        sprintf(filename +7, "%03d.P1R", replay_number);
+    }
+    replay_fp = fopen(filename, "wb");
     if (replay_fp != NULL) {
         // embed a savestate into the replay
         fwrite(&savestate_size, sizeof(savestate_size), 1, replay_fp);
@@ -207,8 +235,42 @@ void save_recorded_replay() {
     }
 }
 
-void load_recorded_replay() {
-    replay_fp = fopen(replay_file, "rb");
+byte open_next_replay_file() {
+    char filename[] = REPLAY_DEFAULT_FILENAME;
+    ++current_replay_number;
+    int try;
+#define MAX_REPLAY_NUMBER 999
+    for (try = 0; try < current_replay_number + MAX_REPLAY_NUMBER; ++try) {
+        sprintf(filename +7, "%03d.P1R", current_replay_number);
+        if (open_replay_file(filename)) break;
+        ++current_replay_number;
+        if (current_replay_number > MAX_REPLAY_NUMBER) current_replay_number = 1; // cycle back to the first replay if necessary
+    }
+    if (!replay_file_open) return 0;
+}
+
+void replay_cycle() {
+    need_replay_cycle = 0;
+    stop_sounds();
+    if (!open_next_replay_file()) return; // failed: can't find replays
+    load_replay();
+    curr_tick = 0;
+    restore_savestate_from_buffer();
+    char message[] = "001";
+    sprintf(message, "%03d", current_replay_number);
+    display_text_bottom(message);
+    text_time_remaining = 24;
+    text_time_total = 24;
+}
+
+void load_replay() {
+    if (!replay_file_open) {
+        char filename[] = REPLAY_DEFAULT_FILENAME;
+        current_replay_number = 1;
+        if (!open_replay_file(filename)) {
+            open_next_replay_file();
+        }
+    }
     if (savestate_buffer == NULL)
         savestate_buffer = malloc(MAX_SAVESTATE_SIZE);
     if (replay_fp != NULL && savestate_buffer != NULL) {
@@ -221,6 +283,7 @@ void load_recorded_replay() {
         fread(&num_replay_ticks, sizeof(num_replay_ticks), 1, replay_fp);
         fread(moves, num_replay_ticks, 1, replay_fp);
         fclose(replay_fp);
+        replay_file_open = 0;
     }
 }
 
@@ -259,6 +322,9 @@ void key_press_while_replaying(int* key_ptr) {
             break;
         case SDL_SCANCODE_R | WITH_CTRL:        // restart game
             replaying = 0;
+            break;
+        case SDL_SCANCODE_TAB:
+            need_replay_cycle = 1;
             break;
     }
 }

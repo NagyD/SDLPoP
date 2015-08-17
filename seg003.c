@@ -315,6 +315,11 @@ int __pascal far play_level_2() {
 #ifdef USE_QUICKSAVE
 		check_quick_op();
 #endif // USE_QUICKSAVE
+
+#ifdef USE_REPLAY
+		if (need_replay_cycle) replay_cycle();
+#endif // USE_QUICKSAVE
+
 		if (Kid.sword == sword_2_drawn) {
 			// speed when fighting (smaller is faster)
 			start_timer(timer_1, 6);

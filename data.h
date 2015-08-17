@@ -559,6 +559,7 @@ word last_loose_sound;
 byte recording INIT(= 0);
 byte replaying INIT(= 0);
 dword num_replay_ticks INIT(= 0);
+byte need_replay_cycle INIT(= 0);
 #endif // USE_REPLAY
 
 #undef INIT

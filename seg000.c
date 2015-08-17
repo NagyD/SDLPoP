@@ -238,12 +238,26 @@ int quick_process(process_func_type process_func) {
 	// remaining time
 	process(rem_min);
 	process(rem_tick);
+	// saved controls
+	process(control_x);
+	process(control_y);
+	process(control_shift);
+	process(control_forward);
+	process(control_backward);
+	process(control_up);
+	process(control_down);
+	process(control_shift2);
+	process(ctrl1_forward);
+	process(ctrl1_backward);
+	process(ctrl1_up);
+	process(ctrl1_down);
+	process(ctrl1_shift2);
 #undef process
 	return ok;
 }
 
 const char* const quick_file = "QUICKSAVE.SAV";
-const char const quick_version[] = "V1.16   ";
+const char const quick_version[] = "V1.16b3 ";
 char quick_control[] = "........";
 
 int quick_save() {
@@ -276,9 +290,7 @@ void restore_room_after_quick_load() {
 
 	hitp_delta = guardhp_delta = 1; // force HP redraw
 	draw_hp();
-
-	// Kid should not move immediately after quickload
-	clear_saved_ctrl();
+	loadkid_and_opp();
 	// Get rid of "press button" message if kid was dead before quickload.
 	text_time_total = text_time_remaining = 0;
 	//next_sound = current_sound = -1;
