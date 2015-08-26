@@ -78,6 +78,13 @@ void __pascal far land() {
 				spiked();
 				return;
 			}
+			#ifdef FIX_SAFE_LANDING_ON_SPIKES
+			else if (options.fix_safe_landing_on_spikes && curr_room_modif[curr_tilepos] == 0) {
+				// spikes ARE dangerous, just not out yet.
+				spiked();
+				return;
+			}
+			#endif // FIX_SAFE_LANDING_ON_SPIKES
 		}
 		{
 			if (Char.fall_y < 22) {
@@ -175,13 +182,13 @@ void __pascal far control() {
 
 		#ifdef ALLOW_CROUCH_AFTER_CLIMBING
 		// When ducking with down+forward, give time to release the forward control (prevents unintended crouch-hops)
-		else if (Char.curr_seq >= seqtbl_offsets[seq_50_crouch] &&
+		else if (options.enable_crouch_after_climbing && Char.curr_seq >= seqtbl_offsets[seq_50_crouch] &&
 				Char.curr_seq < seqtbl_offsets[seq_49_stand_up_from_crouch]) // while stooping
 			if (control_forward < 1) control_forward = 0;
 		#endif
 
 		#ifdef FIX_MOVE_AFTER_DRINK
-		if (char_frame >= frame_191_drink && char_frame <= frame_205_drink)
+		if (options.fix_move_after_drink && char_frame >= frame_191_drink && char_frame <= frame_205_drink)
 			release_arrows();
 		#endif
 	}
@@ -314,7 +321,7 @@ void __pascal far down_pressed() {
 			get_tile_at_char();
 			if (can_grab() &&
 				#ifdef ALLOW_CROUCH_AFTER_CLIMBING
-				control_forward != -1 &&
+				(!(options.enable_crouch_after_climbing && control_forward == -1)) &&
 				#endif
 				(Char.direction >= dir_0_right ||
 				get_tile_at_char() != tiles_4_gate ||
@@ -375,7 +382,7 @@ void __pascal far forward_pressed() {
 	short distance;
 	distance = get_edge_distance();
 	#ifdef ALLOW_CROUCH_AFTER_CLIMBING
-	if (control_down < 0) {
+	if (options.enable_crouch_after_climbing && control_down < 0) {
 		down_pressed();
 		control_forward = 0;
 		return;
@@ -553,7 +560,7 @@ void __pascal far jump_up() {
 	#ifdef FIX_JUMP_DISTANCE_AT_EDGE
 	// When climbing up two floors, turning around and jumping upward, the kid falls down.
 	// This fix makes the workaround of Trick 25 unnecessary.
-	if (distance == 3 && edge_type == 0) {
+	if (options.fix_jump_distance_at_edge && distance == 3 && edge_type == 0) {
 		Char.x = char_dx_forward(-1);
 	}
 	#endif
@@ -644,7 +651,9 @@ void __pascal far grab_up_with_floor_behind() {
 	#ifdef FIX_EDGE_DISTANCE_CHECK_WHEN_CLIMBING
 	// When climbing to a higher floor, the game unnecessarily checks how far away the edge below is;
 	// This contributes to sometimes "teleporting" considerable distances when climbing from firm ground
-	#define JUMP_STRAIGHT_CONDITION distance < 4 && edge_type != 1
+	#define JUMP_STRAIGHT_CONDITION (options.fix_edge_distance_check_when_climbing)						\
+									? (distance < 4 && edge_type != 1)									\
+									: (distance < 4 && edge_distance < 4 && edge_type != 1)
 	#else
 	#define JUMP_STRAIGHT_CONDITION distance < 4 && edge_distance < 4 && edge_type != 1
 	#endif

@@ -159,15 +159,24 @@ void __pascal far check_bumped() {
 		// frames 135..149: climb up
 		(Char.frame < frame_135_climbing_1 || Char.frame >= 149)
 	) {
+#ifdef FIX_TWO_COLL_BUG
 		if (bump_col_left_of_wall >= 0) {
 			check_bumped_look_right();
+			if (!options.fix_two_coll_bug) return; // check for the left-oriented collision only with the fix enabled
 		}
-#ifndef FIX_TWO_COLL_BUG
-		else
-#endif
 		if (bump_col_right_of_wall >= 0) {
 			check_bumped_look_left();
 		}
+#else
+		if (bump_col_left_of_wall >= 0) {
+			check_bumped_look_right();
+		}
+		else
+		if (bump_col_right_of_wall >= 0) {
+			check_bumped_look_left();
+		}
+#endif // FIX_TWO_COLL_BUG
+
 	}
 }
 
@@ -278,7 +287,7 @@ void __pascal far bumped_fall() {
 	if (action == actions_4_in_freefall) {
 		Char.fall_x = 0;
 	} else {
-		seqtbl_offset_char(seq_45_fall_after_bumped); // fall after bumped
+		seqtbl_offset_char(seq_45_bumpfall); // fall after bumped
 		play_seq();
 	}
 	bumped_sound();
@@ -312,7 +321,7 @@ void __pascal far bumped_floor(sbyte push_direction) {
 						(frame >= 40 && frame < 43) ||
 						(frame >= frame_102_start_fall_1 && frame < 107)
 					) {
-						seq_index = seq_46_bump_with_fall; // bump into wall after run-jump (crouch)
+						seq_index = seq_46_hardbump; // bump into wall after run-jump (crouch)
 					} else {
 						seq_index = seq_47_bump; // bump into wall
 					}
@@ -436,7 +445,7 @@ void __pascal far check_chomped_kid() {
 // seg004:07BF
 void __pascal far chomped() {
 	#ifdef FIX_SKELETON_CHOMPER_BLOOD
-	if (Char.charid != charid_4_skeleton)
+	if (!(options.fix_skeleton_chomper_blood && Char.charid == charid_4_skeleton))
 	#endif
 		curr_room_modif[curr_tilepos] |= 0x80; // put blood
 	if (Char.frame != frame_178_chomped && Char.room == curr_room) {

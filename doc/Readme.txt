@@ -79,6 +79,10 @@ Alt-Enter: toggle fullscreen
 F6: quicksave
 F9: quickload
 
+Viewing or recording replays:
+Ctrl+Tab (in game): start or stop recording
+Tab (on title screen): view/cycle through the saved replays in the SDLPoP directory
+
 Cheats:
 Shift-L: go to next level
 c: show numbers of current and adjacent rooms
@@ -126,12 +130,38 @@ This is useful if you want to compare the behavior of this port and the original
 Note that this port does not recognize if the PRINCE.EXE of the mod was changed.
 
 Beware, some mods (especially the harder ones) might rely on bugs that are fixed in SDLPoP.
-You can turn these fixes off in config.h.
+Since version 1.16, you can turn gameplay fixes on or off in SDLPoP.ini.
+To simply get the exact behavior of the original game, set the first option (disable_all_fixes) to 'true'.
+However, you can also toggle individual fixes.
 
 Furthermore, SDLPoP opens up new possibilities for mod making.
 For example:
 Falcury released a mod, called "Secrets of the Citadel" that "has been designed to be played using a modified version of SDLPoP".
 Description and download: http://forum.princed.org/viewtopic.php?f=73&t=3664
+
+REPLAYS
+=======
+
+Q: How do replays work?
+A:
+Starting from version 1.16, you can capture or view replays in SDLPoP.
+To start recording, press Ctrl+Tab while in game. To stop recording, press Ctrl+Tab again.
+Your replays get saved in the SDLPoP folder as files with a .P1R extension (REPLAY_001.P1R, REPLAY_002.P1R, and so on).
+
+To view a replay, you can press Tab while on the title screen. 
+The game then looks for replays with the REPLAY_XXX.P1R pattern and plays those in order (you can cycle by pressing Tab again).
+You can also double-click on a replay file (and tell the OS that the file needs to be opened with the SDLPoP executable).
+SDLPoP will then immediately play that replay. Dragging and dropping onto the executable also works.
+
+Your settings specified in SDLPoP.ini (including whether you are playing with bugfixes on or off) are remembered in the replay.
+It shouldn't matter how SDLPoP.ini is set up when you are viewing the replay later.
+Note that any cheats you use do not get saved as part of the replay.
+
+If you want to start recording on a specific level, you can use the command "prince.exe record <lvl_number>",
+where <lvl_number> is the level on which you want to start.
+
+Also beware that the format of the replay files is not yet final and may change in the future!
+So it is possible that replays you record now will not work well in future versions.
 
 DEVELOPING
 ==========

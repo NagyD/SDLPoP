@@ -270,3 +270,11 @@ CHANGE: Sequence table deobfuscation.
 
 License:
 Added GPLv3 license (2015 June 27).
+
+2015 August 26
+==============
+(experimental version 1.16b3)
+
+DONE: Added ability to view or record replays. While in game, press Ctrl+Tab to stop/start recording. While at the title screen, press Tab to view/cycle saved replays. You can also open replays directly with SDLPoP (drag/drop on the executable or double click the replay file) and they will play immediately.
+DONE: Use SDLPoP.ini to configure gameplay options. Fixes for gameplay quirks are enabled by default but can be very easily disabled all at once by setting the topmost option 'disable_all_fixes' to 'true'.
+CHANGE: Minor build fixes.

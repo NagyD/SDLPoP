@@ -562,6 +562,8 @@ dword num_replay_ticks INIT(= 0);
 byte need_replay_cycle INIT(= 0);
 #endif // USE_REPLAY
 
+options_type options INIT(= {{0}});
+
 #undef INIT
 #undef extern
 

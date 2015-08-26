@@ -3,7 +3,7 @@ project(SDLPoP)
 
 # Use C++11 when using the C++ compiler
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
 
 if (WIN32)
     # Use the -mwindows compiler flag when compiling with MinGW to hide the console window
@@ -40,15 +40,16 @@ set(SOURCE_FILES
     seg007.c
     seg008.c
     seg009.c
-    replay.c
     seqtbl.c
+    options.c
+    replay.c
     types.h
 )
-add_executable(SDLPoP ${SOURCE_FILES})
+add_executable(prince ${SOURCE_FILES})
 
 # @Todo: add a configuration for Mac OS X
 
-target_link_libraries(SDLPoP mingw32 SDL2main SDL2 SDL2.dll SDL2_image SDL2_mixer)
+target_link_libraries(prince mingw32 SDL2main SDL2 SDL2.dll SDL2_image SDL2_mixer)
 
 
 

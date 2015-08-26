@@ -877,8 +877,8 @@ enum seqids {
 	seq_42_safe_step_14 = 42,
 	seq_43_start_run_after_turn = 43,
 	seq_44_step_on_edge = 44,
-	seq_45_fall_after_bumped = 45,
-	seq_46_bump_with_fall = 46,
+	seq_45_bumpfall = 45,
+	seq_46_hardbump = 46,
 	seq_47_bump = 47,
 	seq_49_stand_up_from_crouch = 49,
 	seq_50_crouch = 50,
@@ -978,5 +978,51 @@ enum key_modifiers {
 	WITH_CTRL  = 0x4000,
 	WITH_ALT   = 0x2000,
 };
+
+
+typedef union options_type {
+	// Need a predictable total size for forward compatibility (options data stored in replays for correct behavior!)
+	byte data[64];
+	struct {
+		byte disable_all_fixes; // kill-switch for all changes that modify gameplay behavior
+
+		// Main game options
+		byte enable_copyprot;
+
+		// Technical options
+		byte enable_mixer;
+		byte enable_fade;
+		byte enable_flash;
+		byte enable_text;
+
+		// Additional features on/off
+		byte enable_quicksave;
+		byte enable_quicksave_penalty;
+		byte enable_replay;
+
+		// Gameplay changes
+		byte enable_crouch_after_climbing;
+		byte enable_freeze_time_during_end_music;
+
+		// Bug fixes
+		byte fix_gate_sounds;
+		byte fix_two_coll_bug;
+		byte fix_infinite_down_bug;
+		byte fix_gate_drawing_bug;
+		byte fix_bigpillar_climb;
+		byte fix_jump_distance_at_edge;
+		byte fix_edge_distance_check_when_climbing;
+		byte fix_painless_fall_on_guard;
+		byte fix_wall_bump_triggers_tile_below;
+		byte fix_stand_on_thin_air;
+		byte fix_press_through_closed_gates;
+		byte fix_grab_falling_speed;
+		byte fix_skeleton_chomper_blood;
+		byte fix_move_after_drink;
+		byte fix_loose_left_of_potion;
+		byte fix_guard_following_through_closed_gates;
+		byte fix_safe_landing_on_spikes;
+	};
+} options_type;
 
 #endif

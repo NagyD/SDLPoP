@@ -255,7 +255,7 @@ void __pascal far exit_room() {
 				// left
 				if (Guard.x >= 91) leave = 1;
 				#ifdef FIX_GUARD_FOLLOWING_THROUGH_CLOSED_GATES
-				else if (Guard.x > 0) {
+				else if (options.fix_guard_following_through_closed_gates && Guard.x > 0) {
 					get_tile(Kid.room, 9, Kid.curr_row);
 					if (curr_tile2 == tiles_4_gate && can_bump_into_gate())
 							leave = 1;

@@ -230,7 +230,7 @@ const word seqtbl_offsets[] = {
 };
 
 // data:196E
-const byte seqtbl[] = {
+byte seqtbl[] = {
 
         LABEL(running) // running
         act(actions_1_run_jump), jmp(runcyc1), // goto running: frame 7
@@ -677,14 +677,9 @@ const byte seqtbl[] = {
         frame_51_turn, frame_52_turn,
         jmp(stand), // goto "stand"
 
-        #ifdef FIX_WALL_BUMP_TRIGGERS_TILE_BELOW
-        #define BUMPFALL_ACTION actions_3_in_midair
-        #else
-        #define BUMPFALL_ACTION actions_5_bumped
-        #endif
-
         LABEL(bumpfall) // bumpfall
-        act(BUMPFALL_ACTION), dx(1), dy(3), jmp_if_feather(bumpfloat),
+        /* action is patched to 3_in_midair by FIX_WALLBUMP_TRIGGERS_TILE_BELOW */
+        act(actions_5_bumped), dx(1), dy(3), jmp_if_feather(bumpfloat),
         frame_102_start_fall_1,
         dx(2), dy(6), frame_103_start_fall_2,
         dx(-1), dy(9), frame_104_start_fall_3,
@@ -855,24 +850,16 @@ const byte seqtbl[] = {
         act(actions_1_run_jump), dx(1), frame_107_fall_land_1,
         dx(2), frame_108_fall_land_2,
         /* ":crouch" */ LABEL(stoop_crouch) frame_109_crouch,
-        jmp(stoop_crouch), // goto ":crouch"
-
-        #ifdef FIX_STAND_ON_THIN_AIR
-        // The fix in seg006.c prevents the kid from "standing on thin air" (by standing up when a loose tile falls)
-        // However, this makes it easier to step off ledges by standing up. This adjustment remedies that somewhat.
-        #define STANDUP_FIX_ADJUST 1
-        #else
-        #define STANDUP_FIX_ADJUST 0
-        #endif
+        jmp(stoop_crouch), // goto ":crouch
 
         LABEL(standup) // stand up
         act(actions_5_bumped), dx(1), frame_110_stand_up_from_crouch_1,
         frame_111_stand_up_from_crouch_2,
         dx(2), frame_112_stand_up_from_crouch_3,
         frame_113_stand_up_from_crouch_4,
-        dx(1 - STANDUP_FIX_ADJUST), frame_114_stand_up_from_crouch_5,
+        dx(1 /*patched to 0 by FIX_STAND_ON_THIN_AIR*/), frame_114_stand_up_from_crouch_5,
         frame_115_stand_up_from_crouch_6, frame_116_stand_up_from_crouch_7,
-        dx(-4 + STANDUP_FIX_ADJUST), frame_117_stand_up_from_crouch_8,
+        dx(-4 /*patched to -3 by FIX_STAND_ON_THIN_AIR*/), frame_117_stand_up_from_crouch_8,
         frame_118_stand_up_from_crouch_9, frame_119_stand_up_from_crouch_10,
         jmp(stand), // goto "stand"
 
@@ -1146,6 +1133,21 @@ const byte seqtbl[] = {
         jmp(Mclimb_loop) // goto ":loop"
 
 };
+
+void apply_seqtbl_patches() {
+#ifdef FIX_WALL_BUMP_TRIGGERS_TILE_BELOW
+    if (options.fix_wall_bump_triggers_tile_below)
+        SEQTBL_0[bumpfall + 1] = actions_3_in_midair; // instead of actions_5_bumped
+#endif
+#ifdef FIX_STAND_ON_THIN_AIR
+    // Fix tendency to fall off edges with fix applied: kid moves too far forward temporarily
+    if (options.fix_stand_on_thin_air) {
+        SEQTBL_0[standup + 11] -= 1; // dx(1) --> dx(0)
+        SEQTBL_0[standup + 16] += 1; // dx(-4) --> dx(-3)
+    }
+#endif
+}
+
 #ifdef CHECK_SEQTABLE_MATCHES_ORIGINAL
 
 // unmodified original sequence table
