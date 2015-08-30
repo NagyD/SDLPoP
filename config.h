@@ -123,6 +123,9 @@ The authors of this program may be contacted at http://forum.princed.org
 // Guards may "follow" the kid to the room on the left, even though there is a closed gate in between.
 //#define FIX_GUARD_FOLLOWING_THROUGH_CLOSED_GATES
 
+// When landing on the edge of a spikes tile, it is considered safe. (Trick 65)
+//#define FIX_SAFE_LANDING_ON_SPIKES
+
 
 // Debug features:
 
