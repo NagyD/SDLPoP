@@ -24,7 +24,6 @@ The authors of this program may be contacted at http://forum.princed.org
 #define SEQTBL_0 (seqtbl - SEQTBL_BASE)
 extern const byte seqtbl[]; // the sequence table is defined in seqtbl.c
 
-
 // seg006:0006
 int __pascal far get_tile(int room,int col,int row) {
 	curr_room = room;
@@ -808,7 +807,8 @@ void __pascal far check_action() {
 		if (frame == frame_109_crouch
 
 			#ifdef FIX_STAND_ON_THIN_AIR
-			|| (frame >= frame_110_stand_up_from_crouch_1 && frame <= frame_119_stand_up_from_crouch_10)
+			|| (options.fix_stand_on_thin_air &&
+				frame >= frame_110_stand_up_from_crouch_1 && frame <= frame_119_stand_up_from_crouch_10)
 			#endif
 
 				) {
@@ -1036,7 +1036,7 @@ void __pascal far check_grab() {
 	word old_x;
 
 	#ifdef FIX_GRAB_FALLING_SPEED
-	#define MAX_GRAB_FALLING_SPEED 30
+	#define MAX_GRAB_FALLING_SPEED (options.fix_grab_falling_speed ? 30 : 32)
 	#else
 	#define MAX_GRAB_FALLING_SPEED 32
 	#endif
@@ -1470,7 +1470,7 @@ void __pascal far check_press() {
 			// the pressed tile is the one that the char is standing on
 			if (! (cur_frame.flags & FRAME_NEEDS_FLOOR)) return;
 			#ifdef FIX_PRESS_THROUGH_CLOSED_GATES
-			determine_col();
+			if (options.fix_press_through_closed_gates) determine_col();
 			#endif
 			get_tile_at_char();
 		}
@@ -1510,7 +1510,7 @@ void __pascal far check_spike_below() {
 				! tile_is_floor(curr_tile2) &&
 				curr_room != 0 &&
 #ifdef FIX_INFINITE_DOWN_BUG
-				row <= 2
+				(options.fix_infinite_down_bug ? (row <= 2) : (room == curr_room))
 #else
 				room == curr_room
 #endif
