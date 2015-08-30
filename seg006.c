@@ -1202,6 +1202,10 @@ void __pascal far control_kid() {
 	} else {
 		rest_ctrl_1();
 		do_paused();
+		#ifdef USE_REPLAY
+		if (recording) add_replay_move();
+		if (replaying) do_replay_move();
+		#endif
 		read_user_control();
 		user_control();
 		save_ctrl_1();

@@ -86,7 +86,13 @@ void __pascal far play_level(int level) {
 				quit(1);
 			}
 			cutscene_func = tbl_cutscenes[level];
-			if (cutscene_func != NULL) {
+			if (cutscene_func != NULL
+
+				#ifdef USE_REPLAY
+				&& !(recording || replaying)
+				#endif
+
+					) {
 				load_intro(level > 2, cutscene_func, 1);
 			}
 		}
@@ -119,6 +125,9 @@ void __pascal far play_level(int level) {
 		// busy waiting?
 		while (check_sound_playing() && !do_paused()) idle();
 		stop_sounds();
+		#ifdef USE_REPLAY
+		if (replaying) replay_restore_level();
+		#endif
 		draw_level_first();
 		show_copyprot(0);
 		level = play_level_2();
@@ -306,6 +315,11 @@ int __pascal far play_level_2() {
 #ifdef USE_QUICKSAVE
 		check_quick_op();
 #endif // USE_QUICKSAVE
+
+#ifdef USE_REPLAY
+		if (need_replay_cycle) replay_cycle();
+#endif // USE_QUICKSAVE
+
 		if (Kid.sword == sword_2_drawn) {
 			// speed when fighting (smaller is faster)
 			start_timer(timer_1, 6);

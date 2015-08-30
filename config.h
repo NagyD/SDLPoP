@@ -64,6 +64,9 @@ The authors of this program may be contacted at http://forum.princed.org
 // This disables time passing while the ending music is playing, so you can leave sounds on.
 //#define DISABLE_TIME_DURING_END_MUSIC
 
+// Enable recording/replay feature.
+#define USE_REPLAY
+
 // Bugfixes:
 
 // The mentioned tricks can be found here: http://www.popot.org/documentation.php?doc=Tricks

@@ -96,6 +96,9 @@ void __pascal far init_game_main() {
 	load_opt_sounds(43, 56); //added
 	hof_read();
 
+#ifdef USE_REPLAY
+	init_record_replay();
+#endif
 	start_game();
 }
 
@@ -235,12 +238,26 @@ int quick_process(process_func_type process_func) {
 	// remaining time
 	process(rem_min);
 	process(rem_tick);
+	// saved controls
+	process(control_x);
+	process(control_y);
+	process(control_shift);
+	process(control_forward);
+	process(control_backward);
+	process(control_up);
+	process(control_down);
+	process(control_shift2);
+	process(ctrl1_forward);
+	process(ctrl1_backward);
+	process(ctrl1_up);
+	process(ctrl1_down);
+	process(ctrl1_shift2);
 #undef process
 	return ok;
 }
 
 const char* const quick_file = "QUICKSAVE.SAV";
-const char const quick_version[] = "V1.16   ";
+const char const quick_version[] = "V1.16b3 ";
 char quick_control[] = "........";
 
 int quick_save() {
@@ -253,6 +270,31 @@ int quick_save() {
 		quick_fp = NULL;
 	}
 	return ok;
+}
+
+void restore_room_after_quick_load() {
+	int temp1 = curr_guard_color;
+	int temp2 = next_level;
+	load_lev_spr(current_level);
+	curr_guard_color = temp1;
+	next_level = temp2;
+
+	//need_full_redraw = 1;
+	different_room = 1;
+	next_room = drawn_room;
+	load_room_links();
+	//draw_level_first();
+	//gen_palace_wall_colors();
+	draw_game_frame(); // for falling
+	//redraw_screen(1); // for room_L
+
+	hitp_delta = guardhp_delta = 1; // force HP redraw
+	draw_hp();
+	loadkid_and_opp();
+	// Get rid of "press button" message if kid was dead before quickload.
+	text_time_total = text_time_remaining = 0;
+	//next_sound = current_sound = -1;
+	exit_room_timer = 0;
 }
 
 int quick_load() {
@@ -279,34 +321,11 @@ int quick_load() {
 		fclose(quick_fp);
 		quick_fp = NULL;
 
-		int temp1 = curr_guard_color;
-		int temp2 = next_level;
-		load_lev_spr(current_level);
-		curr_guard_color = temp1;
-		next_level = temp2;
-
-		//need_full_redraw = 1;
-		different_room = 1;
-		next_room = drawn_room;
-		load_room_links();
-		//draw_level_first();
-		//gen_palace_wall_colors();
-		draw_game_frame(); // for falling
-		//redraw_screen(1); // for room_L
-
-		hitp_delta = guardhp_delta = 1; // force HP redraw
-		draw_hp();
+		restore_room_after_quick_load();
 
 		do_wait(timer_0);
 		screen_updates_suspended = 0;
 		request_screen_update();
-
-		// Kid should not move immediately after quickload
-		clear_saved_ctrl();
-		// Get rid of "press button" message if kid was dead before quickload.
-		text_time_total = text_time_remaining = 0;
-		//next_sound = current_sound = -1;
-		exit_room_timer = 0;
 
 		#ifdef USE_QUICKLOAD_PENALTY
 		// Subtract one minute from the remaining time (if it is above 5 minutes)
@@ -367,6 +386,12 @@ int __pascal far process_key() {
 			#ifdef USE_QUICKSAVE
 			if (key == SDL_SCANCODE_F9) need_quick_load = 1;
 			#endif
+			#ifdef USE_REPLAY
+			if (key == SDL_SCANCODE_TAB) {
+				start_replay();
+			}
+			else
+			#endif
 			if (key == (SDL_SCANCODE_L | WITH_CTRL)) { // ctrl-L
 				if (!load_game()) return 0;
 			} else {
@@ -386,6 +411,10 @@ int __pascal far process_key() {
 	if (rem_min != 0 && Kid.alive > 6 && (control_shift || key == SDL_SCANCODE_RETURN)) {
 		key = SDL_SCANCODE_A | WITH_CTRL; // ctrl-a
 	}
+#ifdef USE_REPLAY
+	if (recording) key_press_while_recording(&key);
+	else if (replaying) key_press_while_replaying(&key);
+#endif
 	if (key == 0) return 0;
 	if (is_keyboard_mode) clear_kbd_buf();
 
@@ -483,6 +512,17 @@ int __pascal far process_key() {
 		case SDL_SCANCODE_F9 | WITH_SHIFT:
 			need_quick_load = 1;
 		break;
+#ifdef USE_REPLAY
+		case SDL_SCANCODE_TAB | WITH_CTRL:
+		case SDL_SCANCODE_TAB | WITH_CTRL | WITH_SHIFT:
+			if (recording) { // finished recording
+				stop_recording();
+			}
+			else { // should start recording
+				start_recording();
+			}
+			break;
+#endif // USE_RECORD_REPLAY
 #endif // USE_QUICKSAVE
 	}
 	if (cheats_enabled) {
