@@ -1227,15 +1227,21 @@ void __pascal far play_door_sound_if_visible(int sound_id) {
 	tilepos = trob.tilepos;
 	gate_room = trob.room;
 	has_sound = 0;
-	// Special event: sound of closing gates
-	if ((current_level == 3 && gate_room == 2) || (
+
 #ifdef FIX_GATE_SOUNDS
-		(gate_room == room_L && tilepos % 10 == 9) ||
+	sbyte has_sound_condition;
+	if (options.fix_gate_sounds)
+		has_sound_condition = 	(gate_room == room_L && tilepos % 10 == 9) ||
+							  	(gate_room == drawn_room && tilepos % 10 != 9);
+	else has_sound_condition = 	gate_room == room_L ? tilepos % 10 == 9 :
+							   	(gate_room == drawn_room && tilepos % 10 != 9);
+	#define GATE_SOUND_CONDITION has_sound_condition
 #else
-		gate_room == room_L ? tilepos % 10 == 9 :
+	#define GATE_SOUND_CONDITION gate_room == room_L ? tilepos % 10 == 9 : 			\
+							   	(gate_room == drawn_room && tilepos % 10 != 9)
 #endif
-		(gate_room == drawn_room && tilepos % 10 != 9))
-	) {
+	// Special event: sound of closing gates
+	if ((current_level == 3 && gate_room == 2) || GATE_SOUND_CONDITION) {
 		has_sound = 1;
 	}
 	if (has_sound) {

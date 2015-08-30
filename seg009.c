@@ -2437,6 +2437,7 @@ void __pascal far set_bg_attr(int vga_pal_index,int hc_pal_index) {
 	// stub
 #ifdef USE_FLASH
 	//palette[vga_pal_index] = vga_palette[hc_pal_index];
+	if (!options.enable_flash) return;
 	if (vga_pal_index == 0) {
 		/*
 		if (SDL_SetAlpha(offscreen_surface, SDL_SRCALPHA, 0) != 0) {

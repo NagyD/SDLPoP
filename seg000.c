@@ -40,6 +40,9 @@ void far pop_main() {
 	check_seqtable_matches_original();
 	#endif
 
+	load_options();
+	apply_seqtbl_patches();
+
 	char sprintf_temp[100];
 	int i;
 
@@ -61,7 +64,15 @@ void far pop_main() {
 #endif
 	draw_mode = check_param("draw") && cheats_enabled;
 
-	if (cheats_enabled) {
+#ifdef USE_REPLAY
+	init_record_replay();
+#endif
+
+	if (cheats_enabled
+		#ifdef USE_REPLAY
+		|| recording
+        #endif
+			) {
 		for (i = 14; i >= 0; --i) {
 			snprintf(sprintf_temp, sizeof(sprintf_temp), "%d", i);
 			if (check_param(sprintf_temp)) {
@@ -95,10 +106,6 @@ void __pascal far init_game_main() {
 	load_sounds(0, 43);
 	load_opt_sounds(43, 56); //added
 	hof_read();
-
-#ifdef USE_REPLAY
-	init_record_replay();
-#endif
 	start_game();
 }
 
@@ -329,8 +336,10 @@ int quick_load() {
 
 		#ifdef USE_QUICKLOAD_PENALTY
 		// Subtract one minute from the remaining time (if it is above 5 minutes)
-		if (rem_min == 6) rem_tick = 719; // crop to "5 minutes" exactly, if hitting the threshold in <1 minute
-		if (rem_min > 5) --rem_min;
+		if (options.enable_quicksave_penalty) {
+			if (rem_min == 6) rem_tick = 719; // crop to "5 minutes" exactly, if hitting the threshold in <1 minute
+			if (rem_min > 5) --rem_min;
+		}
 		#endif
 	}
 	return ok;
@@ -340,6 +349,7 @@ int need_quick_save = 0;
 int need_quick_load = 0;
 
 void check_quick_op() {
+	if (!options.enable_quicksave) return;
 	if (need_quick_save) {
 		if (!is_feather_fall && quick_save()) {
 			display_text_bottom("QUICKSAVE");
@@ -489,8 +499,10 @@ int __pascal far process_key() {
 				} else {
 					if (current_level == 15 && cheats_enabled) {
 #ifdef USE_COPYPROT
-						next_level = copyprot_level;
-						copyprot_level = -1;
+                        if (options.enable_copyprot) {
+                        	next_level = copyprot_level;
+                        	copyprot_level = -1;
+                        }
 #endif
 					} else {
 						next_level = current_level + 1;
@@ -1531,7 +1543,7 @@ short __pascal far load_game() {
 	if (read(handle, &start_level, 2) != 2) goto loc_1E8E;
 	if (read(handle, &hitp_beg_lev, 2) != 2) goto loc_1E8E;
 #ifdef USE_COPYPROT
-	if (copyprot_level > 0) {
+	if (options.enable_copyprot && copyprot_level > 0) {
 		copyprot_level = start_level;
 	}
 #endif

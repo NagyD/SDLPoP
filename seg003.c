@@ -67,25 +67,25 @@ const cutscene_ptr_type tbl_cutscenes[16] = {
 };
 
 // seg003:005C
-void __pascal far play_level(int level) {
+void __pascal far play_level(int level_number) {
 	cutscene_ptr_type cutscene_func;
 #ifdef USE_COPYPROT
-	if (level == copyprot_level) {
-		level = 15;
+	if (options.enable_copyprot && level_number == copyprot_level) {
+		level_number = 15;
 	}
 #endif
 	for (;;) {
-		if (demo_mode && level > 2) {
+		if (demo_mode && level_number > 2) {
 			start_level = 0;
 			word_1F05E = 1;
 			start_game();
 		}
-		if (level != current_level) {
-			if (level<0 || level>15) {
-				printf("Tried to load cutscene for level %d, not in 0..15", level);
+		if (level_number != current_level) {
+			if (level_number <0 || level_number >15) {
+				printf("Tried to load cutscene for level %d, not in 0..15", level_number);
 				quit(1);
 			}
-			cutscene_func = tbl_cutscenes[level];
+			cutscene_func = tbl_cutscenes[level_number];
 			if (cutscene_func != NULL
 
 				#ifdef USE_REPLAY
@@ -93,11 +93,11 @@ void __pascal far play_level(int level) {
 				#endif
 
 					) {
-				load_intro(level > 2, cutscene_func, 1);
+				load_intro(level_number > 2, cutscene_func, 1);
 			}
 		}
-		if (level != current_level) {
-			load_lev_spr(level);
+		if (level_number != current_level) {
+			load_lev_spr(level_number);
 		}
 		load_level();
 		pos_guards();
@@ -120,7 +120,7 @@ void __pascal far play_level(int level) {
 		Guard.charid = charid_2_guard;
 		Guard.direction = dir_56_none;
 		do_startpos();
-		have_sword = (level != 1);
+		have_sword = (level_number != 1);
 		find_start_level_door();
 		// busy waiting?
 		while (check_sound_playing() && !do_paused()) idle();
@@ -130,14 +130,14 @@ void __pascal far play_level(int level) {
 		#endif
 		draw_level_first();
 		show_copyprot(0);
-		level = play_level_2();
+		level_number = play_level_2();
 		// hacked...
 #ifdef USE_COPYPROT
-		if (level == copyprot_level && !demo_mode) {
-			level = 15;
+		if (options.enable_copyprot && level_number == copyprot_level && !demo_mode) {
+			level_number = 15;
 		} else {
-			if (level == 16) {
-				level = copyprot_level;
+			if (level_number == 16) {
+				level_number = copyprot_level;
 				copyprot_level = -1;
 			}
 		}
@@ -529,10 +529,12 @@ void __pascal far bump_into_opponent() {
 		if (ABS(distance) <= 15) {
 
 			#ifdef FIX_PAINLESS_FALL_ON_GUARD
-			if (Char.fall_y >= 33) return; // don't bump; dead
-			else if (Char.fall_y >= 22) { // medium land
-				take_hp(1);
-				play_sound(sound_16_medium_land);
+			if (options.fix_painless_fall_on_guard) {
+				if (Char.fall_y >= 33) return; // don't bump; dead
+				else if (Char.fall_y >= 22) { // medium land
+					take_hp(1);
+					play_sound(sound_16_medium_land);
+				}
 			}
 			#endif
 

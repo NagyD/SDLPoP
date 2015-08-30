@@ -24,6 +24,8 @@ The authors of this program may be contacted at http://forum.princed.org
 
 #define MAX_REPLAY_DURATION 345600 // 8 hours: 720 * 60 * 8 ticks
 byte moves[MAX_REPLAY_DURATION] = {0}; // static memory for now because it is easier (should this be dynamic?)
+options_type replay_options; // Need to know what gameplay options are active during recording, for reproducability
+options_type stored_options;
 
 enum special_moves {
     MOVE_RESTART_LEVEL = 1,
@@ -46,6 +48,8 @@ byte special_move = 0;
 
 FILE* replay_fp;
 #define REPLAY_DEFAULT_FILENAME "REPLAY_001.P1R"
+const char const replay_version[] = "V1.16b3 ";
+char replay_control[] = "........";
 byte replay_file_open = 0;
 word current_replay_number = 0;
 
@@ -57,8 +61,8 @@ size_t savestate_size = 0;
 // These are defined in seg000.c:
 typedef int process_func_type(void* data, size_t data_size);
 extern int quick_process(process_func_type process_func);
-extern const char const quick_version[];
-extern char quick_control[];
+extern const char const quick_version[9];
+extern char quick_control[9];
 
 byte open_replay_file(const char *filename) {
     if (replay_file_open) fclose(replay_fp);
@@ -74,10 +78,11 @@ byte open_replay_file(const char *filename) {
 }
 
 void init_record_replay() {
+    if (!options.enable_replay) return;
     if (g_argc > 1) {
         char *filename = g_argv[1]; // file dragged on top of executable or double clicked
         char *e = strrchr(filename, '.');
-        if (e != NULL && strncasecmp(e, ".P1R", 4) == 0) { // valid replay filename passed as first arg
+        if (e != NULL && strcasecmp(e, ".P1R") == 0) { // valid replay filename passed as first arg
             open_replay_file(filename);
             start_replay();
         }
@@ -152,7 +157,7 @@ void add_replay_move() {
         text_time_remaining = 24;
     }
 
-    replay_move curr_move = {0};
+    replay_move curr_move = {{0}};
     curr_move.x = control_x;
     curr_move.y = control_y;
     if (control_shift) curr_move.shift = 1;
@@ -179,10 +184,31 @@ void stop_recording() {
     text_time_remaining = 24;
 }
 
+void apply_replay_options() {
+    stored_options = options;
+    options = replay_options;
+    if (options.disable_all_fixes) disable_all_fixes();
+    // but it does not make sense to apply these as well:
+    options.enable_mixer = stored_options.enable_mixer;
+    options.enable_fade = stored_options.enable_fade;
+    options.enable_flash = stored_options.enable_flash;
+    options.enable_text = stored_options.enable_text;
+    options.enable_replay = 1; // just to be safe...
+    options.enable_quicksave = 1;
+
+}
+
+void apply_stored_options() {
+    options = stored_options;
+    if (options.disable_all_fixes) disable_all_fixes();
+}
+
 void start_replay() {
+    if (!options.enable_replay) return;
     replaying = 1;
     curr_tick = 0;
     load_replay();
+    apply_replay_options();
 }
 
 void do_replay_move() {
@@ -190,9 +216,10 @@ void do_replay_move() {
         random_seed = saved_random_seed;
         seed_was_init = 1;
     }
-    if (curr_tick == num_replay_ticks) { // recording is finished
+    if (curr_tick == num_replay_ticks) { // replay is finished
         replaying = 0;
         start_level = 0;
+        apply_stored_options();
         start_game();
     }
 
@@ -222,13 +249,16 @@ void save_recorded_replay() {
     }
     replay_fp = fopen(filename, "wb");
     if (replay_fp != NULL) {
+        fwrite(replay_version, COUNT(replay_version), 1, replay_fp);
+        fwrite(quick_version, COUNT(quick_version), 1, replay_fp);
         // embed a savestate into the replay
         fwrite(&savestate_size, sizeof(savestate_size), 1, replay_fp);
         fwrite(savestate_buffer, savestate_size, 1, replay_fp);
         // save the rest of the replay data
-        num_replay_ticks = curr_tick;
+        fwrite(&options, sizeof(options), 1, replay_fp);
         fwrite(&start_level, sizeof(start_level), 1, replay_fp);
         fwrite(&saved_random_seed, sizeof(saved_random_seed), 1, replay_fp);
+        num_replay_ticks = curr_tick;
         fwrite(&num_replay_ticks, sizeof(num_replay_ticks), 1, replay_fp);
         fwrite(moves, num_replay_ticks, 1, replay_fp);
         fclose(replay_fp);
@@ -247,6 +277,7 @@ byte open_next_replay_file() {
         if (current_replay_number > MAX_REPLAY_NUMBER) current_replay_number = 1; // cycle back to the first replay if necessary
     }
     if (!replay_file_open) return 0;
+    else return 1;
 }
 
 void replay_cycle() {
@@ -255,6 +286,7 @@ void replay_cycle() {
     if (!open_next_replay_file()) return; // failed: can't find replays
     load_replay();
     curr_tick = 0;
+    apply_replay_options();
     restore_savestate_from_buffer();
     char message[] = "001";
     sprintf(message, "%03d", current_replay_number);
@@ -265,19 +297,27 @@ void replay_cycle() {
 
 void load_replay() {
     if (!replay_file_open) {
-        char filename[] = REPLAY_DEFAULT_FILENAME;
         current_replay_number = 1;
-        if (!open_replay_file(filename)) {
+        if (!open_replay_file(REPLAY_DEFAULT_FILENAME)) {
             open_next_replay_file();
         }
     }
     if (savestate_buffer == NULL)
         savestate_buffer = malloc(MAX_SAVESTATE_SIZE);
     if (replay_fp != NULL && savestate_buffer != NULL) {
+        fread(replay_control, COUNT(replay_control), 1, replay_fp);
+        if (strcmp(replay_control, replay_version) != 0) {
+            printf("Warning: unexpected replay format!\n");
+        }
+        fread(quick_control, COUNT(quick_control), 1, replay_fp);
+        if (strcmp(quick_control, quick_version) != 0) {
+            printf("Warning: unexpected savestate format!\n");
+        }
         // load the savestate
         fread(&savestate_size, sizeof(savestate_size), 1, replay_fp);
         fread(savestate_buffer, savestate_size, 1, replay_fp);
         // load the rest of the replay data
+        fread(&replay_options, sizeof(replay_options), 1, replay_fp);
         fread(&start_level, sizeof(start_level), 1, replay_fp);
         fread(&saved_random_seed, sizeof(saved_random_seed), 1, replay_fp);
         fread(&num_replay_ticks, sizeof(num_replay_ticks), 1, replay_fp);
@@ -322,6 +362,7 @@ void key_press_while_replaying(int* key_ptr) {
             break;
         case SDL_SCANCODE_R | WITH_CTRL:        // restart game
             replaying = 0;
+            apply_stored_options();
             break;
         case SDL_SCANCODE_TAB:
             need_replay_cycle = 1;
