@@ -1,7 +1,7 @@
 [Project]
 FileName=port_debug.dev
 Name=SDLPoP
-UnitCount=18
+UnitCount=19
 Type=1
 Ver=1
 ObjFiles=
@@ -26,7 +26,7 @@ UseCustomMakefile=0
 CustomMakefile=
 IncludeVersionInfo=0
 SupportXPThemes=0
-CompilerSet=0
+CompilerSet=4
 CompilerSettings=0000000000000001000000
 
 [Unit1]
@@ -219,6 +219,16 @@ BuildCmd=
 
 [Unit18]
 FileName=seqtbl.c
+CompileCpp=0
+Folder=SDLPoP
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit19]
+FileName=replay.c
 CompileCpp=0
 Folder=SDLPoP
 Compile=1

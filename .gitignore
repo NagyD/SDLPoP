@@ -5,6 +5,9 @@ PRINCE.HOF
 PRINCE.SAV
 QUICKSAVE.SAV
 
+# PoP recorded gameplay (replay)
+*.P1R
+
 # Object files
 *.o
 *.ko
