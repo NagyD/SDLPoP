@@ -255,15 +255,20 @@ void __pascal far exit_room() {
 				// left
 				if (Guard.x >= 91) leave = 1;
 				#ifdef FIX_GUARD_FOLLOWING_THROUGH_CLOSED_GATES
-				else if (options.fix_guard_following_through_closed_gates && Guard.x > 0) {
-					get_tile(Kid.room, 9, Kid.curr_row);
-					if (curr_tile2 == tiles_4_gate && can_bump_into_gate())
-							leave = 1;
+				else if (options.fix_guard_following_through_closed_gates && can_guard_see_kid != 2 &&
+						Kid.sword != sword_2_drawn) {
+					leave = 1;
 				}
 				#endif
 			} else if (roomleave_result == 1) {
 				// right
 				if (Guard.x < 165) leave = 1;
+				#ifdef FIX_GUARD_FOLLOWING_THROUGH_CLOSED_GATES
+				else if (options.fix_guard_following_through_closed_gates && can_guard_see_kid != 2 &&
+						 Kid.sword != sword_2_drawn) {
+					leave = 1;
+				}
+				#endif
 			} else if (roomleave_result == 2) {
 				// up
 				if (Guard.curr_row >= 0) leave = 1;
