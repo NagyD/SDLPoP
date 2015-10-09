@@ -67,6 +67,14 @@ The authors of this program may be contacted at http://forum.princed.org
 // This disables time passing while the ending music is playing, so you can leave sounds on.
 #define FREEZE_TIME_DURING_END_MUSIC
 
+// Enable fake/invisible tiles feature. Tiles may look like one tiletype but behave like another.
+// Currently works for empty tiles, walls, floors.
+// Use tile modifier 4 to display a fake floor, 5 to display a fake wall, 6 to display an empty tile
+// For now, for fake dungeon walls, the wall neighbors must be specified for now using tile modifiers:
+//      5 or 50 = no neighbors; 51 = wall to the right; 52 = wall to the left; 53 = walls on both sides
+// For fake palace walls:
+//      5 = wall including blue line; 50 = no blue
+#define USE_FAKE_TILES
 
 // Bugfixes:
 
