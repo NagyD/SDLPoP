@@ -211,6 +211,8 @@ int quick_process(process_func_type process_func) {
 	process(word_1EFCE);
 	// guard
 	process(Guard);
+	process(Char);
+	process(Opp);
 	process(guardhp_curr);
 	process(guardhp_max);
 	process(demo_index);
