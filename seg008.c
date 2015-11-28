@@ -640,6 +640,24 @@ int __pascal far get_loose_frame(byte modifier) {
 	return modifier;
 }
 
+// Get an image, with index and NULL checks.
+image_type* get_image(short chtab_id, int id) {
+    if (chtab_id < 0 || chtab_id > COUNT(chtab_addrs)) {
+		printf("Tried to use chtab %d not in 0..%d\n", chtab_id, COUNT(chtab_addrs));
+		return NULL;
+    }
+    chtab_type* chtab = chtab_addrs[chtab_id];
+	if (chtab == NULL) {
+		printf("Tried to use null chtab %d\n", chtab_id);
+		return NULL;
+    }
+	if (id < 0 || id >= chtab->n_images) {
+		printf("Tried to use image %d of chtab %d, not in 0..%d\n", id, chtab_id, chtab->n_images-1);
+		return NULL;
+	}
+	return chtab->images[id];
+}
+
 // seg008:10A8
 int __pascal far add_backtable(short chtab_id, int id, sbyte xh, sbyte xl, int ybottom, byte blit, byte peel) {
 	word index;
@@ -656,10 +674,11 @@ int __pascal far add_backtable(short chtab_id, int id, sbyte xh, sbyte xl, int y
 	backtable_item->xl = xl;
 	backtable_item->chtab_id = chtab_id;
 	backtable_item->id = id - 1;
-	if (chtab_addrs[chtab_id]->images[id - 1] == NULL) {
+	image_type* image = get_image(chtab_id, id - 1);
+	if (image == NULL) {
 		return 0;
 	}
-	backtable_item->y = ybottom - chtab_addrs[chtab_id]->images[id - 1]->h/*height*/ + 1;
+	backtable_item->y = ybottom - image->h/*height*/ + 1;
 	backtable_item->blit = blit;
 	if (draw_mode) {
 		draw_back_fore(0, index);
@@ -682,10 +701,11 @@ int __pascal far add_foretable(short chtab_id, int id, sbyte xh, sbyte xl, int y
 	foretable_item->xl = xl;
 	foretable_item->chtab_id = chtab_id;
 	foretable_item->id = id - 1;
-	if (chtab_addrs[chtab_id]->images[id - 1] == NULL) {
+	image_type* image = get_image(chtab_id, id - 1);
+	if (image == NULL) {
 		return 0;
 	}
-	foretable_item->y = ybottom - chtab_addrs[chtab_id]->images[id - 1]->h/*height*/ + 1;
+	foretable_item->y = ybottom - image->h/*height*/ + 1;
 	foretable_item->blit = blit;
 	if (draw_mode) {
 		draw_back_fore(1, index);
@@ -710,14 +730,11 @@ int __pascal far add_midtable(short chtab_id, int id, sbyte xh, sbyte xl, int yb
 	midtable_item->xl = xl;
 	midtable_item->chtab_id = chtab_id;
 	midtable_item->id = id - 1;
-	if (id > chtab_addrs[chtab_id]->n_images) {
-		printf("add_midtable: Tried to use image %d of chtab %d, not in 1..%d\n", id, chtab_id, chtab_addrs[chtab_id]->n_images);
+	image_type* image = get_image(chtab_id, id - 1);
+	if (image == NULL) {
 		return 0;
 	}
-	if (chtab_addrs[chtab_id]->images[id - 1] == NULL) {
-		return 0;
-	}
-	midtable_item->y = ybottom - chtab_addrs[chtab_id]->images[id - 1]->h/*height*/ + 1;
+	midtable_item->y = ybottom - image->h/*height*/ + 1;
 	if (obj_direction == dir_0_right && chtab_flip_clip[chtab_id] != 0) {
 		blit += 0x80;
 	}
@@ -805,12 +822,14 @@ void __pascal far draw_back_fore(int which_table,int index) {
 	} else if (which_table == 1) {
 		table_entry = &foretable[index];
 	}
-	image = mask = chtab_addrs[table_entry->chtab_id & 0xFF]->images[table_entry->id];
+	image = mask = get_image(table_entry->chtab_id, table_entry->id);
+	/*
 	if ((graphics_mode == gmCga || graphics_mode == gmHgaHerc) &&
 		chtab_shift[table_entry->chtab_id] == 0) {
 		chtab_type* chtab = chtab_addrs[table_entry->chtab_id];
 		mask = chtab->images[chtab->n_images / 2 + table_entry->id];
 	}
+	*/
 	draw_image(image, mask, table_entry->xh * 8 + table_entry->xl, table_entry->y, table_entry->blit);
 }
 
@@ -869,10 +888,12 @@ void __pascal far draw_mid(int index) {
 	midtable_entry = &midtable[index];
 	image_id = midtable_entry->id;
 	chtab_id = midtable_entry->chtab_id;
-	image = mask = chtab_addrs[chtab_id & 0xFF]->images[image_id];
+	image = mask = get_image(chtab_id, image_id);
+	/*
 	if ((graphics_mode == gmCga || graphics_mode == gmHgaHerc) && chtab_shift[chtab_id]) {
 		mask = chtab_addrs[chtab_id]->images[image_id + chtab_addrs[chtab_id]->n_images / 2];
 	}
+	*/
 	xpos = midtable_entry->xh * 8 + midtable_entry->xl;
 	ypos = midtable_entry->y;
 	blit = midtable_entry->blit;
