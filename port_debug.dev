@@ -1,9 +1,9 @@
 [Project]
 FileName=port_debug.dev
 Name=SDLPoP
-UnitCount=19
+UnitCount=20
 Type=1
-Ver=1
+Ver=2
 ObjFiles=
 Includes=
 Libs=
@@ -27,7 +27,9 @@ CustomMakefile=
 IncludeVersionInfo=0
 SupportXPThemes=0
 CompilerSet=4
-CompilerSettings=0000000000000001000000
+CompilerSettings=0000000100000000001000000
+LogOutput=
+LogOutputEnabled=0
 
 [Unit1]
 FileName=main.c
@@ -77,7 +79,7 @@ Build=1
 LanguageID=1033
 CharsetID=1252
 CompanyName=
-FileVersion=
+FileVersion=0.1.1.1
 FileDescription=Developed using the Dev-C++ IDE
 InternalName=
 LegalCopyright=
@@ -86,6 +88,7 @@ OriginalFilename=
 ProductName=
 ProductVersion=
 AutoIncBuildNr=0
+SyncProduct=0
 
 [Unit5]
 FileName=seg009.c
@@ -229,6 +232,16 @@ BuildCmd=
 
 [Unit19]
 FileName=replay.c
+CompileCpp=0
+Folder=SDLPoP
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit20]
+FileName=options.c
 CompileCpp=0
 Folder=SDLPoP
 Compile=1

@@ -125,7 +125,7 @@ The authors of this program may be contacted at http://forum.princed.org
 #define FIX_GUARD_FOLLOWING_THROUGH_CLOSED_GATES
 
 // When landing on the edge of a spikes tile, it is considered safe. (Trick 65)
-//#define FIX_SAFE_LANDING_ON_SPIKES
+#define FIX_SAFE_LANDING_ON_SPIKES
 
 
 // Debug features:

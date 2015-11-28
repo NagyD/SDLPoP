@@ -19,6 +19,7 @@ The authors of this program may be contacted at http://forum.princed.org
 */
 
 #include "common.h"
+#include <ctype.h>
 
 void use_default_options() {
     options.disable_all_fixes = 0;
