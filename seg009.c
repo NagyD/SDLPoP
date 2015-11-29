@@ -2294,10 +2294,10 @@ void idle() {
 			case SDL_JOYAXISMOTION:
 				if (event.jaxis.axis == 0) {
 
-					if (event.jaxis.value < -8000)
+					if (event.jaxis.value < -30000)
 						joy_states[0] = -1;	// left
 
-					else if (event.jaxis.value > 8000)
+					else if (event.jaxis.value > 30000)
 						joy_states[0] = 1; // right
 
 					else
@@ -2305,10 +2305,10 @@ void idle() {
 				}
 
 				if (event.jaxis.axis == 1) {
-					if (event.jaxis.value < -8000)
+					if (event.jaxis.value < -30000)
 						joy_states[1] = -1; // up
 					
-					else if (event.jaxis.value > 8000)
+					else if (event.jaxis.value > 30000)
 						joy_states[1] = 1; // down
 
 					else
