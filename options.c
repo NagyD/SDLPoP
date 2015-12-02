@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2015  Dávid Nagy
+Copyright (C) 2013-2015  Dï¿½vid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@ The authors of this program may be contacted at http://forum.princed.org
 #include "common.h"
 
 void use_default_options() {
-    options.disable_all_fixes = 0;
+    options.use_fixes_and_enhancements = 0;
     options.enable_copyprot = 0;
     options.enable_mixer = 1;
     options.enable_fade = 1;
@@ -51,7 +51,7 @@ void use_default_options() {
     options.fix_safe_landing_on_spikes = 1;
 }
 
-void disable_all_fixes() {
+void disable_fixes_and_enhancements() {
     options.enable_crouch_after_climbing = 0;
     options.enable_freeze_time_during_end_music = 0;
     options.fix_gate_sounds = 0;
@@ -124,7 +124,13 @@ static int ini_callback(const char *section, const char *name, const char *value
         else if (strcasecmp(value, "false") == 0) options.option = 0;}
     #define process_next(option) else process(option)
 
-    process(disable_all_fixes)
+    // this option has an extra allowed value, "prompt"
+    if(strcasecmp(name, "use_fixes_and_enhancements") == 0) {
+        if (strcasecmp(value, "true") == 0) options.use_fixes_and_enhancements = 1;         \
+        else if (strcasecmp(value, "false") == 0) options.use_fixes_and_enhancements = 0;
+        else if (strcasecmp(value, "prompt") == 0) options.use_fixes_and_enhancements = 2;
+    }
+
     process_next(enable_copyprot)
     process_next(enable_mixer)
     process_next(enable_fade)
@@ -161,5 +167,38 @@ static int ini_callback(const char *section, const char *name, const char *value
 void load_options() {
     use_default_options();
     ini_load("SDLPoP.ini", ini_callback);
-    if (options.disable_all_fixes) disable_all_fixes();
+    if (!options.use_fixes_and_enhancements) disable_fixes_and_enhancements();
+}
+
+void show_disable_fixes_prompt() {
+    if (options.use_fixes_and_enhancements != 2) return;
+    draw_rect(&screen_rect, 0);
+    show_text(&screen_rect, 0, 0, "Enable bug fixes and\ngameplay enhancements?\n\nNOTE: This option disables some game quirks.\n\n\nY:  enhanced behavior \nN:  original behavior    \n\nY / N ?\n\n\n To set your preferences, you can edit the file 'SDLPoP.ini'");
+    SDL_Event event;
+    while (options.use_fixes_and_enhancements == 2 ) {
+        SDL_WaitEvent(&event);
+        switch(event.type) {
+            case SDL_QUIT:
+                quit(0);
+                break;
+            case SDL_KEYDOWN:
+                switch(event.key.keysym.scancode) {
+                    case SDL_SCANCODE_Y:
+                        options.use_fixes_and_enhancements = 1;
+                        printf("Enabling game fixes and enhancements.\n");
+                        break;
+                    case SDL_SCANCODE_N:
+                        options.use_fixes_and_enhancements = 0;
+                        printf("Disabling game fixes and enhancements.\n");
+                        break;
+                    default:
+                        break;
+                }
+                break;
+            default:
+                break;
+        }
+        SDL_Delay(10);
+    }
+    if (!options.use_fixes_and_enhancements) disable_fixes_and_enhancements();
 }

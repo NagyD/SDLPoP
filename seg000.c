@@ -107,6 +107,7 @@ void __pascal far init_game_main() {
 	load_sounds(0, 43);
 	load_opt_sounds(43, 56); //added
 	hof_read();
+	show_disable_fixes_prompt(); // added
 	start_game();
 }
 

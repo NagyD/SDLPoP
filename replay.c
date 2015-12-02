@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2015  Dávid Nagy
+Copyright (C) 2013-2015  Dï¿½vid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -187,7 +187,7 @@ void stop_recording() {
 void apply_replay_options() {
     stored_options = options;
     options = replay_options;
-    if (options.disable_all_fixes) disable_all_fixes();
+    if (!options.use_fixes_and_enhancements) disable_fixes_and_enhancements();
     // but it does not make sense to apply these as well:
     options.enable_mixer = stored_options.enable_mixer;
     options.enable_fade = stored_options.enable_fade;
@@ -200,7 +200,7 @@ void apply_replay_options() {
 
 void apply_stored_options() {
     options = stored_options;
-    if (options.disable_all_fixes) disable_all_fixes();
+    if (!options.use_fixes_and_enhancements) disable_fixes_and_enhancements();
 }
 
 void start_replay() {

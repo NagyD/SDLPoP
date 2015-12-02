@@ -130,9 +130,11 @@ This is useful if you want to compare the behavior of this port and the original
 Note that this port does not recognize if the PRINCE.EXE of the mod was changed.
 
 Beware, some mods (especially the harder ones) might rely on bugs that are fixed in SDLPoP.
-Since version 1.16, you can turn gameplay fixes on or off in SDLPoP.ini.
-To simply get the exact behavior of the original game, set the first option (disable_all_fixes) to 'true'.
-However, you can also toggle individual fixes.
+Since version 1.16, SDLPoP will ask you whether gameplay quirks should be fixed or not.
+You can set your choice permanently in the file 'SDLPoP.ini':
+- Set the option 'use_fixes_and_enhancements' to 'false' to get the exact behavior of the original game.
+- Alternatively, set the option 'use_fixes_and_enhancements' to 'true'. You can then also enable or disable 
+  individual fixes and enhancements, depending on your preference.
 
 Furthermore, SDLPoP opens up new possibilities for mod making.
 For example:
