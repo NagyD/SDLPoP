@@ -2816,6 +2816,11 @@ void set_chtab_palette(chtab_type* chtab, byte* colors, int n_colors) {
 			scolors[i].b = *colors << 2; ++colors;
             scolors[i].a = SDL_ALPHA_OPAQUE; // the SDL2 SDL_Color struct has an alpha component
 		}
+
+		// Color 0 of the palette data is not used, it is replaced by the background color.
+		// Needed for correct alternate colors (v1.3) of level 8.
+		scolors[0].r = scolors[0].g = scolors[0].b = 0;
+
 		//printf("setcolors\n",i);
 		for (i = 0; i < chtab->n_images; ++i) {
 			//printf("i=%d\n",i);

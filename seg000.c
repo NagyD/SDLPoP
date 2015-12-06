@@ -86,6 +86,8 @@ void far pop_main() {
 	init_game_main();
 }
 
+byte* level_var_palettes;
+
 // seg000:024F
 void __pascal far init_game_main() {
 	doorlink1_ad = /*&*/level.doorlinks1;
@@ -98,6 +100,9 @@ void __pascal far init_game_main() {
 		set_pal(12, 0x38, 0x00, 0x0C, 1);
 		// (palace wall pattern) #C09850 = light brown
 		set_pal( 6, 0x30, 0x26, 0x14, 0);
+
+		// Level color variations (1.3)
+		level_var_palettes = load_from_opendats_alloc(20, "bin", NULL, NULL);
 	}
 	// PRINCE.DAT: sword
 	chtab_addrs[id_chtab_0_sword] = load_sprites_from_file(700, 1<<2, 1);
@@ -887,6 +892,21 @@ void __pascal far load_lev_spr(int level) {
 	}
 	curr_guard_color = 0;
 	load_chtab_from_file(id_chtab_7_environmentwall, 360, filename, 1<<6);
+
+	// Level colors (1.3)
+	if (graphics_mode == gmMcgaVga && level_var_palettes != NULL) {
+		static const word tbl_level_color[] = {0, 0, 0, 1, 0, 0, 0, 1, 2, 2, 0, 0, 3, 3, 4, 0};
+		int level_color = tbl_level_color[current_level];
+		if (level_color != 0) {
+			byte* env_pal = level_var_palettes + 0x30*(level_color-1);
+			byte* wall_pal = env_pal + 0x30 * tbl_level_type[current_level];
+			set_pal_arr(0x50, 0x10, (rgb_type*)env_pal, 1);
+			set_pal_arr(0x60, 0x10, (rgb_type*)wall_pal, 1);
+			set_chtab_palette(chtab_addrs[id_chtab_6_environment], env_pal, 0x10);
+			set_chtab_palette(chtab_addrs[id_chtab_7_environmentwall], wall_pal, 0x10);
+		}
+	}
+
 	/*if (comp_skeleton[current_level])*/ {
 		load_opt_sounds(44, 44); // skel alive
 	}
