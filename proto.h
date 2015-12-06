@@ -599,8 +599,9 @@ void check_seqtable_matches_original();
 
 // OPTIONS.C
 void use_default_options();
-void disable_all_fixes();
+void disable_fixes_and_enhancements();
 void load_options();
+void show_disable_fixes_prompt();
 
 // REPLAY.C
 #ifdef USE_REPLAY

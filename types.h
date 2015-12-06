@@ -984,7 +984,7 @@ typedef union options_type {
 	// Need a predictable total size for forward compatibility (options data stored in replays for correct behavior!)
 	byte data[64];
 	struct {
-		byte disable_all_fixes; // kill-switch for all changes that modify gameplay behavior
+		byte use_fixes_and_enhancements; // kill-switch for all changes that modify gameplay behavior
 
 		// Main game options
 		byte enable_copyprot;
