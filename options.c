@@ -177,29 +177,18 @@ void show_disable_fixes_prompt() {
     show_text(&screen_rect, 0, 0, "\nEnable bug fixes and\ngameplay enhancements?\n\nNOTE:\nThis option disables some game quirks.\nCertain tricks will no longer work by default.\n\n\nY:  enhanced behavior \nN:  original behavior    \n\nY / N ?\n\n\n\nYou can fine-tune your preferences\nand/or bypass this screen by editing the file\n'SDLPoP.ini'");
     SDL_Event event;
     while (options.use_fixes_and_enhancements == 2 ) {
-        SDL_WaitEvent(&event);
-        switch(event.type) {
-            case SDL_QUIT:
-                quit(0);
+		idle();
+        switch (key_test_quit()) {
+            case SDL_SCANCODE_Y:
+                options.use_fixes_and_enhancements = 1;
+                printf("Enabling game fixes and enhancements.\n");
                 break;
-            case SDL_KEYDOWN:
-                switch(event.key.keysym.scancode) {
-                    case SDL_SCANCODE_Y:
-                        options.use_fixes_and_enhancements = 1;
-                        printf("Enabling game fixes and enhancements.\n");
-                        break;
-                    case SDL_SCANCODE_N:
-                        options.use_fixes_and_enhancements = 0;
-                        printf("Disabling game fixes and enhancements.\n");
-                        break;
-                    default:
-                        break;
-                }
+            case SDL_SCANCODE_N:
+                options.use_fixes_and_enhancements = 0;
+                printf("Disabling game fixes and enhancements.\n");
                 break;
-            default:
-                break;
-        }
-        SDL_Delay(10);
+		}
     }
     if (!options.use_fixes_and_enhancements) disable_fixes_and_enhancements();
 }
+
