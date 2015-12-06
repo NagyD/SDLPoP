@@ -809,7 +809,7 @@ void load_font() {
 int __pascal far get_char_width(byte character) {
 	font_type* font = textstate.ptr_font;
 	int width = 0;
-	if (character <= font->last_char && character >= font->first_char) {
+	if (character != '\n' && character <= font->last_char && character >= font->first_char) {
 		width += font->chtab->images[character - font->first_char]->w; //char_ptrs[character - font->first_char]->width;
 		if (width) width += font->space_between_chars;
 	}
@@ -829,7 +829,7 @@ int __pascal far find_linebreak(const char far *text,int length,int break_width,
 		if (curr_line_width <= break_width) {
 			++curr_char_pos;
 			char curr_char = *(text_pos++);
-			if (curr_char == '\r') {
+			if (curr_char == '\n') {
 				return curr_char_pos;
 			}
 			if (curr_char == '-' ||
@@ -867,7 +867,7 @@ int __pascal far draw_text_character(byte character) {
 	//printf("going to do draw_text_character...\n");
 	font_type* font = textstate.ptr_font;
 	int width = 0;
-	if (character <= font->last_char && character >= font->first_char) {
+	if (character != '\n' && character <= font->last_char && character >= font->first_char) {
 		image_type* image = font->chtab->images[character - font->first_char]; //char_ptrs[character - font->first_char];
 		method_3_blit_mono(image, textstate.current_x, textstate.current_y - font->height_above_baseline, textstate.textblit, textstate.textcolor);
 		width = font->space_between_chars + image->w;
@@ -957,7 +957,7 @@ const rect_type far *__pascal draw_text(const rect_type far *rect_ptr,int x_alig
 		if (x_align < 0 &&
 			*line_pos == ' ' &&
 			i != 0 &&
-			*(line_pos-1) != '\r'
+			*(line_pos-1) != '\n'
 		) {
 			// Skip over space if it's not at the beginning of a line.
 			++line_pos;

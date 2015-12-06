@@ -63,6 +63,7 @@ void far pop_main() {
 	cheats_enabled = 1; // debug
 #endif
 	draw_mode = check_param("draw") && cheats_enabled;
+	demo_mode = check_param("demo");
 
 #ifdef USE_REPLAY
 	init_record_replay();
