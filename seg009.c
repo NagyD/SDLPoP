@@ -809,9 +809,12 @@ void load_font() {
 int __pascal far get_char_width(byte character) {
 	font_type* font = textstate.ptr_font;
 	int width = 0;
-	if (character != '\n' && character <= font->last_char && character >= font->first_char) {
-		width += font->chtab->images[character - font->first_char]->w; //char_ptrs[character - font->first_char]->width;
-		if (width) width += font->space_between_chars;
+	if (character <= font->last_char && character >= font->first_char) {
+		image_type* image = font->chtab->images[character - font->first_char];
+		if (image != NULL) {
+			width += image->w; //char_ptrs[character - font->first_char]->width;
+			if (width) width += font->space_between_chars;
+		}
 	}
 	return width;
 }
@@ -867,10 +870,12 @@ int __pascal far draw_text_character(byte character) {
 	//printf("going to do draw_text_character...\n");
 	font_type* font = textstate.ptr_font;
 	int width = 0;
-	if (character != '\n' && character <= font->last_char && character >= font->first_char) {
+	if (character <= font->last_char && character >= font->first_char) {
 		image_type* image = font->chtab->images[character - font->first_char]; //char_ptrs[character - font->first_char];
-		method_3_blit_mono(image, textstate.current_x, textstate.current_y - font->height_above_baseline, textstate.textblit, textstate.textcolor);
-		width = font->space_between_chars + image->w;
+		if (image != NULL) {
+			method_3_blit_mono(image, textstate.current_x, textstate.current_y - font->height_above_baseline, textstate.textblit, textstate.textcolor);
+			width = font->space_between_chars + image->w;
+		}
 	}
 	textstate.current_x += width;
 	return width;
