@@ -230,12 +230,11 @@ void __pascal far redraw_needed_above(int column) {
 
 // seg008:02FE
 int __pascal far get_tile_to_draw(int room, int column, int row, byte *ptr_tiletype, byte *ptr_modifier, byte tile_room0) {
-	word tilepos;
+	word tilepos = tbl_line[row] + column;
 	if (column == -1) {
 		*ptr_tiletype = leftroom_[row].tiletype;
 		*ptr_modifier = leftroom_[row].modifier;
 	} else if (room) {
-		tilepos = tbl_line[row] + column;
 		*ptr_tiletype = curr_room_tiles[tilepos] & 0x1F;
 		*ptr_modifier = curr_room_modif[tilepos];
 	} else {
@@ -243,17 +242,88 @@ int __pascal far get_tile_to_draw(int room, int column, int row, byte *ptr_tilet
 		*ptr_tiletype = tile_room0;
 	}
 	// Is this a pressed button?
-	byte tiletype = *ptr_tiletype;
+	byte tiletype = (*ptr_tiletype) & 0x1F;
+	byte modifier = *ptr_modifier;
 	if (tiletype == tiles_6_closer) {
-		if (get_doorlink_timer(*ptr_modifier) > 1) {
+		if (get_doorlink_timer(modifier) > 1) {
 			*ptr_tiletype = tiles_5_stuck;
 		}
 	} else if (tiletype == tiles_15_opener) {
-		if (get_doorlink_timer(*ptr_modifier) > 1) {
+		if (get_doorlink_timer(modifier) > 1) {
 			*ptr_modifier = 0;
 			*ptr_tiletype = tiles_1_floor;
 		}
 	}
+#ifdef USE_FAKE_TILES
+	else if (tiletype == tiles_0_empty) {
+		if ((modifier & 7) == 4) {     // display a fake floor
+			*ptr_tiletype = tiles_1_floor;
+			*ptr_modifier = (modifier & 8) ? 0 : 1; // modifier should be '0' for blue, not '1'
+		}
+		else if (modifier == 5) {   // display a fake wall (pattern: no walls left or right)
+			*ptr_tiletype = tiles_20_wall;
+			*ptr_modifier = 0;
+		}
+		else if (modifier == 50) {   // display a fake wall (pattern: no walls left or right (noblue))
+			*ptr_tiletype = tiles_20_wall;
+			*ptr_modifier = 0x80;
+		}
+		else if (modifier == 51) {   // display a fake wall (pattern: wall only to the right)
+			*ptr_tiletype = tiles_20_wall;
+			*ptr_modifier = 1;
+		}
+		else if (modifier == 52) {   // display a fake wall (pattern: wall only to the left)
+			*ptr_tiletype = tiles_20_wall;
+			*ptr_modifier = 2;
+		}
+		else if (modifier == 53) {   // display a fake wall (pattern: wall on both sides)
+			*ptr_tiletype = tiles_20_wall;
+			*ptr_modifier = 3;
+		}
+	}
+	else if (tiletype == tiles_1_floor) {
+		if ((modifier & 7) == 6) {   // display nothing (invisible floor)
+			*ptr_tiletype = tiles_0_empty;
+			*ptr_modifier = (modifier & 8) ? 0 : 1; // modifier should be '0' for noblue, instead of '1'
+		}
+		else if (modifier == 5) {   // display a fake wall (pattern: no walls left or right)
+			*ptr_tiletype = tiles_20_wall;
+			*ptr_modifier = 0;
+		}
+		else if (modifier == 50) {   // display a fake wall (pattern: no walls left or right (noblue))
+			*ptr_tiletype = tiles_20_wall;
+			*ptr_modifier = 0x80;
+		}
+		else if (modifier == 51) {   // display a fake wall (pattern: wall only to the right)
+			*ptr_tiletype = tiles_20_wall;
+			*ptr_modifier = 1;
+		}
+		else if (modifier == 52) {   // display a fake wall (pattern: wall only to the left)
+			*ptr_tiletype = tiles_20_wall;
+			*ptr_modifier = 2;
+		}
+		else if (modifier == 53) {   // display a fake wall (pattern: wall on both sides)
+			*ptr_tiletype = tiles_20_wall;
+			*ptr_modifier = 3;
+		}
+	}
+	else if (tiletype == tiles_20_wall) {
+		// Walls are a bit strange, because a lot of modifier information is discarded in load_alter_mod() (seg008.c)
+		// Also, the "noblue" info for the wall tile is moved to the --most significant-- modifier bit there.
+
+		// load_alter_mod() has been tweaked to retain more information (now stored in the most significant 4 bytes)
+		// Modifiers 2-7 are now accessible to define various fake tiles
+		// Modifiers 9-15 'loop back' onto 2-7 (identical tiles), EXCEPT they also have the "noblue" bit set
+		if (((modifier >> 4) & 7) == 4) {     // display a floor (invisible wall)
+			*ptr_tiletype = tiles_1_floor;
+			*ptr_modifier = (modifier >> 7); // modifier should be '1' for noblue option
+		}
+		else if (((modifier >> 4) & 7) == 6) {   // display empty tile (invisible wall)
+			*ptr_tiletype = tiles_0_empty;
+			*ptr_modifier = (modifier >> 7) ? 0 : 1; // modifier should be '0' for noblue, instead of '1'
+		}
+	}
+#endif
 #ifdef FIX_LOOSE_LEFT_OF_POTION
 	else if (options.fix_loose_left_of_potion && tiletype == tiles_11_loose) {
 		if ((*ptr_modifier & 0x7F) == 0) {
@@ -1085,7 +1155,17 @@ void __pascal far load_alter_mod(int tilepos) {
 #endif
 			break;
 		case tiles_20_wall:
-			*curr_tile_modif <<= 7;
+		{
+			byte stored_modif = *curr_tile_modif;
+			//*curr_tile_modif <<= 7; // original: "no blue" mod becomes most significant bit
+			if (stored_modif == 1) *curr_tile_modif = 0x80;
+			else *curr_tile_modif = (stored_modif << 4);
+			// retain three bits more information:
+			// most significant bit:       1 ==> "no blue"
+			// next 3 bits:                for displaying various fake tiles (invisible walls)
+			// ..
+			// least significant 2 bits:   wall to left/right?
+
 			if (graphics_mode != gmCga && graphics_mode != gmHgaHerc) {
 				wall_to_right = 1;
 				wall_to_left = 1;
@@ -1113,6 +1193,7 @@ void __pascal far load_alter_mod(int tilepos) {
 			} else {
 				*curr_tile_modif = 3;
 			}
+		}
 			break;
 	}
 }
