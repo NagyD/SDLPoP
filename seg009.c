@@ -1582,12 +1582,39 @@ void __pascal far play_digi_sound(sound_buffer_type far *buffer) {
 	//stop_digi();
 	stop_sounds();
 	//printf("play_digi_sound(): called\n");
-	if (buffer->digi.sample_size != 8) return;
+
+	// Determine the version of the wave data.
+	int version = 0;
+	if (buffer->digi.sample_size == 8) version += 1;
+	if (buffer->digi_new.sample_size == 8) version += 2;
+
+	int sample_rate, sample_size, sample_count;
+	const byte* samples;
+	switch (version) {
+		case 0: // unknown
+			printf("Warning: Can't determine wave version.\n");
+			return;
+		case 1: // 1.0 and 1.1
+			sample_rate = buffer->digi.sample_rate;
+			sample_size = buffer->digi.sample_size;
+			sample_count = buffer->digi.sample_count;
+			samples = buffer->digi.samples;
+			break;
+		case 2: // 1.3 and 1.4 (and PoP2)
+			sample_rate = buffer->digi_new.sample_rate;
+			sample_size = buffer->digi_new.sample_size;
+			sample_count = buffer->digi_new.sample_count;
+			samples = buffer->digi_new.samples;
+			break;
+		case 3: // ambiguous
+			printf("Warning: Ambiguous wave version.\n");
+			return;
+	}
 #ifndef USE_MIXER	
 	SDL_AudioCVT cvt;
 	memset(&cvt, 0, sizeof(cvt));
 	int result = SDL_BuildAudioCVT(&cvt,
-		AUDIO_U8, 1, buffer->digi.sample_rate,
+		AUDIO_U8, 1, sample_rate,
 		digi_audiospec->format, digi_audiospec->channels, digi_audiospec->freq
 	);
 	// The case of result == 0 is undocumented, but it may occur.
@@ -1596,9 +1623,9 @@ void __pascal far play_digi_sound(sound_buffer_type far *buffer) {
 		printf("(returned %d)\n", result);
 		quit(1);
 	}
-	int dlen = buffer->digi.sample_count; // if format is AUDIO_U8
+	int dlen = sample_count; // if format is AUDIO_U8
 	cvt.buf = (Uint8*) malloc(dlen * cvt.len_mult);
-	memcpy(cvt.buf, buffer->digi.samples, dlen);
+	memcpy(cvt.buf, samples, dlen);
 	cvt.len = dlen;
 	if (SDL_ConvertAudio(&cvt) != 0) {
 		sdlperror("SDL_ConvertAudio");
@@ -1608,15 +1635,15 @@ void __pascal far play_digi_sound(sound_buffer_type far *buffer) {
 	SDL_LockAudio();
 	digi_buffer = cvt.buf;
 	digi_playing = 1;
-//	digi_remaining_length = buffer->digi.sample_count;
-//	digi_remaining_pos = buffer->digi.samples;
+//	digi_remaining_length = sample_count;
+//	digi_remaining_pos = samples;
 	digi_remaining_length = cvt.len_cvt;
 	digi_remaining_pos = digi_buffer;
 	SDL_UnlockAudio();
 	SDL_PauseAudio(0);
 #else
 	// Convert the DAT sound to WAV, so the Mixer can load it.
-	int size = buffer->digi.sample_count;
+	int size = sample_count;
 	int rounded_size = (size+1)&(~1);
 	int alloc_size = sizeof(WAV_header_type) + rounded_size;
 	WAV_header_type* wav_data = malloc(alloc_size);
@@ -1627,13 +1654,13 @@ void __pascal far play_digi_sound(sound_buffer_type far *buffer) {
 	wav_data->Subchunk1Size = 16;
 	wav_data->AudioFormat = 1; // PCM
 	wav_data->NumChannels = 1; // Mono
-	wav_data->SampleRate = buffer->digi.sample_rate;
-	wav_data->BitsPerSample = buffer->digi.sample_size;
+	wav_data->SampleRate = sample_rate;
+	wav_data->BitsPerSample = sample_size;
 	wav_data->ByteRate = wav_data->SampleRate * wav_data->NumChannels * wav_data->BitsPerSample/8;
 	wav_data->BlockAlign = wav_data->NumChannels * wav_data->BitsPerSample/8;
 	wav_data->Subchunk2ID = fourcc("data");
 	wav_data->Subchunk2Size = size;
-	memcpy(wav_data->Data, buffer->digi.samples, size);
+	memcpy(wav_data->Data, samples, size);
 	SDL_RWops* rw = SDL_RWFromConstMem(wav_data, alloc_size);
 	Mix_Chunk *chunk = Mix_LoadWAV_RW(rw, 1);
 	if (chunk == NULL) {

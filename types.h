@@ -490,7 +490,7 @@ typedef struct speaker_type { // IBM
 } speaker_type;
 SDL_COMPILE_TIME_ASSERT(speaker_type, sizeof(speaker_type) == 2);
 
-typedef struct digi_type { // wave
+typedef struct digi_type { // wave in 1.0 and 1.1
 	word sample_rate;
 	word sample_count;
 	word unknown;
@@ -498,6 +498,16 @@ typedef struct digi_type { // wave
 	byte samples[0];
 } digi_type;
 SDL_COMPILE_TIME_ASSERT(digi_type, sizeof(digi_type) == 7);
+
+typedef struct digi_new_type { // wave in 1.3 and 1.4 (and PoP2)
+	word sample_rate;
+	byte sample_size; // =8
+	word sample_count;
+	word unknown;
+	word unknown2;
+	byte samples[0];
+} digi_new_type;
+SDL_COMPILE_TIME_ASSERT(digi_new_type, sizeof(digi_new_type) == 9);
 
 typedef struct midi_type {
 	byte data[0];
@@ -508,6 +518,7 @@ typedef struct sound_buffer_type {
 	union {
 		speaker_type speaker;
 		digi_type digi;
+		digi_new_type digi_new;
 		midi_type midi;
 #ifdef USE_MIXER
 		Mix_Chunk *chunk;
