@@ -1659,11 +1659,11 @@ void __pascal far load_title_images(int bgcolor) {
 
 #ifdef USE_COPYPROT
 // data:017A
-const word copyprot_word[] = {9,  1,  6,  4,  5,  3,  6,  3,  4,  4,  3,  2, 12,  5, 13,  1,  9,  2,  2,  4,  9,  4, 11,  8,  5,  4,  1,  6,  2,  4,  6,  8,  4,  2,  7, 11,  5,  4,  1,  2};
+const word copyprot_word[] = {9, 1, 6, 4, 5, 3, 6, 3, 4, 4, 3, 2,12, 5,13, 1, 9, 2, 2, 4, 9, 4,11, 8, 5, 4, 1, 6, 2, 4, 6, 8, 4, 2, 7,11, 5, 4, 1, 2};
 // data:012A
-const word copyprot_line[] = {2,  1,  5,  4,  3,  5,  1,  3,  7,  2,  2,  4,  6,  6,  2,  6,  3,  1,  2,  3,  2,  2,  3, 10,  5,  6,  5,  6,  3,  5,  7,  2,  2,  4,  5,  7,  2,  6,  5,  5};
+const word copyprot_line[] = {2, 1, 5, 4, 3, 5, 1, 3, 7, 2, 2, 4, 6, 6, 2, 6, 3, 1, 2, 3, 2, 2, 3,10, 5, 6, 5, 6, 3, 5, 7, 2, 2, 4, 5, 7, 2, 6, 5, 5};
 // data:00DA
-const word copyprot_page[] = {5,  3,  7,  3,  3,  4,  1,  5, 12,  5, 11, 10,  1,  2,  8,  8,  2,  4,  6,  1,  4,  7,  3,  2,  1,  7, 10,  1,  4,  3,  4,  1,  4,  1,  8,  1,  1, 10,  3,  3};
+const word copyprot_page[] = {5, 3, 7, 3, 3, 4, 1, 5,12, 5,11,10, 1, 2, 8, 8, 2, 4, 6, 1, 4, 7, 3, 2, 1, 7,10, 1, 4, 3, 4, 1, 4, 1, 8, 1, 1,10, 3, 3};
 #endif
 
 // seg000:23F4
@@ -1676,10 +1676,15 @@ void __pascal far show_copyprot(int where) {
 		text_time_total = 1188;
 		text_time_remaining = 1188;
 		is_show_time = 0;
-		snprintf(sprintf_temp, sizeof(sprintf_temp), "WORD %d LINE %d PAGE %d", copyprot_word[copyprot_idx], copyprot_line[copyprot_idx], copyprot_page[copyprot_idx]);
+		snprintf(sprintf_temp, sizeof(sprintf_temp),
+			"WORD %d LINE %d PAGE %d",
+			copyprot_word[copyprot_idx], copyprot_line[copyprot_idx], copyprot_page[copyprot_idx]);
 		display_text_bottom(sprintf_temp);
 	} else {
-		snprintf(sprintf_temp, sizeof(sprintf_temp), "Drink potion matching the first letter of Word %d on Line %d\nof Page %d of the manual.", copyprot_word[copyprot_idx], copyprot_line[copyprot_idx], copyprot_page[copyprot_idx]);
+		snprintf(sprintf_temp, sizeof(sprintf_temp),
+			"Drink potion matching the first letter of Word %d on Line %d\n"
+			"of Page %d of the manual.",
+			copyprot_word[copyprot_idx], copyprot_line[copyprot_idx], copyprot_page[copyprot_idx]);
 		show_dialog(sprintf_temp);
 	}
 #endif
@@ -1694,8 +1699,30 @@ void __pascal far show_loading() {
 word which_quote;
 
 char const * const tbl_quotes[2] = {
-"\"(****/****) Incredibly realistic. . . The adventurer character actually looks human as he runs, jumps, climbs, and hangs from ledges.\"\n\n                                  Computer Entertainer\n\n\n\n\n\"A tremendous achievement. . . Mechner has crafted the smoothest animation ever seen in a game of this type.\n\n\"PRINCE OF PERSIA is the STAR WARS of its field.\"\n\n                                  Computer Gaming World",
-"\"An unmitigated delight. . . comes as close to (perfection) as any arcade game has come in a long, long time. . . what makes this game so wonderful (am I gushing?) is that the little onscreen character does not move like a little onscreen character -- he moves like a person.\"\n\n                                      Nibble"
+"\"(****/****) Incredibly realistic. . . The "
+"adventurer character actually looks human as he "
+"runs, jumps, climbs, and hangs from ledges.\"\n"
+"\n"
+"                                  Computer Entertainer\n"
+"\n"
+"\n"
+"\n"
+"\n"
+"\"A tremendous achievement. . . Mechner has crafted "
+"the smoothest animation ever seen in a game of this "
+"type.\n"
+"\n"
+"\"PRINCE OF PERSIA is the STAR WARS of its field.\"\n"
+"\n"
+"                                  Computer Gaming World",
+"\"An unmitigated delight. . . comes as close to "
+"(perfection) as any arcade game has come in a long, "
+"long time. . . what makes this game so wonderful (am "
+"I gushing?) is that the little onscreen character "
+"does not move like a little onscreen character -- he "
+"moves like a person.\"\n"
+"\n"
+"                                      Nibble"
 };
 
 // seg000:249D

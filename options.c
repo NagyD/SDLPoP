@@ -174,8 +174,27 @@ void load_options() {
 void show_disable_fixes_prompt() {
     if (options.use_fixes_and_enhancements != 2) return;
     draw_rect(&screen_rect, 0);
-    show_text(&screen_rect, 0, 0, "\nEnable bug fixes and\ngameplay enhancements?\n\nNOTE:\nThis option disables some game quirks.\nCertain tricks will no longer work by default.\n\n\nY:  enhanced behavior \nN:  original behavior    \n\nY / N ?\n\n\n\nYou can fine-tune your preferences\nand/or bypass this screen by editing the file\n'SDLPoP.ini'");
-    SDL_Event event;
+    show_text(&screen_rect, 0, 0,
+		"\n"
+		"Enable bug fixes and\n"
+		"gameplay enhancements?\n"
+		"\n"
+		"NOTE:\n"
+		"This option disables some game quirks.\n"
+		"Certain tricks will no longer work by default.\n"
+		"\n"
+		"\n"
+		"Y:  enhanced behavior \n"
+		"N:  original behavior    \n"
+		"\n"
+		"Y / N ?\n"
+		"\n"
+		"\n"
+		"\n"
+		"You can fine-tune your preferences\n"
+		"and/or bypass this screen by editing the file\n"
+		"'SDLPoP.ini'"
+	);
     while (options.use_fixes_and_enhancements == 2 ) {
 		idle();
         switch (key_test_quit()) {
