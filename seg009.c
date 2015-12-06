@@ -1710,7 +1710,7 @@ void __pascal far set_gr_mode(byte grmode) {
 
 	//SDL_EnableUNICODE(1); //deprecated
 	Uint32 flags = 0;
-	int fullscreen = check_param("full") != 0;
+	int fullscreen = check_param("full") != NULL;
 	if (fullscreen) flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
 	flags |= SDL_WINDOW_RESIZABLE;
 	

@@ -58,12 +58,12 @@ void far pop_main() {
 	current_target_surface = rect_sthg(onscreen_surface_, &screen_rect);
 	show_loading();
 	set_joy_mode();
-	cheats_enabled = check_param("megahit") != 0;
+	cheats_enabled = check_param("megahit") != NULL;
 #ifdef __DEBUG__
 	cheats_enabled = 1; // debug
 #endif
-	draw_mode = check_param("draw") && cheats_enabled;
-	demo_mode = check_param("demo");
+	draw_mode = check_param("draw") != NULL && cheats_enabled;
+	demo_mode = check_param("demo") != NULL;
 
 #ifdef USE_REPLAY
 	init_record_replay();
