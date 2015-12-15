@@ -562,7 +562,7 @@ void __pascal far remove_flash() {
 
 // seg001:09D7
 void __pascal far end_sequence() {
-	peel_type peel;
+	peel_type* peel;
 	short bgcolor;
 	short color;
 	rect_type rect;

@@ -65,6 +65,7 @@ void far pop_main() {
 	draw_mode = check_param("draw") != NULL && cheats_enabled;
 	demo_mode = check_param("demo") != NULL;
 
+	init_copyprot_dialog();
 #ifdef USE_REPLAY
 	init_record_replay();
 #endif

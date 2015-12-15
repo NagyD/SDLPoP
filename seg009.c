@@ -575,6 +575,7 @@ void __pascal far free_surface(surface_type *surface) {
 // seg009:17EA
 void __pascal far free_peel(peel_type *peel_ptr) {
 	SDL_FreeSurface(peel_ptr->peel);
+	free(peel_ptr);
 }
 
 const rgb_type vga_palette[] = {
@@ -1021,39 +1022,139 @@ void __pascal far set_curr_pos(int xpos,int ypos) {
 	textstate.current_y = ypos;
 }
 
+// seg009:145A
+void __pascal far init_copyprot_dialog() {
+	copyprot_dialog = make_dialog_info(&dialog_settings, &dialog_rect_1, &dialog_rect_1, NULL);
+	copyprot_dialog->peel = read_peel_from_screen(&copyprot_dialog->peel_rect);
+}
+
 // seg009:0838
 int __pascal far showmessage(char far *text,int arg_4,void far *arg_0) {
-#if 0
 	word key;
 	rect_type rect;
-	font_type* saved_font_ptr;
-	surface_type* old_target;
-	old_target = current_target_surface;
-	current_target_surface = onscreen_surface_;
-	method_1_blit_rect(word_1F942->0x14, onscreen_surface_, &word_1F942->0x0A, &word_1F942->0x0A, 0);
-	sub_D16E(word_1F942);
-	saved_font_ptr = current_target_surface->ptr_font;
-	current_target_surface->ptr_font = ptr_font;
-	shrink2_rect(&rect, word_1F942->0x02, 2, 1);
-	show_text_with_color(&rect, 0, 0, text, 15);
-	current_target_surface->ptr_font = saved_font_ptr;
+	//font_type* saved_font_ptr;
+	//surface_type* old_target;
+	//old_target = current_target_surface;
+	//current_target_surface = onscreen_surface_;
+	// In the disassembly there is some messing with the current_target_surface and font (?)
+	// However, this does not seem to be strictly necessary
+	method_1_blit_rect(offscreen_surface, onscreen_surface_, &copyprot_dialog->peel_rect, &copyprot_dialog->peel_rect, 0);
+	draw_dialog_frame(copyprot_dialog);
+	//saved_font_ptr = textstate.ptr_font;
+	//saved_font_ptr = current_target_surface->ptr_font;
+	//current_target_surface->ptr_font = ptr_font;
+	shrink2_rect(&rect, &copyprot_dialog->text_rect, 2, 1);
+	show_text_with_color(&rect, 0, 0, text, color_15_white);
+	screen_updates_suspended = 0;
+	request_screen_update();
+	//textstate.ptr_font = saved_font_ptr;
+	//current_target_surface->ptr_font = saved_font_ptr;
 	clear_kbd_buf();
 	do {
-		key = key_test_quit();
+		idle();
+		key = key_test_quit(); // Press any key to continue...
 	} while(key == 0);
-	sub_DF99(word_1F942->0x14);
-	current_target_surface = old_target;
+	//restore_dialog_peel_2(copyprot_dialog->peel);
+	//current_target_surface = old_target;
+	redraw_screen(0); // lazy: instead of neatly restoring only the relevant part, just redraw the whole screen
 	return key;
-#else // 0
-	return 0;
-#endif // 0
+}
+
+// seg009:08FB
+dialog_type * __pascal far make_dialog_info(dialog_settings_type *settings, rect_type *dialog_rect,
+											rect_type *text_rect, peel_type *dialog_peel) {
+	dialog_type* dialog_info;
+	dialog_info = malloc_near(sizeof(dialog_type));
+	dialog_info->settings = settings;
+	dialog_info->has_peel = 0;
+	dialog_info->peel = dialog_peel;
+	if (text_rect != NULL)
+		dialog_info->text_rect = *text_rect;
+	calc_dialog_peel_rect(dialog_info);
+	if (text_rect != NULL) { 		// does not seem to be quite right; see seg009:0948 (?)
+		read_dialog_peel(dialog_info);
+	}
+	return dialog_info;
+}
+
+// seg009:0BE7
+void __pascal far calc_dialog_peel_rect(dialog_type*dialog) {
+	dialog_settings_type* settings;
+	settings = dialog->settings;
+	dialog->peel_rect.left = dialog->text_rect.left - settings->left_border;
+	dialog->peel_rect.top = dialog->text_rect.top - settings->top_border;
+	dialog->peel_rect.right = dialog->text_rect.right + settings->right_border + settings->shadow_right;
+	dialog->peel_rect.bottom = dialog->text_rect.bottom + settings->bottom_border + settings->shadow_bottom;
+}
+
+// seg009:0BB0
+void __pascal far read_dialog_peel(dialog_type *dialog) {
+	if (dialog->has_peel) {
+		if (dialog->peel == NULL) {
+			dialog->peel = read_peel_from_screen(&dialog->peel_rect);
+		}
+		dialog->has_peel = 1;
+		draw_dialog_frame(dialog);
+	}
+}
+
+// seg009:09DE
+void __pascal far draw_dialog_frame(dialog_type *dialog) {
+	dialog->settings->method_2_frame(dialog);
+}
+
+// A pointer to this function is the first field of dialog_settings (data:2944)
+// Perhaps used when replacing a dialog's text with another text (?)
+// seg009:096F
+void __pascal far add_dialog_rect(dialog_type *dialog) {
+	draw_rect(&dialog->text_rect, color_0_black);
+}
+
+// seg009:09F0
+void __pascal far dialog_method_2_frame(dialog_type *dialog) {
+	rect_type rect;
+	short shadow_right = dialog->settings->shadow_right;
+	short shadow_bottom = dialog->settings->shadow_bottom;
+	short bottom_border = dialog->settings->bottom_border;
+	short outer_border = dialog->settings->outer_border;
+	short peel_top = dialog->peel_rect.top;
+	short peel_left = dialog->peel_rect.left;
+	short peel_bottom = dialog->peel_rect.bottom;
+	short peel_right = dialog->peel_rect.right;
+	short text_top = dialog->text_rect.top;
+	short text_left = dialog->text_rect.left;
+	short text_bottom = dialog->text_rect.bottom;
+	short text_right = dialog->text_rect.right;
+	// Draw outer border
+	rect = (rect_type) { peel_top, peel_left, peel_bottom - shadow_bottom, peel_right - shadow_right };
+	draw_rect(&rect, color_0_black);
+	// Draw shadow (right)
+	rect = (rect_type) { text_top, peel_right - shadow_right, peel_bottom, peel_right };
+	draw_rect(&rect, get_text_color(0, 8 /*dialog's shadow*/, 0));
+	// Draw shadow (bottom)
+	rect = (rect_type) { peel_bottom - shadow_bottom, text_left, peel_bottom, peel_right };
+	draw_rect(&rect, get_text_color(0, 8 /*dialog's shadow*/, 0));
+	// Draw inner border (left)
+	rect = (rect_type) { peel_top + outer_border, peel_left + outer_border, text_bottom, text_left };
+	draw_rect(&rect, color_15_white);
+	// Draw inner border (top)
+	rect = (rect_type) { peel_top + outer_border, text_left, text_top, text_right + dialog->settings->right_border - outer_border };
+	draw_rect(&rect, color_15_white);
+	// Draw inner border (right)
+	rect.top = text_top;
+	rect.left =  text_right;
+	rect.bottom = text_bottom + bottom_border - outer_border; 			// (rect.right stays the same)
+	draw_rect(&rect, color_15_white);
+	// Draw inner border (bottom)
+	rect = (rect_type) { text_bottom, peel_left + outer_border, text_bottom + bottom_border - outer_border, text_right };
+	draw_rect(&rect, color_15_white);
 }
 
 // seg009:0C44
 void __pascal far show_dialog(const char *text) {
 	char string[256];
-	snprintf(string, sizeof(string), "%s\r\rPress any key to continue.", text);
-	//showmessage(string, 1, &key_test_quit);
+	snprintf(string, sizeof(string), "%s\n\nPress any key to continue.", text);
+	showmessage(string, 1, &key_test_quit);
 }
 
 // seg009:0791
@@ -1230,19 +1331,20 @@ rect_type far *__pascal shrink2_rect(rect_type far *target_rect,const rect_type 
 }
 
 // seg009:3BBA
-void __pascal far restore_peel(peel_type peel_ptr) {
+void __pascal far restore_peel(peel_type* peel_ptr) {
 	//printf("restoring peel at (x=%d, y=%d)\n", peel_ptr.rect.left, peel_ptr.rect.top); // debug
-	method_6_blit_img_to_scr(peel_ptr.peel, peel_ptr.rect.left, peel_ptr.rect.top, /*0x10*/0);
-	free_peel(&peel_ptr);
+	method_6_blit_img_to_scr(peel_ptr->peel, peel_ptr->rect.left, peel_ptr->rect.top, /*0x10*/0);
+	free_peel(peel_ptr);
 	//SDL_FreeSurface(peel_ptr.peel);
 }
 
 // seg009:3BE9
-peel_type __pascal far read_peel_from_screen(const rect_type far *rect) {
+peel_type* __pascal far read_peel_from_screen(const rect_type far *rect) {
 	// stub
-	peel_type result;
-	memset(&result, 0, sizeof(result));
-	result.rect = *rect;
+	peel_type* result;
+	result = calloc(1, sizeof(peel_type));
+	//memset(&result, 0, sizeof(result));
+	result->rect = *rect;
 #ifndef USE_ALPHA
 	SDL_Surface* peel_surface = SDL_CreateRGBSurface(0, rect->right - rect->left, rect->bottom - rect->top,
                                                      24, 0xFF, 0xFF<<8, 0xFF<<16, 0);
@@ -1253,9 +1355,9 @@ peel_type __pascal far read_peel_from_screen(const rect_type far *rect) {
 		sdlperror("SDL_CreateRGBSurface");
 		quit(1);
 	}
-	result.peel = peel_surface;
+	result->peel = peel_surface;
 	rect_type target_rect = {0, 0, rect->right - rect->left, rect->bottom - rect->top};
-	method_1_blit_rect(result.peel, current_target_surface, &target_rect, rect, 0);
+	method_1_blit_rect(result->peel, current_target_surface, &target_rect, rect, 0);
 	return result;
 }
 

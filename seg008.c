@@ -1146,10 +1146,10 @@ void __pascal far load_alter_mod(int tilepos) {
 #ifdef USE_COPYPROT
 			if (current_level == 15) {
 				// Copy protection
-				if (copyprot_room[copyprot_plac] == copyprot_plac &&
+				if (copyprot_room[copyprot_plac] == loaded_room &&
 					copyprot_tile[copyprot_plac] == tilepos
 				) {
-					*curr_tile_modif = 0xC0; // place open potion
+					*curr_tile_modif = 6 << 3; // place open potion
 				}
 			}
 #endif
@@ -1261,11 +1261,11 @@ void __pascal far draw_tables() {
 
 // seg008:1C4E
 void __pascal far restore_peels() {
-	peel_type peel;
+	peel_type* peel;
 	while (peels_count--) {
 		peel = peels_table[peels_count];
 		if (need_drects) {
-			add_drect(&peel.rect); // ?
+			add_drect(&peel->rect); // ?
 		}
 		restore_peel(peel);
 	}
@@ -1321,6 +1321,7 @@ void __pascal far draw_leveldoor() {
 
 // seg008:1E0C
 void __pascal far get_room_address(int room) {
+	loaded_room = (word) room;
 	if (room) {
 		curr_room_tiles = &level.fg[(room-1)*30];
 		curr_room_modif = &level.bg[(room-1)*30];
@@ -1691,7 +1692,7 @@ short __pascal far calc_screen_x_coord(short logical_x) {
 void __pascal far free_peels() {
 	while (peels_count > 0) {
 		--peels_count;
-		free_peel(&peels_table[peels_count]);
+		free_peel(peels_table[peels_count]);
 	}
 }
 
