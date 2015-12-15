@@ -21,7 +21,7 @@ The authors of this program may be contacted at http://forum.princed.org
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#define WINDOW_TITLE "Prince of Persia (SDLPoP) v1.15"
+#define WINDOW_TITLE "Prince of Persia (SDLPoP) v1.16 - experimental"
 
 // Window size; game will be scaled accordingly
 #define POP_WINDOW_WIDTH 640
