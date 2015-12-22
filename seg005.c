@@ -231,7 +231,7 @@ void __pascal far control_standing() {
 		return;
 	} //else
 	if (have_sword) {
-		if (word_1EFCE != 0 && control_shift >= 0) goto loc_6213;
+		if (offguard != 0 && control_shift >= 0) goto loc_6213;
 		if (can_guard_see_kid >= 2) {
 			var_2 = char_opp_dist();
 			if (var_2 >= -10 && var_2 < 90) {
@@ -240,7 +240,7 @@ void __pascal far control_standing() {
 					if (Opp.charid == charid_1_shadow &&
 						(Opp.action == actions_3_in_midair || (Opp.frame >= frame_107_fall_land_1 && Opp.frame < 118))
 					) {
-						word_1EFCE = 0;
+						offguard = 0;
 					} else {
 						draw_sword();
 						return;
@@ -251,7 +251,7 @@ void __pascal far control_standing() {
 				}
 			}
 		} else {
-			word_1EFCE = 0;
+			offguard = 0;
 		}
 	}
 	if (control_shift < 0) {
@@ -371,7 +371,7 @@ void __pascal far back_pressed() {
 		seq_id = seq_5_turn; // turn
 	} else {
 		Char.sword = sword_2_drawn;
-		word_1EFCE = 0;
+		offguard = 0;
 		seq_id = seq_89_turn_draw_sword; // turn and draw sword
 	}
 	seqtbl_offset_char(seq_id);
@@ -726,7 +726,7 @@ void __pascal far draw_sword() {
 	control_forward = control_shift2 = release_arrows();
 	if (Char.charid == charid_0_kid) {
 		play_sound(sound_19_draw_sword); // taking out the sword
-		word_1EFCE = 0;
+		offguard = 0;
 	} else if (Char.charid != charid_1_shadow) {
 		seq_id = seq_90_en_garde; // stand active
 	}
@@ -792,7 +792,7 @@ void __pascal far swordfight() {
 			control_down = 1; // disable automatic repeat
 			Char.sword = sword_0_sheathed;
 			if (charid == charid_0_kid) {
-				word_1EFCE = 1;
+				offguard = 1;
 				guard_refrac = 9;
 				holding_sword = 0;
 				seq_id = seq_93_put_sword_away_fast; // put sword away fast (down pressed)

@@ -215,7 +215,7 @@ int quick_process(process_func_type process_func) {
 	process(ctrl1_shift2);*/
 	process(kid_sword_strike);
 	process(pickup_obj_type);
-	process(word_1EFCE);
+	process(offguard);
 	// guard
 	process(Guard);
 	process(Char);
@@ -229,8 +229,8 @@ int quick_process(process_func_type process_func) {
 	process(guard_skill);
 	process(shadow_initialized);
 	process(guard_refrac);
-	process(word_1E1AA);
-	process(word_1EA12);
+	process(justblocked);
+	process(droppedout);
 	// collision
 	process(curr_row_coll_room);
 	process(curr_row_coll_flags);
@@ -669,7 +669,7 @@ void __pascal far play_frame() {
 		if (Kid.room == 24) {
 			draw_rect(&screen_rect, 0);
 			start_level = 0;
-			word_1F05E = 1;
+			need_quotes = 1;
 			start_game();
 		}
 	} else if(current_level == 6) {
@@ -742,7 +742,7 @@ void __pascal far draw_game_frame() {
 			// 288: press button to continue
 			// In this case, restart the game.
 			start_level = 0;
-			word_1F05E = 1;
+			need_quotes = 1;
 			start_game();
 		} else {
 			// Otherwise, just clear it.
@@ -1582,7 +1582,7 @@ void __pascal far clear_screen_and_sounds() {
 	stop_sounds();
 	current_target_surface = rect_sthg(onscreen_surface_, &screen_rect);
 
-	word_1EFAA = 0;
+	is_cutscene = 0;
 	peels_count = 0;
 	// should these be freed?
 	for (index = 2; index < 10; ++index) {
@@ -1672,7 +1672,7 @@ void __pascal far show_copyprot(int where) {
 	char sprintf_temp[140];
 	if (current_level != 15) return;
 	if (where) {
-		if (text_time_remaining || word_1EFAA) return;
+		if (text_time_remaining || is_cutscene) return;
 		text_time_total = 1188;
 		text_time_remaining = 1188;
 		is_show_time = 0;
@@ -1728,11 +1728,11 @@ char const * const tbl_quotes[2] = {
 // seg000:249D
 void __pascal far show_quotes() {
 	start_timer(timer_0,0);
-	if (demo_mode && word_1F05E) {
+	if (demo_mode && need_quotes) {
 		draw_rect(&screen_rect, 0);
 		show_text(&screen_rect, -1, 0, tbl_quotes[which_quote]);
 		which_quote = !which_quote;
 		start_timer(timer_0,0x384);
 	}
-	word_1F05E = 0;
+	need_quotes = 0;
 }

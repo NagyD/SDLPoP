@@ -21,7 +21,7 @@ The authors of this program may be contacted at http://forum.princed.org
 #include "common.h"
 
 // data:3D1A
-sbyte byte_1E9FA;
+sbyte distance_mirror;
 
 // seg003:0000
 void __pascal far init_game(int level) {
@@ -77,7 +77,7 @@ void __pascal far play_level(int level_number) {
 	for (;;) {
 		if (demo_mode && level_number > 2) {
 			start_level = 0;
-			word_1F05E = 1;
+			need_quotes = 1;
 			start_game();
 		}
 		if (level_number != current_level) {
@@ -199,9 +199,9 @@ void __pascal far set_start_pos() {
 	is_feather_fall = 0;
 	Char.fall_y = 0;
 	Char.fall_x = 0;
-	word_1EFCE = 0;
+	offguard = 0;
 	Char.sword = sword_0_sheathed;
-	word_1EA12 = 0;
+	droppedout = 0;
 	play_seq();
 	if (current_level == 7 && Char.room == 17) {
 		// Special event: level 7 falling entry
@@ -472,7 +472,7 @@ void __pascal far check_mirror() {
 			loadkid();
 			load_frame();
 			check_mirror_image();
-			if (byte_1E9FA >= 0) {
+			if (distance_mirror >= 0) {
 				load_frame_to_obj();
 				reset_obj_clip();
 				clip_top = y_clip[Char.curr_row + 1];
@@ -510,7 +510,7 @@ void __pascal far check_mirror_image() {
 	if (Char.direction >= dir_0_right) {
 		distance = (~distance) + 14;
 	}
-	byte_1E9FA = distance - 2;
+	distance_mirror = distance - 2;
 	Char.x = (xpos << 1) - Char.x;
 	Char.direction = ~Char.direction;
 }

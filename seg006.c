@@ -1000,11 +1000,11 @@ void __pascal far start_fall() {
 					Char.x = char_dx_forward(-5);
 				}
 			} else {
-				word_1EA12 = 0;
+				droppedout = 0;
 				seq_id = seq_83_guard_fall; // fall after forwarding with sword
 			}
 		} else {
-			word_1EA12 = 1;
+			droppedout = 1;
 			if (Char.direction < dir_0_right && distance_to_edge_weight() <= 7) {
 				Char.x = char_dx_forward(-5);
 			}
@@ -1088,14 +1088,14 @@ void __pascal far in_wall() {
 
 // seg006:0B0C
 int __pascal far get_tile_infrontof_char() {
-	return get_tile(Char.room, byte_20C62 = dir_front[Char.direction + 1] + Char.curr_col, Char.curr_row);
+	return get_tile(Char.room, infrontx = dir_front[Char.direction + 1] + Char.curr_col, Char.curr_row);
 }
 
 // seg006:0B30
 int __pascal far get_tile_infrontof2_char() {
 	short var_2;
 	var_2 = dir_front[Char.direction + 1];
-	return get_tile(Char.room, byte_20C62 = (var_2 << 1) + Char.curr_col, Char.curr_row);
+	return get_tile(Char.room, infrontx = (var_2 << 1) + Char.curr_col, Char.curr_row);
 }
 
 // seg006:0B66
@@ -1424,7 +1424,7 @@ int __pascal far get_tile_behind_above_char() {
 
 // seg006:1049
 int __pascal far get_tile_front_above_char() {
-	return get_tile(Char.room, byte_20C62 = dir_front[Char.direction + 1] + Char.curr_col, Char.curr_row - 1);
+	return get_tile(Char.room, infrontx = dir_front[Char.direction + 1] + Char.curr_col, Char.curr_row - 1);
 }
 
 // seg006:1072

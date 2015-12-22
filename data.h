@@ -259,7 +259,7 @@ extern word flash_time;
 extern char_type Guard;
 
 // data:437E
-extern word word_1F05E;
+extern word need_quotes;
 // data:4CF8
 extern short roomleave_result;
 // data:4D96
@@ -282,7 +282,7 @@ extern short hof_count;
 extern word demo_mode INIT(= 0);
 
 // data:42CA
-extern word word_1EFAA;
+extern word is_cutscene;
 
 
 // data:408C
@@ -394,9 +394,9 @@ extern const byte x_bump[] INIT(= {-12, 2, 16, 30, 44, 58, 72, 86, 100, 114, 128
 // data:42F4
 extern word is_screaming;
 // data:42EE
-extern word word_1EFCE;
+extern word offguard; // name from Apple II source
 // data:3D32
-extern word word_1EA12;
+extern word droppedout; // name from Apple II source
 
 #ifdef USE_COPYPROT
 // data:00A2
@@ -454,7 +454,7 @@ extern byte fall_frame;
 // data:4C0E
 extern byte through_tile;
 // data:5F82
-extern sbyte byte_20C62;
+extern sbyte infrontx; // name from Apple II source
 // data:228E
 extern const sbyte dir_front[] INIT(= {-1, 1});
 // data:2290
@@ -549,7 +549,7 @@ short pickup_obj_type;
 
 
 // data:34CA
-word word_1E1AA;
+word justblocked; // name from Apple II source
 
 
 // data:5F84

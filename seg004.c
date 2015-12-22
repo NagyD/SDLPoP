@@ -396,7 +396,7 @@ Possible results in edge_type:
 			distance = distance_to_edge_weight();
 		} else {
 			if (wall_type(tiletype) != 0) {
-				tile_col = byte_20C62;
+				tile_col = infrontx;
 				distance = dist_from_wall_forward(tiletype);
 				if (distance >= 0) goto loc_59DD;
 			}

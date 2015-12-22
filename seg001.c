@@ -674,9 +674,9 @@ void __pascal far load_intro(int which_imgs,cutscene_ptr_type func,int free_soun
 	}
 	need_drects = 1;
 	reset_cutscene();
-	word_1EFAA = 1;
+	is_cutscene = 1;
 	func();
-	word_1EFAA = 0;
+	is_cutscene = 0;
 	free_all_chtabs_from(3);
 	draw_rect(&screen_rect, 0);
 }
