@@ -537,8 +537,8 @@ void __pascal far draw_rect(const rect_type far *rect,int color);
 surface_type far *__pascal rect_sthg(surface_type *surface,const rect_type far *rect);
 rect_type far *__pascal shrink2_rect(rect_type far *target_rect,const rect_type far *source_rect,int delta_x,int delta_y);
 void __pascal far set_curr_pos(int xpos,int ypos);
-void __pascal far restore_peel(peel_type peel_ptr);
-peel_type __pascal far read_peel_from_screen(const rect_type far *rect);
+void __pascal far restore_peel(peel_type *peel_ptr);
+peel_type* __pascal far read_peel_from_screen(const rect_type far *rect);
 void __pascal far show_text(const rect_type far *rect_ptr,int x_align,int y_align,const char far *text);
 int __pascal far intersect_rect(rect_type far *output,const rect_type far *input1,const rect_type far *input2);
 rect_type far * __pascal far union_rect(rect_type far *output,const rect_type far *input1,const rect_type far *input2);
@@ -574,6 +574,14 @@ rect_type far *__pascal offset2_rect(rect_type far *dest, const rect_type far *s
 void __pascal far show_text_with_color(const rect_type far *rect_ptr,int x_align,int y_align, const char far *text,int color);
 void __pascal do_simple_wait(int timer_index);
 void idle();
+void __pascal far init_copyprot_dialog();
+dialog_type * __pascal far make_dialog_info(dialog_settings_type *settings, rect_type *dialog_rect,
+                                            rect_type *text_rect, peel_type *dialog_peel);
+void __pascal far calc_dialog_peel_rect(dialog_type*dialog);
+void __pascal far read_dialog_peel(dialog_type *dialog);
+void __pascal far draw_dialog_frame(dialog_type *dialog);
+void __pascal far add_dialog_rect(dialog_type *dialog);
+void __pascal far dialog_method_2_frame(dialog_type *dialog);
 #ifdef USE_FADE
 void __pascal far fade_in_2(surface_type near *source_surface,int which_rows);
 palette_fade_type far *__pascal make_pal_buffer_fadein(surface_type *source_surface,int which_rows,int wait_time);

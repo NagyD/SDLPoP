@@ -545,6 +545,27 @@ typedef struct WAV_header_type {
 } WAV_header_type;
 #endif
 
+struct dialog_type; // (declaration only)
+typedef struct dialog_settings_type {
+	void (* method_1) (struct dialog_type *dialog);
+	void (* method_2_frame) (struct dialog_type *dialog);
+	short top_border;
+	short left_border;
+	short bottom_border;
+	short right_border;
+	short shadow_bottom;
+	short shadow_right;
+	short outer_border;
+} dialog_settings_type;
+
+typedef struct dialog_type {
+	dialog_settings_type* settings;
+	rect_type text_rect;
+	rect_type peel_rect;
+	word has_peel;
+	peel_type* peel;
+} dialog_type;
+
 #pragma pack(pop)
 
 enum soundids {
@@ -974,6 +995,7 @@ enum seqtbl_sounds {
 };
 
 enum colorids {
+	color_0_black = 0,
 	color_4_red = 4,
 	color_7_grey = 7,
 	color_12_red = 12,

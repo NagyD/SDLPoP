@@ -78,7 +78,19 @@ extern const char copyprot_letter[] INIT(= {'A','A','B','B','C','C','D','D','E',
 // data:4620
 extern word cplevel_entr[14];
 #endif
-
+// data:46C6
+extern dialog_type* copyprot_dialog;
+// data:2944
+extern dialog_settings_type dialog_settings
+    INIT(= {
+         add_dialog_rect,
+         dialog_method_2_frame,
+         4, 4, 4, 4, 3, 4, 1
+    });
+// data:2B76
+extern rect_type dialog_rect_1 INIT(= {60, 56, 124, 264});
+// data:2B7E
+extern rect_type dialog_rect_2 INIT(= {61, 56, 120, 264});
 
 // data:409E
 extern word drawn_room;
@@ -97,6 +109,8 @@ extern tile_and_mod row_below_left_[10];
 // data:2274
 extern const word tbl_line[] INIT(= {0, 10, 20});
 
+// data:5966
+extern word loaded_room;
 // data:658A
 extern byte* curr_room_tiles;
 // data:5F88
@@ -152,7 +166,7 @@ extern back_table_type backtable[200];
 // data:3D38
 extern midtable_type midtable[50];
 // data:5F1E
-extern peel_type peels_table[50];
+extern peel_type* peels_table[50];
 // data:4D9A
 extern rect_type drects[30];
 
@@ -495,6 +509,8 @@ extern word kid_sword_strike;
 
 // data:6591
 extern byte edge_type;
+
+
 
 // data:596C
 extern SDL_Surface* onscreen_surface_;
