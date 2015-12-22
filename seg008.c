@@ -713,7 +713,7 @@ int __pascal far get_loose_frame(byte modifier) {
 // Get an image, with index and NULL checks.
 image_type* get_image(short chtab_id, int id) {
     if (chtab_id < 0 || chtab_id > COUNT(chtab_addrs)) {
-		printf("Tried to use chtab %d not in 0..%d\n", chtab_id, COUNT(chtab_addrs));
+		printf("Tried to use chtab %d not in 0..%d\n", chtab_id, (int)COUNT(chtab_addrs));
 		return NULL;
     }
     chtab_type* chtab = chtab_addrs[chtab_id];
