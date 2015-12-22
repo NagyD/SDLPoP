@@ -782,7 +782,7 @@ int __pascal far fade_in_1() {
 //	sbyte index;
 	word interrupted;
 	if (graphics_mode == gmMcgaVga) {
-		fade_palette_buffer = make_pal_buffer_fadein(offscreen_surface, 0x6689, /*0*/1);
+		fade_palette_buffer = make_pal_buffer_fadein(offscreen_surface, 0x6689, /*0*/ 2);
 		is_global_fading = 1;
 		do {
 			interrupted = proc_cutscene_frame(1);
@@ -809,7 +809,7 @@ int __pascal far fade_out_1() {
 #ifdef USE_FADE
 	word interrupted;
 	if (graphics_mode == gmMcgaVga) {
-		fade_palette_buffer = make_pal_buffer_fadeout(0x6689, /*0*/1);
+		fade_palette_buffer = make_pal_buffer_fadeout(0x6689, /*0*/ 2);
 		is_global_fading = 1;
 		do {
 			interrupted = proc_cutscene_frame(1);

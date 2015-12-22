@@ -2234,8 +2234,13 @@ void __pascal start_timer(int timer_index, int length) {
 		remove_timer(timer_index);
 		timer_handles[timer_index] = 0;
 	}
-	timer_stopped[timer_index] = length<=0;
-	if (length <= 0) return;
+	timer_stopped[timer_index] = 0; // length<=0;
+	if (length <= 0) {
+		// We need the timer to finish *after* keypresses.
+		// So idle() is called at least once in do_wait(), and keypresses while fading are not ignored.
+		timer_callback(0, (void*)(uintptr_t)timer_index);
+		return;
+	}
 
 	int now = SDL_GetTicks();
 	double frametime = 1000.0 / 60.0;
@@ -2662,8 +2667,8 @@ int __pascal far fade_in_frame(palette_fade_type far *palette_buffer) {
 	//SDL_UpdateRect(onscreen_surface_, 0, 0, 0, 0); // debug
 	request_screen_update();
 		
-//	/**/do_simple_wait(1); // too slow?
-	do_wait(timer_1);
+	/**/do_simple_wait(1); // can interrupt fading of cutscene
+	//do_wait(timer_1); // can interrupt fading of main title
 	//printf("end ticks = %u\n",SDL_GetTicks());
 	return palette_buffer->fade_pos == 0;
 }
@@ -2782,8 +2787,8 @@ int __pascal far fade_out_frame(palette_fade_type far *palette_buffer) {
 
 	request_screen_update();
 	
-//	/**/do_simple_wait(1); // too slow?
-	do_wait(timer_1);
+	/**/do_simple_wait(1); // can interrupt fading of cutscene
+	//do_wait(timer_1); // can interrupt fading of main title
 	return var_8;
 }
 
