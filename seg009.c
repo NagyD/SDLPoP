@@ -949,7 +949,8 @@ const rect_type far *__pascal draw_text(const rect_type far *rect_ptr,int x_alig
 	if (y_align >= 0) {
 		if (y_align <= 0) {
 			// middle
-			text_top += rect_height/2 - text_height/2;
+			// The +1 is for simulating SHR + ADC/SBB.
+			text_top += (rect_height+1)/2 - (text_height+1)/2;
 		} else {
 			// bottom
 			text_top += rect_height - text_height;
