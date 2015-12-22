@@ -23,6 +23,11 @@ Q: What is this?
 A: This is an open-source port/conversion of the DOS game Prince of Persia.
 It is based on the disassembly of the original PoP1 for DOS.
 
+Q: Where can I download that disassembly?
+A: Here: http://forum.princed.org/viewtopic.php?f=68&t=3423
+Scroll down to the newest zip files.
+The exact version is PoP 1.0, i.e. pop1_ida.zip .
+
 LICENSE
 =======
 
