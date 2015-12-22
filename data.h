@@ -579,9 +579,15 @@ byte need_replay_cycle INIT(= 0);
 #endif // USE_REPLAY
 
 options_type options INIT(= {{0}});
-sbyte start_fullscreen INIT(= 0);
+byte start_fullscreen INIT(= 0);
 word pop_window_width INIT(= 640);
 word pop_window_height INIT(= 400);
+
+// Custom Gameplay settings
+word start_minutes_left INIT(= 60);
+word start_ticks_left INIT(= 719);
+word start_hitp INIT(= 3);
+byte allow_triggering_any_tile INIT(= 0);
 
 #undef INIT
 #undef extern

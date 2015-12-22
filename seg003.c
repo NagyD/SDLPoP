@@ -38,9 +38,9 @@ void __pascal far init_game(int level) {
 	upside_down = 0;
 	resurrect_time = 0;
 	if (!dont_reset_time) {
-		rem_min = 60;
-		rem_tick = 719;
-		hitp_beg_lev = 3;
+		rem_min = start_minutes_left; 	// 60
+		rem_tick = start_ticks_left; 	// 719
+		hitp_beg_lev = start_hitp; 		// 3
 	}
 	need_level1_music = (level == 1);
 	play_level(level);
