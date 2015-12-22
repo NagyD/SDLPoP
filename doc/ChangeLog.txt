@@ -271,10 +271,25 @@ CHANGE: Sequence table deobfuscation.
 License:
 Added GPLv3 license (2015 June 27).
 
-2015 August 26
+2015 December 15
 ==============
-(experimental version 1.16b3)
+(experimental version 1.16b4)
 
-DONE: Added ability to view or record replays. While in game, press Ctrl+Tab to stop/start recording. While at the title screen, press Tab to view/cycle saved replays. You can also open replays directly with SDLPoP (drag/drop on the executable or double click the replay file) and they will play immediately.
-DONE: Use SDLPoP.ini to configure gameplay options. Fixes for gameplay quirks are enabled by default but can be very easily disabled all at once by setting the topmost option 'disable_all_fixes' to 'true'.
-CHANGE: Minor build fixes.
+DONE: Added ability to view or record replays. (See Readme.txt for information on how to use)
+DONE: Added changing options without recompiling: use SDLPoP.ini to configure various options. 
+DONE: The game now prompts whether to enable game fixes and enhancements. (See Readme.txt or the forum topic for further details)
+DONE: Gameplay fix added for safe landing on spikes (Trick 65).
+DONE: Demo mode can now be used (use the command-line parameter "demo"): in this mode, only the first two levels will be playable, and quotes from magazine reviews will be displayed.
+DONE: Added ability to draw fake and invisible walls/floors. (See forum topic for details)
+DONE: Added support for 1.3-format wave sounds.
+DONE: Added support for alternate level colors. (1.3)
+DONE: Added the dialog box in the copy protection level.
+CHANGE: Changed joystick cutoff point to 30000.
+CHANGE: Added index and NULL checks to chtab reads.
+CHANGE: Improved the gameplay fix for guards following through closed gates by checking for can_guard_see_kid == 2. Also added a test level.
+CHANGE: Added collision data, Char and Opp to the list of quicksaved variables.
+CHANGE: Removed Makefile.win from the Git repository.
+CHANGE: Added !=NULL to check_param() calls.
+CHANGE: Build fixes.
+FIXED: Fixed crash upon drawing characters that have no glyphs, such as newline/carriage return.
+FIXED: The open potion now gets placed correctly in the copy protection level.
