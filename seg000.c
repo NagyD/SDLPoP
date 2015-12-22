@@ -1728,7 +1728,8 @@ char const * const tbl_quotes[2] = {
 
 // seg000:249D
 void __pascal far show_quotes() {
-	start_timer(timer_0,0);
+	//start_timer(timer_0,0);
+	//remove_timer(timer_0);
 	if (demo_mode && need_quotes) {
 		draw_rect(&screen_rect, 0);
 		show_text(&screen_rect, -1, 0, tbl_quotes[which_quote]);
