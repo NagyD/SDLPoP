@@ -256,17 +256,17 @@ int __pascal far get_tile_to_draw(int room, int column, int row, byte *ptr_tilet
 	}
 #ifdef USE_FAKE_TILES
 	else if (tiletype == tiles_0_empty) {
-		if ((modifier & 7) == 4) {     // display a fake floor
+		if (modifier == 4 || modifier == 12) {     // display a fake floor
 			*ptr_tiletype = tiles_1_floor;
-			*ptr_modifier = (modifier & 8) ? 0 : 1; // modifier should be '0' for blue, not '1'
+			*ptr_modifier = (modifier == 12) ? 1 : 0; // 12: noblue option
 		}
-		else if (modifier == 5) {   // display a fake wall (pattern: no walls left or right)
+		else if (modifier == 5 || modifier == 13) {   // display a fake wall
+			*ptr_tiletype = tiles_20_wall;
+			*ptr_modifier = (modifier == 13) ? 0x80 : 0; // 13: noblue option
+		}
+		else if (modifier == 50) {   // display a fake wall (pattern: no walls left or right)
 			*ptr_tiletype = tiles_20_wall;
 			*ptr_modifier = 0;
-		}
-		else if (modifier == 50) {   // display a fake wall (pattern: no walls left or right (noblue))
-			*ptr_tiletype = tiles_20_wall;
-			*ptr_modifier = 0x80;
 		}
 		else if (modifier == 51) {   // display a fake wall (pattern: wall only to the right)
 			*ptr_tiletype = tiles_20_wall;
@@ -282,17 +282,17 @@ int __pascal far get_tile_to_draw(int room, int column, int row, byte *ptr_tilet
 		}
 	}
 	else if (tiletype == tiles_1_floor) {
-		if ((modifier & 7) == 6) {   // display nothing (invisible floor)
+		if (modifier == 6 || modifier == 14) {   // display nothing (invisible floor)
 			*ptr_tiletype = tiles_0_empty;
-			*ptr_modifier = (modifier & 8) ? 0 : 1; // modifier should be '0' for noblue, instead of '1'
+			*ptr_modifier = (modifier == 14) ? 1 : 0; // modifier should be '0' for noblue, instead of '1'
 		}
-		else if (modifier == 5) {   // display a fake wall (pattern: no walls left or right)
+		else if (modifier == 5 || modifier == 13) {   // display a fake wall
 			*ptr_tiletype = tiles_20_wall;
-			*ptr_modifier = 0;
+			*ptr_modifier = (modifier == 13) ? 0x80 : 0; // 13: noblue option
 		}
 		else if (modifier == 50) {   // display a fake wall (pattern: no walls left or right (noblue))
 			*ptr_tiletype = tiles_20_wall;
-			*ptr_modifier = 0x80;
+			*ptr_modifier = 0;
 		}
 		else if (modifier == 51) {   // display a fake wall (pattern: wall only to the right)
 			*ptr_tiletype = tiles_20_wall;
@@ -320,7 +320,7 @@ int __pascal far get_tile_to_draw(int room, int column, int row, byte *ptr_tilet
 		}
 		else if (((modifier >> 4) & 7) == 6) {   // display empty tile (invisible wall)
 			*ptr_tiletype = tiles_0_empty;
-			*ptr_modifier = (modifier >> 7) ? 0 : 1; // modifier should be '0' for noblue, instead of '1'
+			*ptr_modifier = (modifier >> 7) ? 1 : 0; // modifier should be '0' for noblue, instead of '1'
 		}
 	}
 #endif
@@ -1154,6 +1154,8 @@ void __pascal far load_alter_mod(int tilepos) {
 			}
 #endif
 			break;
+
+
 		case tiles_20_wall:
 		{
 			byte stored_modif = *curr_tile_modif;
@@ -1165,24 +1167,86 @@ void __pascal far load_alter_mod(int tilepos) {
 			// next 3 bits:                for displaying various fake tiles (invisible walls)
 			// ..
 			// least significant 2 bits:   wall to left/right?
+		}
+			// fallthrough: not done yet, just moving to another scope
+			goto label_wall_continued;
+
+#ifdef USE_FAKE_TILES
+		// Need to deal with the possibility that certain tiles can impersonate walls
+		case tiles_0_empty:
+		case tiles_1_floor:
+			if ((*curr_tile_modif & 7) != 5) break;
+			// if tile is a fake wall, fall through
+#endif
+
+			label_wall_continued:
+		{
+			// Here, ahead of time, we define the condition for a neighbouring tile to be seen as a wall connection
+            #ifndef USE_FAKE_TILES
+            #define read_adj_tile_modif_in_curr_room() 		// nop; access to modifier of adjacent tiles is not needed
+            #define read_adj_tile_modif_in_external_room() 	// nop
+			#define WALL_CONNECTION_CONDITION (adj_tile == tiles_20_wall)
+
+            #else // #ifdef USE_FAKE_TILES
+            // When determining wall connections for fake walls, we need access to the tile modifier of adjacent tiles
+			#define read_adj_tile_modif_in_curr_room() \
+            int adj_tile_modif = curr_room_modif[adj_tile_index];
+			#define read_adj_tile_modif_in_external_room() \
+            int adj_tile_modif = level.bg[adj_tile_index];
+			// Now redefine the condition for what tiletype / modifier combination counts as a valid "wall"
+            #define WALL_CONNECTION_CONDITION (								   										  \
+				(adj_tile == tiles_20_wall && adj_tile_modif != 4 && (adj_tile_modif >> 4) != 4 && 				 	  \
+							 adj_tile_modif != 6 && (adj_tile_modif >> 4) != 6) ||			 						  \
+				(adj_tile == tiles_0_empty && (adj_tile_modif == 5 || adj_tile_modif == 13 ||						  \
+							 (adj_tile_modif >= 50 && adj_tile_modif <= 53))) || 									  \
+				(adj_tile == tiles_1_floor && (adj_tile_modif == 5 || adj_tile_modif == 13 ||						  \
+							 (adj_tile_modif >= 50 && adj_tile_modif <= 53))))
+            #endif
 
 			if (graphics_mode != gmCga && graphics_mode != gmHgaHerc) {
 				wall_to_right = 1;
 				wall_to_left = 1;
+				int adj_tile_index, adj_tile;
 				if (tilepos % 10 == 0) {
 					if (room_L) {
-						wall_to_left = (level.fg[30*(room_L-1)+tilepos+9] & 0x1F) == tiles_20_wall;
+						adj_tile_index = 30*(room_L-1)+tilepos+9;
+						adj_tile = (level.fg[adj_tile_index] & 0x1F);
+						read_adj_tile_modif_in_external_room(); // only executed when fake tiles are enabled
+						wall_to_left = WALL_CONNECTION_CONDITION;
 					}
 				} else {
-					wall_to_left = (curr_room_tiles[tilepos-1] & 0x1F) == tiles_20_wall;
+					adj_tile_index = tilepos-1;
+					adj_tile = (curr_room_tiles[adj_tile_index] & 0x1F);
+					read_adj_tile_modif_in_curr_room();
+					wall_to_left = WALL_CONNECTION_CONDITION;
 				}
 				if (tilepos % 10 == 9) {
 					if (room_R) {
-						wall_to_right = (level.fg[30*(room_R-1)+tilepos-9] & 0x1F) == tiles_20_wall;
+						adj_tile_index = 30*(room_R-1)+tilepos-9;
+						adj_tile = (level.fg[adj_tile_index] & 0x1F);
+						read_adj_tile_modif_in_external_room();
+						wall_to_right = WALL_CONNECTION_CONDITION;
 					}
 				} else {
-					wall_to_right = (curr_room_tiles[tilepos+1] & 0x1F) == tiles_20_wall;
+					adj_tile_index = tilepos+1;
+					adj_tile = (curr_room_tiles[adj_tile_index] & 0x1F);
+					read_adj_tile_modif_in_curr_room();
+					wall_to_right = WALL_CONNECTION_CONDITION;
 				}
+
+				#ifdef USE_FAKE_TILES
+				if (tiletype == tiles_1_floor || tiletype == tiles_0_empty) {
+					if (wall_to_left && wall_to_right) {
+						*curr_tile_modif = 53;
+					} else if (wall_to_left) {
+						*curr_tile_modif = 52;
+					} else if (wall_to_right) {
+						*curr_tile_modif = 51;
+					}
+					break;
+				}
+				#endif
+
 				if (wall_to_left && wall_to_right) {
 					*curr_tile_modif |= 3;
 				} else if (wall_to_left) {
