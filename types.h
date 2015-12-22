@@ -998,6 +998,7 @@ enum colorids {
 	color_0_black = 0,
 	color_4_red = 4,
 	color_7_grey = 7,
+	color_8_darkgrey = 8,
 	color_12_red = 12,
 	color_14_yellow = 14,
 	color_15_white = 15,
