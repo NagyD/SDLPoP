@@ -555,7 +555,7 @@ int __pascal far process_key() {
 				need_show_text = 1;
 			break;
 			case SDL_SCANCODE_C | WITH_SHIFT: // shift-c
-				snprintf(sprintf_temp, sizeof(sprintf_temp), "AL%d AR%d BL%d BR%d", room_BR, room_BL, room_AR, room_AL);
+				snprintf(sprintf_temp, sizeof(sprintf_temp), "AL%d AR%d BL%d BR%d", room_AL, room_AR, room_BL, room_BR);
 				answer_text = /*&*/sprintf_temp;
 				need_show_text = 1;
 			break;
