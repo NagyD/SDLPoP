@@ -579,6 +579,9 @@ byte need_replay_cycle INIT(= 0);
 #endif // USE_REPLAY
 
 options_type options INIT(= {{0}});
+sbyte start_fullscreen INIT(= 0);
+word pop_window_width INIT(= 640);
+word pop_window_height INIT(= 400);
 
 #undef INIT
 #undef extern

@@ -609,7 +609,7 @@ void check_seqtable_matches_original();
 void use_default_options();
 void disable_fixes_and_enhancements();
 void load_options();
-void show_disable_fixes_prompt();
+void show_use_fixes_and_enhancements_prompt();
 
 // REPLAY.C
 #ifdef USE_REPLAY
