@@ -1845,17 +1845,17 @@ void __pascal far set_gr_mode(byte grmode) {
 
 	//SDL_EnableUNICODE(1); //deprecated
 	Uint32 flags = 0;
-	int fullscreen = check_param("full") != NULL;
-	if (fullscreen) flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+	if (!start_fullscreen) start_fullscreen = check_param("full") != NULL;
+	if (start_fullscreen) flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
 	flags |= SDL_WINDOW_RESIZABLE;
 	
 	window_ = SDL_CreateWindow(WINDOW_TITLE,
 										  SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-										  POP_WINDOW_WIDTH, POP_WINDOW_HEIGHT, flags);
+										  pop_window_width, pop_window_height, flags);
 	renderer_ = SDL_CreateRenderer(window_, -1 , SDL_RENDERER_ACCELERATED );
 	
 	// Allow us to use a consistent set of screen co-ordinates, even if the screen size changes
-	SDL_RenderSetLogicalSize(renderer_, POP_WINDOW_WIDTH, POP_WINDOW_HEIGHT);
+	SDL_RenderSetLogicalSize(renderer_, 320, 200);
 
     /* Migration to SDL2: everything is still blitted to onscreen_surface_, however:
      * SDL2 renders textures to the screen instead of surfaces; so for now, every screen
@@ -1863,16 +1863,16 @@ void __pascal far set_gr_mode(byte grmode) {
      * subsequently displayed; awaits a better refactoring!
      * The function handling the screen updates is request_screen_update()
      * */
-    onscreen_surface_ = SDL_CreateRGBSurface(0, 320, 200, 24, 0xFF, 0xFF<<8, 0xFF<<16, 0) ;
+    onscreen_surface_ = SDL_CreateRGBSurface(0, 320, 200, 24, 0xFF, 0xFF << 8, 0xFF << 16, 0) ;
 	sdl_texture_ = SDL_CreateTexture(renderer_, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING,
-												 320, 200);
+									 320, 200);
 	screen_updates_suspended = 0;
 
 	if (onscreen_surface_ == NULL) {
 		sdlperror("SDL_SetVideoMode");
 		quit(1);
 	}
-	if (fullscreen) {
+	if (start_fullscreen) {
 		SDL_ShowCursor(SDL_DISABLE);
 	}
 

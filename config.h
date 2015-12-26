@@ -23,10 +23,6 @@ The authors of this program may be contacted at http://forum.princed.org
 
 #define WINDOW_TITLE "Prince of Persia (SDLPoP) v1.16 - experimental"
 
-// Window size; game will be scaled accordingly
-#define POP_WINDOW_WIDTH 640
-#define POP_WINDOW_HEIGHT 400
-
 // Enable or disable fading.
 // Fading used to be very buggy, but now it works correctly.
 #define USE_FADE

@@ -127,9 +127,27 @@ static int ini_callback(const char *section, const char *name, const char *value
 
     // this option has an extra allowed value, "prompt"
     if(strcasecmp(name, "use_fixes_and_enhancements") == 0) {
-        if (strcasecmp(value, "true") == 0) options.use_fixes_and_enhancements = 1;         \
+        if (strcasecmp(value, "true") == 0) options.use_fixes_and_enhancements = 1;
         else if (strcasecmp(value, "false") == 0) options.use_fixes_and_enhancements = 0;
         else if (strcasecmp(value, "prompt") == 0) options.use_fixes_and_enhancements = 2;
+    }
+
+    else if(strcasecmp(name, "start_fullscreen") == 0) {
+        if (strcasecmp(value, "true") == 0) start_fullscreen = 1;
+    }
+
+    // If custom window dimensions are specified, use those instead of the default 640x400
+    else if(strcasecmp(name, "pop_window_width") == 0) {
+        if (strcasecmp(value, "default") != 0) {
+            word new_value = (word) strtoumax(value, NULL, 0);
+            if (new_value != 0) pop_window_width = new_value;
+        }
+    }
+    else if(strcasecmp(name, "pop_window_height") == 0) {
+        if (strcasecmp(value, "default") != 0) {
+            word new_value = (word) strtoumax(value, NULL, 0);
+            if (new_value != 0) pop_window_height = new_value;
+        }
     }
 
     process_next(enable_copyprot)
@@ -171,7 +189,7 @@ void load_options() {
     if (!options.use_fixes_and_enhancements) disable_fixes_and_enhancements();
 }
 
-void show_disable_fixes_prompt() {
+void show_use_fixes_and_enhancements_prompt() {
     if (options.use_fixes_and_enhancements != 2) return;
     draw_rect(&screen_rect, 0);
     show_text(&screen_rect, 0, 0,
