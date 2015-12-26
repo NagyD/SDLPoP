@@ -20,6 +20,7 @@ The authors of this program may be contacted at http://forum.princed.org
 
 #include "common.h"
 #include <ctype.h>
+#include <inttypes.h>
 
 void use_default_options() {
     options.use_fixes_and_enhancements = 0;
