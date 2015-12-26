@@ -453,7 +453,9 @@ int __pascal far process_key() {
 			}
 		break;
 		case SDL_SCANCODE_G | WITH_CTRL: // ctrl-g
-			if (current_level > 2 && current_level < 14) {
+			// CusPoP: first and last level where saving is allowed
+//			if (current_level > 2 && current_level < 14) { // original
+			if (current_level >= saving_allowed_first_level && current_level <= saving_allowed_last_level) {
 				save_game();
 			}
 		break;
@@ -1082,7 +1084,9 @@ void __pascal far draw_guard_hp(short curr_hp,short max_hp) {
 void __pascal far add_life() {
 	short hpmax = hitp_max;
 	++hpmax;
-	if (hpmax > 10) hpmax = 10;
+	// CusPop: set maximum number of hitpoints (max_hitp_allowed, default = 10)
+//	if (hpmax > 10) hpmax = 10; // original
+	if (hpmax > max_hitp_allowed) hpmax = max_hitp_allowed;
 	hitp_max = hpmax;
 	set_health_life();
 }

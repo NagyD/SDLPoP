@@ -587,6 +587,9 @@ word pop_window_height INIT(= 400);
 word start_minutes_left INIT(= 60);
 word start_ticks_left INIT(= 719);
 word start_hitp INIT(= 3);
+word max_hitp_allowed INIT(= 10);
+word saving_allowed_first_level INIT(= 3);
+word saving_allowed_last_level INIT(= 13);
 byte allow_triggering_any_tile INIT(= 0);
 
 #undef INIT

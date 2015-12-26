@@ -201,6 +201,9 @@ static int ini_callback(const char *section, const char *name, const char *value
         process_word("start_minutes_left", &start_minutes_left);
         process_word("start_ticks_left", &start_ticks_left);
         process_word("start_hitp", &start_hitp);
+        process_word("max_hitp_allowed", &max_hitp_allowed);
+        process_word("saving_allowed_first_level", &saving_allowed_first_level);
+        process_word("saving_allowed_last_level", &saving_allowed_last_level);
         process_boolean("allow_triggering_any_tile", &allow_triggering_any_tile);
     }
 
