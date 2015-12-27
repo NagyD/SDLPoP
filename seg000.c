@@ -898,7 +898,6 @@ void __pascal far load_lev_spr(int level) {
 
 	// Level colors (1.3)
 	if (graphics_mode == gmMcgaVga && level_var_palettes != NULL) {
-		static const word tbl_level_color[] = {0, 0, 0, 1, 0, 0, 0, 1, 2, 2, 0, 0, 3, 3, 4, 0};
 		int level_color = tbl_level_color[current_level];
 		if (level_color != 0) {
 			byte* env_pal = level_var_palettes + 0x30*(level_color-1);

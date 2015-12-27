@@ -34,8 +34,6 @@ const word advprob     [] = {255,200,200,200,255,255,200,  0,  0,255,100,100};
 const word refractimer [] = { 16, 16, 16, 16,  8,  8,  8,  8,  0,  8,  0,  0};
 // data:0EC2
 const word extrastrength[] = {0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0};
-// data:0EDA
-const byte tbl_guard_hp[] = {4, 3, 3, 3, 3, 4, 5, 4, 4, 5, 5, 5, 4, 6, 0, 0};
 
 // seg002:0000
 void __pascal far do_init_shad(const byte *source,int seq_index) {

@@ -119,7 +119,9 @@ extern byte* curr_room_modif;
 extern word draw_xh;
 
 // data:02B2
-extern const byte tbl_level_type[16] INIT(= {0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 0});
+extern /*const*/ byte tbl_level_type[16] INIT(= {0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 0});
+// 1.3
+extern /*const*/ word tbl_level_color[16] INIT(= {0, 0, 0, 1, 0, 0, 0, 1, 2, 2, 0, 0, 3, 3, 4, 0});
 // data:0F9E
 extern word current_level INIT(= -1);
 // data:3021
@@ -398,7 +400,9 @@ extern short tile_col;
 // data:229C
 extern const short y_land[] INIT(= {-8, 55, 118, 181, 244});
 // data:03D4
-extern const short tbl_guard_type[] INIT(= {0, 0, 0, 2, 0, 0, 1, 0, 0, 0, 0, 0, 4, 3, -1, -1});
+extern /*const*/ short tbl_guard_type[16] INIT(= {0, 0, 0, 2, 0, 0, 1, 0, 0, 0, 0, 0, 4, 3, -1, -1});
+// data:0EDA
+extern /*const*/ byte tbl_guard_hp[16] INIT(= {4, 3, 3, 3, 3, 4, 5, 4, 4, 5, 5, 5, 4, 6, 0, 0});
 // data:5888
 extern word curr_guard_color;
 // data:288C

@@ -130,7 +130,29 @@ static inline int ini_process_word(const char* curr_name, const char* value, con
     if(strcasecmp(curr_name, option_name) == 0) {
         if (strcasecmp(value, "default") != 0) {
             word new_value = (word) strtoumax(value, NULL, 0);
-            if (new_value != 0) *target = new_value;
+            /*if (new_value != 0)*/ *target = new_value;
+        }
+        return 1; // finished; don't look for more possible options that curr_name can be
+    }
+    return 0; // not the right option; should check another option_name
+}
+
+static inline int ini_process_short(const char* curr_name, const char* value, const char* option_name, short* target) {
+    if(strcasecmp(curr_name, option_name) == 0) {
+        if (strcasecmp(value, "default") != 0) {
+            short new_value = (short) strtoimax(value, NULL, 0);
+            /*if (new_value != 0)*/ *target = new_value;
+        }
+        return 1; // finished; don't look for more possible options that curr_name can be
+    }
+    return 0; // not the right option; should check another option_name
+}
+
+static inline int ini_process_byte(const char* curr_name, const char* value, const char* option_name, byte* target) {
+    if(strcasecmp(curr_name, option_name) == 0) {
+        if (strcasecmp(value, "default") != 0) {
+            byte new_value = (byte) strtoumax(value, NULL, 0);
+            /*if (new_value != 0)*/ *target = new_value;
         }
         return 1; // finished; don't look for more possible options that curr_name can be
     }
@@ -146,6 +168,12 @@ static int ini_callback(const char *section, const char *name, const char *value
     // Make sure that we return successfully as soon as name matches the correct option_name
     #define process_word(option_name, target)                           \
     if (ini_process_word(name, value, option_name, target)) return 1;
+
+    #define process_short(option_name, target)                           \
+    if (ini_process_short(name, value, option_name, target)) return 1;
+
+    #define process_byte(option_name, target)                           \
+    if (ini_process_byte(name, value, option_name, target)) return 1;
 
     #define process_boolean(option_name, target)                        \
     if (ini_process_boolean(name, value, option_name, target)) return 1;
@@ -206,6 +234,21 @@ static int ini_callback(const char *section, const char *name, const char *value
         process_word("saving_allowed_first_level", &saving_allowed_first_level);
         process_word("saving_allowed_last_level", &saving_allowed_last_level);
         process_boolean("allow_triggering_any_tile", &allow_triggering_any_tile);
+    }
+
+    // [Level 1], etc.
+    int ini_level = -1;
+    if (strncasecmp(section, "Level ", 6) == 0 && sscanf(section+6, "%d", &ini_level) == 1) {
+        if (ini_level >= 0 && ini_level <= 15) {
+            // TODO: Allow names instead of numbers for the *_type settings.
+            // TODO: And maybe allow new types in addition to the existing ones.
+            process_byte("level_type", &tbl_level_type[ini_level]);
+            process_word("level_color", &tbl_level_color[ini_level]);
+            process_short("guard_type", &tbl_guard_type[ini_level]);
+            process_byte("guard_hp", &tbl_guard_hp[ini_level]);
+        } else {
+            // TODO: warning?
+        }
     }
 
     #undef process_word
