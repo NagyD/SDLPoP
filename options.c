@@ -117,6 +117,32 @@ int ini_load(const char *filename,
     return 0;
 }
 
+#define MAX_NAME_LENGTH 16
+typedef struct ini_value_list_type {
+    const char (* names)[][MAX_NAME_LENGTH];
+    word num_names;
+} ini_value_list_type;
+
+const char level_type_names[][MAX_NAME_LENGTH] = {"dungeon", "palace"};
+const char guard_type_names[][MAX_NAME_LENGTH] = {"guard", "fat", "skel", "vizier", "shadow"};
+
+ini_value_list_type level_type_names_list = {&level_type_names, COUNT(level_type_names)};
+ini_value_list_type guard_type_names_list = {&guard_type_names, COUNT(guard_type_names)};
+
+#define INI_NO_VALID_NAME -9999
+
+static inline int ini_get_named_value(const char* value, ini_value_list_type* value_names) {
+    if (value_names != NULL) {
+        int i;
+        char *base_ptr = (char *) value_names->names;
+        for (i = 0; i < value_names->num_names; ++i) {
+            char *name = (base_ptr + i * MAX_NAME_LENGTH);
+            if (strcasecmp(value, name) == 0) return i;
+        }
+    }
+    return INI_NO_VALID_NAME; // failure
+}
+
 static inline int ini_process_boolean(const char* curr_name, const char* value, const char* option_name, byte* target) {
     if(strcasecmp(curr_name, option_name) == 0) {
         if (strcasecmp(value, "true") == 0) *target = 1;
@@ -126,33 +152,33 @@ static inline int ini_process_boolean(const char* curr_name, const char* value, 
     return 0; // not the right option; should check another option_name
 }
 
-static inline int ini_process_word(const char* curr_name, const char* value, const char* option_name, word* target) {
+static inline int ini_process_word(const char* curr_name, const char* value, const char* option_name, word* target, ini_value_list_type* value_names) {
     if(strcasecmp(curr_name, option_name) == 0) {
         if (strcasecmp(value, "default") != 0) {
-            word new_value = (word) strtoumax(value, NULL, 0);
-            /*if (new_value != 0)*/ *target = new_value;
+            int named_value = ini_get_named_value(value, value_names);
+            *target = (named_value == INI_NO_VALID_NAME) ? ((word) strtoumax(value, NULL, 0)) : ((word) named_value);
         }
         return 1; // finished; don't look for more possible options that curr_name can be
     }
     return 0; // not the right option; should check another option_name
 }
 
-static inline int ini_process_short(const char* curr_name, const char* value, const char* option_name, short* target) {
+static inline int ini_process_short(const char* curr_name, const char* value, const char* option_name, short* target, ini_value_list_type* value_names) {
     if(strcasecmp(curr_name, option_name) == 0) {
         if (strcasecmp(value, "default") != 0) {
-            short new_value = (short) strtoimax(value, NULL, 0);
-            /*if (new_value != 0)*/ *target = new_value;
+            int named_value = ini_get_named_value(value, value_names);
+            *target = (named_value == INI_NO_VALID_NAME) ? ((short) strtoimax(value, NULL, 0)) : ((short) named_value);
         }
         return 1; // finished; don't look for more possible options that curr_name can be
     }
     return 0; // not the right option; should check another option_name
 }
 
-static inline int ini_process_byte(const char* curr_name, const char* value, const char* option_name, byte* target) {
+static inline int ini_process_byte(const char* curr_name, const char* value, const char* option_name, byte* target, ini_value_list_type* value_names) {
     if(strcasecmp(curr_name, option_name) == 0) {
         if (strcasecmp(value, "default") != 0) {
-            byte new_value = (byte) strtoumax(value, NULL, 0);
-            /*if (new_value != 0)*/ *target = new_value;
+            int named_value = ini_get_named_value(value, value_names);
+            *target = (named_value == INI_NO_VALID_NAME) ? ((byte) strtoumax(value, NULL, 0)) : ((byte) named_value);
         }
         return 1; // finished; don't look for more possible options that curr_name can be
     }
@@ -166,14 +192,14 @@ static int ini_callback(const char *section, const char *name, const char *value
     #define check_ini_section(section_name)    (strcasecmp(section, section_name) == 0)
 
     // Make sure that we return successfully as soon as name matches the correct option_name
-    #define process_word(option_name, target)                           \
-    if (ini_process_word(name, value, option_name, target)) return 1;
+    #define process_word(option_name, target, value_names)                           \
+    if (ini_process_word(name, value, option_name, target, value_names)) return 1;
 
-    #define process_short(option_name, target)                           \
-    if (ini_process_short(name, value, option_name, target)) return 1;
+    #define process_short(option_name, target, value_names)                           \
+    if (ini_process_short(name, value, option_name, target, value_names)) return 1;
 
-    #define process_byte(option_name, target)                           \
-    if (ini_process_byte(name, value, option_name, target)) return 1;
+    #define process_byte(option_name, target, value_names)                           \
+    if (ini_process_byte(name, value, option_name, target, value_names)) return 1;
 
     #define process_boolean(option_name, target)                        \
     if (ini_process_boolean(name, value, option_name, target)) return 1;
@@ -185,8 +211,8 @@ static int ini_callback(const char *section, const char *name, const char *value
         process_boolean("enable_flash", &options.enable_flash);
         process_boolean("enable_text", &options.enable_text);
         process_boolean("start_fullscreen", &start_fullscreen);
-        process_word("pop_window_width", &pop_window_width);
-        process_word("pop_window_height", &pop_window_height);
+        process_word("pop_window_width", &pop_window_width, NULL);
+        process_word("pop_window_height", &pop_window_height, NULL);
     }
 
     if (check_ini_section("AdditionalFeatures")) {
@@ -227,12 +253,12 @@ static int ini_callback(const char *section, const char *name, const char *value
     }
 
     if (check_ini_section("CustomGameplay")) {
-        process_word("start_minutes_left", &start_minutes_left);
-        process_word("start_ticks_left", &start_ticks_left);
-        process_word("start_hitp", &start_hitp);
-        process_word("max_hitp_allowed", &max_hitp_allowed);
-        process_word("saving_allowed_first_level", &saving_allowed_first_level);
-        process_word("saving_allowed_last_level", &saving_allowed_last_level);
+        process_word("start_minutes_left", &start_minutes_left, NULL);
+        process_word("start_ticks_left", &start_ticks_left, NULL);
+        process_word("start_hitp", &start_hitp, NULL);
+        process_word("max_hitp_allowed", &max_hitp_allowed, NULL);
+        process_word("saving_allowed_first_level", &saving_allowed_first_level, NULL);
+        process_word("saving_allowed_last_level", &saving_allowed_last_level, NULL);
         process_boolean("allow_triggering_any_tile", &allow_triggering_any_tile);
     }
 
@@ -240,12 +266,11 @@ static int ini_callback(const char *section, const char *name, const char *value
     int ini_level = -1;
     if (strncasecmp(section, "Level ", 6) == 0 && sscanf(section+6, "%d", &ini_level) == 1) {
         if (ini_level >= 0 && ini_level <= 15) {
-            // TODO: Allow names instead of numbers for the *_type settings.
             // TODO: And maybe allow new types in addition to the existing ones.
-            process_byte("level_type", &tbl_level_type[ini_level]);
-            process_word("level_color", &tbl_level_color[ini_level]);
-            process_short("guard_type", &tbl_guard_type[ini_level]);
-            process_byte("guard_hp", &tbl_guard_hp[ini_level]);
+            process_byte("level_type", &tbl_level_type[ini_level], &level_type_names_list);
+            process_word("level_color", &tbl_level_color[ini_level], NULL);
+            process_short("guard_type", &tbl_guard_type[ini_level], &guard_type_names_list);
+            process_byte("guard_hp", &tbl_guard_hp[ini_level], NULL);
         } else {
             // TODO: warning?
         }
