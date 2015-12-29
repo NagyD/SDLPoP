@@ -519,7 +519,8 @@ extern SDL_Window* window_;
 extern SDL_Texture* sdl_texture_;
 extern SDL_Joystick* sdl_controller_ INIT( = 0 );
 
-extern int joy_states[3] INIT( = { 0, 0, 0 } );
+extern int joy_state INIT( = { 0 } ); // hor
+extern int gamepad_states[3] INIT( = { 0, 0, 0 } ); // hor, ver, shift
 
 extern int screen_updates_suspended;
 
