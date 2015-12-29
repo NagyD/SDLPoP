@@ -5,7 +5,7 @@ Author: David from forum.princed.org
 Contributors:
 * Andrew (bug reports)
 * htamas (bug reports)
-* Norbert (bug reports, suggestions)
+* Norbert (EndeavourAccuracy on GitHub) (bug reports, suggestions, improved gamepad support)
 * musa (bug reports)
 * Eugene (bug reports)
 * StaticReturn (Mac OS X: Makefile, bug reports)
@@ -50,61 +50,71 @@ GNU/Linux:
 
 Q: What command-line options are there?
 A:
-megahit -- Enable cheats.
-a number from 1 to 14 -- Start the given level.
-draw -- Draw directly to the screen, skipping the offscreen buffer.
-full -- Run in full screen mode.
+* megahit -- Enable cheats.
+* a number from 1 to 14 -- Start the given level.
+* draw -- Draw directly to the screen, skipping the offscreen buffer.
+* full -- Run in full screen mode.
+* demo -- Run in demo mode: only the first two levels will be playable, and quotes from magazine reviews will be displayed.
+* record -- Start recording immediately. (See the Replays section.)
+* replay or a *.P1R filename -- Start replaying immediately. (See the Replays section.)
 
 Q: What keys can I use?
 A:
 Controlling the kid:
-left: turn or go left
-right: turn or go right
-up: jump or climb up
-down: crouch or climb down
-shift: pick up things
-shift+left/right: careful step
-home or up-left: jump left
-page up or up-right: jump right
+* left: turn or run left
+* right: turn or run right
+* up: jump or climb up
+* down: crouch or climb down
+* shift: pick up things
+* shift+left/right: careful step
+* home or up+left: jump left
+* page up or up+right: jump right
 You can also use the numeric keypad.
 
+Gamepad equivalents:
+* left/right = left/right
+* A = down
+* B = quit
+* X = shift
+* Y = up
+
 Controlling the game:
-Esc: pause game
-space: show time left
-Ctrl-A: restart level
-Ctrl-G: save game (on levels 3..13)
-Ctrl-J: joystick mode (implemented by segrax)
-Ctrl-K: keyboard mode
-Ctrl-R: return to intro
-Ctrl-S: sound on/off
-Ctrl-V: show version
-Ctrl-Q: quit game
-Ctrl-L: load game (when in the intro)
-Alt-Enter: toggle fullscreen
-F6: quicksave
-F9: quickload
+* Esc: pause game
+* space: show time left
+* Ctrl-A: restart level
+* Ctrl-G: save game (on levels 3..13)
+* Ctrl-J: joystick/gamepad mode (implemented by segrax)
+* Ctrl-K: keyboard mode
+* Ctrl-R: return to intro
+* Ctrl-S: sound on/off
+* Ctrl-V: show version
+* Ctrl-Q: quit game
+* Ctrl-L: load game (when in the intro)
+* Alt-Enter: toggle fullscreen
+* F6: quicksave
+* F9: quickload
 
 Viewing or recording replays:
-Ctrl+Tab (in game): start or stop recording
-Tab (on title screen): view/cycle through the saved replays in the SDLPoP directory
+* Ctrl+Tab (in game): start or stop recording
+* Tab (on title screen): view/cycle through the saved replays in the SDLPoP directory
 
 Cheats:
-Shift-L: go to next level
-c: show numbers of current and adjacent rooms
-Shift-C: show numbers of diagonally adjacent rooms
--: less remaining time
-+: more remaining time
-r: resurrect kid
-k: kill guard
-Shift-I: flip screen upside-down
-Shift-W: slow falling
-h: look at room to the left
-j: look at room to the right
-u: look at room above
-n: look at room below
-Shift-B: toggle hiding of non-animated objects
-Shift-S: Restore lost hit-point. (Like a small red potion.)
-Shift-T: Give more hit-points. (Like a big red potion.)
+* Shift-L: go to next level
+* c: show numbers of current and adjacent rooms
+* Shift-C: show numbers of diagonally adjacent rooms
+* -: less remaining time
+* +: more remaining time
+* r: resurrect kid
+* k: kill guard
+* Shift-I: flip screen upside-down
+* Shift-W: slow falling
+* h: look at room to the left
+* j: look at room to the right
+* u: look at room above
+* n: look at room below
+* Shift-B: toggle hiding of non-animated objects
+* Shift-S: Restore lost hit-point. (Like a small red potion.)
+* Shift-T: Give more hit-points. (Like a big red potion.)
 
 Q: Where is the music?
 A:
@@ -133,6 +143,7 @@ This is useful if you want to compare the behavior of this port and the original
 	Since 1.11, the data/font folder is no longer required.
 
 Note that this port does not recognize if the PRINCE.EXE of the mod was changed.
+Since version 1.16, you can configure some options in SDLPoP.ini: starting time, level types, etc.
 
 Beware, some mods (especially the harder ones) might rely on bugs that are fixed in SDLPoP.
 Since version 1.16, SDLPoP will ask you whether gameplay quirks should be fixed or not.

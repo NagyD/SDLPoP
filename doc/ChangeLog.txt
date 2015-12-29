@@ -272,7 +272,7 @@ License:
 Added GPLv3 license (2015 June 27).
 
 2015 December 15
-==============
+================
 (experimental version 1.16b4)
 
 DONE: Added ability to view or record replays. (See Readme.txt for information on how to use)
@@ -293,3 +293,19 @@ CHANGE: Added !=NULL to check_param() calls.
 CHANGE: Build fixes.
 FIXED: Fixed crash upon drawing characters that have no glyphs, such as newline/carriage return.
 FIXED: The open potion now gets placed correctly in the copy protection level.
+
+2015 December 29
+================
+(version 1.16)
+
+FIXED: Fixed interrupting of fades and the speed of fading in cutscenes.
+FIXED: Changed vertical centering of text to match the original.
+FIXED: Fixed the order of numbers in the Shift+C cheat.
+FIXED: Fixed the demo quotes disappearing too soon.
+DONE: Add option to start fullscreen, change window dimensions in the INI file.
+DONE: Better INI processing & new custom gameplay options.
+FIXED: Fix wall connections not working for fake tiles.
+DONE: New options: max hitpoints, first & last level where saving is allowed.
+DONE: Added per-level settings to INI and INI processing.
+DONE: Add support for named values in the INI file.
+DONE: Improved gamepad support.
