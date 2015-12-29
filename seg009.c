@@ -2434,34 +2434,59 @@ void idle() {
 			case SDL_JOYAXISMOTION:
 				if (event.jaxis.axis == 0) {
 
-					if (event.jaxis.value < -30000)
-						joy_states[0] = -1;	// left
+					if (event.jaxis.value < -8000)
+						joy_state = -1;	// left
 
-					else if (event.jaxis.value > 30000)
-						joy_states[0] = 1; // right
-
-					else
-						joy_states[0] = 0;
-				}
-
-				if (event.jaxis.axis == 1) {
-					if (event.jaxis.value < -30000)
-						joy_states[1] = -1; // up
-					
-					else if (event.jaxis.value > 30000)
-						joy_states[1] = 1; // down
+					else if (event.jaxis.value > 8000)
+						joy_state = 1; // right
 
 					else
-						joy_states[1] = 0;
+						joy_state = 0;
 				}
-
 				break;
-
+			case SDL_JOYHATMOTION:
+				switch (event.jhat.value)
+				{
+					case 2: gamepad_states[0] = 1; break; // right
+					case 3: gamepad_states[0] = 1; break; // right (and up)
+					case 6: gamepad_states[0] = 1; break; // right (and down)
+					case 8: gamepad_states[0] = -1; break; // left
+					case 9: gamepad_states[0] = -1; break; // left (and up)
+					case 12: gamepad_states[0] = -1; break; // left (and down)
+					default: gamepad_states[0] = 0; break;
+				}
+				break;
 			case SDL_JOYBUTTONDOWN:
-				joy_states[2] = 1;
+				switch (event.jbutton.button)
+				{
+					case 0: gamepad_states[1] = 1; break; /*** A (down) ***/
+					case 1: quit (0); break; /*** B (quit) ***/
+					case 2: gamepad_states[2] = 1; break; /*** X (shift) ***/
+					case 3: gamepad_states[1] = -1; break; /*** Y (up) ***/
+					case 4: break; /*** left shoulder ***/
+					case 5: break; /*** right shoulder ***/
+					case 6: break; /*** back ***/
+					case 7: break; /*** start ***/
+					case 8: break; /*** guide ***/
+					case 9: break; /*** left joystick ***/
+					case 10: break; /*** right joystick ***/
+				}
 				break;
 			case SDL_JOYBUTTONUP:
-				joy_states[2] = 0;
+				switch (event.jbutton.button)
+				{
+					case 0: gamepad_states[1] = 0; break; /*** A (down) ***/
+					case 1: break; /*** B ***/
+					case 2: gamepad_states[2] = 0; break; /*** X (shift) ***/
+					case 3: gamepad_states[1] = 0; break; /*** Y (up) ***/
+					case 4: break; /*** left shoulder ***/
+					case 5: break; /*** right shoulder ***/
+					case 6: break; /*** back ***/
+					case 7: break; /*** start ***/
+					case 8: break; /*** guide ***/
+					case 9: break; /*** left joystick ***/
+					case 10: break; /*** right joystick ***/
+				}
 				break;
 			case SDL_TEXTINPUT:
 				last_text_input = event.text.text[0]; // UTF-8 formatted char text input
