@@ -1677,6 +1677,7 @@ Uint32 fourcc(char* string) {
 }
 #endif
 
+int wave_version = -1;
 // seg009:74F0
 void __pascal far play_digi_sound(sound_buffer_type far *buffer) {
 	//if (!is_sound_on) return;
@@ -1686,10 +1687,14 @@ void __pascal far play_digi_sound(sound_buffer_type far *buffer) {
 	stop_sounds();
 	//printf("play_digi_sound(): called\n");
 
-	// Determine the version of the wave data.
-	int version = 0;
-	if (buffer->digi.sample_size == 8) version += 1;
-	if (buffer->digi_new.sample_size == 8) version += 2;
+	int version = wave_version;
+	if (version == -1) {
+		// Determine the version of the wave data.
+		version = 0;
+		if (buffer->digi.sample_size == 8) version += 1;
+		if (buffer->digi_new.sample_size == 8) version += 2;
+		if (version == 1 || version == 2) wave_version = version;
+	}
 
 	int sample_rate, sample_size, sample_count;
 	const byte* samples;
