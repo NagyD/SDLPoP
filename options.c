@@ -213,6 +213,7 @@ static int ini_callback(const char *section, const char *name, const char *value
         process_boolean("start_fullscreen", &start_fullscreen);
         process_word("pop_window_width", &pop_window_width, NULL);
         process_word("pop_window_height", &pop_window_height, NULL);
+        process_boolean("use_correct_aspect_ratio", &options.use_correct_aspect_ratio);
     }
 
     if (check_ini_section("AdditionalFeatures")) {

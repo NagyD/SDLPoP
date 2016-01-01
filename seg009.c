@@ -1860,7 +1860,11 @@ void __pascal far set_gr_mode(byte grmode) {
 	renderer_ = SDL_CreateRenderer(window_, -1 , SDL_RENDERER_ACCELERATED );
 	
 	// Allow us to use a consistent set of screen co-ordinates, even if the screen size changes
-	SDL_RenderSetLogicalSize(renderer_, 320, 200);
+	if (options.use_correct_aspect_ratio) {
+		SDL_RenderSetLogicalSize(renderer_, 320*5, 200*6);
+	} else {
+		SDL_RenderSetLogicalSize(renderer_, 320, 200);
+	}
 
     /* Migration to SDL2: everything is still blitted to onscreen_surface_, however:
      * SDL2 renders textures to the screen instead of surfaces; so for now, every screen
