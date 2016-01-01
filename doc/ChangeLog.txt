@@ -271,9 +271,9 @@ CHANGE: Sequence table deobfuscation.
 License:
 Added GPLv3 license (2015 June 27).
 
-2015 December 15
+2016 January 1
 ================
-(experimental version 1.16b4)
+(version 1.16)
 
 DONE: Added ability to view or record replays. (See Readme.txt for information on how to use)
 DONE: Added changing options without recompiling: use SDLPoP.ini to configure various options. 
@@ -293,19 +293,15 @@ CHANGE: Added !=NULL to check_param() calls.
 CHANGE: Build fixes.
 FIXED: Fixed crash upon drawing characters that have no glyphs, such as newline/carriage return.
 FIXED: The open potion now gets placed correctly in the copy protection level.
-
-2015 December 29
-================
-(version 1.16)
-
 FIXED: Fixed interrupting of fades and the speed of fading in cutscenes.
 FIXED: Changed vertical centering of text to match the original.
 FIXED: Fixed the order of numbers in the Shift+C cheat.
 FIXED: Fixed the demo quotes disappearing too soon.
-DONE: Add option to start fullscreen, change window dimensions in the INI file.
+DONE: Added option to start fullscreen, change window dimensions in the INI file.
 DONE: Better INI processing & new custom gameplay options.
-FIXED: Fix wall connections not working for fake tiles.
+FIXED: Fixed wall connections not working for fake tiles.
 DONE: New options: max hitpoints, first & last level where saving is allowed.
 DONE: Added per-level settings to INI and INI processing.
-DONE: Add support for named values in the INI file.
+DONE: Added support for named values in the INI file.
 DONE: Improved gamepad support.
+DONE: Added support for displaying the game with the original 4:3 aspect ratio.

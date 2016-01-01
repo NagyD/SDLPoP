@@ -21,7 +21,7 @@ The authors of this program may be contacted at http://forum.princed.org
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#define WINDOW_TITLE "Prince of Persia (SDLPoP) v1.16 - experimental"
+#define WINDOW_TITLE "Prince of Persia (SDLPoP) v1.16"
 
 // Enable or disable fading.
 // Fading used to be very buggy, but now it works correctly.

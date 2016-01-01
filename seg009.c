@@ -1853,7 +1853,11 @@ void __pascal far set_gr_mode(byte grmode) {
 	if (!start_fullscreen) start_fullscreen = check_param("full") != NULL;
 	if (start_fullscreen) flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
 	flags |= SDL_WINDOW_RESIZABLE;
-	
+
+	// Should use different default window dimensions when using 4:3 aspect ratio
+	if (options.use_correct_aspect_ratio && pop_window_width == 640 && pop_window_height == 400) {
+		pop_window_height = 480;
+	}
 	window_ = SDL_CreateWindow(WINDOW_TITLE,
 										  SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 										  pop_window_width, pop_window_height, flags);
