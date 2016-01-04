@@ -333,6 +333,8 @@ int quick_load() {
 		screen_updates_suspended = 0;
 		request_screen_update();
 		screen_updates_suspended = 1;
+		word old_rem_min = rem_min;
+		word old_rem_tick = rem_tick;
 
 		ok = quick_process(process_load);
 		fclose(quick_fp);
@@ -347,8 +349,17 @@ int quick_load() {
 		#ifdef USE_QUICKLOAD_PENALTY
 		// Subtract one minute from the remaining time (if it is above 5 minutes)
 		if (options.enable_quicksave_penalty) {
-			if (rem_min == 6) rem_tick = 719; // crop to "5 minutes" exactly, if hitting the threshold in <1 minute
-			if (rem_min > 5) --rem_min;
+			int ticks_elapsed = 720 * (rem_min - old_rem_min) + (rem_tick - old_rem_tick);
+			// don't restore time at all if the elapsed time is between 0 and 1 minutes
+			if (ticks_elapsed > 0 && ticks_elapsed < 720) {
+				rem_min = old_rem_min;
+				rem_tick = old_rem_tick;
+			}
+			else {
+				if (rem_min == 6) rem_tick = 719; // crop to "5 minutes" exactly, if hitting the threshold in <1 minute
+				if (rem_min > 5) --rem_min;
+			}
+
 		}
 		#endif
 	}
