@@ -1,19 +1,17 @@
-This is how I got things to compile.  There are other ways.
+Mac Compilation HOW TO
+~~~~~~~~~~~~~~~~~~~~~~
 
-
-GET SDL AND SDL_IMAGE:
+Get SDL2 and dependencies
 	a) Install "port" from http://www.macports.org/
-	b) Using port, install sdl & sdl_image.
+	b) sudo port install libsdl2 libsdl2_image libsdl2_mixer
 
-GET DEVLEOPMENT TOOLS:
+Get devleopment tools:
 	a) Install Xcode.
 	b) Install the "command line developer tools" by typing 'xcode-select --install' at the prompt.
-	c) Using terminal, in the root directory of SDLPOP, type "make".
+	c) Using terminal, in the root directory of SDLPOP, type: make -f Makefile.osx
 
 PLAY!
 	a) Type './prince' or './prince full'.
 	b) Hit Control-Q to quit.
 
-DISCLAIMER:  I am using OSX 10.9.5 with Xcode 6.0.1, libsdl 1.2.15_3+x11, libsdl_image 1.2.12_4, and SDLPOP v1.09.  I don't know what will happen if you don't have my exact setup.
-
-I don't know what I have broken in my amature attempt to get SDLPOP to compile and run.
+Tested on OSX 10.9.5 with Xcode 6.0.1

@@ -1,20 +1,26 @@
-# Makefile for OSX
-# 
-# CFLAGS is the result of -DOSX and the output of the command 'sdl-config --cflags'.  You may have to replace those values
-# if the SDL headers are not installed in /opt/local/include.
+# Project: SDLPoP
 
-CC		 = clang
-CFLAGS	 = -DOSX -I/opt/local/include -D_GNU_SOURCE=1 -D_THREAD_SAFE
-LDFLAGS	 = `sdl-config --libs` -lSDL_image -lSDL_mixer
-OBJ		 = main.o data.o seg000.o seg001.o seg002.o seg003.o seg004.o seg005.o seg006.o seg007.o seg008.o seg009.o
-HFILES   = common.h config.h data.h proto.h types.h
+CC = gcc
+RM = rm -f
 
-prince: $(OBJ)
-	$(CC) -o $@ $^ $(LDFLAGS) 
+HFILES = common.h config.h data.h proto.h types.h
+OBJ = main.o data.o seg000.o seg001.o seg002.o seg003.o seg004.o seg005.o seg006.o seg007.o seg008.o seg009.o seqtbl.o replay.o options.o
+BIN = prince
 
-%.o: %.c $(HFILES)
-	$(CC) -c $< $(CFLAGS)
+LIBS := $(shell sdl2-config --libs) -lSDL2_image -lSDL2_mixer
+INCS := -I/opt/local/include
+
+CFLAGS += $(INCS) -Wall -std=gnu99 -D_GNU_SOURCE=1 -D_THREAD_SAFE -DOSX
+
+all: $(BIN)
 
 clean:
-	rm -rf $(OBJ)
-	rm -rf prince
+	$(RM) $(OBJ) $(BIN)
+
+$(BIN): $(OBJ)
+	$(CC) $(LDFLAGS) $(OBJ) -o $@ $(LIBS)
+
+%.o: %.c $(HFILES)
+	$(CC) $(CFLAGS) $(LDFLAGS) -c $<
+
+.PHONY: all clean
