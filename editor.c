@@ -12,6 +12,41 @@ int copied_modif=0;
 
 
 /* do, undo, redo layer */
+#define true 1
+#define false 0
+
+int stack_top=0;
+int stack_size=0;
+int stack_cursor=0;
+long* stack_pointer=NULL;
+
+void stack_push(long data) {
+	if (!stack_size) {
+		stack_size=100;
+		stack_pointer=malloc(sizeof(long)*stack_size);
+	}
+	stack_pointer[stack_cursor]=data;
+	stack_cursor++;
+	if (stack_top<stack_cursor) stack_top=stack_cursor;
+	if (stack_size<=stack_top) {
+		stack_size*=2;
+		stack_pointer=realloc(stack_pointer,sizeof(long)*stack_size);
+	}
+}
+int stack_pop(long* data) {
+	if (!stack_cursor) return false;
+	*data=stack_pointer[--stack_cursor];
+	return true;
+}
+int stack_unpop(long* data) {
+	if (stack_cursor==stack_top) return false;
+	*data=stack_pointer[stack_cursor++];
+	return true;
+}
+#undef true
+#undef false
+
+
 
 typedef enum {
 	mark_middle=0,
@@ -22,8 +57,36 @@ typedef enum {
 
 #define editor__do(field,c,mark) editor__do_( ((long)(&(((level_type*)NULL)->field))) ,c,mark)
 void editor__do_(long offset, unsigned char c, tUndoQueueMark mark) {
+	unsigned char before=offset[(char*)(&level)];
 	offset[(char*)(&level)]=c;
+	stack_push(offset<<18|mark<<16|before<<8|c);
 } 
+void editor__undo() {
+	long aux,offset;
+	unsigned char before;
+	tUndoQueueMark mark;
+	while (stack_pop(&aux)) {
+		//after=   aux     & 0xff;
+		before= (aux>>8) & 0xff;
+		mark=   (aux>>16)& mark_all;
+		offset= (aux>>18);
+		offset[(char*)(&level)]=before;
+		if (mark & mark_start) break;
+	}
+}
+void editor__redo() {
+	long aux,offset;
+	unsigned char after;
+	tUndoQueueMark mark;
+	while (stack_unpop(&aux)) {
+		after=   aux     & 0xff;
+		//before= (aux>>8) & 0xff;
+		mark=   (aux>>16)& mark_all;
+		offset= (aux>>18);
+		offset[(char*)(&level)]=after;
+		if (mark & mark_end) break;
+	}
+}
 
 
 int __pascal far get_tile_div_mod_m7(int xpos);
