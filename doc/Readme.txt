@@ -9,6 +9,7 @@ Contributors:
 * musa (bug reports)
 * Eugene (bug reports)
 * StaticReturn (Mac OS X: Makefile, bug reports)
+* Poirot (Mac OS X: Now compatible with Falcury SDL2 port)
 * kees (bugfixes)
 * Falcury (porting to SDL2, bugfixes, improvements, additions)
 * segrax (Robert Crossfield) (Joystick support, resizable window)
@@ -80,7 +81,7 @@ Gamepad equivalents:
 
 Controlling the game:
 * Esc: pause game
-* space: show time left
+* Space: show time left
 * Ctrl-A: restart level
 * Ctrl-G: save game (on levels 3..13)
 * Ctrl-J: joystick/gamepad mode (implemented by segrax)
@@ -214,5 +215,19 @@ GNU/Linux:
 	and the game should compile.
 
 Mac OS X:
-	See the MAC_INSTALL.txt written by StaticReturn.
-	[TODO: Update this for SDL2.]
+	Get SDL2 and dependencies
+		a) Install "port" from http://www.macports.org/
+		b) sudo port install libsdl2 libsdl2_image libsdl2_mixer
+
+	Get devleopment tools:
+		a) Install Xcode.
+		b) Install the "command line developer tools" by typing 'xcode-select --install' at the prompt.
+		c) Using terminal, in the root directory of SDLPOP, type: make -f Makefile.osx
+
+	PLAY!
+		a) Type './prince' or './prince full'.
+		b) Hit Control-Q to quit.
+
+	Tested on OSX 10.9.5 with Xcode 6.0.1
+
+

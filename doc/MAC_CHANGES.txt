@@ -1,3 +1,5 @@
+Changes done by StaticReturn:
+
 Makefile:			  A new OSX specific makefile.
 seg007.c:  Line 608:  Clang was erroring because the comparison could never be equal, so I simplified it.
 proto.h:   Line 500:
