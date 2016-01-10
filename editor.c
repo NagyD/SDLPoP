@@ -37,13 +37,20 @@ x*144/320+54
 */
 
 void editor__position(char_type* character,int col,int row,int room,int x,word seq) {
-	Kid.curr_col=col;
-	Kid.curr_row=row;
-	Kid.room=room;
-	Kid.x=x;
-	Kid.y=55+63*row;
-	Kid.curr_seq=seq;
+	character->curr_col=col;
+	character->curr_row=row;
+	character->room=room;
+	character->x=x;
+	character->y=55+63*row;
+	character->curr_seq=seq;
 }
+
+/*
+Debug char position
+printf("Guard | %d-%d %d,%d |\n", 
+	Guard.curr_col,Guard.curr_row,Guard.x,Guard.y
+);
+*/
 
 void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int alt) {
 	int col,row,tile,x;
@@ -52,7 +59,6 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int
 	x=e.x*140/320+62;
 	if (row<0 || row>2) return;
 	tile=row*10+col;
-
 
 	if (e.button==SDL_BUTTON_LEFT && !shift && !alt && !ctrl) { //left click: edit tile
 		editor__do(fg[(loaded_room-1)*30+tile],copied_tiles,mark_start);
@@ -63,6 +69,8 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int
 		copied_modif=curr_room_modif[tile];
 	} else if (e.button==SDL_BUTTON_LEFT && shift && !alt && !ctrl) { //shift+left click: move kid
 		editor__position(&Kid,col,row,loaded_room,x,6563);
+	} else if (e.button==SDL_BUTTON_RIGHT && shift && !alt && !ctrl) { //shift+right click: move kid
+		editor__position(&Guard,col,row,loaded_room,x,6569);
 	}
 			
 				/*printf("hola mundo %d %d %d %d %c%c%c\n", 
