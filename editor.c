@@ -7,6 +7,17 @@ int copied_tiles=0;
 int copied_modif=0;
 
 
+int edition_started=0;
+level_type edited;
+void editor__load_level() {
+	dat_type* dathandle;
+	dathandle = open_dat("LEVELS.DAT", 0);
+	load_from_opendats_to_area(current_level + 2000, &edited, sizeof(edited), "bin");
+	close_dat(dathandle);
+	edition_started=1;
+}
+
+
 
 
 
@@ -56,7 +67,13 @@ typedef enum {
 
 #define editor__do(field,c,mark) editor__do_( ((long)(&(((level_type*)NULL)->field))) ,c,mark)
 void editor__do_(long offset, unsigned char c, tUndoQueueMark mark) {
-	unsigned char before=offset[(char*)(&level)];
+	unsigned char before;
+
+	if (!edition_started)
+		editor__load_level();
+
+	before=offset[(char*)(&edited)];
+	offset[(char*)(&edited)]=c;
 	offset[(char*)(&level)]=c;
 	stack_push(offset<<18|mark<<16|before<<8|c);
 } 
@@ -70,6 +87,7 @@ void editor__undo() {
 		mark=   (aux>>16)& mark_all;
 		offset= (aux>>18);
 		offset[(char*)(&level)]=before;
+		offset[(char*)(&edited)]=before;
 		if (mark & mark_start) break;
 	}
 }
@@ -83,6 +101,7 @@ void editor__redo() {
 		mark=   (aux>>16)& mark_all;
 		offset= (aux>>18);
 		offset[(char*)(&level)]=after;
+		offset[(char*)(&edited)]=after;
 		if (mark & mark_end) break;
 	}
 }
@@ -114,6 +133,23 @@ printf("Guard | %d-%d %d,%d |\n",
 );
 */
 
+void save_resource(const char* file, int res, const void* data, int size, const char* ext) {
+	char aux[255];
+	FILE* fp;
+	snprintf(aux,255,"data/%s/res%d.%s",file,res,ext);
+	fp=fopen(aux,"wb");
+	if (fp) {
+		fwrite(data,size,1,fp);
+		fclose(fp);
+	} else {
+		printf("error opening '%s'\n",aux);
+	}
+}
+
+void save_level() {
+	save_resource("LEVELS.DAT",current_level + 2000, &edited, sizeof(edited), "bin");
+}
+
 void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int alt) {
 	int col,row,tile,x;
 	col=e.x/32;
@@ -127,11 +163,11 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int
 		editor__do(bg[(loaded_room-1)*30+tile],copied_modif,mark_end);
 		redraw_screen(1);
 	} else if (e.button==SDL_BUTTON_RIGHT && !shift && !alt && !ctrl) { //right click: copy tile
-		copied_tiles=curr_room_tiles[tile];
-		copied_modif=curr_room_modif[tile];
+		copied_tiles=edited.fg[(loaded_room-1)*30+tile];
+		copied_modif=edited.bg[(loaded_room-1)*30+tile];
 	} else if (e.button==SDL_BUTTON_LEFT && shift && !alt && !ctrl) { //shift+left click: move kid
 		editor__position(&Kid,col,row,loaded_room,x,6563);
-	} else if (e.button==SDL_BUTTON_RIGHT && shift && !alt && !ctrl) { //shift+right click: move kid
+	} else if (e.button==SDL_BUTTON_RIGHT && shift && !alt && !ctrl) { //shift+right click: move move/put guard
 		editor__position(&Guard,col,row,loaded_room,x,6569);
 	}
 			
@@ -145,7 +181,8 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int
 					alt?'a':' '
 	);*/
 }
-void editor__process_key(int key) {
+void editor__process_key(int key,const char** answer_text, word* need_show_text) {
+
 	switch (key) {
 	case SDL_SCANCODE_Z | WITH_CTRL: // ctrl-z
 		editor__undo();
@@ -154,6 +191,16 @@ void editor__process_key(int key) {
 	case SDL_SCANCODE_Z | WITH_CTRL | WITH_ALT: // ctrl-alt-z
 		editor__redo();
 		redraw_screen(1);
+		break;
+	case SDL_SCANCODE_C | WITH_CTRL: // ctrl-c
+		if (edition_started) {
+			*answer_text="LEVEL SAVED";
+			*need_show_text=1;
+			save_level();
+		} else {
+			*answer_text="Nothing to save";
+			*need_show_text=1;
+		}
 		break;
 	}
 }

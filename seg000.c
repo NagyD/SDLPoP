@@ -23,7 +23,7 @@ The authors of this program may be contacted at http://forum.princed.org
 #include <setjmp.h>
 
 #ifdef USE_EDITOR
-void editor__process_key(int key);
+void editor__process_key(int key,const char** answer_text, word* need_show_text);
 #endif // USE_EDITOR
 
 // data:009C
@@ -562,7 +562,7 @@ int __pascal far process_key() {
 #endif // USE_QUICKSAVE
 	}
 #ifdef USE_EDITOR
-	editor__process_key(key);
+	editor__process_key(key,&answer_text,&need_show_text);
 #endif // USE_EDITOR
 	if (cheats_enabled) {
 		switch (key) {
