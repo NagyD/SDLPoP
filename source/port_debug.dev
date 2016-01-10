@@ -1,8 +1,8 @@
 [Project]
-FileName=port_release.dev
+FileName=port_debug.dev
 Name=SDLPoP
 UnitCount=20
-Type=0
+Type=1
 Ver=2
 ObjFiles=
 Includes=
@@ -18,7 +18,7 @@ Icon=
 ExeOutput=
 ObjectOutput=
 OverrideOutput=1
-OverrideOutputName=prince.exe
+OverrideOutputName=../prince.exe
 HostApplication=
 Folders=
 CommandLine=
@@ -26,8 +26,8 @@ UseCustomMakefile=0
 CustomMakefile=
 IncludeVersionInfo=0
 SupportXPThemes=0
-CompilerSet=3
-CompilerSettings=0000000100000000000001000
+CompilerSet=4
+CompilerSettings=0000000100000000001000000
 LogOutput=
 LogOutputEnabled=0
 
