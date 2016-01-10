@@ -1,18 +1,18 @@
 Name of program: SDLPoP
 (Earlier name: David's open-source port of PoP)
 
-Author: David from forum.princed.org
+Author: David from forum.princed.org (NagyD on GitHub)
 Contributors:
 * Andrew (bug reports)
 * htamas (bug reports)
 * Norbert (EndeavourAccuracy on GitHub) (bug reports, suggestions, improved gamepad support)
 * musa (bug reports)
 * Eugene (bug reports)
-* StaticReturn (Mac OS X: Makefile, bug reports)
-* Poirot (Mac OS X: Now compatible with Falcury SDL2 port)
+* StaticReturn (Mac OS X: Makefile (for older SDL1 version), bug reports)
+* Poirot (ecalot on GitHub) (Mac OS X: Now compatible with Falcury SDL2 port)
 * kees (bugfixes)
 * Falcury (porting to SDL2, bugfixes, improvements, additions)
-* segrax (Robert Crossfield) (Joystick support, resizable window)
+* segra (segrax on GitHub) (Joystick support, resizable window)
 
 Topic in forum: http://forum.princed.org/viewtopic.php?f=69&t=3512
 GitHub: https://github.com/NagyD/SDLPoP
@@ -84,7 +84,7 @@ Controlling the game:
 * Space: show time left
 * Ctrl-A: restart level
 * Ctrl-G: save game (on levels 3..13)
-* Ctrl-J: joystick/gamepad mode (implemented by segrax)
+* Ctrl-J: joystick mode (implemented by segrax) / gamepad mode (implemented by Norbert)
 * Ctrl-K: keyboard mode
 * Ctrl-R: return to intro
 * Ctrl-S: sound on/off
@@ -121,10 +121,10 @@ Q: Where is the music?
 A:
 Since version 1.13, the game supports loading music from the data/music folder.
 The music is not included in releases because it is very big, and it does not change between versions.
-You need to get the music from here: (38MB)
+You need to get the music from here: (38 MB)
 	http://www.popot.org/get_the_games/various/PoP1_DOS_music.zip
 It's the last link here: http://www.popot.org/get_the_games.php?game=1
-Copy the ogg files to the data/music folder. (The mp3 and flac files don't seem to work.)
+Copy the OGG files to the data/music folder.
 
 Since version 1.15, music is included.
 
@@ -219,7 +219,7 @@ Mac OS X:
 		a) Install "port" from http://www.macports.org/
 		b) sudo port install libsdl2 libsdl2_image libsdl2_mixer
 
-	Get devleopment tools:
+	Get development tools:
 		a) Install Xcode.
 		b) Install the "command line developer tools" by typing 'xcode-select --install' at the prompt.
 		c) Using terminal, in the root directory of SDLPOP, type: make -f Makefile.osx
