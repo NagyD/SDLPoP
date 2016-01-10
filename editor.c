@@ -1,6 +1,5 @@
-#include <stdio.h>
-#include "types.h"
-#include "data.h"
+#include "common.h"
+#ifdef USE_EDITOR
 
 void __pascal far redraw_screen(int drawing_different_room);
 
@@ -27,7 +26,7 @@ void stack_push(long data) {
 	}
 	stack_pointer[stack_cursor]=data;
 	stack_cursor++;
-	if (stack_top<stack_cursor) stack_top=stack_cursor;
+	/*if (stack_top<stack_cursor)*/ stack_top=stack_cursor;
 	if (stack_size<=stack_top) {
 		stack_size*=2;
 		stack_pointer=realloc(stack_pointer,sizeof(long)*stack_size);
@@ -146,4 +145,18 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int
 					alt?'a':' '
 	);*/
 }
+void editor__process_key(int key) {
+	switch (key) {
+	case SDL_SCANCODE_Z | WITH_CTRL: // ctrl-z
+		editor__undo();
+		redraw_screen(1);
+		break;
+	case SDL_SCANCODE_Z | WITH_CTRL | WITH_ALT: // ctrl-alt-z
+		editor__redo();
+		redraw_screen(1);
+		break;
+	}
+}
 
+
+#endif

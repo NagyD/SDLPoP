@@ -22,6 +22,10 @@ The authors of this program may be contacted at http://forum.princed.org
 #include <fcntl.h>
 #include <setjmp.h>
 
+#ifdef USE_EDITOR
+void editor__process_key(int key);
+#endif // USE_EDITOR
+
 // data:009C
 word cheats_enabled = 0;
 
@@ -557,6 +561,9 @@ int __pascal far process_key() {
 #endif // USE_RECORD_REPLAY
 #endif // USE_QUICKSAVE
 	}
+#ifdef USE_EDITOR
+	editor__process_key(key);
+#endif // USE_EDITOR
 	if (cheats_enabled) {
 		switch (key) {
 			case SDL_SCANCODE_C: // c
