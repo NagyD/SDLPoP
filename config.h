@@ -30,6 +30,9 @@ The authors of this program may be contacted at http://forum.princed.org
 // Enable or disable the potions level. (copy protection)
 #define USE_COPYPROT
 
+// Enable or disable the editor.
+#define USE_EDITOR
+
 // Enable or disable flashing.
 #define USE_FLASH
 

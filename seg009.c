@@ -2553,6 +2553,17 @@ void idle() {
 #endif
 				}
 				break;
+#ifdef USE_EDITOR
+			case SDL_MOUSEBUTTONDOWN:
+				if (editor_enabled)
+					editor__handle_mouse_button(
+						event.button,
+						key_states[SDL_SCANCODE_LSHIFT] || key_states[SDL_SCANCODE_RSHIFT],
+						key_states[SDL_SCANCODE_LCTRL] || key_states[SDL_SCANCODE_RCTRL],
+						key_states[SDL_SCANCODE_LALT] || key_states[SDL_SCANCODE_RALT]
+					);
+				break;
+#endif
 			case SDL_QUIT:
 				quit(0);
 				break;

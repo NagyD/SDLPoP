@@ -1061,4 +1061,9 @@ typedef union options_type {
 	};
 } options_type;
 
+#ifdef USE_EDITOR
+void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int alt);
+extern word editor_enabled;
+#endif
+
 #endif

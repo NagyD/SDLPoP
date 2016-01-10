@@ -25,6 +25,10 @@ The authors of this program may be contacted at http://forum.princed.org
 // data:009C
 word cheats_enabled = 0;
 
+#ifdef USE_EDITOR
+word editor_enabled = 0;
+#endif
+
 // data:461E
 dat_type * dathandle;
 
@@ -61,6 +65,10 @@ void far pop_main() {
 	cheats_enabled = check_param("megahit") != NULL;
 #ifdef __DEBUG__
 	cheats_enabled = 1; // debug
+#endif
+#ifdef USE_EDITOR
+	editor_enabled = check_param("edit") != NULL;
+	if (editor_enabled) cheats_enabled = 1;
 #endif
 	draw_mode = check_param("draw") != NULL && cheats_enabled;
 	demo_mode = check_param("demo") != NULL;
