@@ -179,6 +179,9 @@ void editor__set_guard(tile,x) {
 	}
 }
 void editor__remove_guard() {
+	Guard.alive=0;
+	guardhp_delta = -guardhp_curr;
+	Guard.room=25; //TODO: fix this
 	editor__do(guards_tile[loaded_room-1],30,mark_all);
 }
 int editor__guard_lives(int delta) {
@@ -235,7 +238,7 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 		editor__redo();
 		redraw_screen(1);
 		break;
-	case SDL_SCANCODE_K | WITH_SHIFT: // shift-k
+	case SDL_SCANCODE_DELETE: // delete
 		editor__remove_guard();
 		//TODO: finish this: deactivate Guard object
 		redraw_screen(1);
