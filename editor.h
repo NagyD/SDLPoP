@@ -1,3 +1,4 @@
+
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
 Copyright (C) 2013-2015  Dávid Nagy
@@ -18,42 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 The authors of this program may be contacted at http://forum.princed.org
 */
 
-#ifndef COMMON_H
-#define COMMON_H
+#ifndef EDITOR_H
+#define EDITOR_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <fcntl.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <unistd.h>
-
-#include "config.h"
-#include "types.h"
-#include "proto.h"
-#include "data.h"
-
-#ifdef USE_EDITOR
-#include "editor.h"
-#endif // USE_EDITOR
-
-#ifndef MAX
-#define MAX(a,b) ((a)>(b)?(a):(b))
-#endif
-#ifndef MIN
-#define MIN(a,b) ((a)<(b)?(a):(b))
-#endif
-#ifndef ABS
-#define ABS(x) ((x)<0?-(x):(x))
-#endif
-
-#ifdef __cplusplus
-}
-#endif
+void editor__process_key(int key,const char** answer_text, word* need_show_text);
+void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int alt);
 
 #endif

@@ -22,10 +22,6 @@ The authors of this program may be contacted at http://forum.princed.org
 #include <fcntl.h>
 #include <setjmp.h>
 
-#ifdef USE_EDITOR
-void editor__process_key(int key,const char** answer_text, word* need_show_text);
-#endif // USE_EDITOR
-
 // data:009C
 word cheats_enabled = 0;
 

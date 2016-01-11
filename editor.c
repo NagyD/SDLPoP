@@ -1,3 +1,23 @@
+/*
+SDLPoP editor
+Copyright (C) 2013-2015  Dávid Nagy, Enrique Calot 
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+The authors of this program may be contacted at http://forum.princed.org
+*/
+
 #include "common.h"
 #ifdef USE_EDITOR
 
@@ -6,6 +26,8 @@ void __pascal far redraw_screen(int drawing_different_room);
 int copied_tiles=0;
 int copied_modif=0;
 
+// stack sublayer variable
+int stack_top=0;
 
 int edition_level=-1;
 level_type edited;
@@ -15,17 +37,15 @@ void editor__load_level() {
 	load_from_opendats_to_area(current_level + 2000, &edited, sizeof(edited), "bin");
 	close_dat(dathandle);
 	edition_level=current_level;
+	stack_top=0;
 }
 
-
-
-
-
 /* do, undo, redo layer */
+
+/* stack sublayer */
 #define true 1
 #define false 0
 
-int stack_top=0;
 int stack_size=0;
 int stack_cursor=0;
 long* stack_pointer=NULL;
@@ -65,6 +85,7 @@ typedef enum {
 	mark_all=3
 }tUndoQueueMark;
 
+/* do action sublayer */
 #define editor__do(field,c,mark) editor__do_( ((long)(&(((level_type*)NULL)->field))) ,c,mark)
 void editor__do_(long offset, unsigned char c, tUndoQueueMark mark) {
 	unsigned char before;
@@ -106,16 +127,7 @@ void editor__redo() {
 	}
 }
 
-
-int __pascal far get_tile_div_mod_m7(int xpos);
-
-/**
-convert SDL x to Prince c:
-SDL 0 == Prince 54
-SDL 320 == Prince 198
-x*144/320+54
-
-*/
+//////////////////////////////
 
 void editor__position(char_type* character,int col,int row,int room,int x,word seq) {
 	character->curr_col=col;
@@ -169,6 +181,14 @@ void editor__set_guard(tile,x) {
 void editor__remove_guard() {
 	editor__do(guards_tile[loaded_room-1],30,mark_all);
 }
+int editor__guard_lives(int delta) {
+	int new_skill=level.guards_skill[loaded_room-1]+delta;
+	if (new_skill>=0 && 20>new_skill && level.guards_tile[loaded_room-1]<30) {
+		editor__do(guards_skill[loaded_room-1],new_skill,mark_all);
+		return new_skill;
+	}
+	return -1;
+}
 
 void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int alt) {
 	int col,row,tile,x;
@@ -204,7 +224,8 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int
 	);*/
 }
 void editor__process_key(int key,const char** answer_text, word* need_show_text) {
-
+	static char aux[50];
+	int aux_int;
 	switch (key) {
 	case SDL_SCANCODE_Z | WITH_CTRL: // ctrl-z
 		editor__undo();
@@ -219,9 +240,18 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 		//TODO: finish this: deactivate Guard object
 		redraw_screen(1);
 		break;
-	//TODO: [] for guard lives. {} for guard skill. <> for guard color. g mirror guard
+	case SDL_SCANCODE_LEFTBRACKET:
+	case SDL_SCANCODE_RIGHTBRACKET:
+		aux_int=editor__guard_lives(key==SDL_SCANCODE_LEFTBRACKET?-1:1);
+		if (aux_int!=-1) {
+			snprintf(aux,50,"Guard skill is %d",aux_int);
+			*answer_text=aux;
+			*need_show_text=1;
+		}
+		break; 
+	//TODO: [] for guard skill. <> for guard color. g mirror guard
 	case SDL_SCANCODE_C | WITH_CTRL: // ctrl-c
-		if (edition_level!=-1) {
+		if (edition_level==current_level) {
 			*answer_text="LEVEL SAVED";
 			*need_show_text=1;
 			save_level();
