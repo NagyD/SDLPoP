@@ -7,14 +7,14 @@ int copied_tiles=0;
 int copied_modif=0;
 
 
-int edition_started=0;
+int edition_level=-1;
 level_type edited;
 void editor__load_level() {
 	dat_type* dathandle;
 	dathandle = open_dat("LEVELS.DAT", 0);
 	load_from_opendats_to_area(current_level + 2000, &edited, sizeof(edited), "bin");
 	close_dat(dathandle);
-	edition_started=1;
+	edition_level=current_level;
 }
 
 
@@ -69,7 +69,7 @@ typedef enum {
 void editor__do_(long offset, unsigned char c, tUndoQueueMark mark) {
 	unsigned char before;
 
-	if (!edition_started)
+	if (edition_level!=current_level)
 		editor__load_level();
 
 	before=offset[(char*)(&edited)];
@@ -150,6 +150,26 @@ void save_level() {
 	save_resource("LEVELS.DAT",current_level + 2000, &edited, sizeof(edited), "bin");
 }
 
+void editor__set_guard(tile,x) {
+	printf("tile %d\n",level.guards_tile[loaded_room-1]);
+	printf("c %d\n",level.guards_color[loaded_room-1]);
+	printf("x %d\n",level.guards_x[loaded_room-1]);
+	printf("dir %d\n",level.guards_dir[loaded_room-1]);
+	printf("skill %d\n",level.guards_skill[loaded_room-1]);
+	if (level.guards_tile[loaded_room-1]>=30) {
+		editor__do(guards_tile[loaded_room-1],tile,mark_start);
+		editor__do(guards_color[loaded_room-1],0,mark_middle);
+		editor__do(guards_x[loaded_room-1],x,mark_middle);
+		editor__do(guards_dir[loaded_room-1],0,mark_middle);
+		editor__do(guards_skill[loaded_room-1],0,mark_end);
+	} else {
+		editor__do(guards_tile[loaded_room-1],tile,mark_all);
+	}
+}
+void editor__remove_guard() {
+	editor__do(guards_tile[loaded_room-1],30,mark_all);
+}
+
 void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int alt) {
 	int col,row,tile,x;
 	col=e.x/32;
@@ -168,7 +188,9 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int
 	} else if (e.button==SDL_BUTTON_LEFT && shift && !alt && !ctrl) { //shift+left click: move kid
 		editor__position(&Kid,col,row,loaded_room,x,6563);
 	} else if (e.button==SDL_BUTTON_RIGHT && shift && !alt && !ctrl) { //shift+right click: move move/put guard
+		editor__set_guard(tile,x);
 		editor__position(&Guard,col,row,loaded_room,x,6569);
+		redraw_screen(1);
 	}
 			
 				/*printf("hola mundo %d %d %d %d %c%c%c\n", 
@@ -192,8 +214,14 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 		editor__redo();
 		redraw_screen(1);
 		break;
+	case SDL_SCANCODE_K | WITH_SHIFT: // shift-k
+		editor__remove_guard();
+		//TODO: finish this: deactivate Guard object
+		redraw_screen(1);
+		break;
+	//TODO: [] for guard lives. {} for guard skill. <> for guard color. g mirror guard
 	case SDL_SCANCODE_C | WITH_CTRL: // ctrl-c
-		if (edition_started) {
+		if (edition_level!=-1) {
 			*answer_text="LEVEL SAVED";
 			*need_show_text=1;
 			save_level();
