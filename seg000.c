@@ -510,8 +510,15 @@ int __pascal far process_key() {
 			need_show_text = 1;
 		break;
 		case SDL_SCANCODE_V | WITH_CTRL: // ctrl-v
+			#ifdef USE_EDITOR
+			//editor uses ctrl+v for pasting
+			if (!editor_enabled) {
+			#endif
 			answer_text = "PRINCE OF PERSIA  V1.0";
 			need_show_text = 1;
+			#ifdef USE_EDITOR
+			}
+			#endif
 		break;
 		case SDL_SCANCODE_L | WITH_SHIFT: // shift-l
 			if (current_level <= 3 || cheats_enabled) {

@@ -239,6 +239,7 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 		redraw_screen(1);
 		break;
 	case SDL_SCANCODE_DELETE: // delete
+	case SDL_SCANCODE_BACKSPACE: // backspace
 		editor__remove_guard();
 		//TODO: finish this: deactivate Guard object
 		redraw_screen(1);

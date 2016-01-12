@@ -194,31 +194,39 @@ typedef struct link_type {
 	byte left,right,up,down;
 } link_type;
 
-typedef struct level_type {
-	byte fg[720];
-	byte bg[720];
-	byte doorlinks1[256];
-	byte doorlinks2[256];
-	link_type roomlinks[24];
-	byte used_rooms;
-	byte roomxs[24];
-	byte roomys[24];
-	byte fill_1[15];
-	byte start_room;
-	byte start_pos;
-	sbyte start_dir;
-	byte fill_2[4];
-	byte guards_tile[24];
-	byte guards_dir[24];
-	byte guards_x[24];
-	byte guards_seq_lo[24];
-	byte guards_skill[24];
-	byte guards_seq_hi[24];
-	byte guards_color[24];
-	byte fill_3[18];
-} level_type;
+#define NUMBER_OF_ROOMS 24
+#define DEF_LEVEL_TYPE(name,rooms) \
+typedef struct name { \
+	byte fg[rooms * 30]; \
+	byte bg[rooms * 30]; \
+	byte doorlinks1[256]; \
+	byte doorlinks2[256]; \
+	link_type roomlinks[rooms]; \
+	byte used_rooms; \
+	byte roomxs[rooms]; \
+	byte roomys[rooms]; \
+	byte fill_1[15]; \
+	byte start_room; \
+	byte start_pos; \
+	sbyte start_dir; \
+	byte fill_2[4]; \
+	byte guards_tile[rooms]; \
+	byte guards_dir[rooms]; \
+	byte guards_x[rooms]; \
+	byte guards_seq_lo[rooms]; \
+	byte guards_skill[rooms]; \
+	byte guards_seq_hi[rooms]; \
+	byte guards_color[rooms]; \
+	byte fill_3[18]; \
+} name;
+
+DEF_LEVEL_TYPE(level_type,NUMBER_OF_ROOMS);
 SDL_COMPILE_TIME_ASSERT(level_size, sizeof(level_type) == 2305);
 #pragma pack(pop)
+
+#ifdef USE_EDITOR
+DEF_LEVEL_TYPE(level_editor_type,(NUMBER_OF_ROOMS+8));
+#endif
 
 typedef SDL_Surface surface_type;
 typedef SDL_Surface image_type;
