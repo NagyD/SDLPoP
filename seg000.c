@@ -292,6 +292,7 @@ int quick_save() {
 void restore_room_after_quick_load() {
 	int temp1 = curr_guard_color;
 	int temp2 = next_level;
+	reset_level_unused_fields(false);
 	load_lev_spr(current_level);
 	curr_guard_color = temp1;
 	next_level = temp2;
@@ -942,6 +943,33 @@ void __pascal far load_level() {
 	close_dat(dathandle);
 
 	alter_mods_allrm();
+	reset_level_unused_fields(true); // added
+}
+
+void reset_level_unused_fields(bool loading_clean_level) {
+	// Entirely unused fields in the level format: reset to zero for now
+	// They can be repurposed to add new stuff to the level format in the future
+	memset(level.roomxs, 0, COUNT(level.roomxs));
+	memset(level.roomys, 0, COUNT(level.roomys));
+	memset(level.fill_1, 0, COUNT(level.fill_1));
+	memset(level.fill_2, 0, COUNT(level.fill_2));
+	memset(level.fill_3, 0, COUNT(level.fill_3));
+
+	// For these fields, only use the bits that are actually used, and set the rest to zero.
+	// Good for repurposing the unused bits in the future.
+	int i;
+	for (i = 0; i < level.used_rooms; ++i) {
+		//level.guards_dir[i]   &= 0x01; // 1 bit in use
+		level.guards_skill[i] &= 0x0F; // 4 bits in use
+	}
+
+	// In savestates, additional information may be stored (e.g. remembered guard hp) - should not reset this then!
+	if (loading_clean_level) {
+		for (i = 0; i < level.used_rooms; ++i) {
+			level.guards_color[i] &= 0x0F; // 4 bits in use (other 4 bits repurposed as remembered guard hp)
+		}
+	}
+
 }
 
 // seg000:0EA8

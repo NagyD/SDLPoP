@@ -31,6 +31,7 @@ void __pascal far load_sounds(int min_sound,int max_sound);
 void __pascal far load_opt_sounds(int first,int last);
 void __pascal far load_lev_spr(int level);
 void __pascal far load_level();
+void reset_level_unused_fields(bool loading_clean_level);
 int __pascal far play_kid_frame();
 void __pascal far play_guard_frame();
 void __pascal far check_the_end();

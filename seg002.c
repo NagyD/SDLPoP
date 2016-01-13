@@ -122,6 +122,12 @@ void __pascal far enter_guard() {
 	} else {
 		curr_guard_color = 0;
 	}
+
+	#ifdef REMEMBER_GUARD_HP
+	int remembered_hp = (curr_guard_color & 0xF0) >> 4;
+    #endif
+	curr_guard_color &= 0x0F; // added; only least significant 4 bits are used for guard color
+
 	// level 3 has skeletons with infinite lives
 	if (current_level == 3) {
 		Char.charid = charid_4_skeleton;
@@ -156,6 +162,10 @@ void __pascal far enter_guard() {
 		guard_refrac = 0;
 		is_guard_notice = 0;
 		get_guard_hp();
+		#ifdef REMEMBER_GUARD_HP
+		if (options.enable_remember_guard_hp && remembered_hp > 0)
+			guardhp_delta = guardhp_curr = (word) remembered_hp;
+		#endif
 	}
 	Char.fall_y = 0;
 	Char.fall_x = 0;
@@ -201,7 +211,13 @@ void __pascal far leave_guard() {
 	// arrays are indexed 0..23 instead of 1..24
 	room_minus_1 = Guard.room - 1;
 	level.guards_tile[room_minus_1] = get_tilepos(0, Guard.curr_row);
-	level.guards_color[room_minus_1] = curr_guard_color;
+
+	level.guards_color[room_minus_1] = curr_guard_color & 0x0F; // restriction to 4 bits added
+#ifdef REMEMBER_GUARD_HP
+	if (options.enable_remember_guard_hp && guardhp_curr < 16) // can remember 1..15 hp
+		level.guards_color[room_minus_1] |= (guardhp_curr << 4);
+#endif
+
 	level.guards_x[room_minus_1] = Guard.x;
 	level.guards_dir[room_minus_1] = Guard.direction;
 	level.guards_skill[room_minus_1] = guard_skill;

@@ -72,6 +72,9 @@ The authors of this program may be contacted at http://forum.princed.org
 //      5 = wall including blue line; 50 = no blue
 #define USE_FAKE_TILES
 
+// Allow guard hitpoints not resetting to their default (maximum) value when re-entering the room
+#define REMEMBER_GUARD_HP
+
 // Bugfixes:
 
 // The mentioned tricks can be found here: http://www.popot.org/documentation.php?doc=Tricks
