@@ -161,7 +161,7 @@ void save_level() {
 	save_resource("LEVELS.DAT",current_level + 2000, &edited, sizeof(edited), "bin");
 }
 
-void editor__set_guard(tilepos,x) {
+void editor__set_guard(byte tilepos,byte x) {
 	printf("tile %d\n",level.guards_tile[loaded_room-1]);
 	printf("c %d\n",level.guards_color[loaded_room-1]);
 	printf("x %d\n",level.guards_x[loaded_room-1]);
