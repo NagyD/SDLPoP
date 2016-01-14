@@ -47,6 +47,7 @@ int room_api_alloc_room(tMap* map, int where);
 int room_api_insert_room_right(tMap* map, int where);
 int room_api_insert_room_left(tMap* map, int where);
 int room_api_insert_room_up(tMap* map, int where);
+int room_api_insert_room_down(tMap* map, int where);
 
 
 void __pascal far redraw_screen(int drawing_different_room);
@@ -110,6 +111,11 @@ int stack_unpop(long* data) {
 	*data=stack_pointer[stack_cursor++];
 	return true;
 }
+void stack_or(long data) {
+	if (stack_cursor) {
+		stack_pointer[stack_cursor-1]|=data;
+	}
+}
 #undef true
 #undef false
 
@@ -123,9 +129,19 @@ typedef enum {
 }tUndoQueueMark;
 
 /* do action sublayer */
+tUndoQueueMark prevMark=mark_middle;
+#define editor__do_mark_start() prevMark=mark_start
+void editor__do_mark_end() {
+	if (prevMark!=mark_start) //if writing is open
+		stack_or(mark_end<<16);
+	prevMark=mark_middle;
+}
+
 #define editor__do(field,c,mark) editor__do_( ((long)(&(((level_type*)NULL)->field))) ,c,mark)
 void editor__do_(long offset, byte c, tUndoQueueMark mark) {
 	byte before;
+	mark=mark|prevMark;
+	prevMark=mark_middle;
 
 	if (edition_level!=current_level)
 		editor__load_level();
@@ -135,6 +151,7 @@ void editor__do_(long offset, byte c, tUndoQueueMark mark) {
 	offset[(char*)(&level)]=c;
 	stack_push(offset<<18|mark<<16|before<<8|c);
 } 
+
 void editor__undo() {
 	long aux,offset;
 	byte before;
@@ -318,7 +335,19 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 		Guard.direction=~Guard.direction; //synch
 		break; 
 	case SDL_SCANCODE_J | WITH_SHIFT:
-		aux_int=room_api_insert_room_right(&edited_map,room_api_where_room(&edited_map,drawn_room));	
+	case SDL_SCANCODE_H | WITH_SHIFT:
+	case SDL_SCANCODE_U | WITH_SHIFT:
+	case SDL_SCANCODE_N | WITH_SHIFT:
+		editor__do_mark_start();
+		if (key==(SDL_SCANCODE_J | WITH_SHIFT))
+			aux_int=room_api_insert_room_right(&edited_map,room_api_where_room(&edited_map,drawn_room));	
+		if (key==(SDL_SCANCODE_H | WITH_SHIFT))
+			aux_int=room_api_insert_room_left(&edited_map,room_api_where_room(&edited_map,drawn_room));	
+		if (key==(SDL_SCANCODE_U | WITH_SHIFT))
+			aux_int=room_api_insert_room_up(&edited_map,room_api_where_room(&edited_map,drawn_room));	
+		if (key==(SDL_SCANCODE_N | WITH_SHIFT))
+			aux_int=room_api_insert_room_down(&edited_map,room_api_where_room(&edited_map,drawn_room));	
+		editor__do_mark_end();
 		if (aux_int) {
 			snprintf(aux,50,"Added S%d",aux_int);
 			*answer_text=aux;
@@ -370,7 +399,8 @@ void room_api_refresh(tMap* map) {
 	memset(map->list,0,sizeof(long)*NUMBER_OF_ROOMS);
 
 	room_api__private_recurse(map,MAP_POS(MAP_CENTER,MAP_CENTER),edited.start_room);
-//debug
+
+#ifdef __DEBUG__
 	{
 		int i=0;
 		printf("----------------------------------");
@@ -384,6 +414,7 @@ void room_api_refresh(tMap* map) {
 		}
 		printf("\n");
 	}
+#endif
 }
 
 void room_api_init(tMap* map) {
@@ -415,8 +446,7 @@ int room_api_get_free_room(const tMap* map) {
 
 
 void room_api_free_room(tMap* map,int r) { //DO NOT FREE THE STARTING ROOM!
-//TODO: not in undo-redo stack
-#define REMOVE_LINK(dir,opo) if (edited.roomlinks[r-1].dir) edited.roomlinks[edited.roomlinks[r-1].dir-1].opo=0;
+#define REMOVE_LINK(dir,opo) if (edited.roomlinks[r-1].dir) editor__do(roomlinks[edited.roomlinks[r-1].dir-1].opo,0,mark_middle);
 	REMOVE_LINK(up,down)
 	REMOVE_LINK(left,right)
 	REMOVE_LINK(down,up)
@@ -439,12 +469,9 @@ void room_api_put_room(tMap* map, long where, int r) {
 	map->map[where]=r;
 
 #define ADD_LINK(dir,opodir,offset) \
-	if ((level.roomlinks[r-1].dir=edited.roomlinks[r-1].dir=map->map[where+offset])) {\
-		edited.roomlinks[map->map[where+offset]-1].opodir=r;\
-		level.roomlinks[map->map[where+offset]-1].opodir=r;\
-	}
-
-//TODO: not in undo-redo stack
+	editor__do(roomlinks[r-1].dir,map->map[where+offset],mark_middle);\
+	if (map->map[where+offset])\
+		editor__do(roomlinks[map->map[where+offset]-1].opodir,r,mark_middle)
 	ADD_LINK(down,up,POS_DOWN);
 	ADD_LINK(up,down,POS_UP);
 	ADD_LINK(left,right,POS_LEFT);
@@ -478,12 +505,16 @@ int room_api_insert_room_right(tMap* map, int where) {
 		map->map[MAP_POS(_i,j)]=0;
 	}
 	for (j=MAP_SIDE-2;j;j--) {
-		if (map->map[MAP_POS(_i+POS_LEFT,j)]) //TODO: fix link 
+		if (map->map[MAP_POS(_i-1,j)])
+			editor__do(roomlinks[map->map[MAP_POS(_i-1,j)]-1].right,0,mark_middle);
+		if (map->map[MAP_POS(_i+1,j)])
+			editor__do(roomlinks[map->map[MAP_POS(_i+1,j)]-1].left,0,mark_middle);
 	}
 	room_api_put_room(map,where+POS_RIGHT,r);
 
+#ifdef __DEBUG__
 	{
-		printf("-----iiiii-----------------------------");
+		printf("----------------------------------");
 		for (i=0;i<MAP_SIDE*MAP_SIDE;i++) {
 			if (!(i%MAP_SIDE)) printf("\n");
 			if (map->map[i]) {
@@ -494,6 +525,46 @@ int room_api_insert_room_right(tMap* map, int where) {
 		}
 		printf("\n");
 	}
+#endif
+	return r;
+}
+
+int room_api_insert_room_down(tMap* map, int where) {
+	int i,_j,j,r;
+	if (!map->map[where+POS_DOWN]) {
+		return room_api_alloc_room(map,where+POS_DOWN); 
+	}
+	//there is a room down, I must move the whole down part of the level one position down
+	r=room_api_get_free_room(map);
+	if (!r) return 0;
+	_j=(where+POS_DOWN)/MAP_SIDE;
+	for (i=MAP_SIDE-2;i;i--) {
+		for (j=MAP_SIDE-2;_j<=j;j--)
+			map->map[MAP_POS(i,j+1)]=map->map[MAP_POS(i,j)];
+		map->map[MAP_POS(i,_j)]=0;
+	}
+	for (i=MAP_SIDE-2;i;i--) {
+		if (map->map[MAP_POS(i,_j-1)])
+			editor__do(roomlinks[map->map[MAP_POS(i,_j-1)]-1].down,0,mark_middle);
+		if (map->map[MAP_POS(i,_j+1)])
+			editor__do(roomlinks[map->map[MAP_POS(i,_j+1)]-1].up,0,mark_middle);
+	}
+	room_api_put_room(map,where+POS_DOWN,r);
+
+#ifdef __DEBUG__
+	{
+		printf("----------------------------------");
+		for (i=0;i<MAP_SIDE*MAP_SIDE;i++) {
+			if (!(i%MAP_SIDE)) printf("\n");
+			if (map->map[i]) {
+				printf("%c",'a'+map->map[i]-1);
+			} else {
+				printf(" ");
+			}
+		}
+		printf("\n");
+	}
+#endif
 	return r;
 }
 
@@ -507,7 +578,7 @@ int room_api_insert_room_up(tMap* map, int where) {
 	if (!map->map[where+POS_UP]) {
 		return room_api_alloc_room(map,where+POS_UP); 
 	}
-	return 0;//room_api_insert_room_down(map,where+POS_UP);
+	return room_api_insert_room_down(map,where+POS_UP);
 }
 
 ////////////////////////////////////////
