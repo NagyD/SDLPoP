@@ -18,6 +18,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 The authors of this program may be contacted at http://forum.princed.org
 */
 
+
+/*
+TODO:
+	room fix errors.
+	room decorate.
+
+*/
+
 #include "common.h"
 #ifdef USE_EDITOR
 
@@ -440,14 +448,15 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 			aux_int=room_api_insert_room_up(&edited_map,room_api_where_room(&edited_map,drawn_room));	
 		if (key==(SDL_SCANCODE_N | WITH_SHIFT))
 			aux_int=room_api_insert_room_down(&edited_map,room_api_where_room(&edited_map,drawn_room));	
-		editor__do_mark_end();
 		if (aux_int) {
+			randomize_room(aux_int);
 			next_room=aux_int;
 			snprintf(aux,50,"Added S%d",aux_int);
 			*answer_text=aux;
 		} else {
 			*answer_text="NO MORE SCREENS AVAILABLE";
 		}
+		editor__do_mark_end();
 		*need_show_text=1;
 		break; 
 	case SDL_SCANCODE_R | WITH_CTRL | WITH_SHIFT: // ctrl-shift-r
