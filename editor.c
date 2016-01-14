@@ -311,6 +311,8 @@ void editor__guard_toggle() {
 	}
 }
 
+////room randomizer
+
 void randomize_room(int room) {
 	byte level_mask[NUMBER_OF_ROOMS*30];
 	float f;
@@ -339,7 +341,7 @@ void randomize_room(int room) {
 			t.room=(tile/30)+1;
 			t.tilepos=tile%30;
 			tt=room_api_suggest_tile(&edited_map,t,level_mask);
-			editor__do(fg[tile],tt.concept.fg,mark_start);
+			editor__do(fg[tile],tt.concept.fg,mark_start); //TODO: fix marks
 			editor__do(bg[tile],tt.concept.bg,mark_end);
 			level_mask[tile]=1;
 		}
@@ -357,6 +359,125 @@ void randomize_tile(int tilepos) {
 	editor__do(fg[(loaded_room-1)*30+tilepos],tt.concept.fg,mark_start);
 	editor__do(bg[(loaded_room-1)*30+tilepos],tt.concept.bg,mark_end);
 }
+
+void sanitize_room(int room) {
+	#define tile_at(tilepos,room) (edited.fg[(room-1)*30+(tilepos)]&0x1f)
+	#define room_link edited.roomlinks[room-1]
+	#define up_is(x,def) ((x>=10)?tile_at(x-10,room):(room_link.up?tile_at(x+20,room_link.up):def))
+	#define down_is(x,def) ((x<20)?tile_at(x+10,room):(room_link.down?tile_at(x-20,room_link.down):def))
+	#define left_is(x,def) ((x%10)?tile_at(x-1,room):(room_link.left?tile_at(x+9,room_link.left):def))
+	#define right_is(x,def) ((x%10!=9)?tile_at(x+1,room):(room_link.right?tile_at(x-9,room_link.right):def))
+
+	int i;
+	byte tile;
+	for (i=0;i<30;i++) {
+		tile=tile_at(i,room);
+		printf("sanitize %d %d %d\n",i,tile,(edited.bg[(room-1)*30+(i)]));
+		switch(tile) { //check for alone tile
+		case tiles_1_floor:
+		case tiles_2_spike:
+		case tiles_3_pillar:
+		case tiles_4_gate:
+		//case tiles_5_stuck:
+		case tiles_6_closer:
+		case tiles_7_doortop_with_floor:
+		case tiles_8_bigpillar_bottom:
+		case tiles_9_bigpillar_top:
+		case tiles_10_potion:
+		case tiles_12_doortop:
+		case tiles_13_mirror:
+		case tiles_14_debris:
+		case tiles_15_opener:
+		case tiles_16_level_door_left:
+		case tiles_17_level_door_right:
+		case tiles_18_chomper:
+		case tiles_19_torch:
+		case tiles_21_skeleton:
+		case tiles_22_sword:
+		case tiles_23_balcony_left:
+		case tiles_24_balcony_right:
+		case tiles_25_lattice_pillar:
+		case tiles_26_lattice_down:
+		case tiles_27_lattice_small:
+		case tiles_28_lattice_left:
+		case tiles_29_lattice_right:
+		case tiles_30_torch_with_debris:
+			if (left_is(i,tiles_20_wall)==tiles_20_wall && right_is(i,tiles_20_wall)==tiles_20_wall) {
+printf("if ok\n");
+				switch (up_is(i,tiles_20_wall)) {
+				case tiles_1_floor:
+				case tiles_2_spike:
+				case tiles_3_pillar:
+				case tiles_4_gate:
+				//case tiles_5_stuck:
+				case tiles_6_closer:
+				case tiles_7_doortop_with_floor:
+				case tiles_8_bigpillar_bottom:
+				case tiles_9_bigpillar_top:
+				case tiles_10_potion:
+				case tiles_12_doortop:
+				case tiles_13_mirror:
+				case tiles_14_debris:
+				case tiles_15_opener:
+				case tiles_16_level_door_left:
+				case tiles_17_level_door_right:
+				case tiles_18_chomper:
+				case tiles_19_torch:
+				case tiles_20_wall:
+				case tiles_21_skeleton:
+				case tiles_22_sword:
+				case tiles_23_balcony_left:
+				case tiles_24_balcony_right:
+				case tiles_25_lattice_pillar:
+				case tiles_26_lattice_down:
+				case tiles_27_lattice_small:
+				case tiles_28_lattice_left:
+				case tiles_29_lattice_right:
+				case tiles_30_torch_with_debris:
+					editor__do(fg[(room-1)*30+i],tiles_20_wall,mark_start);		
+					editor__do(bg[(room-1)*30+i],0,mark_end);		
+					break;
+				}
+			}
+			break;
+		}
+		switch(tile) {
+		case tiles_0_empty: //empty above pillar or wall. TODO: add more tiles
+			if (down_is(i,-1)==tiles_20_wall || down_is(i,-1)==tiles_3_pillar) {
+				editor__do(fg[(room-1)*30+i],tiles_1_floor,mark_start);		
+				editor__do(bg[(room-1)*30+i],0,mark_end);		
+			}
+			break;
+		case tiles_19_torch:
+			if (right_is(i,-1)==tiles_20_wall || right_is(i,-1)==tiles_3_pillar) {
+				editor__do(fg[(room-1)*30+i],tiles_1_floor,mark_start);		
+				editor__do(bg[(room-1)*30+i],0,mark_end);		
+			}
+			break;
+		case tiles_30_torch_with_debris:
+			if (right_is(i,-1)==tiles_20_wall || right_is(i,-1)==tiles_3_pillar) {
+				editor__do(fg[(room-1)*30+i],tiles_14_debris,mark_start);		
+				editor__do(bg[(room-1)*30+i],0,mark_end);		
+			}
+			break;
+		case tiles_4_gate:
+			if (right_is(i,-1)==tiles_20_wall || left_is(i,-1)==tiles_20_wall) {
+				editor__do(fg[(room-1)*30+i],tiles_20_wall,mark_start);		
+				editor__do(bg[(room-1)*30+i],0,mark_end);		
+			}
+			break;
+		}
+
+	}
+	
+
+
+}
+
+
+/********************************************\
+*             INPUT BINDINGS!!!!             *
+\********************************************/
 
 void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int alt) {
 	int col,row,tilepos,x;
@@ -450,6 +571,7 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 			aux_int=room_api_insert_room_down(&edited_map,room_api_where_room(&edited_map,drawn_room));	
 		if (aux_int) {
 			randomize_room(aux_int);
+			sanitize_room(aux_int);
 			next_room=aux_int;
 			snprintf(aux,50,"Added S%d",aux_int);
 			*answer_text=aux;
@@ -461,6 +583,10 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 		break; 
 	case SDL_SCANCODE_R | WITH_CTRL | WITH_SHIFT: // ctrl-shift-r
 		randomize_room(loaded_room);
+		redraw_screen(1);
+		break;
+	case SDL_SCANCODE_S | WITH_CTRL | WITH_SHIFT: // ctrl-shift-s
+		sanitize_room(loaded_room);
 		redraw_screen(1);
 		break;
 	case SDL_SCANCODE_S | WITH_ALT: // alt-s
