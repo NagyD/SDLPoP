@@ -38,3 +38,4 @@ Y: Set starting position to the place the kid is
 P: Toggle tile palette mode
 Alt-Mouse left click: Select rise and drop buttons for door linking
 Alt-Mouse right click: Toggle door activation by selected button
+Alt-R: Revert level to latest saved version

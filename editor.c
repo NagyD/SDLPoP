@@ -70,11 +70,21 @@ void editor__load_level() {
 	stack_top=0;
 }
 
+void editor_revert_level() {
+	editor__load_level();
+	level=edited;
+	room_api_free(&edited_map);
+	room_api_init(&edited_map);
+	is_restart_level = 1;
+}
+
 void editor__loading_dat() {
 	if (edition_level!=current_level) {
 		editor__load_level();
 		room_api_free(&edited_map);
 		room_api_init(&edited_map);
+	} else {
+		level=edited; //TODO: when new palettes are added this should change
 	}
 }
 
@@ -364,6 +374,16 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 			save_level();
 		} else {
 			*answer_text="Nothing to save";
+			*need_show_text=1;
+		}
+		break;
+	case SDL_SCANCODE_R | WITH_ALT: // alt-r
+		if (edition_level==current_level) {
+			*answer_text="LEVEL REVERTED";
+			*need_show_text=1;
+			editor_revert_level();
+		} else {
+			*answer_text="Nothing to revert";
 			*need_show_text=1;
 		}
 		break;
