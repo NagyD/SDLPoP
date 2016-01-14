@@ -34,6 +34,7 @@ void use_default_options() {
     options.enable_replay = 1;
     options.enable_crouch_after_climbing = 1;
     options.enable_freeze_time_during_end_music = 1;
+    options.enable_remember_guard_hp = 1;
     options.fix_gate_sounds = 1;
     options.fix_two_coll_bug = 1;
     options.fix_infinite_down_bug = 1;
@@ -56,6 +57,7 @@ void use_default_options() {
 void disable_fixes_and_enhancements() {
     options.enable_crouch_after_climbing = 0;
     options.enable_freeze_time_during_end_music = 0;
+    options.enable_remember_guard_hp = 0;
     options.fix_gate_sounds = 0;
     options.fix_two_coll_bug = 0;
     options.fix_infinite_down_bug = 0;
@@ -231,6 +233,7 @@ static int ini_callback(const char *section, const char *name, const char *value
         }
         process_boolean("enable_crouch_after_climbing", &options.enable_crouch_after_climbing);
         process_boolean("enable_freeze_time_during_end_music", &options.enable_freeze_time_during_end_music);
+        process_boolean("enable_remember_guard_hp", &options.enable_remember_guard_hp);
         process_boolean("fix_gate_sounds", &options.fix_gate_sounds);
         process_boolean("fix_two_coll_bug", &options.fix_two_coll_bug);
         process_boolean("fix_infinite_down_bug", &options.fix_infinite_down_bug);
