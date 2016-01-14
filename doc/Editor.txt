@@ -39,3 +39,6 @@ P: Toggle tile palette mode
 Alt-Mouse left click: Select rise and drop buttons for door linking
 Alt-Mouse right click: Toggle door activation by selected button
 Alt-R: Revert level to latest saved version
+Ctrl-Shift-Mouse left click: Put random tile
+Ctrl-Shift-R: Randomize the whole screen
+

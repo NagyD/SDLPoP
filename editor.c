@@ -49,6 +49,39 @@ int room_api_insert_room_left(tMap* map, int where);
 int room_api_insert_room_up(tMap* map, int where);
 int room_api_insert_room_down(tMap* map, int where);
 
+//randomization sublayer headers
+//E_x_y = e^(-(x^2+y^2)) -> gaussian blur
+#define E_0_1 .36787944117144232159
+#define E_0_2 .01831563888873418029
+#define E_1_1 .13533528323661269189
+#define E_1_2 .00673794699908546709
+
+#pragma pack(push, 1)
+typedef union {
+ struct {
+		byte fg;
+		byte bg;
+	} concept; //tile_and_mod but packed
+	word number;
+} tile_packed_type;
+#pragma pack(pop)
+
+typedef struct {
+	byte room;
+	byte tilepos;
+} tTilePlace;
+
+#define NO_TILE ((word)(-1))
+
+typedef struct probability_info {
+	int count;
+	float  value;
+} tProbability;
+
+float room_api_measure_entropy(const tMap* map, tTilePlace t, byte* level_mask);
+tile_packed_type room_api_suggest_tile(const tMap* map, tTilePlace tilepos, byte* level_mask);
+
+///////////////////
 
 void __pascal far redraw_screen(int drawing_different_room);
 
@@ -290,6 +323,23 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int
 	} else if (e.button==SDL_BUTTON_RIGHT && shift && !alt && !ctrl) { //shift+right click: move move/put guard
 		editor__set_guard(tilepos,x);
 		editor__position(&Guard,col,row,loaded_room,x,6569);
+		redraw_screen(1);
+	} else if (e.button==SDL_BUTTON_LEFT && shift && !alt && ctrl) { //ctrl+shift+left click: randomize tile
+		byte level_mask[NUMBER_OF_ROOMS*30];
+		//float f;
+		tTilePlace t;
+		tile_packed_type tt;
+		t.room=loaded_room;
+		t.tilepos=tilepos;
+		memset(level_mask,1,NUMBER_OF_ROOMS*30);
+		//f=room_api_measure_entropy(&edited_map,t,level_mask);
+		level_mask[30*(t.room-1)+t.tilepos]=0;
+		tt=room_api_suggest_tile(&edited_map,t,level_mask);
+		//printf("ent=%f\n",f);
+		//printf("tt=%d (%d,%d)\n",tt.number,tt.concept.fg,tt.concept.bg);
+		editor__do(fg[(loaded_room-1)*30+tilepos],tt.concept.fg,mark_start);
+		editor__do(bg[(loaded_room-1)*30+tilepos],tt.concept.bg,mark_end);
+		
 		redraw_screen(1);
 	}
 			
@@ -605,66 +655,37 @@ int room_api_insert_room_up(tMap* map, int where) {
 ////////////////////////////////////////
 
 //Randomize tiles, rooms and complete levels using statistical inference. TODO
-#ifdef RANDOMIZE
 //LOCAL DEFINES:
 
 //byte level_mask[NUMBER_OF_ROOMS*30];
 
-//E_x_y = e^(-(x^2+y^2)) -> gaussian blur
-#define E_0_1 .36787944117144232159
-#define E_0_2 .01831563888873418029
-#define E_1_1 .13533528323661269189
-#define E_1_2 .00673794699908546709
 
-#pragma pack(push, 1)
-typedef union {
- struct {
-		byte fg;
-		byte bg;
-	} concept; //tile_and_mod but packed
-	word number;
-} tile_packed_type;
-#pragma pack(pop)
-
-typedef struct {
-	byte room;
-	byte tilepos;
-} tTilePlace;
-
-#define NO_TILE ((word)(-1))
-
-typedef struct probability_info {
-	int count;
-	float  value;
-} tProbability;
-
-
-tTilePlace room_api_tile_move(const tMap* map, tTilePlace t, byte col, byte row) {
+tTilePlace room_api_tile_move(const tMap* map, tTilePlace t, char col, char row) {
 	int absolute_col,absolute_row,where;
 
-	where=map->list[t.room];
+	where=map->list[t.room-1];
 	absolute_col= 10 * (where%MAP_SIDE) + t.tilepos%10 + col;
 	absolute_row= 3  * (where/MAP_SIDE) + t.tilepos/10 + row;
 
-	t.room=MAP_POS(absolute_col/10,absolute_row/3);
+	t.room=map->map[MAP_POS(absolute_col/10,absolute_row/3)];
 	t.tilepos=absolute_col%10 + 10 * (absolute_row%3);
 
 	return t;
 }
 
-int room_api__private_entropy(const tMap* map, tTilePlace t, byte* level_mask,byte col, byte row) {
+int room_api__private_entropy(const tMap* map, tTilePlace t, byte* level_mask,char col, char row) {
 	tTilePlace aux;
 	aux=room_api_tile_move(map,t,col,row);
-	return aux.room && level_mask[aux.room*30+aux.tilepos];
+	return aux.room && level_mask[(aux.room-1)*30+aux.tilepos];
 }
 
-tile_packed_type room_api__private_get_tile_if_exists(const tMap* map, tTilePlace t, byte* level_mask,byte col, byte row) {
+tile_packed_type room_api__private_get_tile_if_exists(const tMap* map, tTilePlace t, byte* level_mask,char col, char row) {
 	tTilePlace aux;
 	tile_packed_type result;
 	aux=room_api_tile_move(map,t,col,row);
-	if (aux.room && level_mask[aux.room*30+aux.tilepos]) {
-		result.concept.fg=edited.fg[aux.room*30+aux.tilepos];
-		result.concept.bg=edited.bg[aux.room*30+aux.tilepos];
+	if (aux.room && level_mask[(aux.room-1)*30+aux.tilepos]) {
+		result.concept.fg=edited.fg[(aux.room-1)*30+aux.tilepos];
+		result.concept.bg=edited.bg[(aux.room-1)*30+aux.tilepos];
 	} else {
 		result.number=-1;
 	}
@@ -673,6 +694,8 @@ tile_packed_type room_api__private_get_tile_if_exists(const tMap* map, tTilePlac
 
 float room_api_measure_entropy(const tMap* map, tTilePlace t, byte* level_mask) {
 	float result=0;
+
+	//printf("room_api_measure_entropy(tTilePlace=(%d,%d))\n",t.room,t.tilepos);
 
 #define ENTROPY_MEASURE_TILE(x,y,e) \
 	if (room_api__private_entropy(map,t,level_mask,x,y)) result+=e
@@ -714,10 +737,11 @@ void room_api__private_measure_similarity(const tMap* map,tTilePlace origin, tTi
 void room_api_measure_similarity(const tMap* map, tTilePlace origin, tTilePlace target, byte* level_mask, tProbability* probabilities) {
 	float result=0,total=0; //ORIGIN is iterating CURRENT
 	tile_packed_type current_tile;
-	tProbability aux;
 
 	current_tile=room_api__private_get_tile_if_exists(map,origin,level_mask,0,0);
 	if (current_tile.number==NO_TILE) return; //there is no tile here
+
+	printf("room_api_measure_similarity(tTilePlace or=(%d,%d) target=(%d,%d))\n",origin.room,origin.tilepos,target.room,target.tilepos);
 
 #define ENTROPY_MEASURE_SIMILARITY(x,y,e) \
 	room_api__private_measure_similarity(map,origin,target,level_mask,x,y,&result,&total,e)
@@ -744,9 +768,8 @@ void room_api_measure_similarity(const tMap* map, tTilePlace origin, tTilePlace 
 	ENTROPY_MEASURE_SIMILARITY(-2,1,E_1_2);
 	ENTROPY_MEASURE_SIMILARITY(-2,-1,E_1_2);
 
-	aux=probabilities[current_tile.number];
-	aux.count++;
-	aux.value+=result/total;
+	probabilities[current_tile.number].count++;
+	probabilities[current_tile.number].value+=result/total;
 }
 
 #define PROBABILITY_SIZE 65536
@@ -763,28 +786,31 @@ tile_packed_type room_api_suggest_tile(const tMap* map, tTilePlace tilepos, byte
 
 	for (i=0;i<NUMBER_OF_ROOMS*30;i++) {
 		origin.room=i/30;
-		if (!map->list[origin.room++]) break;
-		origin.tilepos=i%30;
-		
-		room_api_measure_similarity(map,origin,tilepos,level_mask,probability);
+		if (map->list[origin.room++]) {
+			origin.tilepos=i%30;
+			room_api_measure_similarity(map,origin,tilepos,level_mask,probability);
+		}
 	}
 
+#ifdef __DEBUG__
 	for (i=0;i!=NO_TILE;i++) {
-		probability[i].value/=probability[i].count;
-		total+=probability[i].value;
+		if (probability[i].count)
+			printf("k=%d v=%f c=%d\n",i,probability[i].value,probability[i].count);
 	}
+#endif
+
+	for (i=0;i!=NO_TILE;i++)
+		total+=probability[i].value;
 	random_prob=(total*rand())/RAND_MAX; //what if random==0 ????
 
 	if (random_prob==0) return (tile_packed_type)NO_TILE;
 	total=0;
 	for (i=0;i!=NO_TILE;i++) {
-		total+=probability[i].value;
-		if (random_prob>=total) return (tile_packed_type)i; 
+		random_prob-=probability[i].value;
+		if (random_prob<=0) return (tile_packed_type)i;
 	}
 	return (tile_packed_type)NO_TILE;
 }
 
-
-#endif
 
 #endif
