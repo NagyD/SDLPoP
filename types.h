@@ -1066,6 +1066,7 @@ typedef union options_type {
 		byte fix_safe_landing_on_spikes;
 
 		byte use_correct_aspect_ratio;
+		byte enable_remember_guard_hp;
 	};
 } options_type;
 
