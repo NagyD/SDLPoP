@@ -1,0 +1,40 @@
+SDLPoP built-in editor:
+~~~~~~~~~~~~~~~~~~~~~~
+
+The idea to include an editor in SDLPoP being out there heaps of editors and tools is to allow live editing of the game. It also allows developers to change defined constants in the game (changing level size) to extend it and still having a working editor to create mods.
+
+The concept is different to other editors. It is based on the game, so learning how to edit is different from other editors: users will have to learn more key codes in order to edit the levels.
+
+Keycodes
+~~~~~~~~
+
+U: screen up
+H: screen left
+J: screen right
+N: screen down
+Ctrl-A: restart level
+
+Shift-U: insert screen up
+Shift-H: insert screen left
+Shift-J: insert screen right
+Shift-N: insert screen down
+Del or Backspace: delete guard
+Shift-Del or Backspace: delete room
+Ctrl-C: Copy room
+Ctrl-V: Paste room (the version legend is dropped in edition mode)
+Alt-S: Save level
+Q: Increment guard color
+W: Decrement guard color
+]: Increment guard skill
+[: Decrement guard skill
+Ctrl-Z: Undo
+Ctrl-Alt-Z: Redo
+Tab: Toggle guard direction
+Mouse left click: Put copied tile
+Mouse right click: Copy tile
+Shift-Mouse left click: Put/move the kid there
+Shift-Mouse right click: Put/move a guard there
+Y: Set starting position to the place the kid is
+P: Toggle tile palette mode
+Alt-Mouse left click: Select rise and drop buttons for door linking
+Alt-Mouse right click: Toggle door activation by selected button

@@ -357,7 +357,7 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 		}
 		*need_show_text=1;
 		break; 
-	case SDL_SCANCODE_C | WITH_CTRL: // ctrl-c
+	case SDL_SCANCODE_S | WITH_ALT: // alt-s
 		if (edition_level==current_level) {
 			*answer_text="LEVEL SAVED";
 			*need_show_text=1;
