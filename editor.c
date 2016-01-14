@@ -349,6 +349,7 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 			aux_int=room_api_insert_room_down(&edited_map,room_api_where_room(&edited_map,drawn_room));	
 		editor__do_mark_end();
 		if (aux_int) {
+			next_room=aux_int;
 			snprintf(aux,50,"Added S%d",aux_int);
 			*answer_text=aux;
 		} else {
