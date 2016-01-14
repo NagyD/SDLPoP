@@ -273,8 +273,8 @@ int quick_process(process_func_type process_func) {
 	return ok;
 }
 
-const char* const quick_file = "QUICKSAVE.SAV";
-const char const quick_version[] = "V1.16b4 ";
+const char* quick_file = "QUICKSAVE.SAV";
+const char quick_version[] = "V1.16b4 ";
 char quick_control[] = "........";
 
 int quick_save() {
