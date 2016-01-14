@@ -1058,6 +1058,9 @@ typedef union options_type {
 		byte fix_safe_landing_on_spikes;
 
 		byte use_correct_aspect_ratio;
+		byte fix_glide_through_wall;
+		byte fix_drop_through_tapestry;
+		byte fix_land_against_gate_or_tapestry;
 	};
 } options_type;
 
