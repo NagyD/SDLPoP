@@ -24,5 +24,6 @@ The authors of this program may be contacted at http://forum.princed.org
 
 void editor__process_key(int key,const char** answer_text, word* need_show_text);
 void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int alt);
+void editor__loading_dat();
 
 #endif

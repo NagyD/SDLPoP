@@ -21,6 +21,34 @@ The authors of this program may be contacted at http://forum.princed.org
 #include "common.h"
 #ifdef USE_EDITOR
 
+/* headers of room api */
+#define MAP_SIDE (NUMBER_OF_ROOMS*2+3)
+#define MAP_CENTER (NUMBER_OF_ROOMS+1)
+#define POS_UP (-MAP_SIDE)
+#define POS_DOWN MAP_SIDE
+#define POS_LEFT (-1)
+#define POS_RIGHT 1
+#define MAP_POS(x,y) ((y)*MAP_SIDE+(x))
+
+typedef struct {
+	long* list;
+	byte* map;
+} tMap;
+
+
+long room_api_where_room(const tMap* map, byte room);
+void room_api_refresh(tMap* map);
+void room_api_init(tMap* map);
+void room_api_free(tMap* map);
+int room_api_get_free_room(const tMap* map);
+void room_api_free_room(tMap* map,int r); //DO NOT FREE THE STARTING ROOM!
+void room_api_put_room(tMap* map, long where, int r);
+int room_api_alloc_room(tMap* map, int where);
+int room_api_insert_room_right(tMap* map, int where);
+int room_api_insert_room_left(tMap* map, int where);
+int room_api_insert_room_up(tMap* map, int where);
+
+
 void __pascal far redraw_screen(int drawing_different_room);
 
 tile_and_mod copied={0,0};
@@ -30,6 +58,8 @@ int stack_top=0;
 
 int edition_level=-1;
 level_type edited;
+tMap edited_map={NULL,NULL};
+
 void editor__load_level() {
 	dat_type* dathandle;
 	dathandle = open_dat("LEVELS.DAT", 0);
@@ -37,6 +67,14 @@ void editor__load_level() {
 	close_dat(dathandle);
 	edition_level=current_level;
 	stack_top=0;
+}
+
+void editor__loading_dat() {
+	if (edition_level!=current_level) {
+		editor__load_level();
+		room_api_free(&edited_map);
+		room_api_init(&edited_map);
+	}
 }
 
 /* do, undo, redo layer */
@@ -279,6 +317,16 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 		editor__guard_toggle();
 		Guard.direction=~Guard.direction; //synch
 		break; 
+	case SDL_SCANCODE_J | WITH_SHIFT:
+		aux_int=room_api_insert_room_right(&edited_map,room_api_where_room(&edited_map,drawn_room));	
+		if (aux_int) {
+			snprintf(aux,50,"Added S%d",aux_int);
+			*answer_text=aux;
+		} else {
+			*answer_text="NO MORE SCREENS AVAILABLE";
+		}
+		*need_show_text=1;
+		break; 
 	case SDL_SCANCODE_C | WITH_CTRL: // ctrl-c
 		if (edition_level==current_level) {
 			*answer_text="LEVEL SAVED";
@@ -305,24 +353,11 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 /////////////////////////////////////////
 
 //Room linking api
-#define MAP_SIDE (NUMBER_OF_ROOMS*2+3)
-#define MAP_CENTER (NUMBER_OF_ROOMS+1)
-#define POS_UP (-MAP_SIDE)
-#define POS_DOWN MAP_SIDE
-#define POS_LEFT (-1)
-#define POS_RIGHT 1
-#define MAP_POS(x,y) ((y)*MAP_SIDE+(x))
-
-typedef struct {
-	long* list;
-	byte* map;
-} tMap;
-
 void room_api__private_recurse(tMap* map, long r, int aux_room) {
 	if ( (!aux_room) || map->list[aux_room-1]) return; //if the room exists and is the first time we visit it
 	map->map[r]=aux_room;
 	map->list[aux_room-1]=r;
-#define GO(field,offset) room_api__private_recurse(map,edited.roomlinks[aux_room].field,offset)
+#define GO(field,offset) room_api__private_recurse(map,r+offset,edited.roomlinks[aux_room-1].field)
 	GO(up,POS_UP);
 	GO(right,POS_RIGHT);
 	GO(down,POS_DOWN);
@@ -331,21 +366,36 @@ void room_api__private_recurse(tMap* map, long r, int aux_room) {
 }
 
 void room_api_refresh(tMap* map) {
-	memset(map->map,0,MAP_SIDE*MAP_SIDE);
-	memset(map->list,0,NUMBER_OF_ROOMS);
+	memset(map->map,0,sizeof(byte)*MAP_SIDE*MAP_SIDE);
+	memset(map->list,0,sizeof(long)*NUMBER_OF_ROOMS);
 
 	room_api__private_recurse(map,MAP_POS(MAP_CENTER,MAP_CENTER),edited.start_room);
+//debug
+	{
+		int i=0;
+		printf("----------------------------------");
+		for (i=0;i<MAP_SIDE*MAP_SIDE;i++) {
+			if (!(i%MAP_SIDE)) printf("\n");
+			if (map->map[i]) {
+				printf("%c",'a'+map->map[i]-1);
+			} else {
+				printf(" ");
+			}
+		}
+		printf("\n");
+	}
 }
 
 void room_api_init(tMap* map) {
 	if (map->list) return;
-	map->map=malloc(MAP_SIDE*MAP_SIDE);
-	map->list=malloc(NUMBER_OF_ROOMS);
+	map->map=malloc(sizeof(byte)*MAP_SIDE*MAP_SIDE);
+	map->list=malloc(sizeof(long)*NUMBER_OF_ROOMS);
 
 	room_api_refresh(map);
 }
 
 void room_api_free(tMap* map) {
+	if (!map->list) return;
 	free(map->list);
 	free(map->map);
 	map->list=NULL;
@@ -366,7 +416,7 @@ int room_api_get_free_room(const tMap* map) {
 
 void room_api_free_room(tMap* map,int r) { //DO NOT FREE THE STARTING ROOM!
 //TODO: not in undo-redo stack
-#define REMOVE_LINK(dir,opo) if (edited.roomlinks[r].dir) edited.roomlinks[edited.roomlinks[r].dir].opo=0;
+#define REMOVE_LINK(dir,opo) if (edited.roomlinks[r-1].dir) edited.roomlinks[edited.roomlinks[r-1].dir-1].opo=0;
 	REMOVE_LINK(up,down)
 	REMOVE_LINK(left,right)
 	REMOVE_LINK(down,up)
@@ -389,7 +439,10 @@ void room_api_put_room(tMap* map, long where, int r) {
 	map->map[where]=r;
 
 #define ADD_LINK(dir,opodir,offset) \
-	if ((edited.roomlinks[r].dir=map->map[where+offset])) edited.roomlinks[map->map[where+offset]].opodir=r
+	if ((level.roomlinks[r-1].dir=edited.roomlinks[r-1].dir=map->map[where+offset])) {\
+		edited.roomlinks[map->map[where+offset]-1].opodir=r;\
+		level.roomlinks[map->map[where+offset]-1].opodir=r;\
+	}
 
 //TODO: not in undo-redo stack
 	ADD_LINK(down,up,POS_DOWN);
@@ -398,6 +451,9 @@ void room_api_put_room(tMap* map, long where, int r) {
 	ADD_LINK(right,left,POS_RIGHT);
 #undef ADD_LINK
 	
+}
+long room_api_where_room(const tMap* map, byte room) {
+	return map->list[room-1];
 }
 
 int room_api_alloc_room(tMap* map, int where) {
@@ -416,16 +472,28 @@ int room_api_insert_room_right(tMap* map, int where) {
 	r=room_api_get_free_room(map);
 	if (!r) return 0;
 	_i=(where+POS_RIGHT)%MAP_SIDE;
-	for (i=MAP_SIDE-2;i;i--) {
-		for (j=MAP_SIDE-2;j;j--) {
-			if (_i==i) {
-				map->map[MAP_POS(i,j)]=0;
-			} else if (_i<i) {
-				map->map[MAP_POS(i,j)]=map->map[MAP_POS(i+1,j)];
-			}
-		}
+	for (j=MAP_SIDE-2;j;j--) {
+		for (i=MAP_SIDE-2;_i<=i;i--)
+			map->map[MAP_POS(i+1,j)]=map->map[MAP_POS(i,j)];
+		map->map[MAP_POS(_i,j)]=0;
+	}
+	for (j=MAP_SIDE-2;j;j--) {
+		if (map->map[MAP_POS(_i+POS_LEFT,j)]) //TODO: fix link 
 	}
 	room_api_put_room(map,where+POS_RIGHT,r);
+
+	{
+		printf("-----iiiii-----------------------------");
+		for (i=0;i<MAP_SIDE*MAP_SIDE;i++) {
+			if (!(i%MAP_SIDE)) printf("\n");
+			if (map->map[i]) {
+				printf("%c",'a'+map->map[i]-1);
+			} else {
+				printf(" ");
+			}
+		}
+		printf("\n");
+	}
 	return r;
 }
 
