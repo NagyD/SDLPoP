@@ -731,7 +731,7 @@ void __pascal far show_hof() {
 	// stub
 }
 
-static const char const * hof_path = "PRINCE.HOF";
+static const char* hof_path = "PRINCE.HOF";
 
 // seg001:0F17
 void __pascal far hof_write() {
