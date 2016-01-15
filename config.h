@@ -134,6 +134,16 @@ The authors of this program may be contacted at http://forum.princed.org
 // When landing on the edge of a spikes tile, it is considered safe. (Trick 65)
 #define FIX_SAFE_LANDING_ON_SPIKES
 
+// The kid may glide through walls after turning around while running (especially when weightless).
+#define FIX_GLIDE_THROUGH_WALL
+
+// The kid can drop down through a closed gate, when there is a tapestry (doortop) above the gate.
+#define FIX_DROP_THROUGH_TAPESTRY
+
+// When dropping down and landing right in front of a wall, the entire landing animation should normally play.
+// However, when falling against a closed gate or a tapestry(+floor) tile, the animation aborts.
+// (The game considers these tiles floor tiles; so it mistakenly assumes that no x-position adjustment is needed)
+#define FIX_LAND_AGAINST_GATE_OR_TAPESTRY
 
 // Debug features:
 
