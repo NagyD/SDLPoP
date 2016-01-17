@@ -24,6 +24,9 @@ TODO:
 	room fix errors.
 	room decorate.
 
+	sanitize with levels
+
+	door handling
 */
 
 #include "common.h"
@@ -484,7 +487,7 @@ printf("if ok\n");
 			}
 			break;
 		}
-
+		//TODO: finish
 	}
 	
 
@@ -597,6 +600,11 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 		}
 		editor__do_mark_end();
 		*need_show_text=1;
+		break; 
+	case SDL_SCANCODE_D: // d for debugging purposes
+		{
+//draw_image_2(3 /*Prince Of Persia*/, chtab_title50, 24, 107, blitters_10h_transp);
+		}
 		break; 
 	case SDL_SCANCODE_R | WITH_CTRL | WITH_SHIFT: /* ctrl-shift-r */
 		randomize_room(loaded_room);
