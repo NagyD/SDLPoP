@@ -1886,6 +1886,9 @@ void __pascal far set_gr_mode(byte grmode) {
 		quit(1);
 	}
 	if (start_fullscreen) {
+#ifdef USE_EDITOR
+		if (!editor_enabled)
+#endif
 		SDL_ShowCursor(SDL_DISABLE);
 	}
 

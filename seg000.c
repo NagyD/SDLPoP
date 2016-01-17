@@ -44,6 +44,10 @@ void far pop_main() {
 	check_seqtable_matches_original();
 	#endif
 
+#ifdef USE_EDITOR
+	editor_enabled = check_param("edit") != NULL;
+#endif
+
 	load_options();
 	apply_seqtbl_patches();
 
@@ -67,7 +71,6 @@ void far pop_main() {
 	cheats_enabled = 1; // debug
 #endif
 #ifdef USE_EDITOR
-	editor_enabled = check_param("edit") != NULL;
 	if (editor_enabled) cheats_enabled = 1;
 #endif
 	draw_mode = check_param("draw") != NULL && cheats_enabled;
