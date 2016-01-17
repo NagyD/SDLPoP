@@ -158,6 +158,13 @@ void editor__do_mark_end() {
 	prevMark=mark_middle;
 }
 
+/* editor level layer used by do/undo/redo */
+void editor__load_level();
+tile_and_mod copied={0,0};
+level_type edited;
+tMap edited_map={NULL,NULL};
+int edition_level=-1;
+
 #define editor__do(field,c,mark) editor__do_( ((long)(&(((level_type*)NULL)->field))) ,c,mark)
 void editor__do_(long offset, byte c, tUndoQueueMark mark) {
 	byte before;
@@ -213,12 +220,6 @@ void __pascal far redraw_screen(int drawing_different_room);
 /********************************************\
 *            Editor functions                *
 \********************************************/
-
-tile_and_mod copied={0,0};
-
-int edition_level=-1;
-level_type edited;
-tMap edited_map={NULL,NULL};
 
 void editor__load_level() {
 	dat_type* dathandle;
@@ -332,6 +333,7 @@ void editor__guard_toggle() {
 *        Room randomizer & sanitizer         *
 \********************************************/
 
+void sanitize_room(int room, int sanitation_level);
 void randomize_room(int room) {
 	byte level_mask[NUMBER_OF_ROOMS*30];
 	float f;
@@ -365,7 +367,9 @@ void randomize_room(int room) {
 			level_mask[tile]=1;
 		}
 	} while (tile!=-1);
-}	
+	sanitize_room(room,0);
+	sanitize_room(room,1);
+}
 
 void randomize_tile(int tilepos) {
 	byte level_mask[NUMBER_OF_ROOMS*30];
@@ -380,7 +384,7 @@ void randomize_tile(int tilepos) {
 	editor__do(bg[(loaded_room-1)*30+tilepos],tt.concept.bg,mark_end);
 }
 
-void sanitize_room(int room) {
+void sanitize_room(int room, int sanitation_level) {
 	#define tile_at(tilepos,room) (edited.fg[(room-1)*30+(tilepos)]&0x1f)
 	#define room_link edited.roomlinks[room-1]
 	#define up_is(x,def) ((x>=10)?tile_at(x-10,room):(room_link.up?tile_at(x+20,room_link.up):def))
@@ -393,7 +397,7 @@ void sanitize_room(int room) {
 	for (i=0;i<30;i++) {
 		tile=tile_at(i,room);
 		printf("sanitize %d %d %d\n",i,tile,(edited.bg[(room-1)*30+(i)]));
-		switch(tile) { /* check for alone tile */
+		if (sanitation_level==1) switch(tile) { /* check for alone tile */
 		case tiles_1_floor:
 		case tiles_2_spike:
 		case tiles_3_pillar:
@@ -454,42 +458,67 @@ printf("if ok\n");
 				case tiles_28_lattice_left:
 				case tiles_29_lattice_right:
 				case tiles_30_torch_with_debris:
-					editor__do(fg[(room-1)*30+i],tiles_20_wall,mark_start);		
-					editor__do(bg[(room-1)*30+i],0,mark_end);		
+					editor__do(fg[(room-1)*30+i],tiles_20_wall,mark_start);
+					editor__do(bg[(room-1)*30+i],0,mark_end);
 					break;
 				}
 			}
 			break;
 		}
 		switch(tile) {
+		case tiles_11_loose:
 		case tiles_0_empty: /* empty above pillar or wall. TODO: add more tiles */
-			if (down_is(i,-1)==tiles_20_wall || down_is(i,-1)==tiles_3_pillar) {
-				editor__do(fg[(room-1)*30+i],tiles_1_floor,mark_start);		
-				editor__do(bg[(room-1)*30+i],0,mark_end);		
+			if (sanitation_level==0) {
+				if (down_is(i,-1)==tiles_20_wall || down_is(i,-1)==tiles_3_pillar) {
+					editor__do(fg[(room-1)*30+i],tiles_1_floor,mark_start);
+					editor__do(bg[(room-1)*30+i],0,mark_end);
+				}
+			} else if (sanitation_level==1) {
+				if (right_is(i,-1)==tiles_20_wall && left_is(i,-1)==tiles_20_wall && up_is(i,tiles_20_wall)==tiles_20_wall) {
+					editor__do(fg[(room-1)*30+i],tiles_20_wall,mark_start);
+					editor__do(bg[(room-1)*30+i],0,mark_end);
+				}
 			}
 			break;
 		case tiles_19_torch:
 			if (right_is(i,-1)==tiles_20_wall || right_is(i,-1)==tiles_3_pillar) {
-				editor__do(fg[(room-1)*30+i],tiles_1_floor,mark_start);		
-				editor__do(bg[(room-1)*30+i],0,mark_end);		
+				editor__do(fg[(room-1)*30+i],tiles_1_floor,mark_start);
+				editor__do(bg[(room-1)*30+i],0,mark_end);
 			}
 			break;
 		case tiles_30_torch_with_debris:
 			if (right_is(i,-1)==tiles_20_wall || right_is(i,-1)==tiles_3_pillar) {
-				editor__do(fg[(room-1)*30+i],tiles_14_debris,mark_start);		
-				editor__do(bg[(room-1)*30+i],0,mark_end);		
+				editor__do(fg[(room-1)*30+i],tiles_14_debris,mark_start);
+				editor__do(bg[(room-1)*30+i],0,mark_end);
 			}
 			break;
 		case tiles_4_gate:
 			if (right_is(i,-1)==tiles_20_wall || left_is(i,-1)==tiles_20_wall) {
-				editor__do(fg[(room-1)*30+i],tiles_20_wall,mark_start);		
-				editor__do(bg[(room-1)*30+i],0,mark_end);		
+				editor__do(fg[(room-1)*30+i],tiles_20_wall,mark_start);
+				editor__do(bg[(room-1)*30+i],0,mark_end);
+			}
+			break;
+		case tiles_2_spike:
+			if (sanitation_level==1 && down_is(i,tiles_20_wall)!=tiles_20_wall) {
+				editor__do(fg[(room-1)*30+i],tiles_1_floor,mark_start);
+				editor__do(bg[(room-1)*30+i],0,mark_end);
 			}
 			break;
 		}
-		//TODO: finish
+
+		if (left_is(i,-1)==tiles_16_level_door_left) {
+				editor__do(fg[(room-1)*30+i],tiles_17_level_door_right,mark_start);
+				editor__do(bg[(room-1)*30+i],0,mark_end);
+		}
+		if (right_is(i,-1)==tiles_17_level_door_right) {
+				editor__do(fg[(room-1)*30+i],tiles_16_level_door_left,mark_start);
+				editor__do(bg[(room-1)*30+i],0,mark_end);
+		}
+
+
+		//TODO: finish & undo/redo
 	}
-	
+
 
 
 }
@@ -524,7 +553,7 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int
 		randomize_tile(tilepos);
 		redraw_screen(1);
 	}
-			
+
 				/*printf("hola mundo %d %d %d %d %c%c%c\n", 
 					e.state,
 					e.button,
@@ -582,16 +611,15 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 	case SDL_SCANCODE_N | WITH_SHIFT:
 		editor__do_mark_start();
 		if (key==(SDL_SCANCODE_J | WITH_SHIFT))
-			aux_int=room_api_insert_room_right(&edited_map,room_api_where_room(&edited_map,drawn_room));	
+			aux_int=room_api_insert_room_right(&edited_map,room_api_where_room(&edited_map,drawn_room));
 		if (key==(SDL_SCANCODE_H | WITH_SHIFT))
-			aux_int=room_api_insert_room_left(&edited_map,room_api_where_room(&edited_map,drawn_room));	
+			aux_int=room_api_insert_room_left(&edited_map,room_api_where_room(&edited_map,drawn_room));
 		if (key==(SDL_SCANCODE_U | WITH_SHIFT))
-			aux_int=room_api_insert_room_up(&edited_map,room_api_where_room(&edited_map,drawn_room));	
+			aux_int=room_api_insert_room_up(&edited_map,room_api_where_room(&edited_map,drawn_room));
 		if (key==(SDL_SCANCODE_N | WITH_SHIFT))
-			aux_int=room_api_insert_room_down(&edited_map,room_api_where_room(&edited_map,drawn_room));	
+			aux_int=room_api_insert_room_down(&edited_map,room_api_where_room(&edited_map,drawn_room));
 		if (aux_int) {
 			randomize_room(aux_int);
-			sanitize_room(aux_int);
 			next_room=aux_int;
 			snprintf(aux,50,"Added S%d",aux_int);
 			*answer_text=aux;
@@ -611,7 +639,7 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 		redraw_screen(1);
 		break;
 	case SDL_SCANCODE_S | WITH_CTRL | WITH_SHIFT: /* ctrl-shift-s */
-		sanitize_room(loaded_room);
+		sanitize_room(loaded_room,0);
 		redraw_screen(1);
 		break;
 	case SDL_SCANCODE_S | WITH_ALT: /* alt-s */
@@ -732,7 +760,7 @@ void room_api_put_room(tMap* map, long where, int r) {
 	ADD_LINK(left,right,POS_LEFT);
 	ADD_LINK(right,left,POS_RIGHT);
 #undef ADD_LINK
-	
+
 }
 long room_api_where_room(const tMap* map, byte room) {
 	return map->list[room-1];
