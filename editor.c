@@ -528,6 +528,7 @@ printf("if ok\n");
 
 void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int alt) {
 	int col,row,tilepos,x;
+	if (!editor_active) return;
 	col=e.x/32;
 	row=(e.y-4)/64;
 	x=e.x*140/320+62;
@@ -693,7 +694,7 @@ void room_api_refresh(tMap* map) {
 
 	room_api__private_recurse(map,MAP_POS(MAP_CENTER,MAP_CENTER),edited.start_room);
 
-#ifdef __DEBUG__
+#ifdef __SCREEN_DEBUG__
 	{
 		int i=0;
 		printf("----------------------------------");
@@ -801,7 +802,7 @@ int room_api_insert_room_right(tMap* map, int where) {
 	}
 	room_api_put_room(map,where+POS_RIGHT,r);
 
-#ifdef __DEBUG__
+#ifdef __SCREEN_DEBUG__
 	{
 		printf("----------------------------------");
 		for (i=0;i<MAP_SIDE*MAP_SIDE;i++) {

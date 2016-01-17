@@ -27,6 +27,7 @@ word cheats_enabled = 0;
 
 #ifdef USE_EDITOR
 word editor_enabled = 0;
+word editor_active = 0;
 #endif
 
 // data:461E
@@ -174,6 +175,9 @@ void __pascal far start_game() {
 	}
 #endif
 	if (start_level == 0) {
+#ifdef USE_EDITOR
+	editor_active = 0;
+#endif
 		show_title();
 	} else {
 		init_game(start_level);
