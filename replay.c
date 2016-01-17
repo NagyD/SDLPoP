@@ -48,7 +48,7 @@ byte special_move = 0;
 
 FILE* replay_fp;
 #define REPLAY_DEFAULT_FILENAME "REPLAY_001.P1R"
-const char const replay_version[] = "V1.16b3 ";
+const char replay_version[] = "V1.16b3 ";
 char replay_control[] = "........";
 byte replay_file_open = 0;
 word current_replay_number = 0;
@@ -61,7 +61,7 @@ size_t savestate_size = 0;
 // These are defined in seg000.c:
 typedef int process_func_type(void* data, size_t data_size);
 extern int quick_process(process_func_type process_func);
-extern const char const quick_version[9];
+extern const char quick_version[9];
 extern char quick_control[9];
 
 byte open_replay_file(const char *filename) {
