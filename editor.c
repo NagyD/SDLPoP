@@ -1,6 +1,6 @@
 /*
-SDLPoP editor
-Copyright (C) 2013-2015  Dávid Nagy, Enrique Calot 
+SDLPoP editor module
+Copyright (C) 2013-2016  Dávid Nagy, Enrique Calot 
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,8 +23,6 @@ The authors of this program may be contacted at http://forum.princed.org
 TODO:
 	room fix errors.
 	room decorate.
-
-	sanitize with levels
 
 	door handling
 */
@@ -631,7 +629,15 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 		break; 
 	case SDL_SCANCODE_D: // d for debugging purposes
 		{
-//draw_image_2(3 /*Prince Of Persia*/, chtab_title50, 24, 107, blitters_10h_transp);
+	dat_type* dathandle;
+	chtab_type* chtab_editor_sprites;
+	dathandle = open_dat("editor", 0);
+	chtab_editor_sprites = load_sprites_from_file(200, 1<<11, 1);
+	close_dat(dathandle);
+	draw_image_2(0 /*Prince Of Persia*/, chtab_editor_sprites, 30, 30, blitters_10h_transp);
+	free_chtab(chtab_editor_sprites);
+			*answer_text="DEBUG ACTION";
+			*need_show_text=1;
 		}
 		break; 
 	case SDL_SCANCODE_R | WITH_CTRL | WITH_SHIFT: /* ctrl-shift-r */
