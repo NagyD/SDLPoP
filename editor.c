@@ -537,7 +537,7 @@ void sanitize_room(int room, int sanitation_level) {
 void editor__on_refresh(surface_type* screen) {
 	if (chtab_editor_sprites) {
 		int x,y;
-		if (!SDL_GetMouseState(&x,&y)) {
+		if (!SDL_GetMouseState(&x,&y) && (x!=0) && (y!=0) && (x!=694) && (y<378) ) {
 			const Uint8 *state = SDL_GetKeyboardState(NULL);
 			image_type* image;
 			SDL_Rect src_rect= {0, 0, 0 , 0};
