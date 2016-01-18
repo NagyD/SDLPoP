@@ -538,10 +538,9 @@ void sanitize_room(int room, int sanitation_level) {
 		//TODO: finish & undo/redo
 	}
 
-
-
 }
 
+//SDL_Color* editor_palette[6];
 
 /********************************************\
 *             INPUT BINDINGS!!!!             *
@@ -574,7 +573,11 @@ void editor__on_refresh(surface_type* screen) {
 			SDL_SetSurfaceBlendMode(image, SDL_BLENDMODE_NONE);
 			SDL_SetSurfaceAlphaMod(image, 255);
 			SDL_SetColorKey(image, SDL_TRUE, 0);
-
+/*
+			if (SDL_SetPaletteColors(image->format->palette, editor_palette, 1, 2) != 0) { //TODO: +2 or +4
+			  printf("Couldn't set video mode: %s\n", SDL_GetError());
+			}
+*/
 			if (SDL_BlitSurface(image, &src_rect, screen, &dest_rect) != 0) {
 				sdlperror("SDL_BlitSurface on editor");
 				quit(1);
