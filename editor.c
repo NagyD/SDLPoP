@@ -542,22 +542,25 @@ void editor__on_refresh(surface_type* screen) {
 			x=x/2;
 			y=y/2;
 			if (state[SDL_SCANCODE_LSHIFT] || state[SDL_SCANCODE_RSHIFT]) {
-				SDL_Rect dest_rect = {x-5, y-5, 10, 10};
-				SDL_FillRect(screen,&dest_rect,0xff804000);
+				image_type* image=chtab_editor_sprites->images[0];
+				SDL_Rect src_rect = {0, 0, image->w, image->h};
+				SDL_Rect dest_rect = {x-image->w/2, y-image->h/2, image->w, image->h};
+
+				SDL_SetSurfaceBlendMode(image, SDL_BLENDMODE_NONE);
+				SDL_SetSurfaceAlphaMod(image, 255);
+				SDL_SetColorKey(image, SDL_TRUE, 0);
+
+				if (SDL_BlitSurface(image, &src_rect, screen, &dest_rect) != 0) {
+					sdlperror("SDL_BlitSurface on editor");
+					quit(1);
+				}
 			} else {
 				SDL_Rect dest_rect = {x-10, y-10, 20, 20};
 				SDL_FillRect(screen,&dest_rect,0xc3c3c300);
 			}
 		}
 
-		/* Example
 		// draw temporary layer
-		image_type* image=chtab_editor_sprites->images[0];
-		SDL_Rect src_rect = {0, 0, image->w, image->h};
-		if (SDL_BlitSurface(image, &src_rect, screen, &dest_rect) != 0) {
-			sdlperror("SDL_BlitSurface on editor");
-			quit(1);
-		}*/
 	} else {
 		printf("Sprites not loaded\n");
 	}
