@@ -539,24 +539,32 @@ void editor__on_refresh(surface_type* screen) {
 		int x,y;
 		if (!SDL_GetMouseState(&x,&y)) {
 			const Uint8 *state = SDL_GetKeyboardState(NULL);
+			image_type* image;
+			SDL_Rect src_rect= {0, 0, 0 , 0};
+			SDL_Rect dest_rect = {0, 0, 0, 0};
 			x=x/2;
 			y=y/2;
 			if (state[SDL_SCANCODE_LSHIFT] || state[SDL_SCANCODE_RSHIFT]) {
-				image_type* image=chtab_editor_sprites->images[0];
-				SDL_Rect src_rect = {0, 0, image->w, image->h};
-				SDL_Rect dest_rect = {x-image->w/2, y-image->h/2, image->w, image->h};
-
-				SDL_SetSurfaceBlendMode(image, SDL_BLENDMODE_NONE);
-				SDL_SetSurfaceAlphaMod(image, 255);
-				SDL_SetColorKey(image, SDL_TRUE, 0);
-
-				if (SDL_BlitSurface(image, &src_rect, screen, &dest_rect) != 0) {
-					sdlperror("SDL_BlitSurface on editor");
-					quit(1);
-				}
+				image=chtab_editor_sprites->images[0];
+				dest_rect.x=x-image->w/2;
+				dest_rect.y=y-image->h/2;
 			} else {
-				SDL_Rect dest_rect = {x-10, y-10, 20, 20};
-				SDL_FillRect(screen,&dest_rect,0xc3c3c300);
+				static int i_frame=0;
+				image=chtab_editor_sprites->images[1+(i_frame++)%3]; //TODO: +3 or +6
+				x-=x%32;
+				y-=y%63+10;
+				dest_rect.x=x;
+				dest_rect.y=y;
+			}
+			dest_rect.w=src_rect.w=image->w;
+			dest_rect.h=src_rect.h=image->h;
+			SDL_SetSurfaceBlendMode(image, SDL_BLENDMODE_NONE);
+			SDL_SetSurfaceAlphaMod(image, 255);
+			SDL_SetColorKey(image, SDL_TRUE, 0);
+
+			if (SDL_BlitSurface(image, &src_rect, screen, &dest_rect) != 0) {
+				sdlperror("SDL_BlitSurface on editor");
+				quit(1);
 			}
 		}
 
