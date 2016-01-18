@@ -1,6 +1,6 @@
 /*
 SDLPoP editor module
-Copyright (C) 2013-2016  Dávid Nagy, Enrique Calot 
+Copyright (C) 2013-2016  Dávid Nagy, Enrique Calot
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -63,7 +63,7 @@ int room_api_insert_room_down(tMap* map, int where);
 *      Randomization sublayer headers        *
 \********************************************/
 
-/*  E_x_y = e^(-(x^2+y^2)) -> gaussian blur */
+/* E_x_y = e^(-(x^2+y^2)) -> gaussian blur */
 #define E_0_1 .36787944117144232159
 #define E_0_2 .01831563888873418029
 #define E_1_1 .13533528323661269189
@@ -88,7 +88,7 @@ typedef struct {
 
 typedef struct probability_info {
 	int count;
-	float  value;
+	float value;
 } tProbability;
 
 float room_api_measure_entropy(const tMap* map, tTilePlace t, byte* level_mask);
@@ -176,7 +176,7 @@ void editor__do_(long offset, byte c, tUndoQueueMark mark) {
 	offset[(char*)(&edited)]=c;
 	offset[(char*)(&level)]=c;
 	stack_push(offset<<18|mark<<16|before<<8|c);
-} 
+}
 
 void editor__undo() {
 	long aux,offset;
@@ -219,13 +219,22 @@ void __pascal far redraw_screen(int drawing_different_room);
 *            Editor functions                *
 \********************************************/
 
+chtab_type* chtab_editor_sprites=NULL;
 void editor__load_level() {
 	dat_type* dathandle;
+
 	dathandle = open_dat("LEVELS.DAT", 0);
 	load_from_opendats_to_area(current_level + 2000, &edited, sizeof(edited), "bin");
 	close_dat(dathandle);
 	edition_level=current_level;
 	stack_reset();
+
+	dathandle = open_dat("editor", 0);
+	if (chtab_editor_sprites) free_chtab(chtab_editor_sprites);
+	chtab_editor_sprites = load_sprites_from_file(200, 1<<11, 1);
+	close_dat(dathandle);
+
+	//TODO: free_chtab(chtab_editor_sprites);
 }
 
 void editor_revert_level() {
@@ -257,7 +266,7 @@ void editor__position(char_type* character,int col,int row,int room,int x,word s
 
 /*
 Debug char position
-printf("Guard | %d-%d %d,%d |\n", 
+printf("Guard | %d-%d %d,%d |\n",
 	Guard.curr_col,Guard.curr_row,Guard.x,Guard.y
 );
 */
@@ -394,7 +403,7 @@ void sanitize_room(int room, int sanitation_level) {
 	byte tile;
 	for (i=0;i<30;i++) {
 		tile=tile_at(i,room);
-		printf("sanitize %d %d %d\n",i,tile,(edited.bg[(room-1)*30+(i)]));
+		//printf("sanitize %d %d %d\n",i,tile,(edited.bg[(room-1)*30+(i)]));
 		if (sanitation_level==1) switch(tile) { /* check for alone tile */
 		case tiles_1_floor:
 		case tiles_2_spike:
@@ -425,7 +434,6 @@ void sanitize_room(int room, int sanitation_level) {
 		case tiles_29_lattice_right:
 		case tiles_30_torch_with_debris:
 			if (left_is(i,tiles_20_wall)==tiles_20_wall && right_is(i,tiles_20_wall)==tiles_20_wall) {
-printf("if ok\n");
 				switch (up_is(i,tiles_20_wall)) {
 				case tiles_1_floor:
 				case tiles_2_spike:
@@ -526,6 +534,36 @@ printf("if ok\n");
 *             INPUT BINDINGS!!!!             *
 \********************************************/
 
+void editor__on_refresh(surface_type* screen) {
+	if (chtab_editor_sprites) {
+		int x,y;
+		if (!SDL_GetMouseState(&x,&y)) {
+			const Uint8 *state = SDL_GetKeyboardState(NULL);
+			x=x/2;
+			y=y/2;
+			if (state[SDL_SCANCODE_LSHIFT] || state[SDL_SCANCODE_RSHIFT]) {
+				SDL_Rect dest_rect = {x-5, y-5, 10, 10};
+				SDL_FillRect(screen,&dest_rect,0xff804000);
+			} else {
+				SDL_Rect dest_rect = {x-10, y-10, 20, 20};
+				SDL_FillRect(screen,&dest_rect,0xc3c3c300);
+			}
+		}
+
+		/* Example
+		// draw temporary layer
+		image_type* image=chtab_editor_sprites->images[0];
+		SDL_Rect src_rect = {0, 0, image->w, image->h};
+		if (SDL_BlitSurface(image, &src_rect, screen, &dest_rect) != 0) {
+			sdlperror("SDL_BlitSurface on editor");
+			quit(1);
+		}*/
+	} else {
+		printf("Sprites not loaded\n");
+	}
+
+}
+
 void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int alt) {
 	int col,row,tilepos,x;
 	if (!editor_active) return;
@@ -553,7 +591,7 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int
 		redraw_screen(1);
 	}
 
-				/*printf("hola mundo %d %d %d %d %c%c%c\n", 
+				/*printf("hola mundo %d %d %d %d %c%c%c\n",
 					e.state,
 					e.button,
 					tile,
@@ -589,7 +627,7 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 			*need_show_text=1;
 			/* TODO: synch */
 		}
-		break; 
+		break;
 	case SDL_SCANCODE_Q:
 	case SDL_SCANCODE_W:
 		aux_int=editor__guard_color(key==SDL_SCANCODE_Q?-1:1);
@@ -599,11 +637,11 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 			*need_show_text=1;
 			/* TODO: synch */
 		}
-		break; 
+		break;
 	case SDL_SCANCODE_TAB:
 		editor__guard_toggle();
 		Guard.direction=~Guard.direction; /* synch */
-		break; 
+		break;
 	case SDL_SCANCODE_J | WITH_SHIFT:
 	case SDL_SCANCODE_H | WITH_SHIFT:
 	case SDL_SCANCODE_U | WITH_SHIFT:
@@ -627,20 +665,13 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 		}
 		editor__do_mark_end();
 		*need_show_text=1;
-		break; 
+		break;
 	case SDL_SCANCODE_D: // d for debugging purposes
 		{
-	dat_type* dathandle;
-	chtab_type* chtab_editor_sprites;
-	dathandle = open_dat("editor", 0);
-	chtab_editor_sprites = load_sprites_from_file(200, 1<<11, 1);
-	close_dat(dathandle);
-	draw_image_2(0 /*Prince Of Persia*/, chtab_editor_sprites, 30, 30, blitters_10h_transp);
-	free_chtab(chtab_editor_sprites);
 			*answer_text="DEBUG ACTION";
 			*need_show_text=1;
 		}
-		break; 
+		break;
 	case SDL_SCANCODE_R | WITH_CTRL | WITH_SHIFT: /* ctrl-shift-r */
 		randomize_room(loaded_room);
 		redraw_screen(1);
@@ -783,7 +814,7 @@ int room_api_alloc_room(tMap* map, int where) {
 int room_api_insert_room_right(tMap* map, int where) {
 	int i,j,_i,r;
 	if (!map->map[where+POS_RIGHT]) {
-		return room_api_alloc_room(map,where+POS_RIGHT); 
+		return room_api_alloc_room(map,where+POS_RIGHT);
 	}
 	/* there is a room on the right, I must move the whole right part of the level one position to the right */
 	r=room_api_get_free_room(map);
@@ -822,7 +853,7 @@ int room_api_insert_room_right(tMap* map, int where) {
 int room_api_insert_room_down(tMap* map, int where) {
 	int i,_j,j,r;
 	if (!map->map[where+POS_DOWN]) {
-		return room_api_alloc_room(map,where+POS_DOWN); 
+		return room_api_alloc_room(map,where+POS_DOWN);
 	}
 	/* there is a room down, I must move the whole down part of the level one position down */
 	r=room_api_get_free_room(map);
@@ -860,13 +891,13 @@ int room_api_insert_room_down(tMap* map, int where) {
 
 int room_api_insert_room_left(tMap* map, int where) {
 	if (!map->map[where+POS_LEFT]) {
-		return room_api_alloc_room(map,where+POS_LEFT); 
+		return room_api_alloc_room(map,where+POS_LEFT);
 	}
 	return room_api_insert_room_right(map,where+POS_LEFT);
 }
 int room_api_insert_room_up(tMap* map, int where) {
 	if (!map->map[where+POS_UP]) {
-		return room_api_alloc_room(map,where+POS_UP); 
+		return room_api_alloc_room(map,where+POS_UP);
 	}
 	return room_api_insert_room_down(map,where+POS_UP);
 }

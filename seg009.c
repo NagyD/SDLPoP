@@ -1906,7 +1906,21 @@ void __pascal far set_gr_mode(byte grmode) {
 
 void request_screen_update() {
 	if (!screen_updates_suspended) {
+#ifdef USE_EDITOR
+		surface_type* onscreen_surface_copy;
+		if (editor_enabled && editor_active) {
+			static char* aux=NULL;
+			if (!aux) aux=malloc(320*200*24); //TODO: free memory
+			memcpy(aux,onscreen_surface_->pixels,320*200*24);
+			onscreen_surface_copy=SDL_CreateRGBSurfaceFrom(aux,320, 200, 24, onscreen_surface_->pitch, 0xFF, 0xFF << 8, 0xFF << 16, 0);
+			editor__on_refresh(onscreen_surface_copy);
+		} else {
+			onscreen_surface_copy=onscreen_surface_;
+		}
+		SDL_UpdateTexture(sdl_texture_, NULL, onscreen_surface_copy->pixels, onscreen_surface_copy->pitch);
+#else
 		SDL_UpdateTexture(sdl_texture_, NULL, onscreen_surface_->pixels, onscreen_surface_->pitch);
+#endif
 		SDL_RenderClear(renderer_);
 		SDL_RenderCopy(renderer_, sdl_texture_, NULL, NULL);
 		SDL_RenderPresent(renderer_);
