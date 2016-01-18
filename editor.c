@@ -672,6 +672,13 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 			*need_show_text=1;
 		}
 		break;
+	case SDL_SCANCODE_Y: /* y: save starting position */
+		editor__do(start_pos,Kid.curr_row*10+Kid.curr_col,mark_start);
+		editor__do(start_room,Kid.room,mark_middle);
+		editor__do(start_dir,Kid.direction,mark_end);
+		*answer_text="New starting position set";
+		*need_show_text=1;
+		break;
 	case SDL_SCANCODE_R | WITH_CTRL | WITH_SHIFT: /* ctrl-shift-r */
 		randomize_room(loaded_room);
 		redraw_screen(1);
@@ -872,7 +879,7 @@ int room_api_insert_room_down(tMap* map, int where) {
 	}
 	room_api_put_room(map,where+POS_DOWN,r);
 
-#ifdef __DEBUG__
+#ifdef __SCREEN_DEBUG__
 	{
 		printf("----------------------------------");
 		for (i=0;i<MAP_SIDE*MAP_SIDE;i++) {
@@ -1038,7 +1045,7 @@ tile_packed_type room_api_suggest_tile(const tMap* map, tTilePlace tilepos, byte
 		}
 	}
 
-#ifdef __DEBUG__
+#ifdef __SCREEN_DEBUG__
 	for (i=0;i!=NO_TILE;i++) {
 		if (probability[i].count)
 			printf("k=%d v=%f c=%d\n",i,probability[i].value,probability[i].count);
