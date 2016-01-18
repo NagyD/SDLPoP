@@ -159,6 +159,8 @@ void editor__do_mark_end() {
 /* editor level layer used by do/undo/redo */
 void editor__load_level();
 tile_and_mod copied={0,0};
+byte copied_room_fg[30]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+byte copied_room_bg[30]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 level_type edited;
 tMap edited_map={NULL,NULL};
 int edition_level=-1;
@@ -262,6 +264,17 @@ void editor__position(char_type* character,int col,int row,int room,int x,word s
 	character->x=x;
 	character->y=55+63*row;
 	character->curr_seq=seq;
+}
+
+void editor__paste_room(int room) {
+	int i;
+
+	editor__do_mark_start();
+	for (i=0;i<30;i++) {
+		editor__do(fg[(drawn_room-1)*30+i],copied_room_fg[i],mark_middle);
+		editor__do(bg[(drawn_room-1)*30+i],copied_room_bg[i],mark_middle);
+	}
+	editor__do_mark_end();
 }
 
 /*
@@ -696,6 +709,16 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 		break;
 	case SDL_SCANCODE_S | WITH_CTRL | WITH_SHIFT: /* ctrl-shift-s */
 		sanitize_room(loaded_room,0);
+		redraw_screen(1);
+		break;
+	case SDL_SCANCODE_C | WITH_CTRL: /* ctrl-c: copy room */
+		memcpy(copied_room_fg,&(edited.fg[(drawn_room-1)*30]),30);
+		memcpy(copied_room_bg,&(edited.bg[(drawn_room-1)*30]),30);
+		*answer_text="ROOM COPIED";
+		*need_show_text=1;
+		break;
+	case SDL_SCANCODE_V | WITH_CTRL: /* ctrl-v: paste room */
+		editor__paste_room(drawn_room);
 		redraw_screen(1);
 		break;
 	case SDL_SCANCODE_S | WITH_ALT: /* alt-s */
