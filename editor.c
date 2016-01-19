@@ -612,37 +612,68 @@ void sanitize_room(int room, int sanitation_level) {
 *             INPUT BINDINGS!!!!             *
 \********************************************/
 
+typedef enum {
+	cMain=1,
+	cRight=3,
+	cWrong=5,
+	cSelected=7,
+	cLinked=9,
+	cExtra=11
+ //white/grey: cursors cross+tile. red: cursor tile with alt. green: cursor tile with alt on opener+closer+door+gate tiles. yellow: selected opener+closer+door+gate. blue: binded opener+closer+door+gate.
+} tCursorColors;
+
+typedef enum {
+	cCross=0,
+	cSingleTile=1,
+	cExitdoor=4,
+	cBigPillar=7
+} tEditorImageOffset;
+
+/* blit top surface layer (cursor+annotations) */
 void editor__on_refresh(surface_type* screen) {
 	if (chtab_editor_sprites) {
-		int x,y;
+		int x,y, colors_total=1;
+		tCursorColors colors;
 		if (!SDL_GetMouseState(&x,&y) && (x!=0) && (y!=0) && (x!=694) && (y<378) ) {
 			const Uint8 *state = SDL_GetKeyboardState(NULL);
 			image_type* image;
 			SDL_Rect src_rect= {0, 0, 0 , 0};
 			SDL_Rect dest_rect = {0, 0, 0, 0};
 			int col,row,tilepos;
+			int is_alt_pressed=state[SDL_SCANCODE_LALT] || state[SDL_SCANCODE_RALT];
+			colors=cMain;
 			x=x/2;
 			y=y/2;
 			col=(x-x%32)/32;
 			row=(y-y%63+10)/63;
 			tilepos=row*10+col;
-
+			/* if Shift is pressed a cross is shown */
 			if (state[SDL_SCANCODE_LSHIFT] || state[SDL_SCANCODE_RSHIFT]) {
-				image=chtab_editor_sprites->images[0];
+				image=chtab_editor_sprites->images[cCross];
 				dest_rect.x=x-image->w/2;
 				dest_rect.y=y-image->h/2;
-			} else { //TODO: use enum for offset values
-				int image_offset=1;
+				colors=cMain;
+			} else { /* If not, a 3D selection box is shown. When alt is pressed cRight or cWrong colors are used */
+				tEditorImageOffset image_offset=cSingleTile;
+				if (is_alt_pressed) colors=cWrong;
 				switch(level.fg[(drawn_room-1)*30+tilepos]&0x1f) {
 				case tiles_17_level_door_right:
 					x-=32;
 				case tiles_16_level_door_left:
-					image_offset=4;
+					image_offset=cExitdoor;
+					colors_total=2;
+					if (is_alt_pressed) colors=cRight;
 					break;
 				case tiles_8_bigpillar_bottom:
 					y-=63;
 				case tiles_9_bigpillar_top:
-					image_offset=7;
+					image_offset=cBigPillar;
+					colors_total=2;
+					break;
+				case tiles_6_closer:
+				case tiles_15_opener:
+				case tiles_4_gate:
+					if (is_alt_pressed) colors=cRight;
 					break;
 				}
 
@@ -658,11 +689,11 @@ void editor__on_refresh(surface_type* screen) {
 			SDL_SetSurfaceBlendMode(image, SDL_BLENDMODE_NONE);
 			SDL_SetSurfaceAlphaMod(image, 255);
 			SDL_SetColorKey(image, SDL_TRUE, 0);
-/*
-			if (SDL_SetPaletteColors(image->format->palette, image->format->palette->colors+3, 1, 2) != 0) { //TODO: +2 or +4: white/grey: cursors cross+tile. red: cursor tile with alt. green: cursor tile with alt on opener+closer+door+gate tiles. yellow: selected opener+closer+door+gate. blue: binded opener+closer+door+gate.
+
+			if (SDL_SetPaletteColors(image->format->palette, chtab_editor_sprites->images[0]->format->palette->colors+colors, 1, colors_total) != 0) {
 			  printf("Couldn't set video mode: %s\n", SDL_GetError());
 			}
-*/
+
 			if (SDL_BlitSurface(image, &src_rect, screen, &dest_rect) != 0) {
 				sdlperror("SDL_BlitSurface on editor");
 				quit(1);
