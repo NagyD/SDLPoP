@@ -231,7 +231,7 @@ int door_api_link(tTilePlace tile1,tTilePlace tile2);
 void door_api_unlink(tTilePlace tile1,tTilePlace tile2);
 
 int door_api_init_iterator(tIterator* it, tTilePlace tp) { /* true on success */
-	byte tile=edited.fg[(tp.room-1)*30+(tp.tilepos)];
+	byte tile=edited.fg[(tp.room-1)*30+(tp.tilepos)]&0x1f;
 	switch(tile) {
 		case tiles_6_closer:
 		case tiles_15_opener:
@@ -246,7 +246,7 @@ int door_api_init_iterator(tIterator* it, tTilePlace tp) { /* true on success */
 			return 1;
 		case tiles_17_level_door_right:
 			if (tp.tilepos%10 &&
-				edited.fg[(tp.room-1)*30+(tp.tilepos-1)]==tiles_16_level_door_left) {
+				(edited.fg[(tp.room-1)*30+(tp.tilepos-1)]&0x1f)==tiles_16_level_door_left) {
 					tp.tilepos--;
 					return door_api_init_iterator(it,tp);
 				}
@@ -263,11 +263,12 @@ int door_api_get(tIterator* it, tTilePlace *tile) {
 	} else {
 		short* i=&it->data.info.i;
 		for (;(*i)<NUMBER_OF_ROOMS*30;(*i)++) { /* first loop: check all tiles to find buttons */
-			byte fg=edited.bg[*i];
+			byte fg=edited.bg[*i]&0x1f;
 			if (fg==tiles_6_closer || fg==tiles_15_opener) {
 				tIterator it2;
 				tTilePlace tile_aux,tile_aux2;
 				tile_aux.room=(*i)/30+1;
+				if (!edited_map.list[tile_aux.room-1]) continue; /* skip unused rooms */
 				tile_aux.tilepos=(*i)%30;
 				door_api_init_iterator(&it2,tile_aux);
 				while(door_api_get(&it2,&tile_aux2)) { /* second loop: find door opened by those buttons */
@@ -626,28 +627,27 @@ void editor__on_refresh(surface_type* screen) {
 			row=(y-y%63+10)/63;
 			tilepos=row*10+col;
 
-
 			if (state[SDL_SCANCODE_LSHIFT] || state[SDL_SCANCODE_RSHIFT]) {
 				image=chtab_editor_sprites->images[0];
 				dest_rect.x=x-image->w/2;
 				dest_rect.y=y-image->h/2;
 			} else { //TODO: use enum for offset values
-				int image_offset=0;
-				switch(level.fg[(drawn_room-1)*30+tilepos]) {
+				int image_offset=1;
+				switch(level.fg[(drawn_room-1)*30+tilepos]&0x1f) {
 				case tiles_17_level_door_right:
 					x-=32;
 				case tiles_16_level_door_left:
-					image_offset=3;
+					image_offset=4;
 					break;
 				case tiles_8_bigpillar_bottom:
 					y-=63;
 				case tiles_9_bigpillar_top:
-					image_offset=6;
+					image_offset=7;
 					break;
 				}
 
 				static int i_frame=0;
-				image=chtab_editor_sprites->images[1+image_offset+(i_frame++)%3];
+				image=chtab_editor_sprites->images[image_offset+(i_frame++)%3];
 				x-=x%32;
 				y-=y%63+10;
 				dest_rect.x=x;
