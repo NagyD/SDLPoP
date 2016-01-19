@@ -710,6 +710,29 @@ void __pascal far clear_tile_wipes() {
 	memset_near(redraw_frames_above, 0, sizeof(redraw_frames_above));
 }
 
+/* the following section encapsulate door linking. In case you want to add more rooms more
+   space can be used here */
+
+#ifdef USE_EDITOR
+/* doorlink setters & getters */
+void get_doorlink(Uint16 value, tTilePlace* tp, short* next) {
+	byte dl1=value&0xff;
+	byte dl2=(value>>8)&0xff;
+
+	tp->room=((dl1 & 0x60) >> 5) | ((dl2 & 0xE0) >> 3);
+	tp->tilepos=dl1&0x1f;
+	*next=!(dl1&0x80);
+}
+void set_doorlink(Uint16* value, tTilePlace tp, short next) {
+	register byte dl1, dl2;
+
+	dl1 = ( (tp.room<<5) & 0x60 ) | ( tp.tilepos & 0x1f) | (next?0:0x80);
+	dl2 = (tp.room<<3) & 0xE0;
+
+	*value=dl1|(dl2<<8);
+}
+#endif
+
 // seg007:0BB6
 short __pascal far get_doorlink_timer(short index) {
 	return doorlink2_ad[index] & 0x1F;

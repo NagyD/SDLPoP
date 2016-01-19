@@ -79,13 +79,6 @@ typedef union {
 } tile_packed_type;
 #pragma pack(pop)
 
-typedef struct {
-	byte room;
-	byte tilepos;
-} tTilePlace;
-
-#define NO_TILE ((word)(-1))
-
 typedef struct probability_info {
 	int count;
 	float value;
@@ -218,7 +211,81 @@ void editor__redo() {
 void __pascal far redraw_screen(int drawing_different_room);
 
 /********************************************\
-*            Editor functions                *
+*             Door linking API               *
+\********************************************/
+
+typedef struct {
+	enum {doorIterator, buttonIterator} type;
+	union {
+		short index;
+		struct {
+			tTilePlace tile;
+			short i;
+		} info;
+	} data;
+} tIterator;
+
+int door_api_init_iterator(tIterator* it, tTilePlace tile);
+int door_api_get(tIterator* it, tTilePlace *tile); /* returns false when end_of_list */
+int door_api_link(tTilePlace tile1,tTilePlace tile2);
+void door_api_unlink(tTilePlace tile1,tTilePlace tile2);
+
+int door_api_init_iterator(tIterator* it, tTilePlace tp) { /* true on success */
+	byte tile=edited.fg[(tp.room-1)*30+(tp.tilepos)];
+	switch(tile) {
+		case tiles_6_closer:
+		case tiles_15_opener:
+			it->data.index=edited.bg[(tp.room-1)*30+(tp.tilepos)];
+			it->type=buttonIterator;
+			return 1;
+		case tiles_4_gate:
+		case tiles_16_level_door_left:
+			it->data.info.tile=tp;
+			it->data.info.i=0;
+			it->type=doorIterator;
+			return 1;
+		case tiles_17_level_door_right:
+			if (tp.tilepos%10 &&
+				edited.fg[(tp.room-1)*30+(tp.tilepos-1)]==tiles_16_level_door_left) {
+					tp.tilepos--;
+					return door_api_init_iterator(it,tp);
+				}
+		}
+		return 0;
+}
+int door_api_get(tIterator* it, tTilePlace *tile) {
+	if (it->type==buttonIterator) {
+		if (it->data.index>=NUMBER_OF_DOORLINKS) return 0;
+		short next;
+		get_doorlink((edited.doorlinks2[it->data.index]<<8)|edited.doorlinks1[it->data.index],tile,&next);
+		it->data.index++;
+		return next;
+	} else {
+		short* i=&it->data.info.i;
+		for (;(*i)<NUMBER_OF_ROOMS*30;(*i)++) { /* first loop: check all tiles to find buttons */
+			byte fg=edited.bg[*i];
+			if (fg==tiles_6_closer || fg==tiles_15_opener) {
+				tIterator it2;
+				tTilePlace tile_aux,tile_aux2;
+				tile_aux.room=(*i)/30+1;
+				tile_aux.tilepos=(*i)%30;
+				door_api_init_iterator(&it2,tile_aux);
+				while(door_api_get(&it2,&tile_aux2)) { /* second loop: find door opened by those buttons */
+					if (tile_aux2.room==it->data.info.tile.room && tile_aux2.tilepos==it->data.info.tile.tilepos) {
+						(*i)++;
+						*tile=tile_aux;
+						return 1;
+					}
+				}
+			}
+		}
+		return 0;
+	}
+}
+
+
+/********************************************\
+*             Editor functions               *
 \********************************************/
 
 chtab_type* chtab_editor_sprites=NULL;
@@ -540,8 +607,6 @@ void sanitize_room(int room, int sanitation_level) {
 
 }
 
-//SDL_Color* editor_palette[6];
-
 /********************************************\
 *             INPUT BINDINGS!!!!             *
 \********************************************/
@@ -554,15 +619,35 @@ void editor__on_refresh(surface_type* screen) {
 			image_type* image;
 			SDL_Rect src_rect= {0, 0, 0 , 0};
 			SDL_Rect dest_rect = {0, 0, 0, 0};
+			int col,row,tilepos;
 			x=x/2;
 			y=y/2;
+			col=(x-x%32)/32;
+			row=(y-y%63+10)/63;
+			tilepos=row*10+col;
+
+
 			if (state[SDL_SCANCODE_LSHIFT] || state[SDL_SCANCODE_RSHIFT]) {
 				image=chtab_editor_sprites->images[0];
 				dest_rect.x=x-image->w/2;
 				dest_rect.y=y-image->h/2;
-			} else {
+			} else { //TODO: use enum for offset values
+				int image_offset=0;
+				switch(level.fg[(drawn_room-1)*30+tilepos]) {
+				case tiles_17_level_door_right:
+					x-=32;
+				case tiles_16_level_door_left:
+					image_offset=3;
+					break;
+				case tiles_8_bigpillar_bottom:
+					y-=63;
+				case tiles_9_bigpillar_top:
+					image_offset=6;
+					break;
+				}
+
 				static int i_frame=0;
-				image=chtab_editor_sprites->images[1+(i_frame++)%3]; //TODO: +3 or +6
+				image=chtab_editor_sprites->images[1+image_offset+(i_frame++)%3];
 				x-=x%32;
 				y-=y%63+10;
 				dest_rect.x=x;
@@ -574,7 +659,7 @@ void editor__on_refresh(surface_type* screen) {
 			SDL_SetSurfaceAlphaMod(image, 255);
 			SDL_SetColorKey(image, SDL_TRUE, 0);
 /*
-			if (SDL_SetPaletteColors(image->format->palette, editor_palette, 1, 2) != 0) { //TODO: +2 or +4
+			if (SDL_SetPaletteColors(image->format->palette, image->format->palette->colors+3, 1, 2) != 0) { //TODO: +2 or +4: white/grey: cursors cross+tile. red: cursor tile with alt. green: cursor tile with alt on opener+closer+door+gate tiles. yellow: selected opener+closer+door+gate. blue: binded opener+closer+door+gate.
 			  printf("Couldn't set video mode: %s\n", SDL_GetError());
 			}
 */

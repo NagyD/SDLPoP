@@ -22,8 +22,17 @@ The authors of this program may be contacted at http://forum.princed.org
 #ifndef EDITOR_H
 #define EDITOR_H
 
+typedef struct {
+	byte room;
+	byte tilepos;
+} tTilePlace;
+
+#define NO_TILE ((word)(-1))
+
 void editor__process_key(int key,const char** answer_text, word* need_show_text);
 void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int alt);
 void editor__loading_dat();
 
+void get_doorlink(Uint16 value, tTilePlace* tp, short* next);
+void set_doorlink(Uint16* value, tTilePlace tp, short next);
 #endif

@@ -194,6 +194,8 @@ typedef struct link_type {
 	byte left,right,up,down;
 } link_type;
 
+#define NUMBER_OF_DOORLINKS 256
+
 #define NUMBER_OF_ROOMS 24
 #define DEF_LEVEL_TYPE(name,rooms) \
 typedef struct name { \
