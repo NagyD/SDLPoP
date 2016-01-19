@@ -1,6 +1,6 @@
 /*
 SDLPoP editor module
-Copyright (C) 2013-2016  Dávid Nagy, Enrique Calot
+Copyright (C) 2013-2016  Dávid Nagy, Enrique P. Calot
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -230,6 +230,18 @@ int door_api_get(tIterator* it, tTilePlace *tile); /* returns false when end_of_
 int door_api_link(tTilePlace tile1,tTilePlace tile2);
 void door_api_unlink(tTilePlace tile1,tTilePlace tile2);
 
+int door_api_is_related(byte tile) {
+	switch(tile) {
+	case tiles_6_closer:
+	case tiles_15_opener:
+	case tiles_4_gate:
+	case tiles_16_level_door_left:
+	case tiles_17_level_door_right:
+		return 1;
+	}
+	return 0;
+}
+
 int door_api_init_iterator(tIterator* it, tTilePlace tp) { /* true on success */
 	byte tile=edited.fg[(tp.room-1)*30+(tp.tilepos)]&0x1f;
 	switch(tile) {
@@ -284,6 +296,26 @@ int door_api_get(tIterator* it, tTilePlace *tile) {
 	}
 }
 
+/* editor functions related to this api */
+
+int selected_door_tile=-1;
+void editor__save_door_tile(short room,short tilepos) { /* if the same tile was selected "unselect" if not "select this tile".*/
+	int aux=(room-1)*30+tilepos;
+
+	if ((edited.fg[aux]&0x1f)==tiles_17_level_door_right) {
+			if (aux%10 &&
+				(edited.fg[aux-1]&0x1f)==tiles_16_level_door_left) {
+					aux--;
+			} else {
+				return;
+			}
+	}
+
+	selected_door_tile=(selected_door_tile==aux)?-1:aux;
+}
+void editor__toggle_door_tile(short loaded_room,short tilepos) {
+	printf("TODO toggle\n");
+}
 
 /********************************************\
 *             Editor functions               *
@@ -608,6 +640,7 @@ void sanitize_room(int room, int sanitation_level) {
 
 }
 
+
 /********************************************\
 *             INPUT BINDINGS!!!!             *
 \********************************************/
@@ -633,14 +666,16 @@ typedef enum {
 void editor__on_refresh(surface_type* screen) {
 	if (chtab_editor_sprites) {
 		int x,y, colors_total=1;
+		image_type* image;
+		SDL_Rect src_rect= {0, 0, 0 , 0};
+		SDL_Rect dest_rect = {0, 0, 0, 0};
+		tEditorImageOffset image_offset=cSingleTile;
 		tCursorColors colors;
+
 		if (!SDL_GetMouseState(&x,&y) && (x!=0) && (y!=0) && (x!=694) && (y<378) ) {
 			const Uint8 *state = SDL_GetKeyboardState(NULL);
-			image_type* image;
-			SDL_Rect src_rect= {0, 0, 0 , 0};
-			SDL_Rect dest_rect = {0, 0, 0, 0};
 			int col,row,tilepos;
-			int is_alt_pressed=state[SDL_SCANCODE_LALT] || state[SDL_SCANCODE_RALT];
+			int is_ctrl_alt_pressed=(state[SDL_SCANCODE_LALT] || state[SDL_SCANCODE_RALT]) && (state[SDL_SCANCODE_LCTRL] || state[SDL_SCANCODE_RCTRL]);
 			colors=cMain;
 			x=x/2;
 			y=y/2;
@@ -654,15 +689,14 @@ void editor__on_refresh(surface_type* screen) {
 				dest_rect.y=y-image->h/2;
 				colors=cMain;
 			} else { /* If not, a 3D selection box is shown. When alt is pressed cRight or cWrong colors are used */
-				tEditorImageOffset image_offset=cSingleTile;
-				if (is_alt_pressed) colors=cWrong;
+				if (is_ctrl_alt_pressed) colors=cWrong;
 				switch(level.fg[(drawn_room-1)*30+tilepos]&0x1f) {
 				case tiles_17_level_door_right:
 					x-=32;
 				case tiles_16_level_door_left:
 					image_offset=cExitdoor;
 					colors_total=2;
-					if (is_alt_pressed) colors=cRight;
+					if (is_ctrl_alt_pressed) colors=cRight;
 					break;
 				case tiles_8_bigpillar_bottom:
 					y-=63;
@@ -673,11 +707,11 @@ void editor__on_refresh(surface_type* screen) {
 				case tiles_6_closer:
 				case tiles_15_opener:
 				case tiles_4_gate:
-					if (is_alt_pressed) colors=cRight;
+					if (is_ctrl_alt_pressed) colors=cRight;
 					break;
 				}
 
-				static int i_frame=0;
+				static unsigned short i_frame=0;
 				image=chtab_editor_sprites->images[image_offset+(i_frame++)%3];
 				x-=x%32;
 				y-=y%63+10;
@@ -697,6 +731,41 @@ void editor__on_refresh(surface_type* screen) {
 			if (SDL_BlitSurface(image, &src_rect, screen, &dest_rect) != 0) {
 				sdlperror("SDL_BlitSurface on editor");
 				quit(1);
+			}
+		}
+
+		/* draw selected door tiles */
+		if (selected_door_tile!=-1) {
+			tTilePlace aux;
+			aux.room=(selected_door_tile/30)+1;
+			aux.tilepos=selected_door_tile%30;
+			if (aux.room==loaded_room) {
+				static unsigned short i_frame2=0;
+				colors_total=1;
+				if ((level.fg[selected_door_tile]&0x1f)==tiles_16_level_door_left) {
+					colors_total=2;
+					image_offset=cExitdoor;
+				} else {
+					image_offset=cSingleTile;
+				}
+				/* TODO: abstract this blitting function */
+				image=chtab_editor_sprites->images[image_offset+(i_frame2--)%3];
+				dest_rect.x=(aux.tilepos%10)*32;
+				dest_rect.y=(aux.tilepos/10)*63-10;
+				dest_rect.w=src_rect.w=image->w;
+				dest_rect.h=src_rect.h=image->h;
+				SDL_SetSurfaceBlendMode(image, SDL_BLENDMODE_NONE);
+				SDL_SetSurfaceAlphaMod(image, 255);
+				SDL_SetColorKey(image, SDL_TRUE, 0);
+
+				if (SDL_SetPaletteColors(image->format->palette, chtab_editor_sprites->images[0]->format->palette->colors+cSelected, 1, colors_total) != 0) {
+				  printf("Couldn't set video mode: %s\n", SDL_GetError());
+				}
+
+				if (SDL_BlitSurface(image, &src_rect, screen, &dest_rect) != 0) {
+					sdlperror("SDL_BlitSurface on editor");
+					quit(1);
+				}
 			}
 		}
 
@@ -732,6 +801,14 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int
 	} else if (e.button==SDL_BUTTON_LEFT && shift && !alt && ctrl) { /* ctrl+shift+left click: randomize tile */
 		randomize_tile(tilepos);
 		redraw_screen(1);
+	} else if (e.button==SDL_BUTTON_LEFT && !shift && alt && ctrl) { /* ctrl+alt+left click: toggle door mechanism links */
+		if (door_api_is_related(edited.fg[(loaded_room-1)*30+tilepos]&0x1f)) {
+			editor__toggle_door_tile(loaded_room,tilepos);
+		}
+	} else if (e.button==SDL_BUTTON_RIGHT && !shift && alt && ctrl) { /* ctrl+alt+right click: pick door mechanism tile */
+		if (door_api_is_related(edited.fg[(loaded_room-1)*30+tilepos]&0x1f)) {
+			editor__save_door_tile(loaded_room,tilepos);
+		}
 	}
 
 				/*printf("hola mundo %d %d %d %d %c%c%c\n",
