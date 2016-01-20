@@ -41,6 +41,12 @@ TODO:
 #define POS_RIGHT 1
 #define MAP_POS(x,y) ((y)*MAP_SIDE+(x))
 
+#define R(t) (((t)/30)+1)
+#define R_(t) (((t)/30))
+#define T(r,t) (((r)-1)*30+(t))
+#define P(t) ((t)%30)
+
+
 typedef struct {
 	long* list;
 	byte* map;
@@ -215,7 +221,7 @@ void __pascal far redraw_screen(int drawing_different_room);
 \********************************************/
 
 typedef struct {
-	enum {doorIterator, buttonIterator} type;
+	enum {doorIterator, buttonIterator, noneIterator} type;
 	union {
 		short index;
 		struct {
@@ -225,7 +231,7 @@ typedef struct {
 	} data;
 } tIterator;
 
-int door_api_init_iterator(tIterator* it, tTilePlace tile);
+void door_api_init_iterator(tIterator* it, tTilePlace tp);
 int door_api_get(tIterator* it, tTilePlace *tile); /* returns false when end_of_list */
 int door_api_link(tTilePlace tile1,tTilePlace tile2);
 void door_api_unlink(tTilePlace tile1,tTilePlace tile2);
@@ -243,40 +249,43 @@ int door_api_is_related(byte tile) { //TODO: return enum
 	return 0;
 }
 
-int door_api_init_iterator(tIterator* it, tTilePlace tp) { /* true on success */
+void door_api_init_iterator(tIterator* it, tTilePlace tp) {
 	byte tile=edited.fg[(tp.room-1)*30+(tp.tilepos)]&0x1f;
 	switch(tile) {
 		case tiles_6_closer:
 		case tiles_15_opener:
 			it->data.index=edited.bg[(tp.room-1)*30+(tp.tilepos)];
 			it->type=buttonIterator;
-			return 1;
+			return;
 		case tiles_4_gate:
 		case tiles_16_level_door_left:
 			it->data.info.tile=tp;
 			it->data.info.i=0;
 			it->type=doorIterator;
-			return 1;
+			return;
 		case tiles_17_level_door_right:
 			if (tp.tilepos%10 &&
 				(edited.fg[(tp.room-1)*30+(tp.tilepos-1)]&0x1f)==tiles_16_level_door_left) {
 					tp.tilepos--;
-					return door_api_init_iterator(it,tp);
+					door_api_init_iterator(it,tp);
+					return; 
 				}
 		}
-		return 0;
+		it->type=noneIterator;
+		return;
 }
 int door_api_get(tIterator* it, tTilePlace *tile) {
-	if (it->type==buttonIterator) {
+	switch (it->type) {
+	case buttonIterator:
 		if (it->data.index>=NUMBER_OF_DOORLINKS) return 0;
 		short next;
 		get_doorlink((edited.doorlinks2[it->data.index]<<8)|edited.doorlinks1[it->data.index],tile,&next);
 		it->data.index++;
-		return next;
-	} else {
-		short* i=&it->data.info.i;
-		for (;(*i)<NUMBER_OF_ROOMS*30;(*i)++) { /* first loop: check all tiles to find buttons */
-			byte fg=edited.bg[*i]&0x1f;
+		if (!next) it->type=noneIterator;
+		return 1;
+	case doorIterator:
+		for (short* i=&it->data.info.i;(*i)<NUMBER_OF_ROOMS*30;(*i)++) { /* first loop: check all tiles to find buttons */
+			byte fg=edited.fg[*i]&0x1f;
 			if (fg==tiles_6_closer || fg==tiles_15_opener) {
 				tIterator it2;
 				tTilePlace tile_aux,tile_aux2;
@@ -293,6 +302,8 @@ int door_api_get(tIterator* it, tTilePlace *tile) {
 				}
 			}
 		}
+		it->type=noneIterator;
+	case noneIterator:
 		return 0;
 	}
 }
@@ -746,23 +757,45 @@ void editor__on_refresh(surface_type* screen) {
 			blit_sprites(x,y,image_offset,colors,colors_total,screen);
 		}
 
+		static unsigned short i_frame2=0;
+		i_frame2--;
 		/* draw selected door tiles */
 		if (selected_door_tile!=-1) {
 			tTilePlace aux;
 			aux.room=(selected_door_tile/30)+1;
 			aux.tilepos=selected_door_tile%30;
 			if (aux.room==loaded_room) {
-				static unsigned short i_frame2=0;
 				colors_total=1;
 				if ((level.fg[selected_door_tile]&0x1f)==tiles_16_level_door_left) {
 					colors_total=2;
 					image_offset=cExitdoor;
 				} else {
+					colors_total=1;
 					image_offset=cSingleTile;
 				}
-
-				blit_sprites((aux.tilepos%10)*32,(aux.tilepos/10)*63-10,image_offset+(i_frame2--)%3,colors,colors_total,screen);
-
+				blit_sprites((aux.tilepos%10)*32,(aux.tilepos/10)*63-10,image_offset+(i_frame2)%3,cSelected,colors_total,screen);
+			}
+			tIterator it;
+			tTilePlace selected,linked;
+			selected.room=R(selected_door_tile);
+			selected.tilepos=P(selected_door_tile);
+			door_api_init_iterator(&it,selected);
+			while(door_api_get(&it,&linked)) {
+				if (linked.room==loaded_room) {
+					if ((level.fg[T(linked.room,linked.tilepos)]&0x1f)==tiles_16_level_door_left) {
+						colors_total=2;
+						image_offset=cExitdoor;
+					} else {
+						colors_total=1;
+						image_offset=cSingleTile;
+					}
+					blit_sprites((linked.tilepos%10)*32,(linked.tilepos/10)*63-10,image_offset+(i_frame2)%3,cLinked,colors_total,screen);
+				} else {
+					if (level.roomlinks[loaded_room].left==loaded_room && linked.tilepos%10==9) {
+						//TODO: exit doors
+						blit_sprites((-1)*32,(linked.tilepos/10)*63-10,image_offset+(i_frame2)%3,cLinked,1,screen);
+					}
+				}
 			}
 		}
 
