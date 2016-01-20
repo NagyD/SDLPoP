@@ -304,8 +304,9 @@ int door_api_get(tIterator* it, tTilePlace *tile) {
 		}
 		it->type=noneIterator;
 	case noneIterator:
-		return 0;
+		break;
 	}
+	return 0;
 }
 
 /* editor functions related to this api */
@@ -658,14 +659,13 @@ void sanitize_room(int room, int sanitation_level) {
 \********************************************/
 
 typedef enum {
-	cMain=1,
-	cRight=3,
-	cWrong=5,
-	cSelected=7,
-	cLinked=9,
-	cExtra=11
- //white/grey: cursors cross+tile. red: cursor tile with alt. green: cursor tile with alt on opener+closer+door+gate tiles. yellow: selected opener+closer+door+gate. blue: binded opener+closer+door+gate.
-} tCursorColors;
+	cMain=1,    //White+grey: cursors cross+tile.
+	cRight=3,   //Red: cursor tile when ctrl+alt is pressed and the tile is a door/button.
+	cWrong=5,   //Blue: cursor tile when ctrl+alt is pressed and the tile is NOT a door/button. No actions possible.
+	cLinked=7,  //Green: When a door/button is selected, the linked tiles will have this color
+	cSelected=9,//Yellow: The selected door/button.
+	cExtra=11   //Cyan: Not used yet.
+} tCursorColors; //The palettes are taken from the res201 bitmap, ignoring the res200 palette.
 
 typedef enum {
 	cCross=0,
@@ -781,7 +781,7 @@ void editor__on_refresh(surface_type* screen) {
 			selected.tilepos=P(selected_door_tile);
 			door_api_init_iterator(&it,selected);
 			while(door_api_get(&it,&linked)) {
-				if (linked.room==loaded_room) {
+				if (linked.room==loaded_room) { /* there is a linked tile in the drawn room */
 					if ((level.fg[T(linked.room,linked.tilepos)]&0x1f)==tiles_16_level_door_left) {
 						colors_total=2;
 						image_offset=cExitdoor;
@@ -790,10 +790,10 @@ void editor__on_refresh(surface_type* screen) {
 						image_offset=cSingleTile;
 					}
 					blit_sprites((linked.tilepos%10)*32,(linked.tilepos/10)*63-10,image_offset+(i_frame2)%3,cLinked,colors_total,screen);
-				} else {
-					if (level.roomlinks[loaded_room].left==loaded_room && linked.tilepos%10==9) {
+				} else { /* there is a linked tile in the last column of the left room */
+					if (level.roomlinks[loaded_room-1].left==linked.room && linked.tilepos%10==9) {
 						//TODO: exit doors
-						blit_sprites((-1)*32,(linked.tilepos/10)*63-10,image_offset+(i_frame2)%3,cLinked,1,screen);
+						blit_sprites((-1)*32,(linked.tilepos/10)*63-10,cSingleTile+(i_frame2)%3,cLinked,1,screen);
 					}
 				}
 			}
