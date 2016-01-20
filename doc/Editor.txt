@@ -35,10 +35,19 @@ Mouse right click: Copy tile
 Shift-Mouse left click: Put/move the kid there
 Shift-Mouse right click: Put/move a guard there
 Y: Set starting position to the place the kid is
-P: Toggle tile palette mode
-Alt-Mouse left click: Select rise and drop buttons for door linking
-Alt-Mouse right click: Toggle door activation by selected button
+P: Toggle tile palette mode (not implemented yet)
+Ctrl-Alt-Mouse left click: Toggle door activation by selected button
+Ctrl-Alt-Mouse right click: Select rise and drop buttons for door linking
 Alt-R: Revert level to latest saved version
 Ctrl-Shift-Mouse left click: Put random tile
 Ctrl-Shift-R: Randomize the whole screen
+
+By pressing Shift the mouse pointer indicates where the characters will be placed. Using Ctrl-Alt door linking showing features are activated: Blue tiles are not linkable, red tiles are linkable (doors and buttons), the number displayed indicates how many links this tile has.
+
+TODO List/known bugs:
+* Undo/Redo features are not completely functional. Some things may not be reverted. Also there is a problem when refreshing the screen may break the guard tiles.
+* Door linking: removing links is not coded yet.
+* Palette screens are not yet implemented.
+* Copy/paste does nothing with the room linking functionality.
+* Multiple-tile feature works in the selection cursor but it's not implemented.
 
