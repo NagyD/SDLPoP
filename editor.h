@@ -27,6 +27,8 @@ typedef struct {
 	byte tilepos;
 } tTilePlace;
 
+typedef short tTilePlaceN;
+
 #define NO_TILE ((word)(-1))
 
 void editor__process_key(int key,const char** answer_text, word* need_show_text);

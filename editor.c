@@ -339,24 +339,44 @@ void door_api_init(int* max_doorlinks) {
 }
 
 int door_api_link(int* max_doorlinks, tTilePlaceN door,tTilePlaceN button) { /* Assumption: door is a door (or left exitdoor) and button is a button */
-	/* three steps: */
-	/* 1) make space in the table */
 	if (*max_doorlinks==255) return 0; /* no more space available */
-	int pivot=edited.bg[button],i;
-	for (i=*max_doorlinks;i>pivot;i--) {
-		editor__do(doorlinks1[i+1],edited.doorlinks1[i],mark_middle);
-		editor__do(doorlinks2[i+1],edited.doorlinks2[i],mark_middle);
-	}
-	/* 2) update button references */
-	for (i=0;i<NUMBER_OF_ROOMS*30;i++) {
-		if (door_api_is_related(edited.fg[i]&0x1f)==cButton) {
-			editor__do(bg[i],edited.bg[i]+1,mark_middle);
+	int pivot=edited.bg[button];
+	tTilePlace aux;
+	aux.room=R(door);
+	aux.tilepos=R(door);
+	Uint16 doorlink;
+
+	if (pivot==255) { /* I'm defining 255 as "no links" */
+		/* append link on the top of the list */
+		(*max_doorlinks)++;
+		editor__do(bg[button],(*max_doorlinks),mark_middle);
+
+		/* 3) insert the link */
+		set_doorlink(&doorlink,aux,0);
+		editor__do(doorlinks1[*max_doorlinks],doorlink&0xff,mark_middle);
+		editor__do(doorlinks2[*max_doorlinks],(doorlink>>8)&0xff,mark_middle);
+	} else {
+		/* three steps to insert a new link: */
+		/* 1) make space in the table */
+		int i;
+		for (i=*max_doorlinks;i>pivot;i--) {
+			editor__do(doorlinks1[i+1],edited.doorlinks1[i],mark_middle);
+			editor__do(doorlinks2[i+1],edited.doorlinks2[i],mark_middle);
 		}
+		/* 2) update button references */
+		for (i=0;i<NUMBER_OF_ROOMS*30;i++) {
+			if (door_api_is_related(edited.fg[i]&0x1f)==cButton) {
+				editor__do(bg[i],edited.bg[i]+1,mark_middle);
+			}
+		}
+		/* 3) insert the link */
+
+		(*max_doorlinks)++;
+		set_doorlink(&doorlink,aux,1);
+		editor__do(doorlinks1[pivot],doorlink&0xff,mark_middle);
+		editor__do(doorlinks2[pivot],(doorlink>>8)&0xff,mark_middle);
 	}
-	/* 3) insert the link */
-	
-	(*max_doorlinks)++;
-	return 0;
+	return 1;
 }
 int door_api_fix_pos(tTilePlaceN* door,tTilePlaceN* button) {
 	if (*door==-1 || *button==-1) return 0;
@@ -403,7 +423,12 @@ void editor__toggle_door_tile(short room,short tilepos) {
 	tTilePlaceN door  =T(room,tilepos);
 	tTilePlaceN button=selected_door_tile;
 	if (!door_api_fix_pos(&door,&button)) return; //Error
-	
+
+	//TODO: check if remove
+
+	if (door_api_link(&edited_doorlinks,door,button)) {
+		printf("removed\n");
+	}
 
 	printf("TODO toggle %d %d %d\n",door,button,edited_doorlinks);
 }
@@ -810,6 +835,8 @@ void editor__on_refresh(surface_type* screen) {
 				colors=cMain;
 			} else { /* If not, a 3D selection box is shown. When alt is pressed cRight or cWrong colors are used */
 				if (is_ctrl_alt_pressed) colors=cWrong;
+				x-=x%32;
+				y-=y%63+10;
 				switch(level.fg[(drawn_room-1)*30+tilepos]&0x1f) {
 				case tiles_17_level_door_right:
 					x-=32;
@@ -833,8 +860,29 @@ void editor__on_refresh(surface_type* screen) {
 
 				static unsigned short i_frame=0;
 				image_offset+=(i_frame++)%3;
-				x-=x%32;
-				y-=y%63+10;
+
+				if (is_ctrl_alt_pressed && colors==cRight) { //show number of links
+					char text_aux[20];
+					int count=0;
+					/* count links */
+					tIterator it;
+					tTilePlace current_tile,junk_tile;
+					current_tile.room=drawn_room;
+					current_tile.tilepos=tilepos;
+					door_api_init_iterator(&it,current_tile);
+					while(door_api_get(&it,&junk_tile))
+						count++;
+					sprintf(text_aux,"%d",count);
+
+					/* draw text*/
+					rect_type r={y,x,y+63,x+32*colors_total};
+					screen_updates_suspended=1;
+					surface_type* save_screen=current_target_surface;
+					current_target_surface=screen;
+					show_text_with_color(&r,0,0,text_aux,4);
+					current_target_surface=save_screen;
+					screen_updates_suspended=0;
+				}
 			}
 
 			blit_sprites(x,y,image_offset,colors,colors_total,screen);
