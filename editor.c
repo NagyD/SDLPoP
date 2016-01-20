@@ -230,10 +230,11 @@ int door_api_get(tIterator* it, tTilePlace *tile); /* returns false when end_of_
 int door_api_link(tTilePlace tile1,tTilePlace tile2);
 void door_api_unlink(tTilePlace tile1,tTilePlace tile2);
 
-int door_api_is_related(byte tile) {
+int door_api_is_related(byte tile) { //TODO: return enum
 	switch(tile) {
 	case tiles_6_closer:
 	case tiles_15_opener:
+		return 2;
 	case tiles_4_gate:
 	case tiles_16_level_door_left:
 	case tiles_17_level_door_right:
@@ -300,11 +301,11 @@ int door_api_get(tIterator* it, tTilePlace *tile) {
 
 int selected_door_tile=-1;
 void editor__save_door_tile(short room,short tilepos) { /* if the same tile was selected "unselect" if not "select this tile".*/
-	int aux=(room-1)*30+tilepos;
+	int aux=(room-1)*30+tilepos; //TODO: use a macro for this expression
 
 	if ((edited.fg[aux]&0x1f)==tiles_17_level_door_right) {
 			if (aux%10 &&
-				(edited.fg[aux-1]&0x1f)==tiles_16_level_door_left) {
+				(edited.fg[aux-1]&0x1f)==tiles_16_level_door_left) { //TODO: use a define for this mask
 					aux--;
 			} else {
 				return;
@@ -421,7 +422,7 @@ void editor__set_guard(byte tilepos,byte x) {
 void editor__remove_guard() {
 	Guard.alive=0;
 	guardhp_delta = -guardhp_curr;
-	Guard.room=NUMBER_OF_ROOMS+1; /* TODO: fix this... sending a guard to a buffer overflow */
+	Guard.room=NUMBER_OF_ROOMS+1; /* TODO: fix this... sending a guard to a buffer overflow (a palette tile) */
 	editor__do(guards_tile[loaded_room-1],30,mark_all);
 }
 
@@ -642,7 +643,7 @@ void sanitize_room(int room, int sanitation_level) {
 
 
 /********************************************\
-*             INPUT BINDINGS!!!!             *
+*           Blitting editor layer            *
 \********************************************/
 
 typedef enum {
@@ -663,12 +664,37 @@ typedef enum {
 } tEditorImageOffset;
 
 /* blit top surface layer (cursor+annotations) */
+void blit_sprites(int x,int y, tEditorImageOffset sprite, tCursorColors colors, int colors_total, surface_type* screen) {
+	image_type* image;
+	SDL_Rect src_rect= {0, 0, 0 , 0};
+	SDL_Rect dest_rect = {0, 0, 0, 0};
+
+	image=chtab_editor_sprites->images[sprite];
+	dest_rect.x=x;
+	dest_rect.y=y;
+	dest_rect.w=src_rect.w=image->w;
+	dest_rect.h=src_rect.h=image->h;
+	SDL_SetSurfaceBlendMode(image, SDL_BLENDMODE_NONE);
+	SDL_SetSurfaceAlphaMod(image, 255);
+	SDL_SetColorKey(image, SDL_TRUE, 0);
+
+	if (SDL_SetPaletteColors(image->format->palette, chtab_editor_sprites->images[0]->format->palette->colors+colors, 1, colors_total) != 0) {
+	  printf("Couldn't set video mode: %s\n", SDL_GetError());
+	}
+
+	if (SDL_BlitSurface(image, &src_rect, screen, &dest_rect) != 0) {
+		sdlperror("SDL_BlitSurface on editor");
+		quit(1);
+	}
+}
+
+/********************************************\
+*             INPUT BINDINGS!!!!             *
+\********************************************/
+
 void editor__on_refresh(surface_type* screen) {
 	if (chtab_editor_sprites) {
 		int x,y, colors_total=1;
-		image_type* image;
-		SDL_Rect src_rect= {0, 0, 0 , 0};
-		SDL_Rect dest_rect = {0, 0, 0, 0};
 		tEditorImageOffset image_offset=cSingleTile;
 		tCursorColors colors;
 
@@ -684,9 +710,9 @@ void editor__on_refresh(surface_type* screen) {
 			tilepos=row*10+col;
 			/* if Shift is pressed a cross is shown */
 			if (state[SDL_SCANCODE_LSHIFT] || state[SDL_SCANCODE_RSHIFT]) {
-				image=chtab_editor_sprites->images[cCross];
-				dest_rect.x=x-image->w/2;
-				dest_rect.y=y-image->h/2;
+				image_offset=cCross;
+				x-=chtab_editor_sprites->images[cCross]->w/2;
+				y-=chtab_editor_sprites->images[cCross]->h/2;
 				colors=cMain;
 			} else { /* If not, a 3D selection box is shown. When alt is pressed cRight or cWrong colors are used */
 				if (is_ctrl_alt_pressed) colors=cWrong;
@@ -712,26 +738,12 @@ void editor__on_refresh(surface_type* screen) {
 				}
 
 				static unsigned short i_frame=0;
-				image=chtab_editor_sprites->images[image_offset+(i_frame++)%3];
+				image_offset+=(i_frame++)%3;
 				x-=x%32;
 				y-=y%63+10;
-				dest_rect.x=x;
-				dest_rect.y=y;
-			}
-			dest_rect.w=src_rect.w=image->w;
-			dest_rect.h=src_rect.h=image->h;
-			SDL_SetSurfaceBlendMode(image, SDL_BLENDMODE_NONE);
-			SDL_SetSurfaceAlphaMod(image, 255);
-			SDL_SetColorKey(image, SDL_TRUE, 0);
-
-			if (SDL_SetPaletteColors(image->format->palette, chtab_editor_sprites->images[0]->format->palette->colors+colors, 1, colors_total) != 0) {
-			  printf("Couldn't set video mode: %s\n", SDL_GetError());
 			}
 
-			if (SDL_BlitSurface(image, &src_rect, screen, &dest_rect) != 0) {
-				sdlperror("SDL_BlitSurface on editor");
-				quit(1);
-			}
+			blit_sprites(x,y,image_offset,colors,colors_total,screen);
 		}
 
 		/* draw selected door tiles */
@@ -748,24 +760,9 @@ void editor__on_refresh(surface_type* screen) {
 				} else {
 					image_offset=cSingleTile;
 				}
-				/* TODO: abstract this blitting function */
-				image=chtab_editor_sprites->images[image_offset+(i_frame2--)%3];
-				dest_rect.x=(aux.tilepos%10)*32;
-				dest_rect.y=(aux.tilepos/10)*63-10;
-				dest_rect.w=src_rect.w=image->w;
-				dest_rect.h=src_rect.h=image->h;
-				SDL_SetSurfaceBlendMode(image, SDL_BLENDMODE_NONE);
-				SDL_SetSurfaceAlphaMod(image, 255);
-				SDL_SetColorKey(image, SDL_TRUE, 0);
 
-				if (SDL_SetPaletteColors(image->format->palette, chtab_editor_sprites->images[0]->format->palette->colors+cSelected, 1, colors_total) != 0) {
-				  printf("Couldn't set video mode: %s\n", SDL_GetError());
-				}
+				blit_sprites((aux.tilepos%10)*32,(aux.tilepos/10)*63-10,image_offset+(i_frame2--)%3,colors,colors_total,screen);
 
-				if (SDL_BlitSurface(image, &src_rect, screen, &dest_rect) != 0) {
-					sdlperror("SDL_BlitSurface on editor");
-					quit(1);
-				}
 			}
 		}
 
