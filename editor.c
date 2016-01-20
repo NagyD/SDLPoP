@@ -162,6 +162,7 @@ byte copied_room_fg[30]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 byte copied_room_bg[30]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 level_type edited;
 tMap edited_map={NULL,NULL};
+int edited_doorlinks=0;
 int edition_level=-1;
 
 #define editor__do(field,c,mark) editor__do_( ((long)(&(((level_type*)NULL)->field))) ,c,mark)
@@ -231,9 +232,11 @@ typedef struct {
 	} data;
 } tIterator;
 
+void door_api_init(int* max_doorlinks);
+void door_api_free(int* max_doorlinks);
 void door_api_init_iterator(tIterator* it, tTilePlace tp);
 int door_api_get(tIterator* it, tTilePlace *tile); /* returns false when end_of_list */
-int door_api_link(tTilePlaceN door,tTilePlaceN button); /* Assumption: door is a door (or left exitdoor) and button is a button */
+int door_api_link(int* max_doorlinks, tTilePlaceN door,tTilePlaceN button); /* Assumption: door is a door (or left exitdoor) and button is a button */
 void door_api_unlink(tTilePlaceN tile1,tTilePlaceN tile2);
 
 typedef enum {
@@ -314,7 +317,45 @@ int door_api_get(tIterator* it, tTilePlace *tile) {
 	return 0;
 }
 
-int door_api_link(tTilePlaceN door,tTilePlaceN button) { /* Assumption: door is a door (or left exitdoor) and button is a button */
+void door_api_free(int* max_doorlinks) {}
+void door_api_init(int* max_doorlinks) {
+	tTilePlaceN i;
+	*max_doorlinks=0;
+	for (i=0;i<NUMBER_OF_ROOMS*30;i++) {
+		if (door_api_is_related(edited.fg[i]&0x1f)==cButton) {
+			byte aux=edited.bg[i];
+			if (*max_doorlinks<aux) *max_doorlinks=aux;
+		}
+	}
+
+	/* itarate over the last value */
+	short next=1;
+	tTilePlace junk;
+	do {
+		get_doorlink((edited.doorlinks2[*max_doorlinks]<<8)|edited.doorlinks1[*max_doorlinks],&junk,&next);
+		(*max_doorlinks)++;
+	} while ((*max_doorlinks)<256 && next);
+	(*max_doorlinks)--;
+}
+
+int door_api_link(int* max_doorlinks, tTilePlaceN door,tTilePlaceN button) { /* Assumption: door is a door (or left exitdoor) and button is a button */
+	/* three steps: */
+	/* 1) make space in the table */
+	if (*max_doorlinks==255) return 0; /* no more space available */
+	int pivot=edited.bg[button],i;
+	for (i=*max_doorlinks;i>pivot;i--) {
+		editor__do(doorlinks1[i+1],edited.doorlinks1[i],mark_middle);
+		editor__do(doorlinks2[i+1],edited.doorlinks2[i],mark_middle);
+	}
+	/* 2) update button references */
+	for (i=0;i<NUMBER_OF_ROOMS*30;i++) {
+		if (door_api_is_related(edited.fg[i]&0x1f)==cButton) {
+			editor__do(bg[i],edited.bg[i]+1,mark_middle);
+		}
+	}
+	/* 3) insert the link */
+	
+	(*max_doorlinks)++;
 	return 0;
 }
 int door_api_fix_pos(tTilePlaceN* door,tTilePlaceN* button) {
@@ -364,7 +405,7 @@ void editor__toggle_door_tile(short room,short tilepos) {
 	if (!door_api_fix_pos(&door,&button)) return; //Error
 	
 
-	printf("TODO toggle %d %d\n",door,button);
+	printf("TODO toggle %d %d %d\n",door,button,edited_doorlinks);
 }
 
 /********************************************\
@@ -380,6 +421,7 @@ void editor__load_level() {
 	close_dat(dathandle);
 	edition_level=current_level;
 	stack_reset();
+	selected_door_tile=-1;
 
 	dathandle = open_dat("editor", 0);
 	if (chtab_editor_sprites) free_chtab(chtab_editor_sprites);
@@ -393,7 +435,9 @@ void editor_revert_level() {
 	editor__load_level();
 	level=edited;
 	room_api_free(&edited_map);
+	door_api_free(&edited_doorlinks);
 	room_api_init(&edited_map);
+	door_api_init(&edited_doorlinks);
 	is_restart_level = 1;
 }
 
@@ -401,7 +445,9 @@ void editor__loading_dat() {
 	if (edition_level!=current_level) {
 		editor__load_level();
 		room_api_free(&edited_map);
+		door_api_free(&edited_doorlinks);
 		room_api_init(&edited_map);
+		door_api_init(&edited_doorlinks);
 	} else {
 		level=edited; /* TODO: when new palettes are added this should change */
 	}
