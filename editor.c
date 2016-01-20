@@ -233,18 +233,23 @@ typedef struct {
 
 void door_api_init_iterator(tIterator* it, tTilePlace tp);
 int door_api_get(tIterator* it, tTilePlace *tile); /* returns false when end_of_list */
-int door_api_link(tTilePlace tile1,tTilePlace tile2);
-void door_api_unlink(tTilePlace tile1,tTilePlace tile2);
+int door_api_link(tTilePlaceN door,tTilePlaceN button); /* Assumption: door is a door (or left exitdoor) and button is a button */
+void door_api_unlink(tTilePlaceN tile1,tTilePlaceN tile2);
 
-int door_api_is_related(byte tile) { //TODO: return enum
+typedef enum {
+	cButton=2,
+	cDoor=1,
+	cOther=0
+} tTileDoorType;
+tTileDoorType door_api_is_related(byte tile) {
 	switch(tile) {
 	case tiles_6_closer:
 	case tiles_15_opener:
-		return 2;
+		return cButton;
 	case tiles_4_gate:
 	case tiles_16_level_door_left:
 	case tiles_17_level_door_right:
-		return 1;
+		return cDoor;
 	}
 	return 0;
 }
@@ -309,6 +314,33 @@ int door_api_get(tIterator* it, tTilePlace *tile) {
 	return 0;
 }
 
+int door_api_link(tTilePlaceN door,tTilePlaceN button) { /* Assumption: door is a door (or left exitdoor) and button is a button */
+	return 0;
+}
+int door_api_fix_pos(tTilePlaceN* door,tTilePlaceN* button) {
+	if (*door==-1 || *button==-1) return 0;
+	byte tile_door=edited.fg[*door]&0x1f;
+	byte tile_button=edited.fg[*button]&0x1f;
+	tTileDoorType door_type=door_api_is_related(tile_door);
+	tTileDoorType button_type=door_api_is_related(tile_button);
+	if (door_type==button_type || !door_type || !button_type) return 0;
+	if (door_type==cButton) { //Swap
+		tTilePlaceN aux=*door;
+		*door=*button;
+		*button=aux;
+		tile_door=edited.fg[*door]&0x1f; //refresh tile_door after swapping
+	}
+	if (tile_door==tiles_17_level_door_right) { //door right case
+		if (
+				(*door)%10 &&
+				(edited.fg[(*door)-1]&0x1f)==tiles_16_level_door_left
+		) {
+			(*door)--;
+		}
+	}
+	return 1;
+}
+
 /* editor functions related to this api */
 
 int selected_door_tile=-1;
@@ -326,8 +358,13 @@ void editor__save_door_tile(short room,short tilepos) { /* if the same tile was 
 
 	selected_door_tile=(selected_door_tile==aux)?-1:aux;
 }
-void editor__toggle_door_tile(short loaded_room,short tilepos) {
-	printf("TODO toggle\n");
+void editor__toggle_door_tile(short room,short tilepos) {
+	tTilePlaceN door  =T(room,tilepos);
+	tTilePlaceN button=selected_door_tile;
+	if (!door_api_fix_pos(&door,&button)) return; //Error
+	
+
+	printf("TODO toggle %d %d\n",door,button);
 }
 
 /********************************************\
