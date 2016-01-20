@@ -237,7 +237,7 @@ void door_api_free(int* max_doorlinks);
 void door_api_init_iterator(tIterator* it, tTilePlace tp);
 int door_api_get(tIterator* it, tTilePlace *tile); /* returns false when end_of_list */
 int door_api_link(int* max_doorlinks, tTilePlaceN door,tTilePlaceN button); /* Assumption: door is a door (or left exitdoor) and button is a button */
-void door_api_unlink(tTilePlaceN tile1,tTilePlaceN tile2);
+void door_api_unlink(int* max_doorlinks, tTilePlaceN tile1,tTilePlaceN tile2);
 
 typedef enum {
 	cButton=2,
@@ -359,14 +359,15 @@ int door_api_link(int* max_doorlinks, tTilePlaceN door,tTilePlaceN button) { /* 
 		/* three steps to insert a new link: */
 		/* 1) make space in the table */
 		int i;
-		for (i=*max_doorlinks;i>pivot;i--) {
+		for (i=*max_doorlinks;i>=pivot;i--) {
 			editor__do(doorlinks1[i+1],edited.doorlinks1[i],mark_middle);
 			editor__do(doorlinks2[i+1],edited.doorlinks2[i],mark_middle);
 		}
 		/* 2) update button references */
 		for (i=0;i<NUMBER_OF_ROOMS*30;i++) {
 			if (door_api_is_related(edited.fg[i]&0x1f)==cButton) {
-				editor__do(bg[i],edited.bg[i]+1,mark_middle);
+				if (edited.bg[i]>pivot)
+					editor__do(bg[i],edited.bg[i]+1,mark_middle);
 			}
 		}
 		/* 3) insert the link */
@@ -377,6 +378,9 @@ int door_api_link(int* max_doorlinks, tTilePlaceN door,tTilePlaceN button) { /* 
 		editor__do(doorlinks2[pivot],(doorlink>>8)&0xff,mark_middle);
 	}
 	return 1;
+}
+void door_api_unlink(int* max_doorlinks, tTilePlaceN tile1,tTilePlaceN tile2) {
+	//TODO
 }
 int door_api_fix_pos(tTilePlaceN* door,tTilePlaceN* button) {
 	if (*door==-1 || *button==-1) return 0;
@@ -419,18 +423,38 @@ void editor__save_door_tile(short room,short tilepos) { /* if the same tile was 
 
 	selected_door_tile=(selected_door_tile==aux)?-1:aux;
 }
+/* debug function
+void printl() {
+	int i;
+	for (i=0;i<25;i++) {
+		tTilePlace tile;
+		short next;
+		get_doorlink((edited.doorlinks2[i]<<8)|edited.doorlinks1[i],&tile,&next);
+		printf("i=%d r=%d,t=%d next=%d\n",i,tile.room,tile.tilepos,next);
+	}
+}*/
+
 void editor__toggle_door_tile(short room,short tilepos) {
 	tTilePlaceN door  =T(room,tilepos);
 	tTilePlaceN button=selected_door_tile;
 	if (!door_api_fix_pos(&door,&button)) return; //Error
 
-	//TODO: check if remove
+//printl();
+	tIterator it;
+	tTilePlace current_tile,junk_tile;
+	current_tile.room=R(door);
+	current_tile.tilepos=P(door);
+	door_api_init_iterator(&it,current_tile);
+	while(door_api_get(&it,&junk_tile)) //check if existent to unlink
+		if (T(junk_tile.room,junk_tile.tilepos)==button) {
+			door_api_unlink(&edited_doorlinks,door,button);
+			return;
+		}
 
 	if (door_api_link(&edited_doorlinks,door,button)) {
-		printf("removed\n");
+		printf("Door linked\n");
 	}
-
-	printf("TODO toggle %d %d %d\n",door,button,edited_doorlinks);
+//printl();
 }
 
 /********************************************\
