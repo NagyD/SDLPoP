@@ -23,6 +23,7 @@ The authors of this program may be contacted at http://forum.princed.org
 TODO:
 	room fix errors.
 	room decorate.
+	free room.
 */
 
 #include "common.h"
@@ -470,8 +471,6 @@ const char* editor__toggle_door_tile(short room,short tilepos) {
 	tTilePlaceN button=selected_door_tile;
 	if (!door_api_fix_pos(&door,&button)) return "Select a button and a door"; //Error
 
-	editor__do_mark_start();
-
 	tIterator it;
 	tTilePlace current_tile,check_tile;
 	current_tile.room=R(door);
@@ -480,16 +479,12 @@ const char* editor__toggle_door_tile(short room,short tilepos) {
 	while(door_api_get(&it,&check_tile)) //check if existent to unlink
 		if (T(check_tile.room,check_tile.tilepos)==button) {
 			door_api_unlink(&edited_doorlinks,door,button);
-			editor__do_mark_end();
 			return "Door unlinked";
 		}
 
-	if (door_api_link(&edited_doorlinks,door,button)) {
-		editor__do_mark_end();
+	if (door_api_link(&edited_doorlinks,door,button))
 		return "Door linked";
-	}
 
-	editor__do_mark_end();
 	return "Link error";
 }
 
@@ -767,7 +762,7 @@ void sanitize_room(int room, int sanitation_level) {
 		}
 		switch(tile) {
 		case tiles_11_loose:
-		case tiles_0_empty: /* empty above pillar or wall. TODO: add more tiles */
+		case tiles_0_empty:
 			if (sanitation_level==0) {
 				if (down_is(i,-1)==tiles_20_wall || down_is(i,-1)==tiles_3_pillar) {
 					editor__do(fg[(room-1)*30+i],tiles_1_floor,mark_middle);
@@ -807,16 +802,13 @@ void sanitize_room(int room, int sanitation_level) {
 		}
 
 		if (left_is(i,-1)==tiles_16_level_door_left) {
-				editor__do(fg[(room-1)*30+i],tiles_17_level_door_right,mark_start);
-				editor__do(bg[(room-1)*30+i],0,mark_end);
+				editor__do(fg[(room-1)*30+i],tiles_17_level_door_right,mark_middle);
+				editor__do(bg[(room-1)*30+i],0,mark_middle);
 		}
 		if (right_is(i,-1)==tiles_17_level_door_right) {
-				editor__do(fg[(room-1)*30+i],tiles_16_level_door_left,mark_start);
-				editor__do(bg[(room-1)*30+i],0,mark_end);
+				editor__do(fg[(room-1)*30+i],tiles_16_level_door_left,mark_middle);
+				editor__do(bg[(room-1)*30+i],0,mark_middle);
 		}
-
-
-		//TODO: finish & undo/redo
 	}
 
 }
@@ -1024,7 +1016,9 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int
 		redraw_screen(1);
 	} else if (e.button==SDL_BUTTON_LEFT && !shift && alt && ctrl) { /* ctrl+alt+left click: toggle door mechanism links */
 		if (door_api_is_related(edited.fg[(loaded_room-1)*30+tilepos]&0x1f)) {
+			editor__do_mark_start();
 			display_text_bottom(editor__toggle_door_tile(loaded_room,tilepos));
+			editor__do_mark_end();
 			text_time_total = 24;
 			text_time_remaining = 24;
 		}
