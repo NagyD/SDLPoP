@@ -40,12 +40,6 @@ TODO:
 #define POS_RIGHT 1
 #define MAP_POS(x,y) ((y)*MAP_SIDE+(x))
 
-#define R(t) (((t)/30)+1)
-#define R_(t) (((t)/30))
-#define T(r,t) (((r)-1)*30+(t))
-#define P(t) ((t)%30)
-
-
 typedef struct {
 	long* list;
 	byte* map;
@@ -225,7 +219,7 @@ typedef struct {
 	union {
 		short index;
 		struct {
-			tTilePlace tile;
+			tTilePlaceN tile;
 			short i;
 		} info;
 	} data;
@@ -233,8 +227,8 @@ typedef struct {
 
 void door_api_init(int* max_doorlinks);
 void door_api_free(int* max_doorlinks);
-void door_api_init_iterator(tIterator* it, tTilePlace tp);
-int door_api_get(tIterator* it, tTilePlace *tile); /* returns false when end_of_list */
+void door_api_init_iterator(tIterator* it, tTilePlaceN tp);
+int door_api_get(tIterator* it, tTilePlaceN *tile); /* returns false when end_of_list */
 int door_api_link(int* max_doorlinks, tTilePlaceN door,tTilePlaceN button); /* Assumption: door is a door (or left exitdoor) and button is a button */
 void door_api_unlink(int* max_doorlinks, tTilePlaceN door,tTilePlaceN button);
 
@@ -256,12 +250,12 @@ tTileDoorType door_api_is_related(byte tile) {
 	return 0;
 }
 
-void door_api_init_iterator(tIterator* it, tTilePlace tp) {
-	byte tile=edited.fg[T(tp.room,tp.tilepos)]&0x1f;
+void door_api_init_iterator(tIterator* it, tTilePlaceN tp) {
+	byte tile=edited.fg[tp]&0x1f;
 	switch(tile) {
 		case tiles_6_closer:
 		case tiles_15_opener:
-			it->data.index=edited.bg[T(tp.room,tp.tilepos)];
+			it->data.index=edited.bg[tp];
 			it->type=it->data.index==255?noneIterator:buttonIterator; /* 255 is reserved as no link */
 			return;
 		case tiles_4_gate:
@@ -271,9 +265,9 @@ void door_api_init_iterator(tIterator* it, tTilePlace tp) {
 			it->type=doorIterator;
 			return;
 		case tiles_17_level_door_right:
-			if (tp.tilepos%10 &&
-				(edited.fg[T(tp.room,tp.tilepos-1)]&0x1f)==tiles_16_level_door_left) {
-					tp.tilepos--;
+			if (P(tp)%10 &&
+				(edited.fg[tp-1]&0x1f)==tiles_16_level_door_left) {
+					tp--;
 					door_api_init_iterator(it,tp);
 					return; 
 				}
@@ -281,7 +275,7 @@ void door_api_init_iterator(tIterator* it, tTilePlace tp) {
 		it->type=noneIterator;
 		return;
 }
-int door_api_get(tIterator* it, tTilePlace *tile) {
+int door_api_get(tIterator* it, tTilePlaceN *tile) {
 	switch (it->type) {
 	case buttonIterator:
 		if (it->data.index>=NUMBER_OF_DOORLINKS) return 0;
@@ -295,15 +289,13 @@ int door_api_get(tIterator* it, tTilePlace *tile) {
 			byte fg=edited.fg[*i]&0x1f;
 			if (fg==tiles_6_closer || fg==tiles_15_opener) {
 				tIterator it2;
-				tTilePlace tile_aux,tile_aux2;
-				tile_aux.room=R(*i);
-				if (!edited_map.list[tile_aux.room-1]) continue; /* skip unused rooms */
-				tile_aux.tilepos=P(*i);
-				door_api_init_iterator(&it2,tile_aux);
-				while(door_api_get(&it2,&tile_aux2)) { /* second loop: find door opened by those buttons */
-					if (tile_aux2.room==it->data.info.tile.room && tile_aux2.tilepos==it->data.info.tile.tilepos) {
+				tTilePlaceN linked_tile;
+				if (!edited_map.list[R_(*i)]) continue; /* skip unused rooms */
+				door_api_init_iterator(&it2,*i);
+				while(door_api_get(&it2,&linked_tile)) { /* second loop: find door opened by those buttons */
+					if (linked_tile==it->data.info.tile) {
+						*tile=*i;
 						(*i)++;
-						*tile=tile_aux;
 						return 1;
 					}
 				}
@@ -329,7 +321,7 @@ void door_api_init(int* max_doorlinks) {
 
 	/* itarate over the last value */
 	short next=1;
-	tTilePlace junk;
+	tTilePlaceN junk;
 	do {
 		get_doorlink((edited.doorlinks2[*max_doorlinks]<<8)|edited.doorlinks1[*max_doorlinks],&junk,&next);
 		(*max_doorlinks)++;
@@ -340,9 +332,6 @@ void door_api_init(int* max_doorlinks) {
 int door_api_link(int* max_doorlinks, tTilePlaceN door,tTilePlaceN button) { /* Assumption: door is a door (or left exitdoor) and button is a button */
 	if (*max_doorlinks==255) return 0; /* no more space available */
 	int pivot=edited.bg[button];
-	tTilePlace aux;
-	aux.room=R(door);
-	aux.tilepos=P(door);
 	Uint16 doorlink;
 
 	if (pivot==255) { /* I'm defining 255 as "no links" */
@@ -351,7 +340,7 @@ int door_api_link(int* max_doorlinks, tTilePlaceN door,tTilePlaceN button) { /* 
 		editor__do(bg[button],(*max_doorlinks),mark_middle);
 
 		/* 3) insert the link */
-		set_doorlink(&doorlink,aux,0);
+		set_doorlink(&doorlink,door,0);
 		editor__do(doorlinks1[*max_doorlinks],doorlink&0xff,mark_middle);
 		editor__do(doorlinks2[*max_doorlinks],(doorlink>>8)&0xff,mark_middle);
 	} else {
@@ -370,7 +359,7 @@ int door_api_link(int* max_doorlinks, tTilePlaceN door,tTilePlaceN button) { /* 
 
 		/* 3) insert the link */
 		(*max_doorlinks)++;
-		set_doorlink(&doorlink,aux,1);
+		set_doorlink(&doorlink,door,1);
 		editor__do(doorlinks1[pivot],doorlink&0xff,mark_middle);
 		editor__do(doorlinks2[pivot],(doorlink>>8)&0xff,mark_middle);
 	}
@@ -378,16 +367,16 @@ int door_api_link(int* max_doorlinks, tTilePlaceN door,tTilePlaceN button) { /* 
 }
 void door_api_unlink(int* max_doorlinks, tTilePlaceN door,tTilePlaceN button) {
 	/* read link */
-	tTilePlace tile;
+	tTilePlaceN tile;
 	short next;
 	int i=edited.bg[button];
 	if (i==255) return; /* error, button has no links */
 	do {
 		get_doorlink((edited.doorlinks2[i]<<8)|edited.doorlinks1[i],&tile,&next);
 		i++;
-	} while(next && door!=T(tile.room,tile.tilepos));
+	} while(next && door!=tile);
 	i--;
-	if (door!=T(tile.room,tile.tilepos)) return; /* error, link not found */
+	if (door!=tile) return; /* error, link not found */
 	if (!next) { /* this is the last link */
 		if (i==edited.bg[button]) { /* if the last link is the first, empty the list */
 			editor__do(bg[button],255,mark_middle); /* remove link */
@@ -472,12 +461,10 @@ const char* editor__toggle_door_tile(short room,short tilepos) {
 	if (!door_api_fix_pos(&door,&button)) return "Select a button and a door"; /* Error */
 
 	tIterator it;
-	tTilePlace current_tile,check_tile;
-	current_tile.room=R(door);
-	current_tile.tilepos=P(door);
-	door_api_init_iterator(&it,current_tile);
+	tTilePlaceN check_tile;
+	door_api_init_iterator(&it,door);
 	while(door_api_get(&it,&check_tile)) /* check if existent to unlink */
-		if (T(check_tile.room,check_tile.tilepos)==button) {
+		if (check_tile==button) {
 			door_api_unlink(&edited_doorlinks,door,button);
 			return "Door unlinked";
 		}
@@ -918,9 +905,8 @@ void editor__on_refresh(surface_type* screen) {
 					int count=0;
 					/* count links */
 					tIterator it;
-					tTilePlace current_tile,junk_tile;
-					current_tile.room=drawn_room;
-					current_tile.tilepos=tilepos;
+					tTilePlaceN current_tile,junk_tile;
+					current_tile=T(drawn_room,tilepos);
 					door_api_init_iterator(&it,current_tile);
 					while(door_api_get(&it,&junk_tile))
 						count++;
@@ -959,24 +945,22 @@ void editor__on_refresh(surface_type* screen) {
 				blit_sprites((aux.tilepos%10)*32,(aux.tilepos/10)*63-10,image_offset+(i_frame2)%3,cSelected,colors_total,screen);
 			}
 			tIterator it;
-			tTilePlace selected,linked;
-			selected.room=R(selected_door_tile);
-			selected.tilepos=P(selected_door_tile);
-			door_api_init_iterator(&it,selected);
+			tTilePlaceN linked;
+			door_api_init_iterator(&it,selected_door_tile);
 			while(door_api_get(&it,&linked)) {
-				if (linked.room==loaded_room) { /* there is a linked tile in the drawn room */
-					if ((level.fg[T(linked.room,linked.tilepos)]&0x1f)==tiles_16_level_door_left) {
+				if (R(linked)==loaded_room) { /* there is a linked tile in the drawn room */
+					if ((level.fg[linked]&0x1f)==tiles_16_level_door_left) {
 						colors_total=2;
 						image_offset=cExitdoor;
 					} else {
 						colors_total=1;
 						image_offset=cSingleTile;
 					}
-					blit_sprites((linked.tilepos%10)*32,(linked.tilepos/10)*63-10,image_offset+(i_frame2)%3,cLinked,colors_total,screen);
+					blit_sprites((P(linked)%10)*32,(P(linked)/10)*63-10,image_offset+(i_frame2)%3,cLinked,colors_total,screen);
 				} else { /* there is a linked tile in the last column of the left room */
-					if (level.roomlinks[loaded_room-1].left==linked.room && linked.tilepos%10==9) {
+					if (level.roomlinks[loaded_room-1].left==R(linked) && P(linked)%10==9) {
 						/* TODO: exit doors */
-						blit_sprites((-1)*32,(linked.tilepos/10)*63-10,cSingleTile+(i_frame2)%3,cLinked,1,screen);
+						blit_sprites((-1)*32,(P(linked)/10)*63-10,cSingleTile+(i_frame2)%3,cLinked,1,screen);
 					}
 				}
 			}

@@ -29,12 +29,19 @@ typedef struct {
 
 typedef short tTilePlaceN;
 
+#define R(t) (((t)/30)+1)
+#define R_(t) (((t)/30))
+#define T(r,t) (((r)-1)*30+(t))
+#define P(t) ((t)%30)
+
+
+
 #define NO_TILE ((word)(-1))
 
 void editor__process_key(int key,const char** answer_text, word* need_show_text);
 void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int alt);
 void editor__loading_dat();
 
-void get_doorlink(Uint16 value, tTilePlace* tp, short* next);
-void set_doorlink(Uint16* value, tTilePlace tp, short next);
+void get_doorlink(Uint16 value, tTilePlaceN* tp, short* next);
+void set_doorlink(Uint16* value, tTilePlaceN tp, short next);
 #endif
