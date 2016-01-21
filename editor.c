@@ -343,7 +343,7 @@ int door_api_link(int* max_doorlinks, tTilePlaceN door,tTilePlaceN button) { /* 
 	int pivot=edited.bg[button];
 	tTilePlace aux;
 	aux.room=R(door);
-	aux.tilepos=R(door);
+	aux.tilepos=P(door);
 	Uint16 doorlink;
 
 	if (pivot==255) { /* I'm defining 255 as "no links" */
@@ -364,14 +364,12 @@ int door_api_link(int* max_doorlinks, tTilePlaceN door,tTilePlaceN button) { /* 
 			editor__do(doorlinks2[i+1],edited.doorlinks2[i],mark_middle);
 		}
 		/* 2) update button references */
-		for (i=0;i<NUMBER_OF_ROOMS*30;i++) {
-			if (door_api_is_related(edited.fg[i]&0x1f)==cButton) {
-				if (edited.bg[i]>pivot)
+		for (i=0;i<NUMBER_OF_ROOMS*30;i++)
+			if (door_api_is_related(edited.fg[i]&0x1f)==cButton)
+				if (edited.bg[i]>pivot && edited.bg[i]!=255)
 					editor__do(bg[i],edited.bg[i]+1,mark_middle);
-			}
-		}
-		/* 3) insert the link */
 
+		/* 3) insert the link */
 		(*max_doorlinks)++;
 		set_doorlink(&doorlink,aux,1);
 		editor__do(doorlinks1[pivot],doorlink&0xff,mark_middle);
@@ -403,6 +401,12 @@ void door_api_unlink(int* max_doorlinks, tTilePlaceN door,tTilePlaceN button) {
 			editor__do(doorlinks2[i-1],(aux>>8)&0xff,mark_middle);
 		}
 	}
+	/* update references */
+	for (int j=0;j<NUMBER_OF_ROOMS*30;j++)
+		if (door_api_is_related(edited.fg[j]&0x1f)==cButton)
+			if (edited.bg[j]>i && edited.bg[j]!=255) /* 255 is no link */
+				editor__do(bg[j],edited.bg[j]-1,mark_middle);
+
 	//just shift the array one position
 	for (;i<*max_doorlinks;i++) {
 		editor__do(doorlinks1[i],edited.doorlinks1[i+1],mark_middle);
@@ -455,7 +459,7 @@ void editor__save_door_tile(short room,short tilepos) { /* if the same tile was 
 /* debug function
 void printl() {
 	int i;
-	for (i=0;i<25;i++) {
+	for (i=0;i<=edited_doorlinks;i++) {
 		tTilePlace tile;
 		short next;
 		get_doorlink((edited.doorlinks2[i]<<8)|edited.doorlinks1[i],&tile,&next);
@@ -463,27 +467,26 @@ void printl() {
 	}
 }*/
 
-void editor__toggle_door_tile(short room,short tilepos) {
+const char* editor__toggle_door_tile(short room,short tilepos) {
 	tTilePlaceN door  =T(room,tilepos);
 	tTilePlaceN button=selected_door_tile;
-	if (!door_api_fix_pos(&door,&button)) return; //Error
+	if (!door_api_fix_pos(&door,&button)) return "Select a button and a door"; //Error
 
-//printl();
 	tIterator it;
-	tTilePlace current_tile,junk_tile;
+	tTilePlace current_tile,check_tile;
 	current_tile.room=R(door);
 	current_tile.tilepos=P(door);
 	door_api_init_iterator(&it,current_tile);
-	while(door_api_get(&it,&junk_tile)) //check if existent to unlink
-		if (T(junk_tile.room,junk_tile.tilepos)==button) {
+	while(door_api_get(&it,&check_tile)) //check if existent to unlink
+		if (T(check_tile.room,check_tile.tilepos)==button) {
 			door_api_unlink(&edited_doorlinks,door,button);
-			return;
+			return "Door unlinked";
 		}
 
-	if (door_api_link(&edited_doorlinks,door,button)) {
-		printf("Door linked\n");
-	}
-//printl();
+	if (door_api_link(&edited_doorlinks,door,button))
+		return "Door linked";
+
+	return "Link error";
 }
 
 /********************************************\
@@ -1017,7 +1020,9 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int
 		redraw_screen(1);
 	} else if (e.button==SDL_BUTTON_LEFT && !shift && alt && ctrl) { /* ctrl+alt+left click: toggle door mechanism links */
 		if (door_api_is_related(edited.fg[(loaded_room-1)*30+tilepos]&0x1f)) {
-			editor__toggle_door_tile(loaded_room,tilepos);
+			display_text_bottom(editor__toggle_door_tile(loaded_room,tilepos));
+			text_time_total = 24;
+			text_time_remaining = 24;
 		}
 	} else if (e.button==SDL_BUTTON_RIGHT && !shift && alt && ctrl) { /* ctrl+alt+right click: pick door mechanism tile */
 		if (door_api_is_related(edited.fg[(loaded_room-1)*30+tilepos]&0x1f)) {
