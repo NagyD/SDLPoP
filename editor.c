@@ -237,7 +237,7 @@ void door_api_free(int* max_doorlinks);
 void door_api_init_iterator(tIterator* it, tTilePlace tp);
 int door_api_get(tIterator* it, tTilePlace *tile); /* returns false when end_of_list */
 int door_api_link(int* max_doorlinks, tTilePlaceN door,tTilePlaceN button); /* Assumption: door is a door (or left exitdoor) and button is a button */
-void door_api_unlink(int* max_doorlinks, tTilePlaceN tile1,tTilePlaceN tile2);
+void door_api_unlink(int* max_doorlinks, tTilePlaceN door,tTilePlaceN button);
 
 typedef enum {
 	cButton=2,
@@ -263,7 +263,7 @@ void door_api_init_iterator(tIterator* it, tTilePlace tp) {
 		case tiles_6_closer:
 		case tiles_15_opener:
 			it->data.index=edited.bg[(tp.room-1)*30+(tp.tilepos)];
-			it->type=buttonIterator;
+			it->type=it->data.index==255?noneIterator:buttonIterator; //255 is reserved as no link
 			return;
 		case tiles_4_gate:
 		case tiles_16_level_door_left:
@@ -379,8 +379,37 @@ int door_api_link(int* max_doorlinks, tTilePlaceN door,tTilePlaceN button) { /* 
 	}
 	return 1;
 }
-void door_api_unlink(int* max_doorlinks, tTilePlaceN tile1,tTilePlaceN tile2) {
-	//TODO
+void door_api_unlink(int* max_doorlinks, tTilePlaceN door,tTilePlaceN button) {
+	//read link
+	tTilePlace tile;
+	short next;
+	int i=edited.bg[button];
+	if (i==255) return; /* error, button has no links */
+	do {
+		get_doorlink((edited.doorlinks2[i]<<8)|edited.doorlinks1[i],&tile,&next);
+		i++;
+	} while(next && door!=T(tile.room,tile.tilepos));
+	i--;
+	if (door!=T(tile.room,tile.tilepos)) return; /* error, link not found */
+	if (!next) { //this is the last link
+		if (i==edited.bg[button]) { //if the last link is the first, empty the list
+			editor__do(bg[button],255,mark_middle); //remove link
+		} else { //if there are more links before this one, set the !next bit in the previous one
+			get_doorlink((edited.doorlinks2[i-1]<<8)|edited.doorlinks1[i-1],&tile,&next);
+			next=0;
+			Uint16 aux;
+			set_doorlink(&aux,tile,next);
+			editor__do(doorlinks1[i-1],aux&0xff,mark_middle);
+			editor__do(doorlinks2[i-1],(aux>>8)&0xff,mark_middle);
+		}
+	}
+	//just shift the array one position
+	for (;i<*max_doorlinks;i++) {
+		editor__do(doorlinks1[i],edited.doorlinks1[i+1],mark_middle);
+		editor__do(doorlinks2[i],edited.doorlinks2[i+1],mark_middle);
+	}
+
+	(*max_doorlinks)--;
 }
 int door_api_fix_pos(tTilePlaceN* door,tTilePlaceN* button) {
 	if (*door==-1 || *button==-1) return 0;
