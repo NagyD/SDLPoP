@@ -257,11 +257,11 @@ tTileDoorType door_api_is_related(byte tile) {
 }
 
 void door_api_init_iterator(tIterator* it, tTilePlace tp) {
-	byte tile=edited.fg[(tp.room-1)*30+(tp.tilepos)]&0x1f;
+	byte tile=edited.fg[T(tp.room,tp.tilepos)]&0x1f;
 	switch(tile) {
 		case tiles_6_closer:
 		case tiles_15_opener:
-			it->data.index=edited.bg[(tp.room-1)*30+(tp.tilepos)];
+			it->data.index=edited.bg[T(tp.room,tp.tilepos)];
 			it->type=it->data.index==255?noneIterator:buttonIterator; //255 is reserved as no link
 			return;
 		case tiles_4_gate:
@@ -272,7 +272,7 @@ void door_api_init_iterator(tIterator* it, tTilePlace tp) {
 			return;
 		case tiles_17_level_door_right:
 			if (tp.tilepos%10 &&
-				(edited.fg[(tp.room-1)*30+(tp.tilepos-1)]&0x1f)==tiles_16_level_door_left) {
+				(edited.fg[T(tp.room,tp.tilepos-1)]&0x1f)==tiles_16_level_door_left) {
 					tp.tilepos--;
 					door_api_init_iterator(it,tp);
 					return; 
@@ -296,9 +296,9 @@ int door_api_get(tIterator* it, tTilePlace *tile) {
 			if (fg==tiles_6_closer || fg==tiles_15_opener) {
 				tIterator it2;
 				tTilePlace tile_aux,tile_aux2;
-				tile_aux.room=(*i)/30+1;
+				tile_aux.room=R(*i);
 				if (!edited_map.list[tile_aux.room-1]) continue; /* skip unused rooms */
-				tile_aux.tilepos=(*i)%30;
+				tile_aux.tilepos=P(*i);
 				door_api_init_iterator(&it2,tile_aux);
 				while(door_api_get(&it2,&tile_aux2)) { /* second loop: find door opened by those buttons */
 					if (tile_aux2.room==it->data.info.tile.room && tile_aux2.tilepos==it->data.info.tile.tilepos) {
@@ -442,7 +442,7 @@ int door_api_fix_pos(tTilePlaceN* door,tTilePlaceN* button) {
 
 int selected_door_tile=-1;
 void editor__save_door_tile(short room,short tilepos) { /* if the same tile was selected "unselect" if not "select this tile".*/
-	int aux=(room-1)*30+tilepos; //TODO: use a macro for this expression
+	int aux=T(room,tilepos);
 
 	if ((edited.fg[aux]&0x1f)==tiles_17_level_door_right) {
 			if (aux%10 &&
@@ -547,8 +547,8 @@ void editor__paste_room(int room) {
 
 	editor__do_mark_start();
 	for (i=0;i<30;i++) {
-		editor__do(fg[(drawn_room-1)*30+i],copied_room_fg[i],mark_middle);
-		editor__do(bg[(drawn_room-1)*30+i],copied_room_bg[i],mark_middle);
+		editor__do(fg[T(drawn_room,i)],copied_room_fg[i],mark_middle);
+		editor__do(bg[T(drawn_room,i)],copied_room_bg[i],mark_middle);
 	}
 	editor__do_mark_end();
 }
@@ -639,15 +639,15 @@ void randomize_room(int room) {
 	float max=0;
 
 	memset(level_mask,1,NUMBER_OF_ROOMS*30);
-	memset(level_mask+(room-1)*30,0,30);
+	memset(level_mask+T(room,0),0,30);
 
 	do {
 		tile=-1;
 		max=0;
 		for (i=0;i<NUMBER_OF_ROOMS*30;i++)
-			if (!level_mask[i] && edited_map.list[i/30]) {
-				t.room=(i/30)+1;
-				t.tilepos=i%30;
+			if (!level_mask[i] && edited_map.list[R_(i)]) {
+				t.room=R(i);
+				t.tilepos=P(i);
 				f=room_api_measure_entropy(&edited_map,t,level_mask);
 				if (max<f) {
 					max=f;
@@ -655,8 +655,8 @@ void randomize_room(int room) {
 				}
 			}
 		if (tile!=-1) {
-			t.room=(tile/30)+1;
-			t.tilepos=tile%30;
+			t.room=R(tile);
+			t.tilepos=P(tile);
 			tt=room_api_suggest_tile(&edited_map,t,level_mask);
 			editor__do(fg[tile],tt.concept.fg,mark_middle);
 			editor__do(bg[tile],tt.concept.bg,mark_middle);
@@ -674,14 +674,14 @@ void randomize_tile(int tilepos) {
 	t.room=loaded_room;
 	t.tilepos=tilepos;
 	memset(level_mask,1,NUMBER_OF_ROOMS*30);
-	level_mask[30*(t.room-1)+t.tilepos]=0;
+	level_mask[T(t.room,t.tilepos)]=0;
 	tt=room_api_suggest_tile(&edited_map,t,level_mask);
-	editor__do(fg[(loaded_room-1)*30+tilepos],tt.concept.fg,mark_start);
-	editor__do(bg[(loaded_room-1)*30+tilepos],tt.concept.bg,mark_end);
+	editor__do(fg[T(loaded_room,tilepos)],tt.concept.fg,mark_start);
+	editor__do(bg[T(loaded_room,tilepos)],tt.concept.bg,mark_end);
 }
 
 void sanitize_room(int room, int sanitation_level) {
-	#define tile_at(tilepos,room) (edited.fg[(room-1)*30+(tilepos)]&0x1f)
+	#define tile_at(tilepos,room) (edited.fg[T(room,tilepos)]&0x1f)
 	#define room_link edited.roomlinks[room-1]
 	#define up_is(x,def) ((x>=10)?tile_at(x-10,room):(room_link.up?tile_at(x+20,room_link.up):def))
 	#define down_is(x,def) ((x<20)?tile_at(x+10,room):(room_link.down?tile_at(x-20,room_link.down):def))
@@ -753,8 +753,8 @@ void sanitize_room(int room, int sanitation_level) {
 				case tiles_28_lattice_left:
 				case tiles_29_lattice_right:
 				case tiles_30_torch_with_debris:
-					editor__do(fg[(room-1)*30+i],tiles_20_wall,mark_middle);
-					editor__do(bg[(room-1)*30+i],0,mark_middle);
+					editor__do(fg[T(room,i)],tiles_20_wall,mark_middle);
+					editor__do(bg[T(room,i)],0,mark_middle);
 					break;
 				}
 			}
@@ -765,49 +765,49 @@ void sanitize_room(int room, int sanitation_level) {
 		case tiles_0_empty:
 			if (sanitation_level==0) {
 				if (down_is(i,-1)==tiles_20_wall || down_is(i,-1)==tiles_3_pillar) {
-					editor__do(fg[(room-1)*30+i],tiles_1_floor,mark_middle);
-					editor__do(bg[(room-1)*30+i],0,mark_middle);
+					editor__do(fg[T(room,i)],tiles_1_floor,mark_middle);
+					editor__do(bg[T(room,i)],0,mark_middle);
 				}
 			} else if (sanitation_level==1) {
 				if (right_is(i,-1)==tiles_20_wall && left_is(i,-1)==tiles_20_wall && up_is(i,tiles_20_wall)==tiles_20_wall) {
-					editor__do(fg[(room-1)*30+i],tiles_20_wall,mark_middle);
-					editor__do(bg[(room-1)*30+i],0,mark_middle);
+					editor__do(fg[T(room,i)],tiles_20_wall,mark_middle);
+					editor__do(bg[T(room,i)],0,mark_middle);
 				}
 			}
 			break;
 		case tiles_19_torch:
 			if (right_is(i,-1)==tiles_20_wall || right_is(i,-1)==tiles_3_pillar) {
-				editor__do(fg[(room-1)*30+i],tiles_1_floor,mark_middle);
-				editor__do(bg[(room-1)*30+i],0,mark_middle);
+				editor__do(fg[T(room,i)],tiles_1_floor,mark_middle);
+				editor__do(bg[T(room,i)],0,mark_middle);
 			}
 			break;
 		case tiles_30_torch_with_debris:
 			if (right_is(i,-1)==tiles_20_wall || right_is(i,-1)==tiles_3_pillar) {
-				editor__do(fg[(room-1)*30+i],tiles_14_debris,mark_middle);
-				editor__do(bg[(room-1)*30+i],0,mark_middle);
+				editor__do(fg[T(room,i)],tiles_14_debris,mark_middle);
+				editor__do(bg[T(room,i)],0,mark_middle);
 			}
 			break;
 		case tiles_4_gate:
 			if (right_is(i,-1)==tiles_20_wall || left_is(i,-1)==tiles_20_wall) {
-				editor__do(fg[(room-1)*30+i],tiles_20_wall,mark_middle);
-				editor__do(bg[(room-1)*30+i],0,mark_middle);
+				editor__do(fg[T(room,i)],tiles_20_wall,mark_middle);
+				editor__do(bg[T(room,i)],0,mark_middle);
 			}
 			break;
 		case tiles_2_spike:
 			if (sanitation_level==1 && down_is(i,tiles_20_wall)!=tiles_20_wall) {
-				editor__do(fg[(room-1)*30+i],tiles_1_floor,mark_middle);
-				editor__do(bg[(room-1)*30+i],0,mark_middle);
+				editor__do(fg[T(room,i)],tiles_1_floor,mark_middle);
+				editor__do(bg[T(room,i)],0,mark_middle);
 			}
 			break;
 		}
 
 		if (left_is(i,-1)==tiles_16_level_door_left) {
-				editor__do(fg[(room-1)*30+i],tiles_17_level_door_right,mark_middle);
-				editor__do(bg[(room-1)*30+i],0,mark_middle);
+				editor__do(fg[T(room,i)],tiles_17_level_door_right,mark_middle);
+				editor__do(bg[T(room,i)],0,mark_middle);
 		}
 		if (right_is(i,-1)==tiles_17_level_door_right) {
-				editor__do(fg[(room-1)*30+i],tiles_16_level_door_left,mark_middle);
-				editor__do(bg[(room-1)*30+i],0,mark_middle);
+				editor__do(fg[T(room,i)],tiles_16_level_door_left,mark_middle);
+				editor__do(bg[T(room,i)],0,mark_middle);
 		}
 	}
 
@@ -889,7 +889,7 @@ void editor__on_refresh(surface_type* screen) {
 				if (is_ctrl_alt_pressed) colors=cWrong;
 				x-=x%32;
 				y-=y%63+10;
-				switch(level.fg[(drawn_room-1)*30+tilepos]&0x1f) {
+				switch(level.fg[T(drawn_room,tilepos)]&0x1f) {
 				case tiles_17_level_door_right:
 					x-=32;
 				case tiles_16_level_door_left:
@@ -945,8 +945,8 @@ void editor__on_refresh(surface_type* screen) {
 		/* draw selected door tiles */
 		if (selected_door_tile!=-1) {
 			tTilePlace aux;
-			aux.room=(selected_door_tile/30)+1;
-			aux.tilepos=selected_door_tile%30;
+			aux.room=R(selected_door_tile);
+			aux.tilepos=P(selected_door_tile);
 			if (aux.room==loaded_room) {
 				colors_total=1;
 				if ((level.fg[selected_door_tile]&0x1f)==tiles_16_level_door_left) {
@@ -999,12 +999,12 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int
 	tilepos=row*10+col;
 
 	if (e.button==SDL_BUTTON_LEFT && !shift && !alt && !ctrl) { /* left click: edit tile */
-		editor__do(fg[(loaded_room-1)*30+tilepos],copied.tiletype,mark_start);
-		editor__do(bg[(loaded_room-1)*30+tilepos],copied.modifier,mark_end);
+		editor__do(fg[T(loaded_room,tilepos)],copied.tiletype,mark_start);
+		editor__do(bg[T(loaded_room,tilepos)],copied.modifier,mark_end);
 		redraw_screen(1);
 	} else if (e.button==SDL_BUTTON_RIGHT && !shift && !alt && !ctrl) { /* right click: copy tile */
-		copied.tiletype=edited.fg[(loaded_room-1)*30+tilepos];
-		copied.modifier=edited.bg[(loaded_room-1)*30+tilepos];
+		copied.tiletype=edited.fg[T(loaded_room,tilepos)];
+		copied.modifier=edited.bg[T(loaded_room,tilepos)];
 	} else if (e.button==SDL_BUTTON_LEFT && shift && !alt && !ctrl) { /* shift+left click: move kid */
 		editor__position(&Kid,col,row,loaded_room,x,6563);
 	} else if (e.button==SDL_BUTTON_RIGHT && shift && !alt && !ctrl) { /* shift+right click: move move/put guard */
@@ -1015,7 +1015,7 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int
 		randomize_tile(tilepos);
 		redraw_screen(1);
 	} else if (e.button==SDL_BUTTON_LEFT && !shift && alt && ctrl) { /* ctrl+alt+left click: toggle door mechanism links */
-		if (door_api_is_related(edited.fg[(loaded_room-1)*30+tilepos]&0x1f)) {
+		if (door_api_is_related(edited.fg[T(loaded_room,tilepos)]&0x1f)) {
 			editor__do_mark_start();
 			display_text_bottom(editor__toggle_door_tile(loaded_room,tilepos));
 			editor__do_mark_end();
@@ -1023,7 +1023,7 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int
 			text_time_remaining = 24;
 		}
 	} else if (e.button==SDL_BUTTON_RIGHT && !shift && alt && ctrl) { /* ctrl+alt+right click: pick door mechanism tile */
-		if (door_api_is_related(edited.fg[(loaded_room-1)*30+tilepos]&0x1f)) {
+		if (door_api_is_related(edited.fg[T(loaded_room,tilepos)]&0x1f)) {
 			editor__save_door_tile(loaded_room,tilepos);
 		}
 	}
@@ -1129,8 +1129,8 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 		redraw_screen(1);
 		break;
 	case SDL_SCANCODE_C | WITH_CTRL: /* ctrl-c: copy room */
-		memcpy(copied_room_fg,&(edited.fg[(drawn_room-1)*30]),30);
-		memcpy(copied_room_bg,&(edited.bg[(drawn_room-1)*30]),30);
+		memcpy(copied_room_fg,&(edited.fg[T(drawn_room,0)]),30);
+		memcpy(copied_room_bg,&(edited.bg[T(drawn_room,0)]),30);
 		*answer_text="ROOM COPIED";
 		*need_show_text=1;
 		break;
@@ -1380,16 +1380,16 @@ tTilePlace room_api_tile_move(const tMap* map, tTilePlace t, char col, char row)
 int room_api__private_entropy(const tMap* map, tTilePlace t, byte* level_mask,char col, char row) {
 	tTilePlace aux;
 	aux=room_api_tile_move(map,t,col,row);
-	return aux.room && level_mask[(aux.room-1)*30+aux.tilepos];
+	return aux.room && level_mask[T(aux.room,aux.tilepos)];
 }
 
 tile_packed_type room_api__private_get_tile_if_exists(const tMap* map, tTilePlace t, byte* level_mask,char col, char row) {
 	tTilePlace aux;
 	tile_packed_type result;
 	aux=room_api_tile_move(map,t,col,row);
-	if (aux.room && level_mask[(aux.room-1)*30+aux.tilepos]) {
-		result.concept.fg=edited.fg[(aux.room-1)*30+aux.tilepos];
-		result.concept.bg=edited.bg[(aux.room-1)*30+aux.tilepos];
+	if (aux.room && level_mask[T(aux.room,aux.tilepos)]) {
+		result.concept.fg=edited.fg[T(aux.room,aux.tilepos)];
+		result.concept.bg=edited.bg[T(aux.room,aux.tilepos)];
 	} else {
 		result.number=-1;
 	}
@@ -1489,9 +1489,9 @@ tile_packed_type room_api_suggest_tile(const tMap* map, tTilePlace tilepos, byte
 		probability[i]=aux;
 
 	for (i=0;i<NUMBER_OF_ROOMS*30;i++) {
-		origin.room=i/30;
+		origin.room=R_(i);
 		if (map->list[origin.room++]) {
-			origin.tilepos=i%30;
+			origin.tilepos=P(i);
 			room_api_measure_similarity(map,origin,tilepos,level_mask,probability);
 		}
 	}
