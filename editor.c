@@ -262,7 +262,7 @@ void door_api_init_iterator(tIterator* it, tTilePlace tp) {
 		case tiles_6_closer:
 		case tiles_15_opener:
 			it->data.index=edited.bg[T(tp.room,tp.tilepos)];
-			it->type=it->data.index==255?noneIterator:buttonIterator; //255 is reserved as no link
+			it->type=it->data.index==255?noneIterator:buttonIterator; /* 255 is reserved as no link */
 			return;
 		case tiles_4_gate:
 		case tiles_16_level_door_left:
@@ -377,7 +377,7 @@ int door_api_link(int* max_doorlinks, tTilePlaceN door,tTilePlaceN button) { /* 
 	return 1;
 }
 void door_api_unlink(int* max_doorlinks, tTilePlaceN door,tTilePlaceN button) {
-	//read link
+	/* read link */
 	tTilePlace tile;
 	short next;
 	int i=edited.bg[button];
@@ -388,10 +388,10 @@ void door_api_unlink(int* max_doorlinks, tTilePlaceN door,tTilePlaceN button) {
 	} while(next && door!=T(tile.room,tile.tilepos));
 	i--;
 	if (door!=T(tile.room,tile.tilepos)) return; /* error, link not found */
-	if (!next) { //this is the last link
-		if (i==edited.bg[button]) { //if the last link is the first, empty the list
-			editor__do(bg[button],255,mark_middle); //remove link
-		} else { //if there are more links before this one, set the !next bit in the previous one
+	if (!next) { /* this is the last link */
+		if (i==edited.bg[button]) { /* if the last link is the first, empty the list */
+			editor__do(bg[button],255,mark_middle); /* remove link */
+		} else { /* if there are more links before this one, set the !next bit in the previous one */
 			get_doorlink((edited.doorlinks2[i-1]<<8)|edited.doorlinks1[i-1],&tile,&next);
 			next=0;
 			Uint16 aux;
@@ -406,7 +406,7 @@ void door_api_unlink(int* max_doorlinks, tTilePlaceN door,tTilePlaceN button) {
 			if (edited.bg[j]>i && edited.bg[j]!=255) /* 255 is no link */
 				editor__do(bg[j],edited.bg[j]-1,mark_middle);
 
-	//just shift the array one position
+	/* just shift the array one position */
 	for (;i<*max_doorlinks;i++) {
 		editor__do(doorlinks1[i],edited.doorlinks1[i+1],mark_middle);
 		editor__do(doorlinks2[i],edited.doorlinks2[i+1],mark_middle);
@@ -421,13 +421,13 @@ int door_api_fix_pos(tTilePlaceN* door,tTilePlaceN* button) {
 	tTileDoorType door_type=door_api_is_related(tile_door);
 	tTileDoorType button_type=door_api_is_related(tile_button);
 	if (door_type==button_type || !door_type || !button_type) return 0;
-	if (door_type==cButton) { //Swap
+	if (door_type==cButton) { /* Swap */
 		tTilePlaceN aux=*door;
 		*door=*button;
 		*button=aux;
-		tile_door=edited.fg[*door]&0x1f; //refresh tile_door after swapping
+		tile_door=edited.fg[*door]&0x1f; /* refresh tile_door after swapping */
 	}
-	if (tile_door==tiles_17_level_door_right) { //door right case
+	if (tile_door==tiles_17_level_door_right) { /* door right case */
 		if (
 				(*door)%10 &&
 				(edited.fg[(*door)-1]&0x1f)==tiles_16_level_door_left
@@ -446,7 +446,7 @@ void editor__save_door_tile(short room,short tilepos) { /* if the same tile was 
 
 	if ((edited.fg[aux]&0x1f)==tiles_17_level_door_right) {
 			if (aux%10 &&
-				(edited.fg[aux-1]&0x1f)==tiles_16_level_door_left) { //TODO: use a define for this mask
+				(edited.fg[aux-1]&0x1f)==tiles_16_level_door_left) { /* TODO: use a define for this mask */
 					aux--;
 			} else {
 				return;
@@ -467,16 +467,16 @@ void printl() {
 }*/
 
 const char* editor__toggle_door_tile(short room,short tilepos) {
-	tTilePlaceN door  =T(room,tilepos);
+	tTilePlaceN door=T(room,tilepos);
 	tTilePlaceN button=selected_door_tile;
-	if (!door_api_fix_pos(&door,&button)) return "Select a button and a door"; //Error
+	if (!door_api_fix_pos(&door,&button)) return "Select a button and a door"; /* Error */
 
 	tIterator it;
 	tTilePlace current_tile,check_tile;
 	current_tile.room=R(door);
 	current_tile.tilepos=P(door);
 	door_api_init_iterator(&it,current_tile);
-	while(door_api_get(&it,&check_tile)) //check if existent to unlink
+	while(door_api_get(&it,&check_tile)) /* check if existent to unlink */
 		if (T(check_tile.room,check_tile.tilepos)==button) {
 			door_api_unlink(&edited_doorlinks,door,button);
 			return "Door unlinked";
@@ -508,7 +508,7 @@ void editor__load_level() {
 	chtab_editor_sprites = load_sprites_from_file(200, 1<<11, 1);
 	close_dat(dathandle);
 
-	//TODO: free_chtab(chtab_editor_sprites);
+	/* TODO: free_chtab(chtab_editor_sprites); */
 }
 
 void editor_revert_level() {
@@ -692,7 +692,7 @@ void sanitize_room(int room, int sanitation_level) {
 	byte tile;
 	for (i=0;i<30;i++) {
 		tile=tile_at(i,room);
-		//printf("sanitize %d %d %d\n",i,tile,(edited.bg[(room-1)*30+(i)]));
+		/* printf("sanitize %d %d %d\n",i,tile,(edited.bg[(room-1)*30+(i)])); */
 		if (sanitation_level==1) switch(tile) { /* check for alone tile */
 		case tiles_1_floor:
 		case tiles_2_spike:
@@ -819,13 +819,13 @@ void sanitize_room(int room, int sanitation_level) {
 \********************************************/
 
 typedef enum {
-	cMain=1,    //White+grey: cursors cross+tile.
-	cRight=3,   //Red: cursor tile when ctrl+alt is pressed and the tile is a door/button.
-	cWrong=5,   //Blue: cursor tile when ctrl+alt is pressed and the tile is NOT a door/button. No actions possible.
-	cLinked=7,  //Green: When a door/button is selected, the linked tiles will have this color
-	cSelected=9,//Yellow: The selected door/button.
-	cExtra=11   //Cyan: Not used yet.
-} tCursorColors; //The palettes are taken from the res201 bitmap, ignoring the res200 palette.
+	cMain=1,    /* White+grey: cursors cross+tile. */
+	cRight=3,   /* Red: cursor tile when ctrl+alt is pressed and the tile is a door/button. */
+	cWrong=5,   /* Blue: cursor tile when ctrl+alt is pressed and the tile is NOT a door/button. No actions possible. */
+	cLinked=7,  /* Green: When a door/button is selected, the linked tiles will have this color */
+	cSelected=9,/* Yellow: The selected door/button. */
+	cExtra=11   /* Cyan: Not used yet. */
+} tCursorColors; /* The palettes are taken from the res201 bitmap, ignoring the res200 palette. */
 
 typedef enum {
 	cCross=0,
@@ -850,7 +850,7 @@ void blit_sprites(int x,int y, tEditorImageOffset sprite, tCursorColors colors, 
 	SDL_SetColorKey(image, SDL_TRUE, 0);
 
 	if (SDL_SetPaletteColors(image->format->palette, chtab_editor_sprites->images[0]->format->palette->colors+colors, 1, colors_total) != 0) {
-	  printf("Couldn't set video mode: %s\n", SDL_GetError());
+		printf("Couldn't set video mode: %s\n", SDL_GetError());
 	}
 
 	if (SDL_BlitSurface(image, &src_rect, screen, &dest_rect) != 0) {
@@ -913,7 +913,7 @@ void editor__on_refresh(surface_type* screen) {
 				static unsigned short i_frame=0;
 				image_offset+=(i_frame++)%3;
 
-				if (is_ctrl_alt_pressed && colors==cRight) { //show number of links
+				if (is_ctrl_alt_pressed && colors==cRight) { /* show number of links */
 					char text_aux[20];
 					int count=0;
 					/* count links */
@@ -975,14 +975,14 @@ void editor__on_refresh(surface_type* screen) {
 					blit_sprites((linked.tilepos%10)*32,(linked.tilepos/10)*63-10,image_offset+(i_frame2)%3,cLinked,colors_total,screen);
 				} else { /* there is a linked tile in the last column of the left room */
 					if (level.roomlinks[loaded_room-1].left==linked.room && linked.tilepos%10==9) {
-						//TODO: exit doors
+						/* TODO: exit doors */
 						blit_sprites((-1)*32,(linked.tilepos/10)*63-10,cSingleTile+(i_frame2)%3,cLinked,1,screen);
 					}
 				}
 			}
 		}
 
-		// draw temporary layer
+		/* draw temporary layer */
 	} else {
 		printf("Sprites not loaded\n");
 	}
@@ -1103,7 +1103,7 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 		editor__do_mark_end();
 		*need_show_text=1;
 		break;
-	case SDL_SCANCODE_D: // d for debugging purposes
+	case SDL_SCANCODE_D: /* d for debugging purposes */
 		{
 			*answer_text="DEBUG ACTION";
 			*need_show_text=1;
@@ -1361,7 +1361,7 @@ int room_api_insert_room_up(tMap* map, int where) {
 }
 
 /* Randomization Room Linking API sublayer */
-/* Randomize tiles, rooms and complete levels using statistical inference.  */
+/* Randomize tiles, rooms and complete levels using statistical inference. */
 
 
 tTilePlace room_api_tile_move(const tMap* map, tTilePlace t, char col, char row) {
