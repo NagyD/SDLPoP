@@ -23,8 +23,6 @@ The authors of this program may be contacted at http://forum.princed.org
 TODO:
 	room fix errors.
 	room decorate.
-
-	door handling
 */
 
 #include "common.h"
@@ -472,6 +470,8 @@ const char* editor__toggle_door_tile(short room,short tilepos) {
 	tTilePlaceN button=selected_door_tile;
 	if (!door_api_fix_pos(&door,&button)) return "Select a button and a door"; //Error
 
+	editor__do_mark_start();
+
 	tIterator it;
 	tTilePlace current_tile,check_tile;
 	current_tile.room=R(door);
@@ -480,12 +480,16 @@ const char* editor__toggle_door_tile(short room,short tilepos) {
 	while(door_api_get(&it,&check_tile)) //check if existent to unlink
 		if (T(check_tile.room,check_tile.tilepos)==button) {
 			door_api_unlink(&edited_doorlinks,door,button);
+			editor__do_mark_end();
 			return "Door unlinked";
 		}
 
-	if (door_api_link(&edited_doorlinks,door,button))
+	if (door_api_link(&edited_doorlinks,door,button)) {
+		editor__do_mark_end();
 		return "Door linked";
+	}
 
+	editor__do_mark_end();
 	return "Link error";
 }
 
@@ -659,8 +663,8 @@ void randomize_room(int room) {
 			t.room=(tile/30)+1;
 			t.tilepos=tile%30;
 			tt=room_api_suggest_tile(&edited_map,t,level_mask);
-			editor__do(fg[tile],tt.concept.fg,mark_start); /* TODO: fix marks */
-			editor__do(bg[tile],tt.concept.bg,mark_end);
+			editor__do(fg[tile],tt.concept.fg,mark_middle);
+			editor__do(bg[tile],tt.concept.bg,mark_middle);
 			level_mask[tile]=1;
 		}
 	} while (tile!=-1);
@@ -754,8 +758,8 @@ void sanitize_room(int room, int sanitation_level) {
 				case tiles_28_lattice_left:
 				case tiles_29_lattice_right:
 				case tiles_30_torch_with_debris:
-					editor__do(fg[(room-1)*30+i],tiles_20_wall,mark_start);
-					editor__do(bg[(room-1)*30+i],0,mark_end);
+					editor__do(fg[(room-1)*30+i],tiles_20_wall,mark_middle);
+					editor__do(bg[(room-1)*30+i],0,mark_middle);
 					break;
 				}
 			}
@@ -766,38 +770,38 @@ void sanitize_room(int room, int sanitation_level) {
 		case tiles_0_empty: /* empty above pillar or wall. TODO: add more tiles */
 			if (sanitation_level==0) {
 				if (down_is(i,-1)==tiles_20_wall || down_is(i,-1)==tiles_3_pillar) {
-					editor__do(fg[(room-1)*30+i],tiles_1_floor,mark_start);
-					editor__do(bg[(room-1)*30+i],0,mark_end);
+					editor__do(fg[(room-1)*30+i],tiles_1_floor,mark_middle);
+					editor__do(bg[(room-1)*30+i],0,mark_middle);
 				}
 			} else if (sanitation_level==1) {
 				if (right_is(i,-1)==tiles_20_wall && left_is(i,-1)==tiles_20_wall && up_is(i,tiles_20_wall)==tiles_20_wall) {
-					editor__do(fg[(room-1)*30+i],tiles_20_wall,mark_start);
-					editor__do(bg[(room-1)*30+i],0,mark_end);
+					editor__do(fg[(room-1)*30+i],tiles_20_wall,mark_middle);
+					editor__do(bg[(room-1)*30+i],0,mark_middle);
 				}
 			}
 			break;
 		case tiles_19_torch:
 			if (right_is(i,-1)==tiles_20_wall || right_is(i,-1)==tiles_3_pillar) {
-				editor__do(fg[(room-1)*30+i],tiles_1_floor,mark_start);
-				editor__do(bg[(room-1)*30+i],0,mark_end);
+				editor__do(fg[(room-1)*30+i],tiles_1_floor,mark_middle);
+				editor__do(bg[(room-1)*30+i],0,mark_middle);
 			}
 			break;
 		case tiles_30_torch_with_debris:
 			if (right_is(i,-1)==tiles_20_wall || right_is(i,-1)==tiles_3_pillar) {
-				editor__do(fg[(room-1)*30+i],tiles_14_debris,mark_start);
-				editor__do(bg[(room-1)*30+i],0,mark_end);
+				editor__do(fg[(room-1)*30+i],tiles_14_debris,mark_middle);
+				editor__do(bg[(room-1)*30+i],0,mark_middle);
 			}
 			break;
 		case tiles_4_gate:
 			if (right_is(i,-1)==tiles_20_wall || left_is(i,-1)==tiles_20_wall) {
-				editor__do(fg[(room-1)*30+i],tiles_20_wall,mark_start);
-				editor__do(bg[(room-1)*30+i],0,mark_end);
+				editor__do(fg[(room-1)*30+i],tiles_20_wall,mark_middle);
+				editor__do(bg[(room-1)*30+i],0,mark_middle);
 			}
 			break;
 		case tiles_2_spike:
 			if (sanitation_level==1 && down_is(i,tiles_20_wall)!=tiles_20_wall) {
-				editor__do(fg[(room-1)*30+i],tiles_1_floor,mark_start);
-				editor__do(bg[(room-1)*30+i],0,mark_end);
+				editor__do(fg[(room-1)*30+i],tiles_1_floor,mark_middle);
+				editor__do(bg[(room-1)*30+i],0,mark_middle);
 			}
 			break;
 		}
@@ -1119,11 +1123,15 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 		*need_show_text=1;
 		break;
 	case SDL_SCANCODE_R | WITH_CTRL | WITH_SHIFT: /* ctrl-shift-r */
+		editor__do_mark_start();
 		randomize_room(loaded_room);
+		editor__do_mark_end();
 		redraw_screen(1);
 		break;
 	case SDL_SCANCODE_S | WITH_CTRL | WITH_SHIFT: /* ctrl-shift-s */
+		editor__do_mark_start();
 		sanitize_room(loaded_room,0);
+		editor__do_mark_end();
 		redraw_screen(1);
 		break;
 	case SDL_SCANCODE_C | WITH_CTRL: /* ctrl-c: copy room */
