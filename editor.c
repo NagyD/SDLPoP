@@ -846,6 +846,7 @@ void blit_sprites(int x,int y, tEditorImageOffset sprite, tCursorColors colors, 
 *             INPUT BINDINGS!!!!             *
 \********************************************/
 
+#define MouseState !SDL_GetMouseState(&x,&y) && (x!=0) && (y!=0) && (x!=694) && (y<378)
 void editor__on_refresh(surface_type* screen) {
 	if (chtab_editor_sprites) {
 		int x,y, colors_total=1;
@@ -858,7 +859,7 @@ void editor__on_refresh(surface_type* screen) {
 		int is_only_shift_pressed=(state[SDL_SCANCODE_LSHIFT] || state[SDL_SCANCODE_RSHIFT]) && (!(state[SDL_SCANCODE_LCTRL] || state[SDL_SCANCODE_RCTRL]));
 		int is_ctrl_shift_pressed=(state[SDL_SCANCODE_LSHIFT] || state[SDL_SCANCODE_RSHIFT]) && (state[SDL_SCANCODE_LCTRL] || state[SDL_SCANCODE_RCTRL]);
 
-		if (!SDL_GetMouseState(&x,&y) && (x!=0) && (y!=0) && (x!=694) && (y<378) ) {
+		if (MouseState) {
 			int col,row,tilepos;
 			colors=cMain;
 			x=x/2;
@@ -1028,7 +1029,28 @@ void editor__on_refresh(surface_type* screen) {
 			SDL_FillRect(screen,&lineH,0xffffff);
 			SDL_Rect lineV={sx,offsety,1,sh};
 			SDL_FillRect(screen,&lineV,0xffffff);
+
+			if (MouseState) {
+				x=x/2-offsetx;
+				y=y/2-offsety;
+				if (x<sw && y<sh) {
+					int i=x/(tw*10+1);
+					int j=y/(th*3+1);
+					tile_global_location_type t=room_api_translate(&edited_map,i*10,j*3);
+					if (t!=-1) { //room is R(t)
+						SDL_Rect line1={offsetx+(tw*10+1)*i,offsety+(th*3+1)*j,tw*10+2,1};
+						SDL_Rect line2={offsetx+(tw*10+1)*i,offsety+(th*3+1)*j,1,th*3+2};
+						SDL_Rect line3={offsetx+(tw*10+1)*i,offsety+(th*3+1)*(j+1),tw*10+2,1};
+						SDL_Rect line4={offsetx+(tw*10+1)*(i+1),offsety+(th*3+1)*j,1,th*3+2};
+						SDL_FillRect(screen,&line1,0x55ff55);
+						SDL_FillRect(screen,&line2,0x55ff55);
+						SDL_FillRect(screen,&line3,0x55ff55);
+						SDL_FillRect(screen,&line4,0x55ff55);
+					}
+				}
+			}
 		}
+		
 
 	} else {
 		printf("Sprites not loaded\n");
