@@ -966,22 +966,30 @@ void editor__on_refresh(surface_type* screen) {
 		}
 
 		/* draw map */
-/*		if (state[SDL_SCANCODE_M]) {
+		if (state[SDL_SCANCODE_M]) {
+		//SDL_lock
+		Uint8 *pixels = (Uint8 *)screen->pixels;
 		int w,h,i,j;
 		room_api_get_size(&edited_map,&w,&h);
 		for (j=0;j<h;j++) {
-			printf("\n");
+			//printf("\n");
 			for (i=0;i<w;i++) {
 				tile_global_location_type t=room_api_translate(&edited_map,i,j);
 				if (t!=-1) {
-					printf("%c",'a'+(edited.fg[t]&TILE_MASK));
+					byte c=(edited.fg[t]&TILE_MASK)<<3;
+					pixels[ (( j * screen->w ) + i)*3+0 ]=c;
+					pixels[ (( j * screen->w ) + i)*3+1 ]=c;
+					pixels[ (( j * screen->w ) + i)*3+2 ]=c;
 				} else {
-					printf(" ");
+					byte c=0; //edited.fg[t]&TILE_MASK;
+					pixels[ (( j * screen->w ) + i)*3+0 ]=c;
+					pixels[ (( j * screen->w ) + i)*3+1 ]=c;
+					pixels[ (( j * screen->w ) + i)*3+2 ]=c;
 				}
 			}
 		}
-		printf("\n");
-		}*/
+		//printf("\n");
+		}
 
 
 
