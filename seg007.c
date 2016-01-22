@@ -715,14 +715,14 @@ void __pascal far clear_tile_wipes() {
 
 #ifdef USE_EDITOR
 /* doorlink setters & getters */
-void get_doorlink(Uint16 value, tTilePlaceN* tp, short* next) {
+void get_doorlink(Uint16 value, tile_global_location_type* tp, short* next) {
 	byte dl1=value&0xff;
 	byte dl2=(value>>8)&0xff;
 
 	*tp = T(   ((dl1 & 0x60) >> 5) | ((dl2 & 0xE0) >> 3)   ,   dl1&0x1f  );
 	*next=!(dl1&0x80);
 }
-void set_doorlink(Uint16* value, tTilePlaceN tp, short next) {
+void set_doorlink(Uint16* value, tile_global_location_type tp, short next) {
 	register byte dl1, dl2;
 
 	dl1 = ( (R(tp)<<5) & 0x60 ) | ( P(tp) & 0x1f) | (next?0:0x80);
