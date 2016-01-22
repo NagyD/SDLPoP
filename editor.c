@@ -44,12 +44,15 @@ TODO:
 typedef struct {
 	long* list;
 	byte* map;
+	rect_type crop;
 } tMap;
 
 long room_api_where_room(const tMap* map, byte room);
 void room_api_refresh(tMap* map);
 void room_api_init(tMap* map);
 void room_api_free(tMap* map);
+void room_api_get_size(const tMap* map,int* w, int* h);
+tile_global_location_type room_api_translate(const tMap* map,int x, int y);
 int room_api_get_free_room(const tMap* map);
 void room_api_free_room(tMap* map,int r); /* Pre-condition: DO NOT FREE THE STARTING ROOM! */
 void room_api_put_room(tMap* map, long where, int r);
@@ -847,9 +850,9 @@ void editor__on_refresh(surface_type* screen) {
 		int x,y, colors_total=1;
 		tEditorImageOffset image_offset=cSingleTile;
 		tCursorColors colors;
+		const Uint8 *state = SDL_GetKeyboardState(NULL);
 
 		if (!SDL_GetMouseState(&x,&y) && (x!=0) && (y!=0) && (x!=694) && (y<378) ) {
-			const Uint8 *state = SDL_GetKeyboardState(NULL);
 			int col,row,tilepos;
 			int is_ctrl_alt_pressed=(state[SDL_SCANCODE_LALT] || state[SDL_SCANCODE_RALT]) && (state[SDL_SCANCODE_LCTRL] || state[SDL_SCANCODE_RCTRL]);
 			int is_only_shift_pressed=(state[SDL_SCANCODE_LSHIFT] || state[SDL_SCANCODE_RSHIFT]) && (!(state[SDL_SCANCODE_LCTRL] || state[SDL_SCANCODE_RCTRL]));
@@ -961,6 +964,27 @@ void editor__on_refresh(surface_type* screen) {
 				}
 			}
 		}
+
+		/* draw map */
+/*		if (state[SDL_SCANCODE_M]) {
+		int w,h,i,j;
+		room_api_get_size(&edited_map,&w,&h);
+		for (j=0;j<h;j++) {
+			printf("\n");
+			for (i=0;i<w;i++) {
+				tile_global_location_type t=room_api_translate(&edited_map,i,j);
+				if (t!=-1) {
+					printf("%c",'a'+(edited.fg[t]&TILE_MASK));
+				} else {
+					printf(" ");
+				}
+			}
+		}
+		printf("\n");
+		}*/
+
+
+
 
 		/* draw temporary layer */
 	} else {
@@ -1151,6 +1175,12 @@ void room_api__private_recurse(tMap* map, long r, int aux_room) {
 	if ( (!aux_room) || map->list[aux_room-1]) return; /* if the room exists and is the first time we visit it */
 	map->map[r]=aux_room;
 	map->list[aux_room-1]=r;
+
+	if (r%MAP_SIDE<map->crop.left) map->crop.left=r%MAP_SIDE;
+	if (r%MAP_SIDE>map->crop.right) map->crop.right=r%MAP_SIDE;
+	if (r/MAP_SIDE<map->crop.top) map->crop.top=r/MAP_SIDE;
+	if (r/MAP_SIDE>map->crop.bottom) map->crop.bottom=r/MAP_SIDE;
+
 #define GO(field,offset) room_api__private_recurse(map,r+offset,edited.roomlinks[aux_room-1].field)
 	GO(up,POS_UP);
 	GO(right,POS_RIGHT);
@@ -1163,23 +1193,42 @@ void room_api_refresh(tMap* map) {
 	memset(map->map,0,sizeof(byte)*MAP_SIDE*MAP_SIDE);
 	memset(map->list,0,sizeof(long)*NUMBER_OF_ROOMS);
 
+	rect_type aux={MAP_CENTER+10,MAP_CENTER+10,MAP_CENTER-10,MAP_CENTER-10};
+	map->crop=aux;
 	room_api__private_recurse(map,MAP_POS(MAP_CENTER,MAP_CENTER),edited.start_room);
 
 #ifdef __SCREEN_DEBUG__
 	{
-		int i=0;
+		int i,j;
 		printf("----------------------------------");
-		for (i=0;i<MAP_SIDE*MAP_SIDE;i++) {
-			if (!(i%MAP_SIDE)) printf("\n");
-			if (map->map[i]) {
-				printf("%c",'a'+map->map[i]-1);
-			} else {
-				printf(" ");
+		for (i=map->crop.top;i<=map->crop.bottom;i++) {
+			printf("\n");
+			for (j=map->crop.left;j<=map->crop.right;j++) {
+				if (map->map[i*MAP_SIDE+j]) {
+					printf("%c",'a'+map->map[i*MAP_SIDE+j]-1);
+				} else {
+					printf(" ");
+				}
 			}
 		}
 		printf("\n");
 	}
 #endif
+}
+
+void room_api_get_size(const tMap* map,int* w, int* h) {
+	*w=(map->crop.right-map->crop.left+1)*10;
+	*h=(map->crop.bottom-map->crop.top+1)*3;
+}
+
+tile_global_location_type room_api_translate(const tMap* map,int x, int y) {
+	int col=x%10;
+	int row=y%3;
+	int tilepos=row*10+col;
+	int r=MAP_POS(map->crop.left+x/10,map->crop.top+y/3);
+
+	if (map->map[r]) return T(map->map[r],tilepos);
+	return -1;
 }
 
 void room_api_init(tMap* map) {
