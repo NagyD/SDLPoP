@@ -40,6 +40,8 @@ TODO:
 #define POS_RIGHT 1
 #define MAP_POS(x,y) ((y)*MAP_SIDE+(x))
 
+#define TILE_MASK 0x1F
+
 typedef struct {
 	long* list;
 	byte* map;
@@ -247,11 +249,11 @@ tTileDoorType door_api_is_related(byte tile) {
 	case tiles_17_level_door_right:
 		return cDoor;
 	}
-	return 0;
+	return cOther;
 }
 
 void door_api_init_iterator(tIterator* it, tTilePlaceN tp) {
-	byte tile=edited.fg[tp]&0x1f;
+	byte tile=edited.fg[tp]&TILE_MASK;
 	switch(tile) {
 		case tiles_6_closer:
 		case tiles_15_opener:
@@ -266,7 +268,7 @@ void door_api_init_iterator(tIterator* it, tTilePlaceN tp) {
 			return;
 		case tiles_17_level_door_right:
 			if (P(tp)%10 &&
-				(edited.fg[tp-1]&0x1f)==tiles_16_level_door_left) {
+				(edited.fg[tp-1]&TILE_MASK)==tiles_16_level_door_left) {
 					tp--;
 					door_api_init_iterator(it,tp);
 					return; 
@@ -286,7 +288,7 @@ int door_api_get(tIterator* it, tTilePlaceN *tile) {
 		return 1;
 	case doorIterator:
 		for (short* i=&it->data.info.i;(*i)<NUMBER_OF_ROOMS*30;(*i)++) { /* first loop: check all tiles to find buttons */
-			byte fg=edited.fg[*i]&0x1f;
+			byte fg=edited.fg[*i]&TILE_MASK;
 			if (fg==tiles_6_closer || fg==tiles_15_opener) {
 				tIterator it2;
 				tTilePlaceN linked_tile;
@@ -313,7 +315,7 @@ void door_api_init(int* max_doorlinks) {
 	tTilePlaceN i;
 	*max_doorlinks=0;
 	for (i=0;i<NUMBER_OF_ROOMS*30;i++) {
-		if (door_api_is_related(edited.fg[i]&0x1f)==cButton) {
+		if (door_api_is_related(edited.fg[i]&TILE_MASK)==cButton) {
 			byte aux=edited.bg[i];
 			if (*max_doorlinks<aux) *max_doorlinks=aux;
 		}
@@ -353,7 +355,7 @@ int door_api_link(int* max_doorlinks, tTilePlaceN door,tTilePlaceN button) { /* 
 		}
 		/* 2) update button references */
 		for (i=0;i<NUMBER_OF_ROOMS*30;i++)
-			if (door_api_is_related(edited.fg[i]&0x1f)==cButton)
+			if (door_api_is_related(edited.fg[i]&TILE_MASK)==cButton)
 				if (edited.bg[i]>pivot && edited.bg[i]!=255)
 					editor__do(bg[i],edited.bg[i]+1,mark_middle);
 
@@ -391,7 +393,7 @@ void door_api_unlink(int* max_doorlinks, tTilePlaceN door,tTilePlaceN button) {
 	}
 	/* update references */
 	for (int j=0;j<NUMBER_OF_ROOMS*30;j++)
-		if (door_api_is_related(edited.fg[j]&0x1f)==cButton)
+		if (door_api_is_related(edited.fg[j]&TILE_MASK)==cButton)
 			if (edited.bg[j]>i && edited.bg[j]!=255) /* 255 is no link */
 				editor__do(bg[j],edited.bg[j]-1,mark_middle);
 
@@ -405,8 +407,8 @@ void door_api_unlink(int* max_doorlinks, tTilePlaceN door,tTilePlaceN button) {
 }
 int door_api_fix_pos(tTilePlaceN* door,tTilePlaceN* button) {
 	if (*door==-1 || *button==-1) return 0;
-	byte tile_door=edited.fg[*door]&0x1f;
-	byte tile_button=edited.fg[*button]&0x1f;
+	byte tile_door=edited.fg[*door]&TILE_MASK;
+	byte tile_button=edited.fg[*button]&TILE_MASK;
 	tTileDoorType door_type=door_api_is_related(tile_door);
 	tTileDoorType button_type=door_api_is_related(tile_button);
 	if (door_type==button_type || !door_type || !button_type) return 0;
@@ -414,12 +416,12 @@ int door_api_fix_pos(tTilePlaceN* door,tTilePlaceN* button) {
 		tTilePlaceN aux=*door;
 		*door=*button;
 		*button=aux;
-		tile_door=edited.fg[*door]&0x1f; /* refresh tile_door after swapping */
+		tile_door=edited.fg[*door]&TILE_MASK; /* refresh tile_door after swapping */
 	}
 	if (tile_door==tiles_17_level_door_right) { /* door right case */
 		if (
 				(*door)%10 &&
-				(edited.fg[(*door)-1]&0x1f)==tiles_16_level_door_left
+				(edited.fg[(*door)-1]&TILE_MASK)==tiles_16_level_door_left
 		) {
 			(*door)--;
 		}
@@ -431,9 +433,9 @@ int door_api_fix_pos(tTilePlaceN* door,tTilePlaceN* button) {
 
 int selected_door_tile=-1;
 void editor__save_door_tile(tTilePlaceN tile) { /* if the same tile was selected "unselect" if not "select this tile".*/
-	if ((edited.fg[tile]&0x1f)==tiles_17_level_door_right) {
+	if ((edited.fg[tile]&TILE_MASK)==tiles_17_level_door_right) {
 			if (tile%10 &&
-				(edited.fg[tile-1]&0x1f)==tiles_16_level_door_left) { /* TODO: use a define for this mask */
+				(edited.fg[tile-1]&TILE_MASK)==tiles_16_level_door_left) { /* TODO: use a define for this mask */
 					tile--;
 			} else {
 				return;
@@ -659,7 +661,7 @@ void randomize_tile(int tilepos) {
 }
 
 void sanitize_room(int room, int sanitation_level) {
-	#define tile_at(tilepos,room) (edited.fg[T(room,tilepos)]&0x1f)
+	#define tile_at(tilepos,room) (edited.fg[T(room,tilepos)]&TILE_MASK)
 	#define room_link edited.roomlinks[room-1]
 	#define up_is(x,def) ((x>=10)?tile_at(x-10,room):(room_link.up?tile_at(x+20,room_link.up):def))
 	#define down_is(x,def) ((x<20)?tile_at(x+10,room):(room_link.down?tile_at(x-20,room_link.down):def))
@@ -851,6 +853,8 @@ void editor__on_refresh(surface_type* screen) {
 			const Uint8 *state = SDL_GetKeyboardState(NULL);
 			int col,row,tilepos;
 			int is_ctrl_alt_pressed=(state[SDL_SCANCODE_LALT] || state[SDL_SCANCODE_RALT]) && (state[SDL_SCANCODE_LCTRL] || state[SDL_SCANCODE_RCTRL]);
+			int is_only_shift_pressed=(state[SDL_SCANCODE_LSHIFT] || state[SDL_SCANCODE_RSHIFT]) && (!(state[SDL_SCANCODE_LCTRL] || state[SDL_SCANCODE_RCTRL]));
+			int is_ctrl_shift_pressed=(state[SDL_SCANCODE_LSHIFT] || state[SDL_SCANCODE_RSHIFT]) && (state[SDL_SCANCODE_LCTRL] || state[SDL_SCANCODE_RCTRL]);
 			colors=cMain;
 			x=x/2;
 			y=y/2;
@@ -858,16 +862,17 @@ void editor__on_refresh(surface_type* screen) {
 			row=(y-y%63+10)/63;
 			tilepos=row*10+col;
 			/* if Shift is pressed a cross is shown */
-			if (state[SDL_SCANCODE_LSHIFT] || state[SDL_SCANCODE_RSHIFT]) {
+			if (is_only_shift_pressed) {
 				image_offset=cCross;
 				x-=chtab_editor_sprites->images[cCross]->w/2;
 				y-=chtab_editor_sprites->images[cCross]->h/2;
 				colors=cMain;
 			} else { /* If not, a 3D selection box is shown. When alt is pressed cRight or cWrong colors are used */
 				if (is_ctrl_alt_pressed) colors=cWrong;
+				if (is_ctrl_shift_pressed) colors=cExtra;
 				x-=x%32;
 				y-=y%63+10;
-				switch(level.fg[T(drawn_room,tilepos)]&0x1f) {
+				switch(level.fg[T(drawn_room,tilepos)]&TILE_MASK) {
 				case tiles_17_level_door_right:
 					x-=32;
 				case tiles_16_level_door_left:
@@ -923,7 +928,7 @@ void editor__on_refresh(surface_type* screen) {
 		if (selected_door_tile!=-1) {
 			if (R(selected_door_tile)==loaded_room) {
 				colors_total=1;
-				if ((level.fg[selected_door_tile]&0x1f)==tiles_16_level_door_left) {
+				if ((level.fg[selected_door_tile]&TILE_MASK)==tiles_16_level_door_left) {
 					colors_total=2;
 					image_offset=cExitdoor;
 				} else {
@@ -937,7 +942,7 @@ void editor__on_refresh(surface_type* screen) {
 			door_api_init_iterator(&it,selected_door_tile);
 			while(door_api_get(&it,&linked)) {
 				if (R(linked)==loaded_room) { /* there is a linked tile in the drawn room */
-					if ((level.fg[linked]&0x1f)==tiles_16_level_door_left) {
+					if ((level.fg[linked]&TILE_MASK)==tiles_16_level_door_left) {
 						colors_total=2;
 						image_offset=cExitdoor;
 					} else {
@@ -987,7 +992,7 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int
 		randomize_tile(tilepos);
 		redraw_screen(1);
 	} else if (e.button==SDL_BUTTON_LEFT && !shift && alt && ctrl) { /* ctrl+alt+left click: toggle door mechanism links */
-		if (door_api_is_related(edited.fg[T(loaded_room,tilepos)]&0x1f)) {
+		if (door_api_is_related(edited.fg[T(loaded_room,tilepos)]&TILE_MASK)) {
 			editor__do_mark_start();
 			display_text_bottom(editor__toggle_door_tile(loaded_room,tilepos));
 			editor__do_mark_end();
@@ -995,7 +1000,7 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int
 			text_time_remaining = 24;
 		}
 	} else if (e.button==SDL_BUTTON_RIGHT && !shift && alt && ctrl) { /* ctrl+alt+right click: pick door mechanism tile */
-		if (door_api_is_related(edited.fg[T(loaded_room,tilepos)]&0x1f)) {
+		if (door_api_is_related(edited.fg[T(loaded_room,tilepos)]&TILE_MASK)) {
 			editor__save_door_tile(T(loaded_room,tilepos));
 		}
 	}
