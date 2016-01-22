@@ -45,8 +45,7 @@ Ctrl-Shift-R: Randomize the whole screen
 By pressing Shift the mouse pointer indicates where the characters will be placed. Using Ctrl-Alt door linking showing features are activated: Blue tiles are not linkable, red tiles are linkable (doors and buttons), the number displayed indicates how many links this tile has.
 
 TODO List/known bugs:
-* Undo/Redo features are not completely functional. Some things may not be reverted. Also there is a problem when refreshing the screen may break the guard tiles.
-* Door linking: removing links is not coded yet.
+* Undo/Redo features are not completely functional. Also there is a problem when refreshing the screen may break the guard tiles.
 * Palette screens are not yet implemented.
 * Copy/paste does nothing with the room linking functionality.
 * Multiple-tile feature works in the selection cursor but it's not implemented.

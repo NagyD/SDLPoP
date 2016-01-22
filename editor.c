@@ -893,8 +893,12 @@ void editor__on_refresh(surface_type* screen) {
 					break;
 				}
 
-				static unsigned short i_frame=0;
-				image_offset+=(i_frame++)%3;
+				static unsigned short i_frame_clockwise=0; /* What's this? There are two different layers
+				                                              of selected boxes, the fixed ones and the
+				                                              cursor/pointer ones; when a tile is selected
+				                                              with both layers as they are animated clockwise
+				                                              and anticlockwise both selections are visible */
+				image_offset+=(i_frame_clockwise++)%3;
 
 				if (is_ctrl_alt_pressed && colors==cRight) { /* show number of links */
 					char text_aux[20];
@@ -922,8 +926,8 @@ void editor__on_refresh(surface_type* screen) {
 			blit_sprites(x,y,image_offset,colors,colors_total,screen);
 		}
 
-		static unsigned short i_frame2=0;
-		i_frame2--;
+		static unsigned short i_frame_anticlockwise=0;
+		i_frame_anticlockwise--;
 		/* draw selected door tiles */
 		if (selected_door_tile!=-1) {
 			if (R(selected_door_tile)==loaded_room) {
@@ -935,7 +939,7 @@ void editor__on_refresh(surface_type* screen) {
 					colors_total=1;
 					image_offset=cSingleTile;
 				}
-				blit_sprites((P(selected_door_tile)%10)*32,(P(selected_door_tile)/10)*63-10,image_offset+(i_frame2)%3,cSelected,colors_total,screen);
+				blit_sprites((P(selected_door_tile)%10)*32,(P(selected_door_tile)/10)*63-10,image_offset+(i_frame_anticlockwise)%3,cSelected,colors_total,screen);
 			}
 			tIterator it;
 			tTilePlaceN linked;
@@ -949,11 +953,11 @@ void editor__on_refresh(surface_type* screen) {
 						colors_total=1;
 						image_offset=cSingleTile;
 					}
-					blit_sprites((P(linked)%10)*32,(P(linked)/10)*63-10,image_offset+(i_frame2)%3,cLinked,colors_total,screen);
+					blit_sprites((P(linked)%10)*32,(P(linked)/10)*63-10,image_offset+(i_frame_anticlockwise)%3,cLinked,colors_total,screen);
 				} else { /* there is a linked tile in the last column of the left room */
 					if (level.roomlinks[loaded_room-1].left==R(linked) && P(linked)%10==9) {
 						/* TODO: exit doors */
-						blit_sprites((-1)*32,(P(linked)/10)*63-10,cSingleTile+(i_frame2)%3,cLinked,1,screen);
+						blit_sprites((-1)*32,(P(linked)/10)*63-10,cSingleTile+(i_frame_anticlockwise)%3,cLinked,1,screen);
 					}
 				}
 			}
@@ -1080,12 +1084,14 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 		editor__do_mark_end();
 		*need_show_text=1;
 		break;
+#ifdef __DEBUG__
 	case SDL_SCANCODE_D: /* d for debugging purposes */
 		{
 			*answer_text="DEBUG ACTION";
 			*need_show_text=1;
 		}
 		break;
+#endif
 	case SDL_SCANCODE_Y: /* y: save starting position */
 		editor__do(start_pos,Kid.curr_row*10+Kid.curr_col,mark_start);
 		editor__do(start_room,Kid.room,mark_middle);
