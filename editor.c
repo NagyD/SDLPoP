@@ -936,9 +936,9 @@ void editor__on_refresh(surface_type* screen) {
 			int sw,sh,sx,sy;
 			int mode=0;
 
-			if (is_ctrl_alt_pressed) mode=1;
-			if (is_only_shift_pressed) mode=2;
-			if (is_ctrl_shift_pressed) mode=3;
+			if (is_ctrl_alt_pressed) mode=2;
+			if (is_only_shift_pressed) mode=1;
+			if (is_ctrl_shift_pressed) mode=1;
 
 			tw=image->w/32;
 			th=image->h/4;
@@ -950,6 +950,7 @@ void editor__on_refresh(surface_type* screen) {
 			offsety=(screen->h-sh)/2;
 
 			SDL_Rect src_rect= {0, mode*th, tw , th};
+			SDL_Rect src2_rect= {0, 0, tw , th};
 			SDL_Rect dest_rect = {0, 0, tw, th};
 
 			for (mj=0,sy=offsety;mj<mh;mj++) {
@@ -975,40 +976,41 @@ void editor__on_refresh(surface_type* screen) {
 							sdlperror("SDL_BlitSurface on editor showing map");
 							quit(1);
 						}
+
+						if (is_only_shift_pressed) {
+							/* draw starting position */
+							if (t==T(edited.start_room,edited.start_pos)) {
+								src2_rect.x=tw*0;
+
+								if (SDL_BlitSurface(people, &src2_rect, screen, &dest_rect) != 0) {
+									sdlperror("SDL_BlitSurface on editor showing map");
+									quit(1);
+								}
+							}
+
+							/* draw kid current position (2 ticks yes, 2 ticks no) */
+							if (t==T(Kid.room,(Kid.curr_col>0?Kid.curr_col:0)+10*Kid.curr_row) && (i_frame_anticlockwise&2)) {
+								src2_rect.x=tw*0;
+
+								if (SDL_BlitSurface(people, &src2_rect, screen, &dest_rect) != 0) {
+									sdlperror("SDL_BlitSurface on editor showing map");
+									quit(1);
+								}
+							}
+
+							/* draw guard positions */
+							int v=edited.guards_tile[R_(t)];
+							if (v<30 && v==P(t)) {
+								src2_rect.x=tw*1;
+
+								if (SDL_BlitSurface(people, &src2_rect, screen, &dest_rect) != 0) {
+									sdlperror("SDL_BlitSurface on editor showing map");
+									quit(1);
+								}
+							}
+
+						} /* /is_only_shift_pressed */
 					}
-					if (is_only_shift_pressed) {
-						/* draw starting position */
-						if (t==T(edited.start_room,edited.start_pos)) {
-							src_rect.x=tw*1;
-
-							if (SDL_BlitSurface(people, &src_rect, screen, &dest_rect) != 0) {
-								sdlperror("SDL_BlitSurface on editor showing map");
-								quit(1);
-							}
-						}
-							
-						/* draw kid current position (2 ticks yes, 2 ticks no) */
-						if (t==T(Kid.room,Kid.curr_col+3*Kid.curr_row) && (i_frame_anticlockwise&2)) {
-							src_rect.x=tw*1;
-
-							if (SDL_BlitSurface(people, &src_rect, screen, &dest_rect) != 0) {
-								sdlperror("SDL_BlitSurface on editor showing map");
-								quit(1);
-							}
-						}
-
-						/* draw guard positions */
-						int v=edited.guards_tile[R_(t)];
-						if (v<30 && v==P(t)) {
-							src_rect.x=tw*2;
-
-							if (SDL_BlitSurface(people, &src_rect, screen, &dest_rect) != 0) {
-								sdlperror("SDL_BlitSurface on editor showing map");
-								quit(1);
-							}
-						}
-
-					} /* /is_only_shift_pressed */
 					sx+=tw;
 				}
 				sy+=th;
