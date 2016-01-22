@@ -158,6 +158,7 @@ tile_and_mod copied={0,0};
 byte copied_room_fg[30]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 byte copied_room_bg[30]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 level_type edited;
+int map_selected_room=0;
 tMap edited_map={NULL,NULL};
 int edited_doorlinks=0;
 int edition_level=-1;
@@ -1038,6 +1039,7 @@ void editor__on_refresh(surface_type* screen) {
 					int j=y/(th*3+1);
 					tile_global_location_type t=room_api_translate(&edited_map,i*10,j*3);
 					if (t!=-1) { //room is R(t)
+						map_selected_room=R(t);
 						SDL_Rect line1={offsetx+(tw*10+1)*i,offsety+(th*3+1)*j,tw*10+2,1};
 						SDL_Rect line2={offsetx+(tw*10+1)*i,offsety+(th*3+1)*j,1,th*3+2};
 						SDL_Rect line3={offsetx+(tw*10+1)*i,offsety+(th*3+1)*(j+1),tw*10+2,1};
@@ -1046,12 +1048,14 @@ void editor__on_refresh(surface_type* screen) {
 						SDL_FillRect(screen,&line2,0x55ff55);
 						SDL_FillRect(screen,&line3,0x55ff55);
 						SDL_FillRect(screen,&line4,0x55ff55);
+					} else {
+						map_selected_room=0;
 					}
 				}
+			} else {
+				map_selected_room=0;
 			}
 		}
-		
-
 	} else {
 		printf("Sprites not loaded\n");
 	}
@@ -1095,6 +1099,8 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int
 		if (door_api_is_related(edited.fg[T(loaded_room,tilepos)]&TILE_MASK)) {
 			editor__save_door_tile(T(loaded_room,tilepos));
 		}
+	} else if (e.button==SDL_BUTTON_LEFT && !shift && !alt && !ctrl && m) { /* m+left click: go to map room */
+		if (map_selected_room) next_room=map_selected_room;
 	}
 
 				/*printf("hola mundo %d %d %d %d %c%c%c\n",
