@@ -795,6 +795,12 @@ void sanitize_room(int room, int sanitation_level) {
 	}
 
 }
+void editor__randomize(int room) {
+	editor__do_mark_start();
+	randomize_room(room);
+	editor__do_mark_end();
+	redraw_screen(1);
+}
 
 
 /********************************************\
@@ -1101,17 +1107,20 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int
 		}
 	} else if (e.button==SDL_BUTTON_LEFT && !shift && !alt && !ctrl && m) { /* m+left click: go to map room */
 		if (map_selected_room) next_room=map_selected_room;
+	} else if (e.button==SDL_BUTTON_LEFT && shift && !alt && ctrl && m) { /* ctrl+shift+m+left click: go to map room */
+		if (map_selected_room) editor__randomize(map_selected_room);
 	}
 
-				/*printf("hola mundo %d %d %d %d %c%c%c\n",
-					e.state,
-					e.button,
-					tile,
-					current_level,
-					shift?'s':' ',
-					ctrl?'c':' ',
-					alt?'a':' '
-	);*/
+/* printf("hola mundo %d %d %d %d %c%c%c\n",
+	e.state,
+	e.button,
+	tile,
+	current_level,
+	shift?'s':' ',
+	ctrl?'c':' ',
+	alt?'a':' '
+);*/
+
 }
 void editor__process_key(int key,const char** answer_text, word* need_show_text) {
 	static char aux[50];
@@ -1194,10 +1203,7 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 		*need_show_text=1;
 		break;
 	case SDL_SCANCODE_R | WITH_CTRL | WITH_SHIFT: /* ctrl-shift-r */
-		editor__do_mark_start();
-		randomize_room(loaded_room);
-		editor__do_mark_end();
-		redraw_screen(1);
+		editor__randomize(loaded_room);
 		break;
 	case SDL_SCANCODE_S | WITH_CTRL | WITH_SHIFT: /* ctrl-shift-s */
 		editor__do_mark_start();
@@ -1465,7 +1471,6 @@ int room_api_insert_room_up(tMap* map, int where) {
 /* Randomization Room Linking API sublayer */
 /* Randomize tiles, rooms and complete levels using statistical inference. */
 
-
 tile_global_location_type room_api_tile_move(const tMap* map, tile_global_location_type t, char col, char row) {
 	int absolute_col,absolute_row,where,room;
 
@@ -1620,6 +1625,5 @@ tile_packed_type room_api_suggest_tile(const tMap* map, tile_global_location_typ
 	free(probability);
 	return (tile_packed_type)NO_TILE;
 }
-
 
 #endif
