@@ -22,12 +22,7 @@ The authors of this program may be contacted at http://forum.princed.org
 #ifndef EDITOR_H
 #define EDITOR_H
 
-typedef struct {
-	byte room;
-	byte tilepos;
-} tTilePlace;
-
-typedef short tTilePlaceN;
+typedef short tile_global_location_type;
 
 #define R(t) (((t)/30)+1)
 #define R_(t) (((t)/30))
@@ -42,6 +37,6 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int alt);
 void editor__loading_dat();
 
-void get_doorlink(Uint16 value, tTilePlaceN* tp, short* next);
-void set_doorlink(Uint16* value, tTilePlaceN tp, short next);
+void get_doorlink(Uint16 value, tile_global_location_type* tp, short* next);
+void set_doorlink(Uint16* value, tile_global_location_type tp, short next);
 #endif

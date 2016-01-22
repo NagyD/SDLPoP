@@ -21,7 +21,6 @@ The authors of this program may be contacted at http://forum.princed.org
 
 /*
 TODO:
-	room fix errors.
 	room decorate.
 	free room.
 */
@@ -85,8 +84,8 @@ typedef struct probability_info {
 	float value;
 } tProbability;
 
-float room_api_measure_entropy(const tMap* map, tTilePlaceN t, byte* level_mask);
-tile_packed_type room_api_suggest_tile(const tMap* map, tTilePlaceN tilepos, byte* level_mask);
+float room_api_measure_entropy(const tMap* map, tile_global_location_type t, byte* level_mask);
+tile_packed_type room_api_suggest_tile(const tMap* map, tile_global_location_type tilepos, byte* level_mask);
 
 /********************************************\
 *  DUR: Do, undo, redo layer implementation  *
@@ -221,7 +220,7 @@ typedef struct {
 	union {
 		short index;
 		struct {
-			tTilePlaceN tile;
+			tile_global_location_type tile;
 			short i;
 		} info;
 	} data;
@@ -229,10 +228,10 @@ typedef struct {
 
 void door_api_init(int* max_doorlinks);
 void door_api_free(int* max_doorlinks);
-void door_api_init_iterator(tIterator* it, tTilePlaceN tp);
-int door_api_get(tIterator* it, tTilePlaceN *tile); /* returns false when end_of_list */
-int door_api_link(int* max_doorlinks, tTilePlaceN door,tTilePlaceN button); /* Assumption: door is a door (or left exitdoor) and button is a button */
-void door_api_unlink(int* max_doorlinks, tTilePlaceN door,tTilePlaceN button);
+void door_api_init_iterator(tIterator* it, tile_global_location_type tp);
+int door_api_get(tIterator* it, tile_global_location_type *tile); /* returns false when end_of_list */
+int door_api_link(int* max_doorlinks, tile_global_location_type door,tile_global_location_type button); /* Assumption: door is a door (or left exitdoor) and button is a button */
+void door_api_unlink(int* max_doorlinks, tile_global_location_type door,tile_global_location_type button);
 
 typedef enum {
 	cButton=2,
@@ -252,7 +251,7 @@ tTileDoorType door_api_is_related(byte tile) {
 	return cOther;
 }
 
-void door_api_init_iterator(tIterator* it, tTilePlaceN tp) {
+void door_api_init_iterator(tIterator* it, tile_global_location_type tp) {
 	byte tile=edited.fg[tp]&TILE_MASK;
 	switch(tile) {
 		case tiles_6_closer:
@@ -277,7 +276,7 @@ void door_api_init_iterator(tIterator* it, tTilePlaceN tp) {
 		it->type=noneIterator;
 		return;
 }
-int door_api_get(tIterator* it, tTilePlaceN *tile) {
+int door_api_get(tIterator* it, tile_global_location_type *tile) {
 	switch (it->type) {
 	case buttonIterator:
 		if (it->data.index>=NUMBER_OF_DOORLINKS) return 0;
@@ -291,7 +290,7 @@ int door_api_get(tIterator* it, tTilePlaceN *tile) {
 			byte fg=edited.fg[*i]&TILE_MASK;
 			if (fg==tiles_6_closer || fg==tiles_15_opener) {
 				tIterator it2;
-				tTilePlaceN linked_tile;
+				tile_global_location_type linked_tile;
 				if (!edited_map.list[R_(*i)]) continue; /* skip unused rooms */
 				door_api_init_iterator(&it2,*i);
 				while(door_api_get(&it2,&linked_tile)) { /* second loop: find door opened by those buttons */
@@ -312,7 +311,7 @@ int door_api_get(tIterator* it, tTilePlaceN *tile) {
 
 void door_api_free(int* max_doorlinks) {}
 void door_api_init(int* max_doorlinks) {
-	tTilePlaceN i;
+	tile_global_location_type i;
 	*max_doorlinks=0;
 	for (i=0;i<NUMBER_OF_ROOMS*30;i++) {
 		if (door_api_is_related(edited.fg[i]&TILE_MASK)==cButton) {
@@ -323,7 +322,7 @@ void door_api_init(int* max_doorlinks) {
 
 	/* itarate over the last value */
 	short next=1;
-	tTilePlaceN junk;
+	tile_global_location_type junk;
 	do {
 		get_doorlink((edited.doorlinks2[*max_doorlinks]<<8)|edited.doorlinks1[*max_doorlinks],&junk,&next);
 		(*max_doorlinks)++;
@@ -331,7 +330,7 @@ void door_api_init(int* max_doorlinks) {
 	(*max_doorlinks)--;
 }
 
-int door_api_link(int* max_doorlinks, tTilePlaceN door,tTilePlaceN button) { /* Assumption: door is a door (or left exitdoor) and button is a button */
+int door_api_link(int* max_doorlinks, tile_global_location_type door,tile_global_location_type button) { /* Assumption: door is a door (or left exitdoor) and button is a button */
 	if (*max_doorlinks==255) return 0; /* no more space available */
 	int pivot=edited.bg[button];
 	Uint16 doorlink;
@@ -367,9 +366,9 @@ int door_api_link(int* max_doorlinks, tTilePlaceN door,tTilePlaceN button) { /* 
 	}
 	return 1;
 }
-void door_api_unlink(int* max_doorlinks, tTilePlaceN door,tTilePlaceN button) {
+void door_api_unlink(int* max_doorlinks, tile_global_location_type door,tile_global_location_type button) {
 	/* read link */
-	tTilePlaceN tile;
+	tile_global_location_type tile;
 	short next;
 	int i=edited.bg[button];
 	if (i==255) return; /* error, button has no links */
@@ -405,7 +404,7 @@ void door_api_unlink(int* max_doorlinks, tTilePlaceN door,tTilePlaceN button) {
 
 	(*max_doorlinks)--;
 }
-int door_api_fix_pos(tTilePlaceN* door,tTilePlaceN* button) {
+int door_api_fix_pos(tile_global_location_type* door,tile_global_location_type* button) {
 	if (*door==-1 || *button==-1) return 0;
 	byte tile_door=edited.fg[*door]&TILE_MASK;
 	byte tile_button=edited.fg[*button]&TILE_MASK;
@@ -413,7 +412,7 @@ int door_api_fix_pos(tTilePlaceN* door,tTilePlaceN* button) {
 	tTileDoorType button_type=door_api_is_related(tile_button);
 	if (door_type==button_type || !door_type || !button_type) return 0;
 	if (door_type==cButton) { /* Swap */
-		tTilePlaceN aux=*door;
+		tile_global_location_type aux=*door;
 		*door=*button;
 		*button=aux;
 		tile_door=edited.fg[*door]&TILE_MASK; /* refresh tile_door after swapping */
@@ -432,7 +431,7 @@ int door_api_fix_pos(tTilePlaceN* door,tTilePlaceN* button) {
 /* editor functions related to this api */
 
 int selected_door_tile=-1;
-void editor__save_door_tile(tTilePlaceN tile) { /* if the same tile was selected "unselect" if not "select this tile".*/
+void editor__save_door_tile(tile_global_location_type tile) { /* if the same tile was selected "unselect" if not "select this tile".*/
 	if ((edited.fg[tile]&TILE_MASK)==tiles_17_level_door_right) {
 			if (tile%10 &&
 				(edited.fg[tile-1]&TILE_MASK)==tiles_16_level_door_left) { /* TODO: use a define for this mask */
@@ -448,7 +447,7 @@ void editor__save_door_tile(tTilePlaceN tile) { /* if the same tile was selected
 void printl() {
 	int i;
 	for (i=0;i<=edited_doorlinks;i++) {
-		tTilePlaceN tile;
+		tile_global_location_type tile;
 		short next;
 		get_doorlink((edited.doorlinks2[i]<<8)|edited.doorlinks1[i],&tile,&next);
 		printf("i=%d r=%d,t=%d next=%d\n",i,tile.room,tile.tilepos,next);
@@ -456,12 +455,12 @@ void printl() {
 }*/
 
 const char* editor__toggle_door_tile(short room,short tilepos) {
-	tTilePlaceN door=T(room,tilepos);
-	tTilePlaceN button=selected_door_tile;
+	tile_global_location_type door=T(room,tilepos);
+	tile_global_location_type button=selected_door_tile;
 	if (!door_api_fix_pos(&door,&button)) return "Select a button and a door"; /* Error */
 
 	tIterator it;
-	tTilePlaceN check_tile;
+	tile_global_location_type check_tile;
 	door_api_init_iterator(&it,door);
 	while(door_api_get(&it,&check_tile)) /* check if existent to unlink */
 		if (check_tile==button) {
@@ -621,7 +620,7 @@ void randomize_room(int room) {
 	byte level_mask[NUMBER_OF_ROOMS*30];
 	float f;
 	tile_packed_type tt;
-	tTilePlaceN i,tile=-1;
+	tile_global_location_type i,tile=-1;
 	float max=0;
 
 	memset(level_mask,1,NUMBER_OF_ROOMS*30);
@@ -651,7 +650,7 @@ void randomize_room(int room) {
 
 void randomize_tile(int tilepos) {
 	byte level_mask[NUMBER_OF_ROOMS*30];
-	tTilePlaceN t=T(loaded_room,tilepos);
+	tile_global_location_type t=T(loaded_room,tilepos);
 	tile_packed_type tt;
 	memset(level_mask,1,NUMBER_OF_ROOMS*30);
 	level_mask[t]=0;
@@ -905,7 +904,7 @@ void editor__on_refresh(surface_type* screen) {
 					int count=0;
 					/* count links */
 					tIterator it;
-					tTilePlaceN current_tile,junk_tile;
+					tile_global_location_type current_tile,junk_tile;
 					current_tile=T(drawn_room,tilepos);
 					door_api_init_iterator(&it,current_tile);
 					while(door_api_get(&it,&junk_tile))
@@ -942,7 +941,7 @@ void editor__on_refresh(surface_type* screen) {
 				blit_sprites((P(selected_door_tile)%10)*32,(P(selected_door_tile)/10)*63-10,image_offset+(i_frame_anticlockwise)%3,cSelected,colors_total,screen);
 			}
 			tIterator it;
-			tTilePlaceN linked;
+			tile_global_location_type linked;
 			door_api_init_iterator(&it,selected_door_tile);
 			while(door_api_get(&it,&linked)) {
 				if (R(linked)==loaded_room) { /* there is a linked tile in the drawn room */
@@ -1347,7 +1346,7 @@ int room_api_insert_room_up(tMap* map, int where) {
 /* Randomize tiles, rooms and complete levels using statistical inference. */
 
 
-tTilePlaceN room_api_tile_move(const tMap* map, tTilePlaceN t, char col, char row) {
+tile_global_location_type room_api_tile_move(const tMap* map, tile_global_location_type t, char col, char row) {
 	int absolute_col,absolute_row,where,room;
 
 	where=map->list[R_(t)];
@@ -1359,14 +1358,14 @@ tTilePlaceN room_api_tile_move(const tMap* map, tTilePlaceN t, char col, char ro
 	return T(room,absolute_col%10 + 10 * (absolute_row%3));
 }
 
-int room_api__private_entropy(const tMap* map, tTilePlaceN t, byte* level_mask,char col, char row) {
-	tTilePlaceN aux;
+int room_api__private_entropy(const tMap* map, tile_global_location_type t, byte* level_mask,char col, char row) {
+	tile_global_location_type aux;
 	aux=room_api_tile_move(map,t,col,row);
 	return aux!=-1 && level_mask[aux];
 }
 
-tile_packed_type room_api__private_get_tile_if_exists(const tMap* map, tTilePlaceN t, byte* level_mask,char col, char row) {
-	tTilePlaceN aux;
+tile_packed_type room_api__private_get_tile_if_exists(const tMap* map, tile_global_location_type t, byte* level_mask,char col, char row) {
+	tile_global_location_type aux;
 	tile_packed_type result;
 	aux=room_api_tile_move(map,t,col,row);
 	if (aux!=-1 && level_mask[aux]) {
@@ -1378,7 +1377,7 @@ tile_packed_type room_api__private_get_tile_if_exists(const tMap* map, tTilePlac
 	return result;
 }
 
-float room_api_measure_entropy(const tMap* map, tTilePlaceN t, byte* level_mask) {
+float room_api_measure_entropy(const tMap* map, tile_global_location_type t, byte* level_mask) {
 	float result=0;
 
 #define ENTROPY_MEASURE_TILE(x,y,e) \
@@ -1408,7 +1407,7 @@ float room_api_measure_entropy(const tMap* map, tTilePlaceN t, byte* level_mask)
 
 	return result;
 }
-void room_api__private_measure_similarity(const tMap* map,tTilePlaceN origin, tTilePlaceN target, byte* level_mask, int x, int y,float* result, float* total, float weight) {
+void room_api__private_measure_similarity(const tMap* map,tile_global_location_type origin, tile_global_location_type target, byte* level_mask, int x, int y,float* result, float* total, float weight) {
 	tile_packed_type target_tile, origin_tile;
 	target_tile=room_api__private_get_tile_if_exists(map,target,level_mask,x,y);
 	if (target_tile.number==NO_TILE) return;
@@ -1418,11 +1417,11 @@ void room_api__private_measure_similarity(const tMap* map,tTilePlaceN origin, tT
 	if (origin_tile.number==target_tile.number) *result+=weight;
 }
 
-void room_api_measure_similarity(const tMap* map, tTilePlaceN origin, tTilePlaceN target, byte* level_mask, tProbability* probabilities) {
+void room_api_measure_similarity(const tMap* map, tile_global_location_type origin, tile_global_location_type target, byte* level_mask, tProbability* probabilities) {
 	float result=0,total=0; /* ORIGIN is iterating CURRENT */
 	tile_packed_type current_tile;
 
-/* printf("room_api_measure_similarity(tTilePlaceN or=(%d,%d) target=(%d,%d))\n",origin.room,origin.tilepos,target.room,target.tilepos); */
+/* printf("room_api_measure_similarity(tile_global_location_type or=(%d,%d) target=(%d,%d))\n",origin.room,origin.tilepos,target.room,target.tilepos); */
 
 	current_tile=room_api__private_get_tile_if_exists(map,origin,level_mask,0,0);
 	if (current_tile.number==NO_TILE) return; /* there is no tile here */
@@ -1459,10 +1458,10 @@ void room_api_measure_similarity(const tMap* map, tTilePlaceN origin, tTilePlace
 }
 
 #define PROBABILITY_SIZE 65536
-tile_packed_type room_api_suggest_tile(const tMap* map, tTilePlaceN tilepos, byte* level_mask) {
+tile_packed_type room_api_suggest_tile(const tMap* map, tile_global_location_type tilepos, byte* level_mask) {
 	tProbability* probability;
 	tProbability aux={0,0};
-	tTilePlaceN i;
+	tile_global_location_type i;
 	Uint16 j;
 	float total=0,random_prob;
 
