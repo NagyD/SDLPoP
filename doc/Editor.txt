@@ -41,6 +41,7 @@ Ctrl-Alt-Mouse right click: Select rise and drop buttons for door linking
 Alt-R: Revert level to latest saved version
 Ctrl-Shift-Mouse left click: Put random tile
 Ctrl-Shift-R: Randomize the whole screen
+M: Show map (keep the key pressed)
 
 By pressing Shift the mouse pointer indicates where the characters will be placed. Using Ctrl-Alt door linking showing features are activated: Blue tiles are not linkable, red tiles are linkable (doors and buttons), the number displayed indicates how many links this tile has.
 

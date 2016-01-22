@@ -2577,7 +2577,8 @@ void idle() {
 						event.button,
 						key_states[SDL_SCANCODE_LSHIFT] || key_states[SDL_SCANCODE_RSHIFT],
 						key_states[SDL_SCANCODE_LCTRL] || key_states[SDL_SCANCODE_RCTRL],
-						key_states[SDL_SCANCODE_LALT] || key_states[SDL_SCANCODE_RALT]
+						key_states[SDL_SCANCODE_LALT] || key_states[SDL_SCANCODE_RALT],
+						key_states[SDL_SCANCODE_M]
 					);
 				break;
 #endif

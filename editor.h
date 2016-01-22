@@ -34,7 +34,7 @@ typedef short tile_global_location_type;
 #define NO_TILE ((Uint16)(-1))
 
 void editor__process_key(int key,const char** answer_text, word* need_show_text);
-void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int alt);
+void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int alt, int m);
 void editor__loading_dat();
 
 void get_doorlink(Uint16 value, tile_global_location_type* tp, short* next);

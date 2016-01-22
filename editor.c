@@ -813,7 +813,8 @@ typedef enum {
 	cCross=0,
 	cSingleTile=1,
 	cExitdoor=4,
-	cBigPillar=7
+	cBigPillar=7,
+	cSmallTiles=10
 } tEditorImageOffset;
 
 /* blit top surface layer (cursor+annotations) */
@@ -852,11 +853,13 @@ void editor__on_refresh(surface_type* screen) {
 		tCursorColors colors;
 		const Uint8 *state = SDL_GetKeyboardState(NULL);
 
+		int is_m_pressed=state[SDL_SCANCODE_M];
+		int is_ctrl_alt_pressed=(state[SDL_SCANCODE_LALT] || state[SDL_SCANCODE_RALT]) && (state[SDL_SCANCODE_LCTRL] || state[SDL_SCANCODE_RCTRL]);
+		int is_only_shift_pressed=(state[SDL_SCANCODE_LSHIFT] || state[SDL_SCANCODE_RSHIFT]) && (!(state[SDL_SCANCODE_LCTRL] || state[SDL_SCANCODE_RCTRL]));
+		int is_ctrl_shift_pressed=(state[SDL_SCANCODE_LSHIFT] || state[SDL_SCANCODE_RSHIFT]) && (state[SDL_SCANCODE_LCTRL] || state[SDL_SCANCODE_RCTRL]);
+
 		if (!SDL_GetMouseState(&x,&y) && (x!=0) && (y!=0) && (x!=694) && (y<378) ) {
 			int col,row,tilepos;
-			int is_ctrl_alt_pressed=(state[SDL_SCANCODE_LALT] || state[SDL_SCANCODE_RALT]) && (state[SDL_SCANCODE_LCTRL] || state[SDL_SCANCODE_RCTRL]);
-			int is_only_shift_pressed=(state[SDL_SCANCODE_LSHIFT] || state[SDL_SCANCODE_RSHIFT]) && (!(state[SDL_SCANCODE_LCTRL] || state[SDL_SCANCODE_RCTRL]));
-			int is_ctrl_shift_pressed=(state[SDL_SCANCODE_LSHIFT] || state[SDL_SCANCODE_RSHIFT]) && (state[SDL_SCANCODE_LCTRL] || state[SDL_SCANCODE_RCTRL]);
 			colors=cMain;
 			x=x/2;
 			y=y/2;
@@ -864,7 +867,7 @@ void editor__on_refresh(surface_type* screen) {
 			row=(y-y%63+10)/63;
 			tilepos=row*10+col;
 			/* if Shift is pressed a cross is shown */
-			if (is_only_shift_pressed) {
+			if (is_only_shift_pressed || is_m_pressed) {
 				image_offset=cCross;
 				x-=chtab_editor_sprites->images[cCross]->w/2;
 				y-=chtab_editor_sprites->images[cCross]->h/2;
@@ -966,42 +969,74 @@ void editor__on_refresh(surface_type* screen) {
 		}
 
 		/* draw map */
-		if (state[SDL_SCANCODE_M]) {
-		//SDL_lock
-		Uint8 *pixels = (Uint8 *)screen->pixels;
-		int w,h,i,j;
-		room_api_get_size(&edited_map,&w,&h);
-		for (j=0;j<h;j++) {
-			//printf("\n");
-			for (i=0;i<w;i++) {
-				tile_global_location_type t=room_api_translate(&edited_map,i,j);
-				if (t!=-1) {
-					byte c=(edited.fg[t]&TILE_MASK)<<3;
-					pixels[ (( j * screen->w ) + i)*3+0 ]=c;
-					pixels[ (( j * screen->w ) + i)*3+1 ]=c;
-					pixels[ (( j * screen->w ) + i)*3+2 ]=c;
-				} else {
-					byte c=0; //edited.fg[t]&TILE_MASK;
-					pixels[ (( j * screen->w ) + i)*3+0 ]=c;
-					pixels[ (( j * screen->w ) + i)*3+1 ]=c;
-					pixels[ (( j * screen->w ) + i)*3+2 ]=c;
+		if (is_m_pressed) {
+			image_type* image=chtab_editor_sprites->images[cSmallTiles];
+
+			SDL_SetSurfaceBlendMode(image, SDL_BLENDMODE_NONE);
+			SDL_SetSurfaceAlphaMod(image, 255);
+			SDL_SetColorKey(image, SDL_FALSE, 0);
+			int tw,th,offsetx,offsety;
+			int mw,mh,mi,mj;
+			int sw,sh,sx,sy;
+			int mode=0;
+
+			if (is_ctrl_alt_pressed) mode=1;
+			if (is_only_shift_pressed) mode=2;
+			if (is_ctrl_shift_pressed) mode=3;
+
+			tw=image->w/32;
+			th=image->h/4;
+			room_api_get_size(&edited_map,&mw,&mh);
+			sw=(mw/10)*(tw*10+1)+1;
+			sh=(mh/3)*(th*3+1)+1;
+
+			offsetx=(screen->w-sw)/2;
+			offsety=(screen->h-sh)/2;
+
+			SDL_Rect src_rect= {0, mode*th, tw , th};
+			SDL_Rect dest_rect = {0, 0, tw, th};
+
+			for (mj=0,sy=offsety;mj<mh;mj++) {
+				if (!(mj%3)) {
+					SDL_Rect line={offsetx,sy,sw,1};
+					SDL_FillRect(screen,&line,0xffffff);
+					sy++;
 				}
+				for (mi=0,sx=offsetx;mi<mw;mi++) {
+					if (!(mi%10)) {
+						SDL_Rect line={sx,offsety,1,sh};
+						SDL_FillRect(screen,&line,0xffffff);
+						sx++;
+					}
+					tile_global_location_type t=room_api_translate(&edited_map,mi,mj);
+					if (t!=-1) {
+						byte c=(edited.fg[t]&TILE_MASK);
+						src_rect.x=tw*c;
+						dest_rect.x=sx;
+						dest_rect.y=sy;
+
+						if (SDL_BlitSurface(image, &src_rect, screen, &dest_rect) != 0) {
+							sdlperror("SDL_BlitSurface on editor showing map");
+							quit(1);
+						}
+					}
+					sx+=tw;
+				}
+				sy+=th;
 			}
+			SDL_Rect lineH={offsetx,sy,sw,1};
+			SDL_FillRect(screen,&lineH,0xffffff);
+			SDL_Rect lineV={sx,offsety,1,sh};
+			SDL_FillRect(screen,&lineV,0xffffff);
 		}
-		//printf("\n");
-		}
 
-
-
-
-		/* draw temporary layer */
 	} else {
 		printf("Sprites not loaded\n");
 	}
 
 }
 
-void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int alt) {
+void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int alt, int m) {
 	int col,row,tilepos,x;
 	if (!editor_active) return;
 	col=e.x/32;
@@ -1010,23 +1045,23 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int
 	if (row<0 || row>2) return;
 	tilepos=row*10+col;
 
-	if (e.button==SDL_BUTTON_LEFT && !shift && !alt && !ctrl) { /* left click: edit tile */
+	if (e.button==SDL_BUTTON_LEFT && !shift && !alt && !ctrl && !m) { /* left click: edit tile */
 		editor__do(fg[T(loaded_room,tilepos)],copied.tiletype,mark_start);
 		editor__do(bg[T(loaded_room,tilepos)],copied.modifier,mark_end);
 		redraw_screen(1);
-	} else if (e.button==SDL_BUTTON_RIGHT && !shift && !alt && !ctrl) { /* right click: copy tile */
+	} else if (e.button==SDL_BUTTON_RIGHT && !shift && !alt && !ctrl && !m) { /* right click: copy tile */
 		copied.tiletype=edited.fg[T(loaded_room,tilepos)];
 		copied.modifier=edited.bg[T(loaded_room,tilepos)];
-	} else if (e.button==SDL_BUTTON_LEFT && shift && !alt && !ctrl) { /* shift+left click: move kid */
+	} else if (e.button==SDL_BUTTON_LEFT && shift && !alt && !ctrl && !m) { /* shift+left click: move kid */
 		editor__position(&Kid,col,row,loaded_room,x,6563);
-	} else if (e.button==SDL_BUTTON_RIGHT && shift && !alt && !ctrl) { /* shift+right click: move move/put guard */
+	} else if (e.button==SDL_BUTTON_RIGHT && shift && !alt && !ctrl && !m) { /* shift+right click: move move/put guard */
 		editor__set_guard(tilepos,x);
 		editor__position(&Guard,col,row,loaded_room,x,6569);
 		redraw_screen(1);
-	} else if (e.button==SDL_BUTTON_LEFT && shift && !alt && ctrl) { /* ctrl+shift+left click: randomize tile */
+	} else if (e.button==SDL_BUTTON_LEFT && shift && !alt && ctrl && !m) { /* ctrl+shift+left click: randomize tile */
 		randomize_tile(tilepos);
 		redraw_screen(1);
-	} else if (e.button==SDL_BUTTON_LEFT && !shift && alt && ctrl) { /* ctrl+alt+left click: toggle door mechanism links */
+	} else if (e.button==SDL_BUTTON_LEFT && !shift && alt && ctrl && !m) { /* ctrl+alt+left click: toggle door mechanism links */
 		if (door_api_is_related(edited.fg[T(loaded_room,tilepos)]&TILE_MASK)) {
 			editor__do_mark_start();
 			display_text_bottom(editor__toggle_door_tile(loaded_room,tilepos));
@@ -1034,7 +1069,7 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int
 			text_time_total = 24;
 			text_time_remaining = 24;
 		}
-	} else if (e.button==SDL_BUTTON_RIGHT && !shift && alt && ctrl) { /* ctrl+alt+right click: pick door mechanism tile */
+	} else if (e.button==SDL_BUTTON_RIGHT && !shift && alt && ctrl && !m) { /* ctrl+alt+right click: pick door mechanism tile */
 		if (door_api_is_related(edited.fg[T(loaded_room,tilepos)]&TILE_MASK)) {
 			editor__save_door_tile(T(loaded_room,tilepos));
 		}
