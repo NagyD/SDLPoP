@@ -159,6 +159,7 @@ byte copied_room_fg[30]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 byte copied_room_bg[30]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 level_type edited;
 int map_selected_room=0;
+int goto_next_room=0;
 tMap edited_map={NULL,NULL};
 int edited_doorlinks=0;
 int edition_level=-1;
@@ -676,72 +677,14 @@ void sanitize_room(int room, int sanitation_level) {
 	for (i=0;i<30;i++) {
 		tile=tile_at(i,room);
 		/* printf("sanitize %d %d %d\n",i,tile,(edited.bg[(room-1)*30+(i)])); */
-		if (sanitation_level==1) switch(tile) { /* check for alone tile */
-		case tiles_1_floor:
-		case tiles_2_spike:
-		case tiles_3_pillar:
-		case tiles_4_gate:
-		/* case tiles_5_stuck: */
-		case tiles_6_closer:
-		case tiles_7_doortop_with_floor:
-		case tiles_8_bigpillar_bottom:
-		case tiles_9_bigpillar_top:
-		case tiles_10_potion:
-		case tiles_12_doortop:
-		case tiles_13_mirror:
-		case tiles_14_debris:
-		case tiles_15_opener:
-		case tiles_16_level_door_left:
-		case tiles_17_level_door_right:
-		case tiles_18_chomper:
-		case tiles_19_torch:
-		case tiles_21_skeleton:
-		case tiles_22_sword:
-		case tiles_23_balcony_left:
-		case tiles_24_balcony_right:
-		case tiles_25_lattice_pillar:
-		case tiles_26_lattice_down:
-		case tiles_27_lattice_small:
-		case tiles_28_lattice_left:
-		case tiles_29_lattice_right:
-		case tiles_30_torch_with_debris:
+		if (sanitation_level==1) if(tile!=tiles_11_loose && tile!=tiles_20_wall && tile!=31) { /* check for alone tile */
 			if (left_is(i,tiles_20_wall)==tiles_20_wall && right_is(i,tiles_20_wall)==tiles_20_wall) {
-				switch (up_is(i,tiles_20_wall)) {
-				case tiles_1_floor:
-				case tiles_2_spike:
-				case tiles_3_pillar:
-				case tiles_4_gate:
-				/* case tiles_5_stuck: */
-				case tiles_6_closer:
-				case tiles_7_doortop_with_floor:
-				case tiles_8_bigpillar_bottom:
-				case tiles_9_bigpillar_top:
-				case tiles_10_potion:
-				case tiles_12_doortop:
-				case tiles_13_mirror:
-				case tiles_14_debris:
-				case tiles_15_opener:
-				case tiles_16_level_door_left:
-				case tiles_17_level_door_right:
-				case tiles_18_chomper:
-				case tiles_19_torch:
-				case tiles_20_wall:
-				case tiles_21_skeleton:
-				case tiles_22_sword:
-				case tiles_23_balcony_left:
-				case tiles_24_balcony_right:
-				case tiles_25_lattice_pillar:
-				case tiles_26_lattice_down:
-				case tiles_27_lattice_small:
-				case tiles_28_lattice_left:
-				case tiles_29_lattice_right:
-				case tiles_30_torch_with_debris:
+				int tileup=up_is(i,tiles_20_wall);
+				if (tileup!=tiles_11_loose && tileup!=31) {
 					editor__do(fg[T(room,i)],tiles_20_wall,mark_middle);
 					editor__do(bg[T(room,i)],0,mark_middle);
-					break;
 				}
 			}
-			break;
 		}
 		switch(tile) {
 		case tiles_11_loose:
@@ -821,7 +764,8 @@ typedef enum {
 	cSingleTile=1,
 	cExitdoor=4,
 	cBigPillar=7,
-	cSmallTiles=10
+	cSmallTiles=10,
+	cSmallCharacters=11
 } tEditorImageOffset;
 
 /* blit top surface layer (cursor+annotations) */
@@ -979,10 +923,14 @@ void editor__on_refresh(surface_type* screen) {
 		/* draw map */
 		if (is_m_pressed) {
 			image_type* image=chtab_editor_sprites->images[cSmallTiles];
+			image_type* people=chtab_editor_sprites->images[cSmallCharacters];
 
 			SDL_SetSurfaceBlendMode(image, SDL_BLENDMODE_NONE);
 			SDL_SetSurfaceAlphaMod(image, 255);
 			SDL_SetColorKey(image, SDL_FALSE, 0);
+			SDL_SetSurfaceBlendMode(people, SDL_BLENDMODE_NONE);
+			SDL_SetSurfaceAlphaMod(people, 255);
+			SDL_SetColorKey(people, SDL_FALSE, 0);
 			int tw,th,offsetx,offsety;
 			int mw,mh,mi,mj;
 			int sw,sh,sx,sy;
@@ -1028,6 +976,39 @@ void editor__on_refresh(surface_type* screen) {
 							quit(1);
 						}
 					}
+					if (is_only_shift_pressed) {
+						/* draw starting position */
+						if (t==T(edited.start_room,edited.start_pos)) {
+							src_rect.x=tw*1;
+
+							if (SDL_BlitSurface(people, &src_rect, screen, &dest_rect) != 0) {
+								sdlperror("SDL_BlitSurface on editor showing map");
+								quit(1);
+							}
+						}
+							
+						/* draw kid current position (2 ticks yes, 2 ticks no) */
+						if (t==T(Kid.room,Kid.curr_col+3*Kid.curr_row) && (i_frame_anticlockwise&2)) {
+							src_rect.x=tw*1;
+
+							if (SDL_BlitSurface(people, &src_rect, screen, &dest_rect) != 0) {
+								sdlperror("SDL_BlitSurface on editor showing map");
+								quit(1);
+							}
+						}
+
+						/* draw guard positions */
+						int v=edited.guards_tile[R_(t)];
+						if (v<30 && v==P(t)) {
+							src_rect.x=tw*2;
+
+							if (SDL_BlitSurface(people, &src_rect, screen, &dest_rect) != 0) {
+								sdlperror("SDL_BlitSurface on editor showing map");
+								quit(1);
+							}
+						}
+
+					} /* /is_only_shift_pressed */
 					sx+=tw;
 				}
 				sy+=th;
@@ -1106,7 +1087,9 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int
 			editor__save_door_tile(T(loaded_room,tilepos));
 		}
 	} else if (e.button==SDL_BUTTON_LEFT && !shift && !alt && !ctrl && m) { /* m+left click: go to map room */
-		if (map_selected_room) next_room=map_selected_room;
+		if (map_selected_room) {
+			goto_next_room=map_selected_room;
+		}
 	} else if (e.button==SDL_BUTTON_LEFT && shift && !alt && ctrl && m) { /* ctrl+shift+m+left click: go to map room */
 		if (map_selected_room) editor__randomize(map_selected_room);
 	}
@@ -1125,6 +1108,11 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int
 void editor__process_key(int key,const char** answer_text, word* need_show_text) {
 	static char aux[50];
 	int aux_int;
+	if (goto_next_room) {
+		next_room=goto_next_room;
+		goto_next_room=0;
+	}
+
 	switch (key) {
 	case SDL_SCANCODE_Z | WITH_CTRL: /* ctrl-z */
 		editor__undo();
