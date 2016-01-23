@@ -39,6 +39,8 @@ TODO:
 #define POS_RIGHT 1
 #define MAP_POS(x,y) ((y)*MAP_SIDE+(x))
 
+#define PALETTE_MODE (drawn_room>NUMBER_OF_ROOMS)
+
 #define TILE_MASK 0x1F
 
 typedef struct {
@@ -513,6 +515,7 @@ void editor__load_level() {
 	edition_level=current_level;
 	stack_reset();
 	selected_door_tile=-1;
+	remember_room=0;
 
 	dathandle = open_dat("editor", 0);
 	if (chtab_editor_sprites) free_chtab(chtab_editor_sprites);
@@ -558,13 +561,19 @@ void editor_revert_level() {
 	is_restart_level = 1;
 }
 
-void load_resource(const char* file, int res, void* data, int size, const char* ext);
+int load_resource(const char* file, int res, void* data, int size, const char* ext);
 void save_resource(const char* file, int res, const void* data, int size, const char* ext);
 
 void load_edit_palettes() {
 	load_resource("editor",100,&(level.fg[NUMBER_OF_ROOMS*30]),8*30, "bin");
 	load_resource("editor",101,&(level.bg[NUMBER_OF_ROOMS*30]),8*30, "bin");
-	load_resource("editor",102,&(level.roomlinks[NUMBER_OF_ROOMS]),8*sizeof(link_type), "bin");
+	if (!load_resource("editor",102,&(level.roomlinks[NUMBER_OF_ROOMS]),8*sizeof(link_type), "bin"))
+		for (int a=24;a<24+8;a++) {
+			level.roomlinks[a].left=(a==24)?0:a-1+1;
+			level.roomlinks[a].right=(a==24+7)?0:a+1+1;
+			level.roomlinks[a].up=(a<24+4)?0:a-4+1;
+			level.roomlinks[a].down=(a>=24+4)?0:a+4+1;
+		}
 }
 void save_edit_palettes() {
 	save_resource("editor",100,&(level.fg[NUMBER_OF_ROOMS*30]),8*30, "bin");
@@ -584,6 +593,7 @@ void editor__loading_dat() {
 	memset(&level,0,sizeof(level));
 	editor__extend_level(&level,&aux);
 	load_edit_palettes();
+	remember_room=0;
 
 	if (edition_level!=current_level) {
 		editor__load_level();
@@ -636,7 +646,7 @@ void save_resource(const char* file, int res, const void* data, int size, const 
 	}
 }
 
-void load_resource(const char* file, int res, void* data, int size, const char* ext) {
+int load_resource(const char* file, int res, void* data, int size, const char* ext) {
 	char aux[255];
 	FILE* fp;
 	snprintf(aux,255,"data/%s/res%d.%s",file,res,ext);
@@ -644,8 +654,10 @@ void load_resource(const char* file, int res, void* data, int size, const char* 
 	if (fp) {
 		fread(data,size,1,fp);
 		fclose(fp);
+		return 1;
 	} else {
 		printf("error opening '%s'\n",aux);
+		return 0;
 	}
 }
 
@@ -1148,15 +1160,25 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int
 	tilepos=row*10+col;
 
 	if (e.button==SDL_BUTTON_LEFT && !shift && !alt && !ctrl && !m) { /* left click: edit tile */
-		editor__do(fg[T(loaded_room,tilepos)],copied.tiletype,mark_start);
-		editor__do(bg[T(loaded_room,tilepos)],copied.modifier,mark_end);
-		ed_redraw_tile(tilepos);
-		if (tilepos) ed_redraw_tile(tilepos-1);
-		if (tilepos!=29) ed_redraw_tile(tilepos+1);
+		if (PALETTE_MODE) {
+			level.fg[T(loaded_room,tilepos)]=copied.tiletype;
+			level.bg[T(loaded_room,tilepos)]=copied.modifier;
+		} else {
+			editor__do(fg[T(loaded_room,tilepos)],copied.tiletype,mark_start);
+			editor__do(bg[T(loaded_room,tilepos)],copied.modifier,mark_end);
+			ed_redraw_tile(tilepos);
+			if (tilepos) ed_redraw_tile(tilepos-1);
+			if (tilepos!=29) ed_redraw_tile(tilepos+1);
+		}
 		redraw_screen(1);
 	} else if (e.button==SDL_BUTTON_RIGHT && !shift && !alt && !ctrl && !m) { /* right click: copy tile */
-		copied.tiletype=edited.fg[T(loaded_room,tilepos)];
-		copied.modifier=edited.bg[T(loaded_room,tilepos)];
+		if (PALETTE_MODE) {
+			copied.tiletype=level.fg[T(loaded_room,tilepos)];
+			copied.modifier=level.bg[T(loaded_room,tilepos)];
+		} else {
+			copied.tiletype=edited.fg[T(loaded_room,tilepos)];
+			copied.modifier=edited.bg[T(loaded_room,tilepos)];
+		}
 	} else if (e.button==SDL_BUTTON_LEFT && shift && !alt && !ctrl && !m) { /* shift+left click: move kid */
 		editor__position(&Kid,col,row,loaded_room,x,6563);
 	} else if (e.button==SDL_BUTTON_RIGHT && shift && !alt && !ctrl && !m) { /* shift+right click: move move/put guard */

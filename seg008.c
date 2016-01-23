@@ -1846,7 +1846,7 @@ void __pascal far wall_pattern(int which_part,int which_table) {
 	// save the state of the pseudorandom number generator
 	saved_prng_state = random_seed;
 	// set the new seed
-	random_seed = drawn_room + tbl_line[drawn_row] + drawn_col;
+	random_seed = drawn_room%24 + tbl_line[drawn_row] + drawn_col;
 	prandom(1); // fetch a random number and discard it
 	is_dungeon = (tbl_level_type[current_level] < DESIGN_PALACE);
 	if ( (!is_dungeon) && (graphics_mode== GRAPHICS_VGA) ) {
