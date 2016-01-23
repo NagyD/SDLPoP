@@ -217,6 +217,25 @@ void editor__redo() {
 void __pascal far redraw_screen(int drawing_different_room);
 
 /********************************************\
+*           Room refreshing functions        *
+\********************************************/
+
+void ed_select_room(int room) {
+	get_room_address(room);
+	room_L = level.roomlinks[room-1].left;
+	room_R = level.roomlinks[room-1].right;
+}
+
+void ed_redraw_tile(int tilepos) { //of the current room
+	level.fg[T(loaded_room,tilepos)]=edited.fg[T(loaded_room,tilepos)];
+	level.bg[T(loaded_room,tilepos)]=edited.bg[T(loaded_room,tilepos)];
+	load_alter_mod(tilepos);
+}
+void ed_redraw_room() { //all the current room
+	for (int i=0;i<30;i++) ed_redraw_tile(i);
+}
+
+/********************************************\
 *             Door linking API               *
 \********************************************/
 
@@ -742,6 +761,8 @@ void editor__randomize(int room) {
 	editor__do_mark_start();
 	randomize_room(room);
 	editor__do_mark_end();
+	ed_select_room(room);
+	ed_redraw_room();
 	redraw_screen(1);
 }
 
@@ -1063,6 +1084,9 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int
 	if (e.button==SDL_BUTTON_LEFT && !shift && !alt && !ctrl && !m) { /* left click: edit tile */
 		editor__do(fg[T(loaded_room,tilepos)],copied.tiletype,mark_start);
 		editor__do(bg[T(loaded_room,tilepos)],copied.modifier,mark_end);
+		ed_redraw_tile(tilepos);
+		if (tilepos) ed_redraw_tile(tilepos-1);
+		if (tilepos!=29) ed_redraw_tile(tilepos+1);
 		redraw_screen(1);
 	} else if (e.button==SDL_BUTTON_RIGHT && !shift && !alt && !ctrl && !m) { /* right click: copy tile */
 		copied.tiletype=edited.fg[T(loaded_room,tilepos)];
@@ -1118,10 +1142,12 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 	switch (key) {
 	case SDL_SCANCODE_Z | WITH_CTRL: /* ctrl-z */
 		editor__undo();
+		ed_redraw_room();
 		redraw_screen(1);
 		break;
 	case SDL_SCANCODE_Z | WITH_CTRL | WITH_ALT: /* ctrl-alt-z */
 		editor__redo();
+		ed_redraw_room();
 		redraw_screen(1);
 		break;
 	case SDL_SCANCODE_DELETE: /* delete */
@@ -1168,6 +1194,8 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 			aux_int=room_api_insert_room_down(&edited_map,room_api_where_room(&edited_map,drawn_room));
 		if (aux_int) {
 			randomize_room(aux_int);
+			ed_select_room(aux_int);
+			ed_redraw_room();
 			next_room=aux_int;
 			snprintf(aux,50,"Added S%d",aux_int);
 			*answer_text=aux;
