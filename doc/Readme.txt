@@ -234,7 +234,7 @@ Mac OS X:
 	Get development tools:
 		a) Install Xcode.
 		b) Install the "command line developer tools" by typing 'xcode-select --install' at the prompt.
-		c) Using terminal, in the root directory of SDLPOP, type: make -f Makefile.osx
+		c) Using terminal, in the root directory of SDLPOP, type: make
 
 	PLAY!
 		a) Type './prince' or './prince full'.
