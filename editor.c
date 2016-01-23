@@ -159,7 +159,7 @@ void editor__load_level();
 tile_and_mod copied={0,0};
 byte copied_room_fg[30]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 byte copied_room_bg[30]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-level_real_type edited;
+level_type edited;
 int remember_room=0; /* when switching to palette room mode */
 int map_selected_room=0;
 int goto_next_room=0;
@@ -509,9 +509,7 @@ chtab_type* chtab_editor_sprites=NULL;
 void editor__load_level() {
 	dat_type* dathandle;
 
-	dathandle = open_dat("LEVELS.DAT", 0);
-	load_from_opendats_to_area(current_level + 2000, &edited, sizeof(edited), "bin");
-	close_dat(dathandle);
+	level=edited;
 	edition_level=current_level;
 	stack_reset();
 	selected_door_tile=-1;
@@ -525,63 +523,55 @@ void editor__load_level() {
 	/* TODO: free_chtab(chtab_editor_sprites); */
 }
 
-void editor__extend_level(level_type* dst, level_real_type* src) {
-	#define copy_block(field,size,type) memcpy(&dst->field,&src->field,((size)*sizeof(type)))
-
-	copy_block(fg,NUMBER_OF_ROOMS * 30,byte);
-	copy_block(bg,NUMBER_OF_ROOMS * 30,byte);
-	copy_block(doorlinks1,256,byte);
-	copy_block(doorlinks2,256,byte);
-	copy_block(roomlinks,NUMBER_OF_ROOMS,link_type);
-	copy_block(used_rooms,1,byte);
-	copy_block(roomxs,NUMBER_OF_ROOMS,byte);
-	copy_block(roomys,NUMBER_OF_ROOMS,byte);
-	copy_block(fill_1,15,byte);
-	copy_block(start_room,1,byte);
-	copy_block(start_pos,1,byte);
-	copy_block(start_dir,1,sbyte);
-	copy_block(fill_2,4,byte);
-	copy_block(guards_tile,NUMBER_OF_ROOMS,byte);
-	copy_block(guards_dir,NUMBER_OF_ROOMS,byte);
-	copy_block(guards_x,NUMBER_OF_ROOMS,byte);
-	copy_block(guards_seq_lo,NUMBER_OF_ROOMS,byte);
-	copy_block(guards_skill,NUMBER_OF_ROOMS,byte);
-	copy_block(guards_seq_hi,NUMBER_OF_ROOMS,byte);
-	copy_block(guards_color,NUMBER_OF_ROOMS,byte);
-	copy_block(fill_3,18,byte);
+#define copy_block(field,size,type) memcpy(&dst->field,&src->field,((size)*sizeof(type)))
+#define level_copy_function(name,dst_type,src_type) \
+void name(dst_type* dst, src_type* src) { \
+	copy_block(fg,NUMBER_OF_ROOMS * 30,byte); \
+	copy_block(bg,NUMBER_OF_ROOMS * 30,byte); \
+	copy_block(doorlinks1,256,byte); \
+	copy_block(doorlinks2,256,byte); \
+	copy_block(roomlinks,NUMBER_OF_ROOMS,link_type); \
+	copy_block(used_rooms,1,byte); \
+	copy_block(roomxs,NUMBER_OF_ROOMS,byte); \
+	copy_block(roomys,NUMBER_OF_ROOMS,byte); \
+	copy_block(fill_1,15,byte); \
+	copy_block(start_room,1,byte); \
+	copy_block(start_pos,1,byte); \
+	copy_block(start_dir,1,sbyte); \
+	copy_block(fill_2,4,byte); \
+	copy_block(guards_tile,NUMBER_OF_ROOMS,byte); \
+	copy_block(guards_dir,NUMBER_OF_ROOMS,byte); \
+	copy_block(guards_x,NUMBER_OF_ROOMS,byte); \
+	copy_block(guards_seq_lo,NUMBER_OF_ROOMS,byte); \
+	copy_block(guards_skill,NUMBER_OF_ROOMS,byte); \
+	copy_block(guards_seq_hi,NUMBER_OF_ROOMS,byte); \
+	copy_block(guards_color,NUMBER_OF_ROOMS,byte); \
+	copy_block(fill_3,18,byte); \
 }
-
-void editor_revert_level() {
-	editor__load_level();
-	editor__extend_level(&level,&edited);
-	room_api_free(&edited_map);
-	door_api_free(&edited_doorlinks);
-	room_api_init(&edited_map);
-	door_api_init(&edited_doorlinks);
-	is_restart_level = 1;
-}
+level_copy_function(editor__extend_level,level_type,level_real_type);
+level_copy_function(editor__simplify_level,level_real_type,level_type);
 
 int load_resource(const char* file, int res, void* data, int size, const char* ext);
 void save_resource(const char* file, int res, const void* data, int size, const char* ext);
 
-void load_edit_palettes() {
-	load_resource("editor",100,&(level.fg[NUMBER_OF_ROOMS*30]),8*30, "bin");
-	load_resource("editor",101,&(level.bg[NUMBER_OF_ROOMS*30]),8*30, "bin");
-	if (!load_resource("editor",102,&(level.roomlinks[NUMBER_OF_ROOMS]),8*sizeof(link_type), "bin"))
+void load_edit_palettes(level_type* level_to_load) {
+	load_resource("editor",100,&(level_to_load->fg[NUMBER_OF_ROOMS*30]),8*30, "bin");
+	load_resource("editor",101,&(level_to_load->bg[NUMBER_OF_ROOMS*30]),8*30, "bin");
+	if (!load_resource("editor",102,&(level_to_load->roomlinks[NUMBER_OF_ROOMS]),8*sizeof(link_type), "bin"))
 		for (int a=24;a<24+8;a++) {
-			level.roomlinks[a].left=(a==24)?0:a-1+1;
-			level.roomlinks[a].right=(a==24+7)?0:a+1+1;
-			level.roomlinks[a].up=(a<24+4)?0:a-4+1;
-			level.roomlinks[a].down=(a>=24+4)?0:a+4+1;
+			level_to_load->roomlinks[a].left=(a==24)?0:a-1+1;
+			level_to_load->roomlinks[a].right=(a==24+7)?0:a+1+1;
+			level_to_load->roomlinks[a].up=(a<24+4)?0:a-4+1;
+			level_to_load->roomlinks[a].down=(a>=24+4)?0:a+4+1;
 		}
 }
 void save_edit_palettes() {
-	save_resource("editor",100,&(level.fg[NUMBER_OF_ROOMS*30]),8*30, "bin");
-	save_resource("editor",101,&(level.bg[NUMBER_OF_ROOMS*30]),8*30, "bin");
-	save_resource("editor",102,&(level.roomlinks[NUMBER_OF_ROOMS]),8*sizeof(link_type), "bin");
+	save_resource("editor",100,&(edited.fg[NUMBER_OF_ROOMS*30]),8*30, "bin");
+	save_resource("editor",101,&(edited.bg[NUMBER_OF_ROOMS*30]),8*30, "bin");
+	save_resource("editor",102,&(edited.roomlinks[NUMBER_OF_ROOMS]),8*sizeof(link_type), "bin");
 }
 
-void editor__loading_dat() {
+void editor__load_dat_file(level_type* l) {
 	level_real_type aux;
 
 	dat_type* dathandle;
@@ -590,20 +580,34 @@ void editor__loading_dat() {
 	close_dat(dathandle);
 
 	/* set up extended level */
-	memset(&level,0,sizeof(level));
-	editor__extend_level(&level,&aux);
-	load_edit_palettes();
+	memset(l,0,sizeof(level_type));
+	editor__extend_level(l,&aux);
+	load_edit_palettes(l);
+}
+
+void editor__loading_dat() {
 	remember_room=0;
 
 	if (edition_level!=current_level) {
+		editor__load_dat_file(&edited);
 		editor__load_level();
 		room_api_free(&edited_map);
 		door_api_free(&edited_doorlinks);
 		room_api_init(&edited_map);
 		door_api_init(&edited_doorlinks);
 	} else {
-		editor__extend_level(&level,&edited);
+		level=edited;
 	}
+}
+
+void editor_revert_level() {
+	editor__load_dat_file(&edited);
+	editor__load_level();
+	level=edited;
+	room_api_free(&edited_map);
+	door_api_free(&edited_doorlinks);
+	room_api_init(&edited_map);
+	door_api_init(&edited_doorlinks);
 }
 
 void editor__position(char_type* character,int col,int row,int room,int x,word seq) {
@@ -662,7 +666,9 @@ int load_resource(const char* file, int res, void* data, int size, const char* e
 }
 
 void save_level() {
-	save_resource("LEVELS.DAT",current_level + 2000, &edited, sizeof(edited), "bin");
+	level_real_type aux;
+	editor__simplify_level(&aux,&edited);
+	save_resource("LEVELS.DAT",current_level + 2000, &aux, sizeof(aux), "bin");
 }
 
 void editor__set_guard(byte tilepos,byte x) {
@@ -1160,25 +1166,15 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int
 	tilepos=row*10+col;
 
 	if (e.button==SDL_BUTTON_LEFT && !shift && !alt && !ctrl && !m) { /* left click: edit tile */
-		if (PALETTE_MODE) {
-			level.fg[T(loaded_room,tilepos)]=copied.tiletype;
-			level.bg[T(loaded_room,tilepos)]=copied.modifier;
-		} else {
-			editor__do(fg[T(loaded_room,tilepos)],copied.tiletype,mark_start);
-			editor__do(bg[T(loaded_room,tilepos)],copied.modifier,mark_end);
-			ed_redraw_tile(tilepos);
-			if (tilepos) ed_redraw_tile(tilepos-1);
-			if (tilepos!=29) ed_redraw_tile(tilepos+1);
-		}
+		editor__do(fg[T(loaded_room,tilepos)],copied.tiletype,mark_start);
+		editor__do(bg[T(loaded_room,tilepos)],copied.modifier,mark_end);
+		ed_redraw_tile(tilepos);
+		if (tilepos) ed_redraw_tile(tilepos-1);
+		if (tilepos!=29) ed_redraw_tile(tilepos+1);
 		redraw_screen(1);
 	} else if (e.button==SDL_BUTTON_RIGHT && !shift && !alt && !ctrl && !m) { /* right click: copy tile */
-		if (PALETTE_MODE) {
-			copied.tiletype=level.fg[T(loaded_room,tilepos)];
-			copied.modifier=level.bg[T(loaded_room,tilepos)];
-		} else {
-			copied.tiletype=edited.fg[T(loaded_room,tilepos)];
-			copied.modifier=edited.bg[T(loaded_room,tilepos)];
-		}
+		copied.tiletype=edited.fg[T(loaded_room,tilepos)];
+		copied.modifier=edited.bg[T(loaded_room,tilepos)];
 	} else if (e.button==SDL_BUTTON_LEFT && shift && !alt && !ctrl && !m) { /* shift+left click: move kid */
 		editor__position(&Kid,col,row,loaded_room,x,6563);
 	} else if (e.button==SDL_BUTTON_RIGHT && shift && !alt && !ctrl && !m) { /* shift+right click: move move/put guard */
@@ -1302,19 +1298,19 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 		break;
 #endif
 	case SDL_SCANCODE_P: /* p: Toggle palette */
-			if (remember_room) {
-				next_room=remember_room;
-			} else if (drawn_room>NUMBER_OF_ROOMS) { /* go to a level room */
-					next_room=edited.start_room;
-			} else {
-					next_room=NUMBER_OF_ROOMS+1;
-			}
-			remember_room=drawn_room;
+		if (remember_room) {
+			next_room=remember_room;
+		} else if (drawn_room>NUMBER_OF_ROOMS) { /* go to a level room */
+				next_room=edited.start_room;
+		} else {
+				next_room=NUMBER_OF_ROOMS+1;
+		}
+		remember_room=drawn_room;
 		break;
 	case SDL_SCANCODE_P | WITH_ALT: /* alt-p: Save palette */
 		save_edit_palettes();
-			*answer_text="PALETTE SAVED";
-			*need_show_text=1;
+		*answer_text="PALETTE SAVED";
+		*need_show_text=1;
 		break;
 	case SDL_SCANCODE_Y: /* y: save starting position */
 		editor__do(start_pos,Kid.curr_row*10+Kid.curr_col,mark_start);
@@ -1357,6 +1353,7 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 			*answer_text="LEVEL REVERTED";
 			*need_show_text=1;
 			editor_revert_level();
+			is_restart_level = 1;
 		} else {
 			*answer_text="Nothing to revert";
 			*need_show_text=1;
