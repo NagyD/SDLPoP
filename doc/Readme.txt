@@ -66,6 +66,7 @@ A:
 * demo -- Run in demo mode: only the first two levels will be playable, and quotes from magazine reviews will be displayed.
 * record -- Start recording immediately. (See the Replays section.)
 * replay or a *.P1R filename -- Start replaying immediately. (See the Replays section.)
+* edit -- Start in editor mode
 
 Q: What keys can I use?
 A:
@@ -170,6 +171,8 @@ Since version 1.16, there is support for fake tiles, for example walls that the 
 The Apoplexy level editor supports these additional tiles since v3.0: http://www.popot.org/level_editors.php?editor=apoplexy
 (Just don't overuse them, please!)
 
+After version 1.16, running the game with the 'edit' command-line option provides a fully functional level editor. For more information check the "Editor.txt" file.
+
 REPLAYS
 =======
 
@@ -241,5 +244,6 @@ Mac OS X:
 		b) Hit Control-Q to quit.
 
 	Tested on OSX 10.9.5 with Xcode 6.0.1
+	It's been reported that 'sudo brew install libsdl2 libsdl2_image libsdl2_mixer' also works but has an issue with the ogg files.
 
 
