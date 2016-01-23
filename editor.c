@@ -915,6 +915,12 @@ void editor__on_refresh(surface_type* screen) {
 		int is_only_shift_pressed=(state[SDL_SCANCODE_LSHIFT] || state[SDL_SCANCODE_RSHIFT]) && (!(state[SDL_SCANCODE_LCTRL] || state[SDL_SCANCODE_RCTRL]));
 		int is_ctrl_shift_pressed=(state[SDL_SCANCODE_LSHIFT] || state[SDL_SCANCODE_RSHIFT]) && (state[SDL_SCANCODE_LCTRL] || state[SDL_SCANCODE_RCTRL]);
 
+		if (PALETTE_MODE) {
+			is_ctrl_alt_pressed=0;
+			is_only_shift_pressed=0;
+			is_ctrl_shift_pressed=0;
+		}
+
 		if (MouseState) {
 			int col,row,tilepos;
 			colors=cMain;
@@ -1219,6 +1225,9 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 	static char aux[50];
 	int aux_int;
 	if (goto_next_room) {
+		if (PALETTE_MODE) {
+			remember_room=drawn_room;
+		}
 		next_room=goto_next_room;
 		goto_next_room=0;
 	}
@@ -1298,14 +1307,18 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 		break;
 #endif
 	case SDL_SCANCODE_P: /* p: Toggle palette */
-		if (remember_room) {
-			next_room=remember_room;
-		} else if (drawn_room>NUMBER_OF_ROOMS) { /* go to a level room */
-				next_room=edited.start_room;
-		} else {
-				next_room=NUMBER_OF_ROOMS+1;
+		{
+		if (!remember_room) {
+			if (PALETTE_MODE) { /* go to a level room */
+				remember_room=edited.start_room;
+			} else {
+				remember_room=NUMBER_OF_ROOMS+1;
+			}
 		}
-		remember_room=drawn_room;
+		next_room=remember_room;
+		if ((remember_room>NUMBER_OF_ROOMS)!=PALETTE_MODE)
+			remember_room=drawn_room;
+		}
 		break;
 	case SDL_SCANCODE_P | WITH_ALT: /* alt-p: Save palette */
 		save_edit_palettes();
