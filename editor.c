@@ -157,7 +157,8 @@ void editor__load_level();
 tile_and_mod copied={0,0};
 byte copied_room_fg[30]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 byte copied_room_bg[30]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-level_type edited;
+level_real_type edited;
+int remember_room=0; /* when switching to palette room mode */
 int map_selected_room=0;
 int goto_next_room=0;
 tMap edited_map={NULL,NULL};
@@ -521,9 +522,35 @@ void editor__load_level() {
 	/* TODO: free_chtab(chtab_editor_sprites); */
 }
 
+void editor__extend_level(level_type* dst, level_real_type* src) {
+	#define copy_block(field,size,type) memcpy(&dst->field,&src->field,((size)*sizeof(type)))
+
+	copy_block(fg,NUMBER_OF_ROOMS * 30,byte);
+	copy_block(bg,NUMBER_OF_ROOMS * 30,byte);
+	copy_block(doorlinks1,256,byte);
+	copy_block(doorlinks2,256,byte);
+	copy_block(roomlinks,NUMBER_OF_ROOMS,link_type);
+	copy_block(used_rooms,1,byte);
+	copy_block(roomxs,NUMBER_OF_ROOMS,byte);
+	copy_block(roomys,NUMBER_OF_ROOMS,byte);
+	copy_block(fill_1,15,byte);
+	copy_block(start_room,1,byte);
+	copy_block(start_pos,1,byte);
+	copy_block(start_dir,1,sbyte);
+	copy_block(fill_2,4,byte);
+	copy_block(guards_tile,NUMBER_OF_ROOMS,byte);
+	copy_block(guards_dir,NUMBER_OF_ROOMS,byte);
+	copy_block(guards_x,NUMBER_OF_ROOMS,byte);
+	copy_block(guards_seq_lo,NUMBER_OF_ROOMS,byte);
+	copy_block(guards_skill,NUMBER_OF_ROOMS,byte);
+	copy_block(guards_seq_hi,NUMBER_OF_ROOMS,byte);
+	copy_block(guards_color,NUMBER_OF_ROOMS,byte);
+	copy_block(fill_3,18,byte);
+}
+
 void editor_revert_level() {
 	editor__load_level();
-	level=edited;
+	editor__extend_level(&level,&edited);
 	room_api_free(&edited_map);
 	door_api_free(&edited_doorlinks);
 	room_api_init(&edited_map);
@@ -531,7 +558,33 @@ void editor_revert_level() {
 	is_restart_level = 1;
 }
 
+void load_resource(const char* file, int res, void* data, int size, const char* ext);
+void save_resource(const char* file, int res, const void* data, int size, const char* ext);
+
+void load_edit_palettes() {
+	load_resource("editor",100,&(level.fg[NUMBER_OF_ROOMS*30]),8*30, "bin");
+	load_resource("editor",101,&(level.bg[NUMBER_OF_ROOMS*30]),8*30, "bin");
+	load_resource("editor",102,&(level.roomlinks[NUMBER_OF_ROOMS]),8*sizeof(link_type), "bin");
+}
+void save_edit_palettes() {
+	save_resource("editor",100,&(level.fg[NUMBER_OF_ROOMS*30]),8*30, "bin");
+	save_resource("editor",101,&(level.bg[NUMBER_OF_ROOMS*30]),8*30, "bin");
+	save_resource("editor",102,&(level.roomlinks[NUMBER_OF_ROOMS]),8*sizeof(link_type), "bin");
+}
+
 void editor__loading_dat() {
+	level_real_type aux;
+
+	dat_type* dathandle;
+	dathandle = open_dat("LEVELS.DAT", 0);
+	load_from_opendats_to_area(current_level + 2000, &aux, sizeof(aux), "bin");
+	close_dat(dathandle);
+
+	/* set up extended level */
+	memset(&level,0,sizeof(level));
+	editor__extend_level(&level,&aux);
+	load_edit_palettes();
+
 	if (edition_level!=current_level) {
 		editor__load_level();
 		room_api_free(&edited_map);
@@ -539,7 +592,7 @@ void editor__loading_dat() {
 		room_api_init(&edited_map);
 		door_api_init(&edited_doorlinks);
 	} else {
-		level=edited; /* TODO: when new palettes are added this should change */
+		editor__extend_level(&level,&edited);
 	}
 }
 
@@ -577,6 +630,19 @@ void save_resource(const char* file, int res, const void* data, int size, const 
 	fp=fopen(aux,"wb");
 	if (fp) {
 		fwrite(data,size,1,fp);
+		fclose(fp);
+	} else {
+		printf("error opening '%s'\n",aux);
+	}
+}
+
+void load_resource(const char* file, int res, void* data, int size, const char* ext) {
+	char aux[255];
+	FILE* fp;
+	snprintf(aux,255,"data/%s/res%d.%s",file,res,ext);
+	fp=fopen(aux,"rb");
+	if (fp) {
+		fread(data,size,1,fp);
 		fclose(fp);
 	} else {
 		printf("error opening '%s'\n",aux);
@@ -1213,6 +1279,21 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 		}
 		break;
 #endif
+	case SDL_SCANCODE_P: /* p: Toggle palette */
+			if (remember_room) {
+				next_room=remember_room;
+			} else if (drawn_room>NUMBER_OF_ROOMS) { /* go to a level room */
+					next_room=edited.start_room;
+			} else {
+					next_room=NUMBER_OF_ROOMS+1;
+			}
+			remember_room=drawn_room;
+		break;
+	case SDL_SCANCODE_P | WITH_ALT: /* alt-p: Save palette */
+		save_edit_palettes();
+			*answer_text="PALETTE SAVED";
+			*need_show_text=1;
+		break;
 	case SDL_SCANCODE_Y: /* y: save starting position */
 		editor__do(start_pos,Kid.curr_row*10+Kid.curr_col,mark_start);
 		editor__do(start_room,Kid.room,mark_middle);
