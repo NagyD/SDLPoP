@@ -962,12 +962,13 @@ void __pascal far load_lev_spr(int level) {
 
 // seg000:0E6C
 void __pascal far load_level() {
+#ifdef USE_EDITOR
+	editor__loading_dat();
+#else
 	dat_type* dathandle;
 	dathandle = open_dat("LEVELS.DAT", 0);
 	load_from_opendats_to_area(current_level + 2000, &level, sizeof(level), "bin");
 	close_dat(dathandle);
-#ifdef USE_EDITOR
-	editor__loading_dat();
 #endif
 
 	alter_mods_allrm();

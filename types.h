@@ -222,13 +222,15 @@ typedef struct name { \
 	byte fill_3[18]; \
 } name;
 
+#ifdef USE_EDITOR
+DEF_LEVEL_TYPE(level_type,(NUMBER_OF_ROOMS+8));
+DEF_LEVEL_TYPE(level_real_type,NUMBER_OF_ROOMS);
+#else
 DEF_LEVEL_TYPE(level_type,NUMBER_OF_ROOMS);
 SDL_COMPILE_TIME_ASSERT(level_size, sizeof(level_type) == 2305);
-#pragma pack(pop)
-
-#ifdef USE_EDITOR
-DEF_LEVEL_TYPE(level_editor_type,(NUMBER_OF_ROOMS+8));
 #endif
+
+#pragma pack(pop)
 
 typedef SDL_Surface surface_type;
 typedef SDL_Surface image_type;
