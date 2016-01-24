@@ -230,6 +230,10 @@ Mac OS X:
 	Get SDL2 and dependencies
 		a) Install "port" from http://www.macports.org/
 		b) sudo port install libsdl2 libsdl2_image libsdl2_mixer
+	or
+		a) Install "homebrew"
+		b) sudo brew install libsdl2 libsdl2_image
+		c) sudo brew install sdl2_mixer --with-libvorbis
 
 	Get development tools:
 		a) Install Xcode.
