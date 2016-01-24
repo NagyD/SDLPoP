@@ -711,6 +711,9 @@ int editor__guard_color(int delta) {
 	int new_color=level.guards_color[loaded_room-1]+delta;
 	if (0<=new_color && new_color<=7 && level.guards_tile[loaded_room-1]<30) {
 		editor__do(guards_color[loaded_room-1],new_color,mark_all);
+		// If I call redraw_screen() or enter_guard() directly then the kid changes into a guard...
+		curr_guard_color = new_color;
+		need_full_redraw = 1; // force redraw
 		return new_color;
 	}
 	return -1;

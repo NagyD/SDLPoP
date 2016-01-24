@@ -576,6 +576,9 @@ word justblocked; // name from Apple II source
 // data:5F84
 word last_loose_sound;
 
+// data:4CE2
+word need_full_redraw;
+
 #ifdef USE_REPLAY
 byte recording INIT(= 0);
 byte replaying INIT(= 0);
