@@ -139,18 +139,22 @@ void stack_or(long data) {
 
 /* DUR: Do actions sublayer */
 
+#define MARK_BITS 5
 typedef enum {
 	mark_middle=0,
 	mark_start=1,
 	mark_end=2,
-	mark_all=3
+	mark_all=3,
+	mark_redraw=4,
+	mark_remap=8,
+	mark_redoor=16
 }tUndoQueueMark;
 
 tUndoQueueMark prevMark=mark_middle;
-#define editor__do_mark_start() prevMark=mark_start
-void editor__do_mark_end() {
-	if (prevMark!=mark_start) /* if writing is open */
-		stack_or(mark_end<<16);
+#define editor__do_mark_start(m) prevMark=mark_start|m
+void editor__do_mark_end(tUndoQueueMark m) {
+	if (prevMark) /* if writing is open */
+		stack_or((mark_end|m)<<16);
 	prevMark=mark_middle;
 }
 
@@ -179,7 +183,7 @@ void editor__do_(long offset, byte c, tUndoQueueMark mark) {
 	before=offset[(char*)(&edited)];
 	offset[(char*)(&edited)]=c;
 	offset[(char*)(&level)]=c;
-	stack_push(offset<<18|mark<<16|before<<8|c);
+	stack_push(offset<<(16+MARK_BITS)|mark<<16|before<<8|c);
 }
 
 void editor__undo() {
@@ -190,7 +194,7 @@ void editor__undo() {
 		/* after=   aux     & 0xff; */
 		before= (aux>>8) & 0xff;
 		mark=   (aux>>16)& mark_all;
-		offset= (aux>>18);
+		offset= (aux>>(16+MARK_BITS));
 		offset[(char*)(&level)]=before;
 		offset[(char*)(&edited)]=before;
 		if (mark & mark_start) break;
@@ -204,7 +208,7 @@ void editor__redo() {
 		after=   aux     & 0xff;
 		/* before= (aux>>8) & 0xff; */
 		mark=   (aux>>16)& mark_all;
-		offset= (aux>>18);
+		offset= (aux>>(16+MARK_BITS));
 		offset[(char*)(&level)]=after;
 		offset[(char*)(&edited)]=after;
 		if (mark & mark_end) break;
@@ -622,12 +626,12 @@ void editor__position(char_type* character,int col,int row,int room,int x,word s
 void editor__paste_room(int room) {
 	int i;
 
-	editor__do_mark_start();
+	editor__do_mark_start(0);
 	for (i=0;i<30;i++) {
 		editor__do(fg[T(drawn_room,i)],copied_room_fg[i],mark_middle);
 		editor__do(bg[T(drawn_room,i)],copied_room_bg[i],mark_middle);
 	}
-	editor__do_mark_end();
+	editor__do_mark_end(0);
 }
 
 /*
@@ -842,9 +846,9 @@ void sanitize_room(int room, int sanitation_level) {
 
 }
 void editor__randomize(int room) {
-	editor__do_mark_start();
+	editor__do_mark_start(0);
 	randomize_room(room);
-	editor__do_mark_end();
+	editor__do_mark_end(0);
 	ed_select_room(room);
 	ed_redraw_room();
 	redraw_screen(1);
@@ -1192,9 +1196,9 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int
 		redraw_screen(1);
 	} else if (e.button==SDL_BUTTON_LEFT && !shift && alt && ctrl && !m) { /* ctrl+alt+left click: toggle door mechanism links */
 		if (door_api_is_related(edited.fg[T(loaded_room,tilepos)]&TILE_MASK)) {
-			editor__do_mark_start();
+			editor__do_mark_start(0);
 			display_text_bottom(editor__toggle_door_tile(loaded_room,tilepos));
-			editor__do_mark_end();
+			editor__do_mark_end(0);
 			text_time_total = 24;
 			text_time_remaining = 24;
 		}
@@ -1276,7 +1280,7 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 	case SDL_SCANCODE_H | WITH_SHIFT:
 	case SDL_SCANCODE_U | WITH_SHIFT:
 	case SDL_SCANCODE_N | WITH_SHIFT:
-		editor__do_mark_start();
+		editor__do_mark_start(0);
 		if (key==(SDL_SCANCODE_J | WITH_SHIFT))
 			aux_int=room_api_insert_room_right(&edited_map,room_api_where_room(&edited_map,drawn_room));
 		if (key==(SDL_SCANCODE_H | WITH_SHIFT))
@@ -1295,7 +1299,7 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 		} else {
 			*answer_text="NO MORE SCREENS AVAILABLE";
 		}
-		editor__do_mark_end();
+		editor__do_mark_end(0);
 		*need_show_text=1;
 		break;
 #ifdef __DEBUG__
@@ -1336,9 +1340,9 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 		editor__randomize(loaded_room);
 		break;
 	case SDL_SCANCODE_S | WITH_CTRL | WITH_SHIFT: /* ctrl-shift-s */
-		editor__do_mark_start();
+		editor__do_mark_start(0);
 		sanitize_room(loaded_room,0);
-		editor__do_mark_end();
+		editor__do_mark_end(0);
 		redraw_screen(1);
 		break;
 	case SDL_SCANCODE_C | WITH_CTRL: /* ctrl-c: copy room */
