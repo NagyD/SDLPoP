@@ -1653,9 +1653,11 @@ sound_buffer_type* load_sound(int index) {
 		//printf("Trying to load from DAT\n");
 		result = (sound_buffer_type*) load_from_opendats_alloc(index + 10000, "bin", NULL, NULL);
 	}
+#ifdef USE_MIXER
 	if (result == NULL) {
 		fprintf(stderr, "Failed to load sound %d '%s'\n", index, sound_names[index]);
 	}
+#endif
 	return result;
 }
 
