@@ -617,6 +617,7 @@ void editor__position(char_type* character,int col,int row,int room,int x,word s
 	character->x=x;
 	character->y=55+63*row;
 	character->curr_seq=seq;
+	if (character->direction == dir_56_none) character->direction = dir_0_right;
 }
 
 void editor__paste_room(int room) {
@@ -679,19 +680,21 @@ void editor__set_guard(byte tilepos,byte x) {
 	printf("skill %d\n",level.guards_skill[loaded_room-1]);
 	if (level.guards_tile[loaded_room-1]>=30) {
 		editor__do(guards_tile[loaded_room-1],tilepos,mark_start);
-		editor__do(guards_color[loaded_room-1],0,mark_middle);
+		editor__do(guards_color[loaded_room-1],1,mark_middle);
 		editor__do(guards_x[loaded_room-1],x,mark_middle);
 		editor__do(guards_dir[loaded_room-1],0,mark_middle);
+		editor__do(guards_seq_hi[loaded_room-1],0,mark_middle);
 		editor__do(guards_skill[loaded_room-1],0,mark_end);
 	} else {
-		editor__do(guards_tile[loaded_room-1],tilepos,mark_all);
+		editor__do(guards_tile[loaded_room-1],tilepos,mark_start);
+		editor__do(guards_x[loaded_room-1],x,mark_end);
 	}
+	enter_guard(); // load color, HP
 }
 
 void editor__remove_guard() {
-	Guard.alive=0;
-	guardhp_delta = -guardhp_curr;
-	Guard.room=NUMBER_OF_ROOMS+1; /* TODO: fix this... sending a guard to a buffer overflow (a palette tile) */
+	draw_guard_hp(0, 10); // delete HP
+	Guard.direction = dir_56_none; // delete guard from screen
 	editor__do(guards_tile[loaded_room-1],30,mark_all);
 }
 
