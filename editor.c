@@ -105,31 +105,42 @@ int stack_cursor=0;
 long* stack_pointer=NULL;
 int stack_top=0;
 #define stack_reset() stack_top=0;
+/* private type */
+typedef uint64_t flag_type; /* note that uint64_t/unsigned long long is supported even in 32 bits machines and virtually by all linux, 32 bit windows and OSX. The variable is used as:
+  RRRRRRRR RRRRRRRR RRRRRRRR RRRRRRRR RRRRRRRR RRRrmdes BBBBBBBB AAAAAAAA
+	where R are an offset/reserved bit
+	r,m,d are redraw,remap,redoor flags
+	e,s are startm end marks
+	B is the 8 bits code before editing
+	A is the 8 bits code after editing
 
-void stack_push(long data) {
+	TODO: new flag: reguard
+*/
+
+void stack_push(flag_type data) {
 	if (!stack_size) {
 		stack_size=100;
-		stack_pointer=malloc(sizeof(long)*stack_size);
+		stack_pointer=malloc(sizeof(flag_type)*stack_size);
 	}
 	stack_pointer[stack_cursor]=data;
 	stack_cursor++;
 	/*if (stack_top<stack_cursor)*/ stack_top=stack_cursor;
 	if (stack_size<=stack_top) {
 		stack_size*=2;
-		stack_pointer=realloc(stack_pointer,sizeof(long)*stack_size);
+		stack_pointer=realloc(stack_pointer,sizeof(flag_type)*stack_size);
 	}
 }
-int stack_pop(long* data) {
+int stack_pop(flag_type* data) {
 	if (!stack_cursor) return false;
 	*data=stack_pointer[--stack_cursor];
 	return true;
 }
-int stack_unpop(long* data) {
+int stack_unpop(flag_type* data) {
 	if (stack_cursor==stack_top) return false;
 	*data=stack_pointer[stack_cursor++];
 	return true;
 }
-void stack_or(long data) {
+void stack_or(flag_type data) {
 	if (stack_cursor) {
 		stack_pointer[stack_cursor-1]|=data;
 	}
@@ -145,9 +156,13 @@ typedef enum {
 	mark_start=1,
 	mark_end=2,
 	mark_all=3,
-	mark_redraw=4,
-	mark_remap=8,
-	mark_redoor=16
+
+	flag_redraw=4,
+	flag_remap=8,
+	flag_redoor=16,
+
+	flag_mask=28,
+	mark_flag_mask=31
 }tUndoQueueMark;
 
 tUndoQueueMark prevMark=mark_middle;
@@ -186,33 +201,37 @@ void editor__do_(long offset, byte c, tUndoQueueMark mark) {
 	stack_push(offset<<(16+MARK_BITS)|mark<<16|before<<8|c);
 }
 
-void editor__undo() {
-	long aux,offset;
+tUndoQueueMark editor__undo() {
+	flag_type aux;
+	int offset;
 	byte before;
-	tUndoQueueMark mark;
+	tUndoQueueMark mark=0;
 	while (stack_pop(&aux)) {
 		/* after=   aux     & 0xff; */
 		before= (aux>>8) & 0xff;
-		mark=   (aux>>16)& mark_all;
+		mark=   (aux>>16)& mark_flag_mask;
 		offset= (aux>>(16+MARK_BITS));
 		offset[(char*)(&level)]=before;
 		offset[(char*)(&edited)]=before;
 		if (mark & mark_start) break;
 	}
+	return mark&flag_mask;
 }
-void editor__redo() {
-	long aux,offset;
+tUndoQueueMark editor__redo() {
+	flag_type aux;
+	int offset;
 	byte after;
-	tUndoQueueMark mark;
+	tUndoQueueMark mark=0;
 	while (stack_unpop(&aux)) {
 		after=   aux     & 0xff;
 		/* before= (aux>>8) & 0xff; */
-		mark=   (aux>>16)& mark_all;
+		mark=   (aux>>16)& mark_flag_mask;
 		offset= (aux>>(16+MARK_BITS));
 		offset[(char*)(&level)]=after;
 		offset[(char*)(&edited)]=after;
 		if (mark & mark_end) break;
 	}
+	return mark&flag_mask;
 }
 
 /********************************************\
@@ -627,12 +646,12 @@ void editor__position(char_type* character,int col,int row,int room,int x,word s
 void editor__paste_room(int room) {
 	int i;
 
-	editor__do_mark_start(0);
+	editor__do_mark_start(flag_redraw);
 	for (i=0;i<30;i++) {
 		editor__do(fg[T(drawn_room,i)],copied_room_fg[i],mark_middle);
 		editor__do(bg[T(drawn_room,i)],copied_room_bg[i],mark_middle);
 	}
-	editor__do_mark_end(0);
+	editor__do_mark_end(flag_redraw);
 }
 
 /*
@@ -852,9 +871,9 @@ void sanitize_room(int room, int sanitation_level) {
 
 }
 void editor__randomize(int room) {
-	editor__do_mark_start(0);
+	editor__do_mark_start(flag_redraw);
 	randomize_room(room);
-	editor__do_mark_end(0);
+	editor__do_mark_end(flag_redraw);
 	ed_select_room(room);
 	ed_redraw_room();
 	redraw_screen(1);
@@ -1181,8 +1200,8 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int
 	tilepos=row*10+col;
 
 	if (e.button==SDL_BUTTON_LEFT && !shift && !alt && !ctrl && !m) { /* left click: edit tile */
-		editor__do(fg[T(loaded_room,tilepos)],copied.tiletype,mark_start);
-		editor__do(bg[T(loaded_room,tilepos)],copied.modifier,mark_end);
+		editor__do(fg[T(loaded_room,tilepos)],copied.tiletype,mark_start|flag_redraw);
+		editor__do(bg[T(loaded_room,tilepos)],copied.modifier,mark_end|flag_redraw);
 		ed_redraw_tile(tilepos);
 		if (tilepos) ed_redraw_tile(tilepos-1);
 		if (tilepos!=29) ed_redraw_tile(tilepos+1);
@@ -1201,9 +1220,9 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int
 		redraw_screen(1);
 	} else if (e.button==SDL_BUTTON_LEFT && !shift && alt && ctrl && !m) { /* ctrl+alt+left click: toggle door mechanism links */
 		if (door_api_is_related(edited.fg[T(loaded_room,tilepos)]&TILE_MASK)) {
-			editor__do_mark_start(0);
+			editor__do_mark_start(flag_redoor);
 			display_text_bottom(editor__toggle_door_tile(loaded_room,tilepos));
-			editor__do_mark_end(0);
+			editor__do_mark_end(flag_redoor);
 			text_time_total = 24;
 			text_time_remaining = 24;
 		}
@@ -1243,19 +1262,45 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 
 	switch (key) {
 	case SDL_SCANCODE_Z | WITH_CTRL: /* ctrl-z */
-		editor__undo();
-		ed_redraw_room();
-		redraw_screen(1);
-		break;
 	case SDL_SCANCODE_Z | WITH_CTRL | WITH_ALT: /* ctrl-alt-z */
-		editor__redo();
+		{
+		tUndoQueueMark mrk;
+		if (key==(SDL_SCANCODE_Z | WITH_CTRL)) {
+			mrk=editor__undo();
+		} else {
+			mrk=editor__redo();
+		}
 		ed_redraw_room();
-		redraw_screen(1);
+		if (mrk&flag_redraw) redraw_screen(1);
+		if (mrk&flag_remap) room_api_refresh(&edited_map);
+		//TODO: if (mrk&flag_redoor) door_api_refresh(&edited_doorlinks);
+		}
 		break;
 	case SDL_SCANCODE_DELETE: /* delete */
 	case SDL_SCANCODE_BACKSPACE: /* backspace */
 		editor__remove_guard();
-		/* TODO: synch without sending the guard to a buffer overflow (room NUMBER_OF_ROOMS+1) */
+		break;
+	case SDL_SCANCODE_DELETE | WITH_SHIFT: /* shift-delete */
+	case SDL_SCANCODE_BACKSPACE | WITH_SHIFT: /* shift-backspace */
+		editor__do_mark_start(flag_remap); //TODO: move to another function
+		if (drawn_room!=edited.start_room) {
+			/* select next room to show */
+			aux_int=edited.roomlinks[drawn_room-1].left;
+			if (!aux_int) aux_int=edited.roomlinks[drawn_room-1].right;
+			if (!aux_int) aux_int=edited.roomlinks[drawn_room-1].up;
+			if (!aux_int) aux_int=edited.roomlinks[drawn_room-1].down;
+			room_api_free_room(&edited_map,drawn_room);
+			/* when a room is removed the level may be split in two disconnected level parts, to avoid staying
+			   in the wrong part of the level, I'll send the next_room to the starting position */
+			if (!edited_map.list[aux_int-1]) aux_int=edited.start_room;
+			//TODO: free door links
+			next_room=aux_int;
+			*answer_text="Room deleted";
+		} else {
+			*answer_text="MOVE STARTING ROOM FIRST";
+		}
+		*need_show_text=1;
+		editor__do_mark_end(flag_remap);
 		break;
 	case SDL_SCANCODE_LEFTBRACKET:
 	case SDL_SCANCODE_RIGHTBRACKET:
@@ -1285,7 +1330,7 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 	case SDL_SCANCODE_H | WITH_SHIFT:
 	case SDL_SCANCODE_U | WITH_SHIFT:
 	case SDL_SCANCODE_N | WITH_SHIFT:
-		editor__do_mark_start(0);
+		editor__do_mark_start(flag_remap);
 		if (key==(SDL_SCANCODE_J | WITH_SHIFT))
 			aux_int=room_api_insert_room_right(&edited_map,room_api_where_room(&edited_map,drawn_room));
 		if (key==(SDL_SCANCODE_H | WITH_SHIFT))
@@ -1298,13 +1343,14 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 			randomize_room(aux_int);
 			ed_select_room(aux_int);
 			ed_redraw_room();
+			room_api_refresh(&edited_map);
 			next_room=aux_int;
 			snprintf(aux,50,"Added S%d",aux_int);
 			*answer_text=aux;
 		} else {
 			*answer_text="NO MORE SCREENS AVAILABLE";
 		}
-		editor__do_mark_end(0);
+		editor__do_mark_end(flag_redraw|flag_remap);
 		*need_show_text=1;
 		break;
 #ifdef __DEBUG__
@@ -1345,9 +1391,9 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 		editor__randomize(loaded_room);
 		break;
 	case SDL_SCANCODE_S | WITH_CTRL | WITH_SHIFT: /* ctrl-shift-s */
-		editor__do_mark_start(0);
+		editor__do_mark_start(flag_redraw);
 		sanitize_room(loaded_room,0);
-		editor__do_mark_end(0);
+		editor__do_mark_end(flag_redraw);
 		redraw_screen(1);
 		break;
 	case SDL_SCANCODE_C | WITH_CTRL: /* ctrl-c: copy room */
