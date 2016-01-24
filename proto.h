@@ -599,6 +599,7 @@ void set_chtab_palette(chtab_type* chtab, byte* colors, int n_colors);
 int has_timer_stopped(int index);
 sound_buffer_type* load_sound(int index);
 void free_sound(sound_buffer_type far *buffer);
+Uint32 GetUnscaledMouseState(int* x, int* y);
 
 // SEQTABLE.C
 void apply_seqtbl_patches();
@@ -628,3 +629,4 @@ void load_replay();
 void key_press_while_recording(int* key_ptr);
 void key_press_while_replaying(int* key_ptr);
 #endif
+
