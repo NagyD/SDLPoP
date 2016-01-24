@@ -1249,6 +1249,7 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int
 );*/
 
 }
+extern word cheats_enabled;
 void editor__process_key(int key,const char** answer_text, word* need_show_text) {
 	static char aux[50];
 	int aux_int;
@@ -1260,6 +1261,18 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 		goto_next_room=0;
 	}
 
+	if (key==(SDL_SCANCODE_E | WITH_ALT)) { // alt-e
+		editor_enabled=!editor_enabled;
+		if (editor_enabled) {
+			*answer_text="EDITOR ENABLED";
+			cheats_enabled=1;
+		} else {
+			*answer_text="EDITOR DISABLED";
+		}
+		*need_show_text=1;
+		return;
+	}
+	if (!editor_enabled) return;
 	switch (key) {
 	case SDL_SCANCODE_Z | WITH_CTRL: /* ctrl-z */
 	case SDL_SCANCODE_Z | WITH_CTRL | WITH_ALT: /* ctrl-alt-z */
