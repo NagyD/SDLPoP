@@ -1910,9 +1910,9 @@ void request_screen_update() {
 		surface_type* onscreen_surface_copy;
 		if (editor_enabled && editor_active) {
 			static char* aux=NULL;
-			if (!aux) aux=malloc(320*200*24); //TODO: free memory
-			memcpy(aux,onscreen_surface_->pixels,320*200*24);
-			onscreen_surface_copy=SDL_CreateRGBSurfaceFrom(aux,320, 200, 24, onscreen_surface_->pitch, 0xFF, 0xFF << 8, 0xFF << 16, 0);
+			if (!aux) aux=malloc(onscreen_surface_->pitch * onscreen_surface_->h); //TODO: free memory
+			memcpy(aux, onscreen_surface_->pixels, onscreen_surface_->pitch * onscreen_surface_->h);
+			onscreen_surface_copy=SDL_CreateRGBSurfaceFrom(aux, onscreen_surface_->w, onscreen_surface_->h, 24, onscreen_surface_->pitch, 0xFF, 0xFF << 8, 0xFF << 16, 0);
 			editor__on_refresh(onscreen_surface_copy);
 		} else {
 			onscreen_surface_copy=onscreen_surface_;
