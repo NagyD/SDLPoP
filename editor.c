@@ -1246,7 +1246,7 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 	case SDL_SCANCODE_DELETE: /* delete */
 	case SDL_SCANCODE_BACKSPACE: /* backspace */
 		editor__remove_guard();
-			/* TODO: synch without sending the guard to a buffer overflow (room NUMBER_OF_ROOMS+1) */
+		/* TODO: synch without sending the guard to a buffer overflow (room NUMBER_OF_ROOMS+1) */
 		break;
 	case SDL_SCANCODE_LEFTBRACKET:
 	case SDL_SCANCODE_RIGHTBRACKET:

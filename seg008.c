@@ -1112,7 +1112,11 @@ void __pascal far draw_gate_fore() {
 void __pascal far alter_mods_allrm() {
 	word tilepos;
 	word room;
+#ifdef USE_EDITOR
+	for (room = 1; room <= (NUMBER_OF_ROOMS+8); room++) {
+#else
 	for (room = 1; room <= level.used_rooms; room++) {
+#endif
 		get_room_address(room);
 		room_L = level.roomlinks[room-1].left;
 		room_R = level.roomlinks[room-1].right;
