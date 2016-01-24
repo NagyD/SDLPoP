@@ -1910,9 +1910,9 @@ void request_screen_update() {
 		surface_type* onscreen_surface_copy;
 		if (editor_enabled && editor_active) {
 			static char* aux=NULL;
-			if (!aux) aux=malloc(320*200*24); //TODO: free memory
-			memcpy(aux,onscreen_surface_->pixels,320*200*24);
-			onscreen_surface_copy=SDL_CreateRGBSurfaceFrom(aux,320, 200, 24, onscreen_surface_->pitch, 0xFF, 0xFF << 8, 0xFF << 16, 0);
+			if (!aux) aux=malloc(onscreen_surface_->pitch * onscreen_surface_->h); //TODO: free memory
+			memcpy(aux, onscreen_surface_->pixels, onscreen_surface_->pitch * onscreen_surface_->h);
+			onscreen_surface_copy=SDL_CreateRGBSurfaceFrom(aux, onscreen_surface_->w, onscreen_surface_->h, 24, onscreen_surface_->pitch, 0xFF, 0xFF << 8, 0xFF << 16, 0);
 			editor__on_refresh(onscreen_surface_copy);
 		} else {
 			onscreen_surface_copy=onscreen_surface_;
@@ -2400,10 +2400,16 @@ void toggle_fullscreen() {
     uint32_t flags = SDL_GetWindowFlags(window_);
     if (flags & SDL_WINDOW_FULLSCREEN_DESKTOP) {
         SDL_SetWindowFullscreen(window_, 0);
+#ifdef USE_EDITOR
+		if (!editor_enabled)
+#endif
         SDL_ShowCursor(SDL_ENABLE);
     }
     else {
         SDL_SetWindowFullscreen(window_, SDL_WINDOW_FULLSCREEN_DESKTOP);
+#ifdef USE_EDITOR
+		if (!editor_enabled)
+#endif
         SDL_ShowCursor(SDL_DISABLE);
     }
 }
@@ -3026,3 +3032,44 @@ int has_timer_stopped(int index) {
 	return timer_stopped[index];
 #endif
 }
+
+// Returns surface coordinates even if the window is scaled.
+// There should be something like this in SDL but I can't find it.
+Uint32 GetUnscaledMouseState(int* x, int* y) {
+	int window_x, window_y;
+	Uint32 result = SDL_GetMouseState(&window_x, &window_y);
+
+	//SDL_Window* window = window_; //SDL_GetMouseFocus();
+	SDL_Renderer* renderer = renderer_; //SDL_GetRenderer(window);
+	SDL_Surface* surface = onscreen_surface_;
+
+	int renderer_output_width, renderer_output_height;
+	if (0 != SDL_GetRendererOutputSize(renderer, &renderer_output_width, &renderer_output_height)) {
+		sdlperror("SDL_GetRendererOutputSize");
+	}
+
+	int renderer_logical_width, renderer_logical_height;
+	SDL_RenderGetLogicalSize(renderer, &renderer_logical_width, &renderer_logical_height);
+
+	int used_width  = renderer_output_width;
+	int used_height = renderer_output_height;
+
+	// scaling preserves aspect ratio
+	used_width  = MIN(used_width , used_height * renderer_logical_width  / renderer_logical_height);
+	used_height = MIN(used_height, used_width  * renderer_logical_height / renderer_logical_width );
+
+	int texture_x = (window_x - renderer_output_width /2) * renderer_logical_width  / used_width  + renderer_logical_width /2;
+	int texture_y = (window_y - renderer_output_height/2) * renderer_logical_height / used_height + renderer_logical_height/2;
+
+	int surface_width  = surface->w;
+	int surface_height = surface->h;
+
+	int surface_x = texture_x * surface_width  / renderer_logical_width;
+	int surface_y = texture_y * surface_height / renderer_logical_height;
+
+	//printf("%d %d \n", surface_x, surface_y);
+	*x = surface_x;
+	*y = surface_y;
+	return result;
+}
+

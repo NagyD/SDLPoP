@@ -9,7 +9,7 @@ Contributors:
 * musa (bug reports)
 * Eugene (bug reports)
 * StaticReturn (Mac OS X: Makefile (for older SDL1 version), bug reports)
-* Poirot (ecalot on GitHub) (Mac OS X: Now compatible with Falcury SDL2 port)
+* Poirot (ecalot on GitHub) (Mac OS X: Now compatible with Falcury SDL2 port; editor)
 * kees (bugfixes)
 * Falcury (porting to SDL2, bugfixes, improvements, additions)
 * segra (segrax on GitHub) (Joystick support, resizable window)
@@ -66,7 +66,7 @@ A:
 * demo -- Run in demo mode: only the first two levels will be playable, and quotes from magazine reviews will be displayed.
 * record -- Start recording immediately. (See the Replays section.)
 * replay or a *.P1R filename -- Start replaying immediately. (See the Replays section.)
-* edit -- Start in editor mode
+* edit -- Start in editor mode. (See Editor.txt for details.)
 
 Q: What keys can I use?
 A:

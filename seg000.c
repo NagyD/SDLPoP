@@ -33,8 +33,6 @@ word editor_active = 0;
 // data:461E
 dat_type * dathandle;
 
-// data:4CE2
-word need_full_redraw;
 // data:4C08
 word need_redraw_because_flipped;
 

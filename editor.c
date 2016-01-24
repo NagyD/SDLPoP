@@ -621,6 +621,7 @@ void editor__position(char_type* character,int col,int row,int room,int x,word s
 	character->x=x;
 	character->y=55+63*row;
 	character->curr_seq=seq;
+	if (character->direction == dir_56_none) character->direction = dir_0_right;
 }
 
 void editor__paste_room(int room) {
@@ -683,19 +684,21 @@ void editor__set_guard(byte tilepos,byte x) {
 	printf("skill %d\n",level.guards_skill[loaded_room-1]);
 	if (level.guards_tile[loaded_room-1]>=30) {
 		editor__do(guards_tile[loaded_room-1],tilepos,mark_start);
-		editor__do(guards_color[loaded_room-1],0,mark_middle);
+		editor__do(guards_color[loaded_room-1],1,mark_middle);
 		editor__do(guards_x[loaded_room-1],x,mark_middle);
 		editor__do(guards_dir[loaded_room-1],0,mark_middle);
+		editor__do(guards_seq_hi[loaded_room-1],0,mark_middle);
 		editor__do(guards_skill[loaded_room-1],0,mark_end);
 	} else {
-		editor__do(guards_tile[loaded_room-1],tilepos,mark_all);
+		editor__do(guards_tile[loaded_room-1],tilepos,mark_start);
+		editor__do(guards_x[loaded_room-1],x,mark_end);
 	}
+	enter_guard(); // load color, HP
 }
 
 void editor__remove_guard() {
-	Guard.alive=0;
-	guardhp_delta = -guardhp_curr;
-	Guard.room=NUMBER_OF_ROOMS+1; /* TODO: fix this... sending a guard to a buffer overflow (a palette tile) */
+	draw_guard_hp(0, 10); // delete HP
+	Guard.direction = dir_56_none; // delete guard from screen
 	editor__do(guards_tile[loaded_room-1],30,mark_all);
 }
 
@@ -712,6 +715,9 @@ int editor__guard_color(int delta) {
 	int new_color=level.guards_color[loaded_room-1]+delta;
 	if (0<=new_color && new_color<=7 && level.guards_tile[loaded_room-1]<30) {
 		editor__do(guards_color[loaded_room-1],new_color,mark_all);
+		// If I call redraw_screen() or enter_guard() directly then the kid changes into a guard...
+		curr_guard_color = new_color;
+		need_full_redraw = 1; // force redraw
 		return new_color;
 	}
 	return -1;
@@ -906,7 +912,7 @@ void blit_sprites(int x,int y, tEditorImageOffset sprite, tCursorColors colors, 
 *             INPUT BINDINGS!!!!             *
 \********************************************/
 
-#define MouseState !SDL_GetMouseState(&x,&y) && (x!=0) && (y!=0) && (x!=694) && (y<378)
+#define MouseState !GetUnscaledMouseState(&x,&y) && (x>=0) && (y>=3) && (x<320) && (y<192)
 void editor__on_refresh(surface_type* screen) {
 	if (chtab_editor_sprites) {
 		int x,y, colors_total=1;
@@ -928,10 +934,8 @@ void editor__on_refresh(surface_type* screen) {
 		if (MouseState) {
 			int col,row,tilepos;
 			colors=cMain;
-			x=x/2;
-			y=y/2;
-			col=(x-x%32)/32;
-			row=(y-y%63+10)/63;
+			col=(x)/32;
+			row=(y-3)/63;
 			tilepos=row*10+col;
 			/* if Shift is pressed a cross is shown */
 			if (is_only_shift_pressed || is_m_pressed) {
@@ -942,8 +946,8 @@ void editor__on_refresh(surface_type* screen) {
 			} else { /* If not, a 3D selection box is shown. When alt is pressed cRight or cWrong colors are used */
 				if (is_ctrl_alt_pressed) colors=cWrong;
 				if (is_ctrl_shift_pressed) colors=cExtra;
-				x-=x%32;
-				y-=y%63+10;
+				x=col*32;
+				y=row*63-10;
 				switch(level.fg[T(drawn_room,tilepos)]&TILE_MASK) {
 				case tiles_17_level_door_right:
 					x-=32;
@@ -1136,8 +1140,8 @@ void editor__on_refresh(surface_type* screen) {
 			SDL_FillRect(screen,&lineV,0xffffff);
 
 			if (MouseState) {
-				x=x/2-offsetx;
-				y=y/2-offsety;
+				x=x-offsetx;
+				y=y-offsety;
 				if (x<sw && y<sh) {
 					int i=x/(tw*10+1);
 					int j=y/(th*3+1);
@@ -1167,10 +1171,11 @@ void editor__on_refresh(surface_type* screen) {
 }
 
 void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int alt, int m) {
+	GetUnscaledMouseState(&e.x, &e.y);
 	int col,row,tilepos,x;
 	if (!editor_active) return;
 	col=e.x/32;
-	row=(e.y-4)/64;
+	row=(e.y-3)/63;
 	x=e.x*140/320+62;
 	if (row<0 || row>2) return;
 	tilepos=row*10+col;
