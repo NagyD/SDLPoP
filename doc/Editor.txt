@@ -48,7 +48,8 @@ Alt-E: Enable/disable editor mode. Note that after disabling editor mode, cheats
 By pressing Shift the mouse pointer indicates where the characters will be placed. Using Ctrl-Alt door linking showing features are activated: Blue tiles are not linkable, red tiles are linkable (doors and buttons), the number displayed indicates how many links this tile has.
 
 TODO List/known bugs:
-* Undo/Redo features are not completely functional. Also there is a problem when refreshing the screen may break the guard tiles.
-* Copy/paste does nothing with the room linking functionality.
+* Undo/Redo features fails syncing with current game door links
+* Copy/paste does nothing with the room linking functionality, creating duplicated buttons.
+* Adding buttons won't set up the modifier to 255, which is used as a "non-event" button.
 * Multiple-tile feature works in the selection cursor but it's not implemented.
 

@@ -150,7 +150,7 @@ void stack_or(flag_type data) {
 
 /* DUR: Do actions sublayer */
 
-#define MARK_BITS 5
+#define MARK_BITS 7
 typedef enum {
 	mark_middle=0,
 	mark_start=1,
@@ -161,8 +161,11 @@ typedef enum {
 	flag_remap=8,
 	flag_redoor=16,
 
-	flag_mask=28,
-	mark_flag_mask=31
+	flag_guard_presence   =32,
+	flag_guard_repaint    =64,
+
+	flag_mask=124,
+	mark_flag_mask=127
 }tUndoQueueMark;
 
 tUndoQueueMark prevMark=mark_middle;
@@ -654,13 +657,6 @@ void editor__paste_room(int room) {
 	editor__do_mark_end(flag_redraw);
 }
 
-/*
-Debug char position
-printf("Guard | %d-%d %d,%d |\n",
-	Guard.curr_col,Guard.curr_row,Guard.x,Guard.y
-);
-*/
-
 void save_resource(const char* file, int res, const void* data, int size, const char* ext) {
 	char aux[255];
 	FILE* fp;
@@ -696,29 +692,45 @@ void save_level() {
 }
 
 void editor__set_guard(byte tilepos,byte x) {
-	printf("tile %d\n",level.guards_tile[loaded_room-1]);
-	printf("c %d\n",level.guards_color[loaded_room-1]);
-	printf("x %d\n",level.guards_x[loaded_room-1]);
-	printf("dir %d\n",level.guards_dir[loaded_room-1]);
-	printf("skill %d\n",level.guards_skill[loaded_room-1]);
-	if (level.guards_tile[loaded_room-1]>=30) {
-		editor__do(guards_tile[loaded_room-1],tilepos,mark_start);
+	if (level.guards_tile[loaded_room-1]>=30) { //if not present: create
+		editor__do(guards_tile[loaded_room-1],tilepos,mark_start|flag_guard_presence);
 		editor__do(guards_color[loaded_room-1],1,mark_middle);
 		editor__do(guards_x[loaded_room-1],x,mark_middle);
 		editor__do(guards_dir[loaded_room-1],0,mark_middle);
 		editor__do(guards_seq_hi[loaded_room-1],0,mark_middle);
-		editor__do(guards_skill[loaded_room-1],0,mark_end);
-	} else {
-		editor__do(guards_tile[loaded_room-1],tilepos,mark_start);
-		editor__do(guards_x[loaded_room-1],x,mark_end);
+		editor__do(guards_skill[loaded_room-1],0,mark_end|flag_guard_presence);
+	} else { //if present move
+		editor__do(guards_tile[loaded_room-1],tilepos,mark_start|flag_guard_presence);
+		editor__do(guards_x[loaded_room-1],x,mark_end|flag_guard_presence);
 	}
 	enter_guard(); // load color, HP
 }
 
+void editor__synchronize_guard_repaint() {
+	curr_guard_color = edited.guards_color[loaded_room-1];
+	set_chtab_palette(chtab_addrs[id_chtab_5_guard], &guard_palettes[0x30 * curr_guard_color - 0x30], 0x10);
+	draw_guard_hp(guardhp_curr,guardhp_max);
+}
+void editor__synchronize_guard_presence() {
+	if (edited.guards_tile[loaded_room-1]>=30) { //not present
+		draw_guard_hp(0, 10); // delete HP
+		Guard.direction = dir_56_none; // delete guard from screen
+	} else { //repositon guard if deleted and undo
+		int tilepos=edited.guards_tile[loaded_room-1];
+		int x=edited.guards_x[loaded_room-1];
+		if (x==255) {
+			x=x_bump[tilepos % 10 + 5] + 14;
+			level.guards_x[loaded_room-1]=x; //re-initialize guard after undo/redo
+		}
+		editor__position(&Guard,tilepos%10,tilepos/10,loaded_room,x,6569);
+		Guard.direction=edited.guards_dir[loaded_room-1];
+		editor__synchronize_guard_repaint();
+	}
+}
+
 void editor__remove_guard() {
-	draw_guard_hp(0, 10); // delete HP
-	Guard.direction = dir_56_none; // delete guard from screen
-	editor__do(guards_tile[loaded_room-1],30,mark_all);
+	editor__do(guards_tile[loaded_room-1],30,mark_all|flag_guard_presence);
+	editor__synchronize_guard_presence();
 }
 
 int editor__guard_skill(int delta) {
@@ -732,11 +744,11 @@ int editor__guard_skill(int delta) {
 
 int editor__guard_color(int delta) {
 	int new_color=level.guards_color[loaded_room-1]+delta;
-	if (0<=new_color && new_color<=7 && level.guards_tile[loaded_room-1]<30) {
-		editor__do(guards_color[loaded_room-1],new_color,mark_all);
+	if (1<=new_color && new_color<=7 && level.guards_tile[loaded_room-1]<30) {
+		editor__do(guards_color[loaded_room-1],new_color,mark_all|flag_guard_repaint);
 		// If I call redraw_screen() or enter_guard() directly then the kid changes into a guard...
-		curr_guard_color = new_color;
-		need_full_redraw = 1; // force redraw
+		editor__synchronize_guard_repaint();
+		//need_full_redraw = 1; // force redraw. Didn't change the hp color so I manually changed the palette.
 		return new_color;
 	}
 	return -1;
@@ -744,7 +756,7 @@ int editor__guard_color(int delta) {
 
 void editor__guard_toggle() {
 	if (level.guards_tile[loaded_room-1]<30) {
-		editor__do(guards_dir[loaded_room-1],~level.guards_dir[loaded_room-1],mark_all);
+		editor__do(guards_dir[loaded_room-1],~level.guards_dir[loaded_room-1],mark_all|flag_guard_presence);
 	}
 }
 
@@ -808,7 +820,6 @@ void sanitize_room(int room, int sanitation_level) {
 	byte tile;
 	for (i=0;i<30;i++) {
 		tile=tile_at(i,room);
-		/* printf("sanitize %d %d %d\n",i,tile,(edited.bg[(room-1)*30+(i)])); */
 		if (sanitation_level==1) if(tile!=tiles_11_loose && tile!=tiles_20_wall && tile!=31) { /* check for alone tile */
 			if (left_is(i,tiles_20_wall)==tiles_20_wall && right_is(i,tiles_20_wall)==tiles_20_wall) {
 				int tileup=up_is(i,tiles_20_wall);
@@ -1237,17 +1248,6 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int
 	} else if (e.button==SDL_BUTTON_LEFT && shift && !alt && ctrl && m) { /* ctrl+shift+m+left click: go to map room */
 		if (map_selected_room) editor__randomize(map_selected_room);
 	}
-
-/* printf("hola mundo %d %d %d %d %c%c%c\n",
-	e.state,
-	e.button,
-	tile,
-	current_level,
-	shift?'s':' ',
-	ctrl?'c':' ',
-	alt?'a':' '
-);*/
-
 }
 extern word cheats_enabled;
 void editor__process_key(int key,const char** answer_text, word* need_show_text) {
@@ -1272,6 +1272,7 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 		*need_show_text=1;
 		return;
 	}
+
 	if (!editor_enabled) return;
 	switch (key) {
 	case SDL_SCANCODE_Z | WITH_CTRL: /* ctrl-z */
@@ -1284,9 +1285,13 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 			mrk=editor__redo();
 		}
 		ed_redraw_room();
-		if (mrk&flag_redraw) redraw_screen(1);
+		if (mrk&flag_redraw) need_full_redraw = 1; // force redraw
 		if (mrk&flag_remap) room_api_refresh(&edited_map);
 		//TODO: if (mrk&flag_redoor) door_api_refresh(&edited_doorlinks);
+		if (mrk&flag_guard_presence)
+			editor__synchronize_guard_presence();
+		if (mrk&flag_guard_repaint)
+			editor__synchronize_guard_repaint();
 		}
 		break;
 	case SDL_SCANCODE_DELETE: /* delete */
@@ -1295,7 +1300,7 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 		break;
 	case SDL_SCANCODE_DELETE | WITH_SHIFT: /* shift-delete */
 	case SDL_SCANCODE_BACKSPACE | WITH_SHIFT: /* shift-backspace */
-		editor__do_mark_start(flag_remap); //TODO: move to another function
+		editor__do_mark_start(flag_remap);
 		if (drawn_room!=edited.start_room) {
 			/* select next room to show */
 			aux_int=edited.roomlinks[drawn_room-1].left;
@@ -1322,7 +1327,7 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 			snprintf(aux,50,"Guard skill is %d",aux_int);
 			*answer_text=aux;
 			*need_show_text=1;
-			/* TODO: synch */
+			/* TODO: synchronize skills with the game */
 		}
 		break;
 	case SDL_SCANCODE_Q:
@@ -1332,7 +1337,6 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 			snprintf(aux,50,"Guard color code is %d",aux_int);
 			*answer_text=aux;
 			*need_show_text=1;
-			/* TODO: synch */
 		}
 		break;
 	case SDL_SCANCODE_TAB:
@@ -1343,7 +1347,7 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 	case SDL_SCANCODE_H | WITH_SHIFT:
 	case SDL_SCANCODE_U | WITH_SHIFT:
 	case SDL_SCANCODE_N | WITH_SHIFT:
-		editor__do_mark_start(flag_remap);
+		editor__do_mark_start(flag_redraw|flag_remap);
 		if (key==(SDL_SCANCODE_J | WITH_SHIFT))
 			aux_int=room_api_insert_room_right(&edited_map,room_api_where_room(&edited_map,drawn_room));
 		if (key==(SDL_SCANCODE_H | WITH_SHIFT))
@@ -1744,8 +1748,6 @@ void room_api__private_measure_similarity(const tMap* map,tile_global_location_t
 void room_api_measure_similarity(const tMap* map, tile_global_location_type origin, tile_global_location_type target, byte* level_mask, tProbability* probabilities) {
 	float result=0,total=0; /* ORIGIN is iterating CURRENT */
 	tile_packed_type current_tile;
-
-/* printf("room_api_measure_similarity(tile_global_location_type or=(%d,%d) target=(%d,%d))\n",origin.room,origin.tilepos,target.room,target.tilepos); */
 
 	current_tile=room_api__private_get_tile_if_exists(map,origin,level_mask,0,0);
 	if (current_tile.number==NO_TILE) return; /* there is no tile here */

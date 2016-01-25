@@ -103,6 +103,7 @@ Controlling the game:
 * Alt-Enter: toggle fullscreen
 * F6: quicksave
 * F9: quickload
+* Alt-E: Enable/disable editor mode. Note that after disabling editor mode, cheats remain enabled, even without megahit command line.
 
 Viewing or recording replays:
 * Ctrl+Tab (in game): start or stop recording
