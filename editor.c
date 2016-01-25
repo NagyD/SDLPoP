@@ -1243,15 +1243,31 @@ void editor__handle_mouse_wheel(SDL_MouseWheelEvent e,int shift, int ctrl, int a
 		x=x*140/320+62;
 		if (row<0 || row>2) return;
 		tilepos=row*10+col;
-		if (e.y!=0) {
-//			if (!ctrl) { TODO: use ctrl to edit modifier
-			byte v=(edited.fg[T(loaded_room,tilepos)]+e.y)&TILE_MASK;
-			editor__do(fg[T(loaded_room,tilepos)],v,mark_all|flag_redraw);
+
+		if (ctrl) {
+			e.x=e.y;
+			e.y=0;
+		}
+
+		if (e.y!=0 || e.x!=0) {
+			tile_global_location_type location=T(loaded_room,tilepos);
+			if (e.y!=0) {
+				byte v=(edited.fg[location]+e.y)&TILE_MASK;
+				editor__do(fg[location],v,mark_start|flag_redraw);
+				editor__do(bg[location],0,mark_end|flag_redraw);
+			} else {
+				byte v=(edited.bg[location]+e.x);
+				editor__do(bg[location],v,mark_all|flag_redraw);
+			}
 
 			ed_redraw_tile(tilepos);
 			if (tilepos) ed_redraw_tile(tilepos-1);
 			if (tilepos!=29) ed_redraw_tile(tilepos+1);
-			redraw_screen(1);
+
+			char aux[40];
+			snprintf(aux,40,"FG:%d/%d BG:%d",edited.fg[location]&TILE_MASK, edited.fg[location]>>5, edited.bg[location]);
+			print(aux);
+			need_full_redraw=1;
 		}
 	}
 }
