@@ -1228,6 +1228,9 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int
 		redraw_screen(1);
 	} else if (e.button==SDL_BUTTON_LEFT && shift && !alt && ctrl && !m) { /* ctrl+shift+left click: randomize tile */
 		randomize_tile(tilepos);
+		ed_redraw_tile(tilepos);
+		if (tilepos) ed_redraw_tile(tilepos-1);
+		if (tilepos!=29) ed_redraw_tile(tilepos+1);
 		redraw_screen(1);
 	} else if (e.button==SDL_BUTTON_LEFT && !shift && alt && ctrl && !m) { /* ctrl+alt+left click: toggle door mechanism links */
 		if (door_api_is_related(edited.fg[T(loaded_room,tilepos)]&TILE_MASK)) {
