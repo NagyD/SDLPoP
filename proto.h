@@ -504,6 +504,7 @@ void __pascal far erase_bottom_text(int arg_0);
 void __pascal far wall_pattern(int which_part,int which_table);
 void __pascal far draw_left_mark (word arg3, word arg2, word arg1);
 void __pascal far draw_right_mark (word arg2, word arg1);
+image_type* get_image(short chtab_id, int id);
 
 // SEG009.C
 void sdlperror(const char* header);

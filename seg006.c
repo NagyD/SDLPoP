@@ -892,19 +892,8 @@ int __pascal far get_tile_at_char() {
 
 // seg006:0723
 void __pascal far set_char_collision() {
-	image_type* image;
-	if (obj_id < 0 || obj_id >= chtab_addrs[obj_chtab]->n_images) {
-		//printf("set_char_collision: from chtab %d (%d images) trying to use out-of-range image index %d\n", obj_chtab, chtab_addrs[obj_chtab]->n_images, obj_id);
-		//quit(1);
-		// After going up the level door, obj_id=255.
-		//return;
-		image = NULL;
-	} else {
-		image = chtab_addrs[obj_chtab]->images[obj_id];
-	}
+	image_type* image = get_image(obj_chtab, obj_id);
 	if (image == NULL) {
-		//printf("set_char_collision: from chtab %d (%d images) trying to use NULL image %d\n", obj_chtab, chtab_addrs[obj_chtab]->n_images, obj_id);
-		//quit(1);
 		char_width_half = 0;
 		char_height = 0;
 	} else {
