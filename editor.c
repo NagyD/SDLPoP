@@ -1200,6 +1200,12 @@ void editor__on_refresh(surface_type* screen) {
 
 }
 
+void print(const char* text) {
+	display_text_bottom(text);
+	text_time_total = 24;
+	text_time_remaining = 24;
+}
+
 void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int alt, int m) {
 	GetUnscaledMouseState(&e.x, &e.y);
 	int col,row,tilepos,x;
@@ -1220,6 +1226,9 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int
 	} else if (e.button==SDL_BUTTON_RIGHT && !shift && !alt && !ctrl && !m) { /* right click: copy tile */
 		copied.tiletype=edited.fg[T(loaded_room,tilepos)];
 		copied.modifier=edited.bg[T(loaded_room,tilepos)];
+		char aux[40];
+		snprintf(aux,40,"COPIED FG:%d/%d BG:%d",copied.tiletype&TILE_MASK, copied.tiletype>>5, copied.modifier);
+		print(aux);
 	} else if (e.button==SDL_BUTTON_LEFT && shift && !alt && !ctrl && !m) { /* shift+left click: move kid */
 		editor__position(&Kid,col,row,loaded_room,x,6563);
 	} else if (e.button==SDL_BUTTON_RIGHT && shift && !alt && !ctrl && !m) { /* shift+right click: move move/put guard */
@@ -1235,10 +1244,8 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int
 	} else if (e.button==SDL_BUTTON_LEFT && !shift && alt && ctrl && !m) { /* ctrl+alt+left click: toggle door mechanism links */
 		if (door_api_is_related(edited.fg[T(loaded_room,tilepos)]&TILE_MASK)) {
 			editor__do_mark_start(flag_redoor);
-			display_text_bottom(editor__toggle_door_tile(loaded_room,tilepos));
+			print(editor__toggle_door_tile(loaded_room,tilepos));
 			editor__do_mark_end(flag_redoor);
-			text_time_total = 24;
-			text_time_remaining = 24;
 		}
 	} else if (e.button==SDL_BUTTON_RIGHT && !shift && alt && ctrl && !m) { /* ctrl+alt+right click: pick door mechanism tile */
 		if (door_api_is_related(edited.fg[T(loaded_room,tilepos)]&TILE_MASK)) {
