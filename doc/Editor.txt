@@ -8,47 +8,47 @@ The concept is different to other editors. It is based on the game, so learning 
 Keycodes
 ~~~~~~~~
 
-U: screen up
-H: screen left
-J: screen right
-N: screen down
-Ctrl-A: restart level
+U: screen up.
+H: screen left.
+J: screen right.
+N: screen down.
+Ctrl-A: restart level.
 
-Shift-U: insert screen up
-Shift-H: insert screen left
-Shift-J: insert screen right
-Shift-N: insert screen down
-Del or Backspace: delete guard
-Shift-Del or Backspace: delete room
-Ctrl-C: Copy room
-Ctrl-V: Paste room (the version legend is dropped in edition mode)
-Alt-S: Save level
-Q: Increment guard color
-W: Decrement guard color
-]: Increment guard skill
-[: Decrement guard skill
-Ctrl-Z: Undo
-Ctrl-Alt-Z: Redo
-Tab: Toggle guard direction
-Mouse left click: Put copied tile
-Mouse right click: Copy tile
-Shift-Mouse left click: Put/move the kid there
-Shift-Mouse right click: Put/move a guard there
-Y: Set starting position to the place the kid is
-P: Toggle tile palette mode
-Ctrl-Alt-Mouse left click: Toggle door activation by selected button
-Ctrl-Alt-Mouse right click: Select rise and drop buttons for door linking
-Alt-R: Revert level to latest saved version
-Ctrl-Shift-Mouse left click: Put random tile
-Ctrl-Shift-R: Randomize the whole screen
-M: Show map (keep the key pressed)
-Alt-P: Save Palette
+Shift-U: insert screen up.
+Shift-H: insert screen left.
+Shift-J: insert screen right.
+Shift-N: insert screen down.
+Del or Backspace: delete guard.
+Shift-Del or Backspace: delete room.
+Ctrl-C: Copy room.
+Ctrl-V: Paste room (the version legend is dropped in edition mode).
+Alt-S: Save level.
+Q: Increment guard color.
+W: Decrement guard color.
+]: Increment guard skill.
+[: Decrement guard skill.
+Ctrl-Z: Undo.
+Ctrl-Alt-Z: Redo.
+Tab: Toggle guard direction.
+Mouse left click: Put copied tile.
+Mouse right click: Copy tile.
+Shift-Mouse left click: Put/move the kid there.
+Shift-Mouse right click: Put/move a guard there.
+Y: Set starting position to the place the kid is.
+P: Toggle tile palette mode.
+Ctrl-Alt-Mouse left click: Toggle door activation by selected button.
+Ctrl-Alt-Mouse right click: Select rise and drop buttons for door linking.
+Alt-R: Revert level to latest saved version.
+Ctrl-Shift-Mouse left click: Put random tile.
+Ctrl-Shift-R: Randomize the whole screen.
+M: Show map (keep the key pressed).
+Alt-P: Save Palette.
+Alt-E: Enable/disable editor mode. Note that after disabling editor mode, cheats remain enabled, even without megahit command line.
 
 By pressing Shift the mouse pointer indicates where the characters will be placed. Using Ctrl-Alt door linking showing features are activated: Blue tiles are not linkable, red tiles are linkable (doors and buttons), the number displayed indicates how many links this tile has.
 
 TODO List/known bugs:
 * Undo/Redo features are not completely functional. Also there is a problem when refreshing the screen may break the guard tiles.
-* Palette screens are not yet implemented.
 * Copy/paste does nothing with the room linking functionality.
 * Multiple-tile feature works in the selection cursor but it's not implemented.
 
