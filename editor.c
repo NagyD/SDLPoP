@@ -1185,11 +1185,8 @@ void editor__on_refresh(surface_type* screen) {
 
 			{
 			int i,j;
-			if (room_api_get_room_location(&edited_map,drawn_room,&i,&j)) {
-/*				=x/(tw*10+1);
-				=y/(th*3+1);*/
+			if (room_api_get_room_location(&edited_map,drawn_room,&i,&j))
 				highlight_room(screen,offsetx,offsety,tw,th,i,j,0xff8040);
-			}
 			}
 
 			if (MouseState) {
@@ -1222,10 +1219,46 @@ void print(const char* text) {
 	text_time_remaining = 24;
 }
 
+void editor__handle_mouse_wheel(SDL_MouseWheelEvent e,int shift, int ctrl, int alt, int m);
+void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int alt, int m);
+
+void editor__handle_mouse(SDL_Event e,int shift, int ctrl, int alt, int m) {
+	if (!editor_active) return;
+	switch (e.type) {
+	case SDL_MOUSEWHEEL:
+		editor__handle_mouse_wheel(e.wheel,shift,ctrl,alt,m);
+		return;
+	case SDL_MOUSEBUTTONDOWN:
+		editor__handle_mouse_button(e.button,shift,ctrl,alt,m);
+		return;
+	}
+}
+
+void editor__handle_mouse_wheel(SDL_MouseWheelEvent e,int shift, int ctrl, int alt, int m) {
+	/* TODO: merge this header with editor__handle_mouse_button header and send to editor__handle_mouse */
+	int col,row,tilepos,x,y;
+	if (MouseState) {
+		col=x/32;
+		row=(y-3)/63;
+		x=x*140/320+62;
+		if (row<0 || row>2) return;
+		tilepos=row*10+col;
+		if (e.y!=0) {
+//			if (!ctrl) { TODO: use ctrl to edit modifier
+			byte v=(edited.fg[T(loaded_room,tilepos)]+e.y)&TILE_MASK;
+			editor__do(fg[T(loaded_room,tilepos)],v,mark_all|flag_redraw);
+
+			ed_redraw_tile(tilepos);
+			if (tilepos) ed_redraw_tile(tilepos-1);
+			if (tilepos!=29) ed_redraw_tile(tilepos+1);
+			redraw_screen(1);
+		}
+	}
+}
+
 void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int alt, int m) {
 	GetUnscaledMouseState(&e.x, &e.y);
 	int col,row,tilepos,x;
-	if (!editor_active) return;
 	col=e.x/32;
 	row=(e.y-3)/63;
 	x=e.x*140/320+62;
