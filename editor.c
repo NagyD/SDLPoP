@@ -18,13 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 The authors of this program may be contacted at http://forum.princed.org
 */
 
-
-/*
-TODO:
-	room decorate.
-	free room.
-*/
-
 #include "common.h"
 #ifdef USE_EDITOR
 
@@ -50,6 +43,7 @@ typedef struct {
 } tMap;
 
 long room_api_where_room(const tMap* map, byte room);
+int room_api_get_room_location(const tMap* map, int room, int* i, int* j);
 void room_api_refresh(tMap* map);
 void room_api_init(tMap* map);
 void room_api_free(tMap* map);
@@ -130,16 +124,19 @@ void stack_push(flag_type data) {
 		stack_pointer=realloc(stack_pointer,sizeof(flag_type)*stack_size);
 	}
 }
+
 int stack_pop(flag_type* data) {
 	if (!stack_cursor) return false;
 	*data=stack_pointer[--stack_cursor];
 	return true;
 }
+
 int stack_unpop(flag_type* data) {
 	if (stack_cursor==stack_top) return false;
 	*data=stack_pointer[stack_cursor++];
 	return true;
 }
+
 void stack_or(flag_type data) {
 	if (stack_cursor) {
 		stack_pointer[stack_cursor-1]|=data;
@@ -220,6 +217,7 @@ tUndoQueueMark editor__undo() {
 	}
 	return mark&flag_mask;
 }
+
 tUndoQueueMark editor__redo() {
 	flag_type aux;
 	int offset;
@@ -260,6 +258,7 @@ void ed_redraw_tile(int tilepos) { //of the current room
 	level.bg[T(loaded_room,tilepos)]=edited.bg[T(loaded_room,tilepos)];
 	load_alter_mod(tilepos);
 }
+
 void ed_redraw_room() { //all the current room
 	for (int i=0;i<30;i++) ed_redraw_tile(i);
 }
@@ -329,6 +328,7 @@ void door_api_init_iterator(tIterator* it, tile_global_location_type tp) {
 		it->type=noneIterator;
 		return;
 }
+
 int door_api_get(tIterator* it, tile_global_location_type *tile) {
 	switch (it->type) {
 	case buttonIterator:
@@ -419,6 +419,7 @@ int door_api_link(int* max_doorlinks, tile_global_location_type door,tile_global
 	}
 	return 1;
 }
+
 void door_api_unlink(int* max_doorlinks, tile_global_location_type door,tile_global_location_type button) {
 	/* read link */
 	tile_global_location_type tile;
@@ -457,6 +458,7 @@ void door_api_unlink(int* max_doorlinks, tile_global_location_type door,tile_glo
 
 	(*max_doorlinks)--;
 }
+
 int door_api_fix_pos(tile_global_location_type* door,tile_global_location_type* button) {
 	if (*door==-1 || *button==-1) return 0;
 	byte tile_door=edited.fg[*door]&TILE_MASK;
@@ -591,6 +593,7 @@ void load_edit_palettes(level_type* level_to_load) {
 			level_to_load->roomlinks[a].down=(a>=24+4)?0:a+4+1;
 		}
 }
+
 void save_edit_palettes() {
 	save_resource("editor",100,&(edited.fg[NUMBER_OF_ROOMS*30]),8*30, "bin");
 	save_resource("editor",101,&(edited.bg[NUMBER_OF_ROOMS*30]),8*30, "bin");
@@ -711,6 +714,7 @@ void editor__synchronize_guard_repaint() {
 	set_chtab_palette(chtab_addrs[id_chtab_5_guard], &guard_palettes[0x30 * curr_guard_color - 0x30], 0x10);
 	draw_guard_hp(guardhp_curr,guardhp_max);
 }
+
 void editor__synchronize_guard_presence() {
 	if (edited.guards_tile[loaded_room-1]>=30) { //not present
 		draw_guard_hp(0, 10); // delete HP
@@ -881,6 +885,7 @@ void sanitize_room(int room, int sanitation_level) {
 	}
 
 }
+
 void editor__randomize(int room) {
 	editor__do_mark_start(flag_redraw);
 	randomize_room(room);
@@ -889,7 +894,6 @@ void editor__randomize(int room) {
 	ed_redraw_room();
 	redraw_screen(1);
 }
-
 
 /********************************************\
 *           Blitting editor layer            *
@@ -938,6 +942,16 @@ void blit_sprites(int x,int y, tEditorImageOffset sprite, tCursorColors colors, 
 	}
 }
 
+void highlight_room(surface_type* screen, int offsetx,int offsety, int tw, int th, int i, int j, Uint32 color) {
+	SDL_Rect line1={offsetx+(tw*10+1)*i,offsety+(th*3+1)*j,tw*10+2,1};
+	SDL_Rect line2={offsetx+(tw*10+1)*i,offsety+(th*3+1)*j,1,th*3+2};
+	SDL_Rect line3={offsetx+(tw*10+1)*i,offsety+(th*3+1)*(j+1),tw*10+2,1};
+	SDL_Rect line4={offsetx+(tw*10+1)*(i+1),offsety+(th*3+1)*j,1,th*3+2};
+	SDL_FillRect(screen,&line1,color);
+	SDL_FillRect(screen,&line2,color);
+	SDL_FillRect(screen,&line3,color);
+	SDL_FillRect(screen,&line4,color);
+}
 /********************************************\
 *             INPUT BINDINGS!!!!             *
 \********************************************/
@@ -1142,7 +1156,7 @@ void editor__on_refresh(surface_type* screen) {
 								src2_rect.x=tw*0;
 
 								if (SDL_BlitSurface(people, &src2_rect, screen, &dest_rect) != 0) {
-									sdlperror("SDL_BlitSurface on editor showing map");
+									sdlperror("SDL_BlitSurface on editor showing kid on map");
 									quit(1);
 								}
 							}
@@ -1153,7 +1167,7 @@ void editor__on_refresh(surface_type* screen) {
 								src2_rect.x=tw*1;
 
 								if (SDL_BlitSurface(people, &src2_rect, screen, &dest_rect) != 0) {
-									sdlperror("SDL_BlitSurface on editor showing map");
+									sdlperror("SDL_BlitSurface on editor showing guard on map");
 									quit(1);
 								}
 							}
@@ -1169,23 +1183,25 @@ void editor__on_refresh(surface_type* screen) {
 			SDL_Rect lineV={sx,offsety,1,sh};
 			SDL_FillRect(screen,&lineV,0xffffff);
 
+			{
+			int i,j;
+			if (room_api_get_room_location(&edited_map,drawn_room,&i,&j)) {
+/*				=x/(tw*10+1);
+				=y/(th*3+1);*/
+				highlight_room(screen,offsetx,offsety,tw,th,i,j,0xff8040);
+			}
+			}
+
 			if (MouseState) {
-				x=x-offsetx;
-				y=y-offsety;
-				if (x<sw && y<sh) {
+				x-=offsetx;
+				y-=offsety;
+				if (0<x && x<sw && 0<y && y<sh) {
 					int i=x/(tw*10+1);
 					int j=y/(th*3+1);
 					tile_global_location_type t=room_api_translate(&edited_map,i*10,j*3);
 					if (t!=-1) { //room is R(t)
 						map_selected_room=R(t);
-						SDL_Rect line1={offsetx+(tw*10+1)*i,offsety+(th*3+1)*j,tw*10+2,1};
-						SDL_Rect line2={offsetx+(tw*10+1)*i,offsety+(th*3+1)*j,1,th*3+2};
-						SDL_Rect line3={offsetx+(tw*10+1)*i,offsety+(th*3+1)*(j+1),tw*10+2,1};
-						SDL_Rect line4={offsetx+(tw*10+1)*(i+1),offsety+(th*3+1)*j,1,th*3+2};
-						SDL_FillRect(screen,&line1,0x55ff55);
-						SDL_FillRect(screen,&line2,0x55ff55);
-						SDL_FillRect(screen,&line3,0x55ff55);
-						SDL_FillRect(screen,&line4,0x55ff55);
+						highlight_room(screen,offsetx,offsety,tw,th,i,j,0x55ff55);
 					} else {
 						map_selected_room=0;
 					}
@@ -1259,6 +1275,7 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int
 		if (map_selected_room) editor__randomize(map_selected_room);
 	}
 }
+
 extern word cheats_enabled;
 void editor__process_key(int key,const char** answer_text, word* need_show_text) {
 	static char aux[50];
@@ -1511,6 +1528,15 @@ void room_api_get_size(const tMap* map,int* w, int* h) {
 	*h=(map->crop.bottom-map->crop.top+1)*3;
 }
 
+int room_api_get_room_location(const tMap* map, int room, int* i, int* j) {
+	int where=map->list[room-1];
+	if (!where) return 0;
+
+	*i= (where%MAP_SIDE) - map->crop.left;
+	*j= (where/MAP_SIDE) - map->crop.top;
+	return 1;
+}
+
 tile_global_location_type room_api_translate(const tMap* map,int x, int y) {
 	int col=x%10;
 	int row=y%3;
@@ -1564,6 +1590,7 @@ void room_api_free_room(tMap* map,int r) { /* DO NOT FREE THE STARTING ROOM! */
 		}
 	*/
 }
+
 void room_api_put_room(tMap* map, long where, int r) {
 	map->list[r-1]=where;
 	map->map[where]=r;
@@ -1579,6 +1606,7 @@ void room_api_put_room(tMap* map, long where, int r) {
 #undef ADD_LINK
 
 }
+
 long room_api_where_room(const tMap* map, byte room) {
 	return map->list[room-1];
 }
@@ -1674,6 +1702,7 @@ int room_api_insert_room_left(tMap* map, int where) {
 	}
 	return room_api_insert_room_right(map,where+POS_LEFT);
 }
+
 int room_api_insert_room_up(tMap* map, int where) {
 	if (!map->map[where+POS_UP]) {
 		return room_api_alloc_room(map,where+POS_UP);
@@ -1745,6 +1774,7 @@ float room_api_measure_entropy(const tMap* map, tile_global_location_type t, byt
 
 	return result;
 }
+
 void room_api__private_measure_similarity(const tMap* map,tile_global_location_type origin, tile_global_location_type target, byte* level_mask, int x, int y,float* result, float* total, float weight) {
 	tile_packed_type target_tile, origin_tile;
 	target_tile=room_api__private_get_tile_if_exists(map,target,level_mask,x,y);

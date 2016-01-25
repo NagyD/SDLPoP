@@ -52,7 +52,6 @@ TODO List/known bugs:
 * Copy/paste does nothing with the room linking functionality, creating duplicated buttons.
 * Adding buttons won't set up the modifier to 255, which is used as a "non-event" button.
 * Multiple-tile feature works in the selection cursor but it's not implemented.
-* Make an indicator of drawn_room on the map
 * Selection using middle button scroll and full selection using the palette room 8 redrawn.
-
+* Automatic decoration of room.
 
