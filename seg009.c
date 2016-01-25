@@ -2201,9 +2201,7 @@ const rect_type far * __pascal far method_5_rect(const rect_type far *rect,int b
 	rect_to_sdlrect(rect, &dest_rect);
 	rgb_type palette_color = palette[color];
 #ifndef USE_ALPHA
-	// @Hack: byte order (rgb) is reversed (otherwise the color is wrong) - why doesn't this work as expected?
-	// This is a bug in SDL2: https://bugzilla.libsdl.org/show_bug.cgi?id=2986
-    uint32_t rgb_color = SDL_MapRGB(onscreen_surface_->format, palette_color.b<<2, palette_color.g<<2, palette_color.r<<2);
+    uint32_t rgb_color = SDL_MapRGB(onscreen_surface_->format, palette_color.r<<2, palette_color.g<<2, palette_color.b<<2);
 #else
 	uint32_t rgb_color = SDL_MapRGBA(current_target_surface->format, palette_color.r<<2, palette_color.g<<2, palette_color.b<<2, color == 0 ? SDL_ALPHA_TRANSPARENT : SDL_ALPHA_OPAQUE);
 #endif
@@ -2669,9 +2667,7 @@ void __pascal far set_bg_attr(int vga_pal_index,int hc_pal_index) {
 		rect.w = offscreen_surface->w;
 		rect.h = offscreen_surface->h;
 		rgb_type palette_color = palette[hc_pal_index];
-        // @Hack: byte order is reversed (otherwise the color is wrong). Why doesn't this work as expected?
-		// This is a bug in SDL2: https://bugzilla.libsdl.org/show_bug.cgi?id=2986
-		uint32_t rgb_color = SDL_MapRGB(onscreen_surface_->format, palette_color.b<<2, palette_color.g<<2, palette_color.r<<2) /*& 0xFFFFFF*/;
+		uint32_t rgb_color = SDL_MapRGB(onscreen_surface_->format, palette_color.r<<2, palette_color.g<<2, palette_color.b<<2) /*& 0xFFFFFF*/;
 		//SDL_UpdateRect(onscreen_surface_, 0, 0, 0, 0);
 		// First clear the screen with the color of the flash.
 		if (SDL_FillRect(onscreen_surface_, &rect, rgb_color) != 0) {

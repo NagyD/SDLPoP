@@ -248,6 +248,6 @@ Mac OS X:
 		a) Type './prince' or './prince full'.
 		b) Hit Control-Q to quit.
 
-	Tested on OSX 10.9.5 with Xcode 6.0.1
+	Tested on OSX 10.9.5 and OSX 10.11.2.
 
 
