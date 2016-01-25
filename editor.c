@@ -942,7 +942,7 @@ void blit_sprites(int x,int y, tEditorImageOffset sprite, tCursorColors colors, 
 *             INPUT BINDINGS!!!!             *
 \********************************************/
 
-#define MouseState !GetUnscaledMouseState(&x,&y) && (x>=0) && (y>=3) && (x<320) && (y<192)
+#define MouseState !GetUnscaledMouseState(&x,&y) && (x>0) && (y>=3) && (x<319) && (y<192)
 void editor__on_refresh(surface_type* screen) {
 	if (chtab_editor_sprites) {
 		int x,y, colors_total=1;
