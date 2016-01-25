@@ -103,6 +103,7 @@ Controlling the game:
 * Alt-Enter: toggle fullscreen
 * F6: quicksave
 * F9: quickload
+* Alt-E: Enable/disable editor mode. Note that after disabling editor mode, cheats remain enabled, even without megahit command line.
 
 Viewing or recording replays:
 * Ctrl+Tab (in game): start or stop recording
@@ -171,7 +172,7 @@ Since version 1.16, there is support for fake tiles, for example walls that the 
 The Apoplexy level editor supports these additional tiles since v3.0: http://www.popot.org/level_editors.php?editor=apoplexy
 (Just don't overuse them, please!)
 
-After version 1.16, running the game with the 'edit' command-line option provides a fully functional level editor. For more information check the "Editor.txt" file.
+Since version 1.17, running the game with the 'edit' command-line option provides a fully functional level editor. For more information check the "Editor.txt" file.
 
 REPLAYS
 =======
@@ -235,8 +236,8 @@ Mac OS X:
 		b) sudo port install libsdl2 libsdl2_image libsdl2_mixer
 	or
 		a) Install "homebrew"
-		b) sudo brew install libsdl2 libsdl2_image
-		c) sudo brew install sdl2_mixer --with-libvorbis
+		b) brew install libsdl2 libsdl2_image
+		c) brew install sdl2_mixer --with-libvorbis
 
 	Get development tools:
 		a) Install Xcode.
@@ -247,7 +248,6 @@ Mac OS X:
 		a) Type './prince' or './prince full'.
 		b) Hit Control-Q to quit.
 
-	Tested on OSX 10.9.5 with Xcode 6.0.1
-	It's been reported that 'sudo brew install libsdl2 libsdl2_image libsdl2_mixer' also works but has an issue with the ogg files.
+	Tested on OSX 10.9.5 and OSX 10.11.2.
 
 
