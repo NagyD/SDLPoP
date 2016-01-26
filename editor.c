@@ -57,6 +57,7 @@ int room_api_insert_room_right(tMap* map, int where);
 int room_api_insert_room_left(tMap* map, int where);
 int room_api_insert_room_up(tMap* map, int where);
 int room_api_insert_room_down(tMap* map, int where);
+tile_global_location_type room_api_tile_move(const tMap* map, tile_global_location_type t, char col, char row);
 
 /********************************************\
 *      Randomization sublayer headers        *
@@ -174,8 +175,15 @@ void editor__do_mark_end(tUndoQueueMark m) {
 }
 
 /* editor level layer used by do/undo/redo */
+typedef struct {
+	tile_and_mod main;
+	enum {extra_none,extra_up='A',extra_down='B',extra_left='L',extra_right='R'} extratype;
+	tile_and_mod extra;
+} copied_type;
+
+
 void editor__load_level();
-tile_and_mod copied={0,0};
+copied_type copied={{0,0},extra_none,{0,0}};
 byte copied_room_fg[30]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 byte copied_room_bg[30]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 level_type edited;
@@ -874,6 +882,7 @@ void sanitize_room(int room, int sanitation_level) {
 			break;
 		}
 
+		//TODO: add balcony
 		if (left_is(i,-1)==tiles_16_level_door_left) {
 				editor__do(fg[T(room,i)],tiles_17_level_door_right,mark_middle);
 				editor__do(bg[T(room,i)],0,mark_middle);
@@ -994,8 +1003,10 @@ void editor__on_refresh(surface_type* screen) {
 				y=row*63-10;
 				switch(level.fg[T(drawn_room,tilepos)]&TILE_MASK) {
 				case tiles_17_level_door_right:
+				case tiles_24_balcony_right:
 					x-=32;
 				case tiles_16_level_door_left:
+				case tiles_23_balcony_left:
 					image_offset=cExitdoor;
 					colors_total=2;
 					if (is_ctrl_alt_pressed) colors=cRight;
@@ -1282,17 +1293,77 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int
 	tilepos=row*10+col;
 
 	if (e.button==SDL_BUTTON_LEFT && !shift && !alt && !ctrl && !m) { /* left click: edit tile */
-		editor__do(fg[T(loaded_room,tilepos)],copied.tiletype,mark_start|flag_redraw);
-		editor__do(bg[T(loaded_room,tilepos)],copied.modifier,mark_end|flag_redraw);
+		tile_global_location_type t=T(loaded_room,tilepos);
+		editor__do_mark_start(flag_redraw);
+		editor__do(fg[t],copied.main.tiletype,mark_middle);
+		editor__do(bg[t],copied.main.modifier,mark_middle);
+		switch(copied.extratype) {
+		case extra_up:
+			t=room_api_tile_move(&edited_map,t,0,-1);
+			break;
+		case extra_down:
+			t=room_api_tile_move(&edited_map,t,0,1);
+			break;
+		case extra_left:
+			t=room_api_tile_move(&edited_map,t,-1,0);
+			break;
+		case extra_right:
+			t=room_api_tile_move(&edited_map,t,1,0);
+			break;
+		case extra_none:
+			t=-1;
+			break;
+		}
+		if (t!=-1) {
+			editor__do(fg[t],copied.extra.tiletype,mark_middle);
+			editor__do(bg[t],copied.extra.modifier,mark_middle);
+		}
+		editor__do_mark_end(flag_redraw);
 		ed_redraw_tile(tilepos);
 		if (tilepos) ed_redraw_tile(tilepos-1);
 		if (tilepos!=29) ed_redraw_tile(tilepos+1);
 		redraw_screen(1);
 	} else if (e.button==SDL_BUTTON_RIGHT && !shift && !alt && !ctrl && !m) { /* right click: copy tile */
-		copied.tiletype=edited.fg[T(loaded_room,tilepos)];
-		copied.modifier=edited.bg[T(loaded_room,tilepos)];
+		tile_global_location_type t=T(loaded_room,tilepos);
+		copied.main.tiletype=edited.fg[t];
+		copied.main.modifier=edited.bg[t];
+		switch(copied.main.tiletype&TILE_MASK) {
+		case tiles_16_level_door_left:
+		case tiles_23_balcony_left:
+			t=room_api_tile_move(&edited_map,t,1,0);
+			copied.extratype=extra_right;
+			break;
+		case tiles_17_level_door_right:
+		case tiles_24_balcony_right:
+			t=room_api_tile_move(&edited_map,t,-1,0);
+			copied.extratype=extra_left;
+			break;
+		case tiles_9_bigpillar_top:
+			t=room_api_tile_move(&edited_map,t,0,1);
+			copied.extratype=extra_down;
+			break;
+		case tiles_8_bigpillar_bottom:
+			t=room_api_tile_move(&edited_map,t,0,-1);
+			copied.extratype=extra_up;
+			break;
+		default:
+			copied.extratype=extra_none;
+			break;
+		}
 		char aux[40];
-		snprintf(aux,40,"COPIED FG:%d/%d BG:%d",copied.tiletype&TILE_MASK, copied.tiletype>>5, copied.modifier);
+		if (copied.extratype!=extra_none && t!=-1) {
+			copied.extra.tiletype=edited.fg[t];
+			copied.extra.modifier=edited.bg[t];
+			snprintf(aux,40,"COPIED FG:%d/%d+%d/%d%c BG:%d+%d",
+			            copied.main.tiletype&TILE_MASK, copied.main.tiletype>>5,
+			            copied.extra.tiletype&TILE_MASK, copied.extra.tiletype>>5,
+			            copied.extratype,
+			            copied.main.modifier,
+			            copied.extra.modifier
+			);
+		} else {
+			snprintf(aux,40,"COPIED FG:%d/%d BG:%d",copied.main.tiletype&TILE_MASK, copied.main.tiletype>>5, copied.main.modifier);
+		}
 		print(aux);
 	} else if (e.button==SDL_BUTTON_LEFT && shift && !alt && !ctrl && !m) { /* shift+left click: move kid */
 		editor__position(&Kid,col,row,loaded_room,x,6563);
