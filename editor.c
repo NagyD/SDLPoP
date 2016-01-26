@@ -760,7 +760,6 @@ int editor__guard_color(int delta) {
 		editor__do(guards_color[loaded_room-1],new_color,mark_all|flag_guard_repaint);
 		// If I call redraw_screen() or enter_guard() directly then the kid changes into a guard...
 		editor__synchronize_guard_repaint();
-		//need_full_redraw = 1; // force redraw. Didn't change the hp color so I manually changed the palette.
 		return new_color;
 	}
 	return -1;
@@ -882,13 +881,20 @@ void sanitize_room(int room, int sanitation_level) {
 			break;
 		}
 
-		//TODO: add balcony
 		if (left_is(i,-1)==tiles_16_level_door_left) {
 				editor__do(fg[T(room,i)],tiles_17_level_door_right,mark_middle);
 				editor__do(bg[T(room,i)],0,mark_middle);
 		}
 		if (right_is(i,-1)==tiles_17_level_door_right) {
 				editor__do(fg[T(room,i)],tiles_16_level_door_left,mark_middle);
+				editor__do(bg[T(room,i)],0,mark_middle);
+		}
+		if (left_is(i,-1)==tiles_23_balcony_left) {
+				editor__do(fg[T(room,i)],tiles_24_balcony_right,mark_middle);
+				editor__do(bg[T(room,i)],0,mark_middle);
+		}
+		if (right_is(i,-1)==tiles_24_balcony_right) {
+				editor__do(fg[T(room,i)],tiles_23_balcony_left,mark_middle);
 				editor__do(bg[T(room,i)],0,mark_middle);
 		}
 	}
