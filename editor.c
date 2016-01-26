@@ -973,6 +973,7 @@ typedef struct {
 	int inside;
 	int col,row,tilepos,x,y,x_b;
 	int keys;
+	Uint32 buttons;
 } mouse_type;
 
 mouse_type calculate_mouse(const Uint8* key_states) {
@@ -983,7 +984,7 @@ mouse_type calculate_mouse(const Uint8* key_states) {
 		(key_states[SDL_SCANCODE_LALT] || key_states[SDL_SCANCODE_RALT])     * k_alt   |
 		(key_states[SDL_SCANCODE_M])                                         * k_m     ;
 
-	GetUnscaledMouseState(&mouse.x,&mouse.y);
+	mouse.buttons=GetUnscaledMouseState(&mouse.x,&mouse.y);
 	if ((mouse.x>0) && (mouse.y>=3) && (mouse.x<319) && (mouse.y<192)) {
 		mouse.col=mouse.x/32;
 		mouse.row=(mouse.y-3)/63;
