@@ -965,6 +965,7 @@ void highlight_room(surface_type* screen, int offsetx,int offsety, int tw, int t
 *             INPUT BINDINGS!!!!             *
 \********************************************/
 
+//TODO: replace MouseState with the new mouse structure. Intended to be used in future implementations of drag&drop
 #define MouseState !GetUnscaledMouseState(&x,&y) && (x>0) && (y>=3) && (x<319) && (y<192)
 void editor__on_refresh(surface_type* screen) {
 	if (chtab_editor_sprites) {
@@ -1230,38 +1231,59 @@ void print(const char* text) {
 	text_time_remaining = 24;
 }
 
-void editor__handle_mouse_wheel(SDL_MouseWheelEvent e,int shift, int ctrl, int alt, int m);
-void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int alt, int m);
+typedef struct {
+	int inside;
+	int col,row,tilepos,x,y,x_b;
+	int shift,ctrl,alt,m;
+} mouse_type;
+
+void editor__handle_mouse_wheel(SDL_MouseWheelEvent e,mouse_type mouse);
+void editor__handle_mouse_button(SDL_MouseButtonEvent e,mouse_type mouse);
+
+mouse_type calculate_mouse(int shift, int ctrl, int alt, int m) {
+	mouse_type mouse;
+	GetUnscaledMouseState(&mouse.x,&mouse.y);
+	if ((mouse.x>0) && (mouse.y>=3) && (mouse.x<319) && (mouse.y<192)) {
+		mouse.col=mouse.x/32;
+		mouse.row=(mouse.y-3)/63;
+		mouse.x_b=mouse.x*140/320+62; //x_bump[col + 5] + 14;
+		//x_bump[n] === -12+14*n --> x_bump[col + 5] + 14 === -12+14*(col + 5) + 14 === 14*(x/32) + 72 === (140*x)/320+72
+		mouse.inside=!(mouse.row<0 || mouse.row>2);
+		mouse.tilepos=mouse.row*10+mouse.col;
+	} else {
+		mouse.inside=0;
+	}
+	mouse.shift=shift;
+	mouse.ctrl=ctrl;
+	mouse.alt=alt;
+	mouse.m=m;
+	return mouse;
+}
 
 void editor__handle_mouse(SDL_Event e,int shift, int ctrl, int alt, int m) {
 	if (!editor_active) return;
+	mouse_type mouse=calculate_mouse(shift,ctrl,alt,m);
 	switch (e.type) {
 	case SDL_MOUSEWHEEL:
-		editor__handle_mouse_wheel(e.wheel,shift,ctrl,alt,m);
+		editor__handle_mouse_wheel(e.wheel,mouse);
 		return;
 	case SDL_MOUSEBUTTONDOWN:
-		editor__handle_mouse_button(e.button,shift,ctrl,alt,m);
+		editor__handle_mouse_button(e.button,mouse);
+		return;
+	case SDL_MOUSEBUTTONUP: //TODO: for drag and drop
 		return;
 	}
 }
 
-void editor__handle_mouse_wheel(SDL_MouseWheelEvent e,int shift, int ctrl, int alt, int m) {
-	/* TODO: merge this header with editor__handle_mouse_button header and send to editor__handle_mouse */
-	int col,row,tilepos,x,y;
-	if (MouseState) {
-		col=x/32;
-		row=(y-3)/63;
-		x=x*140/320+62;
-		if (row<0 || row>2) return;
-		tilepos=row*10+col;
-
-		if (ctrl) {
+void editor__handle_mouse_wheel(SDL_MouseWheelEvent e,mouse_type mouse) {
+	if (mouse.inside) {
+		if (mouse.ctrl) {
 			e.x=e.y;
 			e.y=0;
 		}
 
 		if (e.y!=0 || e.x!=0) {
-			tile_global_location_type location=T(loaded_room,tilepos);
+			tile_global_location_type location=T(loaded_room,mouse.tilepos);
 			if (e.y!=0) {
 				byte v=(edited.fg[location]+e.y)&TILE_MASK;
 				editor__do(fg[location],v,mark_start|flag_redraw);
@@ -1271,9 +1293,9 @@ void editor__handle_mouse_wheel(SDL_MouseWheelEvent e,int shift, int ctrl, int a
 				editor__do(bg[location],v,mark_all|flag_redraw);
 			}
 
-			ed_redraw_tile(tilepos);
-			if (tilepos) ed_redraw_tile(tilepos-1);
-			if (tilepos!=29) ed_redraw_tile(tilepos+1);
+			ed_redraw_tile(mouse.tilepos);
+			if (mouse.tilepos) ed_redraw_tile(mouse.tilepos-1);
+			if (mouse.tilepos!=29) ed_redraw_tile(mouse.tilepos+1);
 
 			char aux[40];
 			snprintf(aux,40,"FG:%d/%d BG:%d",edited.fg[location]&TILE_MASK, edited.fg[location]>>5, edited.bg[location]);
@@ -1283,17 +1305,11 @@ void editor__handle_mouse_wheel(SDL_MouseWheelEvent e,int shift, int ctrl, int a
 	}
 }
 
-void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int alt, int m) {
-	GetUnscaledMouseState(&e.x, &e.y);
-	int col,row,tilepos,x;
-	col=e.x/32;
-	row=(e.y-3)/63;
-	x=e.x*140/320+62;
-	if (row<0 || row>2) return;
-	tilepos=row*10+col;
+void editor__handle_mouse_button(SDL_MouseButtonEvent e,mouse_type mouse) {
+	if (!mouse.inside) return;
 
-	if (e.button==SDL_BUTTON_LEFT && !shift && !alt && !ctrl && !m) { /* left click: edit tile */
-		tile_global_location_type t=T(loaded_room,tilepos);
+	if (e.button==SDL_BUTTON_LEFT && !mouse.shift && !mouse.alt && !mouse.ctrl && !mouse.m) { /* left click: edit tile */
+		tile_global_location_type t=T(loaded_room,mouse.tilepos);
 		editor__do_mark_start(flag_redraw);
 		editor__do(fg[t],copied.main.tiletype,mark_middle);
 		editor__do(bg[t],copied.main.modifier,mark_middle);
@@ -1319,12 +1335,12 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int
 			editor__do(bg[t],copied.extra.modifier,mark_middle);
 		}
 		editor__do_mark_end(flag_redraw);
-		ed_redraw_tile(tilepos);
-		if (tilepos) ed_redraw_tile(tilepos-1);
-		if (tilepos!=29) ed_redraw_tile(tilepos+1);
+		ed_redraw_tile(mouse.tilepos);
+		if (mouse.tilepos) ed_redraw_tile(mouse.tilepos-1);
+		if (mouse.tilepos!=29) ed_redraw_tile(mouse.tilepos+1);
 		redraw_screen(1);
-	} else if (e.button==SDL_BUTTON_RIGHT && !shift && !alt && !ctrl && !m) { /* right click: copy tile */
-		tile_global_location_type t=T(loaded_room,tilepos);
+	} else if (e.button==SDL_BUTTON_RIGHT && !mouse.shift && !mouse.alt && !mouse.ctrl && !mouse.m) { /* right click: copy tile */
+		tile_global_location_type t=T(loaded_room,mouse.tilepos);
 		copied.main.tiletype=edited.fg[t];
 		copied.main.modifier=edited.bg[t];
 		switch(copied.main.tiletype&TILE_MASK) {
@@ -1365,33 +1381,33 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,int shift, int ctrl, int
 			snprintf(aux,40,"COPIED FG:%d/%d BG:%d",copied.main.tiletype&TILE_MASK, copied.main.tiletype>>5, copied.main.modifier);
 		}
 		print(aux);
-	} else if (e.button==SDL_BUTTON_LEFT && shift && !alt && !ctrl && !m) { /* shift+left click: move kid */
-		editor__position(&Kid,col,row,loaded_room,x,6563);
-	} else if (e.button==SDL_BUTTON_RIGHT && shift && !alt && !ctrl && !m) { /* shift+right click: move move/put guard */
-		editor__set_guard(tilepos,x);
-		editor__position(&Guard,col,row,loaded_room,x,6569);
+	} else if (e.button==SDL_BUTTON_LEFT && mouse.shift && !mouse.alt && !mouse.ctrl && !mouse.m) { /* shift+left click: move kid */
+		editor__position(&Kid,mouse.col,mouse.row,loaded_room,mouse.x_b,6563);
+	} else if (e.button==SDL_BUTTON_RIGHT && mouse.shift && !mouse.alt && !mouse.ctrl && !mouse.m) { /* shift+right click: move move/put guard */
+		editor__set_guard(mouse.tilepos,mouse.x_b);
+		editor__position(&Guard,mouse.col,mouse.row,loaded_room,mouse.x_b,6569);
 		redraw_screen(1);
-	} else if (e.button==SDL_BUTTON_LEFT && shift && !alt && ctrl && !m) { /* ctrl+shift+left click: randomize tile */
-		randomize_tile(tilepos);
-		ed_redraw_tile(tilepos);
-		if (tilepos) ed_redraw_tile(tilepos-1);
-		if (tilepos!=29) ed_redraw_tile(tilepos+1);
+	} else if (e.button==SDL_BUTTON_LEFT && mouse.shift && !mouse.alt && mouse.ctrl && !mouse.m) { /* ctrl+shift+left click: randomize tile */
+		randomize_tile(mouse.tilepos);
+		ed_redraw_tile(mouse.tilepos);
+		if (mouse.tilepos) ed_redraw_tile(mouse.tilepos-1);
+		if (mouse.tilepos!=29) ed_redraw_tile(mouse.tilepos+1);
 		redraw_screen(1);
-	} else if (e.button==SDL_BUTTON_LEFT && !shift && alt && ctrl && !m) { /* ctrl+alt+left click: toggle door mechanism links */
-		if (door_api_is_related(edited.fg[T(loaded_room,tilepos)]&TILE_MASK)) {
+	} else if (e.button==SDL_BUTTON_LEFT && !mouse.shift && mouse.alt && mouse.ctrl && !mouse.m) { /* ctrl+alt+left click: toggle door mechanism links */
+		if (door_api_is_related(edited.fg[T(loaded_room,mouse.tilepos)]&TILE_MASK)) {
 			editor__do_mark_start(flag_redoor);
-			print(editor__toggle_door_tile(loaded_room,tilepos));
+			print(editor__toggle_door_tile(loaded_room,mouse.tilepos));
 			editor__do_mark_end(flag_redoor);
 		}
-	} else if (e.button==SDL_BUTTON_RIGHT && !shift && alt && ctrl && !m) { /* ctrl+alt+right click: pick door mechanism tile */
-		if (door_api_is_related(edited.fg[T(loaded_room,tilepos)]&TILE_MASK)) {
-			editor__save_door_tile(T(loaded_room,tilepos));
+	} else if (e.button==SDL_BUTTON_RIGHT && !mouse.shift && mouse.alt && mouse.ctrl && !mouse.m) { /* ctrl+alt+right click: pick door mechanism tile */
+		if (door_api_is_related(edited.fg[T(loaded_room,mouse.tilepos)]&TILE_MASK)) {
+			editor__save_door_tile(T(loaded_room,mouse.tilepos));
 		}
-	} else if (e.button==SDL_BUTTON_LEFT && !shift && !alt && !ctrl && m) { /* m+left click: go to map room */
+	} else if (e.button==SDL_BUTTON_LEFT && !mouse.shift && !mouse.alt && !mouse.ctrl && mouse.m) { /* m+left click: go to map room */
 		if (map_selected_room) {
 			goto_next_room=map_selected_room;
 		}
-	} else if (e.button==SDL_BUTTON_LEFT && shift && !alt && ctrl && m) { /* ctrl+shift+m+left click: go to map room */
+	} else if (e.button==SDL_BUTTON_LEFT && mouse.shift && !mouse.alt && mouse.ctrl && mouse.m) { /* ctrl+shift+m+left click: go to map room */
 		if (map_selected_room) editor__randomize(map_selected_room);
 	}
 }
