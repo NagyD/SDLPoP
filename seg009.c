@@ -2579,6 +2579,7 @@ void idle() {
 #ifdef USE_EDITOR
 			case SDL_MOUSEBUTTONDOWN:
 			case SDL_MOUSEBUTTONUP:
+			case SDL_MOUSEMOTION:
 			case SDL_MOUSEWHEEL:
 				if (editor_enabled)
 					editor__handle_mouse(event,key_states);

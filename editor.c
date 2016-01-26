@@ -102,14 +102,12 @@ int stack_top=0;
 #define stack_reset() stack_top=0;
 /* private type */
 typedef uint64_t flag_type; /* note that uint64_t/unsigned long long is supported even in 32 bits machines and virtually by all linux, 32 bit windows and OSX. The variable is used as:
-  RRRRRRRR RRRRRRRR RRRRRRRR RRRRRRRR RRRRRRRR RRRrmdes BBBBBBBB AAAAAAAA
+  RRRRRRRR RRRRRRRR RRRRRRRR RRRRRRRR RRRRRRRR Rgpdmres BBBBBBBB AAAAAAAA
 	where R are an offset/reserved bit
-	r,m,d are redraw,remap,redoor flags
+	r,m,d,p,g are redraw,remap,redoor,guard_presence,guard_repaint flags
 	e,s are startm end marks
 	B is the 8 bits code before editing
 	A is the 8 bits code after editing
-
-	TODO: new flag: reguard
 */
 
 void stack_push(flag_type data) {
@@ -1258,19 +1256,39 @@ void print(const char* text) {
 
 void editor__handle_mouse_wheel(SDL_MouseWheelEvent e,mouse_type mouse);
 void editor__handle_mouse_button(SDL_MouseButtonEvent e,mouse_type mouse);
+void editor__handle_mouse_motion(SDL_MouseMotionEvent e,mouse_type mouse,mouse_type* last);
 
+mouse_type last_keydown={0,0,0,0,0,0,0,0};
 void editor__handle_mouse(SDL_Event e,const Uint8* states) {
 	if (!editor_active) return;
 	mouse_type mouse=calculate_mouse(states);
-	switch (e.type) {
-	case SDL_MOUSEWHEEL:
-		editor__handle_mouse_wheel(e.wheel,mouse);
-		return;
-	case SDL_MOUSEBUTTONDOWN:
-		editor__handle_mouse_button(e.button,mouse);
-		return;
-	case SDL_MOUSEBUTTONUP: //TODO: for drag and drop
-		return;
+	if (mouse.inside)
+		switch (e.type) {
+		case SDL_MOUSEWHEEL:
+			editor__handle_mouse_wheel(e.wheel,mouse);
+			return;
+		case SDL_MOUSEBUTTONDOWN:
+			last_keydown=mouse;
+			editor__handle_mouse_button(e.button,mouse);
+			return;
+		case SDL_MOUSEBUTTONUP:
+			last_keydown.inside=0;
+			return;
+		case SDL_MOUSEMOTION:
+			editor__handle_mouse_motion(e.motion,mouse,&last_keydown);
+			return;
+		}
+}
+void editor__handle_mouse_motion(SDL_MouseMotionEvent e,mouse_type mouse,mouse_type* last) {
+	if (last->inside && mouse.inside && mouse.tilepos!=last->tilepos) {
+		SDL_MouseButtonEvent e; //emulate a keypress
+		if (last->buttons&SDL_BUTTON(SDL_BUTTON_LEFT)) {
+			e.button=SDL_BUTTON_LEFT;
+		} else {
+			e.button=SDL_BUTTON_RIGHT; //TODO: check if exists a drag with right
+		}
+		editor__handle_mouse_button(e,mouse);
+		*last=mouse;
 	}
 }
 
