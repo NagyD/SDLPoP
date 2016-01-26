@@ -1078,6 +1078,15 @@ typedef union options_type {
 } options_type;
 
 #ifdef USE_EDITOR
+
+typedef enum {
+	k_none=0,
+	k_ctrl=1,
+	k_alt=2,
+	k_shift=4,
+	k_m=8
+} modifier_key_type;
+
 void editor__on_refresh(surface_type* screen);
 extern word editor_enabled;
 extern word editor_active;

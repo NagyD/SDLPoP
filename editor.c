@@ -497,7 +497,7 @@ int selected_door_tile=-1;
 void editor__save_door_tile(tile_global_location_type tile) { /* if the same tile was selected "unselect" if not "select this tile".*/
 	if ((edited.fg[tile]&TILE_MASK)==tiles_17_level_door_right) {
 			if (tile%10 &&
-				(edited.fg[tile-1]&TILE_MASK)==tiles_16_level_door_left) { /* TODO: use a define for this mask */
+				(edited.fg[tile-1]&TILE_MASK)==tiles_16_level_door_left) {
 					tile--;
 			} else {
 				return;
@@ -961,59 +961,76 @@ void highlight_room(surface_type* screen, int offsetx,int offsety, int tw, int t
 	SDL_FillRect(screen,&line3,color);
 	SDL_FillRect(screen,&line4,color);
 }
+
+/* private structure */
+typedef struct {
+	int inside;
+	int col,row,tilepos,x,y,x_b;
+	int keys;
+} mouse_type;
+
+mouse_type calculate_mouse(const Uint8* key_states) {
+	mouse_type mouse;
+	mouse.keys=
+		(key_states[SDL_SCANCODE_LSHIFT] || key_states[SDL_SCANCODE_RSHIFT]) * k_shift |
+		(key_states[SDL_SCANCODE_LCTRL] || key_states[SDL_SCANCODE_RCTRL])   * k_ctrl  |
+		(key_states[SDL_SCANCODE_LALT] || key_states[SDL_SCANCODE_RALT])     * k_alt   |
+		(key_states[SDL_SCANCODE_M])                                         * k_m     ;
+
+	GetUnscaledMouseState(&mouse.x,&mouse.y);
+	if ((mouse.x>0) && (mouse.y>=3) && (mouse.x<319) && (mouse.y<192)) {
+		mouse.col=mouse.x/32;
+		mouse.row=(mouse.y-3)/63;
+		mouse.x_b=mouse.x*140/320+62; //x_bump[col + 5] + 14;
+		//x_bump[n] === -12+14*n --> x_bump[col + 5] + 14 === -12+14*(col + 5) + 14 === 14*(x/32) + 72 === (140*x)/320+72
+		mouse.inside=!(mouse.row<0 || mouse.row>2);
+		mouse.tilepos=mouse.row*10+mouse.col;
+	} else {
+		mouse.inside=0;
+	}
+	return mouse;
+}
+
+
 /********************************************\
 *             INPUT BINDINGS!!!!             *
 \********************************************/
 
-//TODO: replace MouseState with the new mouse structure. Intended to be used in future implementations of drag&drop
-#define MouseState !GetUnscaledMouseState(&x,&y) && (x>0) && (y>=3) && (x<319) && (y<192)
 void editor__on_refresh(surface_type* screen) {
 	if (chtab_editor_sprites) {
-		int x,y, colors_total=1;
+		mouse_type mouse=calculate_mouse(SDL_GetKeyboardState(NULL)); 
+		int colors_total=1;
 		tEditorImageOffset image_offset=cSingleTile;
 		tCursorColors colors;
-		const Uint8 *state = SDL_GetKeyboardState(NULL);
 
-		int is_m_pressed=state[SDL_SCANCODE_M];
-		int is_ctrl_alt_pressed=(state[SDL_SCANCODE_LALT] || state[SDL_SCANCODE_RALT]) && (state[SDL_SCANCODE_LCTRL] || state[SDL_SCANCODE_RCTRL]);
-		int is_only_shift_pressed=(state[SDL_SCANCODE_LSHIFT] || state[SDL_SCANCODE_RSHIFT]) && (!(state[SDL_SCANCODE_LCTRL] || state[SDL_SCANCODE_RCTRL]));
-		int is_ctrl_shift_pressed=(state[SDL_SCANCODE_LSHIFT] || state[SDL_SCANCODE_RSHIFT]) && (state[SDL_SCANCODE_LCTRL] || state[SDL_SCANCODE_RCTRL]);
+		if (PALETTE_MODE)
+			mouse.keys=mouse.keys&k_m;
 
-		if (PALETTE_MODE) {
-			is_ctrl_alt_pressed=0;
-			is_only_shift_pressed=0;
-			is_ctrl_shift_pressed=0;
-		}
-
-		if (MouseState) {
-			int col,row,tilepos;
+		if (mouse.inside) {
 			colors=cMain;
-			col=(x)/32;
-			row=(y-3)/63;
-			tilepos=row*10+col;
 			/* if Shift is pressed a cross is shown */
-			if (is_only_shift_pressed || is_m_pressed) {
+			if (mouse.keys==k_shift || mouse.keys&k_m) {
 				image_offset=cCross;
-				x-=chtab_editor_sprites->images[cCross]->w/2;
-				y-=chtab_editor_sprites->images[cCross]->h/2;
+				mouse.x-=chtab_editor_sprites->images[cCross]->w/2;
+				mouse.y-=chtab_editor_sprites->images[cCross]->h/2;
 				colors=cMain;
 			} else { /* If not, a 3D selection box is shown. When alt is pressed cRight or cWrong colors are used */
-				if (is_ctrl_alt_pressed) colors=cWrong;
-				if (is_ctrl_shift_pressed) colors=cExtra;
-				x=col*32;
-				y=row*63-10;
-				switch(level.fg[T(drawn_room,tilepos)]&TILE_MASK) {
+				if (mouse.keys==(k_ctrl|k_alt)) colors=cWrong;
+				if (mouse.keys==(k_ctrl|k_shift)) colors=cExtra;
+				mouse.x=mouse.col*32;
+				mouse.y=mouse.row*63-10;
+				switch(level.fg[T(drawn_room,mouse.tilepos)]&TILE_MASK) {
 				case tiles_17_level_door_right:
 				case tiles_24_balcony_right:
-					x-=32;
+					mouse.x-=32;
 				case tiles_16_level_door_left:
 				case tiles_23_balcony_left:
 					image_offset=cExitdoor;
 					colors_total=2;
-					if (is_ctrl_alt_pressed) colors=cRight;
+					if (mouse.keys==(k_ctrl|k_alt)) colors=cRight;
 					break;
 				case tiles_8_bigpillar_bottom:
-					y-=63;
+					mouse.y-=63;
 				case tiles_9_bigpillar_top:
 					image_offset=cBigPillar;
 					colors_total=2;
@@ -1021,7 +1038,7 @@ void editor__on_refresh(surface_type* screen) {
 				case tiles_6_closer:
 				case tiles_15_opener:
 				case tiles_4_gate:
-					if (is_ctrl_alt_pressed) colors=cRight;
+					if (mouse.keys==(k_ctrl|k_alt)) colors=cRight;
 					break;
 				}
 
@@ -1032,20 +1049,20 @@ void editor__on_refresh(surface_type* screen) {
 				                                              and anticlockwise both selections are visible */
 				image_offset+=(i_frame_clockwise++)%3;
 
-				if (is_ctrl_alt_pressed && colors==cRight) { /* show number of links */
+				if (mouse.keys==(k_ctrl|k_alt) && colors==cRight) { /* show number of links */
 					char text_aux[20];
 					int count=0;
 					/* count links */
 					tIterator it;
 					tile_global_location_type current_tile,junk_tile;
-					current_tile=T(drawn_room,tilepos);
+					current_tile=T(drawn_room,mouse.tilepos);
 					door_api_init_iterator(&it,current_tile);
 					while(door_api_get(&it,&junk_tile))
 						count++;
 					sprintf(text_aux,"%d",count);
 
 					/* draw text*/
-					rect_type r={y,x,y+63,x+32*colors_total};
+					rect_type r={mouse.y,mouse.x,mouse.y+63,mouse.x+32*colors_total};
 					screen_updates_suspended=1;
 					surface_type* save_screen=current_target_surface;
 					current_target_surface=screen;
@@ -1055,7 +1072,7 @@ void editor__on_refresh(surface_type* screen) {
 				}
 			}
 
-			blit_sprites(x,y,image_offset,colors,colors_total,screen);
+			blit_sprites(mouse.x,mouse.y,image_offset,colors,colors_total,screen);
 		}
 
 		static unsigned short i_frame_anticlockwise=0;
@@ -1096,7 +1113,7 @@ void editor__on_refresh(surface_type* screen) {
 		}
 
 		/* draw map */
-		if (is_m_pressed) {
+		if (mouse.keys&k_m) {
 			image_type* image=chtab_editor_sprites->images[cSmallTiles];
 			image_type* people=chtab_editor_sprites->images[cSmallCharacters];
 
@@ -1111,9 +1128,9 @@ void editor__on_refresh(surface_type* screen) {
 			int sw,sh,sx,sy;
 			int mode=0;
 
-			if (is_ctrl_alt_pressed) mode=2;
-			if (is_only_shift_pressed) mode=1;
-			if (is_ctrl_shift_pressed) mode=1;
+			if ((mouse.keys&(k_ctrl|k_alt))==(k_ctrl|k_alt)) mode=2;
+			if (mouse.keys&k_shift) mode=1;
+			if ((mouse.keys&(k_ctrl|k_shift))==(k_ctrl|k_shift)) mode=1;
 
 			tw=image->w/32;
 			th=image->h/4;
@@ -1152,7 +1169,7 @@ void editor__on_refresh(surface_type* screen) {
 							quit(1);
 						}
 
-						if (is_only_shift_pressed) {
+						if (mouse.keys==k_shift) {
 							/* draw starting position */
 							if (t==T(edited.start_room,edited.start_pos)) {
 								src2_rect.x=tw*0;
@@ -1184,7 +1201,7 @@ void editor__on_refresh(surface_type* screen) {
 								}
 							}
 
-						} /* /is_only_shift_pressed */
+						} /* /mouse.keys==(k_shift) */
 					}
 					sx+=tw;
 				}
@@ -1201,12 +1218,13 @@ void editor__on_refresh(surface_type* screen) {
 				highlight_room(screen,offsetx,offsety,tw,th,i,j,0xff8040);
 			}
 
-			if (MouseState) {
-				x-=offsetx;
-				y-=offsety;
-				if (0<x && x<sw && 0<y && y<sh) {
-					int i=x/(tw*10+1);
-					int j=y/(th*3+1);
+			mouse=calculate_mouse(SDL_GetKeyboardState(NULL)); //re-calculate x&y
+			if (mouse.inside) {
+				mouse.x-=offsetx;
+				mouse.y-=offsety;
+				if (0<mouse.x && mouse.x<sw && 0<mouse.y && mouse.y<sh) {
+					int i=mouse.x/(tw*10+1);
+					int j=mouse.y/(th*3+1);
 					tile_global_location_type t=room_api_translate(&edited_map,i*10,j*3);
 					if (t!=-1) { //room is R(t)
 						map_selected_room=R(t);
@@ -1231,38 +1249,12 @@ void print(const char* text) {
 	text_time_remaining = 24;
 }
 
-typedef struct {
-	int inside;
-	int col,row,tilepos,x,y,x_b;
-	int shift,ctrl,alt,m;
-} mouse_type;
-
 void editor__handle_mouse_wheel(SDL_MouseWheelEvent e,mouse_type mouse);
 void editor__handle_mouse_button(SDL_MouseButtonEvent e,mouse_type mouse);
 
-mouse_type calculate_mouse(int shift, int ctrl, int alt, int m) {
-	mouse_type mouse;
-	GetUnscaledMouseState(&mouse.x,&mouse.y);
-	if ((mouse.x>0) && (mouse.y>=3) && (mouse.x<319) && (mouse.y<192)) {
-		mouse.col=mouse.x/32;
-		mouse.row=(mouse.y-3)/63;
-		mouse.x_b=mouse.x*140/320+62; //x_bump[col + 5] + 14;
-		//x_bump[n] === -12+14*n --> x_bump[col + 5] + 14 === -12+14*(col + 5) + 14 === 14*(x/32) + 72 === (140*x)/320+72
-		mouse.inside=!(mouse.row<0 || mouse.row>2);
-		mouse.tilepos=mouse.row*10+mouse.col;
-	} else {
-		mouse.inside=0;
-	}
-	mouse.shift=shift;
-	mouse.ctrl=ctrl;
-	mouse.alt=alt;
-	mouse.m=m;
-	return mouse;
-}
-
-void editor__handle_mouse(SDL_Event e,int shift, int ctrl, int alt, int m) {
+void editor__handle_mouse(SDL_Event e,const Uint8* states) {
 	if (!editor_active) return;
-	mouse_type mouse=calculate_mouse(shift,ctrl,alt,m);
+	mouse_type mouse=calculate_mouse(states);
 	switch (e.type) {
 	case SDL_MOUSEWHEEL:
 		editor__handle_mouse_wheel(e.wheel,mouse);
@@ -1277,7 +1269,7 @@ void editor__handle_mouse(SDL_Event e,int shift, int ctrl, int alt, int m) {
 
 void editor__handle_mouse_wheel(SDL_MouseWheelEvent e,mouse_type mouse) {
 	if (mouse.inside) {
-		if (mouse.ctrl) {
+		if (mouse.keys==k_ctrl) {
 			e.x=e.y;
 			e.y=0;
 		}
@@ -1308,7 +1300,7 @@ void editor__handle_mouse_wheel(SDL_MouseWheelEvent e,mouse_type mouse) {
 void editor__handle_mouse_button(SDL_MouseButtonEvent e,mouse_type mouse) {
 	if (!mouse.inside) return;
 
-	if (e.button==SDL_BUTTON_LEFT && !mouse.shift && !mouse.alt && !mouse.ctrl && !mouse.m) { /* left click: edit tile */
+	if (e.button==SDL_BUTTON_LEFT && mouse.keys==k_none) { /* left click: edit tile */
 		tile_global_location_type t=T(loaded_room,mouse.tilepos);
 		editor__do_mark_start(flag_redraw);
 		editor__do(fg[t],copied.main.tiletype,mark_middle);
@@ -1339,7 +1331,7 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,mouse_type mouse) {
 		if (mouse.tilepos) ed_redraw_tile(mouse.tilepos-1);
 		if (mouse.tilepos!=29) ed_redraw_tile(mouse.tilepos+1);
 		redraw_screen(1);
-	} else if (e.button==SDL_BUTTON_RIGHT && !mouse.shift && !mouse.alt && !mouse.ctrl && !mouse.m) { /* right click: copy tile */
+	} else if (e.button==SDL_BUTTON_RIGHT && mouse.keys==k_none) { /* right click: copy tile */
 		tile_global_location_type t=T(loaded_room,mouse.tilepos);
 		copied.main.tiletype=edited.fg[t];
 		copied.main.modifier=edited.bg[t];
@@ -1381,34 +1373,34 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,mouse_type mouse) {
 			snprintf(aux,40,"COPIED FG:%d/%d BG:%d",copied.main.tiletype&TILE_MASK, copied.main.tiletype>>5, copied.main.modifier);
 		}
 		print(aux);
-	} else if (e.button==SDL_BUTTON_LEFT && mouse.shift && !mouse.alt && !mouse.ctrl && !mouse.m) { /* shift+left click: move kid */
+	} else if (e.button==SDL_BUTTON_LEFT && mouse.keys==k_shift) { /* shift+left click: move kid */
 		editor__position(&Kid,mouse.col,mouse.row,loaded_room,mouse.x_b,6563);
-	} else if (e.button==SDL_BUTTON_RIGHT && mouse.shift && !mouse.alt && !mouse.ctrl && !mouse.m) { /* shift+right click: move move/put guard */
+	} else if (e.button==SDL_BUTTON_RIGHT && mouse.keys==k_shift) { /* shift+right click: move move/put guard */
 		editor__set_guard(mouse.tilepos,mouse.x_b);
 		editor__position(&Guard,mouse.col,mouse.row,loaded_room,mouse.x_b,6569);
 		redraw_screen(1);
-	} else if (e.button==SDL_BUTTON_LEFT && mouse.shift && !mouse.alt && mouse.ctrl && !mouse.m) { /* ctrl+shift+left click: randomize tile */
+	} else if (e.button==SDL_BUTTON_LEFT && mouse.keys==(k_shift|k_ctrl)) { /* ctrl+shift+left click: randomize tile */
 		randomize_tile(mouse.tilepos);
 		ed_redraw_tile(mouse.tilepos);
 		if (mouse.tilepos) ed_redraw_tile(mouse.tilepos-1);
 		if (mouse.tilepos!=29) ed_redraw_tile(mouse.tilepos+1);
 		redraw_screen(1);
-	} else if (e.button==SDL_BUTTON_LEFT && !mouse.shift && mouse.alt && mouse.ctrl && !mouse.m) { /* ctrl+alt+left click: toggle door mechanism links */
+	} else if (e.button==SDL_BUTTON_LEFT && mouse.keys==(k_ctrl|k_alt)) { /* ctrl+alt+left click: toggle door mechanism links */
 		if (door_api_is_related(edited.fg[T(loaded_room,mouse.tilepos)]&TILE_MASK)) {
 			editor__do_mark_start(flag_redoor);
 			print(editor__toggle_door_tile(loaded_room,mouse.tilepos));
 			editor__do_mark_end(flag_redoor);
 		}
-	} else if (e.button==SDL_BUTTON_RIGHT && !mouse.shift && mouse.alt && mouse.ctrl && !mouse.m) { /* ctrl+alt+right click: pick door mechanism tile */
+	} else if (e.button==SDL_BUTTON_RIGHT && mouse.keys==(k_ctrl|k_alt)) { /* ctrl+alt+right click: pick door mechanism tile */
 		if (door_api_is_related(edited.fg[T(loaded_room,mouse.tilepos)]&TILE_MASK)) {
 			editor__save_door_tile(T(loaded_room,mouse.tilepos));
 		}
-	} else if (e.button==SDL_BUTTON_LEFT && !mouse.shift && !mouse.alt && !mouse.ctrl && mouse.m) { /* m+left click: go to map room */
+	} else if (e.button==SDL_BUTTON_LEFT && mouse.keys==k_m) { /* m+left click: go to map room */
 		if (map_selected_room) {
 			goto_next_room=map_selected_room;
 		}
-	} else if (e.button==SDL_BUTTON_LEFT && mouse.shift && !mouse.alt && mouse.ctrl && mouse.m) { /* ctrl+shift+m+left click: go to map room */
-		if (map_selected_room) editor__randomize(map_selected_room);
+	} else if (e.button==SDL_BUTTON_LEFT && mouse.keys==(k_ctrl|k_shift|k_m)) { /* ctrl+shift+m+left click: go to map room */
+		if (map_selected_room) editor__randomize(map_selected_room); //TODO: check map_selected_room
 	}
 }
 
