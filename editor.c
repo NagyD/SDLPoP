@@ -70,11 +70,13 @@ tile_global_location_type room_api_tile_move(const tMap* map, tile_global_locati
 #define E_1_2 .00673794699908546709
 
 #pragma pack(push, 1)
-typedef union {
- struct {
+typedef struct {
 		byte fg;
 		byte bg;
-	} concept; /* tile_and_mod but packed */
+	} concept_type; /* tile_and_mod but packed */
+
+typedef union {
+	concept_type concept;
 	word number;
 } tile_packed_type;
 #pragma pack(pop)
@@ -964,8 +966,57 @@ void blit_sprites(int x,int y, tEditorImageOffset sprite, tCursorColors colors, 
 	}
 }
 
+void draw_ambiguous_on(surface_type* screen, tile_packed_type tile, int x, int y) {
+	tEditorImageOffset sprite;
+	/* TODO: use masks and send to ini file */
+
+	switch (tile.concept.fg&TILE_MASK) {
+	case tiles_11_loose:
+		sprite=aLoose;
+		break;
+	case tiles_10_potion:
+		switch (tile.concept.bg) {
+		case 3:
+			sprite=aFeather;
+			break;
+		case 4:
+			sprite=aFlip;
+			break;
+		case 5:
+			sprite=aLife;
+			break;
+		default:
+			return;
+		}
+		break;
+	default:
+		return;
+	}
+
+	/* draw text*/
+	blit_sprites(x,y,sprite,0,-1,screen);
+}
+
+void name_tile(char* res, int n, tile_packed_type tile, const char* format) {
+	snprintf(res,n,format,tile.concept.fg&TILE_MASK, tile.concept.fg>>5, tile.concept.bg);
+}
+
+void draw_ambiguous_full(surface_type* screen, tile_packed_type tile, int x, int y) {
+	/* draw text*/
+	char aux[40];
+	rect_type r={y,x,y+76,x+56};
+	screen_updates_suspended=1;
+	surface_type* save_screen=current_target_surface;
+	current_target_surface=screen;
+	name_tile(aux,40,tile,"%d\n%d\n\n%d");
+	show_text_with_color(&r,0,0,aux,7);
+	current_target_surface=save_screen;
+	screen_updates_suspended=0;
+}
+
 void draw_ambiguous(surface_type* screen){
 	if (!ambiguous_mode) return;
+
 	for (int i=0;i<30;i++) {
 		int col,row;
 		int x,y;
@@ -976,43 +1027,17 @@ void draw_ambiguous(surface_type* screen){
 		x=col*32;
 		y=row*63-10;
 
-		tEditorImageOffset sprite;
+		tile_packed_type tile;
+		tile.concept.fg=edited.fg[T(drawn_room,i)];
+		tile.concept.bg=edited.bg[T(drawn_room,i)];
+		
 
-		switch (edited.fg[T(drawn_room,i)]&TILE_MASK) {
-		case tiles_11_loose:
-			sprite=aLoose;
-			break;
-		case tiles_10_potion:
-			switch (edited.bg[T(drawn_room,i)]) {
-			case 3:
-				sprite=aFeather;
-				break;
-			case 4:
-				sprite=aFlip;
-				break;
-			case 5:
-				sprite=aLife;
-				break;
-			default:
-				continue;
-			}
-			break;
-		default:
-			continue;
+		if (ambiguous_mode==1) {
+			draw_ambiguous_on(screen,tile,x,y);
+		} else {
+			draw_ambiguous_full(screen,tile,x,y);
 		}
-
-		/* draw text*/
-		blit_sprites(x,y,sprite,0,-1,screen);
-/*
-	TODO: In the ambiguous full show all the file info
-		rect_type r={y,x,y+76,x+56};
-		screen_updates_suspended=1;
-		surface_type* save_screen=current_target_surface;
-		current_target_surface=screen;
-		show_text_with_color(&r,0,0,text,7);
-		current_target_surface=save_screen;
-		screen_updates_suspended=0;
-*/
+		
 	}
 }
 
@@ -1379,7 +1404,7 @@ void editor__handle_mouse_wheel(SDL_MouseWheelEvent e,mouse_type mouse) {
 			if (mouse.tilepos!=29) ed_redraw_tile(mouse.tilepos+1);
 
 			char aux[40];
-			snprintf(aux,40,"FG:%d/%d BG:%d",edited.fg[location]&TILE_MASK, edited.fg[location]>>5, edited.bg[location]);
+			name_tile(aux,40,(tile_packed_type)(word)(edited.fg[location]<<8|edited.bg[location]),"FG:%d/%d BG:%d");
 			print(aux);
 			need_full_redraw=1;
 		}
@@ -1539,9 +1564,12 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 		}
 		break;
 	case SDL_SCANCODE_A:
-		ambiguous_mode^=1;
-		*answer_text=ambiguous_mode?"AMBIGUOUS MODE ON":"AMBIGUOUS MODE OFF";
+		{
+		const char* am[]={"AMBIGUOUS MODE OFF","AMBIGUOUS MODE ON","AMBIGUOUS MODE FULL"};
+		ambiguous_mode=(ambiguous_mode+1)%3;
+		*answer_text=am[ambiguous_mode];
 		*need_show_text=1;
+		}
 		break;
 	case SDL_SCANCODE_DELETE: /* delete */
 	case SDL_SCANCODE_BACKSPACE: /* backspace */
