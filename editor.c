@@ -930,7 +930,11 @@ typedef enum {
 	cExitdoor=4,
 	cBigPillar=7,
 	cSmallTiles=10,
-	cSmallCharacters=11
+	cSmallCharacters=11,
+	aFeather=12,
+	aFlip=13,
+	aLoose=14,
+	aLife=15
 } tEditorImageOffset;
 
 /* blit top surface layer (cursor+annotations) */
@@ -948,8 +952,10 @@ void blit_sprites(int x,int y, tEditorImageOffset sprite, tCursorColors colors, 
 	SDL_SetSurfaceAlphaMod(image, 255);
 	SDL_SetColorKey(image, SDL_TRUE, 0);
 
-	if (SDL_SetPaletteColors(image->format->palette, chtab_editor_sprites->images[0]->format->palette->colors+colors, 1, colors_total) != 0) {
-		printf("Couldn't set video mode: %s\n", SDL_GetError());
+	if (colors_total!=-1) {
+		if (SDL_SetPaletteColors(image->format->palette, chtab_editor_sprites->images[0]->format->palette->colors+colors, 1, colors_total) != 0) {
+			printf("Couldn't set video mode: %s\n", SDL_GetError());
+		}
 	}
 
 	if (SDL_BlitSurface(image, &src_rect, screen, &dest_rect) != 0) {
@@ -957,6 +963,59 @@ void blit_sprites(int x,int y, tEditorImageOffset sprite, tCursorColors colors, 
 		quit(1);
 	}
 }
+
+void draw_ambiguous(surface_type* screen){
+	if (!ambiguous_mode) return;
+	for (int i=0;i<30;i++) {
+		int col,row;
+		int x,y;
+
+		col=i%10;
+		row=i/10;
+
+		x=col*32;
+		y=row*63-10;
+
+		tEditorImageOffset sprite;
+
+		switch (edited.fg[T(drawn_room,i)]&TILE_MASK) {
+		case tiles_11_loose:
+			sprite=aLoose;
+			break;
+		case tiles_10_potion:
+			switch (edited.bg[T(drawn_room,i)]) {
+			case 3:
+				sprite=aFeather;
+				break;
+			case 4:
+				sprite=aFlip;
+				break;
+			case 5:
+				sprite=aLife;
+				break;
+			default:
+				continue;
+			}
+			break;
+		default:
+			continue;
+		}
+
+		/* draw text*/
+		blit_sprites(x,y,sprite,0,-1,screen);
+/*
+	TODO: In the ambiguous full show all the file info
+		rect_type r={y,x,y+76,x+56};
+		screen_updates_suspended=1;
+		surface_type* save_screen=current_target_surface;
+		current_target_surface=screen;
+		show_text_with_color(&r,0,0,text,7);
+		current_target_surface=save_screen;
+		screen_updates_suspended=0;
+*/
+	}
+}
+
 
 void highlight_room(surface_type* screen, int offsetx,int offsety, int tw, int th, int i, int j, Uint32 color) {
 	SDL_Rect line1={offsetx+(tw*10+1)*i,offsety+(th*3+1)*j,tw*10+2,1};
@@ -997,54 +1056,6 @@ mouse_type calculate_mouse(const Uint8* key_states) {
 		mouse.inside=0;
 	}
 	return mouse;
-}
-
-void draw_ambiguous(surface_type* screen){
-	if (!ambiguous_mode) return;
-	for (int i=0;i<30;i++) {
-		int col,row;
-		int x,y;
-
-		col=i%10;
-		row=i/10;
-
-		x=col*32;
-		y=row*63-10;
-
-		const char* text;
-
-		switch (edited.fg[T(drawn_room,i)]&TILE_MASK) {
-		case tiles_11_loose:
-			text="L";
-			break;
-		case tiles_10_potion:
-			switch (edited.bg[T(drawn_room,i)]) {
-			case 3:
-				text="W";
-				break;
-			case 4:
-				text="I";
-				break;
-			case 5:
-				text="K";
-				break;
-			default:
-				continue;
-			}
-			break;
-		default:
-			continue;
-		}
-		/* TODO: use png images */
-		/* draw text*/
-		rect_type r={y,x,y+76,x+56};
-		screen_updates_suspended=1;
-		surface_type* save_screen=current_target_surface;
-		current_target_surface=screen;
-		show_text_with_color(&r,0,0,text,7);
-		current_target_surface=save_screen;
-		screen_updates_suspended=0;
-	}
 }
 
 /********************************************\
