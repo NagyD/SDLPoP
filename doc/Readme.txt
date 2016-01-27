@@ -232,8 +232,8 @@ Mac OS X:
 		b) sudo port install libsdl2 libsdl2_image libsdl2_mixer
 	or
 		a) Install "homebrew"
-		b) sudo brew install libsdl2 libsdl2_image
-		c) sudo brew install sdl2_mixer --with-libvorbis
+		b) brew install libsdl2 libsdl2_image
+		c) brew install sdl2_mixer --with-libvorbis
 
 	Get development tools:
 		a) Install Xcode.
@@ -244,6 +244,6 @@ Mac OS X:
 		a) Type './prince' or './prince full'.
 		b) Hit Control-Q to quit.
 
-	Tested on OSX 10.9.5 with Xcode 6.0.1
+	Tested on OSX 10.9.5 and OSX 10.11.2.
 
 
