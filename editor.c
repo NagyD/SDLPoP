@@ -1004,12 +1004,12 @@ void name_tile(char* res, int n, tile_packed_type tile, const char* format) {
 void draw_ambiguous_full(surface_type* screen, tile_packed_type tile, int x, int y) {
 	/* draw text*/
 	char aux[40];
-	rect_type r={y,x,y+76,x+56};
+	rect_type r={y,x,y+76,x+44};
 	screen_updates_suspended=1;
 	surface_type* save_screen=current_target_surface;
 	current_target_surface=screen;
 	name_tile(aux,40,tile,"%d\n%d\n\n%d");
-	show_text_with_color(&r,0,0,aux,7);
+	show_text_with_color(&r,0,0,aux,15);
 	current_target_surface=save_screen;
 	screen_updates_suspended=0;
 }
