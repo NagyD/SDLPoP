@@ -598,6 +598,8 @@ void load_edit_palettes(level_type* level_to_load) {
 			level_to_load->roomlinks[a].up=(a<24+4)?0:a-4+1;
 			level_to_load->roomlinks[a].down=(a>=24+4)?0:a+4+1;
 		}
+	for (int i=NUMBER_OF_ROOMS;i<NUMBER_OF_ROOMS+8;i++)
+		level_to_load->guards_tile[i]=30;
 }
 
 void save_edit_palettes() {
