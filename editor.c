@@ -1585,6 +1585,7 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 	case SDL_SCANCODE_H | WITH_SHIFT:
 	case SDL_SCANCODE_U | WITH_SHIFT:
 	case SDL_SCANCODE_N | WITH_SHIFT:
+		if (PALETTE_MODE) break;
 		editor__do_mark_start(flag_redraw|flag_remap);
 		if (key==(SDL_SCANCODE_J | WITH_SHIFT))
 			aux_int=room_api_insert_room_right(&edited_map,room_api_where_room(&edited_map,drawn_room));
