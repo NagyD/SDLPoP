@@ -14,7 +14,7 @@ Contributors:
 * Falcury (porting to SDL2, bugfixes, improvements, additions)
 * segra (segrax on GitHub) (Joystick support, resizable window)
 
-Topic in forum: http://forum.princed.org/viewtopic.php?f=69&t=3512
+Forum board: http://forum.princed.org/viewforum.php?f=126
 GitHub: https://github.com/NagyD/SDLPoP
 
 GENERAL
