@@ -185,6 +185,7 @@ copied_type copied={{0,0},extra_none,{0,0}};
 byte copied_room_fg[30]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 byte copied_room_bg[30]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 level_type edited;
+int ambiguous_mode=0;
 int remember_room=0; /* when switching to palette room mode */
 int map_selected_room=0;
 int goto_next_room=0;
@@ -998,6 +999,53 @@ mouse_type calculate_mouse(const Uint8* key_states) {
 	return mouse;
 }
 
+void draw_ambiguous(surface_type* screen){
+	if (!ambiguous_mode) return;
+	for (int i=0;i<30;i++) {
+		int col,row;
+		int x,y;
+
+		col=i%10;
+		row=i/10;
+
+		x=col*32;
+		y=row*63-10;
+
+		const char* text;
+
+		switch (edited.fg[T(drawn_room,i)]&TILE_MASK) {
+		case tiles_11_loose:
+			text="L";
+			break;
+		case tiles_10_potion:
+			switch (edited.bg[T(drawn_room,i)]) {
+			case 3:
+				text="W";
+				break;
+			case 4:
+				text="I";
+				break;
+			case 5:
+				text="K";
+				break;
+			default:
+				continue;
+			}
+			break;
+		default:
+			continue;
+		}
+		/* TODO: use png images */
+		/* draw text*/
+		rect_type r={y,x,y+76,x+56};
+		screen_updates_suspended=1;
+		surface_type* save_screen=current_target_surface;
+		current_target_surface=screen;
+		show_text_with_color(&r,0,0,text,7);
+		current_target_surface=save_screen;
+		screen_updates_suspended=0;
+	}
+}
 
 /********************************************\
 *             INPUT BINDINGS!!!!             *
@@ -1118,6 +1166,9 @@ void editor__on_refresh(surface_type* screen) {
 				}
 			}
 		}
+
+		/* draw ambiguous information */
+		draw_ambiguous(screen);
 
 		/* draw map */
 		if (mouse.keys&k_m) {
@@ -1475,6 +1526,11 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 		if (mrk&flag_guard_repaint)
 			editor__synchronize_guard_repaint();
 		}
+		break;
+	case SDL_SCANCODE_A:
+		ambiguous_mode^=1;
+		*answer_text=ambiguous_mode?"AMBIGUOUS MODE ON":"AMBIGUOUS MODE OFF";
+		*need_show_text=1;
 		break;
 	case SDL_SCANCODE_DELETE: /* delete */
 	case SDL_SCANCODE_BACKSPACE: /* backspace */
