@@ -1915,16 +1915,17 @@ void request_screen_update() {
 			if (!aux) aux=malloc(onscreen_surface_->pitch * onscreen_surface_->h); //TODO: free memory
 			memcpy(aux, onscreen_surface_->pixels, onscreen_surface_->pitch * onscreen_surface_->h);
 			onscreen_surface_copy=SDL_CreateRGBSurfaceFrom(aux, onscreen_surface_->w, onscreen_surface_->h, 24, onscreen_surface_->pitch, 0xFF, 0xFF << 8, 0xFF << 16, 0);
+			if (NULL == onscreen_surface_copy) sdlperror("SDL_CreateRGBSurfaceFrom");
 			editor__on_refresh(onscreen_surface_copy);
 		} else {
 			onscreen_surface_copy=onscreen_surface_;
 		}
-		SDL_UpdateTexture(sdl_texture_, NULL, onscreen_surface_copy->pixels, onscreen_surface_copy->pitch);
+		if (0 != SDL_UpdateTexture(sdl_texture_, NULL, onscreen_surface_copy->pixels, onscreen_surface_copy->pitch)) sdlperror("SDL_UpdateTexture");
 #else
-		SDL_UpdateTexture(sdl_texture_, NULL, onscreen_surface_->pixels, onscreen_surface_->pitch);
+		if (0 != SDL_UpdateTexture(sdl_texture_, NULL, onscreen_surface_->pixels, onscreen_surface_->pitch)) sdlperror("SDL_UpdateTexture");
 #endif
-		SDL_RenderClear(renderer_);
-		SDL_RenderCopy(renderer_, sdl_texture_, NULL, NULL);
+		if (0 != SDL_RenderClear(renderer_)) sdlperror("SDL_RenderClear");
+		if (0 != SDL_RenderCopy(renderer_, sdl_texture_, NULL, NULL)) sdlperror("SDL_RenderCopy");
 		SDL_RenderPresent(renderer_);
 	}
 }
