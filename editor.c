@@ -71,13 +71,13 @@ tile_global_location_type room_api_tile_move(const tMap* map, tile_global_locati
 
 #pragma pack(push, 1)
 typedef struct {
-		byte fg;
 		byte bg;
+		byte fg;
 	} concept_type; /* tile_and_mod but packed */
 
 typedef union {
 	concept_type concept;
-	word number;
+	Uint16 number;
 } tile_packed_type;
 #pragma pack(pop)
 
@@ -331,7 +331,7 @@ void door_api_init_iterator(tIterator* it, tile_global_location_type tp) {
 				(edited.fg[tp-1]&TILE_MASK)==tiles_16_level_door_left) {
 					tp--;
 					door_api_init_iterator(it,tp);
-					return; 
+					return;
 				}
 		}
 		it->type=noneIterator;
@@ -539,7 +539,61 @@ const char* editor__toggle_door_tile(short room,short tilepos) {
 }
 
 /********************************************\
-*             Editor functions               *
+*               INI functions                *
+\********************************************/
+int ini_load(const char *filename,
+             int (*report)(const char *section, const char *name, const char *value));
+
+typedef enum {
+	cMain=1,    /* White+grey: cursors cross+tile. */
+	cRight=3,   /* Red: cursor tile when ctrl+alt is pressed and the tile is a door/button. */
+	cWrong=5,   /* Blue: cursor tile when ctrl+alt is pressed and the tile is NOT a door/button. No actions possible. */
+	cLinked=7,  /* Green: When a door/button is selected, the linked tiles will have this color */
+	cSelected=9,/* Yellow: The selected door/button. */
+	cExtra=11   /* Cyan: Not used yet. */
+} tCursorColors; /* The palettes are taken from the res201 bitmap, ignoring the res200 palette. */
+
+typedef enum {
+	cCross=0,
+	cSingleTile=1,
+	cExitdoor=4,
+	cBigPillar=7,
+	cSmallTiles=10,
+	cSmallCharacters=11,
+	aFeather=12,
+	aFlip=13,
+	aLoose=14,
+	aLife=15
+} tEditorImageOffset;
+
+typedef struct  {
+	tile_packed_type tile,mask;
+	tEditorImageOffset res;
+} ambi_type;
+
+struct {
+	int ambi_count;
+	ambi_type ambi[50];
+	//TODO: add sanitation
+} editor_tables;
+
+static int ini_editor_callback(const char *section, const char *name, const char *value) {
+	if (!strcmp(section,"ambiguous")) {
+		int fg,bg,fgm,bgm;
+		int res,c;
+		c=editor_tables.ambi_count;
+		if (sscanf(value,"%d.%d/%d.%d %d",&fg,&bg,&fgm,&bgm,&res)) {
+			editor_tables.ambi[c].tile.number=fg<<8|bg;
+			editor_tables.ambi[c].mask.number=fgm<<8|bgm;
+			editor_tables.ambi[c].res=res-1;
+			editor_tables.ambi_count++;
+		}
+	}
+	return 1;
+}
+
+/********************************************\
+*              Editor functions              *
 \********************************************/
 
 chtab_type* chtab_editor_sprites=NULL;
@@ -553,7 +607,12 @@ void editor__load_level() {
 	remember_room=0;
 
 	dathandle = open_dat("editor", 0);
-	if (chtab_editor_sprites) free_chtab(chtab_editor_sprites);
+	if (chtab_editor_sprites) {
+		free_chtab(chtab_editor_sprites);
+	} else {
+		//TODO: move the ini to another place (hook it in the init game)
+		ini_load("data/editor/editor.ini", ini_editor_callback);
+	}
 	chtab_editor_sprites = load_sprites_from_file(200, 1<<11, 1);
 	close_dat(dathandle);
 
@@ -917,28 +976,6 @@ void editor__randomize(int room) {
 *           Blitting editor layer            *
 \********************************************/
 
-typedef enum {
-	cMain=1,    /* White+grey: cursors cross+tile. */
-	cRight=3,   /* Red: cursor tile when ctrl+alt is pressed and the tile is a door/button. */
-	cWrong=5,   /* Blue: cursor tile when ctrl+alt is pressed and the tile is NOT a door/button. No actions possible. */
-	cLinked=7,  /* Green: When a door/button is selected, the linked tiles will have this color */
-	cSelected=9,/* Yellow: The selected door/button. */
-	cExtra=11   /* Cyan: Not used yet. */
-} tCursorColors; /* The palettes are taken from the res201 bitmap, ignoring the res200 palette. */
-
-typedef enum {
-	cCross=0,
-	cSingleTile=1,
-	cExitdoor=4,
-	cBigPillar=7,
-	cSmallTiles=10,
-	cSmallCharacters=11,
-	aFeather=12,
-	aFlip=13,
-	aLoose=14,
-	aLife=15
-} tEditorImageOffset;
-
 /* blit top surface layer (cursor+annotations) */
 void blit_sprites(int x,int y, tEditorImageOffset sprite, tCursorColors colors, int colors_total, surface_type* screen) {
 	image_type* image;
@@ -967,34 +1004,10 @@ void blit_sprites(int x,int y, tEditorImageOffset sprite, tCursorColors colors, 
 }
 
 void draw_ambiguous_on(surface_type* screen, tile_packed_type tile, int x, int y) {
-	tEditorImageOffset sprite;
-	/* TODO: use masks and send to ini file */
-
-	switch (tile.concept.fg&TILE_MASK) {
-	case tiles_11_loose:
-		sprite=aLoose;
-		break;
-	case tiles_10_potion:
-		switch (tile.concept.bg) {
-		case 3:
-			sprite=aFeather;
-			break;
-		case 4:
-			sprite=aFlip;
-			break;
-		case 5:
-			sprite=aLife;
-			break;
-		default:
-			return;
-		}
-		break;
-	default:
-		return;
-	}
-
-	/* draw text*/
-	blit_sprites(x,y,sprite,0,-1,screen);
+	int i;
+	for (i=0;i<editor_tables.ambi_count;i++)
+		if ((tile.number&editor_tables.ambi[i].mask.number)==editor_tables.ambi[i].tile.number)
+			blit_sprites(x,y,editor_tables.ambi[i].res,0,-1,screen);
 }
 
 void name_tile(char* res, int n, tile_packed_type tile, const char* format) {
@@ -1030,14 +1043,13 @@ void draw_ambiguous(surface_type* screen){
 		tile_packed_type tile;
 		tile.concept.fg=edited.fg[T(drawn_room,i)];
 		tile.concept.bg=edited.bg[T(drawn_room,i)];
-		
 
 		if (ambiguous_mode==1) {
 			draw_ambiguous_on(screen,tile,x,y);
 		} else {
 			draw_ambiguous_full(screen,tile,x,y);
 		}
-		
+
 	}
 }
 
@@ -1089,7 +1101,7 @@ mouse_type calculate_mouse(const Uint8* key_states) {
 
 void editor__on_refresh(surface_type* screen) {
 	if (chtab_editor_sprites) {
-		mouse_type mouse=calculate_mouse(SDL_GetKeyboardState(NULL)); 
+		mouse_type mouse=calculate_mouse(SDL_GetKeyboardState(NULL));
 		int colors_total=1;
 		tEditorImageOffset image_offset=cSingleTile;
 		tCursorColors colors;
@@ -1404,7 +1416,7 @@ void editor__handle_mouse_wheel(SDL_MouseWheelEvent e,mouse_type mouse) {
 			if (mouse.tilepos!=29) ed_redraw_tile(mouse.tilepos+1);
 
 			char aux[40];
-			name_tile(aux,40,(tile_packed_type)(word)(edited.fg[location]<<8|edited.bg[location]),"FG:%d/%d BG:%d");
+			name_tile(aux,40,(tile_packed_type)(Uint16)(edited.fg[location]<<8|edited.bg[location]),"FG:%d/%d BG:%d");
 			print(aux);
 			need_full_redraw=1;
 		}
