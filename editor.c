@@ -71,8 +71,8 @@ tile_global_location_type room_api_tile_move(const tMap* map, tile_global_locati
 
 #pragma pack(push, 1)
 typedef struct {
-		byte bg;
 		byte fg;
+		byte bg;
 	} concept_type; /* tile_and_mod but packed */
 
 typedef union {
@@ -80,8 +80,6 @@ typedef union {
 	Uint16 number;
 } tile_packed_type;
 #pragma pack(pop)
-
-//TODO: define (tile_packed_type){.concept={.fg=edited.fg[location],.bg=edited.bg[location]}}
 
 typedef struct probability_info {
 	int count;
@@ -1116,9 +1114,7 @@ void draw_ambiguous(surface_type* screen){
 		x=col*32;
 		y=row*63-10;
 
-		tile_packed_type tile;
-		tile.concept.fg=edited.fg[T(drawn_room,i)];
-		tile.concept.bg=edited.bg[T(drawn_room,i)];
+		tile_packed_type tile=TP(edited,T(drawn_room,i));
 
 		if (ambiguous_mode==1) {
 			draw_ambiguous_on(screen,tile,x,y);
@@ -1492,7 +1488,7 @@ void editor__handle_mouse_wheel(SDL_MouseWheelEvent e,mouse_type mouse) {
 			if (mouse.tilepos!=29) ed_redraw_tile(mouse.tilepos+1);
 
 			char aux[40];
-			name_tile(aux,40,(tile_packed_type)(Uint16)(edited.fg[location]<<8|edited.bg[location]),"FG:%d/%d BG:%d");
+			name_tile(aux,40,TP(edited,location),"FG:%d/%d BG:%d");
 			print(aux);
 			need_full_redraw=1;
 		}
@@ -2075,10 +2071,9 @@ tile_packed_type room_api__private_get_tile_if_exists(const tMap* map, tile_glob
 	tile_packed_type result;
 	aux=room_api_tile_move(map,t,col,row);
 	if (aux!=-1 && level_mask[aux]) {
-		result.concept.fg=edited.fg[aux];
-		result.concept.bg=edited.bg[aux];
+		result=TP(edited,aux);
 	} else {
-		result.number=NO_TILE;
+		result=NO_TILE;
 	}
 	return result;
 }
@@ -2117,9 +2112,9 @@ float room_api_measure_entropy(const tMap* map, tile_global_location_type t, byt
 void room_api__private_measure_similarity(const tMap* map,tile_global_location_type origin, tile_global_location_type target, byte* level_mask, int x, int y,float* result, float* total, float weight) {
 	tile_packed_type target_tile, origin_tile;
 	target_tile=room_api__private_get_tile_if_exists(map,target,level_mask,x,y);
-	if (target_tile.number==NO_TILE) return;
+	if (target_tile.number==NO_TILE.number) return;
 	origin_tile=room_api__private_get_tile_if_exists(map,origin,level_mask,x,y);
-	if (origin_tile.number==NO_TILE) return;
+	if (origin_tile.number==NO_TILE.number) return;
 	*total+=weight;
 	if (origin_tile.number==target_tile.number) *result+=weight;
 }
@@ -2129,7 +2124,7 @@ void room_api_measure_similarity(const tMap* map, tile_global_location_type orig
 	tile_packed_type current_tile;
 
 	current_tile=room_api__private_get_tile_if_exists(map,origin,level_mask,0,0);
-	if (current_tile.number==NO_TILE) return; /* there is no tile here */
+	if (current_tile.number==NO_TILE.number) return; /* there is no tile here */
 
 #define ENTROPY_MEASURE_SIMILARITY(x,y,e) \
 	room_api__private_measure_similarity(map,origin,target,level_mask,x,y,&result,&total,e)
@@ -2171,7 +2166,7 @@ tile_packed_type room_api_suggest_tile(const tMap* map, tile_global_location_typ
 	float total=0,random_prob;
 
 	probability=malloc(PROBABILITY_SIZE*sizeof(tProbability));
-	for (j=0;j!=NO_TILE;j++)
+	for (j=0;j!=NO_TILE.number;j++)
 		probability[j]=aux;
 
 	for (i=0;i<NUMBER_OF_ROOMS*30;i++) {
@@ -2180,22 +2175,22 @@ tile_packed_type room_api_suggest_tile(const tMap* map, tile_global_location_typ
 	}
 
 #ifdef __SCREEN_DEBUG__
-	for (j=0;j!=NO_TILE;j++) {
+	for (j=0;j!=NO_TILE.number;j++) {
 		if (probability[j].count)
 			printf("k=%d v=%f c=%d\n",j,probability[j].value,probability[j].count);
 	}
 #endif
 
-	for (j=0;j!=NO_TILE;j++)
+	for (j=0;j!=NO_TILE.number;j++)
 		total+=probability[j].value;
 	random_prob=(total*rand())/RAND_MAX; /* what if random==0 ???? */
 
 	if (random_prob==0) {
 		free(probability);
-		return (tile_packed_type)NO_TILE;
+		return NO_TILE;
 	}
 	total=0;
-	for (j=0;j!=NO_TILE;j++) {
+	for (j=0;j!=NO_TILE.number;j++) {
 		random_prob-=probability[j].value;
 		if (random_prob<=0) {
 			free(probability);
@@ -2203,7 +2198,7 @@ tile_packed_type room_api_suggest_tile(const tMap* map, tile_global_location_typ
 		}
 	}
 	free(probability);
-	return (tile_packed_type)NO_TILE;
+	return NO_TILE;
 }
 
 #endif
