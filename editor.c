@@ -81,6 +81,8 @@ typedef union {
 } tile_packed_type;
 #pragma pack(pop)
 
+//TODO: define (tile_packed_type){.concept={.fg=edited.fg[location],.bg=edited.bg[location]}}
+
 typedef struct probability_info {
 	int count;
 	float value;
