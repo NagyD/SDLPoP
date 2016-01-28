@@ -604,8 +604,8 @@ int ini_editor_callback(const char *section, const char *name, const char *value
 		int res,c;
 		c=editor_tables.ambi_count;
 		if (sscanf(value,"%d.%d/%d.%d %d",&fg,&bg,&fgm,&bgm,&res)) {
-			editor_tables.ambi[c].tile.number=fg<<8|bg;
-			editor_tables.ambi[c].mask.number=fgm<<8|bgm;
+			editor_tables.ambi[c].tile=TP_(fg,bg);
+			editor_tables.ambi[c].mask=TP_(fgm,bgm);
 			editor_tables.ambi[c].res=res-1;
 			editor_tables.ambi_count++;
 		}
@@ -617,15 +617,15 @@ int ini_editor_callback(const char *section, const char *name, const char *value
 			sani_tile_type aux;
 			int t1,t2,m1,m2,nt1,nt2,nm1,nm2;
 			if (sscanf(value,"%d.%d/%d.%d %d.%d/%d.%d",&t1,&t2,&m1,&m2,&nt1,&nt2,&nm1,&nm2)) {
-				aux.match.by_mask.tile.number=t1<<8|t2;
-				aux.match.by_mask.mask.number=m1<<8|m2;
-				aux.new_tile.number=nt1<<8|nt2;
-				aux.new_mask.number=nm1<<8|nm2;
+				aux.match.by_mask.tile=TP_(t1,t2);
+				aux.match.by_mask.mask=TP_(m1,m2);
+				aux.new_tile=TP_(nt1,nt2);
+				aux.new_mask=TP_(nm1,nm2);
 			} else {
 				char str[100];
 				if (sscanf(value,"(%[^)]) %d.%d/%d.%d",str,&nt1,&nt2,&nm1,&nm2)) {
-					aux.new_tile.number=nt1<<8|nt2;
-					aux.new_mask.number=nm1<<8|nm2;
+					aux.new_tile=TP_(nt1,nt2);
+					aux.new_mask=TP_(nm1,nm2);
 					char* token;
 					char* init=str;
 					aux.match.by_flags=0;
