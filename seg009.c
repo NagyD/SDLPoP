@@ -2179,6 +2179,39 @@ image_type far * __pascal far method_3_blit_mono(image_type far *image,int xpos,
 	return image;
 }
 
+// Workaround for a bug in SDL2 (before v2.0.4):
+// https://bugzilla.libsdl.org/show_bug.cgi?id=2986
+// SDL_FillRect onto a 24-bit surface swaps Red and Blue component
+
+bool RGB24_bug_checked = false;
+bool RGB24_bug_affected;
+
+bool RGB24_bug_check() {
+	if (!RGB24_bug_checked) {
+		// Check if the bug occurs in this version of SDL.
+		SDL_Surface* test_surface = SDL_CreateRGBSurface(0, 1, 1, 24, 0, 0, 0, 0);
+		if (NULL == test_surface) sdlperror("SDL_CreateSurface in RGB24_bug_check");
+		// Fill with red.
+		SDL_FillRect(test_surface, NULL, SDL_MapRGB(test_surface->format, 0xFF, 0, 0));
+		if (0 != SDL_LockSurface(test_surface)) sdlperror("SDL_LockSurface in RGB24_bug_check");
+		// Read red component of pixel.
+		RGB24_bug_affected = (*(Uint32*)test_surface->pixels & test_surface->format->Rmask) == 0;
+		SDL_UnlockSurface(test_surface);
+		SDL_FreeSurface(test_surface);
+		RGB24_bug_checked = true;
+	}
+	return RGB24_bug_affected;
+}
+
+int safe_SDL_FillRect(SDL_Surface* dst, const SDL_Rect* rect, Uint32 color) {
+	if (dst->format->BitsPerPixel == 24 && RGB24_bug_check()) {
+		// In the buggy version, SDL_FillRect swaps R and B, so we swap it once more.
+		color = ((color & 0xFF) << 16) | (color & 0xFF00) | ((color & 0xFF0000) >> 16);
+	}
+	return SDL_FillRect(dst, rect, color);
+}
+// End of workaround.
+
 const rect_type far * __pascal far method_5_rect(const rect_type far *rect,int blit,byte color) {
 	SDL_Rect dest_rect;
 	rect_to_sdlrect(rect, &dest_rect);
@@ -2188,7 +2221,7 @@ const rect_type far * __pascal far method_5_rect(const rect_type far *rect,int b
 #else
 	uint32_t rgb_color = SDL_MapRGBA(current_target_surface->format, palette_color.r<<2, palette_color.g<<2, palette_color.b<<2, color == 0 ? SDL_ALPHA_TRANSPARENT : SDL_ALPHA_OPAQUE);
 #endif
-	if (SDL_FillRect(current_target_surface, &dest_rect, rgb_color) != 0) {
+	if (safe_SDL_FillRect(current_target_surface, &dest_rect, rgb_color) != 0) {
 		sdlperror("SDL_FillRect");
 		quit(1);
 	}
@@ -2635,7 +2668,7 @@ void __pascal far set_bg_attr(int vga_pal_index,int hc_pal_index) {
 		uint32_t rgb_color = SDL_MapRGB(onscreen_surface_->format, palette_color.r<<2, palette_color.g<<2, palette_color.b<<2) /*& 0xFFFFFF*/;
 		//SDL_UpdateRect(onscreen_surface_, 0, 0, 0, 0);
 		// First clear the screen with the color of the flash.
-		if (SDL_FillRect(onscreen_surface_, &rect, rgb_color) != 0) {
+		if (safe_SDL_FillRect(onscreen_surface_, &rect, rgb_color) != 0) {
 			sdlperror("SDL_FillRect");
 			quit(1);
 		}
