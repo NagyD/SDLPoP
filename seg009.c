@@ -2579,14 +2579,11 @@ void idle() {
 				break;
 #ifdef USE_EDITOR
 			case SDL_MOUSEBUTTONDOWN:
+			case SDL_MOUSEBUTTONUP:
+			case SDL_MOUSEMOTION:
+			case SDL_MOUSEWHEEL:
 				if (editor_enabled)
-					editor__handle_mouse_button(
-						event.button,
-						key_states[SDL_SCANCODE_LSHIFT] || key_states[SDL_SCANCODE_RSHIFT],
-						key_states[SDL_SCANCODE_LCTRL] || key_states[SDL_SCANCODE_RCTRL],
-						key_states[SDL_SCANCODE_LALT] || key_states[SDL_SCANCODE_RALT],
-						key_states[SDL_SCANCODE_M]
-					);
+					editor__handle_mouse(event,key_states);
 				break;
 #endif
 			case SDL_QUIT:

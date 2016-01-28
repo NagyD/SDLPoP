@@ -44,14 +44,29 @@ Ctrl-Shift-R: Randomize the whole screen.
 M: Show map (keep the key pressed).
 Alt-P: Save Palette.
 Alt-E: Enable/disable editor mode. Note that after disabling editor mode, cheats remain enabled, even without megahit command line.
+MouseWheel: Scroll to chenge current tile.
 
 By pressing Shift the mouse pointer indicates where the characters will be placed. Using Ctrl-Alt door linking showing features are activated: Blue tiles are not linkable, red tiles are linkable (doors and buttons), the number displayed indicates how many links this tile has.
+
+The copied message:
+
+When a single tile is copied the following text is displayed:
+COPIED FG:tile_code/extra BG:mod
+
+Where tile_code is the code of the tile (a number between 0 and 31). Extra is the high part of the tile (normally could be ignored).
+mod is the modifier, it depends on the tile.
+
+When a multiple tile block is copied the following text is displayed:
+COPIED FG:tile_code/extra+tile_code/extraPos BG:mod+mod
+same as above, but for the two tiles. Pos is where the extra tile is located: A for above, B for below, L for left and R for right.
+
 
 TODO List/known bugs:
 * Undo/Redo features fails syncing with current game door links
 * Copy/paste does nothing with the room linking functionality, creating duplicated buttons.
 * Adding buttons won't set up the modifier to 255, which is used as a "non-event" button.
-* Multiple-tile feature works in the selection cursor but it's not implemented.
 * Selection using middle button scroll and full selection using the palette room 8 redrawn.
 * Automatic decoration of room.
-
+* Ctrl-X to cut.
+* Multiple select on room (up to 30 tiles) using ctrl+click or dragging
+* Drag rooms/groups of rooms on map
