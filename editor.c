@@ -246,14 +246,6 @@ tUndoQueueMark editor__redo() {
 }
 
 /********************************************\
-*            External functions              *
-\********************************************/
-
-/* TODO: move to header file */
-
-void __pascal far redraw_screen(int drawing_different_room);
-
-/********************************************\
 *           Room refreshing functions        *
 \********************************************/
 
@@ -1546,7 +1538,7 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,mouse_type mouse) {
 		ed_redraw_tile(mouse.tilepos);
 		if (mouse.tilepos) ed_redraw_tile(mouse.tilepos-1);
 		if (mouse.tilepos!=29) ed_redraw_tile(mouse.tilepos+1);
-		redraw_screen(1);
+		need_full_redraw=1;
 	} else if (e.button==SDL_BUTTON_RIGHT && mouse.keys==k_none) { /* right click: copy tile */
 		tile_global_location_type t=T(loaded_room,mouse.tilepos);
 		copied.main.tiletype=edited.fg[t];
@@ -1594,13 +1586,13 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,mouse_type mouse) {
 	} else if (e.button==SDL_BUTTON_RIGHT && mouse.keys==k_shift) { /* shift+right click: move move/put guard */
 		editor__set_guard(mouse.tilepos,mouse.x_b);
 		editor__position(&Guard,mouse.col,mouse.row,loaded_room,mouse.x_b,6569);
-		redraw_screen(1);
+		need_full_redraw=1;
 	} else if (e.button==SDL_BUTTON_LEFT && mouse.keys==(k_shift|k_ctrl)) { /* ctrl+shift+left click: randomize tile */
 		randomize_tile(mouse.tilepos);
 		ed_redraw_tile(mouse.tilepos);
 		if (mouse.tilepos) ed_redraw_tile(mouse.tilepos-1);
 		if (mouse.tilepos!=29) ed_redraw_tile(mouse.tilepos+1);
-		redraw_screen(1);
+		need_full_redraw=1;
 	} else if (e.button==SDL_BUTTON_LEFT && mouse.keys==(k_ctrl|k_alt)) { /* ctrl+alt+left click: toggle door mechanism links */
 		if (door_api_is_related(edited.fg[T(loaded_room,mouse.tilepos)]&TILE_MASK)) {
 			editor__do_mark_start(flag_redoor);
@@ -1802,7 +1794,8 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 		break;
 	case SDL_SCANCODE_V | WITH_CTRL: /* ctrl-v: paste room */
 		editor__paste_room(drawn_room);
-		redraw_screen(1);
+		ed_redraw_room();
+		need_full_redraw=1;
 		break;
 	case SDL_SCANCODE_S | WITH_ALT: /* alt-s */
 		if (edition_level==current_level) {
