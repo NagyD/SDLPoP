@@ -1102,7 +1102,8 @@ void draw_ambiguous_full(surface_type* screen, tile_packed_type tile, int x, int
 }
 
 void draw_ambiguous(surface_type* screen){
-	if (!ambiguous_mode) return;
+	if (!ambiguous_mode && !PALETTE_MODE) return;
+	/* ambiguous is always on in palette mode */
 
 	for (int i=0;i<30;i++) {
 		int col,row;
@@ -1116,10 +1117,10 @@ void draw_ambiguous(surface_type* screen){
 
 		tile_packed_type tile=TP(edited,T(drawn_room,i));
 
-		if (ambiguous_mode==1) {
-			draw_ambiguous_on(screen,tile,x,y);
-		} else {
+		if (ambiguous_mode==2) {
 			draw_ambiguous_full(screen,tile,x,y);
+		} else { /* ambiguous_mode==2 or PALETTE_MODE */
+			draw_ambiguous_on(screen,tile,x,y);
 		}
 
 	}
