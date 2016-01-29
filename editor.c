@@ -565,7 +565,9 @@ typedef enum {
 	aFeather=12,
 	aFlip=13,
 	aLoose=14,
-	aLife=15
+	aLife=15,
+	aPlaneVertical=16,
+	aPlaneHorizontal=19
 } tEditorImageOffset;
 
 typedef struct  {
@@ -1113,7 +1115,16 @@ void draw_selected(surface_type* screen,int movement){
 			x=col*32;
 			y=row*63-10;
 
-			blit_sprites(x,y,cSingleTile+movement,cTileSel,1,screen);
+			int
+				u=row!=0&&(selected_mask[i-10]),
+				d=row!=2&&(selected_mask[i+10]),
+				l=col!=0&&(selected_mask[i-1]),
+				r=col!=9&&(selected_mask[i+1]);
+			//up
+			blit_sprites(x,y+u,aPlaneHorizontal+movement,cTileSel+u,1,screen);
+			blit_sprites(x-32+l,y,aPlaneVertical+movement,cTileSel+l,1,screen);
+			if (!d) blit_sprites(x,y+63,aPlaneHorizontal+movement,cTileSel,1,screen);
+			if (!r) blit_sprites(x,y,aPlaneVertical+movement,cTileSel,1,screen);
 		}
 }
 
