@@ -178,13 +178,13 @@ void editor__do_mark_end(tUndoQueueMark m) {
 /* editor level layer used by do/undo/redo */
 typedef enum {extra_none,extra_up='A',extra_down='B',extra_left='L',extra_right='R'} movement_type;
 typedef struct {
-	tile_and_mod main;
+	tile_packed_type main;
 	movement_type extratype;
-	tile_and_mod extra;
+	tile_packed_type extra;
 } copied_type;
 
 void editor__load_level();
-copied_type copied={{0,0},extra_none,{0,0}};
+copied_type copied={{.number=-1},extra_none,{.number=-1}}; //NO_TILE
 byte copied_room_fg[30]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 byte copied_room_bg[30]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 level_type edited;
@@ -209,6 +209,11 @@ void editor__do_(long offset, byte c, tUndoQueueMark mark) {
 	offset[(char*)(&edited)]=c;
 	offset[(char*)(&level)]=c;
 	stack_push(offset<<(16+MARK_BITS)|mark<<16|before<<8|c);
+}
+
+void editor_change_tile(tile_global_location_type l, tile_packed_type t) {
+	editor__do(fg[l],t.concept.fg,mark_middle);
+	editor__do(bg[l],t.concept.bg,mark_middle);
 }
 
 tUndoQueueMark editor__undo() {
@@ -965,8 +970,7 @@ void randomize_room(int room) {
 			}
 		if (tile!=-1) {
 			tt=room_api_suggest_tile(&edited_map,tile,level_mask);
-			editor__do(fg[tile],tt.concept.fg,mark_middle);
-			editor__do(bg[tile],tt.concept.bg,mark_middle);
+			editor_change_tile(tile,tt);
 			level_mask[tile]=1;
 		}
 	} while (tile!=-1);
@@ -981,8 +985,9 @@ void randomize_tile(int tilepos) {
 	memset(level_mask,1,NUMBER_OF_ROOMS*30);
 	level_mask[t]=0;
 	tt=room_api_suggest_tile(&edited_map,t,level_mask);
-	editor__do(fg[t],tt.concept.fg,mark_start);
-	editor__do(bg[t],tt.concept.bg,mark_end);
+	editor__do_mark_start(0);
+	editor_change_tile(t,tt);
+	editor__do_mark_end(0);
 }
 
 void print_match(match_type m,int by) {
@@ -1001,10 +1006,6 @@ int matches(match_type m,int by,tile_packed_type t) {
 	} else { /* by flag */
 		return (1<<(t.concept.fg&TILE_MASK))&m.by_flags;
 	}
-}
-void editor_change_tile(tile_global_location_type l, tile_packed_type t) { /* TODO: extend the usage of this function */
-	editor__do(fg[l],t.concept.fg,mark_middle);
-	editor__do(bg[l],t.concept.bg,mark_middle);
 }
 
 void sanitize_room(int room, int sanitation_level) {
@@ -1030,7 +1031,6 @@ void sanitize_room(int room, int sanitation_level) {
 				tile_packed_type current=TP(edited,t);
 				if (match&&aux.center.level<=sanitation_level&&matches(aux.center.match,aux.center.by,current))
 					editor_change_tile(t,(tile_packed_type){.number=( (current.number&(~aux.center.new_mask.number)) | (aux.center.new_tile.number&aux.center.new_mask.number) )});
-					//printf("change! t=%d by=%d level=%d t=%x m=%x\n",i,aux.center.by,aux.center.level,aux.center.new_tile.number,aux.center.new_mask.number);
 				match=1; /* restart */
 			} else {
 				if (match) {
@@ -1509,10 +1509,13 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,mouse_type mouse) {
 	if (!mouse.inside) return;
 
 	if (e.button==SDL_BUTTON_LEFT && mouse.keys==k_none) { /* left click: edit tile */
+		if (copied.main.number==NO_TILE.number) {
+			print("NOTHING TO PASTE");
+			return;
+		}
 		tile_global_location_type t=T(loaded_room,mouse.tilepos);
 		editor__do_mark_start(flag_redraw);
-		editor__do(fg[t],copied.main.tiletype,mark_middle);
-		editor__do(bg[t],copied.main.modifier,mark_middle);
+		editor_change_tile(t,copied.main);
 		switch(copied.extratype) {
 		case extra_up:
 			t=room_api_tile_move(&edited_map,t,0,-1);
@@ -1530,10 +1533,9 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,mouse_type mouse) {
 			t=-1;
 			break;
 		}
-		if (t!=-1) {
-			editor__do(fg[t],copied.extra.tiletype,mark_middle);
-			editor__do(bg[t],copied.extra.modifier,mark_middle);
-		}
+		if (t!=-1)
+			editor_change_tile(t,copied.extra);
+
 		editor__do_mark_end(flag_redraw);
 		ed_redraw_tile(mouse.tilepos);
 		if (mouse.tilepos) ed_redraw_tile(mouse.tilepos-1);
@@ -1541,9 +1543,9 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,mouse_type mouse) {
 		need_full_redraw=1;
 	} else if (e.button==SDL_BUTTON_RIGHT && mouse.keys==k_none) { /* right click: copy tile */
 		tile_global_location_type t=T(loaded_room,mouse.tilepos);
-		copied.main.tiletype=edited.fg[t];
-		copied.main.modifier=edited.bg[t];
-		switch(copied.main.tiletype&TILE_MASK) {
+		copied.main.concept.fg=edited.fg[t];
+		copied.main.concept.bg=edited.bg[t];
+		switch(copied.main.concept.fg&TILE_MASK) {
 		case tiles_16_level_door_left:
 		case tiles_23_balcony_left:
 			t=room_api_tile_move(&edited_map,t,1,0);
@@ -1568,17 +1570,17 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,mouse_type mouse) {
 		}
 		char aux[40];
 		if (copied.extratype!=extra_none && t!=-1) {
-			copied.extra.tiletype=edited.fg[t];
-			copied.extra.modifier=edited.bg[t];
+			copied.extra.concept.fg=edited.fg[t];
+			copied.extra.concept.bg=edited.bg[t];
 			snprintf(aux,40,"COPIED FG:%d/%d+%d/%d%c BG:%d+%d",
-			            copied.main.tiletype&TILE_MASK, copied.main.tiletype>>5,
-			            copied.extra.tiletype&TILE_MASK, copied.extra.tiletype>>5,
-			            copied.extratype,
-			            copied.main.modifier,
-			            copied.extra.modifier
+			         copied.main.concept.fg&TILE_MASK, copied.main.concept.fg>>5,
+			         copied.extra.concept.fg&TILE_MASK, copied.extra.concept.fg>>5,
+			         copied.extratype,
+			         copied.main.concept.bg,
+			         copied.extra.concept.bg
 			);
 		} else {
-			snprintf(aux,40,"COPIED FG:%d/%d BG:%d",copied.main.tiletype&TILE_MASK, copied.main.tiletype>>5, copied.main.modifier);
+			snprintf(aux,40,"COPIED FG:%d/%d BG:%d",copied.main.concept.fg&TILE_MASK, copied.main.concept.fg>>5, copied.main.concept.bg);
 		}
 		print(aux);
 	} else if (e.button==SDL_BUTTON_LEFT && mouse.keys==k_shift) { /* shift+left click: move kid */
@@ -1608,7 +1610,7 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,mouse_type mouse) {
 			goto_next_room=map_selected_room;
 		}
 	} else if (e.button==SDL_BUTTON_LEFT && mouse.keys==(k_ctrl|k_shift|k_m)) { /* ctrl+shift+m+left click: go to map room */
-		if (map_selected_room) editor__randomize(map_selected_room); //TODO: check map_selected_room
+		if (map_selected_room) editor__randomize(map_selected_room);
 	}
 }
 
