@@ -1055,6 +1055,16 @@ void editor__randomize(int room) {
 	need_full_redraw=1;
 }
 
+void editor__clean_room(int room) {
+	tile_packed_type empty={.number=0};
+	editor__do_mark_start(flag_redraw);
+	for (int i=0;i<30;i++)
+		editor_change_tile(T(room,i),empty);
+	editor__do_mark_end(flag_redraw);
+	ed_redraw_room();
+	need_full_redraw=1;
+}
+
 /********************************************\
 *           Blitting editor layer            *
 \********************************************/
@@ -1671,6 +1681,10 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 	case SDL_SCANCODE_BACKSPACE: /* backspace */
 		editor__remove_guard();
 		break;
+	case SDL_SCANCODE_DELETE | WITH_CTRL: /* ctrl-delete */
+	case SDL_SCANCODE_BACKSPACE | WITH_CTRL: /* ctrl-backspace */
+		editor__clean_room(drawn_room);
+		break;
 	case SDL_SCANCODE_DELETE | WITH_SHIFT: /* shift-delete */
 	case SDL_SCANCODE_BACKSPACE | WITH_SHIFT: /* shift-backspace */
 		editor__do_mark_start(flag_remap);
@@ -1792,6 +1806,13 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 		memcpy(copied_room_fg,&(edited.fg[T(drawn_room,0)]),30);
 		memcpy(copied_room_bg,&(edited.bg[T(drawn_room,0)]),30);
 		*answer_text="ROOM COPIED";
+		*need_show_text=1;
+		break;
+	case SDL_SCANCODE_X | WITH_CTRL: /* ctrl-x: copy room */
+		memcpy(copied_room_fg,&(edited.fg[T(drawn_room,0)]),30);
+		memcpy(copied_room_bg,&(edited.bg[T(drawn_room,0)]),30);
+		editor__clean_room(drawn_room);
+		*answer_text="ROOM CUT";
 		*need_show_text=1;
 		break;
 	case SDL_SCANCODE_V | WITH_CTRL: /* ctrl-v: paste room */
