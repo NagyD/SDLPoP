@@ -18,43 +18,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 The authors of this program may be contacted at http://forum.princed.org
 */
 
-#ifndef COMMON_H
-#define COMMON_H
+#ifndef SCRIPT_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+int init_script();
+void script__on_load_room(int room);
+void script__on_init_game();
+void script__on_load_level(int level_number);
 
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <fcntl.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <stdbool.h>
-
-#include "config.h"
-#include "types.h"
-#include "proto.h"
-#include "data.h"
-
-#ifdef USE_SCRIPT
-#include "script.h"
-#endif
-
-#ifndef MAX
-#define MAX(a,b) ((a)>(b)?(a):(b))
-#endif
-#ifndef MIN
-#define MIN(a,b) ((a)<(b)?(a):(b))
-#endif
-#ifndef ABS
-#define ABS(x) ((x)<0?-(x):(x))
-#endif
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
+#endif //SCRIPT_H

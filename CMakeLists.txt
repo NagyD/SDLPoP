@@ -23,6 +23,11 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${SDLPoP_SOURCE_DIR}")
 #include_directories(${DIR_SDL2}/include)
 #link_directories(${DIR_SDL2}/lib)
 
+set(DIR_TCC "C:/dev/scripting/tcc")
+include_directories(${DIR_TCC}/libtcc)
+link_directories(${DIR_TCC})
+link_directories(${DIR_TCC}/libtcc)
+
 set(SOURCE_FILES
     main.c
     common.h
@@ -43,14 +48,15 @@ set(SOURCE_FILES
     seqtbl.c
     options.c
     replay.c
+    script.c        script.h
     types.h
 )
 add_executable(prince ${SOURCE_FILES})
 
 if(WIN32)
-    target_link_libraries(prince mingw32 SDL2main SDL2 SDL2.dll SDL2_image SDL2_mixer)
+    target_link_libraries(prince mingw32 SDL2main SDL2 SDL2.dll SDL2_image SDL2_mixer libtcc)
 else()
-    target_link_libraries(prince SDL2main SDL2 SDL2_image SDL2_mixer)
+    target_link_libraries(prince SDL2main SDL2 SDL2_image SDL2_mixer libtcc)
 endif()
 
 

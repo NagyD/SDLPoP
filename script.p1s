@@ -1,0 +1,27 @@
+#include "pop_script.h"
+
+void on_init_game() {
+	int minutes = get_minutes_remaining();
+	int ticks = get_ticks_remaining();
+	printf("Script: old minutes remaining = %d, old ticks remaining = %d\n", minutes, ticks);
+	set_time_remaining(999, 719);
+}
+
+void on_load_level(int level_number) {
+	printf("Script: loaded level %d\n", level_number);
+	if (level.start_dir == DIR_LEFT) {
+		level.start_dir = DIR_RIGHT; // swap start direction
+	} else level.start_dir = DIR_LEFT;
+}
+
+void on_load_room(int room) {
+	int i;
+	for (i = 1; i <= 30; ++i) {
+		int tile = get_tile(room, i);
+		// pillars are evil
+		if (tile == TILE_PILLAR) set_tile(room, i, TILE_FLOOR);
+	}
+	play_sound(SOUND_MEET_JAFFAR); // life is dramatic
+}
+
+

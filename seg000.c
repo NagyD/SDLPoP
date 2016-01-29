@@ -42,6 +42,9 @@ void far pop_main() {
 
 	load_options();
 	apply_seqtbl_patches();
+#ifdef USE_SCRIPT
+	init_script();
+#endif
 
 	char sprintf_temp[100];
 	int i;
@@ -1048,6 +1051,9 @@ void __pascal far check_the_end() {
 		}
 		different_room = 1;
 		loadkid();
+#ifdef USE_SCRIPT
+        script__on_load_room((byte) drawn_room);
+#endif
 		anim_tile_modif();
 		start_chompers();
 		check_fall_flo();

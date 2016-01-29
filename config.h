@@ -55,6 +55,9 @@ The authors of this program may be contacted at http://forum.princed.org
 // Enable recording/replay feature.
 #define USE_REPLAY
 
+// Enable scripting feature
+#define USE_SCRIPT
+
 // Adds a way to crouch immediately after climbing up: press down and forward simultaneously
 // In the original game, this could not be done (pressing down always causes the kid to climb down).
 #define ALLOW_CROUCH_AFTER_CLIMBING

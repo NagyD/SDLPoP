@@ -43,6 +43,9 @@ void __pascal far init_game(int level) {
 		hitp_beg_lev = start_hitp; 		// 3
 	}
 	need_level1_music = (level == 1);
+#ifdef USE_SCRIPT
+    script__on_init_game();
+#endif
 	play_level(level);
 }
 
@@ -100,6 +103,9 @@ void __pascal far play_level(int level_number) {
 			load_lev_spr(level_number);
 		}
 		load_level();
+#ifdef USE_SCRIPT
+		script__on_load_level(level_number);
+#endif
 		pos_guards();
 		clear_coll_rooms();
 		clear_saved_ctrl();
