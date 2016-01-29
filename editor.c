@@ -186,9 +186,9 @@ typedef struct {
 void editor__load_level();
 copied_type copied={NO_TILE_,extra_none,NO_TILE_};
 tile_packed_type copied_room[30]={NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_};
-/*byte copied_room_fg[30]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-byte copied_room_bg[30]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};*/
 byte selected_mask[30]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+#define clean_selected_mask() memset(selected_mask,0,sizeof(byte)*30)
+int selected_mask_room=-1;
 level_type edited;
 int ambiguous_mode=0;
 int remember_room=0; /* when switching to palette room mode */
@@ -1058,15 +1058,23 @@ void editor__randomize(int room) {
 	need_full_redraw=1;
 }
 
-void editor__copy_room(int room) {
+int editor__copy_room(int room) {
+	int select_all_room=1;
+	if (room==selected_mask_room) /* only use selected tiles if the user is in the selection room */
+		for (int i=0;i<30;i++)
+			select_all_room=select_all_room&&selected_mask[i];
+
 	for (int i=0;i<30;i++)
-		copied_room[i]=TP(edited,T(drawn_room,i));
+		copied_room[i]=(select_all_room||selected_mask[i])?TP(edited,T(drawn_room,i)):NO_TILE;
+
+	return select_all_room;
 }
 void editor__clean_room(int room) {
 	tile_packed_type empty={.number=0};
 	editor__do_mark_start(flag_redraw);
 	for (int i=0;i<30;i++)
-		editor_change_tile(T(room,i),empty);
+		if (selected_mask[i])
+			editor_change_tile(T(room,i),empty);
 	editor__do_mark_end(flag_redraw);
 	ed_redraw_room();
 	need_full_redraw=1;
@@ -1105,7 +1113,7 @@ void blit_sprites(int x,int y, tEditorImageOffset sprite, tCursorColors colors, 
 
 void draw_selected(surface_type* screen,int movement){
 	for (int i=0;i<30;i++)
-		if (selected_mask[i]) {
+		if (selected_mask[i] && selected_mask_room==drawn_room) {
 			int col,row;
 			int x,y;
 
@@ -1657,7 +1665,11 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,mouse_type mouse) {
 	} else if (e.button==SDL_BUTTON_LEFT && mouse.keys==(k_ctrl|k_shift|k_m)) { /* ctrl+shift+m+left click: go to map room */
 		if (map_selected_room) editor__randomize(map_selected_room);
 	} else if (e.button==SDL_BUTTON_LEFT && mouse.keys==(k_ctrl)) { /* ctrl+left click: select tile */
-		selected_mask[mouse.tilepos]=1;
+		if (selected_mask_room!=drawn_room) {
+			selected_mask_room=drawn_room;
+			clean_selected_mask();
+		}
+		selected_mask[mouse.tilepos]^=1;
 	}
 }
 
@@ -1721,6 +1733,7 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 	case SDL_SCANCODE_DELETE | WITH_CTRL: /* ctrl-delete */
 	case SDL_SCANCODE_BACKSPACE | WITH_CTRL: /* ctrl-backspace */
 		editor__clean_room(drawn_room);
+		clean_selected_mask();
 		break;
 	case SDL_SCANCODE_DELETE | WITH_SHIFT: /* shift-delete */
 	case SDL_SCANCODE_BACKSPACE | WITH_SHIFT: /* shift-backspace */
@@ -1840,14 +1853,14 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 		need_full_redraw=1;
 		break;
 	case SDL_SCANCODE_C | WITH_CTRL: /* ctrl-c: copy room */
-		editor__copy_room(drawn_room);
-		*answer_text="ROOM COPIED";
+		*answer_text=editor__copy_room(drawn_room)?"ROOM COPIED":"TILES COPIED";
+		clean_selected_mask();
 		*need_show_text=1;
 		break;
 	case SDL_SCANCODE_X | WITH_CTRL: /* ctrl-x: copy room */
-		editor__copy_room(drawn_room);
+		*answer_text=editor__copy_room(drawn_room)?"ROOM CUT":"TILES CUT";
 		editor__clean_room(drawn_room);
-		*answer_text="ROOM CUT";
+		clean_selected_mask();
 		*need_show_text=1;
 		break;
 	case SDL_SCANCODE_V | WITH_CTRL: /* ctrl-v: paste room */
