@@ -32,6 +32,7 @@ typedef short tile_global_location_type;
 
 
 #define NO_TILE ((tile_packed_type){.number=(Uint16)(-1)})
+#define NO_TILE_ {.number=-1}
 #define TP_(f,b) ((tile_packed_type){.concept={.fg=f,.bg=b}})
 /* tile_packed_type TP(level_type level, tile_global_location_type location) */
 #define TP(level,location) TP_(level.fg[location],level.bg[location])
