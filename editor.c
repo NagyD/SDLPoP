@@ -24,6 +24,7 @@ The authors of this program may be contacted at http://forum.princed.org
 /********************************************\
 *             Headers of room API            *
 \********************************************/
+
 #define MAP_SIDE (NUMBER_OF_ROOMS*2+3)
 #define MAP_CENTER (NUMBER_OF_ROOMS+1)
 #define POS_UP (-MAP_SIDE)
@@ -175,12 +176,12 @@ void editor__do_mark_end(tUndoQueueMark m) {
 }
 
 /* editor level layer used by do/undo/redo */
+typedef enum {extra_none,extra_up='A',extra_down='B',extra_left='L',extra_right='R'} movement_type;
 typedef struct {
 	tile_and_mod main;
-	enum {extra_none,extra_up='A',extra_down='B',extra_left='L',extra_right='R'} extratype;
+	movement_type extratype;
 	tile_and_mod extra;
 } copied_type;
-
 
 void editor__load_level();
 copied_type copied={{0,0},extra_none,{0,0}};
@@ -299,6 +300,7 @@ typedef enum {
 	cDoor=1,
 	cOther=0
 } tTileDoorType;
+
 tTileDoorType door_api_is_related(byte tile) {
 	switch(tile) {
 	case tiles_6_closer:
@@ -571,32 +573,75 @@ typedef struct  {
 	tEditorImageOffset res;
 } ambi_type;
 
-typedef struct  {
-	union {
-		struct {
-			tile_packed_type tile,mask;
-		} by_mask;
-		Uint32 by_flags;
-	} match;
+typedef union {
+	struct {
+		tile_packed_type tile,mask;
+	} by_mask;
+	Uint32 by_flags;
+} match_type;
+
+typedef struct {
+	Uint8 type,by,level;
+	match_type match;
 	tile_packed_type new_tile;
 	tile_packed_type new_mask;
+} sani_c_tile_type;
+
+typedef struct {
+	Uint8 type,by,x,y,null_is_true;
+	match_type match;
 } sani_tile_type;
 
-typedef struct  {
-	Uint8 mask_which_union;
-	sani_tile_type center;
-	sani_tile_type up;
-	sani_tile_type down;
-	sani_tile_type left;
-	sani_tile_type right;
+typedef union {
+	Uint8 type;
+	sani_c_tile_type center;
+	sani_tile_type adjacent;
 } sani_type;
 
 struct {
 	int ambi_count;
 	ambi_type ambi[50];
 	int sani_count;
-	sani_type sani[100];
+	int sani_alloc;
+	sani_type* sani;
 } editor_tables;
+
+void add_sani(sani_type s) {
+	if (!editor_tables.sani_alloc) {
+		editor_tables.sani_alloc=100;
+		editor_tables.sani=malloc(editor_tables.sani_alloc*sizeof(sani_type));
+	} else if (editor_tables.sani_count==editor_tables.sani_alloc) {
+		editor_tables.sani_alloc<<=1;
+		editor_tables.sani=realloc(editor_tables.sani,editor_tables.sani_alloc*sizeof(sani_type));
+	}
+
+	editor_tables.sani[editor_tables.sani_count++]=s;
+}
+
+int parse_match(const char* str,match_type* mt, Uint8* by) {
+	int t1,t2,m1,m2;
+	if (sscanf(str,"%d.%d/%d.%d",&t1,&t2,&m1,&m2)) {
+		mt->by_mask.tile=TP_(t1,t2);
+		mt->by_mask.mask=TP_(m1,m2);
+		*by=0;
+	} else {
+		char str2[100];
+		if (sscanf(str,"(%[^)])",str2)) {
+			char* token;
+			char* init=str2;
+			mt->by_flags=0;
+			while((token = strtok(init,","))) {
+				mt->by_flags|=1<<atoi(token);
+				init=NULL;
+			}
+			*by=1;
+		} else {
+			printf("editor.ini matching error '%s'\n",str);
+			return 0;
+		}
+	}
+	return 1;
+}
 
 int ini_editor_callback(const char *section, const char *name, const char *value) {
 	if (!strcmp(section,"ambiguous")) {
@@ -610,18 +655,22 @@ int ini_editor_callback(const char *section, const char *name, const char *value
 			editor_tables.ambi_count++;
 		}
 	} else if (!strcmp(section,"sanitation")) {
-		int number;
+		int i=0;
 		char c;
-		if (sscanf(name,"%c%d",&c,&number)) {
-			int flag=0;
-			sani_tile_type aux;
-			int t1,t2,m1,m2,nt1,nt2,nm1,nm2;
-			if (sscanf(value,"%d.%d/%d.%d %d.%d/%d.%d",&t1,&t2,&m1,&m2,&nt1,&nt2,&nm1,&nm2)) {
-				aux.match.by_mask.tile=TP_(t1,t2);
-				aux.match.by_mask.mask=TP_(m1,m2);
-				aux.new_tile=TP_(nt1,nt2);
-				aux.new_mask=TP_(nm1,nm2);
+		if (!strcmp(name,"tile")) { //<?match>([0-9]*.[0-9]*/[0-9]*.[0-9]*|\([0-9]*(,[0-9]*)*\)) <?replacement>([0-9]*.[0-9]*/[0-9]*.[0-9]*) <?level>[0-9]
+			char str[100];
+			sani_type aux;
+			int nt1,nt2,nm1,nm2,level;
+			if (sscanf(value,"%[^ ] %d.%d/%d.%d %d",str,&nt1,&nt2,&nm1,&nm2,&level)) {
+				aux.type=0; //central tile
+				if (!parse_match(str,&aux.center.match,&aux.center.by)) quit(0);
+				aux.center.level=level;
 			} else {
+				printf("editor.ini: parsing error: '%s'\n",value);
+				quit(0);
+			}
+			add_sani(aux);
+		} else {
 				char str[100];
 				if (sscanf(value,"(%[^)]) %d.%d/%d.%d",str,&nt1,&nt2,&nm1,&nm2)) {
 					aux.new_tile=TP_(nt1,nt2);
