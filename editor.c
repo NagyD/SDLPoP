@@ -218,6 +218,8 @@ void editor__do_(long offset, byte c, tUndoQueueMark mark) {
 }
 
 void editor_change_tile(tile_global_location_type l, tile_packed_type t) {
+	if ((t.concept.fg&TILE_MASK)==tiles_6_closer || (t.concept.fg&TILE_MASK)==tiles_15_opener)
+		t.concept.bg=255; /* don't mess with room linking */
 	editor__do(fg[l],t.concept.fg,mark_middle);
 	editor__do(bg[l],t.concept.bg,mark_middle);
 }
