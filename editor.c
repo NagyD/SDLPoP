@@ -837,7 +837,7 @@ void editor__position(char_type* character,int col,int row,int room,int x,word s
 	if (character->direction == dir_56_none) character->direction = dir_0_right;
 }
 
-void editor__paste_room(int room) { //TODO: add tilepos
+void editor__paste_room(int room) {
 	int i;
 	editor__do_mark_start(flag_redraw);
 	for (i=0;i<30;i++)
@@ -925,7 +925,7 @@ void editor__remove_guard() {
 
 int editor__guard_skill(int delta) {
 	int new_skill=level.guards_skill[loaded_room-1]+delta;
-	if (0<=new_skill && new_skill<=20 && level.guards_tile[loaded_room-1]<30) {
+	if (0<=new_skill && new_skill<12 && level.guards_tile[loaded_room-1]<30) {
 		editor__do(guards_skill[loaded_room-1],new_skill,mark_all);
 		return new_skill;
 	}
@@ -1581,7 +1581,7 @@ void editor__handle_mouse_motion(SDL_MouseMotionEvent e,mouse_type mouse,mouse_t
 		if (last->buttons&SDL_BUTTON(SDL_BUTTON_LEFT)) {
 			e.button=SDL_BUTTON_LEFT;
 		} else {
-			e.button=SDL_BUTTON_RIGHT; //TODO: check if exists a drag with right
+			e.button=SDL_BUTTON_RIGHT; //Dead code: there is no need for drag with right button
 		}
 		editor__handle_mouse_button(e,mouse);
 		*last=mouse;
@@ -1828,7 +1828,7 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 			snprintf(aux,50,"Guard skill is %d",aux_int);
 			*answer_text=aux;
 			*need_show_text=1;
-			/* TODO: synchronize skills with the game */
+			guard_skill=aux_int;
 		}
 		break;
 	case SDL_SCANCODE_Q:
