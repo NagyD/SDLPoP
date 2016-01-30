@@ -31,7 +31,11 @@ typedef short tile_global_location_type;
 
 
 
-#define NO_TILE ((Uint16)(-1))
+#define NO_TILE ((tile_packed_type){.number=(Uint16)(-1)})
+#define NO_TILE_ {.number=-1}
+#define TP_(f,b) ((tile_packed_type){.concept={.fg=f,.bg=b}})
+/* tile_packed_type TP(level_type level, tile_global_location_type location) */
+#define TP(level,location) TP_(level.fg[location],level.bg[location])
 
 void editor__process_key(int key,const char** answer_text, word* need_show_text);
 void editor__handle_mouse(SDL_Event e,const Uint8* states);
