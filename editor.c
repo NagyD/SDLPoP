@@ -185,10 +185,14 @@ typedef struct {
 
 void editor__load_level();
 copied_type copied={NO_TILE_,extra_none,NO_TILE_};
-tile_packed_type copied_room[30]={NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_};
+
+tile_packed_type clipboard[30]={NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_};
 byte selected_mask[30]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 #define clean_selected_mask() memset(selected_mask,0,sizeof(byte)*30)
 int selected_mask_room=-1;
+enum {chNothing=-1,chFullRoom=1,chTiles=0} clipboard_has=chNothing;
+int clipboard_shift=0;
+
 level_type edited;
 int ambiguous_mode=0;
 int remember_room=0; /* when switching to palette room mode */
@@ -837,8 +841,8 @@ void editor__paste_room(int room) { //TODO: add tilepos
 	int i;
 	editor__do_mark_start(flag_redraw);
 	for (i=0;i<30;i++)
-		if (copied_room[i].number!=NO_TILE.number)
-			editor_change_tile(T(drawn_room,i),copied_room[i]);
+		if (clipboard[i].number!=NO_TILE.number)
+			editor_change_tile(T(drawn_room,i+((clipboard_has==chTiles)?clipboard_shift:0)),clipboard[i]);
 	editor__do_mark_end(flag_redraw);
 }
 
@@ -1065,8 +1069,9 @@ int editor__copy_room(int room) {
 			select_all_room=select_all_room&&selected_mask[i];
 
 	for (int i=0;i<30;i++)
-		copied_room[i]=(select_all_room||selected_mask[i])?TP(edited,T(drawn_room,i)):NO_TILE;
+		clipboard[i]=(select_all_room||selected_mask[i])?TP(edited,T(drawn_room,i)):NO_TILE;
 
+	clipboard_has=select_all_room;
 	return select_all_room;
 }
 void editor__clean_room(int room) {
@@ -1111,6 +1116,68 @@ void blit_sprites(int x,int y, tEditorImageOffset sprite, tCursorColors colors, 
 	}
 }
 
+/* private structure */
+typedef struct {
+	int inside;
+	int col,row,tilepos,x,y,x_b;
+	int keys;
+	Uint32 buttons;
+} mouse_type;
+
+void draw_clipboard(surface_type* screen,int movement, mouse_type mouse) {
+	if (clipboard_has!=chTiles) return;
+	if (mouse.keys!=k_ctrl) return;
+	if (!mouse.inside) return;
+
+	rect_type crop={100,100,-100,-100};
+	for (int i=0;i<30;i++)
+		if (clipboard[i].number!=NO_TILE.number) {
+			int col,row;
+
+			col=i%10;
+			row=i/10;
+
+			if (col<crop.left) crop.left=col;
+			if (col>crop.right) crop.right=col;
+			if (row<crop.top) crop.top=row;
+			if (row>crop.bottom) crop.bottom=row;
+		}
+
+	/* assert */
+	if (crop.top==100) {clipboard_has=chNothing;return;}
+
+	int new_col=mouse.col-(crop.right+crop.left+1)/2;
+	int new_row=mouse.row-(crop.bottom+crop.top+1)/2;
+	if (crop.left+new_col<0) new_col=-crop.left;
+	if (crop.top+new_row<0) new_row=-crop.top;
+	if (crop.right+new_col>9) new_col=9-crop.right;
+	if (crop.bottom+new_row>2) new_row=2-crop.bottom;
+	clipboard_shift=10*new_row+new_col;
+
+	for (int i=0;i<30;i++)
+		if (clipboard[i].number!=NO_TILE.number) {
+			int col,row;
+			int x,y;
+
+			col=i%10;
+			row=i/10;
+
+			x=(col+new_col)*32;
+			y=(row+new_row)*63-10;
+
+			int
+				u=row!=0&&(clipboard[i-10].number!=NO_TILE.number),
+				d=row!=2&&(clipboard[i+10].number!=NO_TILE.number),
+				l=col!=0&&(clipboard[i-1].number!=NO_TILE.number),
+				r=col!=9&&(clipboard[i+1].number!=NO_TILE.number);
+			//up
+			blit_sprites(x,y+u,aPlaneHorizontal+movement,cSelected+u,1,screen);
+			blit_sprites(x-32+l,y,aPlaneVertical+movement,cSelected+l,1,screen);
+			if (!d) blit_sprites(x,y+63,aPlaneHorizontal+movement,cSelected,1,screen);
+			if (!r) blit_sprites(x,y,aPlaneVertical+movement,cSelected,1,screen);
+		}
+
+}
 void draw_selected(surface_type* screen,int movement){
 	for (int i=0;i<30;i++)
 		if (selected_mask[i] && selected_mask_room==drawn_room) {
@@ -1196,14 +1263,6 @@ void highlight_room(surface_type* screen, int offsetx,int offsety, int tw, int t
 	SDL_FillRect(screen,&line3,color);
 	SDL_FillRect(screen,&line4,color);
 }
-
-/* private structure */
-typedef struct {
-	int inside;
-	int col,row,tilepos,x,y,x_b;
-	int keys;
-	Uint32 buttons;
-} mouse_type;
 
 mouse_type calculate_mouse(const Uint8* key_states) {
 	mouse_type mouse;
@@ -1352,6 +1411,7 @@ void editor__on_refresh(surface_type* screen) {
 
 		/* draw selected tiles */
 		draw_selected(screen,i_frame_anticlockwise%3);
+		draw_clipboard(screen,i_frame_anticlockwise%3,mouse);
 
 		/* draw map */
 		if (mouse.keys&k_m) {
