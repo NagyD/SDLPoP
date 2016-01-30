@@ -1590,9 +1590,13 @@ void editor__handle_mouse_motion(SDL_MouseMotionEvent e,mouse_type mouse,mouse_t
 
 void editor__handle_mouse_wheel(SDL_MouseWheelEvent e,mouse_type mouse) {
 	if (mouse.inside) {
-		if (mouse.keys==k_ctrl) {
+		if (mouse.keys&k_ctrl) {
 			e.x=e.y;
 			e.y=0;
+		}
+		if (mouse.keys&k_alt) { /* precision for trackpads */
+			if (e.x) e.x/=abs(e.x);
+			if (e.y) e.y/=abs(e.y);
 		}
 
 		if (e.y!=0 || e.x!=0) {
