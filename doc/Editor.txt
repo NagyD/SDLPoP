@@ -71,7 +71,6 @@ same as above, but for the two tiles. Pos is where the extra tile is located: A 
 
 
 TODO List/known bugs:
-* Undo/Redo features fails syncing with current game door links
 * Selection using the palette room 8 redrawn: add image with smaller palette and modifiers below
 * Automatic decoration of room.
 * Drag rooms/groups of rooms on map

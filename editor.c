@@ -1777,7 +1777,7 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 		ed_redraw_room();
 		if (mrk&flag_redraw) need_full_redraw = 1; // force redraw
 		if (mrk&flag_remap) room_api_refresh(&edited_map);
-		//TODO: if (mrk&flag_redoor) door_api_refresh(&edited_doorlinks);
+		if (mrk&flag_redoor) door_api_init(&edited_doorlinks);
 		if (mrk&flag_guard_presence)
 			editor__synchronize_guard_presence();
 		if (mrk&flag_guard_repaint)
