@@ -212,6 +212,7 @@ void editor__do_(long offset, byte c, tUndoQueueMark mark) {
 		editor__load_level();
 
 	before=offset[(char*)(&edited)];
+	if (mark==mark_middle && before==c) return; /* optimization: do nothing if the tile is the same and no marks are needed */
 	offset[(char*)(&edited)]=c;
 	offset[(char*)(&level)]=c;
 	stack_push(offset<<(16+MARK_BITS)|mark<<16|before<<8|c);
