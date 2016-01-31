@@ -8,24 +8,24 @@ The concept is different to other editors. It is based on the game, so learning 
 Keycodes
 ~~~~~~~~
 
-U: screen up.
-H: screen left.
-J: screen right.
-N: screen down.
-Ctrl-A: restart level.
+U: Screen up.
+H: Screen left.
+J: Screen right.
+N: Screen down.
+Ctrl-A: Restart level.
 
-Shift-U: insert screen up.
-Shift-H: insert screen left.
-Shift-J: insert screen right.
-Shift-N: insert screen down.
+Shift-U: Insert screen up.
+Shift-H: Insert screen left.
+Shift-J: Insert screen right.
+Shift-N: Insert screen down.
 
-Del or Backspace: delete guard.
-Shift-Del or Backspace: delete room.
-Ctrl+Del or Backspace: clean room.
+Del or Backspace: Delete guard.
+Shift-Del or Backspace: Delete room.
+Ctrl+Del or Backspace: Clean. When no tiles are selected the whole screen is cleaned.
 
-Ctrl-C: Copy room.
-Ctrl-V: Paste room (the version legend is dropped in edition mode).
-Ctrl-X: Cut room.
+Ctrl-C: Copy. When no tiles are selected the whole screen is copied.
+Ctrl-V: Paste (the version legend is dropped in edition mode).
+Ctrl-X: Cut. When no tiles are selected the whole screen is cut.
 Ctrl-Z: Undo.
 Ctrl-Alt-Z: Redo.
 
@@ -39,8 +39,8 @@ M: Show map (keep the key pressed).
 P: Toggle tile palette mode.
 Y: Set starting position to the place the kid is.
 
-MouseWheel: Scroll to change current tile.
-Ctrl+MouseWheel: Scroll to change current background.
+MouseWheel: Scroll to change current tile. Use Alt to gain precision.
+Ctrl+MouseWheel (or horizontal scroll if available): Scroll to change current background. Use Alt to gain precision.
 Mouse left click: Put copied tile.
 Mouse right click: Copy tile.
 Shift-Mouse left click: Put/move the kid there.
@@ -71,7 +71,7 @@ same as above, but for the two tiles. Pos is where the extra tile is located: A 
 
 
 TODO List/known bugs:
-* Selection using the palette room 8 redrawn: add image with smaller palette and modifiers below
+* Selection using the palette S8 redrawn: add image with smaller palette and modifiers below
 * Automatic decoration of room.
 * Drag rooms/groups of rooms on map
 
