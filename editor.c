@@ -434,7 +434,7 @@ void door_api_refresh(int* max_doorlinks, tMap* map, int* selected_door_tile) {
 				button_count++;
 				if (door_count_absolute>255) break;
 			}
-	*max_doorlinks=door_count_absolute-1; /* TODO: check */
+	*max_doorlinks=door_count_absolute-1;
 
 	/* rewrite all door handling areas in the level */
 	//printf("Door api debug:\n");
@@ -1663,14 +1663,17 @@ void editor__handle_mouse_wheel(SDL_MouseWheelEvent e,mouse_type mouse) {
 
 		if (e.y!=0 || e.x!=0) {
 			tile_global_location_type location=T(loaded_room,mouse.tilepos);
+			editor__do_mark_start(flag_redraw);
 			if (e.y!=0) {
 				byte v=(edited.fg[location]+e.y)&TILE_MASK;
-				editor__do(fg[location],v,mark_start|flag_redraw);
-				editor__do(bg[location],0,mark_end|flag_redraw);
+				editor__do(fg[location],v,mark_middle);
+				editor__do(bg[location],0,mark_middle);
 			} else {
 				byte v=(edited.bg[location]+e.x);
-				editor__do(bg[location],v,mark_all|flag_redraw);
+				editor__do(bg[location],v,mark_middle);
 			}
+			door_api_refresh(&edited_doorlinks,&edited_map,&selected_door_tile);
+			editor__do_mark_end(flag_redraw);
 
 			ed_redraw_tile(mouse.tilepos);
 			if (mouse.tilepos) ed_redraw_tile(mouse.tilepos-1);
