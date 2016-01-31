@@ -105,9 +105,9 @@ int stack_top=0;
 #define stack_reset() stack_top=0;
 /* private type */
 typedef uint64_t flag_type; /* note that uint64_t/unsigned long long is supported even in 32 bits machines and virtually by all linux, 32 bit windows and OSX. The variable is used as:
-  RRRRRRRR RRRRRRRR RRRRRRRR RRRRRRRR RRRRRRRR Rgpdmres BBBBBBBB AAAAAAAA
+  RRRRRRRR RRRRRRRR RRRRRRRR RRRRRRRR RRRRRRRR Rgpxmres BBBBBBBB AAAAAAAA
 	where R are an offset/reserved bit
-	r,m,d,p,g are redraw,remap,redoor,guard_presence,guard_repaint flags
+	r,m,x,p,g are redraw,remap,reserved,guard_presence,guard_repaint flags
 	e,s are startm end marks
 	B is the 8 bits code before editing
 	A is the 8 bits code after editing
@@ -158,7 +158,7 @@ typedef enum {
 
 	flag_redraw=4,
 	flag_remap=8,
-	flag_redoor=16,
+	flag_reserved=16, /* not used yet */
 
 	flag_guard_presence   =32,
 	flag_guard_repaint    =64,
@@ -300,7 +300,7 @@ void door_api_init_iterator(tIterator* it, tile_global_location_type tp);
 int door_api_get(tIterator* it, tile_global_location_type *tile); /* returns false when end_of_list */
 int door_api_link(int* max_doorlinks, tile_global_location_type door,tile_global_location_type button); /* Assumption: door is a door (or left exitdoor) and button is a button */
 void door_api_unlink(int* max_doorlinks, tile_global_location_type door,tile_global_location_type button);
-void door_api_refresh(int* max_doorlinks, tMap* map);
+void door_api_refresh(int* max_doorlinks, tMap* map, int* selected_door_tile);
 
 typedef enum {
 	cButton=2,
@@ -401,7 +401,10 @@ void door_api_init(int* max_doorlinks) {
 	(*max_doorlinks)--;
 }
 
-void door_api_refresh(int* max_doorlinks, tMap* map) {
+void door_api_refresh(int* max_doorlinks, tMap* map, int* selected_door_tile) {
+	if (*selected_door_tile!=-1 && door_api_is_related(edited.fg[*selected_door_tile]&TILE_MASK)==cOther)
+		*selected_door_tile=-1;
+
 	//check the door handling system for inconsistencies
 	tile_global_location_type doors[255];
 	tile_global_location_type buttons[256];
@@ -898,6 +901,7 @@ void editor__paste_room(int room) {
 	for (i=0;i<30;i++)
 		if (clipboard[i].number!=NO_TILE.number)
 			editor_change_tile(T(drawn_room,i+((clipboard_has==chTiles)?clipboard_shift:0)),clipboard[i]);
+	door_api_refresh(&edited_doorlinks,&edited_map,&selected_door_tile);
 	editor__do_mark_end(flag_redraw);
 }
 
@@ -1049,6 +1053,7 @@ void randomize_tile(int tilepos) {
 	tt=room_api_suggest_tile(&edited_map,t,level_mask);
 	editor__do_mark_start(flag_redraw);
 	editor_change_tile(t,tt);
+	door_api_refresh(&edited_doorlinks,&edited_map,&selected_door_tile);
 	editor__do_mark_end(flag_redraw);
 }
 
@@ -1111,6 +1116,7 @@ void sanitize_room(int room, int sanitation_level) {
 void editor__randomize(int room) {
 	editor__do_mark_start(flag_redraw);
 	randomize_room(room);
+	door_api_refresh(&edited_doorlinks,&edited_map,&selected_door_tile);
 	editor__do_mark_end(flag_redraw);
 	ed_select_room(room);
 	ed_redraw_room();
@@ -1137,6 +1143,7 @@ void editor__clean_room(int room) {
 			editor_change_tile(T(room,i),empty);
 	editor__do_mark_end(flag_redraw);
 	ed_redraw_room();
+	door_api_refresh(&edited_doorlinks,&edited_map,&selected_door_tile);
 	need_full_redraw=1;
 }
 
@@ -1708,6 +1715,7 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,mouse_type mouse) {
 		if (t!=-1)
 			editor_change_tile(t,copied.extra);
 
+		door_api_refresh(&edited_doorlinks,&edited_map,&selected_door_tile);
 		editor__do_mark_end(flag_redraw);
 		ed_redraw_tile(mouse.tilepos);
 		if (mouse.tilepos) ed_redraw_tile(mouse.tilepos-1);
@@ -1769,9 +1777,9 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,mouse_type mouse) {
 		need_full_redraw=1;
 	} else if (e.button==SDL_BUTTON_LEFT && mouse.keys==(k_ctrl|k_alt)) { /* ctrl+alt+left click: toggle door mechanism links */
 		if (door_api_is_related(edited.fg[T(loaded_room,mouse.tilepos)]&TILE_MASK)) {
-			editor__do_mark_start(flag_redoor);
+			editor__do_mark_start(0);
 			print(editor__toggle_door_tile(loaded_room,mouse.tilepos));
-			editor__do_mark_end(flag_redoor);
+			editor__do_mark_end(0);
 		}
 	} else if (e.button==SDL_BUTTON_RIGHT && mouse.keys==(k_ctrl|k_alt)) { /* ctrl+alt+right click: pick door mechanism tile */
 		if (door_api_is_related(edited.fg[T(loaded_room,mouse.tilepos)]&TILE_MASK)) {
@@ -1830,7 +1838,6 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 		ed_redraw_room();
 		if (mrk&flag_redraw) need_full_redraw = 1; // force redraw
 		if (mrk&flag_remap) room_api_refresh(&edited_map);
-		if (mrk&flag_redoor) door_api_init(&edited_doorlinks);
 		if (mrk&flag_guard_presence)
 			editor__synchronize_guard_presence();
 		if (mrk&flag_guard_repaint)
@@ -1867,8 +1874,8 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 			/* when a room is removed the level may be split in two disconnected level parts, to avoid staying
 			   in the wrong part of the level, I'll send the next_room to the starting position */
 			if (!edited_map.list[aux_int-1]) aux_int=edited.start_room;
-			//TODO: free door links
 			next_room=aux_int;
+			door_api_refresh(&edited_doorlinks,&edited_map,&selected_door_tile);
 			*answer_text="Room deleted";
 		} else {
 			*answer_text="MOVE STARTING ROOM FIRST";
@@ -1902,7 +1909,7 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 	case SDL_SCANCODE_J | WITH_SHIFT:
 	case SDL_SCANCODE_H | WITH_SHIFT:
 	case SDL_SCANCODE_U | WITH_SHIFT:
-	case SDL_SCANCODE_N | WITH_SHIFT:
+	case SDL_SCANCODE_N | WITH_SHIFT: /* insert new room */
 		if (PALETTE_MODE) break;
 		editor__do_mark_start(flag_redraw|flag_remap);
 		if (key==(SDL_SCANCODE_J | WITH_SHIFT))
@@ -1927,13 +1934,9 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 		editor__do_mark_end(flag_redraw|flag_remap);
 		*need_show_text=1;
 		break;
-#define __DEBUG__
 #ifdef __DEBUG__
 	case SDL_SCANCODE_D: /* d for debugging purposes */
 		{
-			door_api_refresh(&edited_doorlinks,&edited_map);
-			if (selected_door_tile!=-1 && door_api_is_related(edited.fg[selected_door_tile]&TILE_MASK)==cOther)
-				selected_door_tile=-1;
 			*answer_text="DEBUG ACTION";
 			*need_show_text=1;
 		}
@@ -1971,6 +1974,7 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 	case SDL_SCANCODE_S | WITH_CTRL | WITH_SHIFT: /* ctrl-shift-s */
 		editor__do_mark_start(flag_redraw);
 		sanitize_room(loaded_room,0);
+		door_api_refresh(&edited_doorlinks,&edited_map,&selected_door_tile);
 		editor__do_mark_end(flag_redraw);
 		ed_redraw_room();
 		need_full_redraw=1;
