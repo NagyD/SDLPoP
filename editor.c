@@ -782,17 +782,16 @@ void editor__load_level() {
 	remember_room=0;
 
 	dathandle = open_dat("editor", 0);
-	if (chtab_editor_sprites) {
+	if (chtab_editor_sprites) { //Initialization
 		free_chtab(chtab_editor_sprites);
 	} else {
-		//TODO: move the ini to another place (hook it in the init game)
 		memset(&editor_tables,0,sizeof(editor_tables));
 		ini_load("data/editor/editor.ini", ini_editor_callback);
 	}
 	chtab_editor_sprites = load_sprites_from_file(200, 1<<11, 1);
 	close_dat(dathandle);
 
-	/* TODO: free_chtab(chtab_editor_sprites); */
+	/* since chtab_editor_sprites is useful until quit(), I'll let the OS free_chtab(chtab_editor_sprites); */
 }
 
 #define copy_block(field,size,type) memcpy(&dst->field,&src->field,((size)*sizeof(type)))
@@ -1461,7 +1460,7 @@ void editor__on_refresh(surface_type* screen) {
 					blit_sprites((P(linked)%10)*32,(P(linked)/10)*63-10,image_offset+(i_frame_anticlockwise)%3,cLinked,colors_total,screen);
 				} else { /* there is a linked tile in the last column of the left room */
 					if (level.roomlinks[loaded_room-1].left==R(linked) && P(linked)%10==9) {
-						/* TODO: exit doors */
+						/* I'm not blitting exit doors, only one tile door */
 						blit_sprites((-1)*32,(P(linked)/10)*63-10,cSingleTile+(i_frame_anticlockwise)%3,cLinked,1,screen);
 					}
 				}
