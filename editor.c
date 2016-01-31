@@ -1172,11 +1172,11 @@ void draw_clipboard(surface_type* screen,int movement, mouse_type mouse) {
 				d=row!=2&&(clipboard[i+10].number!=NO_TILE.number),
 				l=col!=0&&(clipboard[i-1].number!=NO_TILE.number),
 				r=col!=9&&(clipboard[i+1].number!=NO_TILE.number);
-			//up
-			blit_sprites(x,y+u,aPlaneHorizontal+movement,cSelected+u,1,screen);
-			blit_sprites(x-32+l,y,aPlaneVertical+movement,cSelected+l,1,screen);
-			if (!d) blit_sprites(x,y+63,aPlaneHorizontal+movement,cSelected,1,screen);
-			if (!r) blit_sprites(x,y,aPlaneVertical+movement,cSelected,1,screen);
+
+			if (!u) blit_sprites(x,y,aPlaneHorizontal+movement,cTileSel+1,1,screen);
+			if (!l) blit_sprites(x-32,y,aPlaneVertical+movement,cTileSel+1,1,screen);
+			if (!d) blit_sprites(x,y+63,aPlaneHorizontal+movement,cTileSel+1,1,screen);
+			if (!r) blit_sprites(x,y,aPlaneVertical+movement,cTileSel+1,1,screen);
 		}
 
 }
@@ -1197,9 +1197,9 @@ void draw_selected(surface_type* screen,int movement){
 				d=row!=2&&(selected_mask[i+10]),
 				l=col!=0&&(selected_mask[i-1]),
 				r=col!=9&&(selected_mask[i+1]);
-			//up
-			blit_sprites(x,y+u,aPlaneHorizontal+movement,cTileSel+u,1,screen);
-			blit_sprites(x-32+l,y,aPlaneVertical+movement,cTileSel+l,1,screen);
+
+			if (!u) blit_sprites(x,y,aPlaneHorizontal+movement,cTileSel,1,screen);
+			if (!l) blit_sprites(x-32,y,aPlaneVertical+movement,cTileSel,1,screen);
 			if (!d) blit_sprites(x,y+63,aPlaneHorizontal+movement,cTileSel,1,screen);
 			if (!r) blit_sprites(x,y,aPlaneVertical+movement,cTileSel,1,screen);
 		}
