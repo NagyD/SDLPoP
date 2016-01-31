@@ -35,31 +35,6 @@ The authors of this program may be contacted at http://forum.princed.org
 
 #define PALETTE_MODE (drawn_room>NUMBER_OF_ROOMS)
 
-#define TILE_MASK 0x1F
-
-typedef struct {
-	long* list;
-	byte* map;
-	rect_type crop;
-} tMap;
-
-long room_api_where_room(const tMap* map, byte room);
-int room_api_get_room_location(const tMap* map, int room, int* i, int* j);
-void room_api_refresh(tMap* map);
-void room_api_init(tMap* map);
-void room_api_free(tMap* map);
-void room_api_get_size(const tMap* map,int* w, int* h);
-tile_global_location_type room_api_translate(const tMap* map,int x, int y);
-int room_api_get_free_room(const tMap* map);
-void room_api_free_room(tMap* map,int r); /* Pre-condition: DO NOT FREE THE STARTING ROOM! */
-void room_api_put_room(tMap* map, long where, int r);
-int room_api_alloc_room(tMap* map, int where);
-int room_api_insert_room_right(tMap* map, int where);
-int room_api_insert_room_left(tMap* map, int where);
-int room_api_insert_room_up(tMap* map, int where);
-int room_api_insert_room_down(tMap* map, int where);
-tile_global_location_type room_api_tile_move(const tMap* map, tile_global_location_type t, char col, char row);
-
 /********************************************\
 *      Randomization sublayer headers        *
 \********************************************/
@@ -69,18 +44,6 @@ tile_global_location_type room_api_tile_move(const tMap* map, tile_global_locati
 #define E_0_2 .01831563888873418029
 #define E_1_1 .13533528323661269189
 #define E_1_2 .00673794699908546709
-
-#pragma pack(push, 1)
-typedef struct {
-		byte fg;
-		byte bg;
-	} concept_type; /* tile_and_mod but packed */
-
-typedef union {
-	concept_type concept;
-	Uint16 number;
-} tile_packed_type;
-#pragma pack(pop)
 
 typedef struct probability_info {
 	int count;
@@ -219,7 +182,7 @@ void editor__do_(long offset, byte c, tUndoQueueMark mark) {
 }
 
 void editor_change_tile(tile_global_location_type l, tile_packed_type t) {
-	if ((t.concept.fg&TILE_MASK)==tiles_6_closer || (t.concept.fg&TILE_MASK)==tiles_15_opener)
+	if (door_api_is_related(t.concept.fg&TILE_MASK)==cButton)
 		t.concept.bg=255; /* don't mess with room linking */
 	editor__do(fg[l],t.concept.fg,mark_middle);
 	editor__do(bg[l],t.concept.bg,mark_middle);
@@ -283,31 +246,6 @@ void ed_redraw_room() { //all the current room
 *             Door linking API               *
 \********************************************/
 
-typedef struct {
-	enum {doorIterator, buttonIterator, noneIterator} type;
-	union {
-		short index;
-		struct {
-			tile_global_location_type tile;
-			short i;
-		} info;
-	} data;
-} tIterator;
-
-void door_api_init(int* max_doorlinks);
-void door_api_free(int* max_doorlinks);
-void door_api_init_iterator(tIterator* it, tile_global_location_type tp);
-int door_api_get(tIterator* it, tile_global_location_type *tile); /* returns false when end_of_list */
-int door_api_link(int* max_doorlinks, tile_global_location_type door,tile_global_location_type button); /* Assumption: door is a door (or left exitdoor) and button is a button */
-void door_api_unlink(int* max_doorlinks, tile_global_location_type door,tile_global_location_type button);
-void door_api_refresh(int* max_doorlinks, tMap* map, int* selected_door_tile);
-
-typedef enum {
-	cButton=2,
-	cDoor=1,
-	cOther=0
-} tTileDoorType;
-
 tTileDoorType door_api_is_related(byte tile) {
 	switch(tile) {
 	case tiles_6_closer:
@@ -359,7 +297,7 @@ int door_api_get(tIterator* it, tile_global_location_type *tile) {
 	case doorIterator:
 		for (short* i=&it->data.info.i;(*i)<NUMBER_OF_ROOMS*30;(*i)++) { /* first loop: check all tiles to find buttons */
 			byte fg=edited.fg[*i]&TILE_MASK;
-			if (fg==tiles_6_closer || fg==tiles_15_opener) {
+			if (door_api_is_related(fg)==cButton) {
 				tIterator it2;
 				tile_global_location_type linked_tile;
 				if (!edited_map.list[R_(*i)]) continue; /* skip unused rooms */
