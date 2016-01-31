@@ -299,6 +299,7 @@ void door_api_init_iterator(tIterator* it, tile_global_location_type tp);
 int door_api_get(tIterator* it, tile_global_location_type *tile); /* returns false when end_of_list */
 int door_api_link(int* max_doorlinks, tile_global_location_type door,tile_global_location_type button); /* Assumption: door is a door (or left exitdoor) and button is a button */
 void door_api_unlink(int* max_doorlinks, tile_global_location_type door,tile_global_location_type button);
+void door_api_refresh(int* max_doorlinks, tMap* map);
 
 typedef enum {
 	cButton=2,
@@ -397,6 +398,57 @@ void door_api_init(int* max_doorlinks) {
 		(*max_doorlinks)++;
 	} while ((*max_doorlinks)<256 && next);
 	(*max_doorlinks)--;
+}
+
+void door_api_refresh(int* max_doorlinks, tMap* map) {
+	//check the door handling system for inconsistencies
+	tile_global_location_type doors[255];
+	tile_global_location_type buttons[256];
+	Uint8 door_counts[256];
+
+	Uint8 door_count=0;
+	Uint8 door_count_absolute=0;
+	Uint8 button_count=0;
+
+	for (tile_global_location_type button=0;button<30*NUMBER_OF_ROOMS;button++)
+		if (map->list[R_(button)])
+			if (door_api_is_related(edited.fg[button]&TILE_MASK)==cButton) {
+				/* start iteration */
+				tIterator it;
+				tile_global_location_type door;
+				door_api_init_iterator(&it,button);
+				while(door_api_get(&it,&door)) /* check if existent to unlink */
+					if (door_api_is_related(edited.fg[door]&TILE_MASK)==cDoor) {
+						if (door_count_absolute>255) break;
+						doors[door_count_absolute]=door;
+						door_count++;
+						door_count_absolute++;
+					}
+				buttons[button_count]=button;
+				door_counts[button_count]=door_count;
+				door_count=0;
+				button_count++;
+				if (door_count_absolute>255) break;
+			}
+	*max_doorlinks=door_count_absolute-1; /* TODO: check */
+
+	/* rewrite all door handling areas in the level */
+	//printf("Door api debug:\n");
+	for (int k=0,l2=0;k<button_count;k++) {
+		//printf("button=(%2d,%2d):\n",R(buttons[k]),P(buttons[k]));
+		if (!door_counts[k]) { /* empty button */
+			editor__do(bg[buttons[k]],255,mark_middle);
+		} else {
+			editor__do(bg[buttons[k]],l2,mark_middle);
+			for (int l=0;l<door_counts[k];l++,l2++) {
+				//printf("d=(%2d,%2d)\n",R(doors[l2]),P(doors[l2]));
+				Uint16 doorlink;
+				set_doorlink(&doorlink,doors[l2],/* next?*/ l+1!=door_counts[k]);
+				editor__do(doorlinks1[l2],doorlink&0xff,mark_middle);
+				editor__do(doorlinks2[l2],(doorlink>>8)&0xff,mark_middle);
+			}
+		}
+	}
 }
 
 int door_api_link(int* max_doorlinks, tile_global_location_type door,tile_global_location_type button) { /* Assumption: door is a door (or left exitdoor) and button is a button */
@@ -1874,9 +1926,13 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 		editor__do_mark_end(flag_redraw|flag_remap);
 		*need_show_text=1;
 		break;
+#define __DEBUG__
 #ifdef __DEBUG__
 	case SDL_SCANCODE_D: /* d for debugging purposes */
 		{
+			door_api_refresh(&edited_doorlinks,&edited_map);
+			if (selected_door_tile!=-1 && door_api_is_related(edited.fg[selected_door_tile]&TILE_MASK)==cOther)
+				selected_door_tile=-1;
 			*answer_text="DEBUG ACTION";
 			*need_show_text=1;
 		}
