@@ -759,6 +759,7 @@ void name(dst_type* dst, src_type* src) { \
 }
 level_copy_function(editor__extend_level,level_type,level_real_type);
 level_copy_function(editor__simplify_level,level_real_type,level_type);
+level_copy_function(editor__extend_level_to_new_rooms,level_extended_type,level_type);
 
 int load_resource(const char* file, int res, void* data, int size, const char* ext);
 void save_resource(const char* file, int res, const void* data, int size, const char* ext);
@@ -874,6 +875,13 @@ void save_level() {
 	level_real_type aux;
 	editor__simplify_level(&aux,&edited);
 	save_resource("LEVELS.DAT",current_level + 2000, &aux, sizeof(aux), "bin");
+}
+
+void save_extended_level() {
+	level_extended_type aux;
+	memset(&aux,0,sizeof(aux));
+	editor__extend_level_to_new_rooms(&aux,&edited);
+	save_resource("LEVELS.DAT",current_level + 3000, &aux, sizeof(aux), "bin");
 }
 
 void editor__set_guard(byte tilepos,byte x) {
@@ -1874,14 +1882,15 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 		editor__do_mark_end(flag_redraw|flag_remap);
 		*need_show_text=1;
 		break;
-#ifdef __DEBUG__
-	case SDL_SCANCODE_D: /* d for debugging purposes */
+	case SDL_SCANCODE_D | WITH_ALT: /* alt-d: to save current level in another level space */
 		{
-			*answer_text="DEBUG ACTION";
+			save_extended_level();
+#define xstr(s) str(s)
+#define str(s) #s
+			*answer_text=xstr(NEW_NUMBER_OF_ROOMS) "-ROOM LEVEL SAVED";
 			*need_show_text=1;
 		}
 		break;
-#endif
 	case SDL_SCANCODE_P: /* p: Toggle palette */
 		{
 		if (!remember_room) {

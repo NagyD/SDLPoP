@@ -197,6 +197,10 @@ typedef struct link_type {
 #define NUMBER_OF_DOORLINKS 256
 
 #define NUMBER_OF_ROOMS 24
+
+/* useful when you want to use the editor to extend the level to more rooms */
+#define NEW_NUMBER_OF_ROOMS 50
+
 #define DEF_LEVEL_TYPE(name,rooms) \
 typedef struct name { \
 	byte fg[rooms * 30]; \
@@ -225,6 +229,7 @@ typedef struct name { \
 #ifdef USE_EDITOR
 DEF_LEVEL_TYPE(level_type,(NUMBER_OF_ROOMS+8));
 DEF_LEVEL_TYPE(level_real_type,NUMBER_OF_ROOMS);
+DEF_LEVEL_TYPE(level_extended_type,NEW_NUMBER_OF_ROOMS);
 #else
 DEF_LEVEL_TYPE(level_type,NUMBER_OF_ROOMS);
 SDL_COMPILE_TIME_ASSERT(level_size, sizeof(level_type) == 2305);
