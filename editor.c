@@ -151,7 +151,7 @@ copied_type copied={NO_TILE_,extra_none,NO_TILE_};
 
 tile_packed_type clipboard[30]={NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_,NO_TILE_};
 byte selected_mask[30]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-#define clean_selected_mask() memset(selected_mask,0,sizeof(byte)*30)
+#define clean_selected_mask(room) memset(selected_mask,0,sizeof(byte)*30);selected_mask_room=room
 int selected_mask_room=-1;
 enum {chNothing=-1,chFullRoom=1,chTiles=0} clipboard_has=chNothing;
 int clipboard_shift=0;
@@ -1080,7 +1080,6 @@ int editor__copy_room(int room) {
 		clipboard[i]=(select_all_room||selected_mask[i])?TP(edited,T(drawn_room,i)):NO_TILE;
 
 	clipboard_has=select_all_room;
-	selected_mask_room=-1;
 	return select_all_room;
 }
 void editor__clean_room(int room) {
@@ -1744,8 +1743,7 @@ void editor__handle_mouse_button(SDL_MouseButtonEvent e,mouse_type mouse) {
 		if (map_selected_room) editor__randomize(map_selected_room);
 	} else if (e.button==SDL_BUTTON_LEFT && mouse.keys==(k_ctrl)) { /* ctrl+left click: select tile */
 		if (selected_mask_room!=drawn_room) {
-			selected_mask_room=drawn_room;
-			clean_selected_mask();
+			clean_selected_mask(drawn_room);
 		}
 		selected_mask[mouse.tilepos]^=1;
 	}
@@ -1825,7 +1823,7 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 	case SDL_SCANCODE_DELETE | WITH_CTRL: /* ctrl-delete */
 	case SDL_SCANCODE_BACKSPACE | WITH_CTRL: /* ctrl-backspace */
 		editor__clean_room(drawn_room);
-		clean_selected_mask();
+		clean_selected_mask(-1);
 		break;
 	case SDL_SCANCODE_DELETE | WITH_SHIFT: /* shift-delete */
 	case SDL_SCANCODE_BACKSPACE | WITH_SHIFT: /* shift-backspace */
@@ -1948,13 +1946,13 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 		break;
 	case SDL_SCANCODE_C | WITH_CTRL: /* ctrl-c: copy room */
 		*answer_text=editor__copy_room(drawn_room)?"ROOM COPIED":"TILES COPIED";
-		clean_selected_mask();
+		clean_selected_mask(-1);
 		*need_show_text=1;
 		break;
 	case SDL_SCANCODE_X | WITH_CTRL: /* ctrl-x: copy room */
 		*answer_text=editor__copy_room(drawn_room)?"ROOM CUT":"TILES CUT";
 		editor__clean_room(drawn_room);
-		clean_selected_mask();
+		clean_selected_mask(-1);
 		*need_show_text=1;
 		break;
 	case SDL_SCANCODE_V | WITH_CTRL: /* ctrl-v: paste room */
