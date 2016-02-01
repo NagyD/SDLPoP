@@ -1079,7 +1079,6 @@ int editor__copy_room(int room) {
 	for (int i=0;i<30;i++)
 		clipboard[i]=(select_all_room||selected_mask[i])?TP(edited,T(drawn_room,i)):NO_TILE;
 
-	clean_selected_mask();
 	clipboard_has=select_all_room;
 	selected_mask_room=-1;
 	return select_all_room;
@@ -1088,7 +1087,7 @@ void editor__clean_room(int room) {
 	tile_packed_type empty={.number=0};
 	editor__do_mark_start(flag_redraw);
 	for (int i=0;i<30;i++)
-		if (selected_mask[i])
+		if (selected_mask[i] || (room!=selected_mask_room))
 			editor_change_tile(T(room,i),empty);
 	editor__do_mark_end(flag_redraw);
 	ed_redraw_room();
