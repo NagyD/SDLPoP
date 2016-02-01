@@ -1800,6 +1800,21 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 		*need_show_text=1;
 		}
 		break;
+	case SDL_SCANCODE_S:
+		{
+		static word selected_room=0;
+		if (selected_room) {
+			sprintf(aux,"SWAP: S%d WITH S%d",selected_room,drawn_room);
+			//TODO: editor_swap_room_id(selected_room,drawn_room);
+			selected_room=0;
+		} else {
+			selected_room=drawn_room;
+			sprintf(aux,"SELECTED S%d TO SWAP",selected_room);
+		}
+		*answer_text=aux;
+		*need_show_text=1;
+		}
+		break;
 	case SDL_SCANCODE_DELETE: /* delete */
 	case SDL_SCANCODE_BACKSPACE: /* backspace */
 		editor__remove_guard();
