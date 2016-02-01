@@ -768,11 +768,11 @@ void load_edit_palettes(level_type* level_to_load) {
 	load_resource("editor",100,&(level_to_load->fg[NUMBER_OF_ROOMS*30]),8*30, "bin");
 	load_resource("editor",101,&(level_to_load->bg[NUMBER_OF_ROOMS*30]),8*30, "bin");
 	if (!load_resource("editor",102,&(level_to_load->roomlinks[NUMBER_OF_ROOMS]),8*sizeof(link_type), "bin"))
-		for (int a=24;a<24+8;a++) {
-			level_to_load->roomlinks[a].left=(a==24)?0:a-1+1;
-			level_to_load->roomlinks[a].right=(a==24+7)?0:a+1+1;
-			level_to_load->roomlinks[a].up=(a<24+4)?0:a-4+1;
-			level_to_load->roomlinks[a].down=(a>=24+4)?0:a+4+1;
+		for (int a=NUMBER_OF_ROOMS;a<NUMBER_OF_ROOMS+8;a++) {
+			level_to_load->roomlinks[a].left=(a==NUMBER_OF_ROOMS)?0:a-1+1;
+			level_to_load->roomlinks[a].right=(a==NUMBER_OF_ROOMS+7)?0:a+1+1;
+			level_to_load->roomlinks[a].up=(a<NUMBER_OF_ROOMS+4)?0:a-4+1;
+			level_to_load->roomlinks[a].down=(a>=NUMBER_OF_ROOMS+4)?0:a+4+1;
 		}
 	for (int i=NUMBER_OF_ROOMS;i<NUMBER_OF_ROOMS+8;i++)
 		level_to_load->guards_tile[i]=30;
@@ -880,6 +880,8 @@ void save_level() {
 void save_extended_level() {
 	level_extended_type aux;
 	memset(&aux,0,sizeof(aux));
+	for (int i=NUMBER_OF_ROOMS;i<NEW_NUMBER_OF_ROOMS;i++)
+		level_to_load->guards_tile[i]=30;
 	editor__extend_level_to_new_rooms(&aux,&edited);
 	save_resource("LEVELS.DAT",current_level + 3000, &aux, sizeof(aux), "bin");
 }
