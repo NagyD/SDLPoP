@@ -180,6 +180,25 @@ enum soundids {
     SOUND_ENDING_MUSIC              = 56,
 };
 
+enum colorids {
+    COLOR_BLACK = 0,
+    COLOR_DARKBLUE = 1,
+    COLOR_DARKGREEN = 2,
+    COLOR_TURQUOISE = 3,
+    COLOR_RED = 4,
+    COLOR_PURPLE = 5,
+    COLOR_GOLD = 6,
+    COLOR_SILVER = 7,
+    COLOR_GREY = 8,
+    COLOR_BLUE = 9,
+    COLOR_GREEN = 10,
+    COLOR_LIGHTBLUE = 11,
+    COLOR_RED = 12,
+    COLOR_VIOLET = 13,
+    COLOR_YELLOW = 14,
+    COLOR_WHITE = 15,
+};
+
 enum rowids {
     ROW_ABOVE  = -1,
     ROW_TOP    = 0,
@@ -188,9 +207,18 @@ enum rowids {
     ROW_BELOW  = 3,
 };
 
+enum potion_pot_size_id {
+    POT_SMALL = 0,
+    POT_BIG = 1,
+};
+
 // SCRIPT FUNCTION PROTOTYPES
 
 void play_sound(int sound_id);
+void stop_sounds(void);
+void draw_kid_hp(short curr_hp, short max_hp);
+void take_hp(int count);
+void set_hp_full(void);
 
 // "encapsulated" data accessors:
 word get_minutes_remaining(void);
@@ -215,6 +243,16 @@ void set_curr_tile_and_modifier(byte new_tile, byte new_modifier);
 void set_tile(word room, word tilepos, byte new_tile);
 void set_modifier(word room, word tilepos, byte new_modifier);
 void set_tile_and_modifier(word room, word tilepos, byte new_tile, byte new_modifier);
+
+word get_hp(void);
+void set_hp(word new_hp);
+word get_max_hp(void);
+void set_max_hp(word new_max_hp);
+
+void set_flash(word color, word duration);
+
+void set_potion_color(word color);
+void set_potion_pot_size(word pot_size);
 
 // DATA
 

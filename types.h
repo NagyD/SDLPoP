@@ -996,10 +996,19 @@ enum seqtbl_sounds {
 
 enum colorids {
 	color_0_black = 0,
+	color_1_darkblue = 1,
+	color_2_darkgreen = 2,
+	color_3_turquoise = 3,
 	color_4_red = 4,
-	color_7_grey = 7,
-	color_8_darkgrey = 8,
+	color_5_purple = 5,
+	color_6_gold = 6,
+	color_7_silver = 7,
+	color_8_grey = 8,
+	color_9_blue = 9,
+	color_10_green = 10,
+	color_11_lightblue = 11,
 	color_12_red = 12,
+	color_13_violet = 13,
 	color_14_yellow = 14,
 	color_15_white = 15,
 };
@@ -1010,6 +1019,11 @@ enum rowids {
 	row_1_middle = 1,
 	row_2_bottom = 2,
 	row_3_below = 3,
+};
+
+enum potion_pot_size_id {
+	pot_0_small = 0,
+	pot_1_big = 1,
 };
 
 #define COUNT(array) (sizeof(array)/sizeof(array[0]))

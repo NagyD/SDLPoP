@@ -602,31 +602,37 @@ void __pascal far draw_tile_anim() {
 	word color;
 	word pot_size;
 	word var_4;
-	pot_size = 0;
-	color = 12; // red
+	pot_size = pot_0_small;
+	color = color_12_red; // red
 	switch (curr_tile) {
 		case tiles_2_spike:
 			ptr_add_table(id_chtab_6_environment, spikes_fram_left[get_spike_frame(curr_modifier)], draw_xh, 0, draw_main_y - 2, blitters_10h_transp, 0);
 			break;
 		case tiles_10_potion:
-			switch((curr_modifier & 0xF8) >> 3) {
+		{
+			int potion_id = ((curr_modifier & 0xF8) >> 3);
+			switch(potion_id) {
 				case 0:
 					return; //empty
 				case 5: // hurt
 				case 6: // open
-					color = 9; // blue
+					color = color_9_blue;
 					break;
 				case 3: // slow fall
 				case 4: // upside down
-					color = 10; // green
+					color = color_10_green;
 					// fallthrough!
 				case 2: // life
-					pot_size = 1;
+					pot_size = pot_1_big;
 					break;
 			}
+			#ifdef USE_SCRIPT
+			script__custom_potion_anim(potion_id, &color, &pot_size);
+			#endif
 			add_backtable(id_chtab_1_flameswordpotion, 23 /*bubble mask*/, draw_xh + 3, 1, draw_main_y - (pot_size << 2) - 14, blitters_40h_mono, 0);
 			add_foretable(id_chtab_1_flameswordpotion, potion_fram_bubb[curr_modifier & 0x7], draw_xh + 3, 1, draw_main_y - (pot_size << 2) - 14, color + blitters_40h_mono, 0);
 			break;
+		}
 		case tiles_22_sword:
 			add_midtable(id_chtab_1_flameswordpotion, (curr_modifier == 1) + 10, draw_xh, 0, draw_main_y - 3, blitters_10h_transp, curr_modifier == 1);
 			break;

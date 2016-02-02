@@ -28,6 +28,11 @@ TCCState *s = NULL;
 void (*on_load_room)(int) = NULL;
 void (*on_init_game)(void) = NULL;
 void (*on_load_level)(int) = NULL;
+void (*on_drink_potion)(int) = NULL;
+void (*custom_potion_anim)(int) = NULL;
+
+word* ptr_potion_color = NULL;
+word* ptr_potion_pot_size = NULL;
 
 // Functions callable by the script:
 
@@ -103,6 +108,38 @@ void script__set_tile_and_modifier(word room, word tilepos, byte new_tile, byte 
     }
 }
 
+word script__get_hp(void) {return hitp_curr; }
+
+void script__set_hp(word new_hp) {
+    hitp_delta = new_hp - hitp_curr;
+}
+word script__get_max_hp(void) {return hitp_max; }
+
+void script__set_max_hp(word new_max_hp) {
+    word old_hitp_max = hitp_max;
+    hitp_max = new_max_hp;
+    if (hitp_curr > hitp_max) hitp_curr = hitp_max; // remove excess health if necessary
+    draw_kid_hp(hitp_curr, MAX(old_hitp_max, new_max_hp));
+}
+
+void script__set_flash(word color, word duration) {
+    flash_color = color;
+    flash_time = duration;
+}
+
+// Call this function only from within custom_potion_anim()
+void script__set_potion_color(word color) {
+    if (ptr_potion_color != NULL) {
+        *ptr_potion_color = color;
+    }
+}
+
+// Call this function only from within custom_potion_anim()
+void script__set_potion_pot_size(word pot_size) {
+    if (ptr_potion_pot_size != NULL) {
+        *ptr_potion_pot_size = pot_size;
+    }
+}
 
 char* load_script(char* filename) {
     char* buffer = NULL;
@@ -147,6 +184,10 @@ int init_script() {
 
     // Function symbols accessible in the script:
     tcc_add_symbol(s, "play_sound", play_sound);
+    tcc_add_symbol(s, "stop_sounds", stop_sounds);
+    tcc_add_symbol(s, "draw_kid_hp", draw_kid_hp);
+    tcc_add_symbol(s, "take_hp", take_hp);
+    tcc_add_symbol(s, "set_hp_full", set_health_life);
 
     tcc_add_symbol(s, "get_minutes_remaining", script__get_minutes_remaining);
     tcc_add_symbol(s, "get_ticks_remaining", script__get_ticks_remaining);
@@ -160,7 +201,14 @@ int init_script() {
     tcc_add_symbol(s, "set_curr_tile_and_modifier", script__set_curr_tile_and_modifier);
     tcc_add_symbol(s, "set_tile", script__set_tile);
     tcc_add_symbol(s, "set_modifier", script__set_modifier);
-    tcc_add_symbol(s, "set_tile_and_modifier", script__set_modifier);
+    tcc_add_symbol(s, "set_tile_and_modifier", script__set_tile_and_modifier);
+    tcc_add_symbol(s, "get_hp", script__get_hp);
+    tcc_add_symbol(s, "set_hp", script__set_hp);
+    tcc_add_symbol(s, "get_max_hp", script__get_max_hp);
+    tcc_add_symbol(s, "set_max_hp", script__set_max_hp);
+    tcc_add_symbol(s, "set_flash", script__set_flash);
+    tcc_add_symbol(s, "set_potion_color", script__set_potion_color);
+    tcc_add_symbol(s, "set_potion_pot_size", script__set_potion_pot_size);
 
     /* relocate the code */
     if (tcc_relocate(s, TCC_RELOCATE_AUTO) < 0){
@@ -170,13 +218,14 @@ int init_script() {
     on_load_room = tcc_get_symbol(s, "on_load_room");
     on_init_game = tcc_get_symbol(s, "on_init_game");
     on_load_level = tcc_get_symbol(s, "on_load_level");
+    on_drink_potion = tcc_get_symbol(s, "on_drink_potion");
+    custom_potion_anim = tcc_get_symbol(s, "custom_potion_anim");
 
     /* delete the state */
     //tcc_delete(s);
 
     return 0;
 }
-
 
 
 
@@ -193,3 +242,18 @@ void script__on_load_level(int level_number) {
     if (on_load_level != NULL) on_load_level(level_number);
 }
 
+void script__on_drink_potion(int potion_id) {
+    if (on_drink_potion != NULL) on_drink_potion(potion_id);
+}
+
+void script__custom_potion_anim(int potion_id, word *color, word *pot_size) {
+    // do not expose raw pointers in the script!
+    // instead, we can call set_potion_color() and set_potion_pot_size() while we are in custom_potion_anim()
+    ptr_potion_color = color;
+    ptr_potion_pot_size = pot_size;
+    if (custom_potion_anim != NULL) custom_potion_anim(potion_id);
+
+    // safety: set_potion_color() and set_potion_pot_size() will not do anything when the pointers are NULL
+    ptr_potion_color = NULL;
+    ptr_potion_pot_size = NULL;
+}
