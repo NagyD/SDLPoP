@@ -15,13 +15,13 @@ void on_load_level(int level_number) {
 }
 
 void on_load_room(int room) {
-	int i;
-	for (i = 1; i <= 30; ++i) {
-		int tile = get_tile(room, i);
+	for (int i = 0; i < 30; ++i) {
+		select_tile(room, i);
+		int tile = get_curr_tile();
 		// pillars are evil
-		if (tile == TILE_PILLAR) set_tile(room, i, TILE_FLOOR);
+		if (tile == TILE_PILLAR) set_curr_tile_and_modifier(TILE_FLOOR, 1);
 	}
-	play_sound(SOUND_MEET_JAFFAR); // life is dramatic
+	//play_sound(SOUND_MEET_JAFFAR); // life is dramatic
 }
 
 

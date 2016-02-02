@@ -180,6 +180,14 @@ enum soundids {
     SOUND_ENDING_MUSIC              = 56,
 };
 
+enum rowids {
+    ROW_ABOVE  = -1,
+    ROW_TOP    = 0,
+    ROW_MIDDLE = 1,
+    ROW_BOTTOM = 2,
+    ROW_BELOW  = 3,
+};
+
 // SCRIPT FUNCTION PROTOTYPES
 
 void play_sound(int sound_id);
@@ -188,8 +196,25 @@ void play_sound(int sound_id);
 word get_minutes_remaining(void);
 word get_ticks_remaining(void);
 void set_time_remaining(word minutes, word ticks);
-void set_tile(word room, word tile_number, byte new_tile);
+
+void select_tile_at_col_row(int room, int column, int row);
+void select_tile_at_tilepos(word room, word tilepos);
+// select_tile() is "overloaded"; it can be used either with:
+//   2 arguments --> calls: select_tile_at_tilepos()
+//   3 arguments --> calls: select_tile_at_col_row()
+#define GET_SELECT_TILE_FUNC(_1, _2, _3, NAME, ...) NAME
+#define select_tile(...) GET_SELECT_TILE_FUNC(__VA_ARGS__, select_tile_at_col_row,select_tile_at_tilepos )(__VA_ARGS__)
+
+byte get_curr_tile(void);
+byte get_curr_modifier(void);
+
+void set_curr_tile(byte new_tile);
+void set_curr_modifier(byte new_modifier);
+void set_curr_tile_and_modifier(byte new_tile, byte new_modifier);
+
+void set_tile(word room, word tilepos, byte new_tile);
 void set_modifier(word room, word tilepos, byte new_modifier);
+void set_tile_and_modifier(word room, word tilepos, byte new_tile, byte new_modifier);
 
 // DATA
 
