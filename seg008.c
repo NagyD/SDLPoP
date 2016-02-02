@@ -687,6 +687,13 @@ void __pascal far draw_tile_fore() {
 				// large pots are drawn for potion types 2, 3, 4
 				potion_type = (curr_modifier & 0xF8) >> 3;
 				if (potion_type < 5 && potion_type >= 2) id = 13; // small pot = 12, large pot = 13
+
+                #ifdef USE_SCRIPT
+				// the script is allowed to override the pot size in its custom_potion_anim routine
+				word pot_size = (id == 12) ? pot_0_small : pot_1_big;
+				script__custom_potion_anim(potion_type, NULL, &pot_size);
+				id = (pot_size == pot_0_small) ? 12 : 13;
+                #endif
 			}
 			xh = tile_table[curr_tile].fore_x + draw_xh;
 			ybottom = tile_table[curr_tile].fore_y + draw_main_y;

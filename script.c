@@ -175,7 +175,6 @@ int init_script() {
     if (script_program == NULL) return 1;
 
     if (tcc_compile_string(s, script_program) == -1) {
-        printf("Aah, compile string failed!");
         return 1;
     }
 

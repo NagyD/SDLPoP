@@ -251,8 +251,8 @@ void set_max_hp(word new_max_hp);
 
 void set_flash(word color, word duration);
 
-void set_potion_color(word color);
-void set_potion_pot_size(word pot_size);
+void set_potion_color(word color);        // use only in custom_potion_anim
+void set_potion_pot_size(word pot_size);  // use only in custom_potion_anim
 
 // DATA
 

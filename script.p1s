@@ -65,14 +65,14 @@ void on_drink_potion(int potion_id) {
 
 void custom_potion_anim(int potion_id) {
 	if (potion_id == 7) { // shadow potion
-		set_potion_color(COLOR_GREY);
+		set_potion_color(COLOR_SILVER);
 		set_potion_pot_size(POT_BIG);
 	}
 	else if (potion_id == 8) { // extra time potion
-		set_potion_color(COLOR_GREY);
+		set_potion_color(COLOR_SILVER);
 	}
 	else if (potion_id == 9) { // full health potion
-		set_potion_color(8);
+		set_potion_color(COLOR_VIOLET);
 	}
 }
 
