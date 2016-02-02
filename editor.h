@@ -103,6 +103,7 @@ int door_api_get(tIterator* it, tile_global_location_type *tile); /* returns fal
 int door_api_link(int* max_doorlinks, tile_global_location_type door,tile_global_location_type button); /* Assumption: door is a door (or left exitdoor) and button is a button */
 void door_api_unlink(int* max_doorlinks, tile_global_location_type door,tile_global_location_type button);
 void door_api_refresh(int* max_doorlinks, tMap* map, int* selected_door_tile);
+void door_api_swap(const int* max_doorlinks, int r1,int r2);
 
 typedef enum {
 	cButton=2,

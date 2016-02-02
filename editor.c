@@ -165,7 +165,8 @@ tMap edited_map={NULL,NULL};
 int edited_doorlinks=0;
 int edition_level=-1;
 
-#define editor__do(field,c,mark) editor__do_( ((long)(&(((level_type*)NULL)->field))) ,c,mark)
+#define offset_(field)  ((long)(&(((level_type*)NULL)->field)))
+#define editor__do(field,c,mark) editor__do_( offset_(field) ,c,mark)
 void editor__do_(long offset, byte c, tUndoQueueMark mark) {
 	byte before;
 	mark=mark|prevMark;
@@ -337,6 +338,22 @@ void door_api_init(int* max_doorlinks) {
 		(*max_doorlinks)++;
 	} while ((*max_doorlinks)<256 && next);
 	(*max_doorlinks)--;
+}
+
+void door_api_swap(const int* max_doorlinks, int r1,int r2) {
+	for (int i=0;i<=*max_doorlinks;i++) {
+		tile_global_location_type door;
+		short next;
+		get_doorlink((edited.doorlinks2[i]<<8)|edited.doorlinks1[i],&door,&next);
+		int room=R(door);
+		if (R(door)==r1) room=r2;
+		else if (R(door)==r2) room=r1;
+
+		Uint16 doorlink;
+		set_doorlink(&doorlink,T(room,P(door)),next);
+		editor__do(doorlinks1[i],doorlink&0xff,mark_middle);
+		editor__do(doorlinks2[i],(doorlink>>8)&0xff,mark_middle);
+	}
 }
 
 void door_api_refresh(int* max_doorlinks, tMap* map, int* selected_door_tile) {
@@ -515,7 +532,7 @@ void printl() {
 		tile_global_location_type tile;
 		short next;
 		get_doorlink((edited.doorlinks2[i]<<8)|edited.doorlinks1[i],&tile,&next);
-		printf("i=%d r=%d,t=%d next=%d\n",i,tile.room,tile.tilepos,next);
+		printf("i=%d r=%d,t=%d next=%d\n",i,R(tile),P(tile),next);
 	}
 }*/
 
@@ -708,6 +725,87 @@ int ini_editor_callback(const char *section, const char *name, const char *value
 /********************************************\
 *              Editor functions              *
 \********************************************/
+
+
+void dump_room(int room,byte* aux) {
+	int i;
+	int j=0;
+
+#define dump_multiple_block(field,off,size) for (i=0;i<size;i++) aux[j++]=((byte*)&edited)[offset_(field)+(off)+i];
+
+	dump_multiple_block(fg,30*(room-1),30);
+	dump_multiple_block(bg,30*(room-1),30);
+	dump_multiple_block(roomlinks,sizeof(link_type)*(room-1),sizeof(link_type));
+/*
+	dump_multiple_block(guards_tile,(room-1),1);
+	dump_multiple_block(guards_dir,(room-1),1);
+	dump_multiple_block(guards_x,(room-1),1);
+	dump_multiple_block(guards_skill,(room-1),1);
+	dump_multiple_block(guards_seq_hi,(room-1),1);
+	dump_multiple_block(guards_color,(room-1),1);
+*/
+}
+void load_room(int room,const byte* aux) {
+	int i;
+	int j=0;
+
+#define load_multiple_block(field,off,size) for (i=0;i<size;i++) editor__do_(offset_(field)+(off)+i,aux[j++],mark_middle);
+
+	load_multiple_block(fg,30*(room-1),30);
+	load_multiple_block(bg,30*(room-1),30);
+	load_multiple_block(roomlinks,sizeof(link_type)*(room-1),sizeof(link_type));
+/*	load_multiple_block(guards_tile,(room-1),1);
+	load_multiple_block(guards_dir,(room-1),1);
+	load_multiple_block(guards_x,(room-1),1);
+	load_multiple_block(guards_skill,(room-1),1);
+	load_multiple_block(guards_seq_hi,(room-1),1);
+	load_multiple_block(guards_color,(room-1),1);
+*/
+}
+void printf_links() {
+	printf("debug\n");
+	for (int i=0;i<NUMBER_OF_ROOMS;i++) {
+		printf("S%d: L%d R%d A%d B%d\n",i+1,edited.roomlinks[i].left,edited.roomlinks[i].right,edited.roomlinks[i].up,edited.roomlinks[i].down);
+	}
+}
+void editor_swap_room_id(int r1, int r2) {
+	printf("SWAP: S%d WITH S%d %ld\n",r1,r2,sizeof(link_type));
+	editor__do_mark_start(flag_redraw);
+
+	byte dump_r1[70];
+	byte dump_r2[70];
+	dump_room(r1,dump_r1);
+	dump_room(r2,dump_r2);
+	load_room(r2,dump_r1);
+	load_room(r1,dump_r2);
+
+	//update room links
+	for (int i=0;i<NUMBER_OF_ROOMS*4;i++) {
+		byte l=i[(byte*)&edited.roomlinks];
+		if (l==r1) editor__do_(offset_(roomlinks)+i,r2,mark_middle);
+		if (l==r2) editor__do_(offset_(roomlinks)+i,r1,mark_middle);
+	}
+
+	//update start room
+	byte s=edited.start_room;
+	if (s==r1) editor__do(start_room,r2,mark_middle);
+	if (s==r2) editor__do(start_room,r1,mark_middle);
+
+	door_api_swap(&edited_doorlinks,r1,r2);
+
+	editor__do_mark_end(flag_redraw);
+
+	ed_select_room(r1);
+	ed_redraw_room();
+	ed_select_room(r2);
+	ed_redraw_room();
+
+	need_full_redraw=1;
+
+	//TODO: update doorlinks
+
+}
+
 
 chtab_type* chtab_editor_sprites=NULL;
 void editor__load_level() {
@@ -1806,7 +1904,7 @@ void editor__process_key(int key,const char** answer_text, word* need_show_text)
 		static word selected_room=0;
 		if (selected_room) {
 			sprintf(aux,"SWAP: S%d WITH S%d",selected_room,drawn_room);
-			//TODO: editor_swap_room_id(selected_room,drawn_room);
+			editor_swap_room_id(selected_room,drawn_room);
 			selected_room=0;
 		} else {
 			selected_room=drawn_room;
