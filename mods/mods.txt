@@ -1,0 +1,20 @@
+Playing custom levelsets with SDLPoP
+====================================
+
+1. Put the folder with the mod's custom files inside this folder (the "mods/" directory).
+
+2. Make sure that the name of the mod directory matches the name of the mod.
+   For example: 
+
+   mods/Prince4D/
+
+3. Open SDLPoP.ini and change the value of the 'levelset' option to the name of the mod.
+   For example: 
+
+   levelset = Prince4D
+
+4. Launch the game and play!
+
+
+
+N.B.: In the mod's directory, only files that have been modified compared to the original game are needed.

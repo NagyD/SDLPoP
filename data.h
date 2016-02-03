@@ -587,6 +587,9 @@ options_type options INIT(= {{0}});
 byte start_fullscreen INIT(= 0);
 word pop_window_width INIT(= 640);
 word pop_window_height INIT(= 400);
+byte enable_scripts INIT(= 1);
+byte use_custom_levelset INIT(= 0);
+char levelset_name[256];
 
 // Custom Gameplay settings
 word start_minutes_left INIT(= 60);

@@ -168,20 +168,24 @@ char* load_script(char* filename) {
 }
 
 int init_script() {
+    if (!(enable_scripts && use_custom_levelset)) return 1; // only load scripts as part of mods
+
+    char filename[256];
+    snprintf(filename, sizeof(filename), "mods/%s/%s", levelset_name, "mod.p1s");
+    char* script_program = load_script(filename); // script must be an ANSI-encoded text file
+    if (script_program == NULL) return 1;
+
     s = tcc_new();
-    if (!s) {
+    if (s == NULL) {
         fprintf(stderr, "Could not create tcc state\n");
         return 1;
     }
 
-    tcc_add_include_path(s, "data/script/");
+    tcc_add_include_path(s, "data/script/"); // location of pop_script.h
     tcc_set_lib_path(s, "data/script/"); // location of lib/libtcc1.a
 
     /* MUST BE CALLED before any compilation */
     tcc_set_output_type(s, TCC_OUTPUT_MEMORY);
-
-    char* script_program = load_script("script.p1s"); // script must be an ANSI-encoded text file
-    if (script_program == NULL) return 1;
 
     if (tcc_compile_string(s, script_program) == -1) {
         return 1;
@@ -284,7 +288,5 @@ void script__custom_timers() {
 // TODO: add script events: on_quicksave(), on_quickload()
 // TODO: allow scripts to store their local data in savestates (perhaps a small stack using unused level fields?)
 // TODO: allow scripts to modify the next level
-// TODO: organize mods' files in their own directory: mods/<mod_name>/
-// TODO: add an option to choose a levelset for SDLPoP.ini (with default: "original")
 
 

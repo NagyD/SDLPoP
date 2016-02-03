@@ -116,7 +116,19 @@ int __pascal far pop_wait(int timer_index,int time) {
 
 // seg009:0F58
 dat_type *__pascal open_dat(const char *filename,int drive) {
-	FILE* fp = fopen(filename, "rb");
+	FILE* fp = NULL;
+	if (!use_custom_levelset) {
+		fp = fopen(filename, "rb");
+	}
+	else {
+		char filename_mod[256];
+		// before checking the root directory, first try mods/MODNAME/
+		snprintf(filename_mod, sizeof(filename_mod), "mods/%s/%s", levelset_name, filename);
+		fp = fopen(filename_mod, "rb");
+		if (fp == NULL) {
+			fp = fopen(filename, "rb");
+		}
+	}
 	dat_header_type dat_header;
 	dat_table_type* dat_table = NULL;
 
@@ -2001,8 +2013,21 @@ void load_from_opendats_metadata(int resource_id, const char* extension, FILE** 
 		} else {
 			// If it's a directory:
 			snprintf(image_filename,sizeof(image_filename),"data/%s/res%d.%s",pointer->filename, resource_id, extension);
-			//printf("loading (binary) %s",image_filename);
-			fp = fopen(image_filename, "rb");
+			if (!use_custom_levelset) {
+				//printf("loading (binary) %s",image_filename);
+				fp = fopen(image_filename, "rb");
+			}
+			else {
+				char image_filename_mod[256];
+				// before checking data/, first try mods/MODNAME/data/
+				snprintf(image_filename_mod, sizeof(image_filename_mod), "mods/%s/%s", levelset_name, image_filename);
+				//printf("loading (binary) %s",image_filename_mod);
+				fp = fopen(image_filename_mod, "rb");
+				if (fp == NULL) {
+					fp = fopen(image_filename, "rb");
+				}
+			}
+
 			if (fp != NULL) {
 				struct stat buf;
 				if (fstat(fileno(fp), &buf) == 0) {

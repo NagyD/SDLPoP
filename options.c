@@ -222,12 +222,23 @@ static int ini_callback(const char *section, const char *name, const char *value
         process_word("pop_window_width", &pop_window_width, NULL);
         process_word("pop_window_height", &pop_window_height, NULL);
         process_boolean("use_correct_aspect_ratio", &options.use_correct_aspect_ratio);
+
+        if (strcasecmp(name, "levelset") == 0) {
+            if (value[0] == '\0' || strcasecmp(value, "original") == 0 || strcasecmp(value, "default") == 0) {
+                use_custom_levelset = 0;
+            } else {
+                use_custom_levelset = 1;
+                strcpy(levelset_name, value);
+            }
+            return 1;
+        }
     }
 
     if (check_ini_section("AdditionalFeatures")) {
         process_boolean("enable_quicksave", &options.enable_quicksave);
         process_boolean("enable_quicksave_penalty", &options.enable_quicksave_penalty);
         process_boolean("enable_replay", &options.enable_replay);
+        process_boolean("enable_scripts", &enable_scripts);
     }
 
     if (check_ini_section("Enhancements")) {
