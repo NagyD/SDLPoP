@@ -254,7 +254,18 @@ void set_flash(word color, word duration);
 void set_potion_color(word color);        // use only in custom_potion_anim
 void set_potion_pot_size(word pot_size);  // use only in custom_potion_anim
 
+void show_time(void);
+
+short have_sword(void);
+void set_have_sword(short kid_has_sword);
+
 // DATA
 
 extern level_type* ptr_level;
 #define level (*ptr_level)
+
+extern char_type* ptr_kid;
+#define kid (*ptr_kid)
+
+extern char_type* ptr_guard;
+#define guard (*ptr_guard)

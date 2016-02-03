@@ -28,8 +28,10 @@ TCCState *s = NULL;
 void (*on_load_room)(int) = NULL;
 void (*on_init_game)(void) = NULL;
 void (*on_load_level)(int) = NULL;
+void (*on_end_level)(void) = NULL;
 void (*on_drink_potion)(int) = NULL;
 void (*custom_potion_anim)(int) = NULL;
+void (*custom_timers)(void) = NULL;
 
 word* ptr_potion_color = NULL;
 word* ptr_potion_pot_size = NULL;
@@ -141,6 +143,13 @@ void script__set_potion_pot_size(word pot_size) {
     }
 }
 
+void script__show_time(void) {
+    is_show_time = 1;
+}
+
+short script__have_sword(void) { return have_sword; }
+void script__set_have_sword(short kid_has_sword) { have_sword = kid_has_sword; }
+
 char* load_script(char* filename) {
     char* buffer = NULL;
     FILE* script_file = fopen(filename, "rb");
@@ -180,6 +189,8 @@ int init_script() {
 
     // Data symbols accessible in the script:
     tcc_add_symbol(s, "ptr_level", &level);
+    tcc_add_symbol(s, "ptr_kid", &Kid);
+    tcc_add_symbol(s, "ptr_guard", &Guard);
 
     // Function symbols accessible in the script:
     tcc_add_symbol(s, "play_sound", play_sound);
@@ -208,6 +219,9 @@ int init_script() {
     tcc_add_symbol(s, "set_flash", script__set_flash);
     tcc_add_symbol(s, "set_potion_color", script__set_potion_color);
     tcc_add_symbol(s, "set_potion_pot_size", script__set_potion_pot_size);
+    tcc_add_symbol(s, "show_time", script__show_time);
+    tcc_add_symbol(s, "have_sword", script__have_sword);
+    tcc_add_symbol(s, "set_have_sword", script__set_have_sword);
 
     /* relocate the code */
     if (tcc_relocate(s, TCC_RELOCATE_AUTO) < 0){
@@ -217,8 +231,10 @@ int init_script() {
     on_load_room = tcc_get_symbol(s, "on_load_room");
     on_init_game = tcc_get_symbol(s, "on_init_game");
     on_load_level = tcc_get_symbol(s, "on_load_level");
+    on_end_level = tcc_get_symbol(s, "on_end_level");
     on_drink_potion = tcc_get_symbol(s, "on_drink_potion");
     custom_potion_anim = tcc_get_symbol(s, "custom_potion_anim");
+    custom_timers = tcc_get_symbol(s, "custom_timers");
 
     /* delete the state */
     //tcc_delete(s);
@@ -241,6 +257,10 @@ void script__on_load_level(int level_number) {
     if (on_load_level != NULL) on_load_level(level_number);
 }
 
+void script__on_end_level(int level_number) {
+    if (on_end_level != NULL) on_end_level();
+}
+
 void script__on_drink_potion(int potion_id) {
     if (on_drink_potion != NULL) on_drink_potion(potion_id);
 }
@@ -256,3 +276,15 @@ void script__custom_potion_anim(int potion_id, word *color, word *pot_size) {
     ptr_potion_color = NULL;
     ptr_potion_pot_size = NULL;
 }
+
+void script__custom_timers() {
+    if (custom_timers != NULL) custom_timers();
+}
+
+// TODO: add script events: on_quicksave(), on_quickload()
+// TODO: allow scripts to store their local data in savestates (perhaps a small stack using unused level fields?)
+// TODO: allow scripts to modify the next level
+// TODO: organize mods' files in their own directory: mods/<mod_name>/
+// TODO: add an option to choose a levelset for SDLPoP.ini (with default: "original")
+
+

@@ -1,17 +1,31 @@
 #include "pop_script.h"
 
+int is_sword_collected_in_prev_level;
+
 void on_init_game() {
 	int minutes = get_minutes_remaining();
 	int ticks = get_ticks_remaining();
-	printf("Script: old minutes remaining = %d, old ticks remaining = %d\n", minutes, ticks);
+	//printf("Script: old minutes remaining = %d, old ticks remaining = %d\n", minutes, ticks);
 	set_time_remaining(999, 719);
+	is_sword_collected_in_prev_level = 0;
 }
 
 void on_load_level(int level_number) {
-	printf("Script: loaded level %d\n", level_number);
+	//printf("Script: loaded level %d\n", level_number);
 	if (level.start_dir == DIR_LEFT) {
 		level.start_dir = DIR_RIGHT; // swap start direction
 	} else level.start_dir = DIR_LEFT;
+
+	// don't trust that the kid actually collected the sword in level 1!
+	if (!is_sword_collected_in_prev_level) {
+		set_have_sword(0);
+	}
+}
+
+void on_end_level(int level_number) {
+	if (have_sword()) {
+		is_sword_collected_in_prev_level = 1;
+	}
 }
 
 void on_load_room(int room) {
@@ -25,7 +39,7 @@ void on_load_room(int room) {
 }
 
 void on_drink_potion(int potion_id) {
-	if (potion_id == 7) { // shadow potion
+	if (potion_id == 7) { // instant death potion
 		stop_sounds();
 		/*united_with_shadow = 10; // blink
         is_shadow_effect = 220;
@@ -51,7 +65,7 @@ void on_drink_potion(int potion_id) {
                 break;
         }*/
 		set_max_hp(get_max_hp() - 1);
-		//is_show_time = 1;
+		show_time();
 	}
 	else if (potion_id == 9) { // full health potion
 		if (get_hp() != get_max_hp()) {
@@ -60,6 +74,9 @@ void on_drink_potion(int potion_id) {
 			set_flash(COLOR_RED, 4);
 			set_hp_full();
 		}
+	}
+	else if (potion_id == 10) { // instant death potion
+		take_hp(100);
 	}
 }
 
@@ -73,6 +90,10 @@ void custom_potion_anim(int potion_id) {
 	}
 	else if (potion_id == 9) { // full health potion
 		set_potion_color(COLOR_VIOLET);
+	}
+	else if (potion_id == 10) { // instant death potion
+		set_potion_color(COLOR_BLUE);
+		set_potion_pot_size(POT_BIG);
 	}
 }
 

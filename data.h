@@ -322,7 +322,7 @@ extern word demo_index;
 // data:4CD4
 extern short demo_time;
 // data:34A2
-extern word have_sword;
+extern short have_sword;
 
 // data:3D22
 extern char_type Char;

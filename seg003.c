@@ -102,6 +102,9 @@ void __pascal far play_level(int level_number) {
 		if (level_number != current_level) {
 			load_lev_spr(level_number);
 		}
+		// moved up, so that the script function on_load_level is allowed to override have_sword
+		have_sword = (level_number != 1);
+
 		load_level();
 #ifdef USE_SCRIPT
 		script__on_load_level(level_number);
@@ -126,7 +129,7 @@ void __pascal far play_level(int level_number) {
 		Guard.charid = charid_2_guard;
 		Guard.direction = dir_56_none;
 		do_startpos();
-		have_sword = (level_number != 1);
+		// have_sword = (level_number != 1); // moved up
 		find_start_level_door();
 		// busy waiting?
 		while (check_sound_playing() && !do_paused()) idle();
@@ -136,7 +139,11 @@ void __pascal far play_level(int level_number) {
 		#endif
 		draw_level_first();
 		show_copyprot(0);
+		int old_level_number = level_number;
 		level_number = play_level_2();
+#ifdef USE_SCRIPT
+		script__on_end_level(level_number);
+#endif
 		// hacked...
 #ifdef USE_COPYPROT
 		if (options.enable_copyprot && level_number == copyprot_level && !demo_mode) {
@@ -466,6 +473,9 @@ void __pascal far timers() {
 			do_mouse();
 		}
 	}
+#ifdef USE_SCRIPT
+    script__custom_timers();
+#endif
 }
 
 // seg003:0798
