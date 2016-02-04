@@ -1710,7 +1710,7 @@ void editor__handle_mouse_wheel(SDL_MouseWheelEvent e,mouse_type mouse) {
 			tile_global_location_type location=T(loaded_room,mouse.tilepos);
 			editor__do_mark_start(flag_redraw);
 			if (e.y!=0) {
-				byte v=(edited.fg[location]+e.y)&TILE_MASK;
+				byte v=(edited.fg[location]+e.y);//&TILE_MASK;
 				editor__do(fg[location],v,mark_middle);
 				editor__do(bg[location],0,mark_middle);
 			} else {
