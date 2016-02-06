@@ -1094,10 +1094,20 @@ void __pascal far read_joyst_control() {
 // seg000:10EA
 void __pascal far draw_kid_hp(short curr_hp,short max_hp) {
 	short drawn_hp_index;
+#ifndef FIX_SURPLUS_EMPTY_HP
 	for (drawn_hp_index = curr_hp; drawn_hp_index < max_hp; ++drawn_hp_index) {
 		// empty HP
 		method_6_blit_img_to_scr(chtab_addrs[id_chtab_2_kid]->images[217], drawn_hp_index * 7, 194, blitters_0_no_transp);
 	}
+#else
+	for (drawn_hp_index = curr_hp; drawn_hp_index < max_hp; ++drawn_hp_index) {
+		// empty HP
+		if (drawn_hp_index <= hitp_max-1)
+			method_6_blit_img_to_scr(chtab_addrs[id_chtab_2_kid]->images[217], drawn_hp_index * 7, 194, blitters_0_no_transp);
+		else // erase any "surplus" of fake hp boxes
+			method_6_blit_img_to_scr(chtab_addrs[id_chtab_2_kid]->images[216], drawn_hp_index * 7, 194, blitters_9_black);
+	}
+#endif // FIX_SURPLUS_EMPTY_HP
 	for (drawn_hp_index = 0; drawn_hp_index < curr_hp; ++drawn_hp_index) {
 		// full HP
 		method_6_blit_img_to_scr(chtab_addrs[id_chtab_2_kid]->images[216], drawn_hp_index * 7, 194, blitters_0_no_transp);

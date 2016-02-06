@@ -21,6 +21,7 @@ The authors of this program may be contacted at http://forum.princed.org
 #ifndef SCRIPT_H
 
 int init_script();
+
 void script__on_load_room(int room);
 void script__on_init_game();
 void script__on_load_level(int level_number);
@@ -28,5 +29,7 @@ void script__on_end_level(int level_number);
 void script__on_drink_potion(int potion_id);
 void script__custom_potion_anim(int potion_id, word *color, word *pot_size);
 void script__custom_timers();
+
+void script__apply_override_level_start_sequence();
 
 #endif //SCRIPT_H

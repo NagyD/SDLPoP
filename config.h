@@ -148,6 +148,9 @@ The authors of this program may be contacted at http://forum.princed.org
 // (The game considers these tiles floor tiles; so it mistakenly assumes that no x-position adjustment is needed)
 #define FIX_LAND_AGAINST_GATE_OR_TAPESTRY
 
+// When max health is decreased (e.g. through scripts or custom potions), excess hp boxes are not erased.
+#define FIX_SURPLUS_EMPTY_HP
+
 // Debug features:
 
 // When the program starts, check whether the deobfuscated sequence table (seqtbl.c) is correct.

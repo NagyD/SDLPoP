@@ -198,6 +198,9 @@ void __pascal far do_startpos() {
 	} else {
 		seqtbl_offset_char(seq_5_turn); // turn
 	}
+#ifdef USE_SCRIPT
+	script__apply_override_level_start_sequence();
+#endif
 	set_start_pos();
 }
 

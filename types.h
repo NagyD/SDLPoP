@@ -1002,8 +1002,8 @@ enum colorids {
 	color_4_red = 4,
 	color_5_purple = 5,
 	color_6_gold = 6,
-	color_7_silver = 7,
-	color_8_grey = 8,
+	color_7_grey = 7,
+	color_8_darkgrey = 8,
 	color_9_blue = 9,
 	color_10_green = 10,
 	color_11_lightblue = 11,
@@ -1021,7 +1021,7 @@ enum rowids {
 	row_3_below = 3,
 };
 
-enum potion_pot_size_id {
+enum potsizeids {
 	pot_0_small = 0,
 	pot_1_big = 1,
 };

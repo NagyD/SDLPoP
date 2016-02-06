@@ -1143,10 +1143,10 @@ void __pascal far dialog_method_2_frame(dialog_type *dialog) {
 	draw_rect(&rect, color_0_black);
 	// Draw shadow (right)
 	rect = (rect_type) { text_top, peel_right - shadow_right, peel_bottom, peel_right };
-	draw_rect(&rect, get_text_color(0, color_8_grey /*dialog's shadow*/, 0));
+	draw_rect(&rect, get_text_color(0, color_8_darkgrey /*dialog's shadow*/, 0));
 	// Draw shadow (bottom)
 	rect = (rect_type) { peel_bottom - shadow_bottom, text_left, peel_bottom, peel_right };
-	draw_rect(&rect, get_text_color(0, color_8_grey /*dialog's shadow*/, 0));
+	draw_rect(&rect, get_text_color(0, color_8_darkgrey /*dialog's shadow*/, 0));
 	// Draw inner border (left)
 	rect = (rect_type) { peel_top + outer_border, peel_left + outer_border, text_bottom, text_left };
 	draw_rect(&rect, color_15_white);

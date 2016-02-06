@@ -180,6 +180,12 @@ enum soundids {
     SOUND_ENDING_MUSIC              = 56,
 };
 
+enum seqids {
+    SEQ_TURN = 5,
+    SEQ_FALL = 7,
+    SEQ_RUN = 84,
+};
+
 enum colorids {
     COLOR_BLACK = 0,
     COLOR_DARKBLUE = 1,
@@ -188,8 +194,8 @@ enum colorids {
     COLOR_RED = 4,
     COLOR_PURPLE = 5,
     COLOR_GOLD = 6,
-    COLOR_SILVER = 7,
-    COLOR_GREY = 8,
+    COLOR_GREY = 7,
+    COLOR_DARKGREY = 8,
     COLOR_BLUE = 9,
     COLOR_GREEN = 10,
     COLOR_LIGHTBLUE = 11,
@@ -207,18 +213,25 @@ enum rowids {
     ROW_BELOW  = 3,
 };
 
-enum potion_pot_size_id {
+enum potsizeids {
     POT_SMALL = 0,
     POT_BIG = 1,
 };
 
 // SCRIPT FUNCTION PROTOTYPES
 
+// Registered variables will be saved in and loaded from savestates (replays, quicksave)
+void register_savestate_variable_explicitly(void* source, int num_bytes, char* variable_name);
+// You can use this macro instead of the explicit function (so you don't need to think too much about addresses, sizes and variable names)
+#define register_savestate_variable(var) register_savestate_variable_explicitly(&var, sizeof(var), #var)
+
+// accessible game functions
 void play_sound(int sound_id);
 void stop_sounds(void);
 void draw_kid_hp(short curr_hp, short max_hp);
 void take_hp(int count);
 void set_hp_full(void);
+void set_char_sequence(short seq_index);
 
 // "encapsulated" data accessors:
 word get_minutes_remaining(void);
@@ -230,8 +243,8 @@ void select_tile_at_tilepos(word room, word tilepos);
 // select_tile() is "overloaded"; it can be used either with:
 //   2 arguments --> calls: select_tile_at_tilepos()
 //   3 arguments --> calls: select_tile_at_col_row()
-#define GET_SELECT_TILE_FUNC(_1, _2, _3, NAME, ...) NAME
-#define select_tile(...) GET_SELECT_TILE_FUNC(__VA_ARGS__, select_tile_at_col_row,select_tile_at_tilepos )(__VA_ARGS__)
+#define GET_OVERLOADED_FUNC(_1, _2, _3, NAME, ...) NAME
+#define select_tile(...) GET_OVERLOADED_FUNC(__VA_ARGS__, select_tile_at_col_row,select_tile_at_tilepos )(__VA_ARGS__)
 
 byte get_curr_tile(void);
 byte get_curr_modifier(void);
@@ -258,6 +271,12 @@ void show_time(void);
 
 short have_sword(void);
 void set_have_sword(short kid_has_sword);
+
+word get_curr_level(void);
+
+void override_level_start_sequence(word sequence_index);
+void disable_level1_music(void);
+
 
 // DATA
 
