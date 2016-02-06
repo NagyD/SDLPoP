@@ -244,7 +244,7 @@ void select_tile_at_tilepos(word room, word tilepos);
 //   2 arguments --> calls: select_tile_at_tilepos()
 //   3 arguments --> calls: select_tile_at_col_row()
 #define GET_OVERLOADED_FUNC(_1, _2, _3, NAME, ...) NAME
-#define select_tile(...) GET_OVERLOADED_FUNC(__VA_ARGS__, select_tile_at_col_row,select_tile_at_tilepos )(__VA_ARGS__)
+#define select_tile(...) GET_OVERLOADED_FUNC(__VA_ARGS__, select_tile_at_col_row, select_tile_at_tilepos)(__VA_ARGS__)
 
 byte get_curr_tile(void);
 byte get_curr_modifier(void);
@@ -273,8 +273,10 @@ short have_sword(void);
 void set_have_sword(short kid_has_sword);
 
 word get_curr_level(void);
+word is_leveldoor_open(void);
+void set_next_level(word level_number); // use only in on_end_level
 
-void override_level_start_sequence(word sequence_index);
+void set_level_start_sequence(word sequence_index); // use only in on_load_level
 void disable_level1_music(void);
 
 

@@ -28,7 +28,7 @@ TCCState *s = NULL;
 void (*on_load_room)(int) = NULL;
 void (*on_init_game)(void) = NULL;
 void (*on_load_level)(int) = NULL;
-void (*on_end_level)(void) = NULL;
+void (*on_end_level)(int) = NULL;
 void (*on_drink_potion)(int) = NULL;
 void (*custom_potion_anim)(int) = NULL;
 void (*custom_timers)(void) = NULL;
@@ -37,6 +37,11 @@ void (*custom_timers)(void) = NULL;
 word* ptr_potion_color = NULL;
 word* ptr_potion_pot_size = NULL;
 
+// Used by on_level_end
+word* ptr_next_level = NULL;
+
+// Variable used in on_load_level, acts as a temporary 'reservation'
+// for overriding the kid's level entry sequence (running, turning, falling, etc.)
 word override_start_sequence = 0;
 
 
@@ -193,14 +198,23 @@ short script__have_sword(void) { return have_sword; }
 void script__set_have_sword(short kid_has_sword) { have_sword = kid_has_sword; }
 
 word script__get_curr_level(void) { return current_level; }
+word script__is_leveldoor_open(void) { return leveldoor_open; }
 
-void script__override_level_start_sequence(word sequence_index) {
+// Call this only from on_level_load
+void script__set_level_start_sequence(word sequence_index) {
     override_start_sequence = sequence_index;
+}
+
+// Call this only from within on_level_end
+void script__set_next_level(word level_number) {
+    if (ptr_next_level != NULL) {
+        *ptr_next_level = level_number;
+    }
 }
 
 // Not callable directly! This simply applies the 'reservation' made by override_level_start_sequence
 // (this is automatically called shortly after)
-void script__apply_override_level_start_sequence() {
+void script__apply_set_level_start_sequence() {
     if (override_start_sequence != 0) {
         seqtbl_offset_char(override_start_sequence);
         override_start_sequence = 0;
@@ -210,6 +224,7 @@ void script__apply_override_level_start_sequence() {
 void script__disable_level1_music(void) {
     need_level1_music = 0;
 }
+
 
 // End of functions that can be called by scripts.
 
@@ -300,7 +315,9 @@ int init_script() {
     tcc_add_symbol(s, "have_sword", script__have_sword);
     tcc_add_symbol(s, "set_have_sword", script__set_have_sword);
     tcc_add_symbol(s, "get_curr_level", script__get_curr_level);
-    tcc_add_symbol(s, "override_level_start_sequence", script__override_level_start_sequence);
+    tcc_add_symbol(s, "is_leveldoor_open", script__is_leveldoor_open);
+    tcc_add_symbol(s, "set_next_level", script__set_next_level);
+    tcc_add_symbol(s, "set_level_start_sequence", script__set_level_start_sequence);
     tcc_add_symbol(s, "disable_level1_music", script__disable_level1_music);
 
     /* relocate the code */
@@ -336,11 +353,15 @@ void script__on_init_game(void) {
 }
 
 void script__on_load_level(int level_number) {
+    override_start_sequence = 0;
     if (on_load_level != NULL) on_load_level(level_number);
 }
 
-void script__on_end_level(int level_number) {
-    if (on_end_level != NULL) on_end_level();
+void script__on_end_level(int level_number, word* next_level_number) {
+    // ptr_next_level is used by set_next_level
+    ptr_next_level = next_level_number; // do not expose raw pointers in the script
+    if (on_end_level != NULL) on_end_level(level_number);
+    ptr_next_level = NULL; // safety
 }
 
 void script__on_drink_potion(int potion_id) {

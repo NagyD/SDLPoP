@@ -25,11 +25,11 @@ int init_script();
 void script__on_load_room(int room);
 void script__on_init_game();
 void script__on_load_level(int level_number);
-void script__on_end_level(int level_number);
+void script__on_end_level(int level_number, word* next_level_number);
 void script__on_drink_potion(int potion_id);
-void script__custom_potion_anim(int potion_id, word *color, word *pot_size);
+void script__custom_potion_anim(int potion_id, word* color, word* pot_size);
 void script__custom_timers();
 
-void script__apply_override_level_start_sequence();
+void script__apply_set_level_start_sequence();
 
 #endif //SCRIPT_H

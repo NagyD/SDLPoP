@@ -139,11 +139,7 @@ void __pascal far play_level(int level_number) {
 		#endif
 		draw_level_first();
 		show_copyprot(0);
-		int old_level_number = level_number;
 		level_number = play_level_2();
-#ifdef USE_SCRIPT
-		script__on_end_level(level_number);
-#endif
 		// hacked...
 #ifdef USE_COPYPROT
 		if (options.enable_copyprot && level_number == copyprot_level && !demo_mode) {
@@ -199,7 +195,7 @@ void __pascal far do_startpos() {
 		seqtbl_offset_char(seq_5_turn); // turn
 	}
 #ifdef USE_SCRIPT
-	script__apply_override_level_start_sequence();
+	script__apply_set_level_start_sequence();
 #endif
 	set_start_pos();
 }
@@ -367,6 +363,9 @@ int __pascal far play_level_2() {
 				stop_sounds();
 				hitp_beg_lev = hitp_max;
 				checkpoint = 0;
+#ifdef USE_SCRIPT
+				script__on_end_level(current_level, &next_level);
+#endif
 				return next_level;
 			}
 		}
