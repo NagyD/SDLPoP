@@ -286,6 +286,9 @@ int quick_save() {
 	if (quick_fp != NULL) {
 		process_save((void*) quick_version, COUNT(quick_version));
 		ok = quick_process(process_save);
+#ifdef USE_SCRIPT
+        if (enable_scripts) script__write_savelist(quick_fp);
+#endif
 		fclose(quick_fp);
 		quick_fp = NULL;
 	}
@@ -341,6 +344,9 @@ int quick_load() {
 		word old_rem_tick = rem_tick;
 
 		ok = quick_process(process_load);
+#ifdef USE_SCRIPT
+        if (enable_scripts) script__read_savelist(quick_fp);
+#endif
 		fclose(quick_fp);
 		quick_fp = NULL;
 

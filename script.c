@@ -19,14 +19,18 @@ The authors of this program may be contacted at http://forum.princed.org
 */
 
 #include "common.h"
+
+#ifdef USE_SCRIPT
+
 #include <libtcc.h>
 
 // The compiler state
 TCCState *s = NULL;
 
 // Script functions called from the main program:
+void (*on_init)(void) = NULL;
 void (*on_load_room)(int) = NULL;
-void (*on_init_game)(void) = NULL;
+void (*on_start_game)(void) = NULL;
 void (*on_load_level)(int) = NULL;
 void (*on_end_level)(int) = NULL;
 void (*on_drink_potion)(int) = NULL;
@@ -47,17 +51,117 @@ word override_start_sequence = 0;
 
 #define SAVELIST_MAX_VARS 256
 #define SAVELIST_MAX_VAR_SIZE 65536
-#define SAVELIST_MAX_VAR_NAME_LEN 32
+#define SAVELIST_MAX_VAR_NAME_LEN 64
+#define SAVELIST_HEADER_BYTE 'S'
 
 typedef struct savelist_var_type {
-    void* var;
-    int num_bytes;
+    byte name_len;
     char name[SAVELIST_MAX_VAR_NAME_LEN];
+    word num_bytes;
+    void* data;
 } savelist_var_type;
 
-savelist_var_type savelist[SAVELIST_MAX_VARS] = {{0}};
+savelist_var_type savelist[SAVELIST_MAX_VARS];
 int savelist_num_vars = 0;
 int savelist_size = 0;
+
+// Writing and reading registered script variables to and from savestates:
+
+void script__write_savelist(FILE* stream) {
+    if (stream != NULL) {
+        fputc(SAVELIST_HEADER_BYTE, stream);
+        fwrite(&savelist_num_vars, sizeof(savelist_num_vars), 1, stream);
+        int i;
+        for (i = 0; i < savelist_num_vars; ++i) {
+            byte name_len = savelist[i].name_len;
+            word num_bytes = savelist[i].num_bytes;
+            fwrite(&name_len,        sizeof(name_len),  1,         stream);
+            fwrite(savelist[i].name, sizeof(char),      name_len,  stream);
+            fwrite(&num_bytes,       sizeof(num_bytes), 1,         stream);
+            fwrite(savelist[i].data, 1,                 num_bytes, stream);
+        }
+    }
+}
+
+void script__read_savelist(FILE* stream) {
+    int savelist_num_vars_read = 0;
+    if (stream != NULL) {
+        // Confirm that script variables are actually included in the savestate
+        byte header_byte = (byte) fgetc(stream);
+        if (feof(stream) || ferror(stream)) {
+            if (savelist_num_vars > 0) {
+                fprintf(stderr, "Warning: Script variables cannot be restored: not found in savestate (expected %d).\n",
+                        savelist_num_vars);
+            }
+            return;
+        }
+        if (header_byte != SAVELIST_HEADER_BYTE) {
+            fseek(stream, -1, SEEK_CUR); // not a savelist
+            return;
+        }
+        // Reserve enough memory as a buffer for the largest possible savelist variable
+        byte* var_buffer = malloc(SAVELIST_MAX_VAR_SIZE);
+
+        fread(&savelist_num_vars_read, sizeof(savelist_num_vars_read), 1, stream);
+        if (savelist_num_vars != savelist_num_vars_read) {
+            fprintf(stderr, "Warning: Found %d script variables in savestate; does not match "
+                    "number expected by the active script (%d).\n", savelist_num_vars_read, savelist_num_vars);
+        }
+
+        // Read savestate's variables
+        int i;
+        for (i = 0; i < savelist_num_vars_read; ++i) {
+            byte name_len_read = 0;
+            char name_read[SAVELIST_MAX_VAR_NAME_LEN] = {0};
+            word num_bytes_read = 0;
+
+            fread(&name_len_read, sizeof(name_len_read), 1, stream);
+            name_len_read = (byte) MIN(name_len_read, SAVELIST_MAX_VAR_NAME_LEN);
+            fread(name_read, sizeof(char), name_len_read, stream);
+
+            fread(&num_bytes_read, sizeof(num_bytes_read), 1, stream);
+            num_bytes_read = (word) MIN(num_bytes_read, SAVELIST_MAX_VAR_SIZE);
+            fread(var_buffer, 1, num_bytes_read, stream);
+
+            if (feof(stream)) {
+                fprintf(stderr, "Warning: Encountered unexpected end of file while restoring script variables "
+                                "from a savestate.\n");
+                return;
+            }
+            if (ferror(stream)) {
+                fprintf(stderr, "Warning: A reading error occurred while restoring script variables "
+                                "from a savestate.\n");
+                return;
+            }
+
+            // Match with the script's registered variables
+            int curr_var;
+            for (curr_var = 0; curr_var < savelist_num_vars; ++curr_var) {
+                if (strncmp(name_read, savelist[curr_var].name, SAVELIST_MAX_VAR_NAME_LEN) == 0) {
+                    goto found;
+                }
+            }
+            fprintf(stderr, "Warning: Savestate contains unregistered variable \"%s\".\n",
+                    name_read);
+            continue; // Matching script var not found, discard and read the next var in the savestate
+
+            found:
+            {
+                // Matching script var found, try to replace that var's data with the data from the savestate
+                word savelist_var_num_bytes = savelist[curr_var].num_bytes;
+                if (savelist_var_num_bytes != num_bytes_read) {
+                    fprintf(stderr, "Warning: Restored savestate variable \"%s\" has an unexpected size "
+                                    "(%d bytes, expected %d bytes).\n",
+                            savelist[curr_var].name, num_bytes_read, savelist_var_num_bytes);
+                }
+                memset(savelist[curr_var].data, 0, savelist_var_num_bytes);
+                memcpy(savelist[curr_var].data, var_buffer, MIN(num_bytes_read, savelist_var_num_bytes));
+            }
+        }
+        free(var_buffer);
+    }
+}
+
 
 // Functions callable by the script start below:
 
@@ -80,11 +184,11 @@ void script__register_savestate_variable(void* source, int var_num_bytes, char* 
     }
     ++savelist_num_vars;
     savelist_size += var_num_bytes;
-    savelist[savelist_num_vars-1] = (savelist_var_type) {source, var_num_bytes, {0}};
+    savelist[savelist_num_vars-1] = (savelist_var_type) {(byte) strnlen(variable_name, SAVELIST_MAX_VAR_NAME_LEN), {0},
+                                                         (word) var_num_bytes, source};
     strncpy(savelist[savelist_num_vars-1].name, variable_name, SAVELIST_MAX_VAR_NAME_LEN);
 
     //printf("Registering savestate variable %s. Value = %d\n", variable_name, *((int*) source));
-    // TODO: Make this work with the savestate code. (Savestates should get carefully serialized and deserialized)
 }
 
 word script__get_minutes_remaining(void) { return rem_min; }
@@ -326,16 +430,16 @@ int init_script() {
     }
 
     // Look for script entry points
+    on_init = tcc_get_symbol(s, "on_init");
     on_load_room = tcc_get_symbol(s, "on_load_room");
-    on_init_game = tcc_get_symbol(s, "on_init_game");
+    on_start_game = tcc_get_symbol(s, "on_start_game");
     on_load_level = tcc_get_symbol(s, "on_load_level");
     on_end_level = tcc_get_symbol(s, "on_end_level");
     on_drink_potion = tcc_get_symbol(s, "on_drink_potion");
     custom_potion_anim = tcc_get_symbol(s, "custom_potion_anim");
     custom_timers = tcc_get_symbol(s, "custom_timers");
 
-    /* delete the state */
-    //tcc_delete(s);
+    if (on_init != NULL) on_init(); // on_init called in the script itself
 
     return 0;
 }
@@ -348,8 +452,11 @@ void script__on_load_room(int room) {
     get_room_address(drawn_room); // careful, scripted on_load_room() might change curr_room_tiles[]/modif[]!
 }
 
-void script__on_init_game(void) {
-    if (on_init_game != NULL) on_init_game();
+void script__on_start_game(void) {
+    #ifdef USE_REPLAY
+    if (replaying) return;
+    #endif
+    if (on_start_game != NULL) on_start_game();
 }
 
 void script__on_load_level(int level_number) {
@@ -384,8 +491,4 @@ void script__custom_timers() {
     if (custom_timers != NULL) custom_timers();
 }
 
-// TODO: add script events: on_quicksave(), on_quickload()
-// TODO: allow scripts to store their local data in savestates (perhaps a small stack using unused level fields?)
-// TODO: allow scripts to modify the next level
-
-
+#endif

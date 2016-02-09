@@ -44,7 +44,7 @@ void __pascal far init_game(int level) {
 	}
 	need_level1_music = (level == 1);
 #ifdef USE_SCRIPT
-    script__on_init_game();
+	script__on_start_game();
 #endif
 	play_level(level);
 }

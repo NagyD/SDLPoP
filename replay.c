@@ -261,6 +261,9 @@ void save_recorded_replay() {
         num_replay_ticks = curr_tick;
         fwrite(&num_replay_ticks, sizeof(num_replay_ticks), 1, replay_fp);
         fwrite(moves, num_replay_ticks, 1, replay_fp);
+#ifdef USE_SCRIPT
+        if (enable_scripts) script__write_savelist(replay_fp);
+#endif
         fclose(replay_fp);
     }
 }
@@ -322,6 +325,9 @@ void load_replay() {
         fread(&saved_random_seed, sizeof(saved_random_seed), 1, replay_fp);
         fread(&num_replay_ticks, sizeof(num_replay_ticks), 1, replay_fp);
         fread(moves, num_replay_ticks, 1, replay_fp);
+#ifdef USE_SCRIPT
+        if (enable_scripts) script__read_savelist(replay_fp);
+#endif
         fclose(replay_fp);
         replay_file_open = 0;
     }
