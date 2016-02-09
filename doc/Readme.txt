@@ -144,6 +144,10 @@ A:
 Since version 1.02, the game supports LEVELS.DAT, and since version 1.03, the game can use all .DAT files.
 You can either copy the modified .DAT files to the folder of the game, or the game to the mod's folder.
 
+Since version 1.17, the game can also load from mod folders that have been placed in the mods/ directory.
+To choose which mod to play, open SDLPoP.ini and change the 'levelset' option to the name of the mod folder.
+If you use this method, only the files different from the original V1.0 data are required in the mod's folder.
+
 Another way is to start the game while the current directory is the mod's directory.
 You can do this from the command line, or with batch files / shell scripts.
 This is useful if you want to compare the behavior of this port and the original DOS version (to find bugs).
@@ -193,6 +197,72 @@ where <lvl_number> is the level on which you want to start.
 
 Also beware that the format of the replay files is not yet final and may change in the future!
 So it is possible that replays you record now will not work well in future versions.
+
+SCRIPTS
+=======
+
+Q: How do scripts work?
+A:
+Scripts can be used by mod makers to change the behaviour of the game in many different ways. 
+For example, scripts can add new potions or special events.
+Support for scripts is currently 'experimental' and being developed and tested. It may be added in a future release.
+
+Scripts are written in the C programming language. 
+The script can make use of a header file (found here: data/script/pop_script.h).
+This makes numerous symbols available for use.
+
+Upon launch, the game uses the the Tiny C Compiler library 'libtcc' (http://bellard.org/tcc/) to interpret the script.
+The game always looks for a script file with the name "mod.p1s". This must be an ANSI-encoded plain text file. 
+This file has to be located in a mod folder that is placed in the "mods/" directory. (Scripts should be part of a 'mod'.)
+The name of the mod folder can be specified in SDLPoP.ini, using the 'levelset' option.
+
+After the script has been loaded, the game looks for specific functions in the script. 
+It will try to call these functions at different times:
+
+- void on_init()
+  Called immediately after the script has been compiled and loaded correctly.
+
+- void on_start_game()
+  Called every time you begin a new game.
+
+- void on_load_level(int level_number)
+  Called right after a level has been loaded (or reloaded again after restarting).
+
+- void on_end_level(int level_number)
+  Called when a level ends, just before a cutscene or the next level is loaded.
+
+- void on_drink_potion(int potion_id)
+  Called when a potion is drunk.
+
+- void custom_potion_anim(int potion_id)
+  Called just before the game draws a potion. Bubble color and pot size can be changed here.
+
+- void custom_timers()
+  Called every game tick.
+
+You can define these functions yourself in the script file. The game should find them automatically.
+
+Q: How do I write a script?
+A:
+You can take a look at the header file located here: data/script/pop_script.h
+It declares all of the types, functions and variables that you can currently access.
+
+Start your script this with this line:
+#include <pop_script.h>
+Below that, you can add all your own variables and functions.
+If you use a function name from the list above, the game will automatically call that function at the right time.
+(If you are new to the C programming language, very good tutorials can be found online!)
+
+The available functionality is still quite limited and may be expanded in the future.
+All criticisms and ideas are welcome (find us on the forum, or on GitHub).
+
+Q: Can I add variables from my script to the quicksave and replay formats?
+A:
+Yes, that is possible. You can 'register' variables from the on_init() function, like so:
+register_savestate_variable(my_var);
+The game will then automatically add your variables to QUICKSAVE.SAV, and to replay files as well.
+When quickloading or loading a replay, make sure that the script is active (the script itself is NOT saved).
+When you makes changes to your script, old quicksaves may still work. The game will try to warn you about incompatibilities.
 
 DEVELOPING
 ==========
