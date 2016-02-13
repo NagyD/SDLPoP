@@ -70,6 +70,8 @@ int savelist_size = 0;
 void script__write_savelist(FILE* stream) {
     if (stream != NULL) {
         fputc(SAVELIST_HEADER_BYTE, stream);
+        fputc(strnlen(levelset_name, 255), stream);
+        fputs(levelset_name, stream);
         fwrite(&savelist_num_vars, sizeof(savelist_num_vars), 1, stream);
         int i;
         for (i = 0; i < savelist_num_vars; ++i) {
@@ -99,14 +101,25 @@ void script__read_savelist(FILE* stream) {
             fseek(stream, -1, SEEK_CUR); // not a savelist
             return;
         }
-        // Reserve enough memory as a buffer for the largest possible savelist variable
-        byte* var_buffer = malloc(SAVELIST_MAX_VAR_SIZE);
+
+        // Check that the correct script for the savestate is also active (levelset name)
+        char levelset_name_read[256];
+        byte levelset_name_len_read = (byte) fgetc(stream);
+        fread(levelset_name_read, sizeof(char), levelset_name_len_read, stream);
+        levelset_name_read[levelset_name_len_read] = '\0';
+        if (strcmp(levelset_name_read, levelset_name) != 0) {
+            fprintf(stderr, "Warning: Loading savestate created by \"%s\", but the active levelset is \"%s\"\n",
+                    levelset_name_read, levelset_name);
+        }
 
         fread(&savelist_num_vars_read, sizeof(savelist_num_vars_read), 1, stream);
         if (savelist_num_vars != savelist_num_vars_read) {
             fprintf(stderr, "Warning: Found %d script variables in savestate; does not match "
                     "number expected by the active script (%d).\n", savelist_num_vars_read, savelist_num_vars);
         }
+
+        // Reserve enough memory as a buffer for the largest possible savelist variable
+        byte* var_buffer = malloc(SAVELIST_MAX_VAR_SIZE);
 
         // Read savestate's variables
         int i;
