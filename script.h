@@ -22,8 +22,8 @@ The authors of this program may be contacted at http://forum.princed.org
 
 int init_script();
 
-void script__write_savelist(FILE* stream);
-void script__read_savelist(FILE* stream);
+void script__write_savelist(FILE*fp);
+void script__read_savelist(FILE*fp);
 
 void script__on_load_room(int room);
 void script__on_start_game();

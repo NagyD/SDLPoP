@@ -19,6 +19,7 @@ The authors of this program may be contacted at http://forum.princed.org
 */
 
 #include "common.h"
+#include "savestate.h"
 
 #ifdef USE_REPLAY
 
@@ -53,6 +54,7 @@ char replay_control[] = "........";
 byte replay_file_open = 0;
 word current_replay_number = 0;
 
+membuf_type savestate_membuf;
 byte* savestate_buffer = NULL;
 size_t savestate_offset = 0;
 size_t savestate_size = 0;
@@ -374,6 +376,56 @@ void key_press_while_replaying(int* key_ptr) {
             need_replay_cycle = 1;
             break;
     }
+}
+
+savelist_type replay_savelist;
+
+void replay__register_savelist_var(char* name, size_t name_len, void* data, size_t data_size) {
+    ++replay_savelist.num_vars;
+    savelist_var_type* new_var = &replay_savelist.vars[replay_savelist.num_vars-1];
+    new_var->name_len = (byte) name_len;
+    memcpy(new_var->name, name, name_len);
+    new_var->data = data;
+    new_var->data_size = (word) data_size;
+}
+
+void replay__init_savelist() {
+    #define register_var(var) replay__register_savelist_var(#var, sizeof(#var)-1, &var, sizeof(var))
+    register_var(options.enable_copyprot);
+    register_var(options.use_fixes_and_enhancements);
+    register_var(options.enable_quicksave_penalty);
+    register_var(options.enable_crouch_after_climbing);
+    register_var(options.enable_freeze_time_during_end_music);
+    register_var(options.fix_gate_sounds);
+    register_var(options.fix_two_coll_bug);
+    register_var(options.fix_infinite_down_bug);
+    register_var(options.fix_gate_drawing_bug);
+    register_var(options.fix_bigpillar_climb);
+    register_var(options.fix_jump_distance_at_edge);
+    register_var(options.fix_edge_distance_check_when_climbing);
+    register_var(options.fix_painless_fall_on_guard);
+    register_var(options.fix_wall_bump_triggers_tile_below);
+    register_var(options.fix_stand_on_thin_air);
+    register_var(options.fix_press_through_closed_gates);
+    register_var(options.fix_grab_falling_speed);
+    register_var(options.fix_skeleton_chomper_blood);
+    register_var(options.fix_move_after_drink);
+    register_var(options.fix_loose_left_of_potion);
+    register_var(options.fix_guard_following_through_closed_gates);
+    register_var(options.fix_safe_landing_on_spikes);
+    register_var(options.enable_remember_guard_hp);
+    register_var(options.fix_glide_through_wall);
+    register_var(options.fix_drop_through_tapestry);
+    register_var(options.fix_land_against_gate_or_tapestry);
+}
+
+void replay__read_savelist(FILE* stream) {
+    // backup savelist to a temporary buffer (stored options)
+        // for each var: process to buffer
+}
+
+void savelist_to_buffer(void* buffer) {
+
 }
 
 #endif // USE_REPLAY
