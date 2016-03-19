@@ -24,18 +24,20 @@ The authors of this program may be contacted at http://forum.princed.org
 
 #include <libtcc.h>
 
-// The compiler state
-TCCState *s = NULL;
+typedef struct script_type {
+    void (*on_init)(void);
+    void (*on_load_room)(int);
+    void (*on_start_game)(void);
+    void (*on_load_level)(int);
+    void (*on_end_level)(int);
+    void (*on_drink_potion)(int);
+    void (*custom_potion_anim)(int);
+    void (*custom_timers)(void);
+} script_type;
 
-// Script functions called from the main program:
-void (*on_init)(void) = NULL;
-void (*on_load_room)(int) = NULL;
-void (*on_start_game)(void) = NULL;
-void (*on_load_level)(int) = NULL;
-void (*on_end_level)(int) = NULL;
-void (*on_drink_potion)(int) = NULL;
-void (*custom_potion_anim)(int) = NULL;
-void (*custom_timers)(void) = NULL;
+#define MAX_SCRIPTS 10
+script_type scripts[MAX_SCRIPTS];
+word num_active_scripts = 0;
 
 // Used by custom_potion_anim
 word* ptr_potion_color = NULL;
@@ -64,6 +66,8 @@ typedef struct savelist_var_type {
 savelist_var_type savelist[SAVELIST_MAX_VARS];
 int savelist_num_vars = 0;
 int savelist_size = 0;
+
+int load_script(char* filename); // forward declaration
 
 // Writing and reading registered script variables to and from savestates:
 
@@ -202,6 +206,18 @@ void script__register_savestate_variable(void* source, int var_num_bytes, char* 
     strncpy(savelist[savelist_num_vars-1].name, variable_name, SAVELIST_MAX_VAR_NAME_LEN);
 
     //printf("Registering savestate variable %s. Value = %d\n", variable_name, *((int*) source));
+}
+
+void script__load_additional_script(char* filename) {
+    if (num_active_scripts < MAX_SCRIPTS) {
+        char filename2[256];
+        snprintf(filename2, sizeof(filename2), "mods/%s/%s", levelset_name, filename);
+        //printf("Loading additional script: %s\n", filename2);
+        load_script(filename2);
+    }
+    else {
+        printf("Cannot load script %s, maximum active scripts reaches (%d)\n", filename, MAX_SCRIPTS);
+    }
 }
 
 word script__get_minutes_remaining(void) { return rem_min; }
@@ -347,7 +363,7 @@ void script__disable_level1_music(void) {
 
 
 // Loads an ANSI text file into a newly allocated buffer and returns the buffer.
-char* load_script(char* filename) {
+char* load_script_text(char* filename) {
     char* buffer = NULL;
     FILE* script_file = fopen(filename, "rb");
     fseek(script_file, 0, SEEK_END);
@@ -364,15 +380,12 @@ char* load_script(char* filename) {
     return buffer;
 }
 
-int init_script() {
-    if (!(enable_scripts && use_custom_levelset)) return 1; // only load scripts as part of mods
-
-    char filename[256];
-    snprintf(filename, sizeof(filename), "mods/%s/%s", levelset_name, "mod.p1s");
-    char* script_program = load_script(filename); // script must be an ANSI-encoded text file
+int load_script(char* filename) {
+    char* script_program = load_script_text(filename); // script must be an ANSI-encoded text file
     if (script_program == NULL) return 1;
 
-    s = tcc_new();
+    // Create the compiler state
+    TCCState *s = tcc_new();
     if (s == NULL) {
         fprintf(stderr, "Could not create tcc state\n");
         return 1;
@@ -396,7 +409,8 @@ int init_script() {
 
     // Function symbols accessible in the script:
 
-    // Functions for proper communication between the main program and the script
+    // Callable functions defined in script.c (this file) with a "meta" purpose
+    tcc_add_symbol(s, "load_script", script__load_additional_script);
     tcc_add_symbol(s, "register_savestate_variable_explicitly", script__register_savestate_variable);
 
     // PoP functions that can be called directly
@@ -407,7 +421,7 @@ int init_script() {
     tcc_add_symbol(s, "set_hp_full", set_health_life);
     tcc_add_symbol(s, "set_char_sequence", seqtbl_offset_char);
 
-    // Script functions
+    // Extra callable functions defined in script.c (this file)
     tcc_add_symbol(s, "get_minutes_remaining", script__get_minutes_remaining);
     tcc_add_symbol(s, "get_ticks_remaining", script__get_ticks_remaining);
     tcc_add_symbol(s, "set_time_remaining", script__set_time_remaining);
@@ -442,26 +456,43 @@ int init_script() {
         return 1;
     }
 
-    // Look for script entry points
-    on_init = tcc_get_symbol(s, "on_init");
-    on_load_room = tcc_get_symbol(s, "on_load_room");
-    on_start_game = tcc_get_symbol(s, "on_start_game");
-    on_load_level = tcc_get_symbol(s, "on_load_level");
-    on_end_level = tcc_get_symbol(s, "on_end_level");
-    on_drink_potion = tcc_get_symbol(s, "on_drink_potion");
-    custom_potion_anim = tcc_get_symbol(s, "custom_potion_anim");
-    custom_timers = tcc_get_symbol(s, "custom_timers");
+    // Look for script entry points and store them for this script
+    script_type* script = &scripts[num_active_scripts];
+    ++num_active_scripts;
+    script->on_init = tcc_get_symbol(s, "on_init");
+    script->on_load_room = tcc_get_symbol(s, "on_load_room");
+    script->on_start_game = tcc_get_symbol(s, "on_start_game");
+    script->on_load_level = tcc_get_symbol(s, "on_load_level");
+    script->on_end_level = tcc_get_symbol(s, "on_end_level");
+    script->on_drink_potion = tcc_get_symbol(s, "on_drink_potion");
+    script->custom_potion_anim = tcc_get_symbol(s, "custom_potion_anim");
+    script->custom_timers = tcc_get_symbol(s, "custom_timers");
 
-    if (on_init != NULL) on_init(); // on_init called in the script itself
+    if (script->on_init != NULL) {
+        script->on_init(); // on_init called in the script itself
+    }
 
+    // Intentional leak: don't free the compilation context (that would also delete the compiled code)
     return 0;
 }
+
+int init_script() {
+    if (!(enable_scripts && use_custom_levelset)) return 1; // only load scripts as part of mods
+    char filename[256];
+    snprintf(filename, sizeof(filename), "mods/%s/%s", levelset_name, "mod.scr");
+    return load_script(filename);
+}
+
+
 
 
 // Functions that invoke the script:
 
 void script__on_load_room(int room) {
-    if (on_load_room != NULL) on_load_room(room);
+    for (int i = num_active_scripts-1; i >= 0; --i ) {
+        if (scripts[i].on_load_room != NULL) scripts[i].on_load_room(room);
+    }
+
     get_room_address(drawn_room); // careful, scripted on_load_room() might change curr_room_tiles[]/modif[]!
 }
 
@@ -469,23 +500,40 @@ void script__on_start_game(void) {
     #ifdef USE_REPLAY
     if (replaying) return;
     #endif
-    if (on_start_game != NULL) on_start_game();
+    for (int i = num_active_scripts-1; i >= 0; --i ) {
+        if (scripts[i].on_start_game != NULL) {
+            scripts[i].on_start_game();
+        }
+    }
 }
 
 void script__on_load_level(int level_number) {
     override_start_sequence = 0;
-    if (on_load_level != NULL) on_load_level(level_number);
+    for (int i = num_active_scripts-1; i >= 0; --i ) {
+        if (scripts[i].on_load_level != NULL) {
+            scripts[i].on_load_level(level_number);
+        }
+    }
 }
 
 void script__on_end_level(int level_number, word* next_level_number) {
     // ptr_next_level is used by set_next_level
     ptr_next_level = next_level_number; // do not expose raw pointers in the script
-    if (on_end_level != NULL) on_end_level(level_number);
+    for (int i = num_active_scripts-1; i >= 0; --i ) {
+        if (scripts[i].on_end_level != NULL) {
+            scripts[i].on_end_level(level_number);
+        }
+    }
     ptr_next_level = NULL; // safety
 }
 
 void script__on_drink_potion(int potion_id) {
-    if (on_drink_potion != NULL) on_drink_potion(potion_id);
+//    if (on_drink_potion != NULL) on_drink_potion(potion_id);
+    for (int i = num_active_scripts-1; i >= 0; --i ) {
+        if (scripts[i].on_drink_potion != NULL) {
+            scripts[i].on_drink_potion(potion_id);
+        }
+    }
 }
 
 void script__custom_potion_anim(int potion_id, word *color, word *pot_size) {
@@ -493,7 +541,11 @@ void script__custom_potion_anim(int potion_id, word *color, word *pot_size) {
     // instead, we can call set_potion_color() and set_potion_pot_size() while we are in custom_potion_anim()
     ptr_potion_color = color;
     ptr_potion_pot_size = pot_size;
-    if (custom_potion_anim != NULL) custom_potion_anim(potion_id);
+    for (int i = num_active_scripts-1; i >= 0; --i ) {
+        if (scripts[i].custom_potion_anim != NULL) {
+            scripts[i].custom_potion_anim(potion_id);
+        }
+    }
 
     // safety: set_potion_color() and set_potion_pot_size() will not do anything when the pointers are NULL
     ptr_potion_color = NULL;
@@ -501,7 +553,11 @@ void script__custom_potion_anim(int potion_id, word *color, word *pot_size) {
 }
 
 void script__custom_timers() {
-    if (custom_timers != NULL) custom_timers();
+    for (int i = num_active_scripts-1; i >= 0; --i ) {
+        if (scripts[i].custom_timers != NULL) {
+            scripts[i].custom_timers();
+        }
+    }
 }
 
 #endif

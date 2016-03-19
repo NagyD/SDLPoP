@@ -1,3 +1,6 @@
+#ifndef POP_SCRIPT_H
+#define POP_SCRIPT_H
+
 #define NULL 0
 
 typedef unsigned char byte;
@@ -220,6 +223,9 @@ enum potsizeids {
 
 // SCRIPT FUNCTION PROTOTYPES
 
+// Scripts are executed in REVERSE loading order. The main script always runs last.
+void load_script(char* filename);
+
 // Registered variables will be saved in and loaded from savestates (replays, quicksave)
 void register_savestate_variable_explicitly(void* source, int num_bytes, char* variable_name);
 // You can use this macro instead of the explicit function (so you don't need to think too much about addresses, sizes and variable names)
@@ -290,3 +296,5 @@ extern char_type* ptr_kid;
 
 extern char_type* ptr_guard;
 #define guard (*ptr_guard)
+
+#endif // POP_SCRIPT_H
