@@ -51,7 +51,6 @@ set(SOURCE_FILES
     seqtbl.c
     options.c
     replay.c
-    savestate.c     savestate.h
     script.c        script.h
     types.h
 )

@@ -19,7 +19,6 @@ The authors of this program may be contacted at http://forum.princed.org
 */
 
 #include "common.h"
-#include "savestate.h"
 
 #ifdef USE_REPLAY
 
@@ -54,15 +53,18 @@ char replay_control[] = "........";
 byte replay_file_open = 0;
 word current_replay_number = 0;
 
+// Helper type, similar to the FILE struct, so that we can keep track of a 'current position' within a chunk of memory
+typedef struct membuf_type {
+    byte* curr_ptr;
+    size_t content_size;
+    byte* base_ptr;
+    byte* end_ptr; // initialized to base_ptr + max buffer size
+} membuf_type;
+
 membuf_type savestate_membuf;
-byte* savestate_buffer = NULL;
-size_t savestate_offset = 0;
-size_t savestate_size = 0;
-#define MAX_SAVESTATE_SIZE 4096
+#define SAVESTATE_MEMBUF_SIZE 4096 // more than enough for a savestate
 
 // These are defined in seg000.c:
-typedef int process_func_type(void* data, size_t data_size);
-extern int quick_process(process_func_type process_func);
 extern const char quick_version[9];
 extern char quick_control[9];
 
@@ -79,8 +81,19 @@ byte open_replay_file(const char *filename) {
     }
 }
 
+void init_membuf(membuf_type* buf, size_t buffer_size) {
+    buf->curr_ptr = buf->base_ptr = malloc(buffer_size);
+    buf->end_ptr = buf->base_ptr + buffer_size;
+}
+
+void reset_membuf(membuf_type* buf) {
+    buf->content_size = 0;
+    buf->curr_ptr = buf->base_ptr;
+}
+
 void init_record_replay() {
     if (!options.enable_replay) return;
+    init_membuf(&savestate_membuf, SAVESTATE_MEMBUF_SIZE); // 4096 should be more than enough for a savestate
     if (g_argc > 1) {
         char *filename = g_argv[1]; // file dragged on top of executable or double clicked
         char *e = strrchr(filename, '.');
@@ -104,41 +117,31 @@ void replay_restore_level() {
     if (curr_tick == 0) restore_savestate_from_buffer();
 }
 
-int process_to_buffer(void* data, size_t data_size) {
-    if (savestate_offset + data_size > MAX_SAVESTATE_SIZE) {
+int process_to_membuf(void* data, size_t data_size, membuf_type* buf) {
+    if (buf->curr_ptr + data_size > buf->end_ptr) {
         printf("Saving savestate to memory failed: buffer is overflowing!\n");
         return 0;
     }
-    memcpy(savestate_buffer + savestate_offset, data, data_size);
-    savestate_offset += data_size;
+    memcpy(buf->curr_ptr, data, data_size);
+    buf->curr_ptr += data_size;
+    buf->content_size += data_size;
     return 1;
 }
 
-int process_load_from_buffer(void* data, size_t data_size) {
-    memcpy(data, savestate_buffer + savestate_offset, data_size);
-    savestate_offset += data_size;
-    return 1;
-}
-
-int savestate_to_buffer() {
-    int ok = 0;
-    if (savestate_buffer == NULL)
-        savestate_buffer = malloc(MAX_SAVESTATE_SIZE);
-    if (savestate_buffer != NULL) {
-        savestate_offset = 0;
-        savestate_size = 0;
-        ok = quick_process(process_to_buffer);
-        savestate_size = savestate_offset;
+int process_from_membuf(void* data, size_t data_size, membuf_type* buf) {
+    if (buf->curr_ptr + data_size - buf->base_ptr > buf->content_size) {
+        printf("Reading savestate from memory failed: reading past end of buffer!\n");
+        return 0;
     }
-    return ok;
+    memcpy(data, buf->curr_ptr, data_size);
+    buf->curr_ptr += data_size;
+    buf->content_size += data_size;
+    return 1;
 }
 
 int restore_savestate_from_buffer() {
-    int ok = 0;
-    savestate_offset = 0;
-    while (savestate_offset < savestate_size) {
-        ok = quick_process(process_load_from_buffer);
-    }
+    savestate_membuf.curr_ptr = savestate_membuf.base_ptr; // rewind the memory buffer for reading
+    int ok = quick_process((process_func_type) process_from_membuf, &savestate_membuf);
     restore_room_after_quick_load();
     return ok;
 }
@@ -153,7 +156,10 @@ void add_replay_move() {
         prandom(1); // make sure random_seed is initialized
         saved_random_seed = random_seed;
         seed_was_init = 1;
-        savestate_to_buffer(); // create a savestate in memory
+        // create a savestate in memory
+        reset_membuf(&savestate_membuf); // rewind and reset the buffer contents so it will be clean to use
+        quick_process((process_func_type) process_to_membuf, &savestate_membuf);
+
         display_text_bottom("RECORDING");
         text_time_total = 24;
         text_time_remaining = 24;
@@ -254,8 +260,9 @@ void save_recorded_replay() {
         fwrite(replay_version, COUNT(replay_version), 1, replay_fp);
         fwrite(quick_version, COUNT(quick_version), 1, replay_fp);
         // embed a savestate into the replay
+        size_t savestate_size = savestate_membuf.content_size;
         fwrite(&savestate_size, sizeof(savestate_size), 1, replay_fp);
-        fwrite(savestate_buffer, savestate_size, 1, replay_fp);
+        fwrite(savestate_membuf.base_ptr, savestate_size, 1, replay_fp);
         // save the rest of the replay data
         fwrite(&options, sizeof(options), 1, replay_fp);
         fwrite(&start_level, sizeof(start_level), 1, replay_fp);
@@ -307,9 +314,7 @@ void load_replay() {
             open_next_replay_file();
         }
     }
-    if (savestate_buffer == NULL)
-        savestate_buffer = malloc(MAX_SAVESTATE_SIZE);
-    if (replay_fp != NULL && savestate_buffer != NULL) {
+    if (replay_fp != NULL) {
         fread(replay_control, COUNT(replay_control), 1, replay_fp);
         if (strcmp(replay_control, replay_version) != 0) {
             printf("Warning: unexpected replay format!\n");
@@ -318,9 +323,12 @@ void load_replay() {
         if (strcmp(quick_control, quick_version) != 0) {
             printf("Warning: unexpected savestate format!\n");
         }
-        // load the savestate
+        // copy the savestate into a memory buffer
+        size_t savestate_size;
         fread(&savestate_size, sizeof(savestate_size), 1, replay_fp);
-        fread(savestate_buffer, savestate_size, 1, replay_fp);
+        fread(savestate_membuf.base_ptr, savestate_size, 1, replay_fp);
+        savestate_membuf.content_size = savestate_size;
+
         // load the rest of the replay data
         fread(&replay_options, sizeof(replay_options), 1, replay_fp);
         fread(&start_level, sizeof(start_level), 1, replay_fp);
@@ -378,6 +386,7 @@ void key_press_while_replaying(int* key_ptr) {
     }
 }
 
+#if 0
 savelist_type replay_savelist;
 
 void replay__register_savelist_var(char* name, size_t name_len, void* data, size_t data_size) {
@@ -427,5 +436,6 @@ void replay__read_savelist(FILE* stream) {
 void savelist_to_buffer(void* buffer) {
 
 }
+#endif
 
 #endif // USE_REPLAY

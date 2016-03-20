@@ -72,6 +72,11 @@ void __pascal far show_copyprot(int where);
 void __pascal far show_loading();
 void __pascal far show_quotes();
 #ifdef USE_QUICKSAVE
+int process_save_to_file(void* data, size_t data_size, FILE* fp);
+int process_load_from_file(void *data, size_t data_size, FILE* fp);
+// process_func_type typedef: it seems most natural to add this here instead of in types.h
+typedef int (*process_func_type)(void* data, size_t data_size, void* stream);
+int quick_process(process_func_type process_func, void* stream);
 void check_quick_op();
 void restore_room_after_quick_load();
 #endif // USE_QUICKSAVE

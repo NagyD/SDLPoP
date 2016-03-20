@@ -23,7 +23,6 @@ The authors of this program may be contacted at http://forum.princed.org
 #ifdef USE_SCRIPT
 
 #include <libtcc.h>
-#include "savestate.h"
 
 typedef struct script_type {
     void (*on_init)(void);
@@ -51,18 +50,108 @@ word* ptr_next_level = NULL;
 // for overriding the kid's level entry sequence (running, turning, falling, etc.)
 word override_start_sequence = 0;
 
+#define SAVELIST_MAX_VARS 256
+#define SAVELIST_MAX_VAR_SIZE 65536
+#define SAVELIST_MAX_VAR_NAME_LEN 64
+
+#define SAVESTATE_OPTIONVARS_HEADER_BYTE 'O'
+#define SCRIPT_SAVELIST_HEADER_BYTE 'S'
+
+typedef struct savelist_var_type {
+    byte name_len;
+    char name[SAVELIST_MAX_VAR_NAME_LEN];
+    word data_size;
+    void* data;
+} savelist_var_type;
+
+typedef struct savelist_type {
+    int num_vars;
+    savelist_var_type vars[SAVELIST_MAX_VARS];
+} savelist_type;
+
+// List of script-defined variable names (and associated data pointers), for which the script has requested
+// storage in savestates (i.e. these vars also get saved in quicksaves and replays)
 savelist_type script_savelist;
 
 int load_script(char* filename); // forward declaration
 
 // Writing and reading registered script variables to and from savestates:
 
+void savelist_save(savelist_type* savelist, process_func_type save_func, void* stream) {
+    int num_vars = savelist->num_vars;
+    save_func(&num_vars, sizeof(num_vars), stream);
+    int i;
+    for (i = 0; i < num_vars; ++i) {
+        savelist_var_type* var = &savelist->vars[i];
+        byte var_name_len = var->name_len;
+        word var_data_size = var->data_size;
+        save_func(&var_name_len, sizeof(var_name_len), stream);
+        save_func(var->name, var_name_len, stream);
+        save_func(&var_data_size, sizeof(var_data_size), stream);
+        save_func(var->data, var_data_size, stream);
+    }
+}
+
+void savelistvar_deserialize(savelist_var_type* var_dest, void* data_buffer, process_func_type load_func, void* stream) {
+    byte name_len = 0;
+    word data_size = 0;
+
+    load_func(&name_len, sizeof(name_len), stream);
+    name_len = (byte) MIN(name_len, SAVELIST_MAX_VAR_NAME_LEN);
+    var_dest->name_len = name_len;
+    load_func(var_dest->name, name_len, stream);
+
+    load_func(&data_size, sizeof(data_size), stream);
+    data_size = (word) MIN(data_size, SAVELIST_MAX_VAR_SIZE);
+    var_dest->data_size = data_size;
+
+    load_func(data_buffer, data_size, stream); // this retrieves the actual data of the variable
+}
+
+void savelist_load(savelist_type *savelist, int num_vars_read, process_func_type load_func, void *stream) {
+    // Reserve enough memory as a buffer for the largest possible savelist variable
+    byte* var_buffer = malloc(SAVELIST_MAX_VAR_SIZE);
+
+    // Read savestate's variables
+    int i;
+    for (i = 0; i < num_vars_read; ++i) {
+        savelist_var_type the_var = {0};
+        savelistvar_deserialize(&the_var, var_buffer, load_func, stream);
+
+        // Match with the script's registered variables
+        int curr_var_id;
+        for (curr_var_id = 0; curr_var_id < savelist->num_vars; ++curr_var_id) {
+            if (strncmp(the_var.name, savelist->vars[curr_var_id].name, SAVELIST_MAX_VAR_NAME_LEN) == 0) {
+                goto found;
+            }
+        }
+        fprintf(stderr, "Warning: Savestate contains unregistered variable \"%s\".\n", the_var.name);
+        continue; // Matching script var not found, discard and read the next var in the savestate
+
+        found:
+        {
+            // Matching script var found, try to replace that var's data with the data from the savestate
+            savelist_var_type* found_var = &savelist->vars[curr_var_id];
+            word savelist_var_data_size = found_var->data_size;
+
+            if (savelist_var_data_size != the_var.data_size) {
+                fprintf(stderr, "Warning: Restored savestate variable \"%s\" has an unexpected size "
+                                "(%d bytes, expected %d bytes).\n",
+                        found_var->name, the_var.data_size, savelist_var_data_size);
+            }
+            memset(found_var->data, 0, savelist_var_data_size);
+            memcpy(found_var->data, var_buffer, MIN(the_var.data_size, savelist_var_data_size));
+        }
+    }
+    free(var_buffer);
+}
+
 void script__write_savelist(FILE*fp) {
     if (fp != NULL) {
         fputc(SCRIPT_SAVELIST_HEADER_BYTE, fp);
         fputc(strnlen(levelset_name, 255), fp);
         fputs(levelset_name, fp);
-        savelist_serialize(&script_savelist, (serialization_func_type) serialize_to_file, fp);
+        savelist_save(&script_savelist, (process_func_type) process_save_to_file, fp);
     }
 }
 
@@ -99,8 +188,8 @@ void script__read_savelist(FILE*fp) {
                     "number expected by the active script (%d).\n", savelist_num_vars_read, script_savelist.num_vars);
         }
 
-        savelist_deserialize(&script_savelist, savelist_num_vars_read,
-                             (serialization_func_type) deserialize_from_file, fp);
+        savelist_load(&script_savelist, savelist_num_vars_read,
+                      (process_func_type) process_load_from_file, fp);
     }
 }
 
