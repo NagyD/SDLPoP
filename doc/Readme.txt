@@ -13,6 +13,8 @@ Contributors:
 * kees (bugfixes)
 * Falcury (porting to SDL2, bugfixes, improvements, additions)
 * segra (segrax on GitHub) (Joystick support, resizable window)
+* DarkPrince (bug reports)
+* Andrey Vasilkin / digi@os2.snc.ru (eComStation (OS/2) support)
 
 Forum board: http://forum.princed.org/viewforum.php?f=126
 GitHub: https://github.com/NagyD/SDLPoP
@@ -34,6 +36,7 @@ Sources that helped in making the disassembly:
 * Modifications to prince.exe (hex editing) topic in the POPUW forum.
 	- That forum is down, you can find some saved posts here: http://forum.princed.org/viewtopic.php?f=73&t=661
 	- HTamas posted the dungeon wall drawing algorithm in C-style pseudocode here, along with many hex-edit hacks.
+	- It was his work that prompted me to start the disassembly and later SDLPoP. Thank you!
 * PoP1 Technical Information by Mechner: http://www.popot.org/documentation.php?doc=OldDocuments
 * PoP1 Apple II source code by Mechner: https://github.com/jmechner/Prince-of-Persia-Apple-II
 
@@ -50,12 +53,22 @@ A:
 Windows:
 	Double-click on the prince.exe file.
 	If you want to pass command line parameters, you need to open a command line.
+
 GNU/Linux:
 	First you have to compile the game. (See the DEVELOPING section.)
 	Then you can start the game with the
 		./prince
 	command.
 	(Or just double-click it in a file-manager.)
+
+Mac OS X:
+	See the DEVELOPING section.
+	Thanks to StaticReturn and Poirot for this!
+
+eComStation (OS/2):
+	Unofficial binaries were posted here: http://forum.princed.org/viewtopic.php?p=18431#p18431
+	Or you can compile for yourself using gcc, according to that post.
+	Thanks to digi@os2.snc.ru for the bugfixes!
 
 Q: What command-line options are there?
 A:

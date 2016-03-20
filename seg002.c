@@ -426,6 +426,7 @@ void __pascal far sword_disappears() {
 	if (current_level == 12 && Char.room == 18) {
 		get_tile(15, 1, 0);
 		curr_room_tiles[curr_tilepos] = tiles_1_floor;
+		curr_room_modif[curr_tilepos] = 0; // added, a nonzero modifier may show fake tiles
 	}
 }
 
