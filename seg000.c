@@ -1452,30 +1452,30 @@ void __pascal far show_title() {
 	play_sound_from_buffer(sound_pointers[54]); // main theme
 	start_timer(timer_0, 0x82);
 	draw_image_2(1 /*Broderbund Software presents*/, chtab_title50, 96, 106, blitters_0_no_transp);
-	do_wait(0);
+	do_wait(timer_0);
 
 	start_timer(timer_0,0xCD);
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, &rect_titles, &rect_titles, blitters_0_no_transp);
 	draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, blitters_0_no_transp);
-	do_wait(0);
+	do_wait(timer_0);
 	
 	start_timer(timer_0,0x41);
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, &rect_titles, &rect_titles, blitters_0_no_transp);
 	draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, blitters_0_no_transp);
 	draw_image_2(2 /*a game by Jordan Mechner*/, chtab_title50, 96, 122, blitters_0_no_transp);
-	do_wait(0);
+	do_wait(timer_0);
 	
 	start_timer(timer_0,0x10E);
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, &rect_titles, &rect_titles, blitters_0_no_transp);
 	draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, blitters_0_no_transp);
-	do_wait(0);
+	do_wait(timer_0);
 	
 	start_timer(timer_0,0xEB);
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, &rect_titles, &rect_titles, blitters_0_no_transp);
 	draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, blitters_0_no_transp);
 	draw_image_2(3 /*Prince Of Persia*/, chtab_title50, 24, 107, blitters_10h_transp);
 	draw_image_2(4 /*Copyright 1990 Jordan Mechner*/, chtab_title50, 48, 184, blitters_0_no_transp);
-	do_wait(0);
+	do_wait(timer_0);
 
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, &rect_titles, &rect_titles, blitters_0_no_transp);
 	draw_image_2(0 /*story frame*/, chtab_title40, 0, 0, blitters_0_no_transp);
@@ -1507,7 +1507,7 @@ void __pascal far show_title() {
 		do_paused();
 	}
 	transition_ltr();
-	pop_wait(0, 0x78);
+	pop_wait(timer_0, 0x78);
 	draw_image_2(0 /*story frame*/, chtab_title40, 0, 0, blitters_0_no_transp);
 	draw_image_2(4 /*credits*/, chtab_title40, 24, 26, textcolor);
 	transition_ltr();

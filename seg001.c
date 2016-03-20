@@ -581,7 +581,7 @@ void __pascal far end_sequence() {
 	draw_image_2(0 /*story frame*/, chtab_title40, 0, 0, 0);
 	draw_image_2(3 /*The tyrant Jaffar*/, chtab_title40, 24, 25, get_text_color(15, color_15_white, 0x800));
 	fade_in_2(offscreen_surface, 0x800);
-	pop_wait(0, 900);
+	pop_wait(timer_0, 900);
 	start_timer(timer_0, 240);
 	draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, 0);
 	transition_ltr();

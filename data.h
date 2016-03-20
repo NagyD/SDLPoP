@@ -22,9 +22,11 @@ The authors of this program may be contacted at http://forum.princed.org
 #define DATA_H
 
 #ifdef BODY
+// If included from data.c: definitions (without extern and with initialization).
 #define INIT(...) __VA_ARGS__
 #define extern
 #else
+// Otherwise: just declarations (with extern and without initialization).
 #define INIT(...)
 #undef extern
 #endif
@@ -528,12 +530,6 @@ extern int gamepad_states[3] INIT( = { 0, 0, 0 } ); // hor, ver, shift
 
 extern int screen_updates_suspended;
 
-#ifndef USE_COMPAT_TIMER
-extern int timer_stopped[2];
-#else
-extern int wait_time[2];
-#endif
-
 #ifdef USE_MIXER
 extern char** sound_names;
 #endif
@@ -543,62 +539,62 @@ extern char** g_argv;
 
 
 // data:405A
-sbyte collision_row;
+extern sbyte collision_row;
 // data:42C2
-sbyte prev_collision_row;
+extern sbyte prev_collision_row;
 
 // data:4C10
-sbyte prev_coll_room[10];
+extern sbyte prev_coll_room[10];
 // data:4374
-sbyte curr_row_coll_room[10];
+extern sbyte curr_row_coll_room[10];
 // data:3D06
-sbyte below_row_coll_room[10];
+extern sbyte below_row_coll_room[10];
 // data:42D2
-sbyte above_row_coll_room[10];
+extern sbyte above_row_coll_room[10];
 // data:5890
-byte curr_row_coll_flags[10];
+extern byte curr_row_coll_flags[10];
 // data:4CEA
-byte above_row_coll_flags[10];
+extern byte above_row_coll_flags[10];
 // data:4C4C
-byte below_row_coll_flags[10];
+extern byte below_row_coll_flags[10];
 // data:5BA0
-byte prev_coll_flags[10];
+extern byte prev_coll_flags[10];
 
 
 // data:4F80
-short pickup_obj_type;
+extern short pickup_obj_type;
 
 
 // data:34CA
-word justblocked; // name from Apple II source
+extern word justblocked; // name from Apple II source
 
 
 // data:5F84
-word last_loose_sound;
+extern word last_loose_sound;
 
 // data:4CE2
 word need_full_redraw;
 
 #ifdef USE_REPLAY
-byte recording INIT(= 0);
-byte replaying INIT(= 0);
-dword num_replay_ticks INIT(= 0);
-byte need_replay_cycle INIT(= 0);
+extern byte recording INIT(= 0);
+extern byte replaying INIT(= 0);
+extern dword num_replay_ticks INIT(= 0);
+extern byte need_replay_cycle INIT(= 0);
 #endif // USE_REPLAY
 
-options_type options INIT(= {{0}});
-byte start_fullscreen INIT(= 0);
-word pop_window_width INIT(= 640);
-word pop_window_height INIT(= 400);
+extern options_type options INIT(= {{0}});
+extern byte start_fullscreen INIT(= 0);
+extern word pop_window_width INIT(= 640);
+extern word pop_window_height INIT(= 400);
 
 // Custom Gameplay settings
-word start_minutes_left INIT(= 60);
-word start_ticks_left INIT(= 719);
-word start_hitp INIT(= 3);
-word max_hitp_allowed INIT(= 10);
-word saving_allowed_first_level INIT(= 3);
-word saving_allowed_last_level INIT(= 13);
-byte allow_triggering_any_tile INIT(= 0);
+extern word start_minutes_left INIT(= 60);
+extern word start_ticks_left INIT(= 719);
+extern word start_hitp INIT(= 3);
+extern word max_hitp_allowed INIT(= 10);
+extern word saving_allowed_first_level INIT(= 3);
+extern word saving_allowed_last_level INIT(= 13);
+extern byte allow_triggering_any_tile INIT(= 0);
 
 #undef INIT
 #undef extern
