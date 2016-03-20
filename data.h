@@ -580,16 +580,12 @@ extern byte need_replay_cycle INIT(= 0);
 #endif // USE_REPLAY
 
 extern options_type options INIT(= {{0}});
-extern extern byte start_fullscreen INIT(= 0);
+extern byte start_fullscreen INIT(= 0);
 extern word pop_window_width INIT(= 640);
 extern word pop_window_height INIT(= 400);
 extern byte enable_scripts INIT(= 1);
 extern byte use_custom_levelset INIT(= 0);
 extern char levelset_name[256];
-extern options_type options INIT(= {{0}});
-extern byte start_fullscreen INIT(= 0);
-extern word pop_window_width INIT(= 640);
-extern word pop_window_height INIT(= 400);
 
 // Custom Gameplay settings
 extern word start_minutes_left INIT(= 60);

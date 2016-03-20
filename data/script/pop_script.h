@@ -285,6 +285,8 @@ void set_next_level(word level_number); // use only in on_end_level
 void set_level_start_sequence(word sequence_index); // use only in on_load_level
 void disable_level1_music(void);
 
+void show_dialog(char* text);
+
 
 // DATA
 

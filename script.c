@@ -372,6 +372,41 @@ void script__disable_level1_music(void) {
     need_level1_music = 0;
 }
 
+void script__show_dialog(char* text) {
+    word key;
+    rect_type rect;
+    screen_updates_suspended = 1;
+    method_1_blit_rect(offscreen_surface, onscreen_surface_, &copyprot_dialog->peel_rect, &copyprot_dialog->peel_rect, 0);
+    draw_dialog_frame(copyprot_dialog);
+    shrink2_rect(&rect, &copyprot_dialog->text_rect, 2, 1);
+    show_text_with_color(&rect, 0, 0, text, color_15_white);
+    screen_updates_suspended = 0;
+    request_screen_update();
+    clear_kbd_buf();
+    bool controls_not_yet_released = true;
+    do {
+        idle();
+        key = key_test_quit(); // Press any key to continue...
+
+        // We want to check that the arrow keys have been completely released, before the dialog box can close.
+        // Otherwise, the dialog could just blink once and immediately disappear!
+        if (controls_not_yet_released) {
+            control_y = 0;
+            control_x = 0;
+            if (is_joyst_mode) {
+                read_joyst_control();
+            } else {
+                read_keyb_control();
+            }
+            controls_not_yet_released = (control_x || control_y);
+        }
+    } while(controls_not_yet_released || key == 0);
+    savekid();
+    redraw_screen(0);
+    loadkid();
+    return;
+}
+
 
 // End of functions that can be called by scripts.
 
@@ -464,6 +499,7 @@ int load_script(char* filename) {
     tcc_add_symbol(s, "set_next_level", script__set_next_level);
     tcc_add_symbol(s, "set_level_start_sequence", script__set_level_start_sequence);
     tcc_add_symbol(s, "disable_level1_music", script__disable_level1_music);
+    tcc_add_symbol(s, "show_dialog", script__show_dialog);
 
     /* relocate the code */
     if (tcc_relocate(s, TCC_RELOCATE_AUTO) < 0){
