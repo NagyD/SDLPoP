@@ -250,14 +250,14 @@ void __pascal far decompress_rle_lr(byte far *destination,const byte far *source
 			do {
 				*(dest_pos++) = *(src_pos++);
 				--rem_length;
-			} while (--count);
+			} while (--count && rem_length);
 		} else { // repeat
 			byte al = *(src_pos++);
 			count = -count;
 			do {
 				*(dest_pos++) = al;
 				--rem_length;
-			} while (--count);
+			} while (--count && rem_length);
 		}
 	}
 }
@@ -282,7 +282,7 @@ void __pascal far decompress_rle_ud(byte far *destination,const byte far *source
 					rem_height = height;
 				}
 				--rem_length;
-			} while (--count);
+			} while (--count && rem_length);
 		} else { // repeat
 			byte al = *(src_pos++);
 			count = -count;
@@ -294,7 +294,7 @@ void __pascal far decompress_rle_ud(byte far *destination,const byte far *source
 					rem_height = height;
 				}
 				--rem_length;
-			} while (--count);
+			} while (--count && rem_length);
 		}
 	}
 }
