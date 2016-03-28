@@ -1557,7 +1557,7 @@ void init_digi() {
 	desired->freq = digi_samplerate; //buffer->digi.sample_rate;
 	desired->format = AUDIO_U8;
 	desired->channels = 1;
-	desired->samples = /*4096*/ /*512*/ 256;
+	desired->samples = /*4096*/ 512 /*256*/;
 #ifndef USE_MIXER
 	desired->callback = digi_callback;
 	desired->userdata = NULL;
