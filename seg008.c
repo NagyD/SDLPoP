@@ -748,7 +748,7 @@ int __pascal far add_backtable(short chtab_id, int id, sbyte xh, sbyte xl, int y
 	if (image == NULL) {
 		return 0;
 	}
-	backtable_item->y = ybottom - image->h/*height*/ + 1;
+	backtable_item->y = ybottom - logical_height(image) + 1;
 	backtable_item->blit = blit;
 	if (draw_mode) {
 		draw_back_fore(0, index);
@@ -775,7 +775,7 @@ int __pascal far add_foretable(short chtab_id, int id, sbyte xh, sbyte xl, int y
 	if (image == NULL) {
 		return 0;
 	}
-	foretable_item->y = ybottom - image->h/*height*/ + 1;
+	foretable_item->y = ybottom - logical_height(image) + 1;
 	foretable_item->blit = blit;
 	if (draw_mode) {
 		draw_back_fore(1, index);
@@ -804,7 +804,7 @@ int __pascal far add_midtable(short chtab_id, int id, sbyte xh, sbyte xl, int yb
 	if (image == NULL) {
 		return 0;
 	}
-	midtable_item->y = ybottom - image->h/*height*/ + 1;
+	midtable_item->y = ybottom - logical_height(image) + 1;
 	if (obj_direction == dir_0_right && chtab_flip_clip[chtab_id] != 0) {
 		blit += 0x80;
 	}
@@ -904,39 +904,6 @@ void __pascal far draw_back_fore(int which_table,int index) {
 }
 
 
-SDL_Surface* hflip(SDL_Surface* input) {
-	int width = input->w;
-	int height = input->h;
-	int source_x, target_x;
-
-	// The simplest way to create a surface with same format as input:
-	SDL_Surface* output = SDL_ConvertSurface(input, input->format, 0);
-	SDL_SetSurfacePalette(output, input->format->palette);
-	// The copied image will be overwritten anyway.
-	if (output == NULL) {
-		sdlperror("SDL_ConvertSurface");
-		quit(1);
-	}
-
-	SDL_SetSurfaceBlendMode(input, SDL_BLENDMODE_NONE);
-	// Temporarily turn off alpha and colorkey on input. So we overwrite the output image.
-	SDL_SetColorKey(input, SDL_FALSE, 0);
-	SDL_SetColorKey(output, SDL_FALSE, 0);
-	SDL_SetSurfaceAlphaMod(input, 255);
-
-	for (source_x = 0, target_x = width-1; source_x < width; ++source_x, --target_x) {
-		SDL_Rect srcrect = {source_x, 0, 1, height};
-		SDL_Rect dstrect = {target_x, 0, 1, height};
-		if (SDL_BlitSurface(input/*32*/, &srcrect, output, &dstrect) != 0) {
-			sdlperror("SDL_BlitSurface");
-			quit(1);
-		}
-	}
-
-	return output;
-}
-
-
 // seg008:140C
 void __pascal far draw_mid(int index) {
 	word need_free_mask;
@@ -979,14 +946,15 @@ void __pascal far draw_mid(int index) {
 		}
 	}
 	if (blit_flip) {
-		xpos -= image->w/*width*/;
+		xpos -= logical_width(image);
 		// for this version:
 		need_free_image = 1;
 		image = hflip(image);
 	}
 
 	if (midtable_entry->peel) {
-		add_peel(round_xpos_to_byte(xpos, 0), round_xpos_to_byte(image->w/*width*/ + xpos, 1), ypos, image->h/*height*/);
+		// Round up in case the actual with is odd.
+		add_peel(round_xpos_to_byte(xpos, 0), round_xpos_to_byte(logical_width(image) + xpos, 1) + 1, ypos, logical_height(image) + 1);
 	}
 	//printf("Midtable: drawing (chtab %d, image %d) at (x=%d, y=%d)\n",chtab_id,image_id,xpos,ypos); // debug
 	draw_image(image, mask, xpos, ypos, blit);
@@ -1024,9 +992,9 @@ void __pascal far draw_image(image_type far *image,image_type far *mask,int xpos
 	}
 	if (need_drects) {
 		rect.left = rect.right = xpos;
-		rect.right += image->w/*width*/;
+		rect.right += logical_width(image);
 		rect.top = rect.bottom = ypos;
-		rect.bottom += image->h/*height*/;
+		rect.bottom += logical_height(image);
 		add_drect(&rect);
 	}
 }

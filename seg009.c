@@ -558,11 +558,13 @@ int __pascal far set_joy_mode() {
 // seg009:178B
 surface_type far *__pascal make_offscreen_buffer(const rect_type far *rect) {
 	// stub
+	SDL_Rect sdl_rect;
+	rect_to_sdlrect(rect, &sdl_rect);
 #ifndef USE_ALPHA
 	// Bit order matches onscreen buffer, good for fading.
-    return SDL_CreateRGBSurface(0, rect->right, rect->bottom, 24, 0xFF, 0xFF<<8, 0xFF<<16, 0); //RGB888 (little endian)
+    return SDL_CreateRGBSurface(0, sdl_rect.w, sdl_rect.h, 24, 0xFF, 0xFF<<8, 0xFF<<16, 0); //RGB888 (little endian)
 #else
-	return SDL_CreateRGBSurface(0, rect->right, rect->bottom, 32, 0xFF, 0xFF<<8, 0xFF<<16, 0xFF<<24);
+	return SDL_CreateRGBSurface(0, sdl_rect.w, sdl_rect.h, 32, 0xFF, 0xFF<<8, 0xFF<<16, 0xFF<<24);
 #endif
 	//return surface;
 }
@@ -640,6 +642,51 @@ void __pascal far flip_screen(surface_type far *surface) {
 		// ...
 	}
 }
+
+// seg009:235E
+SDL_Surface* hflip(SDL_Surface* input) {
+	int width = input->w;
+	int height = input->h;
+	int source_x, target_x;
+
+	// The simplest way to create a surface with same format as input:
+	SDL_Surface* output = SDL_ConvertSurface(input, input->format, 0);
+	SDL_SetSurfacePalette(output, input->format->palette);
+	// The copied image will be overwritten anyway.
+	if (output == NULL) {
+		sdlperror("SDL_ConvertSurface");
+		quit(1);
+	}
+
+	SDL_SetSurfaceBlendMode(input, SDL_BLENDMODE_NONE);
+	// Temporarily turn off alpha and colorkey on input. So we overwrite the output image.
+	SDL_SetColorKey(input, SDL_FALSE, 0);
+	SDL_SetColorKey(output, SDL_FALSE, 0);
+	SDL_SetSurfaceAlphaMod(input, 255);
+
+	for (source_x = 0, target_x = width-1; source_x < width; ++source_x, --target_x) {
+		SDL_Rect srcrect = {source_x, 0, 1, height};
+		SDL_Rect dstrect = {target_x, 0, 1, height};
+		if (SDL_BlitSurface(input/*32*/, &srcrect, output, &dstrect) != 0) {
+			sdlperror("SDL_BlitSurface");
+			quit(1);
+		}
+	}
+
+	return output;
+}
+
+// Get the size of the image in units that are valid on a 320*200 screen.
+// Round up for use with peels.
+
+int logical_width(image_type* image) {
+	return (image->w /*+ (SCALE-1)*/) / SCALE;
+}
+
+int logical_height(image_type* image) {
+	return (image->h /*+ (SCALE-1)*/) / SCALE;
+}
+
 
 #ifndef USE_FADE
 // seg009:19EF
@@ -813,7 +860,7 @@ int __pascal far get_char_width(byte character) {
 	if (character <= font->last_char && character >= font->first_char) {
 		image_type* image = font->chtab->images[character - font->first_char];
 		if (image != NULL) {
-			width += image->w; //char_ptrs[character - font->first_char]->width;
+			width += logical_width(image); //char_ptrs[character - font->first_char]->width;
 			if (width) width += font->space_between_chars;
 		}
 	}
@@ -875,7 +922,7 @@ int __pascal far draw_text_character(byte character) {
 		image_type* image = font->chtab->images[character - font->first_char]; //char_ptrs[character - font->first_char];
 		if (image != NULL) {
 			method_3_blit_mono(image, textstate.current_x, textstate.current_y - font->height_above_baseline, textstate.textblit, textstate.textcolor);
-			width = font->space_between_chars + image->w;
+			width = font->space_between_chars + logical_width(image);
 		}
 	}
 	textstate.current_x += width;
@@ -1346,12 +1393,24 @@ peel_type* __pascal far read_peel_from_screen(const rect_type far *rect) {
 	result = calloc(1, sizeof(peel_type));
 	//memset(&result, 0, sizeof(result));
 	result->rect = *rect;
+
+	SDL_Rect sdl_rect;
+	rect_to_sdlrect(rect, &sdl_rect);
+#ifndef USE_ALPHA
+	SDL_Surface* peel_surface = SDL_CreateRGBSurface(0, sdl_rect.w, sdl_rect.h,
+                                                     24, 0xFF, 0xFF<<8, 0xFF<<16, 0);
+#else
+	SDL_Surface* peel_surface = SDL_CreateRGBSurface(0, sdl_rect.w, sdl_rect.h, 32, 0xFF, 0xFF<<8, 0xFF<<16, 0xFF<<24);
+#endif
+	/*
 #ifndef USE_ALPHA
 	SDL_Surface* peel_surface = SDL_CreateRGBSurface(0, rect->right - rect->left, rect->bottom - rect->top,
                                                      24, 0xFF, 0xFF<<8, 0xFF<<16, 0);
 #else
-	SDL_Surface* peel_surface = SDL_CreateRGBSurface(0, rect->right - rect->left, rect->bottom - rect->top, 32, 0xFF, 0xFF<<8, 0xFF<<16, 0xFF<<24);
+	SDL_Surface* peel_surface = SDL_CreateRGBSurface(0, rect->right - rect->left, rect->bottom - rect->top,
+                                                     32, 0xFF, 0xFF<<8, 0xFF<<16, 0xFF<<24);
 #endif
+	*/
 	if (peel_surface == NULL) {
 		sdlperror("SDL_CreateRGBSurface");
 		quit(1);
@@ -1359,6 +1418,7 @@ peel_type* __pascal far read_peel_from_screen(const rect_type far *rect) {
 	result->peel = peel_surface;
 	rect_type target_rect = {0, 0, rect->right - rect->left, rect->bottom - rect->top};
 	method_1_blit_rect(result->peel, current_target_surface, &target_rect, rect, 0);
+	// SDL_BlitSurface(source_surface, &src_rect, target_surface, &dest_rect
 	return result;
 }
 
@@ -1877,7 +1937,7 @@ void __pascal far set_gr_mode(byte grmode) {
 	if (options.use_correct_aspect_ratio) {
 		SDL_RenderSetLogicalSize(renderer_, 320*5, 200*6);
 	} else {
-		SDL_RenderSetLogicalSize(renderer_, 320, 200);
+		SDL_RenderSetLogicalSize(renderer_, 320 * SCALE, 200 * SCALE);
 	}
 
     /* Migration to SDL2: everything is still blitted to onscreen_surface_, however:
@@ -1886,9 +1946,9 @@ void __pascal far set_gr_mode(byte grmode) {
      * subsequently displayed; awaits a better refactoring!
      * The function handling the screen updates is request_screen_update()
      * */
-    onscreen_surface_ = SDL_CreateRGBSurface(0, 320, 200, 24, 0xFF, 0xFF << 8, 0xFF << 16, 0) ;
+    onscreen_surface_ = SDL_CreateRGBSurface(0, 320 * SCALE, 200 * SCALE, 24, 0xFF, 0xFF << 8, 0xFF << 16, 0) ;
 	sdl_texture_ = SDL_CreateTexture(renderer_, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING,
-									 320, 200);
+									 320 * SCALE, 200 * SCALE);
 	screen_updates_suspended = 0;
 
 	if (onscreen_surface_ == NULL) {
@@ -2107,6 +2167,10 @@ void rect_to_sdlrect(const rect_type* rect, SDL_Rect* sdlrect) {
 	sdlrect->y = rect->top;
 	sdlrect->w = rect->right - rect->left;
 	sdlrect->h = rect->bottom - rect->top;
+	sdlrect->x *= SCALE;
+	sdlrect->y *= SCALE;
+	sdlrect->w *= SCALE;
+	sdlrect->h *= SCALE;
 }
 
 void __pascal far method_1_blit_rect(surface_type near *target_surface,surface_type near *source_surface,const rect_type far *target_rect, const rect_type far *source_rect,int blit) {
@@ -2173,7 +2237,7 @@ image_type far * __pascal far method_3_blit_mono(image_type far *image,int xpos,
 	SDL_UnlockSurface(colored_image);
 
 	SDL_Rect src_rect = {0, 0, image->w, image->h};
-	SDL_Rect dest_rect = {xpos, ypos, image->w, image->h};
+	SDL_Rect dest_rect = {xpos * SCALE, ypos * SCALE, image->w, image->h};
 
 	SDL_SetSurfaceBlendMode(colored_image, SDL_BLENDMODE_BLEND);
     SDL_SetSurfaceBlendMode(current_target_surface, SDL_BLENDMODE_BLEND);
@@ -2306,7 +2370,7 @@ image_type far * __pascal far method_6_blit_img_to_scr(image_type far *image,int
 	}
 
 	SDL_Rect src_rect = {0, 0, image->w, image->h};
-	SDL_Rect dest_rect = {xpos, ypos, image->w, image->h};
+	SDL_Rect dest_rect = {xpos * SCALE, ypos * SCALE, image->w, image->h};
 
 	if (blit == blitters_3_xor) {
 		blit_xor(current_target_surface, &dest_rect, image, &src_rect);

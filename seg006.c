@@ -897,8 +897,8 @@ void __pascal far set_char_collision() {
 		char_width_half = 0;
 		char_height = 0;
 	} else {
-		char_width_half = (image->/*width*/w + 1) / 2;
-		char_height = image->/*height*/h;
+		char_width_half = (logical_width(image) + 1) / 2;
+		char_height = logical_height(image);
 	}
 	char_x_left = obj_x / 2 + 58;
 	if (Char.direction >= dir_0_right) {
