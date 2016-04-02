@@ -1426,7 +1426,7 @@ size_t digi_remaining_length = 0;
 // The properties of the audio device.
 SDL_AudioSpec* digi_audiospec = NULL;
 // The desired samplerate. Everything will be resampled to this.
-const int digi_samplerate = 22050;
+const int digi_samplerate = 44100;
 
 void stop_digi() {
 #ifndef USE_MIXER
@@ -1555,9 +1555,9 @@ void init_digi() {
 	desired = (SDL_AudioSpec *)malloc(sizeof(SDL_AudioSpec));
 	memset(desired, 0, sizeof(SDL_AudioSpec));
 	desired->freq = digi_samplerate; //buffer->digi.sample_rate;
-	desired->format = AUDIO_U8;
-	desired->channels = 1;
-	desired->samples = /*4096*/ 512 /*256*/;
+	desired->format = AUDIO_U16SYS;
+	desired->channels = 2;
+	desired->samples = 1024;
 #ifndef USE_MIXER
 	desired->callback = digi_callback;
 	desired->userdata = NULL;
