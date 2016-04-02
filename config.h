@@ -21,6 +21,12 @@ The authors of this program may be contacted at http://forum.princed.org
 #ifndef CONFIG_H
 #define CONFIG_H
 
+// WINDOWS overrides
+#ifdef _MSC_VER
+#define strncasecmp _strnicmp
+#define strcasecmp _stricmp
+#endif
+
 #define WINDOW_TITLE "Prince of Persia (SDLPoP) v1.16"
 
 // Enable or disable fading.
