@@ -183,7 +183,7 @@ chtab_type* __pascal load_sprites_from_file(int resource,int palette_bits, int q
 	dat_shpl_type* shpl = (dat_shpl_type*) load_from_opendats_alloc(resource, "pal", NULL, NULL);
 	if (shpl == NULL) {
 		printf("Can't load sprites from resource %d.\n", resource);
-		if (quit_on_error) quit(1);
+		//if (quit_on_error) quit(1);
 		return NULL;
 	}
 	
@@ -262,14 +262,14 @@ void __pascal far decompress_rle_lr(byte far *destination,const byte far *source
 			do {
 				*(dest_pos++) = *(src_pos++);
 				--rem_length;
-			} while (--count);
+			} while (--count && rem_length);
 		} else { // repeat
 			byte al = *(src_pos++);
 			count = -count;
 			do {
 				*(dest_pos++) = al;
 				--rem_length;
-			} while (--count);
+			} while (--count && rem_length);
 		}
 	}
 }
@@ -294,7 +294,7 @@ void __pascal far decompress_rle_ud(byte far *destination,const byte far *source
 					rem_height = height;
 				}
 				--rem_length;
-			} while (--count);
+			} while (--count && rem_length);
 		} else { // repeat
 			byte al = *(src_pos++);
 			count = -count;
@@ -306,7 +306,7 @@ void __pascal far decompress_rle_ud(byte far *destination,const byte far *source
 					rem_height = height;
 				}
 				--rem_length;
-			} while (--count);
+			} while (--count && rem_length);
 		}
 	}
 }
@@ -1438,7 +1438,7 @@ size_t digi_remaining_length = 0;
 // The properties of the audio device.
 SDL_AudioSpec* digi_audiospec = NULL;
 // The desired samplerate. Everything will be resampled to this.
-const int digi_samplerate = 22050;
+const int digi_samplerate = 44100;
 
 void stop_digi() {
 #ifndef USE_MIXER
@@ -1567,9 +1567,9 @@ void init_digi() {
 	desired = (SDL_AudioSpec *)malloc(sizeof(SDL_AudioSpec));
 	memset(desired, 0, sizeof(SDL_AudioSpec));
 	desired->freq = digi_samplerate; //buffer->digi.sample_rate;
-	desired->format = AUDIO_U8;
-	desired->channels = 1;
-	desired->samples = /*4096*/ /*512*/ 256;
+	desired->format = AUDIO_U16SYS;
+	desired->channels = 2;
+	desired->samples = 1024;
 #ifndef USE_MIXER
 	desired->callback = digi_callback;
 	desired->userdata = NULL;
@@ -1604,32 +1604,40 @@ void load_sound_names() {
 	if (fp==NULL) return;
 	sound_names = (char**) calloc(sizeof(char*) * max_sound_id, 1);
 	while (!feof(fp)) {
-		int number;
+		int index;
 		char name[256];
-		if (fscanf(fp, "%d=%255s\n", &number, /*sizeof(name)-1,*/ name) != 2) {
+		if (fscanf(fp, "%d=%255s\n", &index, /*sizeof(name)-1,*/ name) != 2) {
 			perror(names_path);
 			continue;
 		}
 		//if (feof(fp)) break;
-		//printf("sound_names[%d] = %s\n",number,name);
-		if (number>=0 && number<max_sound_id) {
-			sound_names[number] = strdup(name);
+		//printf("sound_names[%d] = %s\n",index,name);
+		if (index >= 0 && index < max_sound_id) {
+			sound_names[index] = strdup(name);
 		}
 	}
 	fclose(fp);
 }
 #endif
 
+char* sound_name(int index) {
+	if (sound_names != NULL && index >= 0 && index < max_sound_id) {
+		return sound_names[index];
+	} else {
+		return NULL;
+	}
+}
+
 sound_buffer_type* load_sound(int index) {
 	sound_buffer_type* result = NULL;
 #ifdef USE_MIXER
 	//printf("load_sound(%d)\n", index);
 	init_digi();
-	if (!digi_unavailable && result == NULL && index>=0 && index<max_sound_id) {
+	if (!digi_unavailable && result == NULL && index >= 0 && index < max_sound_id) {
 		//printf("Trying to load from music folder\n");
 
 		//load_sound_names();  // Moved to load_sounds()
-		if (sound_names != NULL && sound_names[index] != NULL) {
+		if (sound_names != NULL && sound_name(index) != NULL) {
 			//printf("Loading from music folder\n");
 			const char* exts[]={"ogg","mp3","flac","wav"};
 			int i;
@@ -1638,7 +1646,7 @@ sound_buffer_type* load_sound(int index) {
 				const char* ext=exts[i];
 				struct stat info;
 
-				snprintf(filename, sizeof(filename), "data/music/%s.%s", sound_names[index], ext);
+				snprintf(filename, sizeof(filename), "data/music/%s.%s", sound_name(index), ext);
 				// Skip nonexistent files:
 				if (stat(filename, &info))
 					continue;
@@ -1657,7 +1665,7 @@ sound_buffer_type* load_sound(int index) {
 			}
 		} else {
 			//printf("sound_names = %p\n", sound_names);
-			//printf("sound_names[%d] = %p\n", index, sound_names[index]);
+			//printf("sound_names[%d] = %p\n", index, sound_name(index));
 		}
 	}
 #endif
@@ -1667,7 +1675,7 @@ sound_buffer_type* load_sound(int index) {
 	}
 #ifdef USE_MIXER
 	if (result == NULL) {
-		fprintf(stderr, "Failed to load sound %d '%s'\n", index, sound_names[index]);
+		fprintf(stderr, "Failed to load sound %d '%s'\n", index, sound_name(index));
 	}
 #endif
 	return result;
@@ -1816,8 +1824,8 @@ void __pascal far play_sound_from_buffer(sound_buffer_type far *buffer) {
 	// stub
 	if (buffer == NULL) {
 		printf("Tried to play NULL sound.");
-		quit(1);
-		//return;
+		//quit(1);
+		return;
 	}
 	switch (buffer->type & 3) {
 		case sound_speaker:
@@ -2313,7 +2321,8 @@ void blit_xor(SDL_Surface* target_surface, SDL_Rect* dest_rect, SDL_Surface* ima
 image_type far * __pascal far method_6_blit_img_to_scr(image_type far *image,int xpos,int ypos,int blit) {
 	if (image == NULL) {
 		printf("method_6_blit_img_to_scr: image == NULL\n");
-		quit(1);
+		//quit(1);
+		return NULL;
 	}
 
 	if (blit == blitters_9_black) {

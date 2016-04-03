@@ -1099,7 +1099,7 @@ void __pascal far draw_kid_hp(short curr_hp,short max_hp) {
 #ifndef FIX_SURPLUS_EMPTY_HP
 	for (drawn_hp_index = curr_hp; drawn_hp_index < max_hp; ++drawn_hp_index) {
 		// empty HP
-		method_6_blit_img_to_scr(chtab_addrs[id_chtab_2_kid]->images[217], drawn_hp_index * 7, 194, blitters_0_no_transp);
+		method_6_blit_img_to_scr(get_image(id_chtab_2_kid, 217), drawn_hp_index * 7, 194, blitters_0_no_transp);
 	}
 #else
 	for (drawn_hp_index = curr_hp; drawn_hp_index < max_hp; ++drawn_hp_index) {
@@ -1112,7 +1112,7 @@ void __pascal far draw_kid_hp(short curr_hp,short max_hp) {
 #endif // FIX_SURPLUS_EMPTY_HP
 	for (drawn_hp_index = 0; drawn_hp_index < curr_hp; ++drawn_hp_index) {
 		// full HP
-		method_6_blit_img_to_scr(chtab_addrs[id_chtab_2_kid]->images[216], drawn_hp_index * 7, 194, blitters_0_no_transp);
+		method_6_blit_img_to_scr(get_image(id_chtab_2_kid, 216), drawn_hp_index * 7, 194, blitters_0_no_transp);
 	}
 }
 
@@ -1208,6 +1208,7 @@ byte sound_pcspeaker_exists[] = {
 void __pascal far play_sound(int sound_id) {
 	//printf("Would play sound %d\n", sound_id);
 	if (next_sound < 0 || sound_prio_table[sound_id] <= sound_prio_table[next_sound]) {
+		if (NULL == sound_pointers[sound_id]) return;
 		if (sound_pcspeaker_exists[sound_id] != 0 || sound_pointers[sound_id]->type != sound_speaker) {
 			next_sound = sound_id;
 		}
@@ -1556,6 +1557,7 @@ void __pascal far draw_image_2(int id, chtab_type* chtab_ptr, int xpos, int ypos
 	image_type* decoded_image;
 	image_type* mask;
 	mask = NULL;
+	if (NULL == chtab_ptr) return;
 	source = chtab_ptr->images[id];
 	decoded_image = source;
 	if (blit != blitters_0_no_transp && blit != blitters_10h_transp) {
@@ -1712,7 +1714,9 @@ void __pascal far load_title_images(int bgcolor) {
 			color.b = 0x00;
 			color.a = 0xFF;
 		}
-		SDL_SetPaletteColors(chtab_title40->images[0]->format->palette, &color, 14, 1);
+		if (NULL != chtab_title40) {
+			SDL_SetPaletteColors(chtab_title40->images[0]->format->palette, &color, 14, 1);
+		}
 	} else if (graphics_mode == gmEga || graphics_mode == gmTga) {
 		// ...
 	}
