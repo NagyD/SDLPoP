@@ -194,7 +194,7 @@ enum colorids {
     COLOR_DARKBLUE = 1,
     COLOR_DARKGREEN = 2,
     COLOR_TURQUOISE = 3,
-    COLOR_RED = 4,
+    COLOR_DARKRED = 4,
     COLOR_PURPLE = 5,
     COLOR_GOLD = 6,
     COLOR_GREY = 7,

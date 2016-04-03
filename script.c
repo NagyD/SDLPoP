@@ -415,6 +415,9 @@ void script__show_dialog(char* text) {
 char* load_script_text(char* filename) {
     char* buffer = NULL;
     FILE* script_file = fopen(filename, "rb");
+    if (script_file == NULL) {
+        return NULL;
+    }
     fseek(script_file, 0, SEEK_END);
     off_t script_file_size = ftell(script_file);
     if (script_file_size > 0) {

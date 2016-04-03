@@ -1629,14 +1629,14 @@ void __pascal far proc_get_object() {
 					stop_sounds();
 					play_sound(sound_33_small_potion); // small potion
 					hitp_delta = 1;
-					flash_color = color_4_red;
+					flash_color = color_4_darkred;
 					flash_time = 2;
 				}
 			break;
 			case 1: // life
 				stop_sounds();
 				play_sound(sound_30_big_potion); // big potion
-				flash_color = color_4_red;
+				flash_color = color_4_darkred;
 				flash_time = 4;
 				add_life();
 			break;

@@ -999,7 +999,7 @@ enum colorids {
 	color_1_darkblue = 1,
 	color_2_darkgreen = 2,
 	color_3_turquoise = 3,
-	color_4_red = 4,
+	color_4_darkred = 4,
 	color_5_purple = 5,
 	color_6_gold = 6,
 	color_7_grey = 7,
