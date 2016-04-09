@@ -2500,10 +2500,10 @@ void idle() {
 				}
 
 				if (event.jaxis.axis == 1) {
-					if (event.jaxis.value < -30000)
+					if (event.jaxis.value < -8000)
 						gamepad_states[1] = -1; // up
 
-					else if (event.jaxis.value > 30000)
+					else if (event.jaxis.value > 8000)
 						gamepad_states[1] = 1; // down
 
 					else
