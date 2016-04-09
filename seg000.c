@@ -1069,10 +1069,10 @@ void __pascal far check_fall_flo() {
 // seg000:1051
 void __pascal far read_joyst_control() {
 	// stub
-	if ((gamepad_states[0] == -1) || (joy_state == -1))
+	if (gamepad_states[0] == -1)
 		control_x = -1;
 	
-	if ((gamepad_states[0] == 1) || (joy_state == 1))
+	if (gamepad_states[0] == 1)
 		control_x = 1;
 
 	if (gamepad_states[1] == -1)
