@@ -1555,7 +1555,7 @@ void init_digi() {
 	desired = (SDL_AudioSpec *)malloc(sizeof(SDL_AudioSpec));
 	memset(desired, 0, sizeof(SDL_AudioSpec));
 	desired->freq = digi_samplerate; //buffer->digi.sample_rate;
-	desired->format = AUDIO_U16SYS;
+	desired->format = AUDIO_S16SYS;
 	desired->channels = 2;
 	desired->samples = 1024;
 #ifndef USE_MIXER
