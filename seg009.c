@@ -1567,7 +1567,7 @@ void init_digi() {
 	desired = (SDL_AudioSpec *)malloc(sizeof(SDL_AudioSpec));
 	memset(desired, 0, sizeof(SDL_AudioSpec));
 	desired->freq = digi_samplerate; //buffer->digi.sample_rate;
-	desired->format = AUDIO_U16SYS;
+	desired->format = AUDIO_S16SYS;
 	desired->channels = 2;
 	desired->samples = 1024;
 #ifndef USE_MIXER
@@ -2515,32 +2515,45 @@ void idle() {
 				if (event.jaxis.axis == 0) {
 
 					if (event.jaxis.value < -8000)
-						joy_state = -1;	// left
+						gamepad_states[0] = -1;	// left
 
 					else if (event.jaxis.value > 8000)
-						joy_state = 1; // right
+						gamepad_states[0] = 1; // right
 
 					else
-						joy_state = 0;
+						gamepad_states[0] = 0;
+				}
+
+				if (event.jaxis.axis == 1) {
+					if (event.jaxis.value < -8000)
+						gamepad_states[1] = -1; // up
+
+					else if (event.jaxis.value > 8000)
+						gamepad_states[1] = 1; // down
+
+					else
+						gamepad_states[1] = 0;
 				}
 				break;
 			case SDL_JOYHATMOTION:
 				switch (event.jhat.value)
 				{
+					case 1: gamepad_states[1] = -1; break; // up
 					case 2: gamepad_states[0] = 1; break; // right
-					case 3: gamepad_states[0] = 1; break; // right (and up)
-					case 6: gamepad_states[0] = 1; break; // right (and down)
+					case 3: gamepad_states[0] = 1; gamepad_states[1] = -1; break; // right (and up)
+					case 4: gamepad_states[1] = 1; break;	// down
+					case 6: gamepad_states[0] = 1; gamepad_states[1] = 1; break; // right (and down)
 					case 8: gamepad_states[0] = -1; break; // left
-					case 9: gamepad_states[0] = -1; break; // left (and up)
-					case 12: gamepad_states[0] = -1; break; // left (and down)
-					default: gamepad_states[0] = 0; break;
+					case 9: gamepad_states[0] = -1; gamepad_states[1] = -1; break; // left (and up)
+					case 12: gamepad_states[0] = -1; gamepad_states[1] = 1; break; // left (and down)
+					default: gamepad_states[0] = 0; gamepad_states[1] = 0;  break;
 				}
 				break;
 			case SDL_JOYBUTTONDOWN:
 				switch (event.jbutton.button)
 				{
 					case 0: gamepad_states[1] = 1; break; /*** A (down) ***/
-					case 1: quit (0); break; /*** B (quit) ***/
+					case 1: quit( 0 ); break; /*** B (quit) ***/
 					case 2: gamepad_states[2] = 1; break; /*** X (shift) ***/
 					case 3: gamepad_states[1] = -1; break; /*** Y (up) ***/
 					case 4: break; /*** left shoulder ***/
