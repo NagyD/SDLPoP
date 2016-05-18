@@ -2528,13 +2528,13 @@ void idle() {
 				switch (event.jbutton.button)
 				{
 					case 0: gamepad_states[1] = 1; break; /*** A (down) ***/
-					case 1: quit( 0 ); break; /*** B (quit) ***/
+					case 1: break; /*** B ***/
 					case 2: gamepad_states[2] = 1; break; /*** X (shift) ***/
 					case 3: gamepad_states[1] = -1; break; /*** Y (up) ***/
 					case 4: break; /*** left shoulder ***/
 					case 5: break; /*** right shoulder ***/
 					case 6: break; /*** back ***/
-					case 7: break; /*** start ***/
+					case 7: quit(0); break; /*** start (quit) ***/
 					case 8: break; /*** guide ***/
 					case 9: break; /*** left joystick ***/
 					case 10: break; /*** right joystick ***/
