@@ -424,7 +424,7 @@ void __pascal far move_mob();
 void __pascal far move_loose();
 void __pascal far loose_land();
 void __pascal far loose_fall();
-void __pascal far draw_cur_mob();
+void __pascal far redraw_at_cur_mob();
 void __pascal far mob_down_a_row();
 void __pascal far draw_mobs();
 void __pascal far draw_mob();
