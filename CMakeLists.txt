@@ -51,7 +51,7 @@ set(SOURCE_FILES
     seqtbl.c
     options.c
     replay.c
-    script.c        script.h
+    script.c
     types.h
 )
 add_executable(prince ${SOURCE_FILES})

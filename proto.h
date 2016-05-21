@@ -634,3 +634,18 @@ void load_replay();
 void key_press_while_recording(int* key_ptr);
 void key_press_while_replaying(int* key_ptr);
 #endif
+
+// SCRIPT.C
+#ifdef USE_SCRIPT
+int init_script();
+void script__write_savelist(FILE*fp);
+void script__read_savelist(FILE*fp);
+void script__on_load_room(int room);
+void script__on_start_game();
+void script__on_load_level(int level_number);
+void script__on_end_level(int level_number, word* next_level_number);
+void script__on_drink_potion(int potion_id);
+void script__custom_potion_anim(int potion_id, word* color, word* pot_size);
+void script__custom_timers();
+void script__apply_set_level_start_sequence();
+#endif
