@@ -949,11 +949,11 @@ void __pascal far load_level() {
 void reset_level_unused_fields(bool loading_clean_level) {
 	// Entirely unused fields in the level format: reset to zero for now
 	// They can be repurposed to add new stuff to the level format in the future
-	memset(level.roomxs, 0, COUNT(level.roomxs));
-	memset(level.roomys, 0, COUNT(level.roomys));
-	memset(level.fill_1, 0, COUNT(level.fill_1));
-	memset(level.fill_2, 0, COUNT(level.fill_2));
-	memset(level.fill_3, 0, COUNT(level.fill_3));
+	memset(level.roomxs, 0, sizeof(level.roomxs));
+	memset(level.roomys, 0, sizeof(level.roomys));
+	memset(level.fill_1, 0, sizeof(level.fill_1));
+	memset(level.fill_2, 0, sizeof(level.fill_2));
+	memset(level.fill_3, 0, sizeof(level.fill_3));
 
 	// For these fields, only use the bits that are actually used, and set the rest to zero.
 	// Good for repurposing the unused bits in the future.
