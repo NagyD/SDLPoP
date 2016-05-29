@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 2.8)
 project(SDLPoP)
 
 # Use C++11 when using the C++ compiler
