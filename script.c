@@ -379,7 +379,7 @@ void script__show_dialog(char* text) {
     method_1_blit_rect(offscreen_surface, onscreen_surface_, &copyprot_dialog->peel_rect, &copyprot_dialog->peel_rect, 0);
     draw_dialog_frame(copyprot_dialog);
     shrink2_rect(&rect, &copyprot_dialog->text_rect, 2, 1);
-    show_text_with_color(&rect, 0, 0, text, color_15_white);
+    show_text_with_color(&rect, 0, 0, text, color_15_brightwhite);
     screen_updates_suspended = 0;
     request_screen_update();
     clear_kbd_buf();

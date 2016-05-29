@@ -1430,7 +1430,7 @@ const rect_type rect_titles = {106,24,195,296};
 void __pascal far show_title() {
 	word textcolor;
 	load_opt_sounds(sound_50_story_2_princess, sound_55_story_1_absence); // main theme, story, princess door
-	textcolor = get_text_color(15, color_15_white, 0x800);
+	textcolor = get_text_color(15, color_15_brightwhite, 0x800);
 	dont_reset_time = 0;
 	if(offscreen_surface) free_surface(offscreen_surface); // missing in original
 	offscreen_surface = make_offscreen_buffer(&screen_rect);

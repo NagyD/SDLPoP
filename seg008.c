@@ -603,7 +603,7 @@ void __pascal far draw_tile_anim() {
 	word pot_size;
 	word var_4;
 	pot_size = pot_0_small;
-	color = color_12_red; // red
+	color = color_12_brightred; // red
 	switch (curr_tile) {
 		case tiles_2_spike:
 			ptr_add_table(id_chtab_6_environment, spikes_fram_left[get_spike_frame(curr_modifier)], draw_xh, 0, draw_main_y - 2, blitters_10h_transp, 0);
@@ -616,11 +616,11 @@ void __pascal far draw_tile_anim() {
 					return; //empty
 				case 5: // hurt
 				case 6: // open
-					color = color_9_blue;
+					color = color_9_brightblue;
 					break;
 				case 3: // slow fall
 				case 4: // upside down
-					color = color_10_green;
+					color = color_10_brightgreen;
 					// fallthrough!
 				case 2: // life
 					pot_size = pot_1_big;

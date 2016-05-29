@@ -665,7 +665,7 @@ int __pascal far flash_if_hurt() {
 		do_flash_no_delay(flash_color); // don't add delay to the flash
 		return 1;
 	} else if (hitp_delta < 0) {
-		do_flash_no_delay(color_12_red); // red
+		do_flash_no_delay(color_12_brightred); // red
 		return 1;
 	}
 	return 0; // not flashed
