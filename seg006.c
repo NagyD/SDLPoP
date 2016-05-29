@@ -1620,7 +1620,7 @@ void __pascal far proc_get_object() {
 	if (pickup_obj_type == -1) {
 		have_sword = -1;
 		play_sound(sound_37_victory); // get sword
-		flash_color = color_14_yellow;
+		flash_color = color_14_brightyellow;
 		flash_time = 8;
 	} else {
 		switch (--pickup_obj_type) {
@@ -1692,7 +1692,7 @@ void __pascal far on_guard_killed() {
 		demo_index = demo_time = 0;
 	} else if (current_level == 13) {
 		// Jaffar's level: flash
-		flash_color = color_15_white; // white
+		flash_color = color_15_brightwhite; // white
 		flash_time = 18;
 		is_show_time = 1;
 		leveldoor_open = 2;
@@ -1798,7 +1798,7 @@ void __pascal far check_killed_shadow() {
 		if ((Char.charid | Opp.charid) == charid_1_shadow &&
 			Char.alive < 0 && Opp.alive >= 0
 		) {
-			flash_color = color_15_white; // white
+			flash_color = color_15_brightwhite; // white
 			flash_time = 5;
 			take_hp(100);
 		}
