@@ -31,7 +31,13 @@ extern "C" {
 #include <fcntl.h>
 #include <string.h>
 #include <sys/stat.h>
+#ifdef _MSC_VER
+#include <io.h>
+#include "unistd_win.h"
+#else
 #include <unistd.h>
+#endif
+#include <stdbool.h>
 
 #include "config.h"
 #include "types.h"

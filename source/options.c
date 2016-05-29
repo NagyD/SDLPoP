@@ -34,6 +34,7 @@ void use_default_options() {
     options.enable_replay = 1;
     options.enable_crouch_after_climbing = 1;
     options.enable_freeze_time_during_end_music = 1;
+    options.enable_remember_guard_hp = 1;
     options.fix_gate_sounds = 1;
     options.fix_two_coll_bug = 1;
     options.fix_infinite_down_bug = 1;
@@ -51,11 +52,15 @@ void use_default_options() {
     options.fix_loose_left_of_potion = 1;
     options.fix_guard_following_through_closed_gates = 1;
     options.fix_safe_landing_on_spikes = 1;
+    options.fix_glide_through_wall = 1;
+    options.fix_drop_through_tapestry = 1;
+    options.fix_land_against_gate_or_tapestry = 1;
 }
 
 void disable_fixes_and_enhancements() {
     options.enable_crouch_after_climbing = 0;
     options.enable_freeze_time_during_end_music = 0;
+    options.enable_remember_guard_hp = 0;
     options.fix_gate_sounds = 0;
     options.fix_two_coll_bug = 0;
     options.fix_infinite_down_bug = 0;
@@ -73,6 +78,9 @@ void disable_fixes_and_enhancements() {
     options.fix_loose_left_of_potion = 0;
     options.fix_guard_following_through_closed_gates = 0;
     options.fix_safe_landing_on_spikes = 0;
+    options.fix_glide_through_wall = 0;
+    options.fix_drop_through_tapestry = 0;
+    options.fix_land_against_gate_or_tapestry = 0;
 }
 
 // .ini file parser adapted from https://gist.github.com/OrangeTide/947070
@@ -231,6 +239,7 @@ static int ini_callback(const char *section, const char *name, const char *value
         }
         process_boolean("enable_crouch_after_climbing", &options.enable_crouch_after_climbing);
         process_boolean("enable_freeze_time_during_end_music", &options.enable_freeze_time_during_end_music);
+        process_boolean("enable_remember_guard_hp", &options.enable_remember_guard_hp);
         process_boolean("fix_gate_sounds", &options.fix_gate_sounds);
         process_boolean("fix_two_coll_bug", &options.fix_two_coll_bug);
         process_boolean("fix_infinite_down_bug", &options.fix_infinite_down_bug);
@@ -248,9 +257,9 @@ static int ini_callback(const char *section, const char *name, const char *value
         process_boolean("fix_loose_left_of_potion", &options.fix_loose_left_of_potion);
         process_boolean("fix_guard_following_through_closed_gates", &options.fix_guard_following_through_closed_gates);
         process_boolean("fix_safe_landing_on_spikes", &options.fix_safe_landing_on_spikes);
-        process_boolean("fix_wall_bump_triggers_tile_below", &options.fix_wall_bump_triggers_tile_below);
-        process_boolean("fix_wall_bump_triggers_tile_below", &options.fix_wall_bump_triggers_tile_below);
-        process_boolean("fix_wall_bump_triggers_tile_below", &options.fix_wall_bump_triggers_tile_below);
+        process_boolean("fix_glide_through_wall", &options.fix_glide_through_wall);
+        process_boolean("fix_drop_through_tapestry", &options.fix_drop_through_tapestry);
+        process_boolean("fix_land_against_gate_or_tapestry", &options.fix_land_against_gate_or_tapestry);
     }
 
     if (check_ini_section("CustomGameplay")) {

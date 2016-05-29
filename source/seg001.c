@@ -581,7 +581,7 @@ void __pascal far end_sequence() {
 	draw_image_2(0 /*story frame*/, chtab_title40, 0, 0, 0);
 	draw_image_2(3 /*The tyrant Jaffar*/, chtab_title40, 24, 25, get_text_color(15, color_15_white, 0x800));
 	fade_in_2(offscreen_surface, 0x800);
-	pop_wait(0, 900);
+	pop_wait(timer_0, 900);
 	start_timer(timer_0, 240);
 	draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, 0);
 	transition_ltr();
@@ -653,13 +653,13 @@ void __pascal far load_intro(int which_imgs,cutscene_ptr_type func,int free_soun
 	load_chtab_from_file(id_chtab_8_princessroom, 950, "PV.DAT", 1<<13);
 	load_chtab_from_file(id_chtab_9_princessbed, 980, "PV.DAT", 1<<14);
 	current_target_surface = offscreen_surface;
-	method_6_blit_img_to_scr(chtab_addrs[id_chtab_8_princessroom]->images[0], 0, 0, 0);
-	method_6_blit_img_to_scr(chtab_addrs[id_chtab_9_princessbed]->images[0], 0, 142, blitters_2_or);
+	method_6_blit_img_to_scr(get_image(id_chtab_8_princessroom, 0), 0, 0, 0);
+	method_6_blit_img_to_scr(get_image(id_chtab_9_princessbed, 0), 0, 142, blitters_2_or);
 	
 	// Free the images that are not needed anymore.
 	free_all_chtabs_from(id_chtab_9_princessbed);
-	SDL_FreeSurface(chtab_addrs[id_chtab_8_princessroom]->images[0]);
-	chtab_addrs[id_chtab_8_princessroom]->images[0] = NULL;
+	SDL_FreeSurface(get_image(id_chtab_8_princessroom, 0));
+	if (NULL != chtab_addrs[id_chtab_8_princessroom]) chtab_addrs[id_chtab_8_princessroom]->images[0] = NULL;
 	
 	load_chtab_from_file(id_chtab_3_princessinstory, 800, "PV.DAT", 1<<9);
 	load_chtab_from_file(id_chtab_4_jaffarinstory_princessincutscenes,
@@ -731,7 +731,7 @@ void __pascal far show_hof() {
 	// stub
 }
 
-static const char const * hof_path = "PRINCE.HOF";
+static const char* hof_path = "PRINCE.HOF";
 
 // seg001:0F17
 void __pascal far hof_write() {

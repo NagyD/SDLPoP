@@ -24,32 +24,32 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${SDLPoP_SOURCE_DIR}/..")
 #link_directories(${DIR_SDL2}/lib)
 
 set(SOURCE_FILES
-    main.c
-    common.h
-    config.h
-    data.c
-    data.h
-    proto.h
-    seg000.c
-    seg001.c
-    seg002.c
-    seg003.c
-    seg004.c
-    seg005.c
-    seg006.c
-    seg007.c
-    seg008.c
-    seg009.c
-    seqtbl.c
-    options.c
-    replay.c
-    types.h
-)
+        main.c
+        common.h
+        config.h
+        data.c
+        data.h
+        proto.h
+        seg000.c
+        seg001.c
+        seg002.c
+        seg003.c
+        seg004.c
+        seg005.c
+        seg006.c
+        seg007.c
+        seg008.c
+        seg009.c
+        seqtbl.c
+        options.c
+        replay.c
+        types.h
+        )
 add_executable(prince ${SOURCE_FILES})
 
-# @Todo: add a configuration for Mac OS X
-
-target_link_libraries(prince mingw32 SDL2main SDL2 SDL2.dll SDL2_image SDL2_mixer)
-
-
+if(WIN32)
+    target_link_libraries(prince mingw32 SDL2main SDL2 SDL2.dll SDL2_image SDL2_mixer)
+else()
+    target_link_libraries(prince SDL2main SDL2 SDL2_image SDL2_mixer)
+endif()
 
