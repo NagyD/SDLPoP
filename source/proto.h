@@ -31,6 +31,7 @@ void __pascal far load_sounds(int min_sound,int max_sound);
 void __pascal far load_opt_sounds(int first,int last);
 void __pascal far load_lev_spr(int level);
 void __pascal far load_level();
+void reset_level_unused_fields(bool loading_clean_level);
 int __pascal far play_kid_frame();
 void __pascal far play_guard_frame();
 void __pascal far check_the_end();
@@ -418,7 +419,7 @@ void __pascal far move_mob();
 void __pascal far move_loose();
 void __pascal far loose_land();
 void __pascal far loose_fall();
-void __pascal far draw_cur_mob();
+void __pascal far redraw_at_cur_mob();
 void __pascal far mob_down_a_row();
 void __pascal far draw_mobs();
 void __pascal far draw_mob();
@@ -503,6 +504,7 @@ void __pascal far erase_bottom_text(int arg_0);
 void __pascal far wall_pattern(int which_part,int which_table);
 void __pascal far draw_left_mark (word arg3, word arg2, word arg1);
 void __pascal far draw_right_mark (word arg2, word arg1);
+image_type* get_image(short chtab_id, int id);
 
 // SEG009.C
 void sdlperror(const char* header);

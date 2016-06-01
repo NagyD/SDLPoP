@@ -889,7 +889,7 @@ void __pascal far draw_back_fore(int which_table,int index) {
 	back_table_type* table_entry;
 	if (which_table == 0) {
 		table_entry = &backtable[index];
-	} else if (which_table == 1) {
+	} else /* if (which_table == 1) this is always true */ {
 		table_entry = &foretable[index];
 	}
 	image = mask = get_image(table_entry->chtab_id, table_entry->id);

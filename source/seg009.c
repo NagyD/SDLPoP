@@ -171,7 +171,7 @@ chtab_type* __pascal load_sprites_from_file(int resource,int palette_bits, int q
 	dat_shpl_type* shpl = (dat_shpl_type*) load_from_opendats_alloc(resource, "pal", NULL, NULL);
 	if (shpl == NULL) {
 		printf("Can't load sprites from resource %d.\n", resource);
-		if (quit_on_error) quit(1);
+		//if (quit_on_error) quit(1);
 		return NULL;
 	}
 	
@@ -250,14 +250,14 @@ void __pascal far decompress_rle_lr(byte far *destination,const byte far *source
 			do {
 				*(dest_pos++) = *(src_pos++);
 				--rem_length;
-			} while (--count);
+			} while (--count && rem_length);
 		} else { // repeat
 			byte al = *(src_pos++);
 			count = -count;
 			do {
 				*(dest_pos++) = al;
 				--rem_length;
-			} while (--count);
+			} while (--count && rem_length);
 		}
 	}
 }
@@ -282,7 +282,7 @@ void __pascal far decompress_rle_ud(byte far *destination,const byte far *source
 					rem_height = height;
 				}
 				--rem_length;
-			} while (--count);
+			} while (--count && rem_length);
 		} else { // repeat
 			byte al = *(src_pos++);
 			count = -count;
@@ -294,7 +294,7 @@ void __pascal far decompress_rle_ud(byte far *destination,const byte far *source
 					rem_height = height;
 				}
 				--rem_length;
-			} while (--count);
+			} while (--count && rem_length);
 		}
 	}
 }
@@ -1426,7 +1426,7 @@ size_t digi_remaining_length = 0;
 // The properties of the audio device.
 SDL_AudioSpec* digi_audiospec = NULL;
 // The desired samplerate. Everything will be resampled to this.
-const int digi_samplerate = 22050;
+const int digi_samplerate = 44100;
 
 void stop_digi() {
 #ifndef USE_MIXER
@@ -1555,9 +1555,9 @@ void init_digi() {
 	desired = (SDL_AudioSpec *)malloc(sizeof(SDL_AudioSpec));
 	memset(desired, 0, sizeof(SDL_AudioSpec));
 	desired->freq = digi_samplerate; //buffer->digi.sample_rate;
-	desired->format = AUDIO_U8;
-	desired->channels = 1;
-	desired->samples = /*4096*/ /*512*/ 256;
+	desired->format = AUDIO_S16SYS;
+	desired->channels = 2;
+	desired->samples = 1024;
 #ifndef USE_MIXER
 	desired->callback = digi_callback;
 	desired->userdata = NULL;
@@ -1586,38 +1586,46 @@ const int max_sound_id = 58;
 char** sound_names = NULL;
 
 void load_sound_names() {
-	const char const * names_path = "data/music/names.txt";
+	const char* names_path = "data/music/names.txt";
 	if (sound_names != NULL) return;
 	FILE* fp = fopen(names_path,"rt");
 	if (fp==NULL) return;
 	sound_names = (char**) calloc(sizeof(char*) * max_sound_id, 1);
 	while (!feof(fp)) {
-		int number;
+		int index;
 		char name[256];
-		if (fscanf(fp, "%d=%255s\n", &number, /*sizeof(name)-1,*/ name) != 2) {
+		if (fscanf(fp, "%d=%255s\n", &index, /*sizeof(name)-1,*/ name) != 2) {
 			perror(names_path);
 			continue;
 		}
 		//if (feof(fp)) break;
-		//printf("sound_names[%d] = %s\n",number,name);
-		if (number>=0 && number<max_sound_id) {
-			sound_names[number] = strdup(name);
+		//printf("sound_names[%d] = %s\n",index,name);
+		if (index >= 0 && index < max_sound_id) {
+			sound_names[index] = strdup(name);
 		}
 	}
 	fclose(fp);
 }
 #endif
 
+char* sound_name(int index) {
+	if (sound_names != NULL && index >= 0 && index < max_sound_id) {
+		return sound_names[index];
+	} else {
+		return NULL;
+	}
+}
+
 sound_buffer_type* load_sound(int index) {
 	sound_buffer_type* result = NULL;
 #ifdef USE_MIXER
 	//printf("load_sound(%d)\n", index);
 	init_digi();
-	if (!digi_unavailable && result == NULL && index>=0 && index<max_sound_id) {
+	if (!digi_unavailable && result == NULL && index >= 0 && index < max_sound_id) {
 		//printf("Trying to load from music folder\n");
 
 		//load_sound_names();  // Moved to load_sounds()
-		if (sound_names != NULL && sound_names[index] != NULL) {
+		if (sound_names != NULL && sound_name(index) != NULL) {
 			//printf("Loading from music folder\n");
 			const char* exts[]={"ogg","mp3","flac","wav"};
 			int i;
@@ -1626,7 +1634,7 @@ sound_buffer_type* load_sound(int index) {
 				const char* ext=exts[i];
 				struct stat info;
 
-				snprintf(filename, sizeof(filename), "data/music/%s.%s", sound_names[index], ext);
+				snprintf(filename, sizeof(filename), "data/music/%s.%s", sound_name(index), ext);
 				// Skip nonexistent files:
 				if (stat(filename, &info))
 					continue;
@@ -1645,7 +1653,7 @@ sound_buffer_type* load_sound(int index) {
 			}
 		} else {
 			//printf("sound_names = %p\n", sound_names);
-			//printf("sound_names[%d] = %p\n", index, sound_names[index]);
+			//printf("sound_names[%d] = %p\n", index, sound_name(index));
 		}
 	}
 #endif
@@ -1653,9 +1661,11 @@ sound_buffer_type* load_sound(int index) {
 		//printf("Trying to load from DAT\n");
 		result = (sound_buffer_type*) load_from_opendats_alloc(index + 10000, "bin", NULL, NULL);
 	}
+#ifdef USE_MIXER
 	if (result == NULL) {
-		fprintf(stderr, "Failed to load sound %d '%s'\n", index, sound_names[index]);
+		fprintf(stderr, "Failed to load sound %d '%s'\n", index, sound_name(index));
 	}
+#endif
 	return result;
 }
 
@@ -1802,8 +1812,8 @@ void __pascal far play_sound_from_buffer(sound_buffer_type far *buffer) {
 	// stub
 	if (buffer == NULL) {
 		printf("Tried to play NULL sound.");
-		quit(1);
-		//return;
+		//quit(1);
+		return;
 	}
 	switch (buffer->type & 3) {
 		case sound_speaker:
@@ -2177,18 +2187,49 @@ image_type far * __pascal far method_3_blit_mono(image_type far *image,int xpos,
 	return image;
 }
 
+// Workaround for a bug in SDL2 (before v2.0.4):
+// https://bugzilla.libsdl.org/show_bug.cgi?id=2986
+// SDL_FillRect onto a 24-bit surface swaps Red and Blue component
+
+bool RGB24_bug_checked = false;
+bool RGB24_bug_affected;
+
+bool RGB24_bug_check() {
+	if (!RGB24_bug_checked) {
+		// Check if the bug occurs in this version of SDL.
+		SDL_Surface* test_surface = SDL_CreateRGBSurface(0, 1, 1, 24, 0, 0, 0, 0);
+		if (NULL == test_surface) sdlperror("SDL_CreateSurface in RGB24_bug_check");
+		// Fill with red.
+		SDL_FillRect(test_surface, NULL, SDL_MapRGB(test_surface->format, 0xFF, 0, 0));
+		if (0 != SDL_LockSurface(test_surface)) sdlperror("SDL_LockSurface in RGB24_bug_check");
+		// Read red component of pixel.
+		RGB24_bug_affected = (*(Uint32*)test_surface->pixels & test_surface->format->Rmask) == 0;
+		SDL_UnlockSurface(test_surface);
+		SDL_FreeSurface(test_surface);
+		RGB24_bug_checked = true;
+	}
+	return RGB24_bug_affected;
+}
+
+int safe_SDL_FillRect(SDL_Surface* dst, const SDL_Rect* rect, Uint32 color) {
+	if (dst->format->BitsPerPixel == 24 && RGB24_bug_check()) {
+		// In the buggy version, SDL_FillRect swaps R and B, so we swap it once more.
+		color = ((color & 0xFF) << 16) | (color & 0xFF00) | ((color & 0xFF0000) >> 16);
+	}
+	return SDL_FillRect(dst, rect, color);
+}
+// End of workaround.
+
 const rect_type far * __pascal far method_5_rect(const rect_type far *rect,int blit,byte color) {
 	SDL_Rect dest_rect;
 	rect_to_sdlrect(rect, &dest_rect);
 	rgb_type palette_color = palette[color];
 #ifndef USE_ALPHA
-	// @Hack: byte order (rgb) is reversed (otherwise the color is wrong) - why doesn't this work as expected?
-	// This is a bug in SDL2: https://bugzilla.libsdl.org/show_bug.cgi?id=2986
-    uint32_t rgb_color = SDL_MapRGB(onscreen_surface_->format, palette_color.b<<2, palette_color.g<<2, palette_color.r<<2);
+    uint32_t rgb_color = SDL_MapRGB(onscreen_surface_->format, palette_color.r<<2, palette_color.g<<2, palette_color.b<<2);
 #else
 	uint32_t rgb_color = SDL_MapRGBA(current_target_surface->format, palette_color.r<<2, palette_color.g<<2, palette_color.b<<2, color == 0 ? SDL_ALPHA_TRANSPARENT : SDL_ALPHA_OPAQUE);
 #endif
-	if (SDL_FillRect(current_target_surface, &dest_rect, rgb_color) != 0) {
+	if (safe_SDL_FillRect(current_target_surface, &dest_rect, rgb_color) != 0) {
 		sdlperror("SDL_FillRect");
 		quit(1);
 	}
@@ -2255,7 +2296,8 @@ void blit_xor(SDL_Surface* target_surface, SDL_Rect* dest_rect, SDL_Surface* ima
 image_type far * __pascal far method_6_blit_img_to_scr(image_type far *image,int xpos,int ypos,int blit) {
 	if (image == NULL) {
 		printf("method_6_blit_img_to_scr: image == NULL\n");
-		quit(1);
+		//quit(1);
+		return NULL;
 	}
 
 	if (blit == blitters_9_black) {
@@ -2448,38 +2490,51 @@ void idle() {
 				if (event.jaxis.axis == 0) {
 
 					if (event.jaxis.value < -8000)
-						joy_state = -1;	// left
+						gamepad_states[0] = -1;	// left
 
 					else if (event.jaxis.value > 8000)
-						joy_state = 1; // right
+						gamepad_states[0] = 1; // right
 
 					else
-						joy_state = 0;
+						gamepad_states[0] = 0;
+				}
+
+				if (event.jaxis.axis == 1) {
+					if (event.jaxis.value < -8000)
+						gamepad_states[1] = -1; // up
+
+					else if (event.jaxis.value > 8000)
+						gamepad_states[1] = 1; // down
+
+					else
+						gamepad_states[1] = 0;
 				}
 				break;
 			case SDL_JOYHATMOTION:
 				switch (event.jhat.value)
 				{
+					case 1: gamepad_states[1] = -1; break; // up
 					case 2: gamepad_states[0] = 1; break; // right
-					case 3: gamepad_states[0] = 1; break; // right (and up)
-					case 6: gamepad_states[0] = 1; break; // right (and down)
+					case 3: gamepad_states[0] = 1; gamepad_states[1] = -1; break; // right (and up)
+					case 4: gamepad_states[1] = 1; break;	// down
+					case 6: gamepad_states[0] = 1; gamepad_states[1] = 1; break; // right (and down)
 					case 8: gamepad_states[0] = -1; break; // left
-					case 9: gamepad_states[0] = -1; break; // left (and up)
-					case 12: gamepad_states[0] = -1; break; // left (and down)
-					default: gamepad_states[0] = 0; break;
+					case 9: gamepad_states[0] = -1; gamepad_states[1] = -1; break; // left (and up)
+					case 12: gamepad_states[0] = -1; gamepad_states[1] = 1; break; // left (and down)
+					default: gamepad_states[0] = 0; gamepad_states[1] = 0;  break;
 				}
 				break;
 			case SDL_JOYBUTTONDOWN:
 				switch (event.jbutton.button)
 				{
 					case 0: gamepad_states[1] = 1; break; /*** A (down) ***/
-					case 1: quit (0); break; /*** B (quit) ***/
+					case 1: break; /*** B ***/
 					case 2: gamepad_states[2] = 1; break; /*** X (shift) ***/
 					case 3: gamepad_states[1] = -1; break; /*** Y (up) ***/
 					case 4: break; /*** left shoulder ***/
 					case 5: break; /*** right shoulder ***/
 					case 6: break; /*** back ***/
-					case 7: break; /*** start ***/
+					case 7: quit(0); break; /*** start (quit) ***/
 					case 8: break; /*** guide ***/
 					case 9: break; /*** left joystick ***/
 					case 10: break; /*** right joystick ***/
@@ -2632,12 +2687,10 @@ void __pascal far set_bg_attr(int vga_pal_index,int hc_pal_index) {
 		rect.w = offscreen_surface->w;
 		rect.h = offscreen_surface->h;
 		rgb_type palette_color = palette[hc_pal_index];
-        // @Hack: byte order is reversed (otherwise the color is wrong). Why doesn't this work as expected?
-		// This is a bug in SDL2: https://bugzilla.libsdl.org/show_bug.cgi?id=2986
-		uint32_t rgb_color = SDL_MapRGB(onscreen_surface_->format, palette_color.b<<2, palette_color.g<<2, palette_color.r<<2) /*& 0xFFFFFF*/;
+		uint32_t rgb_color = SDL_MapRGB(onscreen_surface_->format, palette_color.r<<2, palette_color.g<<2, palette_color.b<<2) /*& 0xFFFFFF*/;
 		//SDL_UpdateRect(onscreen_surface_, 0, 0, 0, 0);
 		// First clear the screen with the color of the flash.
-		if (SDL_FillRect(onscreen_surface_, &rect, rgb_color) != 0) {
+		if (safe_SDL_FillRect(onscreen_surface_, &rect, rgb_color) != 0) {
 			sdlperror("SDL_FillRect");
 			quit(1);
 		}

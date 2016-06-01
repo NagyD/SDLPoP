@@ -4,7 +4,7 @@ Name of program: SDLPoP
 Author: David from forum.princed.org (NagyD on GitHub)
 Contributors:
 * Andrew (bug reports)
-* htamas (bug reports)
+* htamas (dungeon wall drawing algorithm, bug reports)
 * Norbert (EndeavourAccuracy on GitHub) (bug reports, suggestions, improved gamepad support)
 * musa (bug reports)
 * Eugene (bug reports)
@@ -13,8 +13,10 @@ Contributors:
 * kees (bugfixes)
 * Falcury (porting to SDL2, bugfixes, improvements, additions)
 * segra (segrax on GitHub) (Joystick support, resizable window)
+* DarkPrince (bug reports)
+* Andrey Vasilkin / digi@os2.snc.ru (eComStation (OS/2) support)
 
-Topic in forum: http://forum.princed.org/viewtopic.php?f=69&t=3512
+Forum board: http://forum.princed.org/viewforum.php?f=126
 GitHub: https://github.com/NagyD/SDLPoP
 
 GENERAL
@@ -28,6 +30,15 @@ Q: Where can I download that disassembly?
 A: Here: http://forum.princed.org/viewtopic.php?f=68&t=3423
 Scroll down to the newest zip files.
 The exact version is PoP 1.0, i.e. pop1_ida.zip .
+(But I also added some features from later versions.)
+
+Sources that helped in making the disassembly:
+* Modifications to prince.exe (hex editing) topic in the POPUW forum.
+	- That forum is down, you can find some saved posts here: http://forum.princed.org/viewtopic.php?f=73&t=661
+	- HTamas posted the dungeon wall drawing algorithm in C-style pseudocode here, along with many hex-edit hacks.
+	- It was his work that prompted me to start the disassembly and later SDLPoP. Thank you!
+* PoP1 Technical Information by Mechner: http://www.popot.org/documentation.php?doc=OldDocuments
+* PoP1 Apple II source code by Mechner: https://github.com/jmechner/Prince-of-Persia-Apple-II
 
 LICENSE
 =======
@@ -42,12 +53,22 @@ A:
 Windows:
 	Double-click on the prince.exe file.
 	If you want to pass command line parameters, you need to open a command line.
+
 GNU/Linux:
 	First you have to compile the game. (See the DEVELOPING section.)
 	Then you can start the game with the
 		./prince
 	command.
 	(Or just double-click it in a file-manager.)
+
+Mac OS X:
+	See the DEVELOPING section.
+	Thanks to StaticReturn and Poirot for this!
+
+eComStation (OS/2):
+	Unofficial binaries were posted here: http://forum.princed.org/viewtopic.php?p=18431#p18431
+	Or you can compile for yourself using gcc, according to that post.
+	Thanks to digi@os2.snc.ru for the bugfixes!
 
 Q: What command-line options are there?
 A:
@@ -158,6 +179,10 @@ For example:
 Falcury released a mod, called "Secrets of the Citadel" that "has been designed to be played using a modified version of SDLPoP".
 Description and download: http://forum.princed.org/viewtopic.php?f=73&t=3664
 
+Since version 1.16, there is support for fake tiles, for example walls that the prince can go through.
+The Apoplexy level editor supports these additional tiles since v3.0: http://www.popot.org/level_editors.php?editor=apoplexy
+(Just don't overuse them, please!)
+
 REPLAYS
 =======
 
@@ -218,16 +243,20 @@ Mac OS X:
 	Get SDL2 and dependencies
 		a) Install "port" from http://www.macports.org/
 		b) sudo port install libsdl2 libsdl2_image libsdl2_mixer
+	or
+		a) Install "homebrew"
+		b) brew install libsdl2 libsdl2_image
+		c) brew install sdl2_mixer --with-libvorbis
 
 	Get development tools:
 		a) Install Xcode.
 		b) Install the "command line developer tools" by typing 'xcode-select --install' at the prompt.
-		c) Using terminal, in the root directory of SDLPOP, type: make -f Makefile.osx
+		c) Using terminal, in the root directory of SDLPOP, type: make
 
 	PLAY!
 		a) Type './prince' or './prince full'.
 		b) Hit Control-Q to quit.
 
-	Tested on OSX 10.9.5 with Xcode 6.0.1
+	Tested on OSX 10.9.5 and OSX 10.11.2.
 
 

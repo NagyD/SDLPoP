@@ -41,10 +41,42 @@ void __pascal far do_fall() {
 	}
 	if ((word)y_land[Char.curr_row + 1] > (word)Char.y) {
 		check_grab();
+
+		#ifdef FIX_GLIDE_THROUGH_WALL
+        if (options.fix_glide_through_wall) {
+			// Fix for the kid falling through walls after turning around while running (especially when weightless)
+			get_tile_at_char();
+			if (curr_tile2 == tiles_20_wall ||
+					((curr_tile2 == tiles_12_doortop || curr_tile2 == tiles_7_doortop_with_floor) &&
+					 Char.direction == dir_FF_left)
+			) {
+				Char.fall_x = 0;
+				int delta_x = distance_to_edge_weight();
+				//printf("delta_x = %d\n", delta_x);
+				// When falling into a wall or doortop after turning or running, delta_x is likely to be either 8, 11 or 12
+				// Calling in_wall() here produces the desired fix (no glitching through wall), but only when delta_x >= 10
+				// The code below "emulates" in_wall() to always get the same effect as if delta_x == 10
+				// (which distance actually looks/behaves best is a matter of preference)
+				#define delta_x_reference 10
+				if (delta_x >= 8) {
+					delta_x = -5 + delta_x - delta_x_reference;
+					Char.x = (byte) char_dx_forward(delta_x);
+				}
+			}
+        }
+        #endif
+
 	} else {
 		if (get_tile_at_char() == tiles_20_wall) {
 			in_wall();
 		}
+		#ifdef FIX_DROP_THROUGH_TAPESTRY
+		else if (options.fix_drop_through_tapestry && get_tile_at_char() == tiles_12_doortop && Char.direction == dir_FF_left) {
+			if (distance_to_edge_weight() >= 8) // only intervene if the kid is actually IN FRONT of the tapestry
+				in_wall();
+		}
+        #endif
+
 		if (tile_is_floor(curr_tile2)) {
 			land();
 		} else {
@@ -59,11 +91,28 @@ void __pascal far land() {
 	is_screaming = 0;
 	Char.y = y_land[Char.curr_row + 1];
 	if (get_tile_at_char() != tiles_2_spike) {
+
+
 		if (! tile_is_floor(get_tile_infrontof_char()) &&
 			distance_to_edge_weight() < 3
 		) {
 			Char.x = char_dx_forward(-3);
 		}
+
+        #ifdef FIX_LAND_AGAINST_GATE_OR_TAPESTRY
+		else if (options.fix_land_against_gate_or_tapestry) {
+			// A closed gate right in front of the landing spot should not behave like an open floor tile, but like a wall
+			// Similar for a tapestry tile (with floor)
+			get_tile_infrontof_char();
+			if (Char.direction == dir_FF_left && (
+							(curr_tile2 == tiles_4_gate && can_bump_into_gate()) ||
+							(curr_tile2 == tiles_7_doortop_with_floor))
+					&& distance_to_edge_weight() < 3
+			) {
+				Char.x = char_dx_forward(-3);
+			}
+		}
+		#endif
 		start_chompers();
 	} else {
 		goto loc_5EE6;

@@ -273,8 +273,8 @@ int quick_process(process_func_type process_func) {
 	return ok;
 }
 
-const char* const quick_file = "QUICKSAVE.SAV";
-const char const quick_version[] = "V1.16b4 ";
+const char* quick_file = "QUICKSAVE.SAV";
+const char quick_version[] = "V1.16b4 ";
 char quick_control[] = "........";
 
 int quick_save() {
@@ -292,6 +292,7 @@ int quick_save() {
 void restore_room_after_quick_load() {
 	int temp1 = curr_guard_color;
 	int temp2 = next_level;
+	reset_level_unused_fields(false);
 	load_lev_spr(current_level);
 	curr_guard_color = temp1;
 	next_level = temp2;
@@ -942,6 +943,33 @@ void __pascal far load_level() {
 	close_dat(dathandle);
 
 	alter_mods_allrm();
+	reset_level_unused_fields(true); // added
+}
+
+void reset_level_unused_fields(bool loading_clean_level) {
+	// Entirely unused fields in the level format: reset to zero for now
+	// They can be repurposed to add new stuff to the level format in the future
+	memset(level.roomxs, 0, sizeof(level.roomxs));
+	memset(level.roomys, 0, sizeof(level.roomys));
+	memset(level.fill_1, 0, sizeof(level.fill_1));
+	memset(level.fill_2, 0, sizeof(level.fill_2));
+	memset(level.fill_3, 0, sizeof(level.fill_3));
+
+	// For these fields, only use the bits that are actually used, and set the rest to zero.
+	// Good for repurposing the unused bits in the future.
+	int i;
+	for (i = 0; i < level.used_rooms; ++i) {
+		//level.guards_dir[i]   &= 0x01; // 1 bit in use
+		level.guards_skill[i] &= 0x0F; // 4 bits in use
+	}
+
+	// In savestates, additional information may be stored (e.g. remembered guard hp) - should not reset this then!
+	if (loading_clean_level) {
+		for (i = 0; i < level.used_rooms; ++i) {
+			level.guards_color[i] &= 0x0F; // 4 bits in use (other 4 bits repurposed as remembered guard hp)
+		}
+	}
+
 }
 
 // seg000:0EA8
@@ -1041,10 +1069,10 @@ void __pascal far check_fall_flo() {
 // seg000:1051
 void __pascal far read_joyst_control() {
 	// stub
-	if ((gamepad_states[0] == -1) || (joy_state == -1))
+	if (gamepad_states[0] == -1)
 		control_x = -1;
 	
-	if ((gamepad_states[0] == 1) || (joy_state == 1))
+	if (gamepad_states[0] == 1)
 		control_x = 1;
 
 	if (gamepad_states[1] == -1)
@@ -1062,11 +1090,11 @@ void __pascal far draw_kid_hp(short curr_hp,short max_hp) {
 	short drawn_hp_index;
 	for (drawn_hp_index = curr_hp; drawn_hp_index < max_hp; ++drawn_hp_index) {
 		// empty HP
-		method_6_blit_img_to_scr(chtab_addrs[id_chtab_2_kid]->images[217], drawn_hp_index * 7, 194, blitters_0_no_transp);
+		method_6_blit_img_to_scr(get_image(id_chtab_2_kid, 217), drawn_hp_index * 7, 194, blitters_0_no_transp);
 	}
 	for (drawn_hp_index = 0; drawn_hp_index < curr_hp; ++drawn_hp_index) {
 		// full HP
-		method_6_blit_img_to_scr(chtab_addrs[id_chtab_2_kid]->images[216], drawn_hp_index * 7, 194, blitters_0_no_transp);
+		method_6_blit_img_to_scr(get_image(id_chtab_2_kid, 216), drawn_hp_index * 7, 194, blitters_0_no_transp);
 	}
 }
 
@@ -1162,6 +1190,7 @@ byte sound_pcspeaker_exists[] = {
 void __pascal far play_sound(int sound_id) {
 	//printf("Would play sound %d\n", sound_id);
 	if (next_sound < 0 || sound_prio_table[sound_id] <= sound_prio_table[next_sound]) {
+		if (NULL == sound_pointers[sound_id]) return;
 		if (sound_pcspeaker_exists[sound_id] != 0 || sound_pointers[sound_id]->type != sound_speaker) {
 			next_sound = sound_id;
 		}
@@ -1397,30 +1426,30 @@ void __pascal far show_title() {
 	play_sound_from_buffer(sound_pointers[54]); // main theme
 	start_timer(timer_0, 0x82);
 	draw_image_2(1 /*Broderbund Software presents*/, chtab_title50, 96, 106, blitters_0_no_transp);
-	do_wait(0);
+	do_wait(timer_0);
 
 	start_timer(timer_0,0xCD);
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, &rect_titles, &rect_titles, blitters_0_no_transp);
 	draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, blitters_0_no_transp);
-	do_wait(0);
+	do_wait(timer_0);
 	
 	start_timer(timer_0,0x41);
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, &rect_titles, &rect_titles, blitters_0_no_transp);
 	draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, blitters_0_no_transp);
 	draw_image_2(2 /*a game by Jordan Mechner*/, chtab_title50, 96, 122, blitters_0_no_transp);
-	do_wait(0);
+	do_wait(timer_0);
 	
 	start_timer(timer_0,0x10E);
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, &rect_titles, &rect_titles, blitters_0_no_transp);
 	draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, blitters_0_no_transp);
-	do_wait(0);
+	do_wait(timer_0);
 	
 	start_timer(timer_0,0xEB);
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, &rect_titles, &rect_titles, blitters_0_no_transp);
 	draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, blitters_0_no_transp);
 	draw_image_2(3 /*Prince Of Persia*/, chtab_title50, 24, 107, blitters_10h_transp);
 	draw_image_2(4 /*Copyright 1990 Jordan Mechner*/, chtab_title50, 48, 184, blitters_0_no_transp);
-	do_wait(0);
+	do_wait(timer_0);
 
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, &rect_titles, &rect_titles, blitters_0_no_transp);
 	draw_image_2(0 /*story frame*/, chtab_title40, 0, 0, blitters_0_no_transp);
@@ -1452,7 +1481,7 @@ void __pascal far show_title() {
 		do_paused();
 	}
 	transition_ltr();
-	pop_wait(0, 0x78);
+	pop_wait(timer_0, 0x78);
 	draw_image_2(0 /*story frame*/, chtab_title40, 0, 0, blitters_0_no_transp);
 	draw_image_2(4 /*credits*/, chtab_title40, 24, 26, textcolor);
 	transition_ltr();
@@ -1510,6 +1539,7 @@ void __pascal far draw_image_2(int id, chtab_type* chtab_ptr, int xpos, int ypos
 	image_type* decoded_image;
 	image_type* mask;
 	mask = NULL;
+	if (NULL == chtab_ptr) return;
 	source = chtab_ptr->images[id];
 	decoded_image = source;
 	if (blit != blitters_0_no_transp && blit != blitters_10h_transp) {
@@ -1666,7 +1696,9 @@ void __pascal far load_title_images(int bgcolor) {
 			color.b = 0x00;
 			color.a = 0xFF;
 		}
-		SDL_SetPaletteColors(chtab_title40->images[0]->format->palette, &color, 14, 1);
+		if (NULL != chtab_title40) {
+			SDL_SetPaletteColors(chtab_title40->images[0]->format->palette, &color, 14, 1);
+		}
 	} else if (graphics_mode == gmEga || graphics_mode == gmTga) {
 		// ...
 	}
