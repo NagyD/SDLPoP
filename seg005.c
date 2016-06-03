@@ -115,13 +115,16 @@ void __pascal far land() {
 		#endif
 		start_chompers();
 	} else {
+		// fell on spikes
 		goto loc_5EE6;
 	}
 	if (Char.alive < 0) {
+		// alive
 		if ((distance_to_edge_weight() >= 12 &&
 			get_tile_behind_char() == tiles_2_spike) ||
 			get_tile_at_char() == tiles_2_spike
 		) {
+			// fell on spikes
 			loc_5EE6:
 			if (is_spike_harmful()) {
 				spiked();
@@ -137,6 +140,7 @@ void __pascal far land() {
 		}
 		{
 			if (Char.fall_y < 22) {
+				// fell 1 row
 				loc_5EFD:
 				if (Char.charid >= charid_2_guard || Char.sword == sword_2_drawn) {
 					Char.sword = sword_2_drawn;
@@ -149,20 +153,26 @@ void __pascal far land() {
 					is_guard_notice = 1;
 				}
 			} else if (Char.fall_y < 33) {
+				// fell 2 rows
 				if (Char.charid == charid_1_shadow) goto loc_5EFD;
 				if (Char.charid == charid_2_guard) goto loc_5F6C;
+				// kid (or skeleton (bug!))
 				if (! take_hp(1)) {
+					// still alive
 					play_sound(sound_16_medium_land); // medium land
 					is_guard_notice = 1;
 					seq_id = seq_20_medium_land; // medium land (lose 1 HP, crouch)
 				} else {
+					// dead (this was the last HP)
 					goto loc_5F75;
 				}
 			} else {
+				// fell 3 or more rows
 				goto loc_5F6C;
 			}
 		}
 	} else {
+		// dead
 		loc_5F6C:
 		take_hp(100);
 		loc_5F75:

@@ -193,7 +193,7 @@ static inline int ini_process_byte(const char* curr_name, const char* value, con
     return 0; // not the right option; should check another option_name
 }
 
-static int ini_callback(const char *section, const char *name, const char *value)
+static int global_ini_callback(const char *section, const char *name, const char *value)
 {
     //fprintf(stdout, "[%s] '%s'='%s'\n", section, name, value);
 
@@ -222,6 +222,16 @@ static int ini_callback(const char *section, const char *name, const char *value
         process_word("pop_window_width", &pop_window_width, NULL);
         process_word("pop_window_height", &pop_window_height, NULL);
         process_boolean("use_correct_aspect_ratio", &options.use_correct_aspect_ratio);
+
+        if (strcasecmp(name, "levelset") == 0) {
+            if (value[0] == '\0' || strcasecmp(value, "original") == 0 || strcasecmp(value, "default") == 0) {
+                use_custom_levelset = 0;
+            } else {
+                use_custom_levelset = 1;
+                strcpy(levelset_name, value);
+            }
+            return 1;
+        }
     }
 
     if (check_ini_section("AdditionalFeatures")) {
@@ -285,16 +295,34 @@ static int ini_callback(const char *section, const char *name, const char *value
             // TODO: warning?
         }
     }
+    return 0;
+}
 
-    #undef process_word
-    #undef process_boolean
-    #undef check_ini_section
+// Callback for a mod-specific INI configuration (that may overrule SDLPoP.ini for SOME but not all options):
+static int mod_ini_callback(const char *section, const char *name, const char *value) {
+    if (check_ini_section("Enhancements") || check_ini_section("CustomGameplay") ||
+            strncasecmp(section, "Level ", 6) == 0 ||
+            strcasecmp(name, "enable_copyprot") == 0 ||
+            strcasecmp(name, "enable_quicksave") == 0 ||
+            strcasecmp(name, "enable_quicksave_penalty") == 0 ||
+            strcasecmp(name, "enable_copyprot") == 0
+            ) {
+        global_ini_callback(section, name, value);
+    }
     return 0;
 }
 
 void load_options() {
     use_default_options();
-    ini_load("SDLPoP.ini", ini_callback);
+    ini_load("SDLPoP.ini", global_ini_callback); // global configuration
+
+    // load mod-specific INI configuration
+    if (use_custom_levelset) {
+        char filename[256];
+        snprintf(filename, sizeof(filename), "mods/%s/%s", levelset_name, "mod.ini");
+        ini_load(filename, mod_ini_callback);
+    }
+
     if (!options.use_fixes_and_enhancements) disable_fixes_and_enhancements();
 }
 

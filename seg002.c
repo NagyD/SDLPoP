@@ -1094,7 +1094,7 @@ void __pascal far autocontrol_shadow_level12() {
 	}
 	if (char_opp_dist() < 10) {
 		// unite with the shadow
-		flash_color = color_15_white; // white
+		flash_color = color_15_brightwhite; // white
 		flash_time = 18;
 		// get an extra HP for uniting the shadow
 		add_life();
