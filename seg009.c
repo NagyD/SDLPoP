@@ -2476,34 +2476,36 @@ void idle() {
 				int scancode = event.key.keysym.scancode;
 
 				if ((modifier & KMOD_ALT) &&
-					scancode == SDL_SCANCODE_RETURN) {
+					scancode == SDL_SCANCODE_RETURN &&
+					// Only if the Enter key was pressed down right now.
+					key_states[scancode] == 0) {
 					// Alt-Enter: toggle fullscreen mode
 					toggle_fullscreen();
-				} else {
-					key_states[scancode] = 1;
-					switch (scancode) {
-						// Keys that are ignored by themselves:
-						case SDL_SCANCODE_LCTRL:
-						case SDL_SCANCODE_LSHIFT:
-						case SDL_SCANCODE_LALT:
-						case SDL_SCANCODE_LGUI:
-						case SDL_SCANCODE_RCTRL:
-						case SDL_SCANCODE_RSHIFT:
-						case SDL_SCANCODE_RALT:
-						case SDL_SCANCODE_RGUI:
-						case SDL_SCANCODE_CAPSLOCK:
-						case SDL_SCANCODE_SCROLLLOCK:
-						case SDL_SCANCODE_NUMLOCKCLEAR:
-						case SDL_SCANCODE_APPLICATION:
-						case SDL_SCANCODE_PRINTSCREEN:
-						case SDL_SCANCODE_PAUSE:
-						break;
-						default:
-						last_key_scancode = scancode;
-						if (modifier & KMOD_SHIFT) last_key_scancode |= WITH_SHIFT;
-						if (modifier & KMOD_CTRL ) last_key_scancode |= WITH_CTRL ;
-						if (modifier & KMOD_ALT  ) last_key_scancode |= WITH_ALT  ;
-					}
+				}
+
+				key_states[scancode] = 1;
+				switch (scancode) {
+					// Keys that are ignored by themselves:
+					case SDL_SCANCODE_LCTRL:
+					case SDL_SCANCODE_LSHIFT:
+					case SDL_SCANCODE_LALT:
+					case SDL_SCANCODE_LGUI:
+					case SDL_SCANCODE_RCTRL:
+					case SDL_SCANCODE_RSHIFT:
+					case SDL_SCANCODE_RALT:
+					case SDL_SCANCODE_RGUI:
+					case SDL_SCANCODE_CAPSLOCK:
+					case SDL_SCANCODE_SCROLLLOCK:
+					case SDL_SCANCODE_NUMLOCKCLEAR:
+					case SDL_SCANCODE_APPLICATION:
+					case SDL_SCANCODE_PRINTSCREEN:
+					case SDL_SCANCODE_PAUSE:
+					break;
+					default:
+					last_key_scancode = scancode;
+					if (modifier & KMOD_SHIFT) last_key_scancode |= WITH_SHIFT;
+					if (modifier & KMOD_CTRL ) last_key_scancode |= WITH_CTRL ;
+					if (modifier & KMOD_ALT  ) last_key_scancode |= WITH_ALT  ;
 				}
 				break;
 			}
