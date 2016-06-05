@@ -159,6 +159,10 @@ A:
 Since version 1.02, the game supports LEVELS.DAT, and since version 1.03, the game can use all .DAT files.
 You can either copy the modified .DAT files to the folder of the game, or the game to the mod's folder.
 
+Since version 1.17, the game can also load from mod folders that have been placed in the mods/ directory.
+To choose which mod to play, open SDLPoP.ini and change the 'levelset' option to the name of the mod folder.
+If you use this method, only the files different from the original V1.0 data are required in the mod's folder.
+
 Another way is to start the game while the current directory is the mod's directory.
 You can do this from the command line, or with batch files / shell scripts.
 This is useful if you want to compare the behavior of this port and the original DOS version (to find bugs).

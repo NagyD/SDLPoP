@@ -976,11 +976,11 @@ void __pascal far load_level() {
 void reset_level_unused_fields(bool loading_clean_level) {
 	// Entirely unused fields in the level format: reset to zero for now
 	// They can be repurposed to add new stuff to the level format in the future
-	memset(level.roomxs, 0, COUNT(level.roomxs));
-	memset(level.roomys, 0, COUNT(level.roomys));
-	memset(level.fill_1, 0, COUNT(level.fill_1));
-	memset(level.fill_2, 0, COUNT(level.fill_2));
-	memset(level.fill_3, 0, COUNT(level.fill_3));
+	memset(level.roomxs, 0, sizeof(level.roomxs));
+	memset(level.roomys, 0, sizeof(level.roomys));
+	memset(level.fill_1, 0, sizeof(level.fill_1));
+	memset(level.fill_2, 0, sizeof(level.fill_2));
+	memset(level.fill_3, 0, sizeof(level.fill_3));
 
 	// For these fields, only use the bits that are actually used, and set the rest to zero.
 	// Good for repurposing the unused bits in the future.
@@ -1096,10 +1096,10 @@ void __pascal far check_fall_flo() {
 // seg000:1051
 void __pascal far read_joyst_control() {
 	// stub
-	if ((gamepad_states[0] == -1) || (joy_state == -1))
+	if (gamepad_states[0] == -1)
 		control_x = -1;
 	
-	if ((gamepad_states[0] == 1) || (joy_state == 1))
+	if (gamepad_states[0] == 1)
 		control_x = 1;
 
 	if (gamepad_states[1] == -1)
@@ -1117,11 +1117,11 @@ void __pascal far draw_kid_hp(short curr_hp,short max_hp) {
 	short drawn_hp_index;
 	for (drawn_hp_index = curr_hp; drawn_hp_index < max_hp; ++drawn_hp_index) {
 		// empty HP
-		method_6_blit_img_to_scr(chtab_addrs[id_chtab_2_kid]->images[217], drawn_hp_index * 7, 194, blitters_0_no_transp);
+		method_6_blit_img_to_scr(get_image(id_chtab_2_kid, 217), drawn_hp_index * 7, 194, blitters_0_no_transp);
 	}
 	for (drawn_hp_index = 0; drawn_hp_index < curr_hp; ++drawn_hp_index) {
 		// full HP
-		method_6_blit_img_to_scr(chtab_addrs[id_chtab_2_kid]->images[216], drawn_hp_index * 7, 194, blitters_0_no_transp);
+		method_6_blit_img_to_scr(get_image(id_chtab_2_kid, 216), drawn_hp_index * 7, 194, blitters_0_no_transp);
 	}
 }
 
@@ -1217,6 +1217,7 @@ byte sound_pcspeaker_exists[] = {
 void __pascal far play_sound(int sound_id) {
 	//printf("Would play sound %d\n", sound_id);
 	if (next_sound < 0 || sound_prio_table[sound_id] <= sound_prio_table[next_sound]) {
+		if (NULL == sound_pointers[sound_id]) return;
 		if (sound_pcspeaker_exists[sound_id] != 0 || sound_pointers[sound_id]->type != sound_speaker) {
 			next_sound = sound_id;
 		}
@@ -1438,7 +1439,7 @@ const rect_type rect_titles = {106,24,195,296};
 void __pascal far show_title() {
 	word textcolor;
 	load_opt_sounds(sound_50_story_2_princess, sound_55_story_1_absence); // main theme, story, princess door
-	textcolor = get_text_color(15, color_15_white, 0x800);
+	textcolor = get_text_color(15, color_15_brightwhite, 0x800);
 	dont_reset_time = 0;
 	if(offscreen_surface) free_surface(offscreen_surface); // missing in original
 	offscreen_surface = make_offscreen_buffer(&screen_rect);
@@ -1565,6 +1566,7 @@ void __pascal far draw_image_2(int id, chtab_type* chtab_ptr, int xpos, int ypos
 	image_type* decoded_image;
 	image_type* mask;
 	mask = NULL;
+	if (NULL == chtab_ptr) return;
 	source = chtab_ptr->images[id];
 	decoded_image = source;
 	if (blit != blitters_0_no_transp && blit != blitters_10h_transp) {
@@ -1721,7 +1723,9 @@ void __pascal far load_title_images(int bgcolor) {
 			color.b = 0x00;
 			color.a = 0xFF;
 		}
-		SDL_SetPaletteColors(chtab_title40->images[0]->format->palette, &color, 14, 1);
+		if (NULL != chtab_title40) {
+			SDL_SetPaletteColors(chtab_title40->images[0]->format->palette, &color, 14, 1);
+		}
 	} else if (graphics_mode == gmEga || graphics_mode == gmTga) {
 		// ...
 	}

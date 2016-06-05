@@ -1073,7 +1073,7 @@ void __pascal far loose_land() {
 			} else {
 				curr_room_tiles[curr_tilepos] = tiles_14_debris;
 			}
-			draw_cur_mob();
+			redraw_at_cur_mob();
 			if (tile_col != 0) {
 				set_redraw_full(curr_tilepos - 1, 1);
 			}
@@ -1089,16 +1089,17 @@ void __pascal far loose_fall() {
 	mob_down_a_row();
 	add_mob();
 	curmob = mobs[curmob_index];
-	draw_cur_mob();
+	redraw_at_cur_mob();
 }
 
 // seg007:132C
-void __pascal far draw_cur_mob() {
+void __pascal far redraw_at_cur_mob() {
 	if (curmob.room == drawn_room) {
 		redraw_height = 0x20;
 		set_redraw_full(curr_tilepos, 1);
 		set_wipe(curr_tilepos, 1);
-		if ((curr_tilepos + 1) % 10 < 10) {
+		// Redraw tile to the right only if it's in the same room.
+		if ((curr_tilepos % 10) + 1 < 10) { // changed
 			set_redraw_full(curr_tilepos + 1, 1);
 			set_wipe(curr_tilepos + 1, 1);
 		}

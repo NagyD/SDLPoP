@@ -116,7 +116,19 @@ int __pascal far pop_wait(int timer_index,int time) {
 
 // seg009:0F58
 dat_type *__pascal open_dat(const char *filename,int drive) {
-	FILE* fp = fopen(filename, "rb");
+	FILE* fp = NULL;
+	if (!use_custom_levelset) {
+		fp = fopen(filename, "rb");
+	}
+	else {
+		char filename_mod[256];
+		// before checking the root directory, first try mods/MODNAME/
+		snprintf(filename_mod, sizeof(filename_mod), "mods/%s/%s", levelset_name, filename);
+		fp = fopen(filename_mod, "rb");
+		if (fp == NULL) {
+			fp = fopen(filename, "rb");
+		}
+	}
 	dat_header_type dat_header;
 	dat_table_type* dat_table = NULL;
 
@@ -171,7 +183,7 @@ chtab_type* __pascal load_sprites_from_file(int resource,int palette_bits, int q
 	dat_shpl_type* shpl = (dat_shpl_type*) load_from_opendats_alloc(resource, "pal", NULL, NULL);
 	if (shpl == NULL) {
 		printf("Can't load sprites from resource %d.\n", resource);
-		if (quit_on_error) quit(1);
+		//if (quit_on_error) quit(1);
 		return NULL;
 	}
 	
@@ -250,14 +262,14 @@ void __pascal far decompress_rle_lr(byte far *destination,const byte far *source
 			do {
 				*(dest_pos++) = *(src_pos++);
 				--rem_length;
-			} while (--count);
+			} while (--count && rem_length);
 		} else { // repeat
 			byte al = *(src_pos++);
 			count = -count;
 			do {
 				*(dest_pos++) = al;
 				--rem_length;
-			} while (--count);
+			} while (--count && rem_length);
 		}
 	}
 }
@@ -282,7 +294,7 @@ void __pascal far decompress_rle_ud(byte far *destination,const byte far *source
 					rem_height = height;
 				}
 				--rem_length;
-			} while (--count);
+			} while (--count && rem_length);
 		} else { // repeat
 			byte al = *(src_pos++);
 			count = -count;
@@ -294,7 +306,7 @@ void __pascal far decompress_rle_ud(byte far *destination,const byte far *source
 					rem_height = height;
 				}
 				--rem_length;
-			} while (--count);
+			} while (--count && rem_length);
 		}
 	}
 }
@@ -1045,7 +1057,7 @@ int __pascal far showmessage(char far *text,int arg_4,void far *arg_0) {
 	//saved_font_ptr = current_target_surface->ptr_font;
 	//current_target_surface->ptr_font = ptr_font;
 	shrink2_rect(&rect, &copyprot_dialog->text_rect, 2, 1);
-	show_text_with_color(&rect, 0, 0, text, color_15_white);
+	show_text_with_color(&rect, 0, 0, text, color_15_brightwhite);
 	screen_updates_suspended = 0;
 	request_screen_update();
 	//textstate.ptr_font = saved_font_ptr;
@@ -1131,24 +1143,24 @@ void __pascal far dialog_method_2_frame(dialog_type *dialog) {
 	draw_rect(&rect, color_0_black);
 	// Draw shadow (right)
 	rect = (rect_type) { text_top, peel_right - shadow_right, peel_bottom, peel_right };
-	draw_rect(&rect, get_text_color(0, color_8_darkgrey /*dialog's shadow*/, 0));
+	draw_rect(&rect, get_text_color(0, color_8_darkgray /*dialog's shadow*/, 0));
 	// Draw shadow (bottom)
 	rect = (rect_type) { peel_bottom - shadow_bottom, text_left, peel_bottom, peel_right };
-	draw_rect(&rect, get_text_color(0, color_8_darkgrey /*dialog's shadow*/, 0));
+	draw_rect(&rect, get_text_color(0, color_8_darkgray /*dialog's shadow*/, 0));
 	// Draw inner border (left)
 	rect = (rect_type) { peel_top + outer_border, peel_left + outer_border, text_bottom, text_left };
-	draw_rect(&rect, color_15_white);
+	draw_rect(&rect, color_15_brightwhite);
 	// Draw inner border (top)
 	rect = (rect_type) { peel_top + outer_border, text_left, text_top, text_right + dialog->settings->right_border - outer_border };
-	draw_rect(&rect, color_15_white);
+	draw_rect(&rect, color_15_brightwhite);
 	// Draw inner border (right)
 	rect.top = text_top;
 	rect.left =  text_right;
 	rect.bottom = text_bottom + bottom_border - outer_border; 			// (rect.right stays the same)
-	draw_rect(&rect, color_15_white);
+	draw_rect(&rect, color_15_brightwhite);
 	// Draw inner border (bottom)
 	rect = (rect_type) { text_bottom, peel_left + outer_border, text_bottom + bottom_border - outer_border, text_right };
-	draw_rect(&rect, color_15_white);
+	draw_rect(&rect, color_15_brightwhite);
 }
 
 // seg009:0C44
@@ -1426,7 +1438,7 @@ size_t digi_remaining_length = 0;
 // The properties of the audio device.
 SDL_AudioSpec* digi_audiospec = NULL;
 // The desired samplerate. Everything will be resampled to this.
-const int digi_samplerate = 22050;
+const int digi_samplerate = 44100;
 
 void stop_digi() {
 #ifndef USE_MIXER
@@ -1555,9 +1567,9 @@ void init_digi() {
 	desired = (SDL_AudioSpec *)malloc(sizeof(SDL_AudioSpec));
 	memset(desired, 0, sizeof(SDL_AudioSpec));
 	desired->freq = digi_samplerate; //buffer->digi.sample_rate;
-	desired->format = AUDIO_U8;
-	desired->channels = 1;
-	desired->samples = /*4096*/ /*512*/ 256;
+	desired->format = AUDIO_S16SYS;
+	desired->channels = 2;
+	desired->samples = 1024;
 #ifndef USE_MIXER
 	desired->callback = digi_callback;
 	desired->userdata = NULL;
@@ -1592,32 +1604,40 @@ void load_sound_names() {
 	if (fp==NULL) return;
 	sound_names = (char**) calloc(sizeof(char*) * max_sound_id, 1);
 	while (!feof(fp)) {
-		int number;
+		int index;
 		char name[256];
-		if (fscanf(fp, "%d=%255s\n", &number, /*sizeof(name)-1,*/ name) != 2) {
+		if (fscanf(fp, "%d=%255s\n", &index, /*sizeof(name)-1,*/ name) != 2) {
 			perror(names_path);
 			continue;
 		}
 		//if (feof(fp)) break;
-		//printf("sound_names[%d] = %s\n",number,name);
-		if (number>=0 && number<max_sound_id) {
-			sound_names[number] = strdup(name);
+		//printf("sound_names[%d] = %s\n",index,name);
+		if (index >= 0 && index < max_sound_id) {
+			sound_names[index] = strdup(name);
 		}
 	}
 	fclose(fp);
 }
 #endif
 
+char* sound_name(int index) {
+	if (sound_names != NULL && index >= 0 && index < max_sound_id) {
+		return sound_names[index];
+	} else {
+		return NULL;
+	}
+}
+
 sound_buffer_type* load_sound(int index) {
 	sound_buffer_type* result = NULL;
 #ifdef USE_MIXER
 	//printf("load_sound(%d)\n", index);
 	init_digi();
-	if (!digi_unavailable && result == NULL && index>=0 && index<max_sound_id) {
+	if (!digi_unavailable && result == NULL && index >= 0 && index < max_sound_id) {
 		//printf("Trying to load from music folder\n");
 
 		//load_sound_names();  // Moved to load_sounds()
-		if (sound_names != NULL && sound_names[index] != NULL) {
+		if (sound_names != NULL && sound_name(index) != NULL) {
 			//printf("Loading from music folder\n");
 			const char* exts[]={"ogg","mp3","flac","wav"};
 			int i;
@@ -1626,7 +1646,7 @@ sound_buffer_type* load_sound(int index) {
 				const char* ext=exts[i];
 				struct stat info;
 
-				snprintf(filename, sizeof(filename), "data/music/%s.%s", sound_names[index], ext);
+				snprintf(filename, sizeof(filename), "data/music/%s.%s", sound_name(index), ext);
 				// Skip nonexistent files:
 				if (stat(filename, &info))
 					continue;
@@ -1645,7 +1665,7 @@ sound_buffer_type* load_sound(int index) {
 			}
 		} else {
 			//printf("sound_names = %p\n", sound_names);
-			//printf("sound_names[%d] = %p\n", index, sound_names[index]);
+			//printf("sound_names[%d] = %p\n", index, sound_name(index));
 		}
 	}
 #endif
@@ -1655,7 +1675,7 @@ sound_buffer_type* load_sound(int index) {
 	}
 #ifdef USE_MIXER
 	if (result == NULL) {
-		fprintf(stderr, "Failed to load sound %d '%s'\n", index, sound_names[index]);
+		fprintf(stderr, "Failed to load sound %d '%s'\n", index, sound_name(index));
 	}
 #endif
 	return result;
@@ -1803,9 +1823,9 @@ void free_sound(sound_buffer_type far *buffer) {
 void __pascal far play_sound_from_buffer(sound_buffer_type far *buffer) {
 	// stub
 	if (buffer == NULL) {
-		printf("Tried to play NULL sound.");
-		quit(1);
-		//return;
+		printf("Tried to play NULL sound.\n");
+		//quit(1);
+		return;
 	}
 	switch (buffer->type & 3) {
 		case sound_speaker:
@@ -1820,7 +1840,7 @@ void __pascal far play_sound_from_buffer(sound_buffer_type far *buffer) {
 		break;
 #endif
 		default:
-			printf("Tried to play unimplemented sound type %d.", buffer->type);
+			printf("Tried to play unimplemented sound type %d.\n", buffer->type);
 			quit(1);
 		break;
 	}
@@ -2019,8 +2039,21 @@ void load_from_opendats_metadata(int resource_id, const char* extension, FILE** 
 		} else {
 			// If it's a directory:
 			snprintf(image_filename,sizeof(image_filename),"data/%s/res%d.%s",pointer->filename, resource_id, extension);
-			//printf("loading (binary) %s",image_filename);
-			fp = fopen(image_filename, "rb");
+			if (!use_custom_levelset) {
+				//printf("loading (binary) %s",image_filename);
+				fp = fopen(image_filename, "rb");
+			}
+			else {
+				char image_filename_mod[256];
+				// before checking data/, first try mods/MODNAME/data/
+				snprintf(image_filename_mod, sizeof(image_filename_mod), "mods/%s/%s", levelset_name, image_filename);
+				//printf("loading (binary) %s",image_filename_mod);
+				fp = fopen(image_filename_mod, "rb");
+				if (fp == NULL) {
+					fp = fopen(image_filename, "rb");
+				}
+			}
+
 			if (fp != NULL) {
 				struct stat buf;
 				if (fstat(fileno(fp), &buf) == 0) {
@@ -2306,7 +2339,8 @@ void blit_xor(SDL_Surface* target_surface, SDL_Rect* dest_rect, SDL_Surface* ima
 image_type far * __pascal far method_6_blit_img_to_scr(image_type far *image,int xpos,int ypos,int blit) {
 	if (image == NULL) {
 		printf("method_6_blit_img_to_scr: image == NULL\n");
-		quit(1);
+		//quit(1);
+		return NULL;
 	}
 
 	if (blit == blitters_9_black) {
@@ -2505,38 +2539,51 @@ void idle() {
 				if (event.jaxis.axis == 0) {
 
 					if (event.jaxis.value < -8000)
-						joy_state = -1;	// left
+						gamepad_states[0] = -1;	// left
 
 					else if (event.jaxis.value > 8000)
-						joy_state = 1; // right
+						gamepad_states[0] = 1; // right
 
 					else
-						joy_state = 0;
+						gamepad_states[0] = 0;
+				}
+
+				if (event.jaxis.axis == 1) {
+					if (event.jaxis.value < -8000)
+						gamepad_states[1] = -1; // up
+
+					else if (event.jaxis.value > 8000)
+						gamepad_states[1] = 1; // down
+
+					else
+						gamepad_states[1] = 0;
 				}
 				break;
 			case SDL_JOYHATMOTION:
 				switch (event.jhat.value)
 				{
+					case 1: gamepad_states[1] = -1; break; // up
 					case 2: gamepad_states[0] = 1; break; // right
-					case 3: gamepad_states[0] = 1; break; // right (and up)
-					case 6: gamepad_states[0] = 1; break; // right (and down)
+					case 3: gamepad_states[0] = 1; gamepad_states[1] = -1; break; // right (and up)
+					case 4: gamepad_states[1] = 1; break;	// down
+					case 6: gamepad_states[0] = 1; gamepad_states[1] = 1; break; // right (and down)
 					case 8: gamepad_states[0] = -1; break; // left
-					case 9: gamepad_states[0] = -1; break; // left (and up)
-					case 12: gamepad_states[0] = -1; break; // left (and down)
-					default: gamepad_states[0] = 0; break;
+					case 9: gamepad_states[0] = -1; gamepad_states[1] = -1; break; // left (and up)
+					case 12: gamepad_states[0] = -1; gamepad_states[1] = 1; break; // left (and down)
+					default: gamepad_states[0] = 0; gamepad_states[1] = 0;  break;
 				}
 				break;
 			case SDL_JOYBUTTONDOWN:
 				switch (event.jbutton.button)
 				{
 					case 0: gamepad_states[1] = 1; break; /*** A (down) ***/
-					case 1: quit (0); break; /*** B (quit) ***/
+					case 1: break; /*** B ***/
 					case 2: gamepad_states[2] = 1; break; /*** X (shift) ***/
 					case 3: gamepad_states[1] = -1; break; /*** Y (up) ***/
 					case 4: break; /*** left shoulder ***/
 					case 5: break; /*** right shoulder ***/
 					case 6: break; /*** back ***/
-					case 7: break; /*** start ***/
+					case 7: quit(0); break; /*** start (quit) ***/
 					case 8: break; /*** guide ***/
 					case 9: break; /*** left joystick ***/
 					case 10: break; /*** right joystick ***/
