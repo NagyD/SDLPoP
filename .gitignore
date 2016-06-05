@@ -49,3 +49,4 @@ Makefile.win
 
 # CLion
 .idea/
+src/.idea/
