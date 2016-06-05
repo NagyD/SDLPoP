@@ -1721,9 +1721,6 @@ void __pascal far play_digi_sound(sound_buffer_type far *buffer) {
 	int sample_rate, sample_size, sample_count;
 	const byte* samples;
 	switch (version) {
-		case 0: // unknown
-			printf("Warning: Can't determine wave version.\n");
-			return;
 		case 1: // 1.0 and 1.1
 			sample_rate = buffer->digi.sample_rate;
 			sample_size = buffer->digi.sample_size;
@@ -1738,6 +1735,9 @@ void __pascal far play_digi_sound(sound_buffer_type far *buffer) {
 			break;
 		case 3: // ambiguous
 			printf("Warning: Ambiguous wave version.\n");
+			return;
+		default: // case 0, unknown
+			printf("Warning: Can't determine wave version.\n");
 			return;
 	}
 #ifndef USE_MIXER	
