@@ -2476,11 +2476,15 @@ void idle() {
 				int scancode = event.key.keysym.scancode;
 
 				if ((modifier & KMOD_ALT) &&
-					scancode == SDL_SCANCODE_RETURN &&
+					scancode == SDL_SCANCODE_RETURN) {
 					// Only if the Enter key was pressed down right now.
-					key_states[scancode] == 0) {
-					// Alt-Enter: toggle fullscreen mode
-					toggle_fullscreen();
+					if (key_states[scancode] == 0) {
+						// Alt-Enter: toggle fullscreen mode
+						toggle_fullscreen();
+					}
+					// Don't allow processing Enter when toggling fullscreen mode
+					key_states[scancode] = 1;
+					break;
 				}
 
 				key_states[scancode] = 1;
