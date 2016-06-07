@@ -55,7 +55,9 @@ The authors of this program may be contacted at http://forum.princed.org
 // Enable quicksave/load feature.
 #define USE_QUICKSAVE
 
-// Enable one-minute penalty for quickloading
+// Try to let time keep running out when quickloading. (similar to Ctrl+A)
+// Technically, the 'remaining time' is still restored, but with a penalty for elapsed time (up to 1 minute).
+// The one minute penalty will also be applied when quickloading from e.g. the title screen.
 #define USE_QUICKLOAD_PENALTY
 
 // Enable recording/replay feature.
@@ -64,12 +66,12 @@ The authors of this program may be contacted at http://forum.princed.org
 // Enable scripting feature
 #define USE_SCRIPT
 
-// Adds a way to crouch immediately after climbing up: press down and forward simultaneously
+// Adds a way to crouch immediately after climbing up: press down and forward simultaneously.
 // In the original game, this could not be done (pressing down always causes the kid to climb down).
 #define ALLOW_CROUCH_AFTER_CLIMBING
 
-// Time passes while the level ending music plays; however, this can be skipped by disabling sound.
-// This disables time passing while the ending music is playing, so you can leave sounds on.
+// Time runs out while the level ending music plays; however, the music can be skipped by disabling sound.
+// This option stops time while the ending music is playing (so there is no need to disable sound).
 #define FREEZE_TIME_DURING_END_MUSIC
 
 // Enable fake/invisible tiles feature. Tiles may look like one tiletype but behave like another.
@@ -116,7 +118,7 @@ The authors of this program may be contacted at http://forum.princed.org
 // Falling from a great height directly on top of guards does not hurt.
 #define FIX_PAINLESS_FALL_ON_GUARD
 
-// Bumping against a wall may cause a loose floor below to drop, even though it has not been touched (Trick 18, 34)
+// Bumping against a wall may cause a loose floor below to drop, even though it has not been touched. (Trick 18, 34)
 #define FIX_WALL_BUMP_TRIGGERS_TILE_BELOW
 
 // When pressing a loose tile, you can temporarily stand on thin air by standing up from crouching.
@@ -137,7 +139,7 @@ The authors of this program may be contacted at http://forum.princed.org
 // A drawing bug occurs when a loose tile is placed to the left of a potion (or sword).
 #define FIX_LOOSE_LEFT_OF_POTION
 
-// Guards may "follow" the kid to the room on the left, even though there is a closed gate in between.
+// Guards may "follow" the kid to the room on the left or right, even though there is a closed gate in between.
 #define FIX_GUARD_FOLLOWING_THROUGH_CLOSED_GATES
 
 // When landing on the edge of a spikes tile, it is considered safe. (Trick 65)

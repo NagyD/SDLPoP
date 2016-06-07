@@ -1823,7 +1823,7 @@ void free_sound(sound_buffer_type far *buffer) {
 void __pascal far play_sound_from_buffer(sound_buffer_type far *buffer) {
 	// stub
 	if (buffer == NULL) {
-		printf("Tried to play NULL sound.");
+		printf("Tried to play NULL sound.\n");
 		//quit(1);
 		return;
 	}
@@ -1840,7 +1840,7 @@ void __pascal far play_sound_from_buffer(sound_buffer_type far *buffer) {
 		break;
 #endif
 		default:
-			printf("Tried to play unimplemented sound type %d.", buffer->type);
+			printf("Tried to play unimplemented sound type %d.\n", buffer->type);
 			quit(1);
 		break;
 	}
@@ -2476,9 +2476,14 @@ void idle() {
 				int scancode = event.key.keysym.scancode;
 
 				if ((modifier & KMOD_ALT) &&
-					scancode == SDL_SCANCODE_RETURN) {
-					// Alt-Enter: toggle fullscreen mode
-					toggle_fullscreen();
+					scancode == SDL_SCANCODE_RETURN)
+				{
+					// Only if the Enter key was pressed down right now.
+					if (key_states[scancode] == 0) {
+						// Alt-Enter: toggle fullscreen mode
+						toggle_fullscreen();
+						key_states[scancode] = 1;
+					}
 				} else {
 					key_states[scancode] = 1;
 					switch (scancode) {
