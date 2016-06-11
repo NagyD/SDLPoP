@@ -50,7 +50,6 @@ void __pascal far do_fall() {
 					((curr_tile2 == tiles_12_doortop || curr_tile2 == tiles_7_doortop_with_floor) &&
 					 Char.direction == dir_FF_left)
 			) {
-				Char.fall_x = 0;
 				int delta_x = distance_to_edge_weight();
 				//printf("delta_x = %d\n", delta_x);
 				// When falling into a wall or doortop after turning or running, delta_x is likely to be either 8, 11 or 12
@@ -61,6 +60,8 @@ void __pascal far do_fall() {
 				if (delta_x >= 8) {
 					delta_x = -5 + delta_x - delta_x_reference;
 					Char.x = (byte) char_dx_forward(delta_x);
+
+					Char.fall_x = 0; // not in in_wall(), but we do need to cancel horizontal movement
 				}
 			}
         }
