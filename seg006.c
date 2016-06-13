@@ -957,6 +957,21 @@ void __pascal far check_on_floor() {
 				set_wipe(curr_tilepos, 1);
 				set_redraw_full(curr_tilepos, 1);
 			} else {
+
+#ifdef FIX_STAND_ON_THIN_AIR
+				if (options.fix_stand_on_thin_air &&
+					Char.frame >= frame_110_stand_up_from_crouch_1 && Char.frame <= frame_119_stand_up_from_crouch_10)
+				{
+					// We need to prevent the Kid from stepping off a ledge accidentally while standing up.
+					// (This can happen because the "standing up" frames now require a floor.)
+					// --> Cancel the fall, if the tile at dx=2 behind the kid is a valid floor.
+					int col = get_tile_div_mod_m7(dx_weight() + back_delta_x(2));
+					if (tile_is_floor(get_tile(Char.room, col, Char.curr_row))) {
+						return;
+					}
+				}
+#endif
+
 				start_fall();
 			}
 		}
