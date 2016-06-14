@@ -1,0 +1,77 @@
+SDLPoP built-in editor:
+~~~~~~~~~~~~~~~~~~~~~~
+
+The idea to include an editor in SDLPoP being out there heaps of editors and tools is to allow live editing of the game. It also allows developers to change defined constants in the game (changing level size) to extend it and still having a working editor to create mods.
+
+The concept is different to other editors. It is based on the game, so learning how to edit is different from other editors: users will have to learn more key codes in order to edit the levels.
+
+Keycodes
+~~~~~~~~
+
+U: Screen up.
+H: Screen left.
+J: Screen right.
+N: Screen down.
+Ctrl-A: Restart level.
+
+Shift-U: Insert screen up.
+Shift-H: Insert screen left.
+Shift-J: Insert screen right.
+Shift-N: Insert screen down.
+
+Del or Backspace: Delete guard.
+Shift-Del or Backspace: Delete room.
+Ctrl+Del or Backspace: Clean. When no tiles are selected the whole screen is cleaned.
+
+Ctrl-C: Copy. When no tiles are selected the whole screen is copied.
+Ctrl-V: Paste (the version legend is dropped in edition mode).
+Ctrl-X: Cut. When no tiles are selected the whole screen is cut.
+Ctrl-Z: Undo.
+Ctrl-Alt-Z: Redo.
+
+Q: Increment guard color.
+W: Decrement guard color.
+]: Increment guard skill.
+[: Decrement guard skill.
+Tab: Toggle guard direction.
+
+M: Show map (keep the key pressed).
+P: Toggle tile palette mode.
+Y: Set starting position to the place the kid is.
+
+MouseWheel: Scroll to change current tile. Use Alt to gain precision.
+Ctrl+MouseWheel (or horizontal scroll if available): Scroll to change current background. Use Alt to gain precision.
+Mouse left click: Put copied tile.
+Mouse right click: Copy tile.
+Shift-Mouse left click: Put/move the kid there.
+Shift-Mouse right click: Put/move a guard there.
+Ctrl-Alt-Mouse left click: Toggle door activation by selected button.
+Ctrl-Alt-Mouse right click: Select rise and drop buttons for door linking.
+Ctrl-Shift-Mouse left click: Put random tile.
+Ctrl-Shift-R: Randomize the whole screen.
+
+Alt-E: Enable/disable editor mode. Note that after disabling editor mode, cheats remain enabled, even without megahit command line.
+Alt-P: Save Palette.
+Alt-R: Revert level to latest saved version.
+Alt-S: Save level.
+
+By pressing Shift the mouse pointer indicates where the characters will be placed. Using Ctrl-Alt door linking showing features are activated: Blue tiles are not linkable, red tiles are linkable (doors and buttons), the number displayed indicates how many links this tile has.
+
+The copied message:
+
+When a single tile is copied the following text is displayed:
+COPIED FG:tile_code/extra BG:mod
+
+Where tile_code is the code of the tile (a number between 0 and 31). Extra is the high part of the tile (normally could be ignored).
+mod is the modifier, it depends on the tile.
+
+When a multiple tile block is copied the following text is displayed:
+COPIED FG:tile_code/extra+tile_code/extraPos BG:mod+mod
+same as above, but for the two tiles. Pos is where the extra tile is located: A for above, B for below, L for left and R for right.
+
+
+TODO List/known bugs:
+* Selection using the palette S8 redrawn: add image with smaller palette and modifiers below
+* Automatic decoration of room.
+* Drag rooms/groups of rooms on map
+

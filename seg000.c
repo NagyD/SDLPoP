@@ -25,11 +25,14 @@ The authors of this program may be contacted at http://forum.princed.org
 // data:009C
 word cheats_enabled = 0;
 
+#ifdef USE_EDITOR
+word editor_enabled = 0;
+word editor_active = 0;
+#endif
+
 // data:461E
 dat_type * dathandle;
 
-// data:4CE2
-word need_full_redraw;
 // data:4C08
 word need_redraw_because_flipped;
 
@@ -39,6 +42,10 @@ void far pop_main() {
 	#ifdef CHECK_SEQTABLE_MATCHES_ORIGINAL
 	check_seqtable_matches_original();
 	#endif
+
+#ifdef USE_EDITOR
+	editor_enabled = check_param("edit") != NULL;
+#endif
 
 	load_options();
 	apply_seqtbl_patches();
@@ -61,6 +68,9 @@ void far pop_main() {
 	cheats_enabled = check_param("megahit") != NULL;
 #ifdef __DEBUG__
 	cheats_enabled = 1; // debug
+#endif
+#ifdef USE_EDITOR
+	if (editor_enabled) cheats_enabled = 1;
 #endif
 	draw_mode = check_param("draw") != NULL && cheats_enabled;
 	demo_mode = check_param("demo") != NULL;
@@ -163,6 +173,9 @@ void __pascal far start_game() {
 	}
 #endif
 	if (start_level == 0) {
+#ifdef USE_EDITOR
+	editor_active = 0;
+#endif
 		show_title();
 	} else {
 		init_game(start_level);
@@ -503,8 +516,15 @@ int __pascal far process_key() {
 			need_show_text = 1;
 		break;
 		case SDL_SCANCODE_V | WITH_CTRL: // ctrl-v
+			#ifdef USE_EDITOR
+			//editor uses ctrl+v for pasting
+			if (!editor_enabled) {
+			#endif
 			answer_text = "PRINCE OF PERSIA  V1.0";
 			need_show_text = 1;
+			#ifdef USE_EDITOR
+			}
+			#endif
 		break;
 		case SDL_SCANCODE_L | WITH_SHIFT: // shift-l
 			if (current_level <= 3 || cheats_enabled) {
@@ -561,6 +581,9 @@ int __pascal far process_key() {
 #endif // USE_RECORD_REPLAY
 #endif // USE_QUICKSAVE
 	}
+#ifdef USE_EDITOR
+	editor__process_key(key,&answer_text,&need_show_text);
+#endif // USE_EDITOR
 	if (cheats_enabled) {
 		switch (key) {
 			case SDL_SCANCODE_C: // c
@@ -937,10 +960,14 @@ void __pascal far load_lev_spr(int level) {
 
 // seg000:0E6C
 void __pascal far load_level() {
+#ifdef USE_EDITOR
+	editor__loading_dat();
+#else
 	dat_type* dathandle;
 	dathandle = open_dat("LEVELS.DAT", 0);
 	load_from_opendats_to_area(current_level + 2000, &level, sizeof(level), "bin");
 	close_dat(dathandle);
+#endif
 
 	alter_mods_allrm();
 	reset_level_unused_fields(true); // added

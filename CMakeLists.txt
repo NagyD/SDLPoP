@@ -3,7 +3,7 @@ project(SDLPoP)
 
 # Use C++11 when using the C++ compiler
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -std=gnu99")
 
 if (WIN32)
     # Use the -mwindows compiler flag when compiling with MinGW to hide the console window
@@ -43,6 +43,7 @@ set(SOURCE_FILES
     seqtbl.c
     options.c
     replay.c
+    editor.c    editor.h
     types.h
 )
 add_executable(prince ${SOURCE_FILES})

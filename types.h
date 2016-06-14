@@ -194,30 +194,47 @@ typedef struct link_type {
 	byte left,right,up,down;
 } link_type;
 
-typedef struct level_type {
-	byte fg[720];
-	byte bg[720];
-	byte doorlinks1[256];
-	byte doorlinks2[256];
-	link_type roomlinks[24];
-	byte used_rooms;
-	byte roomxs[24];
-	byte roomys[24];
-	byte fill_1[15];
-	byte start_room;
-	byte start_pos;
-	sbyte start_dir;
-	byte fill_2[4];
-	byte guards_tile[24];
-	byte guards_dir[24];
-	byte guards_x[24];
-	byte guards_seq_lo[24];
-	byte guards_skill[24];
-	byte guards_seq_hi[24];
-	byte guards_color[24];
-	byte fill_3[18];
-} level_type;
+#define NUMBER_OF_DOORLINKS 256
+
+#define NUMBER_OF_ROOMS 24
+
+/* useful when you want to use the editor to extend the level to more rooms */
+#define NEW_NUMBER_OF_ROOMS 50
+
+#define DEF_LEVEL_TYPE(name,rooms) \
+typedef struct name { \
+	byte fg[rooms * 30]; \
+	byte bg[rooms * 30]; \
+	byte doorlinks1[256]; \
+	byte doorlinks2[256]; \
+	link_type roomlinks[rooms]; \
+	byte used_rooms; \
+	byte roomxs[rooms]; \
+	byte roomys[rooms]; \
+	byte fill_1[15]; \
+	byte start_room; \
+	byte start_pos; \
+	sbyte start_dir; \
+	byte fill_2[4]; \
+	byte guards_tile[rooms]; \
+	byte guards_dir[rooms]; \
+	byte guards_x[rooms]; \
+	byte guards_seq_lo[rooms]; \
+	byte guards_skill[rooms]; \
+	byte guards_seq_hi[rooms]; \
+	byte guards_color[rooms]; \
+	byte fill_3[18]; \
+} name;
+
+#ifdef USE_EDITOR
+DEF_LEVEL_TYPE(level_type,(NUMBER_OF_ROOMS+8));
+DEF_LEVEL_TYPE(level_real_type,NUMBER_OF_ROOMS);
+DEF_LEVEL_TYPE(level_extended_type,NEW_NUMBER_OF_ROOMS);
+#else
+DEF_LEVEL_TYPE(level_type,NUMBER_OF_ROOMS);
 SDL_COMPILE_TIME_ASSERT(level_size, sizeof(level_type) == 2305);
+#endif
+
 #pragma pack(pop)
 
 typedef SDL_Surface surface_type;
@@ -1073,5 +1090,20 @@ typedef union options_type {
 		byte fix_land_against_gate_or_tapestry;
 	};
 } options_type;
+
+#ifdef USE_EDITOR
+
+typedef enum {
+	k_none=0,
+	k_ctrl=1,
+	k_alt=2,
+	k_shift=4,
+	k_m=8
+} modifier_key_type;
+
+void editor__on_refresh(surface_type* screen);
+extern word editor_enabled;
+extern word editor_active;
+#endif
 
 #endif

@@ -1112,7 +1112,11 @@ void __pascal far draw_gate_fore() {
 void __pascal far alter_mods_allrm() {
 	word tilepos;
 	word room;
+#ifdef USE_EDITOR
+	for (room = 1; room <= (NUMBER_OF_ROOMS+8); room++) {
+#else
 	for (room = 1; room <= level.used_rooms; room++) {
+#endif
 		get_room_address(room);
 		room_L = level.roomlinks[room-1].left;
 		room_R = level.roomlinks[room-1].right;
@@ -1846,7 +1850,7 @@ void __pascal far wall_pattern(int which_part,int which_table) {
 	// save the state of the pseudorandom number generator
 	saved_prng_state = random_seed;
 	// set the new seed
-	random_seed = drawn_room + tbl_line[drawn_row] + drawn_col;
+	random_seed = drawn_room%24 + tbl_line[drawn_row] + drawn_col;
 	prandom(1); // fetch a random number and discard it
 	is_dungeon = (tbl_level_type[current_level] < DESIGN_PALACE);
 	if ( (!is_dungeon) && (graphics_mode== GRAPHICS_VGA) ) {

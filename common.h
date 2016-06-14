@@ -44,6 +44,10 @@ extern "C" {
 #include "proto.h"
 #include "data.h"
 
+#ifdef USE_EDITOR
+#include "editor.h"
+#endif // USE_EDITOR
+
 #ifndef MAX
 #define MAX(a,b) ((a)>(b)?(a):(b))
 #endif

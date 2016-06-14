@@ -9,7 +9,7 @@ Contributors:
 * musa (bug reports)
 * Eugene (bug reports)
 * StaticReturn (Mac OS X: Makefile (for older SDL1 version), bug reports)
-* Poirot (ecalot on GitHub) (Mac OS X: Now compatible with Falcury SDL2 port)
+* Poirot (ecalot on GitHub) (Mac OS X: Now compatible with Falcury SDL2 port; editor)
 * kees (bugfixes)
 * Falcury (porting to SDL2, bugfixes, improvements, additions)
 * segra (segrax on GitHub) (Joystick support, resizable window)
@@ -79,6 +79,7 @@ A:
 * demo -- Run in demo mode: only the first two levels will be playable, and quotes from magazine reviews will be displayed.
 * record -- Start recording immediately. (See the Replays section.)
 * replay or a *.P1R filename -- Start replaying immediately. (See the Replays section.)
+* edit -- Start in editor mode. (See Editor.txt for details.)
 
 Q: What keys can I use?
 A:
@@ -115,6 +116,7 @@ Controlling the game:
 * Alt-Enter: toggle fullscreen
 * F6: quicksave
 * F9: quickload
+* Alt-E: Enable/disable editor mode. Note that after disabling editor mode, cheats remain enabled, even without megahit command line.
 
 Viewing or recording replays:
 * Ctrl+Tab (in game): start or stop recording
@@ -186,6 +188,8 @@ Description and download: http://forum.princed.org/viewtopic.php?f=73&t=3664
 Since version 1.16, there is support for fake tiles, for example walls that the prince can go through.
 The Apoplexy level editor supports these additional tiles since v3.0: http://www.popot.org/level_editors.php?editor=apoplexy
 (Just don't overuse them, please!)
+
+Since version 1.17, running the game with the 'edit' command-line option provides a fully functional level editor. For more information check the "Editor.txt" file.
 
 REPLAYS
 =======

@@ -645,6 +645,9 @@ void __pascal far expired() {
 // seg001:0CCD
 void __pascal far load_intro(int which_imgs,cutscene_ptr_type func,int free_sounds) {
 	short current_star;
+#ifdef USE_EDITOR
+	editor_active = 0;
+#endif
 	draw_rect(&screen_rect, 0);
 	if (free_sounds) {
 		free_optional_sounds();

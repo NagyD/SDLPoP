@@ -311,6 +311,9 @@ void __pascal far redraw_screen(int drawing_different_room) {
 // - The current level if it was restarted.
 // - The next level if the level was completed.
 int __pascal far play_level_2() {
+#ifdef USE_EDITOR
+	editor_active = 1;
+#endif
 	while (1) { // main loop
 #ifdef USE_QUICKSAVE
 		check_quick_op();
