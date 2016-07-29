@@ -163,6 +163,9 @@ The authors of this program may be contacted at http://forum.princed.org
 // The kid can jump through a tapestry with a running jump to the left, if there is a floor above it.
 #define FIX_RUNNING_JUMP_THROUGH_TAPESTRY
 
+// Guards can be pushed into walls, because the game does not correctly check for walls located behind a guard.
+#define FIX_PUSH_GUARD_INTO_WALL
+
 // Debug features:
 
 // When the program starts, check whether the deobfuscated sequence table (seqtbl.c) is correct.
