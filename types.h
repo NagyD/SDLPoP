@@ -1072,6 +1072,7 @@ typedef union options_type {
 		byte fix_drop_through_tapestry;
 		byte fix_land_against_gate_or_tapestry;
 		byte fix_unintended_sword_strike;
+		byte fix_retreat_without_leaving_room;
 	};
 } options_type;
 

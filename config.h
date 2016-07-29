@@ -157,6 +157,9 @@ The authors of this program may be contacted at http://forum.princed.org
 // This especially happens when dropping down from a higher floor and then turning towards the opponent.
 #define FIX_UNINTENDED_SWORD_STRIKE
 
+// By repeatedly pressing 'back' in a swordfight, you can retreat out of a room without the room changing. (Trick 35)
+#define FIX_RETREAT_WITHOUT_LEAVING_ROOM
+
 // Debug features:
 
 // When the program starts, check whether the deobfuscated sequence table (seqtbl.c) is correct.
