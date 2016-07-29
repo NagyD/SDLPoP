@@ -1075,6 +1075,7 @@ typedef union options_type {
 		byte fix_retreat_without_leaving_room;
 		byte fix_running_jump_through_tapestry;
 		byte fix_push_guard_into_wall;
+		byte fix_jump_through_wall_above_gate;
 	};
 } options_type;
 

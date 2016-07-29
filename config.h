@@ -166,6 +166,9 @@ The authors of this program may be contacted at http://forum.princed.org
 // Guards can be pushed into walls, because the game does not correctly check for walls located behind a guard.
 #define FIX_PUSH_GUARD_INTO_WALL
 
+// By doing a running jump into a wall, you can fall behind a closed gate two floors down. (e.g. skip in Level 7)
+#define FIX_JUMP_THROUGH_WALL_ABOVE_GATE
+
 // Debug features:
 
 // When the program starts, check whether the deobfuscated sequence table (seqtbl.c) is correct.
