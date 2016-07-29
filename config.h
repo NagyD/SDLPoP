@@ -160,6 +160,9 @@ The authors of this program may be contacted at http://forum.princed.org
 // By repeatedly pressing 'back' in a swordfight, you can retreat out of a room without the room changing. (Trick 35)
 #define FIX_RETREAT_WITHOUT_LEAVING_ROOM
 
+// The kid can jump through a tapestry with a running jump to the left, if there is a floor above it.
+#define FIX_RUNNING_JUMP_THROUGH_TAPESTRY
+
 // Debug features:
 
 // When the program starts, check whether the deobfuscated sequence table (seqtbl.c) is correct.

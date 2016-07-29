@@ -57,6 +57,7 @@ void use_default_options() {
     options.fix_land_against_gate_or_tapestry = 1;
     options.fix_unintended_sword_strike = 1;
     options.fix_retreat_without_leaving_room = 1;
+    options.fix_running_jump_through_tapestry = 1;
 }
 
 void disable_fixes_and_enhancements() {
@@ -85,6 +86,7 @@ void disable_fixes_and_enhancements() {
     options.fix_land_against_gate_or_tapestry = 0;
     options.fix_unintended_sword_strike = 0;
     options.fix_retreat_without_leaving_room = 0;
+    options.fix_running_jump_through_tapestry= 0;
 }
 
 // .ini file parser adapted from https://gist.github.com/OrangeTide/947070
@@ -276,6 +278,7 @@ static int global_ini_callback(const char *section, const char *name, const char
         process_boolean("fix_land_against_gate_or_tapestry", &options.fix_land_against_gate_or_tapestry);
         process_boolean("fix_unintended_sword_strike", &options.fix_unintended_sword_strike);
         process_boolean("fix_retreat_without_leaving_room", &options.fix_retreat_without_leaving_room);
+        process_boolean("fix_running_jump_through_tapestry", &options.fix_running_jump_through_tapestry);
     }
 
     if (check_ini_section("CustomGameplay")) {
