@@ -55,6 +55,7 @@ void use_default_options() {
     options.fix_glide_through_wall = 1;
     options.fix_drop_through_tapestry = 1;
     options.fix_land_against_gate_or_tapestry = 1;
+    options.fix_unintended_sword_strike = 1;
 }
 
 void disable_fixes_and_enhancements() {
@@ -81,6 +82,7 @@ void disable_fixes_and_enhancements() {
     options.fix_glide_through_wall = 0;
     options.fix_drop_through_tapestry = 0;
     options.fix_land_against_gate_or_tapestry = 0;
+    options.fix_unintended_sword_strike = 0;
 }
 
 // .ini file parser adapted from https://gist.github.com/OrangeTide/947070
@@ -270,6 +272,7 @@ static int global_ini_callback(const char *section, const char *name, const char
         process_boolean("fix_glide_through_wall", &options.fix_glide_through_wall);
         process_boolean("fix_drop_through_tapestry", &options.fix_drop_through_tapestry);
         process_boolean("fix_land_against_gate_or_tapestry", &options.fix_land_against_gate_or_tapestry);
+        process_boolean("fix_unintended_sword_strike", &options.fix_unintended_sword_strike);
     }
 
     if (check_ini_section("CustomGameplay")) {

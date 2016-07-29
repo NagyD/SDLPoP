@@ -784,6 +784,11 @@ void __pascal far draw_sword() {
 	word seq_id;
 	seq_id = seq_55_draw_sword; // draw sword
 	control_forward = control_shift2 = release_arrows();
+#ifdef FIX_UNINTENDED_SWORD_STRIKE
+	if (options.fix_unintended_sword_strike) {
+		ctrl1_shift2 = 1; // prevent restoring control_shift2 to -1 in rest_ctrl_1()
+	}
+#endif
 	if (Char.charid == charid_0_kid) {
 		play_sound(sound_19_draw_sword); // taking out the sword
 		offguard = 0;

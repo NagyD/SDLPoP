@@ -153,6 +153,10 @@ The authors of this program may be contacted at http://forum.princed.org
 // (The game considers these tiles floor tiles; so it mistakenly assumes that no x-position adjustment is needed)
 #define FIX_LAND_AGAINST_GATE_OR_TAPESTRY
 
+// Sometimes, the kid may automatically strike immediately after drawing the sword.
+// This especially happens when dropping down from a higher floor and then turning towards the opponent.
+#define FIX_UNINTENDED_SWORD_STRIKE
+
 // Debug features:
 
 // When the program starts, check whether the deobfuscated sequence table (seqtbl.c) is correct.
