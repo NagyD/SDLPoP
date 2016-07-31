@@ -68,6 +68,20 @@ void __pascal far do_fall() {
         #endif
 
 	} else {
+
+		#ifdef FIX_JUMP_THROUGH_WALL_ABOVE_GATE
+		if (options.fix_jump_through_wall_above_gate) {
+			// At this point, Char.curr_col has not yet been updated since check_bumped()
+			// Basically, Char.curr_col is still set to the column of the wall itself (even though the kid
+			// may have 'bumped' against the wall, with Char.x being offset)
+
+			// To prevent in_wall() from being called we need to update Char.curr_col here.
+			// (in_wall() only makes things worse, because it tries to 'eject' the kid from the wall the wrong way.
+			// For this reason, the kid can end up behind a closed gate below, like is possible in Level 7)
+			determine_col();
+		}
+        #endif
+
 		if (get_tile_at_char() == tiles_20_wall) {
 			in_wall();
 		}
@@ -784,6 +798,11 @@ void __pascal far draw_sword() {
 	word seq_id;
 	seq_id = seq_55_draw_sword; // draw sword
 	control_forward = control_shift2 = release_arrows();
+#ifdef FIX_UNINTENDED_SWORD_STRIKE
+	if (options.fix_unintended_sword_strike) {
+		ctrl1_shift2 = 1; // prevent restoring control_shift2 to -1 in rest_ctrl_1()
+	}
+#endif
 	if (Char.charid == charid_0_kid) {
 		play_sound(sound_19_draw_sword); // taking out the sword
 		offguard = 0;

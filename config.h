@@ -153,6 +153,22 @@ The authors of this program may be contacted at http://forum.princed.org
 // (The game considers these tiles floor tiles; so it mistakenly assumes that no x-position adjustment is needed)
 #define FIX_LAND_AGAINST_GATE_OR_TAPESTRY
 
+// Sometimes, the kid may automatically strike immediately after drawing the sword.
+// This especially happens when dropping down from a higher floor and then turning towards the opponent.
+#define FIX_UNINTENDED_SWORD_STRIKE
+
+// By repeatedly pressing 'back' in a swordfight, you can retreat out of a room without the room changing. (Trick 35)
+#define FIX_RETREAT_WITHOUT_LEAVING_ROOM
+
+// The kid can jump through a tapestry with a running jump to the left, if there is a floor above it.
+#define FIX_RUNNING_JUMP_THROUGH_TAPESTRY
+
+// Guards can be pushed into walls, because the game does not correctly check for walls located behind a guard.
+#define FIX_PUSH_GUARD_INTO_WALL
+
+// By doing a running jump into a wall, you can fall behind a closed gate two floors down. (e.g. skip in Level 7)
+#define FIX_JUMP_THROUGH_WALL_ABOVE_GATE
+
 // Debug features:
 
 // When the program starts, check whether the deobfuscated sequence table (seqtbl.c) is correct.

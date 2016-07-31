@@ -1037,7 +1037,16 @@ void __pascal far start_fall() {
 		in_wall();
 		return;
 	}
-	if (get_tile_infrontof_char() == tiles_20_wall) {
+	int tile = get_tile_infrontof_char();
+	if (tile == tiles_20_wall
+
+		#ifdef FIX_RUNNING_JUMP_THROUGH_TAPESTRY
+		    // Also treat tapestries (when approached to the left) like a wall here.
+		|| (options.fix_running_jump_through_tapestry && Char.direction == dir_FF_left &&
+			(tile == tiles_12_doortop || tile == tiles_7_doortop_with_floor))
+        #endif
+
+			) {
 		if (fall_frame != 44 || distance_to_edge_weight() >= 6) {
 			Char.x = char_dx_forward(-1);
 		} else {
