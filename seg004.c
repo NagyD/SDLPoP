@@ -486,13 +486,18 @@ void __pascal far check_gate_push() {
 
 // seg004:08C3
 void __pascal far check_guard_bumped() {
-	short var_2;
 	if (
 		Char.action == actions_1_run_jump &&
 		Char.alive < 0 &&
 		Char.sword >= sword_2_drawn
 	) {
 		if (
+
+			#ifdef FIX_PUSH_GUARD_INTO_WALL
+            // Should also check for a wall BEHIND the guard, instead of only the current tile
+			(options.fix_push_guard_into_wall && get_tile_behind_char() == tiles_20_wall) ||
+			#endif
+
 			get_tile_at_char() == tiles_20_wall ||
 			curr_tile2 == tiles_7_doortop_with_floor ||
 			(curr_tile2 == tiles_4_gate && can_bump_into_gate()) ||
@@ -504,9 +509,10 @@ void __pascal far check_guard_bumped() {
 			load_frame_to_obj();
 			set_char_collision();
 			if (is_obstacle()) {
-				var_2 = dist_from_wall_behind(curr_tile2);
-				if (var_2 < 0 && var_2 > -13) {
-					Char.x = char_dx_forward(-var_2);
+				short delta_x;
+				delta_x = dist_from_wall_behind(curr_tile2);
+				if (delta_x < 0 && delta_x > -13) {
+					Char.x = char_dx_forward(-delta_x);
 					seqtbl_offset_char(seq_65_bump_forward_with_sword); // pushed to wall with sword (Guard)
 					play_seq();
 					load_fram_det_col();

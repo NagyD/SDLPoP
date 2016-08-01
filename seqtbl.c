@@ -1139,13 +1139,6 @@ void apply_seqtbl_patches() {
     if (options.fix_wall_bump_triggers_tile_below)
         SEQTBL_0[bumpfall + 1] = actions_3_in_midair; // instead of actions_5_bumped
 #endif
-#ifdef FIX_STAND_ON_THIN_AIR
-    // Fix tendency to fall off edges with fix applied: kid moves too far forward temporarily
-    if (options.fix_stand_on_thin_air) {
-        SEQTBL_0[standup + 11] -= 1; // dx(1) --> dx(0)
-        SEQTBL_0[standup + 16] += 1; // dx(-4) --> dx(-3)
-    }
-#endif
 }
 
 #ifdef CHECK_SEQTABLE_MATCHES_ORIGINAL

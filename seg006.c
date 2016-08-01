@@ -957,6 +957,21 @@ void __pascal far check_on_floor() {
 				set_wipe(curr_tilepos, 1);
 				set_redraw_full(curr_tilepos, 1);
 			} else {
+
+#ifdef FIX_STAND_ON_THIN_AIR
+				if (options.fix_stand_on_thin_air &&
+					Char.frame >= frame_110_stand_up_from_crouch_1 && Char.frame <= frame_119_stand_up_from_crouch_10)
+				{
+					// We need to prevent the Kid from stepping off a ledge accidentally while standing up.
+					// (This can happen because the "standing up" frames now require a floor.)
+					// --> Cancel the fall, if the tile at dx=2 behind the kid is a valid floor.
+					int col = get_tile_div_mod_m7(dx_weight() + back_delta_x(2));
+					if (tile_is_floor(get_tile(Char.room, col, Char.curr_row))) {
+						return;
+					}
+				}
+#endif
+
 				start_fall();
 			}
 		}
@@ -1022,7 +1037,16 @@ void __pascal far start_fall() {
 		in_wall();
 		return;
 	}
-	if (get_tile_infrontof_char() == tiles_20_wall) {
+	int tile = get_tile_infrontof_char();
+	if (tile == tiles_20_wall
+
+		#ifdef FIX_RUNNING_JUMP_THROUGH_TAPESTRY
+		    // Also treat tapestries (when approached to the left) like a wall here.
+		|| (options.fix_running_jump_through_tapestry && Char.direction == dir_FF_left &&
+			(tile == tiles_12_doortop || tile == tiles_7_doortop_with_floor))
+        #endif
+
+			) {
 		if (fall_frame != 44 || distance_to_edge_weight() >= 6) {
 			Char.x = char_dx_forward(-1);
 		} else {
