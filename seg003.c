@@ -345,6 +345,18 @@ int __pascal far play_level_2() {
 				}
 				screen_updates_suspended = 0;
 				remove_flash_if_hurt();
+
+				#ifdef USE_DEBUG_CHEATS
+                if (debug_cheats_enabled && is_timer_displayed) {
+					char timer_text[16];
+					snprintf(timer_text, 16, "%02d:%02d:%02d", rem_min - 1, rem_tick / 12, rem_tick % 12);
+					screen_updates_suspended = 1;
+					draw_rect(&timer_rect, color_0_black);
+					show_text(&timer_rect, -1, -1, timer_text);
+					screen_updates_suspended = 0;
+				}
+                #endif
+
 				request_screen_update(); // request screen update manually
 				do_simple_wait(1);
 			} else {
