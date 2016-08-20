@@ -456,8 +456,8 @@ int load_script(char* filename) {
     // They are linked as pointers. However, the script header file (pop_script.h) provides macros
     // that dereference those pointers, so you can still access the symbols as if they were "plain data" fields.
     tcc_add_symbol(s, "ptr_level", &level);
-    tcc_add_symbol(s, "ptr_kid", &Kid);
-    tcc_add_symbol(s, "ptr_guard", &Guard);
+    tcc_add_symbol(s, "ptr_Kid", &Kid);
+    tcc_add_symbol(s, "ptr_Guard", &Guard);
 
     // Function symbols accessible in the script:
 

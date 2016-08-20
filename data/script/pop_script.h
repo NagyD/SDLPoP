@@ -208,23 +208,6 @@ enum colorids {
     COLOR_BRIGHTWHITE = 15,
 };
 
-/*	color_0_black = 0,
-	color_1_blue = 1,
-	color_2_green = 2,
-	color_3_cyan = 3,
-	color_4_red = 4,
-	color_5_magenta = 5,
-	color_6_brown = 6,
-	color_7_lightgray = 7,
-	color_8_darkgray = 8,
-	color_9_brightblue = 9,
-	color_10_brightgreen = 10,
-	color_11_brightcyan = 11,
-	color_12_brightred = 12,
-	color_13_brightmagenta = 13,
-	color_14_brightyellow = 14,
-	color_15_brightwhite = 15,*/
-
 enum rowids {
     ROW_ABOVE  = -1,
     ROW_TOP    = 0,
@@ -310,10 +293,10 @@ void show_dialog(char* text);
 extern level_type* ptr_level;
 #define level (*ptr_level)
 
-extern char_type* ptr_kid;
-#define kid (*ptr_kid)
+extern char_type* ptr_Kid;
+#define Kid (*ptr_Kid)
 
-extern char_type* ptr_guard;
-#define guard (*ptr_guard)
+extern char_type* ptr_Guard;
+#define Guard (*ptr_Guard)
 
 #endif // POP_SCRIPT_H
