@@ -532,7 +532,7 @@ int load_script(char* filename) {
 int init_script() {
     if (!(enable_scripts && use_custom_levelset)) return 1; // only load scripts as part of mods
     char filename[256];
-    snprintf(filename, sizeof(filename), "mods/%s/%s", levelset_name, "mod.scr");
+    snprintf(filename, sizeof(filename), "mods/%s/%s", levelset_name, "mod.c");
     return load_script(filename);
 }
 
