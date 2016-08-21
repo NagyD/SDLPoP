@@ -593,6 +593,7 @@ extern word max_hitp_allowed INIT(= 10);
 extern word saving_allowed_first_level INIT(= 3);
 extern word saving_allowed_last_level INIT(= 13);
 extern byte start_upside_down INIT(= 0);
+extern byte start_in_blind_mode INIT(= 0);
 extern byte allow_triggering_any_tile INIT(= 0);
 
 #undef INIT

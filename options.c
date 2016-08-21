@@ -295,6 +295,7 @@ static int global_ini_callback(const char *section, const char *name, const char
         process_word("saving_allowed_first_level", &saving_allowed_first_level, NULL);
         process_word("saving_allowed_last_level", &saving_allowed_last_level, NULL);
         process_boolean("start_upside_down", &start_upside_down);
+        process_boolean("start_in_blind_mode", &start_in_blind_mode);
         process_boolean("allow_triggering_any_tile", &allow_triggering_any_tile);
     }
 
@@ -340,6 +341,10 @@ void load_options() {
     }
 
     if (!options.use_fixes_and_enhancements) disable_fixes_and_enhancements();
+
+    // CusPop option
+    is_blind_mode = start_in_blind_mode;
+    // Bug: with start_in_blind_mode enabled, moving objects are not displayed until blind mode is toggled off+on??
 }
 
 void show_use_fixes_and_enhancements_prompt() {
