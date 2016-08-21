@@ -311,6 +311,8 @@ static int global_ini_callback(const char *section, const char *name, const char
         process_byte("drawn_tile_left_level_edge", &drawn_tile_left_level_edge, &tile_type_names_list);
         process_byte("level_edge_hit_tile", &level_edge_hit_tile, &tile_type_names_list);
         process_boolean("allow_triggering_any_tile", &allow_triggering_any_tile);
+        // TODO: Maybe allow automatically choosing the correct WDA, depending on the loaded VDUNGEON.DAT?
+		process_boolean("enable_wda_in_palace", &enable_wda_in_palace);
     }
 
     // [Level 1], etc.

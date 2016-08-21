@@ -598,6 +598,7 @@ extern byte drawn_tile_top_level_edge INIT(= tiles_1_floor);
 extern byte drawn_tile_left_level_edge INIT(= tiles_20_wall);
 extern byte level_edge_hit_tile INIT(= tiles_20_wall);
 extern byte allow_triggering_any_tile INIT(= 0);
+extern byte enable_wda_in_palace INIT(= 0);
 
 #undef INIT
 #undef extern
