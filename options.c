@@ -296,6 +296,7 @@ static int global_ini_callback(const char *section, const char *name, const char
         process_word("saving_allowed_last_level", &saving_allowed_last_level, NULL);
         process_boolean("start_upside_down", &start_upside_down);
         process_boolean("start_in_blind_mode", &start_in_blind_mode);
+        process_word("copyprot_level", &copyprot_level, NULL);
         process_boolean("allow_triggering_any_tile", &allow_triggering_any_tile);
     }
 
