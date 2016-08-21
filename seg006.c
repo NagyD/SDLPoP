@@ -37,7 +37,7 @@ int __pascal far get_tile(int room,int col,int row) {
 		curr_tile2 = curr_room_tiles[curr_tilepos] & 0x1F;
 	} else {
 		// wall in room 0
-		curr_tile2 = tiles_20_wall;
+		curr_tile2 = level_edge_hit_tile; // tiles_20_wall
 	}
 	return curr_tile2;
 }

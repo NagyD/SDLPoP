@@ -341,7 +341,7 @@ void __pascal far load_curr_and_left_tile() {
 	word tiletype;
 	tiletype = tiles_20_wall;
 	if (drawn_row == 2) {
-		tiletype = tiles_1_floor; // floor at top of level
+		tiletype = drawn_tile_top_level_edge; // floor at top of level (default: tiles_1_floor)
 	}
 	get_tile_to_draw(drawn_room, drawn_col, drawn_row, &curr_tile, &curr_modifier, tiletype);
 	get_tile_to_draw(drawn_room, drawn_col - 1, drawn_row, &tile_left, &modifier_left, tiletype);
@@ -353,8 +353,8 @@ void __pascal far load_leftroom() {
 	word row;
 	get_room_address(room_L);
 	for (row = 0; row < 3; ++row) {
-		// wall at left of level
-		get_tile_to_draw(room_L, 9, row, &leftroom_[row].tiletype, &leftroom_[row].modifier, tiles_20_wall);
+		// wall at left of level (drawn_tile_left_level_edge), default: tiles_20_wall
+		get_tile_to_draw(room_L, 9, row, &leftroom_[row].tiletype, &leftroom_[row].modifier, drawn_tile_left_level_edge);
 	}
 }
 
