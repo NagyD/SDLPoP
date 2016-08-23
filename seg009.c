@@ -104,6 +104,13 @@ const char* __pascal far check_param(const char *param) {
 
 		char* curr_arg = g_argv[arg_index];
 
+		// Filenames (e.g. replays) should never be a valid 'normal' param so we should skip these to prevent conflicts.
+		// We can lazily distinguish filenames from non-filenames by checking whether they have a dot in them.
+		// (Assumption: all relevant files, e.g. replay files, have some file extension anyway)
+		if (strchr(curr_arg, '.') != NULL) {
+			continue;
+		}
+
 		// List of params that expect a specifier ('sub-') arg directly after it (e.g. the mod's name, after "mod" arg)
 		// Such sub-args may conflict with the normal params (so, we should 'skip over' them)
 		static const char params_with_one_subparam[][8] = { "mod", /*...*/ };
