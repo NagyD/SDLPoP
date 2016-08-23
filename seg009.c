@@ -101,11 +101,35 @@ const char* __pascal far check_param(const char *param) {
 	// stub
 	short arg_index;
 	for (arg_index = 1; arg_index < g_argc; ++arg_index) {
-		if (/*strnicmp*/strncasecmp(g_argv[arg_index], param, strlen(param)) == 0) {
+
+		char* curr_arg = g_argv[arg_index];
+
+		// List of params that expect a specifier ('sub-') arg directly after it (e.g. the mod's name, after "mod" arg)
+		// Such sub-args may conflict with the normal params (so, we should 'skip over' them)
+		static const char params_with_one_subparam[][8] = { "mod", /*...*/ };
+
+		bool curr_arg_has_one_subparam = false;
+		int i;
+		for (i = 0; i < COUNT(params_with_one_subparam); ++i) {
+			if (strncasecmp(curr_arg, params_with_one_subparam[i], strlen(params_with_one_subparam[i])) == 0) {
+				curr_arg_has_one_subparam = true;
+				break;
+			}
+		}
+
+		if (curr_arg_has_one_subparam) {
+			// Found an arg that has one sub-param, so we want to:
+			// 1: skip over the next arg                (if we are NOT checking for this specific param)
+			// 2: return a pointer below to the SUB-arg (if we ARE checking for this specific param)
+			++arg_index;
+			if (!(arg_index < g_argc)) return NULL; // not enough arguments
+		}
+
+		if (/*strnicmp*/strncasecmp(curr_arg, param, strlen(param)) == 0) {
 			return g_argv[arg_index];
 		}
 	}
-	return 0;
+	return NULL;
 }
 
 // seg009:0EDF
