@@ -593,7 +593,13 @@ extern word start_hitp INIT(= 3);
 extern word max_hitp_allowed INIT(= 10);
 extern word saving_allowed_first_level INIT(= 3);
 extern word saving_allowed_last_level INIT(= 13);
+extern byte start_upside_down INIT(= 0);
+extern byte start_in_blind_mode INIT(= 0);
+extern byte drawn_tile_top_level_edge INIT(= tiles_1_floor);
+extern byte drawn_tile_left_level_edge INIT(= tiles_20_wall);
+extern byte level_edge_hit_tile INIT(= tiles_20_wall);
 extern byte allow_triggering_any_tile INIT(= 0);
+extern byte enable_wda_in_palace INIT(= 0);
 
 #ifdef USE_DEBUG_CHEATS
 extern byte debug_cheats_enabled INIT(= 0);

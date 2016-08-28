@@ -341,7 +341,7 @@ void __pascal far load_curr_and_left_tile() {
 	word tiletype;
 	tiletype = tiles_20_wall;
 	if (drawn_row == 2) {
-		tiletype = tiles_1_floor; // floor at top of level
+		tiletype = drawn_tile_top_level_edge; // floor at top of level (default: tiles_1_floor)
 	}
 	get_tile_to_draw(drawn_room, drawn_col, drawn_row, &curr_tile, &curr_modifier, tiletype);
 	get_tile_to_draw(drawn_room, drawn_col - 1, drawn_row, &tile_left, &modifier_left, tiletype);
@@ -353,8 +353,8 @@ void __pascal far load_leftroom() {
 	word row;
 	get_room_address(room_L);
 	for (row = 0; row < 3; ++row) {
-		// wall at left of level
-		get_tile_to_draw(room_L, 9, row, &leftroom_[row].tiletype, &leftroom_[row].modifier, tiles_20_wall);
+		// wall at left of level (drawn_tile_left_level_edge), default: tiles_20_wall
+		get_tile_to_draw(room_L, 9, row, &leftroom_[row].tiletype, &leftroom_[row].modifier, drawn_tile_left_level_edge);
 	}
 }
 
@@ -538,7 +538,7 @@ void __pascal far draw_tile_bottom(word arg_0) {
 	chtab_id = id_chtab_6_environment;
 	switch (curr_tile) {
 		case tiles_20_wall:
-			if (tbl_level_type[current_level] == 0 || graphics_mode != gmMcgaVga) {
+			if (tbl_level_type[current_level] == 0 || enable_wda_in_palace || graphics_mode != gmMcgaVga) {
 				id = wall_fram_bottom[curr_modifier & 0x7F];
 			}
 			chtab_id = id_chtab_7_environmentwall;
@@ -667,7 +667,7 @@ void __pascal far draw_tile_fore() {
 			}
 			break;
 		case tiles_20_wall:
-			if (tbl_level_type[current_level] == 0 || graphics_mode != gmMcgaVga) {
+			if (tbl_level_type[current_level] == 0 || enable_wda_in_palace || graphics_mode != gmMcgaVga) {
 				add_foretable(id_chtab_7_environmentwall, wall_fram_main[curr_modifier & 0x7F], draw_xh, 0, draw_main_y, blitters_0_no_transp, 0);
 			}
 			if (graphics_mode != gmCga && graphics_mode != gmHgaHerc) {
@@ -1846,7 +1846,7 @@ void __pascal far wall_pattern(int which_part,int which_table) {
 	// set the new seed
 	random_seed = drawn_room + tbl_line[drawn_row] + drawn_col;
 	prandom(1); // fetch a random number and discard it
-	is_dungeon = (tbl_level_type[current_level] < DESIGN_PALACE);
+	is_dungeon = (tbl_level_type[current_level] < DESIGN_PALACE) || enable_wda_in_palace;
 	if ( (!is_dungeon) && (graphics_mode== GRAPHICS_VGA) ) {
 		// I haven't traced the palace WDA
 		//[...]

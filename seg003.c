@@ -35,7 +35,7 @@ void __pascal far init_game(int level) {
 	text_time_total = 0;
 	is_show_time = 0;
 	checkpoint = 0;
-	upside_down = 0;
+	upside_down = 0; // N.B. upside_down is also reset in set_start_pos()
 	resurrect_time = 0;
 	if (!dont_reset_time) {
 		rem_min = start_minutes_left; 	// 60
@@ -195,7 +195,7 @@ void __pascal far set_start_pos() {
 	Char.charid = charid_0_kid;
 	is_screaming = 0;
 	knock = 0;
-	upside_down = 0;
+	upside_down = start_upside_down; // 0
 	is_feather_fall = 0;
 	Char.fall_y = 0;
 	Char.fall_x = 0;
