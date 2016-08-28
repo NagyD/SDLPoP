@@ -101,11 +101,42 @@ const char* __pascal far check_param(const char *param) {
 	// stub
 	short arg_index;
 	for (arg_index = 1; arg_index < g_argc; ++arg_index) {
-		if (/*strnicmp*/strncasecmp(g_argv[arg_index], param, strlen(param)) == 0) {
+
+		char* curr_arg = g_argv[arg_index];
+
+		// Filenames (e.g. replays) should never be a valid 'normal' param so we should skip these to prevent conflicts.
+		// We can lazily distinguish filenames from non-filenames by checking whether they have a dot in them.
+		// (Assumption: all relevant files, e.g. replay files, have some file extension anyway)
+		if (strchr(curr_arg, '.') != NULL) {
+			continue;
+		}
+
+		// List of params that expect a specifier ('sub-') arg directly after it (e.g. the mod's name, after "mod" arg)
+		// Such sub-args may conflict with the normal params (so, we should 'skip over' them)
+		static const char params_with_one_subparam[][8] = { "mod", /*...*/ };
+
+		bool curr_arg_has_one_subparam = false;
+		int i;
+		for (i = 0; i < COUNT(params_with_one_subparam); ++i) {
+			if (strncasecmp(curr_arg, params_with_one_subparam[i], strlen(params_with_one_subparam[i])) == 0) {
+				curr_arg_has_one_subparam = true;
+				break;
+			}
+		}
+
+		if (curr_arg_has_one_subparam) {
+			// Found an arg that has one sub-param, so we want to:
+			// 1: skip over the next arg                (if we are NOT checking for this specific param)
+			// 2: return a pointer below to the SUB-arg (if we ARE checking for this specific param)
+			++arg_index;
+			if (!(arg_index < g_argc)) return NULL; // not enough arguments
+		}
+
+		if (/*strnicmp*/strncasecmp(curr_arg, param, strlen(param)) == 0) {
 			return g_argv[arg_index];
 		}
 	}
-	return 0;
+	return NULL;
 }
 
 // seg009:0EDF
@@ -116,7 +147,19 @@ int __pascal far pop_wait(int timer_index,int time) {
 
 // seg009:0F58
 dat_type *__pascal open_dat(const char *filename,int drive) {
-	FILE* fp = fopen(filename, "rb");
+	FILE* fp = NULL;
+	if (!use_custom_levelset) {
+		fp = fopen(filename, "rb");
+	}
+	else {
+		char filename_mod[256];
+		// before checking the root directory, first try mods/MODNAME/
+		snprintf(filename_mod, sizeof(filename_mod), "mods/%s/%s", levelset_name, filename);
+		fp = fopen(filename_mod, "rb");
+		if (fp == NULL) {
+			fp = fopen(filename, "rb");
+		}
+	}
 	dat_header_type dat_header;
 	dat_table_type* dat_table = NULL;
 
@@ -1045,7 +1088,7 @@ int __pascal far showmessage(char far *text,int arg_4,void far *arg_0) {
 	//saved_font_ptr = current_target_surface->ptr_font;
 	//current_target_surface->ptr_font = ptr_font;
 	shrink2_rect(&rect, &copyprot_dialog->text_rect, 2, 1);
-	show_text_with_color(&rect, 0, 0, text, color_15_white);
+	show_text_with_color(&rect, 0, 0, text, color_15_brightwhite);
 	screen_updates_suspended = 0;
 	request_screen_update();
 	//textstate.ptr_font = saved_font_ptr;
@@ -1131,24 +1174,24 @@ void __pascal far dialog_method_2_frame(dialog_type *dialog) {
 	draw_rect(&rect, color_0_black);
 	// Draw shadow (right)
 	rect = (rect_type) { text_top, peel_right - shadow_right, peel_bottom, peel_right };
-	draw_rect(&rect, get_text_color(0, color_8_darkgrey /*dialog's shadow*/, 0));
+	draw_rect(&rect, get_text_color(0, color_8_darkgray /*dialog's shadow*/, 0));
 	// Draw shadow (bottom)
 	rect = (rect_type) { peel_bottom - shadow_bottom, text_left, peel_bottom, peel_right };
-	draw_rect(&rect, get_text_color(0, color_8_darkgrey /*dialog's shadow*/, 0));
+	draw_rect(&rect, get_text_color(0, color_8_darkgray /*dialog's shadow*/, 0));
 	// Draw inner border (left)
 	rect = (rect_type) { peel_top + outer_border, peel_left + outer_border, text_bottom, text_left };
-	draw_rect(&rect, color_15_white);
+	draw_rect(&rect, color_15_brightwhite);
 	// Draw inner border (top)
 	rect = (rect_type) { peel_top + outer_border, text_left, text_top, text_right + dialog->settings->right_border - outer_border };
-	draw_rect(&rect, color_15_white);
+	draw_rect(&rect, color_15_brightwhite);
 	// Draw inner border (right)
 	rect.top = text_top;
 	rect.left =  text_right;
 	rect.bottom = text_bottom + bottom_border - outer_border; 			// (rect.right stays the same)
-	draw_rect(&rect, color_15_white);
+	draw_rect(&rect, color_15_brightwhite);
 	// Draw inner border (bottom)
 	rect = (rect_type) { text_bottom, peel_left + outer_border, text_bottom + bottom_border - outer_border, text_right };
-	draw_rect(&rect, color_15_white);
+	draw_rect(&rect, color_15_brightwhite);
 }
 
 // seg009:0C44
@@ -1709,9 +1752,6 @@ void __pascal far play_digi_sound(sound_buffer_type far *buffer) {
 	int sample_rate, sample_size, sample_count;
 	const byte* samples;
 	switch (version) {
-		case 0: // unknown
-			printf("Warning: Can't determine wave version.\n");
-			return;
 		case 1: // 1.0 and 1.1
 			sample_rate = buffer->digi.sample_rate;
 			sample_size = buffer->digi.sample_size;
@@ -1726,6 +1766,9 @@ void __pascal far play_digi_sound(sound_buffer_type far *buffer) {
 			break;
 		case 3: // ambiguous
 			printf("Warning: Ambiguous wave version.\n");
+			return;
+		default: // case 0, unknown
+			printf("Warning: Can't determine wave version.\n");
 			return;
 	}
 #ifndef USE_MIXER	
@@ -1811,7 +1854,7 @@ void free_sound(sound_buffer_type far *buffer) {
 void __pascal far play_sound_from_buffer(sound_buffer_type far *buffer) {
 	// stub
 	if (buffer == NULL) {
-		printf("Tried to play NULL sound.");
+		printf("Tried to play NULL sound.\n");
 		//quit(1);
 		return;
 	}
@@ -1828,7 +1871,7 @@ void __pascal far play_sound_from_buffer(sound_buffer_type far *buffer) {
 		break;
 #endif
 		default:
-			printf("Tried to play unimplemented sound type %d.", buffer->type);
+			printf("Tried to play unimplemented sound type %d.\n", buffer->type);
 			quit(1);
 		break;
 	}
@@ -2009,8 +2052,21 @@ void load_from_opendats_metadata(int resource_id, const char* extension, FILE** 
 		} else {
 			// If it's a directory:
 			snprintf(image_filename,sizeof(image_filename),"data/%s/res%d.%s",pointer->filename, resource_id, extension);
-			//printf("loading (binary) %s",image_filename);
-			fp = fopen(image_filename, "rb");
+			if (!use_custom_levelset) {
+				//printf("loading (binary) %s",image_filename);
+				fp = fopen(image_filename, "rb");
+			}
+			else {
+				char image_filename_mod[256];
+				// before checking data/, first try mods/MODNAME/data/
+				snprintf(image_filename_mod, sizeof(image_filename_mod), "mods/%s/%s", levelset_name, image_filename);
+				//printf("loading (binary) %s",image_filename_mod);
+				fp = fopen(image_filename_mod, "rb");
+				if (fp == NULL) {
+					fp = fopen(image_filename, "rb");
+				}
+			}
+
 			if (fp != NULL) {
 				struct stat buf;
 				if (fstat(fileno(fp), &buf) == 0) {
@@ -2451,9 +2507,14 @@ void idle() {
 				int scancode = event.key.keysym.scancode;
 
 				if ((modifier & KMOD_ALT) &&
-					scancode == SDL_SCANCODE_RETURN) {
-					// Alt-Enter: toggle fullscreen mode
-					toggle_fullscreen();
+					scancode == SDL_SCANCODE_RETURN)
+				{
+					// Only if the Enter key was pressed down right now.
+					if (key_states[scancode] == 0) {
+						// Alt-Enter: toggle fullscreen mode
+						toggle_fullscreen();
+						key_states[scancode] = 1;
+					}
 				} else {
 					key_states[scancode] = 1;
 					switch (scancode) {

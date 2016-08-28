@@ -50,7 +50,6 @@ void __pascal far do_fall() {
 					((curr_tile2 == tiles_12_doortop || curr_tile2 == tiles_7_doortop_with_floor) &&
 					 Char.direction == dir_FF_left)
 			) {
-				Char.fall_x = 0;
 				int delta_x = distance_to_edge_weight();
 				//printf("delta_x = %d\n", delta_x);
 				// When falling into a wall or doortop after turning or running, delta_x is likely to be either 8, 11 or 12
@@ -61,12 +60,28 @@ void __pascal far do_fall() {
 				if (delta_x >= 8) {
 					delta_x = -5 + delta_x - delta_x_reference;
 					Char.x = (byte) char_dx_forward(delta_x);
+
+					Char.fall_x = 0; // not in in_wall(), but we do need to cancel horizontal movement
 				}
 			}
         }
         #endif
 
 	} else {
+
+		#ifdef FIX_JUMP_THROUGH_WALL_ABOVE_GATE
+		if (options.fix_jump_through_wall_above_gate) {
+			// At this point, Char.curr_col has not yet been updated since check_bumped()
+			// Basically, Char.curr_col is still set to the column of the wall itself (even though the kid
+			// may have 'bumped' against the wall, with Char.x being offset)
+
+			// To prevent in_wall() from being called we need to update Char.curr_col here.
+			// (in_wall() only makes things worse, because it tries to 'eject' the kid from the wall the wrong way.
+			// For this reason, the kid can end up behind a closed gate below, like is possible in Level 7)
+			determine_col();
+		}
+        #endif
+
 		if (get_tile_at_char() == tiles_20_wall) {
 			in_wall();
 		}
@@ -115,13 +130,16 @@ void __pascal far land() {
 		#endif
 		start_chompers();
 	} else {
+		// fell on spikes
 		goto loc_5EE6;
 	}
 	if (Char.alive < 0) {
+		// alive
 		if ((distance_to_edge_weight() >= 12 &&
 			get_tile_behind_char() == tiles_2_spike) ||
 			get_tile_at_char() == tiles_2_spike
 		) {
+			// fell on spikes
 			loc_5EE6:
 			if (is_spike_harmful()) {
 				spiked();
@@ -137,6 +155,7 @@ void __pascal far land() {
 		}
 		{
 			if (Char.fall_y < 22) {
+				// fell 1 row
 				loc_5EFD:
 				if (Char.charid >= charid_2_guard || Char.sword == sword_2_drawn) {
 					Char.sword = sword_2_drawn;
@@ -149,20 +168,26 @@ void __pascal far land() {
 					is_guard_notice = 1;
 				}
 			} else if (Char.fall_y < 33) {
+				// fell 2 rows
 				if (Char.charid == charid_1_shadow) goto loc_5EFD;
 				if (Char.charid == charid_2_guard) goto loc_5F6C;
+				// kid (or skeleton (bug!))
 				if (! take_hp(1)) {
+					// still alive
 					play_sound(sound_16_medium_land); // medium land
 					is_guard_notice = 1;
 					seq_id = seq_20_medium_land; // medium land (lose 1 HP, crouch)
 				} else {
+					// dead (this was the last HP)
 					goto loc_5F75;
 				}
 			} else {
+				// fell 3 or more rows
 				goto loc_5F6C;
 			}
 		}
 	} else {
+		// dead
 		loc_5F6C:
 		take_hp(100);
 		loc_5F75:
@@ -773,6 +798,11 @@ void __pascal far draw_sword() {
 	word seq_id;
 	seq_id = seq_55_draw_sword; // draw sword
 	control_forward = control_shift2 = release_arrows();
+#ifdef FIX_UNINTENDED_SWORD_STRIKE
+	if (options.fix_unintended_sword_strike) {
+		ctrl1_shift2 = 1; // prevent restoring control_shift2 to -1 in rest_ctrl_1()
+	}
+#endif
 	if (Char.charid == charid_0_kid) {
 		play_sound(sound_19_draw_sword); // taking out the sword
 		offguard = 0;

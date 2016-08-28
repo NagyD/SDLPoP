@@ -35,7 +35,7 @@ void __pascal far init_game(int level) {
 	text_time_total = 0;
 	is_show_time = 0;
 	checkpoint = 0;
-	upside_down = 0;
+	upside_down = 0; // N.B. upside_down is also reset in set_start_pos()
 	resurrect_time = 0;
 	if (!dont_reset_time) {
 		rem_min = start_minutes_left; 	// 60
@@ -82,7 +82,7 @@ void __pascal far play_level(int level_number) {
 		}
 		if (level_number != current_level) {
 			if (level_number <0 || level_number >15) {
-				printf("Tried to load cutscene for level %d, not in 0..15", level_number);
+				printf("Tried to load cutscene for level %d, not in 0..15\n", level_number);
 				quit(1);
 			}
 			cutscene_func = tbl_cutscenes[level_number];
@@ -195,7 +195,7 @@ void __pascal far set_start_pos() {
 	Char.charid = charid_0_kid;
 	is_screaming = 0;
 	knock = 0;
-	upside_down = 0;
+	upside_down = start_upside_down; // 0
 	is_feather_fall = 0;
 	Char.fall_y = 0;
 	Char.fall_x = 0;
@@ -345,6 +345,18 @@ int __pascal far play_level_2() {
 				}
 				screen_updates_suspended = 0;
 				remove_flash_if_hurt();
+
+				#ifdef USE_DEBUG_CHEATS
+                if (debug_cheats_enabled && is_timer_displayed) {
+					char timer_text[16];
+					snprintf(timer_text, 16, "%02d:%02d:%02d", rem_min - 1, rem_tick / 12, rem_tick % 12);
+					screen_updates_suspended = 1;
+					draw_rect(&timer_rect, color_0_black);
+					show_text(&timer_rect, -1, -1, timer_text);
+					screen_updates_suspended = 0;
+				}
+                #endif
+
 				request_screen_update(); // request screen update manually
 				do_simple_wait(1);
 			} else {
@@ -647,7 +659,7 @@ int __pascal far flash_if_hurt() {
 		do_flash_no_delay(flash_color); // don't add delay to the flash
 		return 1;
 	} else if (hitp_delta < 0) {
-		do_flash_no_delay(color_12_red); // red
+		do_flash_no_delay(color_12_brightred); // red
 		return 1;
 	}
 	return 0; // not flashed

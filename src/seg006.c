@@ -37,7 +37,7 @@ int __pascal far get_tile(int room,int col,int row) {
 		curr_tile2 = curr_room_tiles[curr_tilepos] & 0x1F;
 	} else {
 		// wall in room 0
-		curr_tile2 = tiles_20_wall;
+		curr_tile2 = level_edge_hit_tile; // tiles_20_wall
 	}
 	return curr_tile2;
 }
@@ -486,6 +486,18 @@ const frame_type frame_tbl_cuts[] = {
 {  37, 0x80| 0,   1,   0, 0x00| 0},
 };
 
+
+void get_frame_internal(const frame_type frame_table[], int frame, const char* frame_table_name, int count) {
+	if (frame >= 0 && frame < count) {
+		cur_frame = frame_table[frame];
+	} else {
+		printf("Tried to use %s[%d], not in 0..%d\n", frame_table_name, frame, count-1);
+		static const frame_type blank_frame = {255, 0, 0, 0, 0};
+		cur_frame = blank_frame;
+	}
+}
+#define get_frame(frame_table, frame) get_frame_internal(frame_table, frame, #frame_table, COUNT(frame_table))
+
 // seg006:015A
 void __pascal far load_frame() {
 	short frame;
@@ -496,7 +508,7 @@ void __pascal far load_frame() {
 		case charid_0_kid:
 		case charid_24_mouse:
 		use_table_kid:
-			cur_frame = frame_table_kid[frame];
+			get_frame(frame_table_kid, frame);
 		break;
 		case charid_2_guard:
 		case charid_4_skeleton:
@@ -505,15 +517,16 @@ void __pascal far load_frame() {
 		case charid_1_shadow:
 			if (frame < 150 || frame >= 190) goto use_table_kid;
 		use_table_guard:
-			cur_frame = frame_tbl_guard[frame + add_frame - 149];
+			get_frame(frame_tbl_guard, frame + add_frame - 149);
 		break;
 		case charid_5_princess:
 		case charid_6_vizier:
 //		use_table_cutscene:
-			cur_frame = frame_tbl_cuts[frame];
+			get_frame(frame_tbl_cuts, frame);
 		break;
 	}
 }
+#undef get_frame
 
 // seg006:01F5
 short __pascal far dx_weight() {
@@ -944,6 +957,21 @@ void __pascal far check_on_floor() {
 				set_wipe(curr_tilepos, 1);
 				set_redraw_full(curr_tilepos, 1);
 			} else {
+
+#ifdef FIX_STAND_ON_THIN_AIR
+				if (options.fix_stand_on_thin_air &&
+					Char.frame >= frame_110_stand_up_from_crouch_1 && Char.frame <= frame_119_stand_up_from_crouch_10)
+				{
+					// We need to prevent the Kid from stepping off a ledge accidentally while standing up.
+					// (This can happen because the "standing up" frames now require a floor.)
+					// --> Cancel the fall, if the tile at dx=2 behind the kid is a valid floor.
+					int col = get_tile_div_mod_m7(dx_weight() + back_delta_x(2));
+					if (tile_is_floor(get_tile(Char.room, col, Char.curr_row))) {
+						return;
+					}
+				}
+#endif
+
 				start_fall();
 			}
 		}
@@ -1009,7 +1037,16 @@ void __pascal far start_fall() {
 		in_wall();
 		return;
 	}
-	if (get_tile_infrontof_char() == tiles_20_wall) {
+	int tile = get_tile_infrontof_char();
+	if (tile == tiles_20_wall
+
+		#ifdef FIX_RUNNING_JUMP_THROUGH_TAPESTRY
+		    // Also treat tapestries (when approached to the left) like a wall here.
+		|| (options.fix_running_jump_through_tapestry && Char.direction == dir_FF_left &&
+			(tile == tiles_12_doortop || tile == tiles_7_doortop_with_floor))
+        #endif
+
+			) {
 		if (fall_frame != 44 || distance_to_edge_weight() >= 6) {
 			Char.x = char_dx_forward(-1);
 		} else {
@@ -1620,7 +1657,7 @@ void __pascal far proc_get_object() {
 	if (pickup_obj_type == -1) {
 		have_sword = -1;
 		play_sound(sound_37_victory); // get sword
-		flash_color = color_14_yellow;
+		flash_color = color_14_brightyellow;
 		flash_time = 8;
 	} else {
 		switch (--pickup_obj_type) {
@@ -1692,7 +1729,7 @@ void __pascal far on_guard_killed() {
 		demo_index = demo_time = 0;
 	} else if (current_level == 13) {
 		// Jaffar's level: flash
-		flash_color = color_15_white; // white
+		flash_color = color_15_brightwhite; // white
 		flash_time = 18;
 		is_show_time = 1;
 		leveldoor_open = 2;
@@ -1798,7 +1835,7 @@ void __pascal far check_killed_shadow() {
 		if ((Char.charid | Opp.charid) == charid_1_shadow &&
 			Char.alive < 0 && Opp.alive >= 0
 		) {
-			flash_color = color_15_white; // white
+			flash_color = color_15_brightwhite; // white
 			flash_time = 5;
 			take_hp(100);
 		}

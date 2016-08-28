@@ -8,6 +8,9 @@ QUICKSAVE.SAV
 # PoP recorded gameplay (replay)
 *.P1R
 
+# PoP custom levelsets
+mods/*/
+
 # Object files
 *.o
 *.ko

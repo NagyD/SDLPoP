@@ -55,18 +55,20 @@ The authors of this program may be contacted at http://forum.princed.org
 // Enable quicksave/load feature.
 #define USE_QUICKSAVE
 
-// Enable one-minute penalty for quickloading
+// Try to let time keep running out when quickloading. (similar to Ctrl+A)
+// Technically, the 'remaining time' is still restored, but with a penalty for elapsed time (up to 1 minute).
+// The one minute penalty will also be applied when quickloading from e.g. the title screen.
 #define USE_QUICKLOAD_PENALTY
 
 // Enable recording/replay feature.
 #define USE_REPLAY
 
-// Adds a way to crouch immediately after climbing up: press down and forward simultaneously
+// Adds a way to crouch immediately after climbing up: press down and forward simultaneously.
 // In the original game, this could not be done (pressing down always causes the kid to climb down).
 #define ALLOW_CROUCH_AFTER_CLIMBING
 
-// Time passes while the level ending music plays; however, this can be skipped by disabling sound.
-// This disables time passing while the ending music is playing, so you can leave sounds on.
+// Time runs out while the level ending music plays; however, the music can be skipped by disabling sound.
+// This option stops time while the ending music is playing (so there is no need to disable sound).
 #define FREEZE_TIME_DURING_END_MUSIC
 
 // Enable fake/invisible tiles feature. Tiles may look like one tiletype but behave like another.
@@ -113,7 +115,7 @@ The authors of this program may be contacted at http://forum.princed.org
 // Falling from a great height directly on top of guards does not hurt.
 #define FIX_PAINLESS_FALL_ON_GUARD
 
-// Bumping against a wall may cause a loose floor below to drop, even though it has not been touched (Trick 18, 34)
+// Bumping against a wall may cause a loose floor below to drop, even though it has not been touched. (Trick 18, 34)
 #define FIX_WALL_BUMP_TRIGGERS_TILE_BELOW
 
 // When pressing a loose tile, you can temporarily stand on thin air by standing up from crouching.
@@ -134,7 +136,7 @@ The authors of this program may be contacted at http://forum.princed.org
 // A drawing bug occurs when a loose tile is placed to the left of a potion (or sword).
 #define FIX_LOOSE_LEFT_OF_POTION
 
-// Guards may "follow" the kid to the room on the left, even though there is a closed gate in between.
+// Guards may "follow" the kid to the room on the left or right, even though there is a closed gate in between.
 #define FIX_GUARD_FOLLOWING_THROUGH_CLOSED_GATES
 
 // When landing on the edge of a spikes tile, it is considered safe. (Trick 65)
@@ -151,14 +153,30 @@ The authors of this program may be contacted at http://forum.princed.org
 // (The game considers these tiles floor tiles; so it mistakenly assumes that no x-position adjustment is needed)
 #define FIX_LAND_AGAINST_GATE_OR_TAPESTRY
 
+// Sometimes, the kid may automatically strike immediately after drawing the sword.
+// This especially happens when dropping down from a higher floor and then turning towards the opponent.
+#define FIX_UNINTENDED_SWORD_STRIKE
+
+// By repeatedly pressing 'back' in a swordfight, you can retreat out of a room without the room changing. (Trick 35)
+#define FIX_RETREAT_WITHOUT_LEAVING_ROOM
+
+// The kid can jump through a tapestry with a running jump to the left, if there is a floor above it.
+#define FIX_RUNNING_JUMP_THROUGH_TAPESTRY
+
+// Guards can be pushed into walls, because the game does not correctly check for walls located behind a guard.
+#define FIX_PUSH_GUARD_INTO_WALL
+
+// By doing a running jump into a wall, you can fall behind a closed gate two floors down. (e.g. skip in Level 7)
+#define FIX_JUMP_THROUGH_WALL_ABOVE_GATE
+
 // Debug features:
 
 // When the program starts, check whether the deobfuscated sequence table (seqtbl.c) is correct.
 //#define CHECK_SEQTABLE_MATCHES_ORIGINAL
 
-// Enable debug cheats
+// Enable debug cheats (with command-line argument "debug")
 // "[" and "]" : nudge x position by one pixel
 // "T" : display remaining time in minutes, seconds and ticks
-//#define USE_DEBUG_CHEATS
+#define USE_DEBUG_CHEATS
 
 #endif

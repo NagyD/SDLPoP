@@ -996,12 +996,21 @@ enum seqtbl_sounds {
 
 enum colorids {
 	color_0_black = 0,
+	color_1_blue = 1,
+	color_2_green = 2,
+	color_3_cyan = 3,
 	color_4_red = 4,
-	color_7_grey = 7,
-	color_8_darkgrey = 8,
-	color_12_red = 12,
-	color_14_yellow = 14,
-	color_15_white = 15,
+	color_5_magenta = 5,
+	color_6_brown = 6,
+	color_7_lightgray = 7,
+	color_8_darkgray = 8,
+	color_9_brightblue = 9,
+	color_10_brightgreen = 10,
+	color_11_brightcyan = 11,
+	color_12_brightred = 12,
+	color_13_brightmagenta = 13,
+	color_14_brightyellow = 14,
+	color_15_brightwhite = 15,
 };
 
 #define COUNT(array) (sizeof(array)/sizeof(array[0]))
@@ -1062,6 +1071,11 @@ typedef union options_type {
 		byte fix_glide_through_wall;
 		byte fix_drop_through_tapestry;
 		byte fix_land_against_gate_or_tapestry;
+		byte fix_unintended_sword_strike;
+		byte fix_retreat_without_leaving_room;
+		byte fix_running_jump_through_tapestry;
+		byte fix_push_guard_into_wall;
+		byte fix_jump_through_wall_above_gate;
 	};
 } options_type;
 

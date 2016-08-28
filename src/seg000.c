@@ -59,8 +59,9 @@ void far pop_main() {
 	show_loading();
 	set_joy_mode();
 	cheats_enabled = check_param("megahit") != NULL;
-#ifdef __DEBUG__
-	cheats_enabled = 1; // debug
+#ifdef USE_DEBUG_CHEATS
+	debug_cheats_enabled = check_param("debug") != NULL;
+	if (debug_cheats_enabled) cheats_enabled = 1; // param 'megahit' not necessary if 'debug' is used
 #endif
 	draw_mode = check_param("draw") != NULL && cheats_enabled;
 	demo_mode = check_param("demo") != NULL;
@@ -644,10 +645,10 @@ int __pascal far process_key() {
 			break;
 			#ifdef USE_DEBUG_CHEATS
 			case SDL_SCANCODE_T:
-				printf("Remaining minutes: %d\tticks:%d\n", rem_min, rem_tick);
-				snprintf(sprintf_temp, sizeof(sprintf_temp), "M:%d S:%d T:%d", rem_min, rem_tick / 12, rem_tick);
-				answer_text = sprintf_temp;
-				need_show_text = 1;
+				is_timer_displayed = 1 - is_timer_displayed; // toggle
+				if (!is_timer_displayed) {
+					need_full_redraw = 1;
+				}
 			break;
 			#endif
 		}
@@ -1327,7 +1328,7 @@ void __pascal far read_keyb_control() {
 	control_shift = -(key_states[SDL_SCANCODE_LSHIFT] || key_states[SDL_SCANCODE_RSHIFT]);
 
 	#ifdef USE_DEBUG_CHEATS
-	if (cheats_enabled) {
+	if (cheats_enabled && debug_cheats_enabled) {
 		if (key_states[SDL_SCANCODE_RIGHTBRACKET]) ++Char.x;
 		else if (key_states[SDL_SCANCODE_LEFTBRACKET]) --Char.x;
 	}
@@ -1412,7 +1413,7 @@ const rect_type rect_titles = {106,24,195,296};
 void __pascal far show_title() {
 	word textcolor;
 	load_opt_sounds(sound_50_story_2_princess, sound_55_story_1_absence); // main theme, story, princess door
-	textcolor = get_text_color(15, color_15_white, 0x800);
+	textcolor = get_text_color(15, color_15_brightwhite, 0x800);
 	dont_reset_time = 0;
 	if(offscreen_surface) free_surface(offscreen_surface); // missing in original
 	offscreen_surface = make_offscreen_buffer(&screen_rect);
