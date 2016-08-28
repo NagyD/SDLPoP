@@ -1760,8 +1760,6 @@ void __pascal far free_peels() {
 	}
 }
 
-// data:0F96
-const rect_type rect_bottom_text = {193, 70, 202, 250};
 
 // seg008:2644
 void __pascal far display_text_bottom(const char near *text) {

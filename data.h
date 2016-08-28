@@ -197,7 +197,8 @@ extern word is_blind_mode;
 
 // data:0F86
 extern const rect_type rect_top INIT(= {0, 0, 192, 320});
-
+// data:0F96
+extern const rect_type rect_bottom_text INIT(= {193, 70, 202, 250});
 
 // data:4CB2
 extern word leveldoor_right;
@@ -593,6 +594,12 @@ extern word max_hitp_allowed INIT(= 10);
 extern word saving_allowed_first_level INIT(= 3);
 extern word saving_allowed_last_level INIT(= 13);
 extern byte allow_triggering_any_tile INIT(= 0);
+
+#ifdef USE_DEBUG_CHEATS
+extern byte debug_cheats_enabled INIT(= 0);
+extern const rect_type timer_rect INIT(= {1, 2, 8, 55});
+extern byte is_timer_displayed INIT(= 0);
+#endif
 
 #undef INIT
 #undef extern
