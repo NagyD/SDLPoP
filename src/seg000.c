@@ -66,8 +66,9 @@ void far pop_main() {
 	show_loading();
 	set_joy_mode();
 	cheats_enabled = check_param("megahit") != NULL;
-#ifdef __DEBUG__
-	cheats_enabled = 1; // debug
+#ifdef USE_DEBUG_CHEATS
+	debug_cheats_enabled = check_param("debug") != NULL;
+	if (debug_cheats_enabled) cheats_enabled = 1; // param 'megahit' not necessary if 'debug' is used
 #endif
 #ifdef USE_EDITOR
 	if (editor_enabled) cheats_enabled = 1;
@@ -667,10 +668,10 @@ int __pascal far process_key() {
 			break;
 			#ifdef USE_DEBUG_CHEATS
 			case SDL_SCANCODE_T:
-				printf("Remaining minutes: %d\tticks:%d\n", rem_min, rem_tick);
-				snprintf(sprintf_temp, sizeof(sprintf_temp), "M:%d S:%d T:%d", rem_min, rem_tick / 12, rem_tick);
-				answer_text = sprintf_temp;
-				need_show_text = 1;
+				is_timer_displayed = 1 - is_timer_displayed; // toggle
+				if (!is_timer_displayed) {
+					need_full_redraw = 1;
+				}
 			break;
 			#endif
 		}
@@ -1354,7 +1355,7 @@ void __pascal far read_keyb_control() {
 	control_shift = -(key_states[SDL_SCANCODE_LSHIFT] || key_states[SDL_SCANCODE_RSHIFT]);
 
 	#ifdef USE_DEBUG_CHEATS
-	if (cheats_enabled) {
+	if (cheats_enabled && debug_cheats_enabled) {
 		if (key_states[SDL_SCANCODE_RIGHTBRACKET]) ++Char.x;
 		else if (key_states[SDL_SCANCODE_LEFTBRACKET]) --Char.x;
 	}

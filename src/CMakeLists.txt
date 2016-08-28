@@ -15,7 +15,7 @@ if (WIN32)
 endif(WIN32)
 
 # have CMake output binaries to the directory that contains the source files
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${SDLPoP_SOURCE_DIR}")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${SDLPoP_SOURCE_DIR}/..")
 
 # if SDL_2, SDL2_image and SDL2_mixer are not in the toolchain/build environment, specify /include and /lib paths:
 
@@ -53,6 +53,4 @@ if(WIN32)
 else()
     target_link_libraries(prince SDL2main SDL2 SDL2_image SDL2_mixer)
 endif()
-
-
 

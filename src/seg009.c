@@ -101,11 +101,42 @@ const char* __pascal far check_param(const char *param) {
 	// stub
 	short arg_index;
 	for (arg_index = 1; arg_index < g_argc; ++arg_index) {
-		if (/*strnicmp*/strncasecmp(g_argv[arg_index], param, strlen(param)) == 0) {
+
+		char* curr_arg = g_argv[arg_index];
+
+		// Filenames (e.g. replays) should never be a valid 'normal' param so we should skip these to prevent conflicts.
+		// We can lazily distinguish filenames from non-filenames by checking whether they have a dot in them.
+		// (Assumption: all relevant files, e.g. replay files, have some file extension anyway)
+		if (strchr(curr_arg, '.') != NULL) {
+			continue;
+		}
+
+		// List of params that expect a specifier ('sub-') arg directly after it (e.g. the mod's name, after "mod" arg)
+		// Such sub-args may conflict with the normal params (so, we should 'skip over' them)
+		static const char params_with_one_subparam[][8] = { "mod", /*...*/ };
+
+		bool curr_arg_has_one_subparam = false;
+		int i;
+		for (i = 0; i < COUNT(params_with_one_subparam); ++i) {
+			if (strncasecmp(curr_arg, params_with_one_subparam[i], strlen(params_with_one_subparam[i])) == 0) {
+				curr_arg_has_one_subparam = true;
+				break;
+			}
+		}
+
+		if (curr_arg_has_one_subparam) {
+			// Found an arg that has one sub-param, so we want to:
+			// 1: skip over the next arg                (if we are NOT checking for this specific param)
+			// 2: return a pointer below to the SUB-arg (if we ARE checking for this specific param)
+			++arg_index;
+			if (!(arg_index < g_argc)) return NULL; // not enough arguments
+		}
+
+		if (/*strnicmp*/strncasecmp(curr_arg, param, strlen(param)) == 0) {
 			return g_argv[arg_index];
 		}
 	}
-	return 0;
+	return NULL;
 }
 
 // seg009:0EDF
@@ -1721,9 +1752,6 @@ void __pascal far play_digi_sound(sound_buffer_type far *buffer) {
 	int sample_rate, sample_size, sample_count;
 	const byte* samples;
 	switch (version) {
-		case 0: // unknown
-			printf("Warning: Can't determine wave version.\n");
-			return;
 		case 1: // 1.0 and 1.1
 			sample_rate = buffer->digi.sample_rate;
 			sample_size = buffer->digi.sample_size;
@@ -1738,6 +1766,9 @@ void __pascal far play_digi_sound(sound_buffer_type far *buffer) {
 			break;
 		case 3: // ambiguous
 			printf("Warning: Ambiguous wave version.\n");
+			return;
+		default: // case 0, unknown
+			printf("Warning: Can't determine wave version.\n");
 			return;
 	}
 #ifndef USE_MIXER	
@@ -2500,9 +2531,14 @@ void idle() {
 				int scancode = event.key.keysym.scancode;
 
 				if ((modifier & KMOD_ALT) &&
-					scancode == SDL_SCANCODE_RETURN) {
-					// Alt-Enter: toggle fullscreen mode
-					toggle_fullscreen();
+					scancode == SDL_SCANCODE_RETURN)
+				{
+					// Only if the Enter key was pressed down right now.
+					if (key_states[scancode] == 0) {
+						// Alt-Enter: toggle fullscreen mode
+						toggle_fullscreen();
+						key_states[scancode] = 1;
+					}
 				} else {
 					key_states[scancode] = 1;
 					switch (scancode) {

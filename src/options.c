@@ -55,6 +55,11 @@ void use_default_options() {
     options.fix_glide_through_wall = 1;
     options.fix_drop_through_tapestry = 1;
     options.fix_land_against_gate_or_tapestry = 1;
+    options.fix_unintended_sword_strike = 1;
+    options.fix_retreat_without_leaving_room = 1;
+    options.fix_running_jump_through_tapestry = 1;
+    options.fix_push_guard_into_wall = 1;
+    options.fix_jump_through_wall_above_gate = 1;
 }
 
 void disable_fixes_and_enhancements() {
@@ -81,6 +86,11 @@ void disable_fixes_and_enhancements() {
     options.fix_glide_through_wall = 0;
     options.fix_drop_through_tapestry = 0;
     options.fix_land_against_gate_or_tapestry = 0;
+    options.fix_unintended_sword_strike = 0;
+    options.fix_retreat_without_leaving_room = 0;
+    options.fix_running_jump_through_tapestry= 0;
+    options.fix_push_guard_into_wall = 0;
+    options.fix_jump_through_wall_above_gate = 0;
 }
 
 // .ini file parser adapted from https://gist.github.com/OrangeTide/947070
@@ -125,7 +135,7 @@ int ini_load(const char *filename,
     return 0;
 }
 
-#define MAX_NAME_LENGTH 16
+#define MAX_NAME_LENGTH 20
 typedef struct ini_value_list_type {
     const char (* names)[][MAX_NAME_LENGTH];
     word num_names;
@@ -133,9 +143,19 @@ typedef struct ini_value_list_type {
 
 const char level_type_names[][MAX_NAME_LENGTH] = {"dungeon", "palace"};
 const char guard_type_names[][MAX_NAME_LENGTH] = {"guard", "fat", "skel", "vizier", "shadow"};
+const char tile_type_names[][MAX_NAME_LENGTH] = {
+				"empty", "floor", "spike", "pillar", "gate",                                        // 0..4
+				"stuck", "closer", "doortop_with_floor", "bigpillar_bottom", "bigpillar_top",       // 5..9
+				"potion", "loose", "doortop", "mirror", "debris",                                   // 10..14
+				"opener", "level_door_left", "level_door_right", "chomper", "torch",                // 15..19
+				"wall", "skeleton", "sword", "balcony_left", "balcony_right",                       // 20..24
+				"lattice_pillar", "lattice_down", "lattice_small", "lattice_left", "lattice_right", // 25..29
+				"torch_with_debris", // 30
+};
 
 ini_value_list_type level_type_names_list = {&level_type_names, COUNT(level_type_names)};
 ini_value_list_type guard_type_names_list = {&guard_type_names, COUNT(guard_type_names)};
+ini_value_list_type tile_type_names_list = {&tile_type_names, COUNT(tile_type_names)};
 
 #define INI_NO_VALID_NAME -9999
 
@@ -270,6 +290,11 @@ static int global_ini_callback(const char *section, const char *name, const char
         process_boolean("fix_glide_through_wall", &options.fix_glide_through_wall);
         process_boolean("fix_drop_through_tapestry", &options.fix_drop_through_tapestry);
         process_boolean("fix_land_against_gate_or_tapestry", &options.fix_land_against_gate_or_tapestry);
+        process_boolean("fix_unintended_sword_strike", &options.fix_unintended_sword_strike);
+        process_boolean("fix_retreat_without_leaving_room", &options.fix_retreat_without_leaving_room);
+        process_boolean("fix_running_jump_through_tapestry", &options.fix_running_jump_through_tapestry);
+        process_boolean("fix_push_guard_into_wall", &options.fix_push_guard_into_wall);
+        process_boolean("fix_jump_through_wall_above_gate", &options.fix_jump_through_wall_above_gate);
     }
 
     if (check_ini_section("CustomGameplay")) {
@@ -279,7 +304,15 @@ static int global_ini_callback(const char *section, const char *name, const char
         process_word("max_hitp_allowed", &max_hitp_allowed, NULL);
         process_word("saving_allowed_first_level", &saving_allowed_first_level, NULL);
         process_word("saving_allowed_last_level", &saving_allowed_last_level, NULL);
+        process_boolean("start_upside_down", &start_upside_down);
+        process_boolean("start_in_blind_mode", &start_in_blind_mode);
+        process_word("copyprot_level", &copyprot_level, NULL);
+        process_byte("drawn_tile_top_level_edge", &drawn_tile_top_level_edge, &tile_type_names_list);
+        process_byte("drawn_tile_left_level_edge", &drawn_tile_left_level_edge, &tile_type_names_list);
+        process_byte("level_edge_hit_tile", &level_edge_hit_tile, &tile_type_names_list);
         process_boolean("allow_triggering_any_tile", &allow_triggering_any_tile);
+        // TODO: Maybe allow automatically choosing the correct WDA, depending on the loaded VDUNGEON.DAT?
+		process_boolean("enable_wda_in_palace", &enable_wda_in_palace);
     }
 
     // [Level 1], etc.
@@ -316,6 +349,15 @@ void load_options() {
     use_default_options();
     ini_load("SDLPoP.ini", global_ini_callback); // global configuration
 
+    // The 'mod' command line argument can override the levelset choice in SDLPoP.ini
+    // usage: prince mod "Mod Name"
+    const char* mod_param = check_param("mod");
+    if (mod_param != NULL) {
+        use_custom_levelset = true;
+        memset(levelset_name, 0, sizeof(levelset_name));
+        strncpy(levelset_name, mod_param, sizeof(levelset_name));
+    }
+
     // load mod-specific INI configuration
     if (use_custom_levelset) {
         char filename[256];
@@ -324,6 +366,10 @@ void load_options() {
     }
 
     if (!options.use_fixes_and_enhancements) disable_fixes_and_enhancements();
+
+    // CusPop option
+    is_blind_mode = start_in_blind_mode;
+    // Bug: with start_in_blind_mode enabled, moving objects are not displayed until blind mode is toggled off+on??
 }
 
 void show_use_fixes_and_enhancements_prompt() {

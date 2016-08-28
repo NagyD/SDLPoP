@@ -769,7 +769,7 @@ void printf_links() {
 	}
 }
 void editor_swap_room_id(int r1, int r2) {
-	printf("SWAP: S%d WITH S%d %ld\n",r1,r2,sizeof(link_type));
+	printf("SWAP: S%d WITH S%d %u\n",r1,r2,sizeof(link_type));
 	editor__do_mark_start(flag_redraw);
 
 	byte dump_r1[70];
