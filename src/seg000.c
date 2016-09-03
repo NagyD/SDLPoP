@@ -42,6 +42,9 @@ void far pop_main() {
 
 	load_options();
 	apply_seqtbl_patches();
+#ifdef USE_SCRIPT
+	init_script();
+#endif
 
 	char sprintf_temp[100];
 	int i;
@@ -173,21 +176,20 @@ void __pascal far start_game() {
 #ifdef USE_QUICKSAVE
 // All these functions return true on success, false otherwise.
 
-FILE* quick_fp;
-
-int process_save(void* data, size_t data_size) {
-	return fwrite(data, data_size, 1, quick_fp) == 1;
+int process_save_to_file(void* data, size_t data_size, FILE* fp) {
+	return fwrite(data, data_size, 1, fp) == 1;
 }
 
-int process_load(void* data, size_t data_size) {
-	return fread(data, data_size, 1, quick_fp) == 1;
+int process_load_from_file(void* data, size_t data_size, FILE* fp) {
+	return fread(data, data_size, 1, fp) == 1;
 }
 
-typedef int process_func_type(void* data, size_t data_size);
+// in proto.h:
+// typedef int (*process_func_type)(void* data, size_t data_size, void* stream);
 
-int quick_process(process_func_type process_func) {
+int quick_process(process_func_type process_func, void* stream) {
 	int ok = 1;
-#define process(x) ok = ok && process_func(&(x), sizeof(x))
+#define process(x) ok = ok && process_func(&(x), sizeof(x), stream)
 	// level
 	process(level);
 	process(checkpoint);
@@ -280,12 +282,14 @@ char quick_control[] = "........";
 
 int quick_save() {
 	int ok = 0;
-	quick_fp = fopen(quick_file, "wb");
+	FILE* quick_fp = fopen(quick_file, "wb");
 	if (quick_fp != NULL) {
-		process_save((void*) quick_version, COUNT(quick_version));
-		ok = quick_process(process_save);
+		process_save_to_file((void *) quick_version, COUNT(quick_version), quick_fp);
+		ok = quick_process((process_func_type) process_save_to_file, quick_fp);
+#ifdef USE_SCRIPT
+        if (enable_scripts) script__write_savelist(quick_fp);
+#endif
 		fclose(quick_fp);
-		quick_fp = NULL;
 	}
 	return ok;
 }
@@ -319,13 +323,12 @@ void restore_room_after_quick_load() {
 int quick_load() {
 
 	int ok = 0;
-	quick_fp = fopen(quick_file, "rb");
+	FILE* quick_fp = fopen(quick_file, "rb");
 	if (quick_fp != NULL) {
 		// check quicksave version is compatible
-		process_load(quick_control, COUNT(quick_control));
+		process_load_from_file(quick_control, COUNT(quick_control), quick_fp);
 		if (strcmp(quick_control, quick_version) != 0) {
 			fclose(quick_fp);
-			quick_fp = NULL;
 			return 0;
 		}
 
@@ -338,9 +341,11 @@ int quick_load() {
 		word old_rem_min = rem_min;
 		word old_rem_tick = rem_tick;
 
-		ok = quick_process(process_load);
+		ok = quick_process((process_func_type) process_load_from_file, quick_fp);
+#ifdef USE_SCRIPT
+        if (enable_scripts) script__read_savelist(quick_fp);
+#endif
 		fclose(quick_fp);
-		quick_fp = NULL;
 
 		restore_room_after_quick_load();
 
@@ -1049,6 +1054,9 @@ void __pascal far check_the_end() {
 		}
 		different_room = 1;
 		loadkid();
+#ifdef USE_SCRIPT
+        script__on_load_room((byte) drawn_room);
+#endif
 		anim_tile_modif();
 		start_chompers();
 		check_fall_flo();
@@ -1089,10 +1097,20 @@ void __pascal far read_joyst_control() {
 // seg000:10EA
 void __pascal far draw_kid_hp(short curr_hp,short max_hp) {
 	short drawn_hp_index;
+#ifndef FIX_SURPLUS_EMPTY_HP
 	for (drawn_hp_index = curr_hp; drawn_hp_index < max_hp; ++drawn_hp_index) {
 		// empty HP
 		method_6_blit_img_to_scr(get_image(id_chtab_2_kid, 217), drawn_hp_index * 7, 194, blitters_0_no_transp);
 	}
+#else
+	for (drawn_hp_index = curr_hp; drawn_hp_index < max_hp; ++drawn_hp_index) {
+		// empty HP
+		if (drawn_hp_index <= hitp_max-1)
+			method_6_blit_img_to_scr(chtab_addrs[id_chtab_2_kid]->images[217], drawn_hp_index * 7, 194, blitters_0_no_transp);
+		else // erase any "surplus" of fake hp boxes
+			method_6_blit_img_to_scr(chtab_addrs[id_chtab_2_kid]->images[216], drawn_hp_index * 7, 194, blitters_9_black);
+	}
+#endif // FIX_SURPLUS_EMPTY_HP
 	for (drawn_hp_index = 0; drawn_hp_index < curr_hp; ++drawn_hp_index) {
 		// full HP
 		method_6_blit_img_to_scr(get_image(id_chtab_2_kid, 216), drawn_hp_index * 7, 194, blitters_0_no_transp);

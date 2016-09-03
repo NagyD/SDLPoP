@@ -43,6 +43,9 @@ void __pascal far init_game(int level) {
 		hitp_beg_lev = start_hitp; 		// 3
 	}
 	need_level1_music = (level == 1);
+#ifdef USE_SCRIPT
+	script__on_start_game();
+#endif
 	play_level(level);
 }
 
@@ -99,7 +102,13 @@ void __pascal far play_level(int level_number) {
 		if (level_number != current_level) {
 			load_lev_spr(level_number);
 		}
+		// moved up, so that the script function on_load_level is allowed to override have_sword
+		have_sword = (level_number != 1);
+
 		load_level();
+#ifdef USE_SCRIPT
+		script__on_load_level(level_number);
+#endif
 		pos_guards();
 		clear_coll_rooms();
 		clear_saved_ctrl();
@@ -120,7 +129,7 @@ void __pascal far play_level(int level_number) {
 		Guard.charid = charid_2_guard;
 		Guard.direction = dir_56_none;
 		do_startpos();
-		have_sword = (level_number != 1);
+		// have_sword = (level_number != 1); // moved up
 		find_start_level_door();
 		// busy waiting?
 		while (check_sound_playing() && !do_paused()) idle();
@@ -185,6 +194,9 @@ void __pascal far do_startpos() {
 	} else {
 		seqtbl_offset_char(seq_5_turn); // turn
 	}
+#ifdef USE_SCRIPT
+	script__apply_set_level_start_sequence();
+#endif
 	set_start_pos();
 }
 
@@ -363,6 +375,9 @@ int __pascal far play_level_2() {
 				stop_sounds();
 				hitp_beg_lev = hitp_max;
 				checkpoint = 0;
+#ifdef USE_SCRIPT
+				script__on_end_level(current_level, &next_level);
+#endif
 				return next_level;
 			}
 		}
@@ -472,6 +487,9 @@ void __pascal far timers() {
 			do_mouse();
 		}
 	}
+#ifdef USE_SCRIPT
+    script__custom_timers();
+#endif
 }
 
 // seg003:0798

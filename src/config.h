@@ -63,6 +63,9 @@ The authors of this program may be contacted at http://forum.princed.org
 // Enable recording/replay feature.
 #define USE_REPLAY
 
+// Enable scripting feature
+#define USE_SCRIPT
+
 // Adds a way to crouch immediately after climbing up: press down and forward simultaneously.
 // In the original game, this could not be done (pressing down always causes the kid to climb down).
 #define ALLOW_CROUCH_AFTER_CLIMBING
@@ -168,6 +171,9 @@ The authors of this program may be contacted at http://forum.princed.org
 
 // By doing a running jump into a wall, you can fall behind a closed gate two floors down. (e.g. skip in Level 7)
 #define FIX_JUMP_THROUGH_WALL_ABOVE_GATE
+
+// When max health is decreased (e.g. through scripts or custom potions), excess hp boxes are not erased.
+#define FIX_SURPLUS_EMPTY_HP
 
 // Debug features:
 

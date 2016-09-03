@@ -1013,6 +1013,19 @@ enum colorids {
 	color_15_brightwhite = 15,
 };
 
+enum rowids {
+	row_0xFF_above = -1,
+	row_0_top = 0,
+	row_1_middle = 1,
+	row_2_bottom = 2,
+	row_3_below = 3,
+};
+
+enum potsizeids {
+	pot_0_small = 0,
+	pot_1_big = 1,
+};
+
 #define COUNT(array) (sizeof(array)/sizeof(array[0]))
 
 // These are or'ed with SDL_SCANCODE_* constants in last_key_scancode.

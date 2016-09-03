@@ -1698,6 +1698,9 @@ void __pascal far proc_get_object() {
 				}
 			break;
 		}
+		#ifdef USE_SCRIPT
+        script__on_drink_potion(pickup_obj_type+1);
+		#endif
 	}
 }
 

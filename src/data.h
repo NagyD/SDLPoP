@@ -325,7 +325,7 @@ extern word demo_index;
 // data:4CD4
 extern short demo_time;
 // data:34A2
-extern word have_sword;
+extern short have_sword;
 
 // data:3D22
 extern char_type Char;
@@ -583,6 +583,7 @@ extern options_type options INIT(= {{0}});
 extern byte start_fullscreen INIT(= 0);
 extern word pop_window_width INIT(= 640);
 extern word pop_window_height INIT(= 400);
+extern byte enable_scripts INIT(= 1);
 extern byte use_custom_levelset INIT(= 0);
 extern char levelset_name[256];
 

@@ -1,17 +1,19 @@
 cmake_minimum_required(VERSION 2.8)
 project(SDLPoP)
 
-# Use C++11 when using the C++ compiler
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -std=gnu99")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
+
+# Errors are reported in the console, including any script compile errors, so it may be useful to leave it enabled
+set(HIDE_WINDOWS_CONSOLE FALSE)
 
 if (WIN32)
     # Use the -mwindows compiler flag when compiling with MinGW to hide the console window
     # Only do this when not in debug mode
-    if (NOT (CMAKE_BUILD_TYPE STREQUAL "Debug"))
+    if (HIDE_WINDOWS_CONSOLE AND (NOT (CMAKE_BUILD_TYPE STREQUAL "Debug")))
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mwindows")
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mwindows")
-    endif (NOT (CMAKE_BUILD_TYPE STREQUAL "Debug"))
+    endif()
 endif(WIN32)
 
 # have CMake output binaries to the directory that contains the source files
@@ -22,6 +24,12 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${SDLPoP_SOURCE_DIR}/..")
 #set(DIR_SDL2 "C:/SDL2-2.0.3")
 #include_directories(${DIR_SDL2}/include)
 #link_directories(${DIR_SDL2}/lib)
+
+# TCC (Tiny C Compiler) can be downloaded from http://bellard.org/tcc/
+set(DIR_TCC "C:/dev/scripting/tcc")
+include_directories(${DIR_TCC}/libtcc)
+link_directories(${DIR_TCC})
+link_directories(${DIR_TCC}/libtcc)
 
 set(SOURCE_FILES
         main.c
@@ -43,13 +51,14 @@ set(SOURCE_FILES
         seqtbl.c
         options.c
         replay.c
+        script.c
         types.h
         )
 add_executable(prince ${SOURCE_FILES})
 
 if(WIN32)
-    target_link_libraries(prince mingw32 SDL2main SDL2 SDL2.dll SDL2_image SDL2_mixer)
+    target_link_libraries(prince mingw32 SDL2main SDL2 SDL2.dll SDL2_image SDL2_mixer libtcc)
 else()
-    target_link_libraries(prince SDL2main SDL2 SDL2_image SDL2_mixer)
+    target_link_libraries(prince SDL2main SDL2 SDL2_image SDL2_mixer libtcc)
 endif()
 
