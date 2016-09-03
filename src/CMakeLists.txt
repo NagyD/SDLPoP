@@ -17,7 +17,7 @@ if (WIN32)
 endif(WIN32)
 
 # have CMake output binaries to the directory that contains the source files
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${SDLPoP_SOURCE_DIR}")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${SDLPoP_SOURCE_DIR}/..")
 
 # if SDL_2, SDL2_image and SDL2_mixer are not in the toolchain/build environment, specify /include and /lib paths:
 
@@ -32,28 +32,28 @@ link_directories(${DIR_TCC})
 link_directories(${DIR_TCC}/libtcc)
 
 set(SOURCE_FILES
-    main.c
-    common.h
-    config.h
-    data.c
-    data.h
-    proto.h
-    seg000.c
-    seg001.c
-    seg002.c
-    seg003.c
-    seg004.c
-    seg005.c
-    seg006.c
-    seg007.c
-    seg008.c
-    seg009.c
-    seqtbl.c
-    options.c
-    replay.c
-    script.c
-    types.h
-)
+        main.c
+        common.h
+        config.h
+        data.c
+        data.h
+        proto.h
+        seg000.c
+        seg001.c
+        seg002.c
+        seg003.c
+        seg004.c
+        seg005.c
+        seg006.c
+        seg007.c
+        seg008.c
+        seg009.c
+        seqtbl.c
+        options.c
+        replay.c
+        script.c
+        types.h
+        )
 add_executable(prince ${SOURCE_FILES})
 
 if(WIN32)
@@ -61,6 +61,4 @@ if(WIN32)
 else()
     target_link_libraries(prince SDL2main SDL2 SDL2_image SDL2_mixer libtcc)
 endif()
-
-
 

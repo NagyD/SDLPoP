@@ -79,6 +79,7 @@ A:
 * demo -- Run in demo mode: only the first two levels will be playable, and quotes from magazine reviews will be displayed.
 * record -- Start recording immediately. (See the Replays section.)
 * replay or a *.P1R filename -- Start replaying immediately. (See the Replays section.)
+* mod "Mod Name" -- Run with custom data files from the folder "mods/Mod Name/"
 
 Q: What keys can I use?
 A:
@@ -157,9 +158,11 @@ A:
 Since version 1.02, the game supports LEVELS.DAT, and since version 1.03, the game can use all .DAT files.
 You can either copy the modified .DAT files to the folder of the game, or the game to the mod's folder.
 
-Since version 1.17, the game can also load from mod folders that have been placed in the mods/ directory.
-To choose which mod to play, open SDLPoP.ini and change the 'levelset' option to the name of the mod folder.
+Since version 1.17, the game can also load from mod folders that have been placed in the "mods/" directory.
 If you use this method, only the files different from the original V1.0 data are required in the mod's folder.
+To choose which mod to play, do one of the following:
+* Open SDLPoP.ini and change the 'levelset' option to the name of the mod folder.
+* Use the command line option "mod", like so: prince.exe mod "Mod Name"
 
 Another way is to start the game while the current directory is the mod's directory.
 You can do this from the command line, or with batch files / shell scripts.

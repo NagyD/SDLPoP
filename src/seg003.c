@@ -35,7 +35,7 @@ void __pascal far init_game(int level) {
 	text_time_total = 0;
 	is_show_time = 0;
 	checkpoint = 0;
-	upside_down = 0;
+	upside_down = 0; // N.B. upside_down is also reset in set_start_pos()
 	resurrect_time = 0;
 	if (!dont_reset_time) {
 		rem_min = start_minutes_left; 	// 60
@@ -207,7 +207,7 @@ void __pascal far set_start_pos() {
 	Char.charid = charid_0_kid;
 	is_screaming = 0;
 	knock = 0;
-	upside_down = 0;
+	upside_down = start_upside_down; // 0
 	is_feather_fall = 0;
 	Char.fall_y = 0;
 	Char.fall_x = 0;
@@ -357,6 +357,18 @@ int __pascal far play_level_2() {
 				}
 				screen_updates_suspended = 0;
 				remove_flash_if_hurt();
+
+				#ifdef USE_DEBUG_CHEATS
+                if (debug_cheats_enabled && is_timer_displayed) {
+					char timer_text[16];
+					snprintf(timer_text, 16, "%02d:%02d:%02d", rem_min - 1, rem_tick / 12, rem_tick % 12);
+					screen_updates_suspended = 1;
+					draw_rect(&timer_rect, color_0_black);
+					show_text(&timer_rect, -1, -1, timer_text);
+					screen_updates_suspended = 0;
+				}
+                #endif
+
 				request_screen_update(); // request screen update manually
 				do_simple_wait(1);
 			} else {
