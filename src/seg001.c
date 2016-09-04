@@ -736,13 +736,24 @@ static const char* hof_path = "PRINCE.HOF";
 // seg001:0F17
 void __pascal far hof_write() {
 	int handle;
+	char custom_hof_path[POP_MAX_PATH];
+	char* path;
+
+	if (!use_custom_levelset) {
+		path = (char*) hof_path; // default PRINCE.HOF in the main folder
+	} else {
+		// if playing a custom levelset, try to use the mod folder
+		path = custom_hof_path;
+		snprintf(path, sizeof(custom_hof_path), "mods/%s/%s", levelset_name, hof_path /*PRINCE.HOF*/ );
+	}
+
 	// no O_TRUNC
-	handle = open(hof_path, O_WRONLY | O_CREAT | O_BINARY, 0600);
+	handle = open(path, O_WRONLY | O_CREAT | O_BINARY, 0600);
 	if (handle < 0 ||
 	    write(handle, &hof_count, 2) != 2 ||
 	    write(handle, &hof, sizeof(hof)) != sizeof(hof) ||
 	    close(handle))
-		perror(hof_path);
+		perror(path);
 	if (handle >= 0)
 		close(handle);
 }
@@ -751,12 +762,23 @@ void __pascal far hof_write() {
 void __pascal far hof_read() {
 	int handle;
 	hof_count = 0;
-	handle = open(hof_path, O_RDONLY | O_BINARY);
+	char custom_hof_path[POP_MAX_PATH];
+	char* path;
+
+	if (!use_custom_levelset) {
+		path = (char*) hof_path; // default PRINCE.HOF in the main folder
+	} else {
+		// if playing a custom levelset, try to use the mod folder
+		path = custom_hof_path;
+		snprintf(path, sizeof(custom_hof_path), "mods/%s/%s", levelset_name, hof_path /*PRINCE.HOF*/ );
+	}
+
+	handle = open(path, O_RDONLY | O_BINARY);
 	if (handle < 0)
 		return;
 	if (read(handle, &hof_count, 2) != 2 ||
 	    read(handle, &hof, sizeof(hof)) != sizeof(hof)) {
-		perror(hof_path);
+		perror(path);
 		hof_count = 0;
 	}
 }
