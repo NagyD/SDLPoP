@@ -584,7 +584,7 @@ extern byte start_fullscreen INIT(= 0);
 extern word pop_window_width INIT(= 640);
 extern word pop_window_height INIT(= 400);
 extern byte use_custom_levelset INIT(= 0);
-extern char levelset_name[256];
+extern char levelset_name[POP_MAX_PATH];
 
 // Custom Gameplay settings
 extern word start_minutes_left INIT(= 60);

@@ -360,7 +360,7 @@ void load_options() {
 
     // load mod-specific INI configuration
     if (use_custom_levelset) {
-        char filename[256];
+        char filename[POP_MAX_PATH];
         snprintf(filename, sizeof(filename), "mods/%s/%s", levelset_name, "mod.ini");
         ini_load(filename, mod_ini_callback);
     }

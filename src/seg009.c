@@ -152,7 +152,7 @@ dat_type *__pascal open_dat(const char *filename,int drive) {
 		fp = fopen(filename, "rb");
 	}
 	else {
-		char filename_mod[256];
+		char filename_mod[POP_MAX_PATH];
 		// before checking the root directory, first try mods/MODNAME/
 		snprintf(filename_mod, sizeof(filename_mod), "mods/%s/%s", levelset_name, filename);
 		fp = fopen(filename_mod, "rb");
@@ -1636,7 +1636,7 @@ void load_sound_names() {
 	sound_names = (char**) calloc(sizeof(char*) * max_sound_id, 1);
 	while (!feof(fp)) {
 		int index;
-		char name[256];
+		char name[POP_MAX_PATH];
 		if (fscanf(fp, "%d=%255s\n", &index, /*sizeof(name)-1,*/ name) != 2) {
 			perror(names_path);
 			continue;
@@ -1673,7 +1673,7 @@ sound_buffer_type* load_sound(int index) {
 			const char* exts[]={"ogg","mp3","flac","wav"};
 			int i;
 			for (i = 0; i < COUNT(exts); ++i) {
-				char filename[256];
+				char filename[POP_MAX_PATH];
 				const char* ext=exts[i];
 				struct stat info;
 
@@ -2019,7 +2019,7 @@ int __pascal far get_text_color(int cga_color,int low_half,int high_half_mask) {
 }
 
 void load_from_opendats_metadata(int resource_id, const char* extension, FILE** out_fp, data_location* result, byte* checksum, int* size, dat_type** out_pointer) {
-	char image_filename[256];
+	char image_filename[POP_MAX_PATH];
 	FILE* fp = NULL;
 	dat_type* pointer;
 	*result = data_none;
@@ -2057,7 +2057,7 @@ void load_from_opendats_metadata(int resource_id, const char* extension, FILE** 
 				fp = fopen(image_filename, "rb");
 			}
 			else {
-				char image_filename_mod[256];
+				char image_filename_mod[POP_MAX_PATH];
 				// before checking data/, first try mods/MODNAME/data/
 				snprintf(image_filename_mod, sizeof(image_filename_mod), "mods/%s/%s", levelset_name, image_filename);
 				//printf("loading (binary) %s",image_filename_mod);

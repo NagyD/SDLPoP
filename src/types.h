@@ -407,7 +407,7 @@ SDL_COMPILE_TIME_ASSERT(image_data_size, sizeof(image_data_type) == 6);
 typedef struct dat_type {
 	struct dat_type* next_dat;
 	FILE* handle;
-	char filename[64];
+	char filename[POP_MAX_PATH];
 	dat_table_type* dat_table;
 	// handle and dat_table are NULL if the DAT is a directory.
 } dat_type;

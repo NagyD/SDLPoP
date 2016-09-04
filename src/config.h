@@ -27,6 +27,8 @@ The authors of this program may be contacted at http://forum.princed.org
 #define strcasecmp _stricmp
 #endif
 
+#define POP_MAX_PATH 256
+
 #define WINDOW_TITLE "Prince of Persia (SDLPoP) v1.16"
 
 // Enable or disable fading.
