@@ -83,6 +83,12 @@ The authors of this program may be contacted at http://forum.princed.org
 // Allow guard hitpoints not resetting to their default (maximum) value when re-entering the room
 #define REMEMBER_GUARD_HP
 
+// Enable completely disabling the time limit. To use this feature, set the starting time to -1.
+// This also disables the in-game messages that report how much time is left every minute.
+// The elasped time is still kept track of, so that the shortest times will appear in the Hall of Fame.
+#define ALLOW_INFINITE_TIME
+
+
 // Bugfixes:
 
 // The mentioned tricks can be found here: http://www.popot.org/documentation.php?doc=Tricks

@@ -724,7 +724,22 @@ void __pascal far show_hof() {
 	short index;
 	char time_text[12];
 	for (index = 0; index < hof_count; ++index) {
+
+#ifdef ALLOW_INFINITE_TIME
+		int minutes, seconds;
+		if (hof[index].min > 0) {
+			minutes = hof[index].min - 1;
+			seconds = hof[index].tick / 12;
+		} else {
+			// negative minutes means time ran 'forward' from 0:00 upwards
+			minutes = abs(hof[index].min) - 1;
+			seconds = (719 - hof[index].tick) / 12;
+		}
+		snprintf(time_text, sizeof(time_text), "%d:%02d", minutes, seconds);
+#else
 		snprintf(time_text, sizeof(time_text), "%d:%02d", hof[index].min - 1, hof[index].tick / 12);
+#endif
+
 		show_hof_text(&hof_rects[index], -1, 0, hof[index].name);
 		show_hof_text(&hof_rects[index], 1, 0, time_text);
 	}

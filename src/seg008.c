@@ -1689,6 +1689,10 @@ void __pascal far show_time() {
 		#ifdef FREEZE_TIME_DURING_END_MUSIC
 		(!(options.enable_freeze_time_during_end_music && next_level != current_level)) &&
 		#endif
+		#ifdef ALLOW_INFINITE_TIME
+		// prevent overflow
+		(!(rem_min == INT16_MIN && rem_tick == 1)) &&
+		#endif
 		rem_min != 0 &&
 		(current_level < 13 || (current_level == 13 && leveldoor_open == 0)) &&
 		current_level < 15
@@ -1724,6 +1728,11 @@ void __pascal far show_time() {
 			}
 			display_text_bottom(sprintf_temp);
 		} else {
+
+#ifdef ALLOW_INFINITE_TIME
+			if (rem_min == 0) // may also be negative, don't report "expired" in that case!
+#endif
+
 			display_text_bottom("TIME HAS EXPIRED!");
 		}
 		is_show_time = 0;

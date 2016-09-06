@@ -335,7 +335,7 @@ int quick_load() {
 		screen_updates_suspended = 0;
 		request_screen_update();
 		screen_updates_suspended = 1;
-		word old_rem_min = rem_min;
+		short old_rem_min = rem_min;
 		word old_rem_tick = rem_tick;
 
 		ok = quick_process(process_load);
@@ -359,7 +359,9 @@ int quick_load() {
 			}
 			else {
 				if (rem_min == 6) rem_tick = 719; // crop to "5 minutes" exactly, if hitting the threshold in <1 minute
-				if (rem_min > 5) --rem_min;
+				if (rem_min > 5 /*be lenient, not much time left*/ || rem_min < 0 /*time runs 'forward' if < 0*/) {
+					--rem_min;
+				}
 			}
 
 		}
@@ -577,13 +579,28 @@ int __pascal far process_key() {
 			case SDL_SCANCODE_MINUS:
 			case SDL_SCANCODE_KP_MINUS:		// '-' --> subtract time cheat
 				if (rem_min > 1) --rem_min;
+
+#ifdef ALLOW_INFINITE_TIME
+				else if (rem_min < -1) ++rem_min; // if negative/infinite, time runs 'forward'
+				else if (rem_min == -1) rem_tick = 720; // resets the timer to 00:00:00
+#endif
+
 				text_time_total = 0;
 				text_time_remaining = 0;
 				is_show_time = 1;
 			break;
 			case SDL_SCANCODE_EQUALS | WITH_SHIFT: // '+'
 			case SDL_SCANCODE_KP_PLUS:	   // '+' --> add time cheat
+
+#ifdef ALLOW_INFINITE_TIME
+				if (rem_min < 0) { // if negative/infinite, time runs 'forward'
+					if (rem_min > INT16_MIN) --rem_min;
+				}
+				else ++rem_min;
+#else
 				++rem_min;
+#endif
+
 				text_time_total = 0;
 				text_time_remaining = 0;
 				is_show_time = 1;
