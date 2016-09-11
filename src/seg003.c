@@ -349,7 +349,11 @@ int __pascal far play_level_2() {
 				#ifdef USE_DEBUG_CHEATS
                 if (debug_cheats_enabled && is_timer_displayed) {
 					char timer_text[16];
-					snprintf(timer_text, 16, "%02d:%02d:%02d", rem_min - 1, rem_tick / 12, rem_tick % 12);
+					if (rem_min < 0) {
+						snprintf(timer_text, 16, "%02d:%02d:%02d", -(rem_min + 1), (719 - rem_tick) / 12, (719 - rem_tick) % 12);
+					} else {
+						snprintf(timer_text, 16, "%02d:%02d:%02d", rem_min - 1, rem_tick / 12, rem_tick % 12);
+					}
 					screen_updates_suspended = 1;
 					draw_rect(&timer_rect, color_0_black);
 					show_text(&timer_rect, -1, -1, timer_text);

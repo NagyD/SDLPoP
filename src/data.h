@@ -46,7 +46,7 @@ extern word resurrect_time;
 // data:42B4
 extern word dont_reset_time;
 // data:4F7E
-extern word rem_min;
+extern short rem_min;
 // data:4F82
 extern word rem_tick;
 // data:4608
