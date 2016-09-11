@@ -746,11 +746,22 @@ void __pascal far show_hof() {
 	// stub
 }
 
-static const char* hof_path = "PRINCE.HOF";
+static const char* hof_file = "PRINCE.HOF";
+
+const char* get_hof_path(char* custom_path_buffer, size_t max_len) {
+	if (!use_custom_levelset) {
+		return hof_file;
+	}
+	// if playing a custom levelset, try to use the mod folder
+	snprintf(custom_path_buffer, max_len, "mods/%s/%s", levelset_name, hof_file /*PRINCE.HOF*/ );
+	return custom_path_buffer;
+}
 
 // seg001:0F17
 void __pascal far hof_write() {
 	int handle;
+	char custom_hof_path[POP_MAX_PATH];
+	const char* hof_path = get_hof_path(custom_hof_path, sizeof(custom_hof_path));
 	// no O_TRUNC
 	handle = open(hof_path, O_WRONLY | O_CREAT | O_BINARY, 0600);
 	if (handle < 0 ||
@@ -766,6 +777,8 @@ void __pascal far hof_write() {
 void __pascal far hof_read() {
 	int handle;
 	hof_count = 0;
+	char custom_hof_path[POP_MAX_PATH];
+	const char* hof_path = get_hof_path(custom_hof_path, sizeof(custom_hof_path));
 	handle = open(hof_path, O_RDONLY | O_BINARY);
 	if (handle < 0)
 		return;
