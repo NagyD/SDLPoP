@@ -29,7 +29,7 @@ The authors of this program may be contacted at http://forum.princed.org
 
 #define POP_MAX_PATH 256
 
-#define WINDOW_TITLE "Prince of Persia (SDLPoP) v1.16"
+#define WINDOW_TITLE "Prince of Persia (SDLPoP) v1.17 - pre-release"
 
 // Enable or disable fading.
 // Fading used to be very buggy, but now it works correctly.
