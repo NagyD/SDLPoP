@@ -278,9 +278,20 @@ const char* quick_file = "QUICKSAVE.SAV";
 const char quick_version[] = "V1.16b4 ";
 char quick_control[] = "........";
 
+const char* get_quick_path(char* custom_path_buffer, size_t max_len) {
+	if (!use_custom_levelset) {
+		return quick_file;
+	}
+	// if playing a custom levelset, try to use the mod folder
+	snprintf(custom_path_buffer, max_len, "mods/%s/%s", levelset_name, quick_file /*QUICKSAVE.SAV*/ );
+	return custom_path_buffer;
+}
+
 int quick_save() {
 	int ok = 0;
-	quick_fp = fopen(quick_file, "wb");
+	char custom_quick_path[POP_MAX_PATH];
+	const char* path = get_quick_path(custom_quick_path, sizeof(custom_quick_path));
+	quick_fp = fopen(path, "wb");
 	if (quick_fp != NULL) {
 		process_save((void*) quick_version, COUNT(quick_version));
 		ok = quick_process(process_save);
@@ -317,9 +328,10 @@ void restore_room_after_quick_load() {
 }
 
 int quick_load() {
-
 	int ok = 0;
-	quick_fp = fopen(quick_file, "rb");
+	char custom_quick_path[POP_MAX_PATH];
+	const char* path = get_quick_path(custom_quick_path, sizeof(custom_quick_path));
+	quick_fp = fopen(path, "rb");
 	if (quick_fp != NULL) {
 		// check quicksave version is compatible
 		process_load(quick_control, COUNT(quick_control));
@@ -1582,19 +1594,32 @@ void __pascal far load_kid_sprite() {
 	load_chtab_from_file(id_chtab_2_kid, 400, "KID.DAT", 1<<7);
 }
 
+const char* save_file = "PRINCE.SAV";
+
+const char* get_save_path(char* custom_path_buffer, size_t max_len) {
+	if (!use_custom_levelset) {
+		return save_file;
+	}
+	// if playing a custom levelset, try to use the mod folder
+	snprintf(custom_path_buffer, max_len, "mods/%s/%s", levelset_name, save_file /*PRINCE.SAV*/ );
+	return custom_path_buffer;
+}
+
 // seg000:1D45
 void __pascal far save_game() {
 	word success;
 	int handle;
 	success = 0;
+	char custom_save_path[POP_MAX_PATH];
+	const char* save_path = get_save_path(custom_save_path, sizeof(custom_save_path));
 	// no O_TRUNC
-	handle = open("PRINCE.SAV", O_WRONLY | O_CREAT | O_BINARY, 0600);
+	handle = open(save_path, O_WRONLY | O_CREAT | O_BINARY, 0600);
 	if (handle == -1) goto loc_1DB8;
 	if (write(handle, &rem_min, 2) == 2) goto loc_1DC9;
 	loc_1D9B:
 	close(handle);
 	if (!success) {
-		unlink("PRINCE.SAV");
+		unlink(save_path);
 	}
 	loc_1DB8:
 	if (!success) goto loc_1E18;
@@ -1618,7 +1643,9 @@ short __pascal far load_game() {
 	int handle;
 	word success;
 	success = 0;
-	handle = open("PRINCE.SAV", O_RDONLY | O_BINARY);
+	char custom_save_path[POP_MAX_PATH];
+	const char* save_path = get_save_path(custom_save_path, sizeof(custom_save_path));
+	handle = open(save_path, O_RDONLY | O_BINARY);
 	if (handle == -1) goto loc_1E99;
 	if (read(handle, &rem_min, 2) == 2) goto loc_1E9E;
 	loc_1E8E:
