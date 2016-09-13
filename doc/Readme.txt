@@ -15,6 +15,9 @@ Contributors:
 * segra (segrax on GitHub) (Joystick support, resizable window)
 * DarkPrince (bug reports)
 * Andrey Vasilkin / digi@os2.snc.ru (eComStation (OS/2) support)
+* mfn
+* diddledan (Visual C++ (NMake) support)
+* zaps166
 
 Forum board: http://forum.princed.org/viewforum.php?f=126
 GitHub: https://github.com/NagyD/SDLPoP
@@ -80,6 +83,8 @@ A:
 * record -- Start recording immediately. (See the Replays section.)
 * replay or a *.P1R filename -- Start replaying immediately. (See the Replays section.)
 * mod "Mod Name" -- Run with custom data files from the folder "mods/Mod Name/"
+	Hall-of-Fame and saved game files will also be placed in the mod's folder.
+* debug -- Enable debug cheats.
 
 Q: What keys can I use?
 A:
@@ -95,11 +100,11 @@ Controlling the kid:
 You can also use the numeric keypad.
 
 Gamepad equivalents:
-* left/right = left/right
+* left/right/up/down = left/right/up/down
 * A = down
-* B = quit
 * X = shift
 * Y = up
+* Start = quit
 
 Controlling the game:
 * Esc: pause game
@@ -178,7 +183,7 @@ Beware, some mods (especially the harder ones) might rely on bugs that are fixed
 Since version 1.16, SDLPoP will ask you whether gameplay quirks should be fixed or not.
 You can set your choice permanently in the file 'SDLPoP.ini':
 - Set the option 'use_fixes_and_enhancements' to 'false' to get the exact behavior of the original game.
-- Alternatively, set the option 'use_fixes_and_enhancements' to 'true'. You can then also enable or disable 
+- Alternatively, set the option 'use_fixes_and_enhancements' to 'true'. You can then also enable or disable
   individual fixes and enhancements, depending on your preference.
 
 Furthermore, SDLPoP opens up new possibilities for mod making.
@@ -199,7 +204,7 @@ Starting from version 1.16, you can capture or view replays in SDLPoP.
 To start recording, press Ctrl+Tab while in game. To stop recording, press Ctrl+Tab again.
 Your replays get saved in the SDLPoP folder as files with a .P1R extension (REPLAY_001.P1R, REPLAY_002.P1R, and so on).
 
-To view a replay, you can press Tab while on the title screen. 
+To view a replay, you can press Tab while on the title screen.
 The game then looks for replays with the REPLAY_XXX.P1R pattern and plays those in order (you can cycle by pressing Tab again).
 You can also double-click on a replay file (and tell the OS that the file needs to be opened with the SDLPoP executable).
 SDLPoP will then immediately play that replay. Dragging and dropping onto the executable also works.
