@@ -154,7 +154,7 @@ static FILE* open_dat_from_root_or_data_dir(const char* filename) {
 		char data_path[POP_MAX_PATH];
 		snprintf(data_path, sizeof(data_path), "data/%s", filename);
 
-		// check whether this is a regular file and not a directory (otherwise, don't open)
+		// verify that this is a regular file and not a directory (otherwise, don't open)
 		struct stat path_stat;
 		stat(data_path, &path_stat);
 		if (S_ISREG(path_stat.st_mode)) {
@@ -2070,7 +2070,14 @@ void load_from_opendats_metadata(int resource_id, const char* extension, FILE** 
 			}
 		} else {
 			// If it's a directory:
-			snprintf(image_filename,sizeof(image_filename),"data/%s/res%d.%s",pointer->filename, resource_id, extension);
+			char filename_no_ext[POP_MAX_PATH];
+			// strip the .DAT file extension from the filename (use folders simply named TITLE, KID, VPALACE, etc.)
+			strncpy(filename_no_ext, pointer->filename, sizeof(filename_no_ext));
+			size_t len = strlen(filename_no_ext);
+			if (len >= 5 && filename_no_ext[len-4] == '.') {
+				filename_no_ext[len-4] = '\0'; // terminate, so ".DAT" is deleted from the filename
+			}
+			snprintf(image_filename,sizeof(image_filename),"data/%s/res%d.%s",filename_no_ext, resource_id, extension);
 			if (!use_custom_levelset) {
 				//printf("loading (binary) %s",image_filename);
 				fp = fopen(image_filename, "rb");
