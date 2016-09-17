@@ -83,7 +83,6 @@ A:
 * record -- Start recording immediately. (See the Replays section.)
 * replay or a *.P1R filename -- Start replaying immediately. (See the Replays section.)
 * mod "Mod Name" -- Run with custom data files from the folder "mods/Mod Name/"
-	Hall-of-Fame and saved game files will also be placed in the mod's folder.
 * debug -- Enable debug cheats.
 
 Q: What keys can I use?
@@ -144,10 +143,15 @@ Cheats:
 * Shift-S: Restore lost hit-point. (Like a small red potion.)
 * Shift-T: Give more hit-points. (Like a big red potion.)
 
+Debug cheats:
+* [: shift kid 1 pixel to the left
+* ]: shift kid 1 pixel to the right
+* t: toggle timer
+
 Q: Where is the music?
 A:
 Since version 1.13, the game supports loading music from the data/music folder.
-The music is not included in releases because it is very big, and it does not change between versions.
+Until 1.15, music was not included in releases because it is very big, and it does not change between versions.
 You need to get the music from here: (38 MB)
 	http://www.popot.org/get_the_games/various/PoP1_DOS_music.zip
 It's the last link here: http://www.popot.org/get_the_games.php?game=1
@@ -165,11 +169,12 @@ You can either copy the modified .DAT files to the folder of the game, or the ga
 
 Since version 1.17, the game can also load from mod folders that have been placed in the "mods/" directory.
 If you use this method, only the files different from the original V1.0 data are required in the mod's folder.
-To choose which mod to play, do one of the following:
-* Open SDLPoP.ini and change the 'levelset' option to the name of the mod folder.
+To choose which mod from the "mods/" folder to play, do one of the following:
+* Open SDLPoP.ini and change the 'levelset' option to the name of the mod's folder.
 * Use the command line option "mod", like so: prince.exe mod "Mod Name"
+Hall-of-Fame and saved game files will also be placed in the mod's folder.
 
-Another way is to start the game while the current directory is the mod's directory.
+Another way to play a mod is to start the game while the current directory is the mod's directory.
 You can do this from the command line, or with batch files / shell scripts.
 This is useful if you want to compare the behavior of this port and the original DOS version (to find bugs).
 	Especially if you're editing the level and don't want to copy LEVELS.DAT from one place to the other.
@@ -178,9 +183,11 @@ This is useful if you want to compare the behavior of this port and the original
 
 Note that this port does not recognize if the PRINCE.EXE of the mod was changed.
 Since version 1.16, you can configure some options in SDLPoP.ini: starting time, level types, etc.
+In addition, since version 1.17, mods in the "mods/" folder can use a custom configuration file "mod.ini".
+Options in this file can override (most of) the gameplay-related options in SDLPoP.ini.
 
 Beware, some mods (especially the harder ones) might rely on bugs that are fixed in SDLPoP.
-Since version 1.16, SDLPoP will ask you whether gameplay quirks should be fixed or not.
+Since version 1.16, SDLPoP can ask you whether gameplay quirks should be fixed or not.
 You can set your choice permanently in the file 'SDLPoP.ini':
 - Set the option 'use_fixes_and_enhancements' to 'false' to get the exact behavior of the original game.
 - Alternatively, set the option 'use_fixes_and_enhancements' to 'true'. You can then also enable or disable
