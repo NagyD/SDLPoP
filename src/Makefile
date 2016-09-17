@@ -1,5 +1,4 @@
 # Project: SDLPoP
-# Makefile created by Dev-C++ 4.9.9.2
 
 CC = gcc
 RM = rm -f
