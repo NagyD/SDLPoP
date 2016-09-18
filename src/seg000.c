@@ -40,7 +40,17 @@ void far pop_main() {
 	check_seqtable_matches_original();
 	#endif
 
-	load_options();
+	load_global_options();
+#ifdef USE_REPLAY
+	check_if_opening_replay_file();
+#endif
+	check_mod_param();
+	load_mod_options();
+
+	// CusPop option
+	is_blind_mode = start_in_blind_mode;
+	// Bug: with start_in_blind_mode enabled, moving objects are not displayed until blind mode is toggled off+on??
+
 	apply_seqtbl_patches();
 
 	char sprintf_temp[100];
@@ -434,7 +444,7 @@ int __pascal far process_key() {
 			if (key == SDL_SCANCODE_F9) need_quick_load = 1;
 			#endif
 			#ifdef USE_REPLAY
-			if (key == SDL_SCANCODE_TAB) {
+			if (key == SDL_SCANCODE_TAB || need_start_replay) {
 				start_replay();
 			}
 			else
@@ -1708,6 +1718,27 @@ void __pascal far free_optional_sounds() {
 	}
 	*/
 	// stub
+}
+
+const byte tbl_snd_is_music[] = {
+		0,0,0,0,0,0,0,0,0,0, //9
+		0,0,0,0,0,0,0,0,0,0, //19
+		0,0,0,0,1,1,1,1,1,1, //29
+		1,0,1,1,1,1,1,1,0,1, //39
+		1,1,0,1,0,0,0,0,0,0, //49
+		1,0,1,1,1,1,1
+};
+
+void reload_non_music_sounds() {
+	int i;
+	for (i = 0; i < COUNT(tbl_snd_is_music); ++i) {
+		if (!tbl_snd_is_music[i]) {
+			free_sound(sound_pointers[i]);
+			sound_pointers[i] = NULL;
+		}
+	}
+	load_sounds(0, 43);
+	load_opt_sounds(44, 56);
 }
 
 // seg000:22BB

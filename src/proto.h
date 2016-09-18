@@ -66,6 +66,7 @@ short __pascal far load_game();
 void __pascal far clear_screen_and_sounds();
 void __pascal far parse_cmdline_sound();
 void __pascal far free_optional_sounds();
+void reload_non_music_sounds();
 void __pascal far free_optsnd_chtab();
 void __pascal far load_title_images(int bgcolor);
 void __pascal far show_copyprot(int where);
@@ -610,11 +611,14 @@ void check_seqtable_matches_original();
 // OPTIONS.C
 void use_default_options();
 void disable_fixes_and_enhancements();
-void load_options();
+void load_global_options();
+void check_mod_param();
+void load_mod_options();
 void show_use_fixes_and_enhancements_prompt();
 
 // REPLAY.C
 #ifdef USE_REPLAY
+void check_if_opening_replay_file();
 void init_record_replay();
 void replay_restore_level();
 int restore_savestate_from_buffer();

@@ -345,19 +345,23 @@ static int mod_ini_callback(const char *section, const char *name, const char *v
     return 0;
 }
 
-void load_options() {
+void load_global_options() {
     use_default_options();
     ini_load("SDLPoP.ini", global_ini_callback); // global configuration
+}
 
-    // The 'mod' command line argument can override the levelset choice in SDLPoP.ini
-    // usage: prince mod "Mod Name"
-    const char* mod_param = check_param("mod");
-    if (mod_param != NULL) {
-        use_custom_levelset = true;
-        memset(levelset_name, 0, sizeof(levelset_name));
-        strncpy(levelset_name, mod_param, sizeof(levelset_name));
-    }
+void check_mod_param() {
+	// The 'mod' command line argument can override the levelset choice in SDLPoP.ini
+	// usage: prince mod "Mod Name"
+	const char* mod_param = check_param("mod");
+	if (mod_param != NULL) {
+		use_custom_levelset = true;
+		memset(levelset_name, 0, sizeof(levelset_name));
+		strncpy(levelset_name, mod_param, sizeof(levelset_name));
+	}
+}
 
+void load_mod_options() {
     // load mod-specific INI configuration
     if (use_custom_levelset) {
         char filename[POP_MAX_PATH];
@@ -365,11 +369,7 @@ void load_options() {
         ini_load(filename, mod_ini_callback);
     }
 
-    if (!options.use_fixes_and_enhancements) disable_fixes_and_enhancements();
-
-    // CusPop option
-    is_blind_mode = start_in_blind_mode;
-    // Bug: with start_in_blind_mode enabled, moving objects are not displayed until blind mode is toggled off+on??
+	if (!options.use_fixes_and_enhancements) disable_fixes_and_enhancements();
 }
 
 void show_use_fixes_and_enhancements_prompt() {

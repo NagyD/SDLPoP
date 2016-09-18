@@ -576,6 +576,7 @@ extern word last_loose_sound;
 extern byte recording INIT(= 0);
 extern byte replaying INIT(= 0);
 extern dword num_replay_ticks INIT(= 0);
+extern byte need_start_replay INIT(= 0);
 extern byte need_replay_cycle INIT(= 0);
 #endif // USE_REPLAY
 
