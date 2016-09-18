@@ -11,13 +11,22 @@ Contributors:
 * StaticReturn (Mac OS X: Makefile (for older SDL1 version), bug reports)
 * Poirot (ecalot on GitHub) (Mac OS X: Now compatible with Falcury SDL2 port)
 * kees (bugfixes)
-* Falcury (porting to SDL2, bugfixes, improvements, additions)
+* Falcury
+	* porting to SDL2
+	* quicksave improvements
+	* replay files
+	* SDLPoP.ini: added basic support and constantly adding new options
+	* mod folders
+	* fake tiles
+	* readable sequence table
+	* CMake support
+	* and various other bugfixes, improvements, additions
 * segra (segrax on GitHub) (Joystick support, resizable window)
 * DarkPrince (bug reports)
 * Andrey Vasilkin / digi@os2.snc.ru (eComStation (OS/2) support)
-* mfn
+* mfn (fixed a small bug when USE_MIXER is undefined)
 * diddledan (Visual C++ (NMake) support)
-* zaps166
+* zaps166 (small Makefile fixes)
 
 Forum board: http://forum.princed.org/viewforum.php?f=126
 GitHub: https://github.com/NagyD/SDLPoP
@@ -46,7 +55,7 @@ Sources that helped in making the disassembly:
 LICENSE
 =======
 
-This program is open source under the GNU General Public License terms, see gpl-3.0.txt.
+This program is open source under the GNU General Public License terms, see gpl-3.0.txt and src/GPLv3.h.
 
 USAGE
 =====
@@ -76,7 +85,7 @@ eComStation (OS/2):
 Q: What command-line options are there?
 A:
 * megahit -- Enable cheats.
-* a number from 1 to 14 -- Start the given level.
+* a number from 1 to 14 -- Start the given level. (if cheats are enabled)
 * draw -- Draw directly to the screen, skipping the offscreen buffer.
 * full -- Run in full screen mode.
 * demo -- Run in demo mode: only the first two levels will be playable, and quotes from magazine reviews will be displayed.
@@ -99,7 +108,7 @@ Controlling the kid:
 You can also use the numeric keypad.
 
 Gamepad equivalents:
-* left/right/up/down = left/right/up/down
+* arrows = D-Pad/joysticks
 * A = down
 * X = shift
 * Y = up
