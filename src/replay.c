@@ -29,6 +29,7 @@ The authors of this program may be contacted at http://forum.princed.org
 byte moves[MAX_REPLAY_DURATION] = {0}; // static memory for now because it is easier (should this be dynamic?)
 byte replay_options[POP_MAX_OPTIONS_SIZE]; // Need to know what gameplay options are active during recording, for reproducability
 size_t replay_options_size;
+byte stored_options[POP_MAX_OPTIONS_SIZE];
 
 char replay_levelset_name[POP_MAX_PATH];
 char stored_levelset_name[POP_MAX_PATH];
@@ -185,7 +186,7 @@ void change_working_dir_to_sdlpop_root() {
 
 // Called in pop_main(); check whether a replay file is being opened directly (double-clicked, dragged onto .exe, etc.)
 void check_if_opening_replay_file() {
-	if (!options.enable_replay) return;
+	if (!enable_replay) return;
 	if (g_argc > 1) {
 		char *filename = g_argv[1]; // file dragged on top of executable or double clicked
 		char *e = strrchr(filename, '.');
@@ -208,7 +209,7 @@ void check_if_opening_replay_file() {
 }
 
 void init_record_replay() {
-    if (!options.enable_replay) return;
+    if (!enable_replay) return;
     if (check_param("record")) {
         start_recording();
     }
@@ -325,26 +326,24 @@ void stop_recording() {
 }
 
 void apply_replay_options() {
-    save_options(); // stores the current options, so they can be restored later
+	// store the current options, so they can be restored later
+	save_options_to_buffer(stored_options, sizeof(stored_options));
 
-    SDL_RWops* rw = SDL_RWFromMem(replay_options, replay_options_size);
-	load_options_from_rw(rw); // apply the options from the memory buffer (max. replay_options_size bytes will be read)
-	SDL_RWclose(rw);
+	// apply the options from the memory buffer (max. replay_options_size bytes will be read)
+	load_options_from_buffer(replay_options, replay_options_size);
 
-    if (!options.use_fixes_and_enhancements) disable_fixes_and_enhancements();
-    options.enable_replay = 1; // just to be safe...
-    options.enable_quicksave = 1;
+    if (!use_fixes_and_enhancements) disable_fixes_and_enhancements();
+    enable_replay = 1; // just to be safe...
 
 	memcpy(stored_levelset_name, levelset_name, sizeof(levelset_name));
 	memcpy(levelset_name, replay_levelset_name, sizeof(levelset_name));
 	use_custom_levelset = (levelset_name[0] == '\0') ? 0 : 1;
 
-	load_mod_options(); // handle customized set-up in mods/MODNAME/mod.ini
 	reload_resources();
 }
 
 void restore_normal_options() {
-    load_saved_options();
+	load_options_from_buffer(stored_options, sizeof(stored_options));
 
 	start_level = 0; // may have been set to a different value by the replay
 
@@ -353,7 +352,7 @@ void restore_normal_options() {
 }
 
 void start_replay() {
-	if (!options.enable_replay) return;
+	if (!enable_replay) return;
 	need_start_replay = 0;
 	list_replay_files();
 	replaying = 1;
@@ -425,13 +424,9 @@ void save_recorded_replay() {
 
 		// save the options
 		byte temp_options[POP_MAX_OPTIONS_SIZE];
-		SDL_RWops* rw = SDL_RWFromMem(temp_options, sizeof(temp_options));
-		write_options_to_rw(rw);
-		Sint64 temp_size = SDL_RWtell(rw);
-		if (temp_size < 0) temp_size = 0;
-		SDL_RWclose(rw);
-		fwrite(&temp_size, sizeof(size_t), 1, replay_fp);
-		fwrite(temp_options, (size_t) temp_size, 1, replay_fp);
+		size_t options_size = save_options_to_buffer(temp_options, sizeof(temp_options));
+		fwrite(&options_size, sizeof(size_t), 1, replay_fp);
+		fwrite(temp_options, options_size, 1, replay_fp);
 
         // save the rest of the replay data
         fwrite(&start_level, sizeof(start_level), 1, replay_fp);

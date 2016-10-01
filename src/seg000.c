@@ -372,7 +372,7 @@ int quick_load() {
 
 		#ifdef USE_QUICKLOAD_PENALTY
 		// Subtract one minute from the remaining time (if it is above 5 minutes)
-		if (options.enable_quicksave_penalty) {
+		if (enable_quicksave_penalty) {
 			int ticks_elapsed = 720 * (rem_min - old_rem_min) + (rem_tick - old_rem_tick);
 			// don't restore time at all if the elapsed time is between 0 and 1 minutes
 			if (ticks_elapsed > 0 && ticks_elapsed < 720) {
@@ -396,7 +396,7 @@ int need_quick_save = 0;
 int need_quick_load = 0;
 
 void check_quick_op() {
-	if (!options.enable_quicksave) return;
+	if (!enable_quicksave) return;
 	if (need_quick_save) {
 		if (!is_feather_fall && quick_save()) {
 			display_text_bottom("QUICKSAVE");
@@ -548,7 +548,7 @@ int __pascal far process_key() {
 				} else {
 					if (current_level == 15 && cheats_enabled) {
 #ifdef USE_COPYPROT
-                        if (options.enable_copyprot) {
+                        if (enable_copyprot) {
                         	next_level = copyprot_level;
                         	copyprot_level = -1;
                         }
@@ -1667,7 +1667,7 @@ short __pascal far load_game() {
 	if (read(handle, &start_level, 2) != 2) goto loc_1E8E;
 	if (read(handle, &hitp_beg_lev, 2) != 2) goto loc_1E8E;
 #ifdef USE_COPYPROT
-	if (options.enable_copyprot && copyprot_level > 0) {
+	if (enable_copyprot && copyprot_level > 0) {
 		copyprot_level = start_level;
 	}
 #endif

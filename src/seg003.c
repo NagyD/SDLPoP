@@ -70,7 +70,7 @@ const cutscene_ptr_type tbl_cutscenes[16] = {
 void __pascal far play_level(int level_number) {
 	cutscene_ptr_type cutscene_func;
 #ifdef USE_COPYPROT
-	if (options.enable_copyprot && level_number == copyprot_level) {
+	if (enable_copyprot && level_number == copyprot_level) {
 		level_number = 15;
 	}
 #endif
@@ -133,7 +133,7 @@ void __pascal far play_level(int level_number) {
 		level_number = play_level_2();
 		// hacked...
 #ifdef USE_COPYPROT
-		if (options.enable_copyprot && level_number == copyprot_level && !demo_mode) {
+		if (enable_copyprot && level_number == copyprot_level && !demo_mode) {
 			level_number = 15;
 		} else {
 			if (level_number == 16) {
@@ -545,7 +545,7 @@ void __pascal far bump_into_opponent() {
 		if (ABS(distance) <= 15) {
 
 			#ifdef FIX_PAINLESS_FALL_ON_GUARD
-			if (options.fix_painless_fall_on_guard) {
+			if (fix_painless_fall_on_guard) {
 				if (Char.fall_y >= 33) return; // don't bump; dead
 				else if (Char.fall_y >= 22) { // medium land
 					take_hp(1);
