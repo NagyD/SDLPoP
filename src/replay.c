@@ -119,7 +119,7 @@ void list_replay_files() {
     }
 
     num_replay_files = 0;
-	dp = opendir("replays/");
+	dp = opendir(replays_folder);
 	if (dp != NULL) {
 		while ((ep = readdir(dp))) {
 			char* ext = strrchr(ep->d_name, '.');
@@ -133,7 +133,7 @@ void list_replay_files() {
                 replay_info_type* replay_info = &replay_list[num_replay_files-1]; // current replay file
 				memset(replay_info, 0, sizeof(replay_info_type));
                 // store the filename of the replay
-				snprintf(replay_info->filename, POP_MAX_PATH, "replays/%s", ep->d_name);
+				snprintf(replay_info->filename, POP_MAX_PATH, "%s/%s", replays_folder, ep->d_name);
 				// get the creation time
 				struct stat st;
 				if (stat(replay_info->filename, &st) == 0) {
@@ -410,13 +410,13 @@ void save_recorded_replay() {
 	strftime(timestamp, sizeof(timestamp), "%Y-%m-%d", tm_now);
 
 	char filename[POP_MAX_PATH];
-	snprintf(filename, sizeof(filename), "replays/%s %s L%d - 1.p1r", timestamp, name, current_level);
     word replay_number = 1;
-    while (access(filename, F_OK) != -1) { // file already exists
-        ++replay_number;
-		snprintf(filename, sizeof(filename), "replays/%s %s L%d - %d.p1r",
-				 timestamp, name, current_level, replay_number);
-    }
+    do {
+		snprintf(filename, sizeof(filename), "%s/%s %s L%d - %d.p1r",
+				 replays_folder, timestamp, name, current_level, replay_number);
+		++replay_number;
+	} while (access(filename, F_OK) != -1); // check if file already exists
+
     replay_fp = fopen(filename, "wb");
     if (replay_fp != NULL) {
         fwrite(replay_version, COUNT(replay_version), 1, replay_fp);

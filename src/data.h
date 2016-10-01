@@ -578,6 +578,7 @@ extern byte replaying INIT(= 0);
 extern dword num_replay_ticks INIT(= 0);
 extern byte need_start_replay INIT(= 0);
 extern byte need_replay_cycle INIT(= 0);
+extern char replays_folder[POP_MAX_PATH] INIT(= "replays");
 #endif // USE_REPLAY
 
 extern options_type options INIT(= {{0}});

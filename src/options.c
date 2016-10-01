@@ -258,6 +258,13 @@ static int global_ini_callback(const char *section, const char *name, const char
         process_boolean("enable_quicksave", &options.enable_quicksave);
         process_boolean("enable_quicksave_penalty", &options.enable_quicksave_penalty);
         process_boolean("enable_replay", &options.enable_replay);
+
+        if (strcasecmp(name, "replays_folder") == 0) {
+            if (value[0] != '\0' && strcasecmp(value, "default") != 0) {
+                strcpy(replays_folder, value);
+            }
+            return 1;
+        }
     }
 
     if (check_ini_section("Enhancements")) {
