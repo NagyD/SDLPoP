@@ -27,8 +27,8 @@ The authors of this program may be contacted at http://forum.princed.org
 
 #define MAX_REPLAY_DURATION 345600 // 8 hours: 720 * 60 * 8 ticks
 byte moves[MAX_REPLAY_DURATION] = {0}; // static memory for now because it is easier (should this be dynamic?)
-options_type replay_options; // Need to know what gameplay options are active during recording, for reproducability
-options_type stored_options;
+byte replay_options[POP_MAX_OPTIONS_SIZE]; // Need to know what gameplay options are active during recording, for reproducability
+size_t replay_options_size;
 
 char replay_levelset_name[POP_MAX_PATH];
 char stored_levelset_name[POP_MAX_PATH];
@@ -325,14 +325,13 @@ void stop_recording() {
 }
 
 void apply_replay_options() {
-    stored_options = options;
-    options = replay_options;
+    save_options(); // stores the current options, so they can be restored later
+
+    SDL_RWops* rw = SDL_RWFromMem(replay_options, replay_options_size);
+	load_options_from_rw(rw); // apply the options from the memory buffer (max. replay_options_size bytes will be read)
+	SDL_RWclose(rw);
+
     if (!options.use_fixes_and_enhancements) disable_fixes_and_enhancements();
-    // but it does not make sense to apply these as well:
-    options.enable_mixer = stored_options.enable_mixer;
-    options.enable_fade = stored_options.enable_fade;
-    options.enable_flash = stored_options.enable_flash;
-    options.enable_text = stored_options.enable_text;
     options.enable_replay = 1; // just to be safe...
     options.enable_quicksave = 1;
 
@@ -345,16 +344,12 @@ void apply_replay_options() {
 }
 
 void restore_normal_options() {
-    options = stored_options;
+    load_saved_options();
 
 	start_level = 0; // may have been set to a different value by the replay
 
 	memcpy(levelset_name, stored_levelset_name, sizeof(levelset_name));
 	use_custom_levelset = (levelset_name[0] == '\0') ? 0 : 1;
-
-	load_global_options();
-	check_mod_param();
-	load_mod_options();
 }
 
 void start_replay() {
@@ -427,8 +422,18 @@ void save_recorded_replay() {
         // embed a savestate into the replay
         fwrite(&savestate_size, sizeof(savestate_size), 1, replay_fp);
         fwrite(savestate_buffer, savestate_size, 1, replay_fp);
+
+		// save the options
+		byte temp_options[POP_MAX_OPTIONS_SIZE];
+		SDL_RWops* rw = SDL_RWFromMem(temp_options, sizeof(temp_options));
+		write_options_to_rw(rw);
+		Sint64 temp_size = SDL_RWtell(rw);
+		if (temp_size < 0) temp_size = 0;
+		SDL_RWclose(rw);
+		fwrite(&temp_size, sizeof(size_t), 1, replay_fp);
+		fwrite(temp_options, (size_t) temp_size, 1, replay_fp);
+
         // save the rest of the replay data
-        fwrite(&options, sizeof(options), 1, replay_fp);
         fwrite(&start_level, sizeof(start_level), 1, replay_fp);
         fwrite(&saved_random_seed, sizeof(saved_random_seed), 1, replay_fp);
         num_replay_ticks = curr_tick;
@@ -485,11 +490,22 @@ void load_replay() {
             printf("Warning: unexpected savestate format!\n");
         }*/
 		memcpy(replay_levelset_name, header.levelset_name, sizeof(header.levelset_name));
-        // load the savestate
+
+		// load the savestate
         fread(&savestate_size, sizeof(savestate_size), 1, replay_fp);
         fread(savestate_buffer, savestate_size, 1, replay_fp);
-        // load the rest of the replay data
-        fread(&replay_options, sizeof(replay_options), 1, replay_fp);
+
+		// load the replay options
+		if (strncmp(header.replay_version, "V1.16", 5) == 0) {
+			// backward compatibility: only the first 37 (of 64) written bytes are actually used in the old format
+			fread(replay_options, 64, 1, replay_fp);
+			replay_options_size = 37;
+		} else {
+			fread(&replay_options_size, sizeof(replay_options_size), 1, replay_fp);
+			fread(replay_options, replay_options_size, 1, replay_fp);
+		}
+
+		// load the rest of the replay data
         fread(&start_level, sizeof(start_level), 1, replay_fp);
         fread(&saved_random_seed, sizeof(saved_random_seed), 1, replay_fp);
         fread(&num_replay_ticks, sizeof(num_replay_ticks), 1, replay_fp);

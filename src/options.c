@@ -62,6 +62,103 @@ void use_default_options() {
     options.fix_jump_through_wall_above_gate = 1;
 }
 
+
+byte pop_initial_options[POP_MAX_OPTIONS_SIZE];
+
+int process_rw_write(SDL_RWops* rw, void* data, size_t data_size) {
+    return SDL_RWwrite(rw, data, data_size, 1);
+}
+
+int process_rw_read(SDL_RWops* rw, void* data, size_t data_size) {
+    return SDL_RWread(rw, data, data_size, 1);
+    // if this returns 0, most likely the end of the stream has been reached
+}
+
+typedef int rw_process_func_type(SDL_RWops* rw, void* data, size_t data_size);
+
+void options_process(SDL_RWops* rw, rw_process_func_type process_func) {
+#define process(x) if (!process_func(rw, &(x), sizeof(x))) return
+    process(options.use_fixes_and_enhancements);
+    process(options.enable_copyprot);
+    process(options.enable_mixer);
+    process(options.enable_fade);
+    process(options.enable_flash);
+    process(options.enable_text);
+    process(options.enable_quicksave);
+    process(options.enable_quicksave_penalty);
+    process(options.enable_replay);
+    process(options.enable_crouch_after_climbing);
+    process(options.enable_freeze_time_during_end_music);
+    process(options.enable_remember_guard_hp);
+    process(options.fix_gate_sounds);
+    process(options.fix_two_coll_bug);
+    process(options.fix_infinite_down_bug);
+    process(options.fix_gate_drawing_bug);
+    process(options.fix_bigpillar_climb);
+    process(options.fix_jump_distance_at_edge);
+    process(options.fix_edge_distance_check_when_climbing);
+    process(options.fix_painless_fall_on_guard);
+    process(options.fix_wall_bump_triggers_tile_below);
+    process(options.fix_stand_on_thin_air);
+    process(options.fix_press_through_closed_gates);
+    process(options.fix_grab_falling_speed);
+    process(options.fix_skeleton_chomper_blood);
+    process(options.fix_move_after_drink);
+    process(options.fix_loose_left_of_potion);
+    process(options.fix_guard_following_through_closed_gates);
+    process(options.fix_safe_landing_on_spikes);
+    process(options.fix_glide_through_wall);
+    process(options.fix_drop_through_tapestry);
+    process(options.fix_land_against_gate_or_tapestry);
+    process(options.fix_unintended_sword_strike);
+    process(options.fix_retreat_without_leaving_room);
+    process(options.fix_running_jump_through_tapestry);
+    process(options.fix_push_guard_into_wall);
+    process(options.fix_jump_through_wall_above_gate);
+    process(start_minutes_left);
+    process(start_ticks_left);
+    process(start_hitp);
+    process(max_hitp_allowed);
+    process(saving_allowed_first_level);
+    process(saving_allowed_last_level);
+    process(start_upside_down);
+    process(start_in_blind_mode);
+    process(copyprot_level);
+    process(drawn_tile_top_level_edge);
+    process(drawn_tile_left_level_edge);
+    process(level_edge_hit_tile);
+    process(allow_triggering_any_tile);
+    process(enable_wda_in_palace);
+
+    process(tbl_level_type);
+    process(tbl_level_color);
+    process(tbl_guard_type);
+    process(tbl_guard_hp);
+
+#undef process
+}
+
+void save_options() {
+	SDL_RWops* rw = SDL_RWFromMem(pop_initial_options, sizeof(pop_initial_options));
+	options_process(rw, process_rw_write);
+	SDL_RWclose(rw);
+}
+
+void load_saved_options() {
+	SDL_RWops* rw = SDL_RWFromMem(pop_initial_options, sizeof(pop_initial_options));
+	options_process(rw, process_rw_read);
+	SDL_RWclose(rw);
+}
+
+void write_options_to_rw(SDL_RWops* rw) {
+	options_process(rw, process_rw_write);
+}
+
+void load_options_from_rw(SDL_RWops* rw) {
+	options_process(rw, process_rw_read);
+}
+
+
 void disable_fixes_and_enhancements() {
     options.enable_crouch_after_climbing = 0;
     options.enable_freeze_time_during_end_music = 0;
@@ -343,8 +440,7 @@ static int mod_ini_callback(const char *section, const char *name, const char *v
             strncasecmp(section, "Level ", 6) == 0 ||
             strcasecmp(name, "enable_copyprot") == 0 ||
             strcasecmp(name, "enable_quicksave") == 0 ||
-            strcasecmp(name, "enable_quicksave_penalty") == 0 ||
-            strcasecmp(name, "enable_copyprot") == 0
+            strcasecmp(name, "enable_quicksave_penalty") == 0
             ) {
         global_ini_callback(section, name, value);
     }
@@ -417,4 +513,5 @@ void show_use_fixes_and_enhancements_prompt() {
     }
     if (!options.use_fixes_and_enhancements) disable_fixes_and_enhancements();
 }
+
 

@@ -28,6 +28,7 @@ The authors of this program may be contacted at http://forum.princed.org
 #endif
 
 #define POP_MAX_PATH 256
+#define POP_MAX_OPTIONS_SIZE 256
 
 #define WINDOW_TITLE "Prince of Persia (SDLPoP) v1.16"
 

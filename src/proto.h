@@ -610,6 +610,10 @@ void check_seqtable_matches_original();
 
 // OPTIONS.C
 void use_default_options();
+void save_options();
+void load_saved_options();
+void write_options_to_rw(SDL_RWops* rw);
+void load_options_from_rw(SDL_RWops* rw);
 void disable_fixes_and_enhancements();
 void load_global_options();
 void check_mod_param();
