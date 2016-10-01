@@ -112,7 +112,6 @@ int ini_load(const char *filename,
 
     f = fopen(filename, "r");
     if (!f) {
-        perror(filename);
         return -1;
     }
 
