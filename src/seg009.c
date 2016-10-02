@@ -145,11 +145,30 @@ int __pascal far pop_wait(int timer_index,int time) {
 	return do_wait(timer_index);
 }
 
+static FILE* open_dat_from_root_or_data_dir(const char* filename) {
+	FILE* fp = NULL;
+	fp = fopen(filename, "rb");
+
+	// if failed, try if the DAT file can be opened in the data/ directory, instead of the main folder
+	if (fp == NULL) {
+		char data_path[POP_MAX_PATH];
+		snprintf(data_path, sizeof(data_path), "data/%s", filename);
+
+		// verify that this is a regular file and not a directory (otherwise, don't open)
+		struct stat path_stat;
+		stat(data_path, &path_stat);
+		if (S_ISREG(path_stat.st_mode)) {
+			fp = fopen(data_path, "rb");
+		}
+	}
+	return fp;
+}
+
 // seg009:0F58
 dat_type *__pascal open_dat(const char *filename,int drive) {
 	FILE* fp = NULL;
 	if (!use_custom_levelset) {
-		fp = fopen(filename, "rb");
+		fp = open_dat_from_root_or_data_dir(filename);
 	}
 	else {
 		char filename_mod[POP_MAX_PATH];
@@ -157,7 +176,7 @@ dat_type *__pascal open_dat(const char *filename,int drive) {
 		snprintf(filename_mod, sizeof(filename_mod), "mods/%s/%s", levelset_name, filename);
 		fp = fopen(filename_mod, "rb");
 		if (fp == NULL) {
-			fp = fopen(filename, "rb");
+			fp = open_dat_from_root_or_data_dir(filename);
 		}
 	}
 	dat_header_type dat_header;
@@ -2051,7 +2070,14 @@ void load_from_opendats_metadata(int resource_id, const char* extension, FILE** 
 			}
 		} else {
 			// If it's a directory:
-			snprintf(image_filename,sizeof(image_filename),"data/%s/res%d.%s",pointer->filename, resource_id, extension);
+			char filename_no_ext[POP_MAX_PATH];
+			// strip the .DAT file extension from the filename (use folders simply named TITLE, KID, VPALACE, etc.)
+			strncpy(filename_no_ext, pointer->filename, sizeof(filename_no_ext));
+			size_t len = strlen(filename_no_ext);
+			if (len >= 5 && filename_no_ext[len-4] == '.') {
+				filename_no_ext[len-4] = '\0'; // terminate, so ".DAT" is deleted from the filename
+			}
+			snprintf(image_filename,sizeof(image_filename),"data/%s/res%d.%s",filename_no_ext, resource_id, extension);
 			if (!use_custom_levelset) {
 				//printf("loading (binary) %s",image_filename);
 				fp = fopen(image_filename, "rb");

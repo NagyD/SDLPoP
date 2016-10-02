@@ -42,6 +42,7 @@ mods/*/
 *.hex
 *.bat
 prince
+!data/PRINCE/
 
 # Debug files
 *.dSYM/
