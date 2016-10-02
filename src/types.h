@@ -473,6 +473,7 @@ typedef enum data_location {
 enum sound_type {
 #ifdef USE_MIXER
 	sound_chunk = 3,
+	sound_music = 4,
 #endif
 	sound_speaker = 0,
 	sound_digi = 1,
@@ -522,6 +523,7 @@ typedef struct sound_buffer_type {
 		midi_type midi;
 #ifdef USE_MIXER
 		Mix_Chunk *chunk;
+		Mix_Music *music;
 #endif
 	};
 } sound_buffer_type;
