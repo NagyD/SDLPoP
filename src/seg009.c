@@ -1927,7 +1927,7 @@ void __pascal far set_gr_mode(byte grmode) {
 	flags |= SDL_WINDOW_RESIZABLE;
 
 	// Should use different default window dimensions when using 4:3 aspect ratio
-	if (options.use_correct_aspect_ratio && pop_window_width == 640 && pop_window_height == 400) {
+	if (use_correct_aspect_ratio && pop_window_width == 640 && pop_window_height == 400) {
 		pop_window_height = 480;
 	}
 	window_ = SDL_CreateWindow(WINDOW_TITLE,
@@ -1936,7 +1936,7 @@ void __pascal far set_gr_mode(byte grmode) {
 	renderer_ = SDL_CreateRenderer(window_, -1 , SDL_RENDERER_ACCELERATED );
 	
 	// Allow us to use a consistent set of screen co-ordinates, even if the screen size changes
-	if (options.use_correct_aspect_ratio) {
+	if (use_correct_aspect_ratio) {
 		SDL_RenderSetLogicalSize(renderer_, 320*5, 200*6);
 	} else {
 		SDL_RenderSetLogicalSize(renderer_, 320, 200);
@@ -2757,7 +2757,7 @@ void __pascal far set_bg_attr(int vga_pal_index,int hc_pal_index) {
 	// stub
 #ifdef USE_FLASH
 	//palette[vga_pal_index] = vga_palette[hc_pal_index];
-	if (!options.enable_flash) return;
+	if (!enable_flash) return;
 	if (vga_pal_index == 0) {
 		/*
 		if (SDL_SetAlpha(offscreen_surface, SDL_SRCALPHA, 0) != 0) {

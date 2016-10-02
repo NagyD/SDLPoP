@@ -40,7 +40,17 @@ void far pop_main() {
 	check_seqtable_matches_original();
 	#endif
 
-	load_options();
+	load_global_options();
+#ifdef USE_REPLAY
+	check_if_opening_replay_file();
+#endif
+	check_mod_param();
+	load_mod_options();
+
+	// CusPop option
+	is_blind_mode = start_in_blind_mode;
+	// Bug: with start_in_blind_mode enabled, moving objects are not displayed until blind mode is toggled off+on??
+
 	apply_seqtbl_patches();
 
 	char sprintf_temp[100];
@@ -362,7 +372,7 @@ int quick_load() {
 
 		#ifdef USE_QUICKLOAD_PENALTY
 		// Subtract one minute from the remaining time (if it is above 5 minutes)
-		if (options.enable_quicksave_penalty) {
+		if (enable_quicksave_penalty) {
 			int ticks_elapsed = 720 * (rem_min - old_rem_min) + (rem_tick - old_rem_tick);
 			// don't restore time at all if the elapsed time is between 0 and 1 minutes
 			if (ticks_elapsed > 0 && ticks_elapsed < 720) {
@@ -386,7 +396,7 @@ int need_quick_save = 0;
 int need_quick_load = 0;
 
 void check_quick_op() {
-	if (!options.enable_quicksave) return;
+	if (!enable_quicksave) return;
 	if (need_quick_save) {
 		if (!is_feather_fall && quick_save()) {
 			display_text_bottom("QUICKSAVE");
@@ -434,7 +444,7 @@ int __pascal far process_key() {
 			if (key == SDL_SCANCODE_F9) need_quick_load = 1;
 			#endif
 			#ifdef USE_REPLAY
-			if (key == SDL_SCANCODE_TAB) {
+			if (key == SDL_SCANCODE_TAB || need_start_replay) {
 				start_replay();
 			}
 			else
@@ -538,7 +548,7 @@ int __pascal far process_key() {
 				} else {
 					if (current_level == 15 && cheats_enabled) {
 #ifdef USE_COPYPROT
-                        if (options.enable_copyprot) {
+                        if (enable_copyprot) {
                         	next_level = copyprot_level;
                         	copyprot_level = -1;
                         }
@@ -1657,7 +1667,7 @@ short __pascal far load_game() {
 	if (read(handle, &start_level, 2) != 2) goto loc_1E8E;
 	if (read(handle, &hitp_beg_lev, 2) != 2) goto loc_1E8E;
 #ifdef USE_COPYPROT
-	if (options.enable_copyprot && copyprot_level > 0) {
+	if (enable_copyprot && copyprot_level > 0) {
 		copyprot_level = start_level;
 	}
 #endif
@@ -1708,6 +1718,27 @@ void __pascal far free_optional_sounds() {
 	}
 	*/
 	// stub
+}
+
+const byte tbl_snd_is_music[] = {
+		0,0,0,0,0,0,0,0,0,0, //9
+		0,0,0,0,0,0,0,0,0,0, //19
+		0,0,0,0,1,1,1,1,1,1, //29
+		1,0,1,1,1,1,1,1,0,1, //39
+		1,1,0,1,0,0,0,0,0,0, //49
+		1,0,1,1,1,1,1
+};
+
+void reload_non_music_sounds() {
+	int i;
+	for (i = 0; i < COUNT(tbl_snd_is_music); ++i) {
+		if (!tbl_snd_is_music[i]) {
+			free_sound(sound_pointers[i]);
+			sound_pointers[i] = NULL;
+		}
+	}
+	load_sounds(0, 43);
+	load_opt_sounds(44, 56);
 }
 
 // seg000:22BB

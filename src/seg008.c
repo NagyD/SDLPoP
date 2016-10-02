@@ -325,7 +325,7 @@ int __pascal far get_tile_to_draw(int room, int column, int row, byte *ptr_tilet
 	}
 #endif
 #ifdef FIX_LOOSE_LEFT_OF_POTION
-	else if (options.fix_loose_left_of_potion && tiletype == tiles_11_loose) {
+	else if (fix_loose_left_of_potion && tiletype == tiles_11_loose) {
 		if ((*ptr_modifier & 0x7F) == 0) {
 			*ptr_tiletype = tiles_1_floor;
 		}
@@ -1687,7 +1687,7 @@ void __pascal far show_time() {
 	word rem_sec;
 	if (Kid.alive < 0 &&
 		#ifdef FREEZE_TIME_DURING_END_MUSIC
-		(!(options.enable_freeze_time_during_end_music && next_level != current_level)) &&
+		(!(enable_freeze_time_during_end_music && next_level != current_level)) &&
 		#endif
 		#ifdef ALLOW_INFINITE_TIME
 		// prevent overflow

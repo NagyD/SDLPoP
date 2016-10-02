@@ -576,15 +576,55 @@ extern word last_loose_sound;
 extern byte recording INIT(= 0);
 extern byte replaying INIT(= 0);
 extern dword num_replay_ticks INIT(= 0);
+extern byte need_start_replay INIT(= 0);
 extern byte need_replay_cycle INIT(= 0);
+extern char replays_folder[POP_MAX_PATH] INIT(= "replays");
 #endif // USE_REPLAY
 
-extern options_type options INIT(= {{0}});
 extern byte start_fullscreen INIT(= 0);
 extern word pop_window_width INIT(= 640);
 extern word pop_window_height INIT(= 400);
 extern byte use_custom_levelset INIT(= 0);
 extern char levelset_name[POP_MAX_PATH];
+
+extern byte use_fixes_and_enhancements INIT(= 0);
+extern byte enable_copyprot INIT(= 0);
+extern byte enable_mixer INIT(= 1);
+extern byte enable_fade INIT(= 1);
+extern byte enable_flash INIT(= 1);
+extern byte enable_text INIT(= 1);
+extern byte enable_quicksave INIT(= 1);
+extern byte enable_quicksave_penalty INIT(= 1);
+extern byte enable_replay INIT(= 1);
+extern byte enable_crouch_after_climbing INIT(= 1);
+extern byte enable_freeze_time_during_end_music INIT(= 1);
+extern byte fix_gate_sounds INIT(= 1);
+extern byte fix_two_coll_bug INIT(= 1);
+extern byte fix_infinite_down_bug INIT(= 1);
+extern byte fix_gate_drawing_bug INIT(= 0);
+extern byte fix_bigpillar_climb INIT(= 0);
+extern byte fix_jump_distance_at_edge INIT(= 1);
+extern byte fix_edge_distance_check_when_climbing INIT(= 1);
+extern byte fix_painless_fall_on_guard INIT(= 1);
+extern byte fix_wall_bump_triggers_tile_below INIT(= 1);
+extern byte fix_stand_on_thin_air INIT(= 1);
+extern byte fix_press_through_closed_gates INIT(= 1);
+extern byte fix_grab_falling_speed INIT(= 1);
+extern byte fix_skeleton_chomper_blood INIT(= 1);
+extern byte fix_move_after_drink INIT(= 1);
+extern byte fix_loose_left_of_potion INIT(= 1);
+extern byte fix_guard_following_through_closed_gates INIT(= 1);
+extern byte fix_safe_landing_on_spikes INIT(= 1);
+extern byte use_correct_aspect_ratio INIT(= 0);
+extern byte enable_remember_guard_hp INIT(= 1);
+extern byte fix_glide_through_wall INIT(= 1);
+extern byte fix_drop_through_tapestry INIT(= 1);
+extern byte fix_land_against_gate_or_tapestry INIT(= 1);
+extern byte fix_unintended_sword_strike INIT(= 1);
+extern byte fix_retreat_without_leaving_room INIT(= 1);
+extern byte fix_running_jump_through_tapestry INIT(= 1);
+extern byte fix_push_guard_into_wall INIT(= 1);
+extern byte fix_jump_through_wall_above_gate INIT(= 1);
 
 // Custom Gameplay settings
 extern word start_minutes_left INIT(= 60);

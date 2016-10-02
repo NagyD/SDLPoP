@@ -1231,7 +1231,7 @@ void __pascal far play_door_sound_if_visible(int sound_id) {
 
 #ifdef FIX_GATE_SOUNDS
 	sbyte has_sound_condition;
-	if (options.fix_gate_sounds)
+	if (fix_gate_sounds)
 		has_sound_condition = 	(gate_room == room_L && tilepos % 10 == 9) ||
 							  	(gate_room == drawn_room && tilepos % 10 != 9);
 	else has_sound_condition = 	gate_room == room_L ? tilepos % 10 == 9 :
