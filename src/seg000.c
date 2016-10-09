@@ -173,6 +173,12 @@ void __pascal far start_game() {
 		letts_used[copyprot_letter[which_entry]-'A'] = 1;
 	}
 #endif
+	if (skip_title) { // CusPop option: skip the title sequence (level loads instantly)
+		int level_number = (start_level != 0) ? start_level : first_level;
+		init_game(level_number);
+		return;
+	}
+
 	if (start_level == 0) {
 		show_title();
 	} else {

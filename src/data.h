@@ -660,6 +660,7 @@ extern byte level_edge_hit_tile INIT(= tiles_20_wall);
 extern byte allow_triggering_any_tile INIT(= 0);
 extern byte enable_wda_in_palace INIT(= 0);
 extern word first_level INIT(= 1);
+extern byte skip_title INIT(= 0);
 
 #ifdef USE_DEBUG_CHEATS
 extern byte debug_cheats_enabled INIT(= 0);

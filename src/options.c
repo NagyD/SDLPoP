@@ -87,6 +87,7 @@ void options_process(SDL_RWops* rw, rw_process_func_type process_func) {
     process(enable_wda_in_palace);
 	process(vga_palette);
 	process(first_level);
+	process(skip_title);
 
     process(tbl_level_type);
     process(tbl_level_color);
@@ -402,6 +403,7 @@ static int global_ini_callback(const char *section, const char *name, const char
 			return 1;
 		}
 		process_word("first_level", &first_level, NULL);
+		process_boolean("skip_title", &skip_title);
     } // end of section [CustomGameplay]
 
     // [Level 1], etc.
