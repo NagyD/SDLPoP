@@ -86,6 +86,7 @@ void options_process(SDL_RWops* rw, rw_process_func_type process_func) {
     process(allow_triggering_any_tile);
     process(enable_wda_in_palace);
 	process(vga_palette);
+	process(first_level);
 
     process(tbl_level_type);
     process(tbl_level_color);
@@ -400,6 +401,7 @@ static int global_ini_callback(const char *section, const char *name, const char
 			palette_color->b = rgb[2] / 4;
 			return 1;
 		}
+		process_word("first_level", &first_level, NULL);
     } // end of section [CustomGameplay]
 
     // [Level 1], etc.

@@ -452,7 +452,7 @@ int __pascal far process_key() {
 			if (key == (SDL_SCANCODE_L | WITH_CTRL)) { // ctrl-L
 				if (!load_game()) return 0;
 			} else {
-				start_level = 1;
+				start_level = first_level; // 1
 			}
 			draw_rect(&screen_rect, 0);
 #ifdef USE_FADE
