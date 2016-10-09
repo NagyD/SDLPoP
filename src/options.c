@@ -22,6 +22,36 @@ The authors of this program may be contacted at http://forum.princed.org
 #include <ctype.h>
 #include <inttypes.h>
 
+
+// customized cutscene set-up: handled as index into a lookup table (can't rely on function pointers being stable!)
+byte tbl_cutscenes_by_index[16] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+
+cutscene_ptr_type tbl_cutscenes_lookup[16] = {
+		NULL,
+		NULL,
+		cutscene_2_6,
+		NULL,
+		cutscene_4,
+		NULL,
+		cutscene_2_6,
+		NULL,
+		cutscene_8,
+		cutscene_9,
+		NULL,
+		NULL,
+		cutscene_12,
+		NULL,
+		NULL,
+		NULL,
+};
+
+void apply_cutscene_pointers() {
+	int i;
+	for (i = 0; i < 16; ++i) {
+		tbl_cutscenes[i] = tbl_cutscenes_lookup[tbl_cutscenes_by_index[i]];
+	}
+}
+
 int process_rw_write(SDL_RWops* rw, void* data, size_t data_size) {
     return SDL_RWwrite(rw, data, data_size, 1);
 }
@@ -91,6 +121,7 @@ void options_process(SDL_RWops* rw, rw_process_func_type process_func) {
 	process(shift_L_allowed_until_level);
 	process(shift_L_reduced_minutes);
 	process(shift_L_reduced_ticks);
+	process(tbl_cutscenes_by_index);
 
     process(tbl_level_type);
     process(tbl_level_color);
@@ -115,6 +146,7 @@ size_t save_options_to_buffer(void* options_buffer, size_t max_size) {
 void load_options_from_buffer(void* options_buffer, size_t options_size) {
 	SDL_RWops* rw = SDL_RWFromMem(options_buffer, options_size);
 	options_process(rw, process_rw_read);
+	apply_cutscene_pointers();
 	SDL_RWclose(rw);
 }
 
@@ -421,6 +453,15 @@ static int global_ini_callback(const char *section, const char *name, const char
             process_word("level_color", &tbl_level_color[ini_level], NULL);
             process_short("guard_type", &tbl_guard_type[ini_level], &guard_type_names_list);
             process_byte("guard_hp", &tbl_guard_hp[ini_level], NULL);
+
+			byte cutscene_index = 0xFF;
+			if (ini_process_byte(name, value, "cutscene", &cutscene_index, NULL) == 1) {
+				if (cutscene_index < COUNT(tbl_cutscenes_lookup)) {
+					tbl_cutscenes_by_index[ini_level] = cutscene_index;
+					tbl_cutscenes[ini_level] = tbl_cutscenes_lookup[cutscene_index];
+				}
+				return 1;
+			}
         } else {
             // TODO: warning?
         }

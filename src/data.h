@@ -322,6 +322,25 @@ extern word demo_mode INIT(= 0);
 // data:42CA
 extern word is_cutscene;
 
+// data:0FA0
+extern cutscene_ptr_type tbl_cutscenes[16] INIT(= {
+		NULL,
+		NULL,
+		cutscene_2_6,
+		NULL,
+		cutscene_4,
+		NULL,
+		cutscene_2_6,
+		NULL,
+		cutscene_8,
+		cutscene_9,
+		NULL,
+		NULL,
+		cutscene_12,
+		NULL,
+		NULL,
+		NULL,
+});
 
 // data:408C
 extern short mobs_count;

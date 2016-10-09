@@ -492,9 +492,9 @@ void load_replay() {
 
 		// load the replay options
 		if (strncmp(header.replay_version, "V1.16", 5) == 0) {
-			// backward compatibility: only the first 37 (of 64) written bytes are actually used in the old format
+			// backward compatibility: only the first 38 (of 64) written bytes are equal to the newer format
 			fread(replay_options, 64, 1, replay_fp);
-			replay_options_size = 37;
+			replay_options_size = 38;
 		} else {
 			fread(&replay_options_size, sizeof(replay_options_size), 1, replay_fp);
 			fread(replay_options, replay_options_size, 1, replay_fp);
