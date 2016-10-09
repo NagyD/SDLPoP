@@ -538,7 +538,7 @@ int __pascal far process_key() {
 			need_show_text = 1;
 		break;
 		case SDL_SCANCODE_L | WITH_SHIFT: // shift-l
-			if (current_level <= 3 || cheats_enabled) {
+			if (current_level < shift_L_allowed_until_level /* 4 */ || cheats_enabled) {
 				// if shift is not released within the delay, the cutscene is skipped
 				Uint32 delay = 250;
 				key_states[SDL_SCANCODE_LSHIFT] = 0;
@@ -561,9 +561,9 @@ int __pascal far process_key() {
 #endif
 					} else {
 						next_level = current_level + 1;
-						if (!cheats_enabled && rem_min > 15) {
-							rem_min = 15;
-							rem_tick = 719;
+						if (!cheats_enabled && rem_min > shift_L_reduced_minutes /* 15 */) {
+							rem_min = shift_L_reduced_minutes; // 15
+							rem_tick = shift_L_reduced_ticks; // 719
 						}
 					}
 				}

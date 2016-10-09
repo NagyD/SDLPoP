@@ -661,6 +661,9 @@ extern byte allow_triggering_any_tile INIT(= 0);
 extern byte enable_wda_in_palace INIT(= 0);
 extern word first_level INIT(= 1);
 extern byte skip_title INIT(= 0);
+extern word shift_L_allowed_until_level INIT(= 4);
+extern word shift_L_reduced_minutes INIT(= 15);
+extern word shift_L_reduced_ticks INIT(= 719);
 
 #ifdef USE_DEBUG_CHEATS
 extern byte debug_cheats_enabled INIT(= 0);
