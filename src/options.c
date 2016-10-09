@@ -85,6 +85,7 @@ void options_process(SDL_RWops* rw, rw_process_func_type process_func) {
     process(level_edge_hit_tile);
     process(allow_triggering_any_tile);
     process(enable_wda_in_palace);
+	process(vga_palette);
 
     process(tbl_level_type);
     process(tbl_level_color);
@@ -370,7 +371,36 @@ static int global_ini_callback(const char *section, const char *name, const char
         process_boolean("allow_triggering_any_tile", &allow_triggering_any_tile);
         // TODO: Maybe allow automatically choosing the correct WDA, depending on the loaded VDUNGEON.DAT?
 		process_boolean("enable_wda_in_palace", &enable_wda_in_palace);
-    }
+
+		// Options that change the hard-coded color palette (options 'vga_color_0', 'vga_color_1', ...)
+		static const char prefix[] = "vga_color_";
+		static const size_t prefix_len = sizeof(prefix)-1;
+		int ini_palette_color = -1;
+		if (strncasecmp(name, prefix, prefix_len) == 0 && sscanf(name+prefix_len, "%d", &ini_palette_color) == 1) {
+			if (!(ini_palette_color >= 0 && ini_palette_color <= 15)) return 0;
+
+			byte rgb[3] = {0};
+			if (strcasecmp(value, "default") != 0) {
+				// We want to parse an rgb string with three entries like this: "255, 255, 255"
+				char* start = (char*) value;
+				char* end   = (char*) value;
+				int i;
+				for (i = 0; i < 3 && *end != '\0'; ++i) {
+					rgb[i] = (byte) strtol(start, &end, 0); // convert this entry into a number 0..255
+
+					while (*end == ',' || *end == ' ') {
+						++end; // skip delimiter characters or whitespace
+					}
+					start = end; // start parsing the next entry here
+				}
+			}
+			rgb_type* palette_color = &vga_palette[ini_palette_color];
+			palette_color->r = rgb[0] / 4; // the palette uses values 0..63, not 0..255
+			palette_color->g = rgb[1] / 4;
+			palette_color->b = rgb[2] / 4;
+			return 1;
+		}
+    } // end of section [CustomGameplay]
 
     // [Level 1], etc.
     int ini_level = -1;
