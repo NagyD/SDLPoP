@@ -107,7 +107,7 @@ The authors of this program may be contacted at http://forum.princed.org
 
 // When a gate is under another gate, the top of the bottom gate is not visible.
 // But this fix causes a drawing bug when a gate opens.
-//#define FIX_GATE_DRAWING_BUG
+#define FIX_GATE_DRAWING_BUG
 
 // When climbing up to a floor with a big pillar top behind, turned right, Kid sees through floor.
 // The current fix causes glitches you can see on bug_chomper.PNG and bug_climb.PNG .

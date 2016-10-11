@@ -1070,17 +1070,21 @@ void __pascal far draw_gate_back() {
 	if (gate_bottom_y + 12 < draw_main_y) {
 		add_backtable(id_chtab_6_environment, 50 /*gate bottom with B*/, draw_xh, 0, gate_bottom_y, blitters_0_no_transp, 0);
 	} else {
-#ifndef FIX_GATE_DRAWING_BUG
 		// The following line (erroneously) erases the top-right of the tile below-left (because it is drawn non-transparently).
 		// -- But it draws something that was already drawn! (in draw_tile_right()).
-		add_backtable(id_chtab_6_environment, tile_table[tiles_4_gate].right_id, draw_xh, 0, tile_table[tiles_4_gate].right_y + draw_main_y, blitters_0_no_transp, 0);
+		add_backtable(id_chtab_6_environment, tile_table[tiles_4_gate].right_id, draw_xh, 0,
+					  tile_table[tiles_4_gate].right_y + draw_main_y, blitters_0_no_transp, 0);
 		// And this line tries to fix it. But it fails if it was a gate or a pillar.
 		if (can_see_bottomleft()) draw_tile_topright();
+#ifdef FIX_GATE_DRAWING_BUG
+		if (fix_gate_drawing_bug) {
+			draw_tile_anim_topright(); // redraw the erased top-right section of the gate below-left
+		}
+#endif
 		// The following 3 lines draw things that are drawn after this anyway.
 		draw_tile_bottom(0);
 		draw_loose(0);
 		draw_tile_base();
-#endif
 		add_backtable(id_chtab_6_environment, 51 /*gate bottom*/, draw_xh, 0, gate_bottom_y - 2, blitters_10h_transp, 0);
 	}
 	ybottom = gate_bottom_y - 12;
