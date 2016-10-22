@@ -1087,6 +1087,9 @@ void __pascal far check_grab() {
 			grab_timer = 12;
 			play_sound(sound_9_grab); // grab
 			is_screaming = 0;
+#ifdef FIX_CHOMPERS_NOT_STARTING
+			if (fix_chompers_not_starting) start_chompers();
+#endif
 		}
 	}
 }

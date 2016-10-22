@@ -177,6 +177,10 @@ The authors of this program may be contacted at http://forum.princed.org
 // By doing a running jump into a wall, you can fall behind a closed gate two floors down. (e.g. skip in Level 7)
 #define FIX_JUMP_THROUGH_WALL_ABOVE_GATE
 
+// If you grab a ledge that is one or more floors down, the chompers on that row will not start.
+#define FIX_CHOMPERS_NOT_STARTING
+
+
 // Debug features:
 
 // When the program starts, check whether the deobfuscated sequence table (seqtbl.c) is correct.
