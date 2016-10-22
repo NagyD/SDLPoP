@@ -1401,7 +1401,15 @@ const word floor_left_overlay[] = {32, 151, 151, 150, 150, 151, 32, 32};
 
 // seg008:1E3A
 void __pascal far draw_floor_overlay() {
-#ifndef FIX_BIGPILLAR_CLIMB
+#ifdef FIX_BIGPILLAR_CLIMB
+	if (tile_left != tiles_0_empty) {
+		// Bug: When climbing up to a floor with a big pillar top behind, turned right, Kid sees through floor.
+		// The bigpillar_top tile should be treated similarly to an empty tile here.
+		if (!fix_bigpillar_climb || (tile_left != tiles_9_bigpillar_top)) {
+			return;
+		}
+	}
+#else
 	if (tile_left != tiles_0_empty) return;
 #endif
 	if (curr_tile == tiles_1_floor ||

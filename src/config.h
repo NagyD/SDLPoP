@@ -110,8 +110,7 @@ The authors of this program may be contacted at http://forum.princed.org
 #define FIX_GATE_DRAWING_BUG
 
 // When climbing up to a floor with a big pillar top behind, turned right, Kid sees through floor.
-// The current fix causes glitches you can see on bug_chomper.PNG and bug_climb.PNG .
-//#define FIX_BIGPILLAR_CLIMB
+#define FIX_BIGPILLAR_CLIMB
 
 // When climbing up two floors, turning around and jumping upward, the kid falls down.
 // This fix makes the workaround of Trick 25 unnecessary.
