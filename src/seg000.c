@@ -1106,23 +1106,77 @@ void __pascal far check_fall_flo() {
 	}
 }
 
+void get_joystick_state(int raw_x, int raw_y, int axis_state[2]) {
+
+#define JOY_THRESHOLD 8000
+#define DEGREES_TO_RADIANS (M_PI/180.0)
+
+	// check if the X/Y position is within the 'dead zone' of the joystick
+	if ((raw_x*raw_x + raw_y*raw_y) < JOY_THRESHOLD*JOY_THRESHOLD) {
+		axis_state[0] = 0;
+		axis_state[1] = 0;
+	} else {
+		double angle = atan2(raw_y, raw_x); // angle of the joystick: 0 = right, >0 = downward, <0 = upward
+		//printf("Joystick angle is %f degrees\n", angle/DEGREES_TO_RADIANS);
+
+		if (fabs(angle) < (60*DEGREES_TO_RADIANS)) // 120 degree range facing right
+			axis_state[0] = 1;
+
+		else if (fabs(angle) > (120*DEGREES_TO_RADIANS)) // 120 degree range facing left
+			axis_state[0] = -1;
+
+		else {
+			// joystick is neutral horizontally, so the control should be released
+			// however: prevent stop running if the Kid was already running / trying to do a running-jump
+			// (this tweak makes it a bit easier to do (multiple) running jumps)
+			if (!(angle < 0 /*facing upward*/ && Kid.action == actions_1_run_jump)) {
+				axis_state[0] = 0;
+			}
+		}
+
+		if (angle < (-30*DEGREES_TO_RADIANS) && angle > (-150*DEGREES_TO_RADIANS)) // 120 degree range facing up
+			axis_state[1] = -1;
+
+		// down slightly less sensitive than up (prevent annoyance when your thumb slips down a bit by accident)
+		// (not sure if this adjustment is really necesary)
+		else if (angle > (35*DEGREES_TO_RADIANS) && angle < (145*DEGREES_TO_RADIANS)) // 110 degree range facing down
+			axis_state[1] = 1;
+
+		else {
+			// joystick is neutral vertically, so the control should be released
+			// however: should prevent unintended standing up when attempting to crouch-hop
+			if (!(Kid.frame == frame_109_crouch && angle > 0 /*facing downward*/)) {
+				axis_state[1] = 0;
+			}
+		}
+	}
+}
+
 // seg000:1051
 void __pascal far read_joyst_control() {
-	// stub
-	if (gamepad_states[0] == -1)
+
+	get_joystick_state(joy_axis[SDL_CONTROLLER_AXIS_LEFTX], joy_axis[SDL_CONTROLLER_AXIS_LEFTY], joy_left_stick_states);
+	get_joystick_state(joy_axis[SDL_CONTROLLER_AXIS_RIGHTX], joy_axis[SDL_CONTROLLER_AXIS_RIGHTY], joy_right_stick_states);
+
+	if (joy_left_stick_states[0] == -1 || joy_right_stick_states[0] == -1 || joy_hat_states[0] == -1)
 		control_x = -1;
 	
-	if (gamepad_states[0] == 1)
+	if (joy_left_stick_states[0] == 1 || joy_right_stick_states[0] == 1 || joy_hat_states[0] == 1)
 		control_x = 1;
 
-	if (gamepad_states[1] == -1)
+	if (joy_left_stick_states[1] == -1 || joy_right_stick_states[1] == -1 || joy_hat_states[1] == -1 || joy_AY_buttons_state == -1)
 		control_y = -1;
 
-	if (gamepad_states[1] == 1)
+	if (joy_left_stick_states[1] == 1 || joy_right_stick_states[1] == 1 || joy_hat_states[1] == 1 || joy_AY_buttons_state == 1)
 		control_y = 1;
 
-	if (gamepad_states[2] == 1)
+	if (joy_X_button_state == 1 ||
+			joy_axis[SDL_CONTROLLER_AXIS_TRIGGERLEFT] > 8000 ||
+			joy_axis[SDL_CONTROLLER_AXIS_TRIGGERRIGHT] > 8000)
+	{
 		control_shift = -1;
+	}
+
 }
 
 // seg000:10EA
