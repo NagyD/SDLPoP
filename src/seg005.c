@@ -424,6 +424,22 @@ void __pascal far control_turning() {
 	if (control_shift >= 0 && control_x < 0 && control_y >= 0) {
 		seqtbl_offset_char(seq_43_start_run_after_turn); // start run and run (after turning)
 	}
+
+	// Added:
+	// When using a joystick, the kid may sometimes jump/duck/turn unintendedly after turning around.
+	// To prevent this: clear the remembered controls, so that if the stick has already moved to another/neutral position,
+	// the kid will not jump, duck, or turn again.
+	if (is_joyst_mode) {
+		if (control_up < 0 && control_y >= 0) {
+			control_up = 0;
+		}
+		if (control_down < 0 && control_y <= 0) {
+			control_down = 0;
+		}
+		if (control_backward < 0 && control_x == 0) {
+			control_backward = 0;
+		}
+	}
 }
 
 // seg005:05AD

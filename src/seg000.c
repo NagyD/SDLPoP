@@ -21,6 +21,7 @@ The authors of this program may be contacted at http://forum.princed.org
 #include "common.h"
 #include <fcntl.h>
 #include <setjmp.h>
+#include <math.h>
 
 // data:009C
 word cheats_enabled = 0;
@@ -1112,7 +1113,9 @@ void get_joystick_state(int raw_x, int raw_y, int axis_state[2]) {
 #define DEGREES_TO_RADIANS (M_PI/180.0)
 
 	// check if the X/Y position is within the 'dead zone' of the joystick
-	if ((raw_x*raw_x + raw_y*raw_y) < JOY_THRESHOLD*JOY_THRESHOLD) {
+	int reduced_y = raw_y / 2; // y-axis cutoff biased for less sensitivity near the neutral position of the joystick
+	int dist_squared = raw_x*raw_x + reduced_y*reduced_y;
+	if (dist_squared < JOY_THRESHOLD*JOY_THRESHOLD) {
 		axis_state[0] = 0;
 		axis_state[1] = 0;
 	} else {
@@ -1138,25 +1141,43 @@ void get_joystick_state(int raw_x, int raw_y, int axis_state[2]) {
 			axis_state[1] = -1;
 
 		// down slightly less sensitive than up (prevent annoyance when your thumb slips down a bit by accident)
-		// (not sure if this adjustment is really necesary)
+		// (not sure if this adjustment is really necessary)
 		else if (angle > (35*DEGREES_TO_RADIANS) && angle < (145*DEGREES_TO_RADIANS)) // 110 degree range facing down
 			axis_state[1] = 1;
 
 		else {
 			// joystick is neutral vertically, so the control should be released
 			// however: should prevent unintended standing up when attempting to crouch-hop
-			if (!(Kid.frame == frame_109_crouch && angle > 0 /*facing downward*/)) {
+			if (!((Kid.frame >= frame_108_fall_land_2 && Kid.frame <= frame_112_stand_up_from_crouch_3)
+				  && angle > 0 /*facing downward*/))
+			{
 				axis_state[1] = 0;
 			}
 		}
 	}
 }
 
+void get_joystick_state_hor_only(int raw_x, int axis_state[2]) {
+	if (raw_x > JOY_THRESHOLD) {
+		axis_state[0] = 1;
+	} else if (raw_x < -JOY_THRESHOLD) {
+		axis_state[0] = -1;
+	} else axis_state[0] = 0;
+
+	// disregard all vertical input from the joystick controls (only use Y and A buttons or D-pad for up/down)
+	axis_state[1] = 0;
+}
+
 // seg000:1051
 void __pascal far read_joyst_control() {
 
-	get_joystick_state(joy_axis[SDL_CONTROLLER_AXIS_LEFTX], joy_axis[SDL_CONTROLLER_AXIS_LEFTY], joy_left_stick_states);
-	get_joystick_state(joy_axis[SDL_CONTROLLER_AXIS_RIGHTX], joy_axis[SDL_CONTROLLER_AXIS_RIGHTY], joy_right_stick_states);
+	if (joystick_only_horizontal) {
+		get_joystick_state_hor_only(joy_axis[SDL_CONTROLLER_AXIS_LEFTX], joy_left_stick_states);
+		get_joystick_state_hor_only(joy_axis[SDL_CONTROLLER_AXIS_RIGHTX], joy_right_stick_states);
+	} else {
+		get_joystick_state(joy_axis[SDL_CONTROLLER_AXIS_LEFTX], joy_axis[SDL_CONTROLLER_AXIS_LEFTY], joy_left_stick_states);
+		get_joystick_state(joy_axis[SDL_CONTROLLER_AXIS_RIGHTX], joy_axis[SDL_CONTROLLER_AXIS_RIGHTY], joy_right_stick_states);
+	}
 
 	if (joy_left_stick_states[0] == -1 || joy_right_stick_states[0] == -1 || joy_hat_states[0] == -1)
 		control_x = -1;
