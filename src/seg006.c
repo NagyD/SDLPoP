@@ -1221,7 +1221,7 @@ void __pascal far control_kid() {
 			}
 		} else {
 			if (key) {
-				start_level = 1;
+				start_level = first_level; // 1
 				start_game();
 			}
 		}

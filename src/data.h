@@ -128,6 +128,25 @@ extern /*const*/ word tbl_level_color[16] INIT(= {0, 0, 0, 1, 0, 0, 0, 1, 2, 2, 
 extern word current_level INIT(= -1);
 // data:3021
 extern byte graphics_mode INIT(= 0);
+// data:2BA6
+extern rgb_type vga_palette[16] INIT(= {
+		{0x00, 0x00, 0x00},
+		{0x00, 0x00, 0x2A},
+		{0x00, 0x2A, 0x00},
+		{0x00, 0x2A, 0x2A},
+		{0x2A, 0x00, 0x00},
+		{0x2A, 0x00, 0x2A},
+		{0x2A, 0x15, 0x00},
+		{0x2A, 0x2A, 0x2A},
+		{0x15, 0x15, 0x15},
+		{0x15, 0x15, 0x3F},
+		{0x15, 0x3F, 0x15},
+		{0x15, 0x3F, 0x3F},
+		{0x3F, 0x15, 0x15},
+		{0x3F, 0x15, 0x3F},
+		{0x3F, 0x3F, 0x15},
+		{0x3F, 0x3F, 0x3F},
+});
 
 // data:4CC0
 extern word room_L;
@@ -303,6 +322,25 @@ extern word demo_mode INIT(= 0);
 // data:42CA
 extern word is_cutscene;
 
+// data:0FA0
+extern cutscene_ptr_type tbl_cutscenes[16] INIT(= {
+		NULL,
+		NULL,
+		cutscene_2_6,
+		NULL,
+		cutscene_4,
+		NULL,
+		cutscene_2_6,
+		NULL,
+		cutscene_8,
+		cutscene_9,
+		NULL,
+		NULL,
+		cutscene_12,
+		NULL,
+		NULL,
+		NULL,
+});
 
 // data:408C
 extern short mobs_count;
@@ -640,6 +678,11 @@ extern byte drawn_tile_left_level_edge INIT(= tiles_20_wall);
 extern byte level_edge_hit_tile INIT(= tiles_20_wall);
 extern byte allow_triggering_any_tile INIT(= 0);
 extern byte enable_wda_in_palace INIT(= 0);
+extern word first_level INIT(= 1);
+extern byte skip_title INIT(= 0);
+extern word shift_L_allowed_until_level INIT(= 4);
+extern word shift_L_reduced_minutes INIT(= 15);
+extern word shift_L_reduced_ticks INIT(= 719);
 
 #ifdef USE_DEBUG_CHEATS
 extern byte debug_cheats_enabled INIT(= 0);

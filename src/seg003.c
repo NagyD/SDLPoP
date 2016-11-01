@@ -46,26 +46,6 @@ void __pascal far init_game(int level) {
 	play_level(level);
 }
 
-// data:0FA0
-const cutscene_ptr_type tbl_cutscenes[16] = {
-	NULL,
-	NULL,
-	cutscene_2_6,
-	NULL,
-	cutscene_4,
-	NULL,
-	cutscene_2_6,
-	NULL,
-	cutscene_8,
-	cutscene_9,
-	NULL,
-	NULL,
-	cutscene_12,
-	NULL,
-	NULL,
-	NULL,
-};
-
 // seg003:005C
 void __pascal far play_level(int level_number) {
 	cutscene_ptr_type cutscene_func;

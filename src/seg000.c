@@ -173,6 +173,12 @@ void __pascal far start_game() {
 		letts_used[copyprot_letter[which_entry]-'A'] = 1;
 	}
 #endif
+	if (skip_title) { // CusPop option: skip the title sequence (level loads instantly)
+		int level_number = (start_level != 0) ? start_level : first_level;
+		init_game(level_number);
+		return;
+	}
+
 	if (start_level == 0) {
 		show_title();
 	} else {
@@ -452,7 +458,7 @@ int __pascal far process_key() {
 			if (key == (SDL_SCANCODE_L | WITH_CTRL)) { // ctrl-L
 				if (!load_game()) return 0;
 			} else {
-				start_level = 1;
+				start_level = first_level; // 1
 			}
 			draw_rect(&screen_rect, 0);
 #ifdef USE_FADE
@@ -532,7 +538,7 @@ int __pascal far process_key() {
 			need_show_text = 1;
 		break;
 		case SDL_SCANCODE_L | WITH_SHIFT: // shift-l
-			if (current_level <= 3 || cheats_enabled) {
+			if (current_level < shift_L_allowed_until_level /* 4 */ || cheats_enabled) {
 				// if shift is not released within the delay, the cutscene is skipped
 				Uint32 delay = 250;
 				key_states[SDL_SCANCODE_LSHIFT] = 0;
@@ -555,9 +561,9 @@ int __pascal far process_key() {
 #endif
 					} else {
 						next_level = current_level + 1;
-						if (!cheats_enabled && rem_min > 15) {
-							rem_min = 15;
-							rem_tick = 719;
+						if (!cheats_enabled && rem_min > shift_L_reduced_minutes /* 15 */) {
+							rem_min = shift_L_reduced_minutes; // 15
+							rem_tick = shift_L_reduced_ticks; // 719
 						}
 					}
 				}
