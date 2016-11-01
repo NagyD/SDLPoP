@@ -663,6 +663,7 @@ extern byte fix_retreat_without_leaving_room INIT(= 1);
 extern byte fix_running_jump_through_tapestry INIT(= 1);
 extern byte fix_push_guard_into_wall INIT(= 1);
 extern byte fix_jump_through_wall_above_gate INIT(= 1);
+extern byte fix_chompers_not_starting INIT(= 1);
 
 // Custom Gameplay settings
 extern word start_minutes_left INIT(= 60);

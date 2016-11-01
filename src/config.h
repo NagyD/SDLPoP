@@ -107,11 +107,10 @@ The authors of this program may be contacted at http://forum.princed.org
 
 // When a gate is under another gate, the top of the bottom gate is not visible.
 // But this fix causes a drawing bug when a gate opens.
-//#define FIX_GATE_DRAWING_BUG
+#define FIX_GATE_DRAWING_BUG
 
 // When climbing up to a floor with a big pillar top behind, turned right, Kid sees through floor.
-// The current fix causes glitches you can see on bug_chomper.PNG and bug_climb.PNG .
-//#define FIX_BIGPILLAR_CLIMB
+#define FIX_BIGPILLAR_CLIMB
 
 // When climbing up two floors, turning around and jumping upward, the kid falls down.
 // This fix makes the workaround of Trick 25 unnecessary.
@@ -177,6 +176,10 @@ The authors of this program may be contacted at http://forum.princed.org
 
 // By doing a running jump into a wall, you can fall behind a closed gate two floors down. (e.g. skip in Level 7)
 #define FIX_JUMP_THROUGH_WALL_ABOVE_GATE
+
+// If you grab a ledge that is one or more floors down, the chompers on that row will not start.
+#define FIX_CHOMPERS_NOT_STARTING
+
 
 // Debug features:
 

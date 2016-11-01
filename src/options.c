@@ -101,6 +101,7 @@ void options_process(SDL_RWops* rw, rw_process_func_type process_func) {
     process(fix_running_jump_through_tapestry);
     process(fix_push_guard_into_wall);
     process(fix_jump_through_wall_above_gate);
+    process(fix_chompers_not_starting);
     process(start_minutes_left);
     process(start_ticks_left);
     process(start_hitp);
@@ -180,6 +181,7 @@ void disable_fixes_and_enhancements() {
     fix_running_jump_through_tapestry= 0;
     fix_push_guard_into_wall = 0;
     fix_jump_through_wall_above_gate = 0;
+    fix_chompers_not_starting = 0;
 }
 
 // .ini file parser adapted from https://gist.github.com/OrangeTide/947070
@@ -390,6 +392,7 @@ static int global_ini_callback(const char *section, const char *name, const char
         process_boolean("fix_running_jump_through_tapestry", &fix_running_jump_through_tapestry);
         process_boolean("fix_push_guard_into_wall", &fix_push_guard_into_wall);
         process_boolean("fix_jump_through_wall_above_gate", &fix_jump_through_wall_above_gate);
+        process_boolean("fix_chompers_not_starting", &fix_chompers_not_starting);
     }
 
     if (check_ini_section("CustomGameplay")) {
