@@ -606,7 +606,7 @@ int __pascal far set_joy_mode() {
 	if (SDL_NumJoysticks() < 1) {
 		is_joyst_mode = 0;
 	} else {
-		sdl_controller_ = SDL_JoystickOpen( 0 );
+		sdl_controller_ = SDL_GameControllerOpen(0);
 		if (sdl_controller_ == NULL) {
 			is_joyst_mode = 0;
 		} else {
@@ -1917,7 +1917,7 @@ int __pascal far check_sound_playing() {
 
 // seg009:38ED
 void __pascal far set_gr_mode(byte grmode) {
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_NOPARACHUTE | SDL_INIT_JOYSTICK ) != 0) {
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_NOPARACHUTE | SDL_INIT_GAMECONTROLLER ) != 0) {
 		sdlperror("SDL_Init");
 		quit(1);
 	}
@@ -2574,75 +2574,45 @@ void idle() {
 			case SDL_KEYUP:
 				key_states[event.key.keysym.scancode] = 0;
 				break;
+			case SDL_CONTROLLERAXISMOTION:
+				if (event.caxis.axis < 6) joy_axis[event.caxis.axis] = event.caxis.value;
+				break;
+			case SDL_CONTROLLERBUTTONDOWN:
+				switch (event.cbutton.button)
+				{
+					case SDL_CONTROLLER_BUTTON_DPAD_LEFT:  joy_hat_states[0] = -1; break; // left
+					case SDL_CONTROLLER_BUTTON_DPAD_RIGHT: joy_hat_states[0] = 1;  break; // right
+					case SDL_CONTROLLER_BUTTON_DPAD_UP:    joy_hat_states[1] = -1; break; // up
+					case SDL_CONTROLLER_BUTTON_DPAD_DOWN:  joy_hat_states[1] = 1;  break; // down
 
-			case SDL_JOYAXISMOTION:
-				if (event.jaxis.axis == 0) {
+					case SDL_CONTROLLER_BUTTON_A:          joy_AY_buttons_state = 1;  break; /*** A (down) ***/
+					case SDL_CONTROLLER_BUTTON_Y:          joy_AY_buttons_state = -1; break; /*** Y (up) ***/
+					case SDL_CONTROLLER_BUTTON_X:          joy_X_button_state = 1;    break; /*** X (shift) ***/
 
-					if (event.jaxis.value < -8000)
-						gamepad_states[0] = -1;	// left
+					case SDL_CONTROLLER_BUTTON_START:
+						last_key_scancode = SDL_SCANCODE_R | WITH_CTRL; /*** start (restart game) ***/
+						break;
 
-					else if (event.jaxis.value > 8000)
-						gamepad_states[0] = 1; // right
+					case SDL_CONTROLLER_BUTTON_BACK:
+						last_key_scancode = SDL_SCANCODE_A | WITH_CTRL;  /*** back (restart level) ***/
+						break;
 
-					else
-						gamepad_states[0] = 0;
-				}
-
-				if (event.jaxis.axis == 1) {
-					if (event.jaxis.value < -8000)
-						gamepad_states[1] = -1; // up
-
-					else if (event.jaxis.value > 8000)
-						gamepad_states[1] = 1; // down
-
-					else
-						gamepad_states[1] = 0;
+					default: break;
 				}
 				break;
-			case SDL_JOYHATMOTION:
-				switch (event.jhat.value)
+			case SDL_CONTROLLERBUTTONUP:
+				switch (event.cbutton.button)
 				{
-					case 1: gamepad_states[1] = -1; break; // up
-					case 2: gamepad_states[0] = 1; break; // right
-					case 3: gamepad_states[0] = 1; gamepad_states[1] = -1; break; // right (and up)
-					case 4: gamepad_states[1] = 1; break;	// down
-					case 6: gamepad_states[0] = 1; gamepad_states[1] = 1; break; // right (and down)
-					case 8: gamepad_states[0] = -1; break; // left
-					case 9: gamepad_states[0] = -1; gamepad_states[1] = -1; break; // left (and up)
-					case 12: gamepad_states[0] = -1; gamepad_states[1] = 1; break; // left (and down)
-					default: gamepad_states[0] = 0; gamepad_states[1] = 0;  break;
-				}
-				break;
-			case SDL_JOYBUTTONDOWN:
-				switch (event.jbutton.button)
-				{
-					case 0: gamepad_states[1] = 1; break; /*** A (down) ***/
-					case 1: break; /*** B ***/
-					case 2: gamepad_states[2] = 1; break; /*** X (shift) ***/
-					case 3: gamepad_states[1] = -1; break; /*** Y (up) ***/
-					case 4: break; /*** left shoulder ***/
-					case 5: break; /*** right shoulder ***/
-					case 6: break; /*** back ***/
-					case 7: quit(0); break; /*** start (quit) ***/
-					case 8: break; /*** guide ***/
-					case 9: break; /*** left joystick ***/
-					case 10: break; /*** right joystick ***/
-				}
-				break;
-			case SDL_JOYBUTTONUP:
-				switch (event.jbutton.button)
-				{
-					case 0: gamepad_states[1] = 0; break; /*** A (down) ***/
-					case 1: break; /*** B ***/
-					case 2: gamepad_states[2] = 0; break; /*** X (shift) ***/
-					case 3: gamepad_states[1] = 0; break; /*** Y (up) ***/
-					case 4: break; /*** left shoulder ***/
-					case 5: break; /*** right shoulder ***/
-					case 6: break; /*** back ***/
-					case 7: break; /*** start ***/
-					case 8: break; /*** guide ***/
-					case 9: break; /*** left joystick ***/
-					case 10: break; /*** right joystick ***/
+					case SDL_CONTROLLER_BUTTON_DPAD_LEFT:  joy_hat_states[0] = 0; break; // left
+					case SDL_CONTROLLER_BUTTON_DPAD_RIGHT: joy_hat_states[0] = 0; break; // right
+					case SDL_CONTROLLER_BUTTON_DPAD_UP:    joy_hat_states[1] = 0; break; // up
+					case SDL_CONTROLLER_BUTTON_DPAD_DOWN:  joy_hat_states[1] = 0; break; // down
+
+					case SDL_CONTROLLER_BUTTON_A:          joy_AY_buttons_state = 0; break; /*** A (down) ***/
+					case SDL_CONTROLLER_BUTTON_Y:          joy_AY_buttons_state = 0; break; /*** Y (up) ***/
+					case SDL_CONTROLLER_BUTTON_X:          joy_X_button_state = 0;   break; /*** X (shift) ***/
+
+					default: break;
 				}
 				break;
 			case SDL_TEXTINPUT:

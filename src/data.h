@@ -562,9 +562,14 @@ extern SDL_Surface* onscreen_surface_;
 extern SDL_Renderer* renderer_;
 extern SDL_Window* window_;
 extern SDL_Texture* sdl_texture_;
-extern SDL_Joystick* sdl_controller_ INIT( = 0 );
 
-extern int gamepad_states[3] INIT( = { 0, 0, 0 } ); // hor, ver, shift
+extern SDL_GameController* sdl_controller_ INIT( = 0 );
+extern int joy_axis[6]; // hor/ver axes for left/right sticks + left and right triggers (in total 6 axes)
+extern int joy_left_stick_states[2]; // horizontal, vertical
+extern int joy_right_stick_states[2];
+extern int joy_hat_states[2]; // horizontal, vertical
+extern int joy_AY_buttons_state;
+extern int joy_X_button_state;
 
 extern int screen_updates_suspended;
 
@@ -631,6 +636,7 @@ extern byte enable_mixer INIT(= 1);
 extern byte enable_fade INIT(= 1);
 extern byte enable_flash INIT(= 1);
 extern byte enable_text INIT(= 1);
+extern byte joystick_only_horizontal INIT(= 0);
 extern byte enable_quicksave INIT(= 1);
 extern byte enable_quicksave_penalty INIT(= 1);
 extern byte enable_replay INIT(= 1);
