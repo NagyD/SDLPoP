@@ -25,7 +25,7 @@ clean:
 	$(RM) $(OBJ) $(BIN)
 
 $(BIN): $(OBJ)
-	$(CC) $(LDFLAGS) $(OBJ) -o $@ $(LIBS)
+	$(CC) $(LDFLAGS) $(OBJ) -o $@ $(LIBS) -lm
 
 %.o: %.c $(HFILES)
 	$(CC) $(CFLAGS) $(LDFLAGS) -c $<
