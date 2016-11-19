@@ -355,6 +355,7 @@ void start_replay() {
 	if (!enable_replay) return;
 	need_start_replay = 0;
 	list_replay_files();
+	if (num_replay_files == 0) return;
 	replaying = 1;
     curr_tick = 0;
     load_replay();
@@ -410,6 +411,8 @@ void save_recorded_replay() {
 				 replays_folder, timestamp, name, current_level, replay_number);
 		++replay_number;
 	} while (access(filename, F_OK) != -1); // check if file already exists
+
+	mkdir(replays_folder); // create the "replays" folder if it does not exist already
 
     replay_fp = fopen(filename, "wb");
     if (replay_fp != NULL) {
