@@ -1119,8 +1119,7 @@ void get_joystick_state(int raw_x, int raw_y, int axis_state[2]) {
 #define DEGREES_TO_RADIANS (M_PI/180.0)
 
 	// check if the X/Y position is within the 'dead zone' of the joystick
-	int reduced_y = raw_y / 2; // y-axis cutoff biased for less sensitivity near the neutral position of the joystick
-	int dist_squared = raw_x*raw_x + reduced_y*reduced_y;
+	int dist_squared = raw_x*raw_x + raw_y*raw_y;
 	if (dist_squared < JOY_THRESHOLD*JOY_THRESHOLD) {
 		axis_state[0] = 0;
 		axis_state[1] = 0;

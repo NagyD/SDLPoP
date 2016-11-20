@@ -306,86 +306,109 @@ DONE: Added support for named values in the INI file.
 DONE: Improved gamepad support.
 DONE: Added support for displaying the game with the original 4:3 aspect ratio.
 
-2016 September ??
+2016 November ??
 =================
 (version 1.17)
 
-CHANGE: Let time just run when quickloading immediately after quicksave
-DONE: OSX port upgraded from SDL to SDL2. Mixer library added in makefile and documentation. Tested.
+General changes:
+CHANGE: Moved source to src/. (That is, merged the with-folders branch into master.)
 DONE: Moved OSX documentation to Readme.txt. Upgraded information there. Removed TODO text for the SDL2 port.
-DONE: Merged both makefiles. Now make is fully portable.
-DONE: Added remembering guard hitpoints (optional fix/enhancement)
-FIXED: New movement fixes
-CHANGE: Updated CMakeLists.txt
-FIXED: Removed duplicate const to avoid warnings in default gcc settings on OSX. Commented an always-true if.
 DONE: Added sources and fake tiles to Readme.
-CHANGE: Updated OSX make command in Readme.
-DONE: Removed unneeded libraries from Dev-C++ projects.
 DONE: Added Markus installation method with brew install for OSX to the readme.
-DONE: Add OSX build configuration for CMake
-FIXED: config: compile with USE_MIXER undefined
-DONE: Removed RGB/BGR hack.
-DONE: Removed sudo as Markus remarks. Added another tested OSX version by DarkPrince.
-FIXED: Fixed crashing from guards on level 14.
+CHANGE: Updated OSX make command in Readme.
 DONE: Updated forum link in Readme.
-FIXED: Re-added RGB24 workaround with a check.
-FIXED: Added extern to all variables in data.h.
-FIXED: Removed duplicate definition of timer_stopped.
-DONE: Also changed 0 to timer_0 where appropriate.
-FIXED: Fixed: Fake tiles randomly appeared in place of the disappearing sword.
 DONE: Added some contributors and thanks to the Readme.
+DONE: Removed some old unneeded files.
+DONE: Added comments to explain the available options in SDLPoP.ini
+DONE: Add info on the "mod" command line option to doc/Readme.txt
+DONE: Allow opening DAT files from the data/ directory as well; Moved DAT files to data/ to clean up the main folder.
+CHANGE: Folders in the data/ directory no longer have the .DAT extension, so they can coexist with .DAT files.
+FIXED: Removed Dev-C++ note from Linux Makefile.
+FIXED: Use Mix_Music instead of Mix_Chunk to play music files. This reduces loading time. (contributed by @usineur)
+FIXED: Fixed Dávid's name in the header comments.
+
+Game additions, changes, bug fixes:
+CHANGE: Let time just run when quickloading immediately after quicksave
+DONE: Added remembering guard hitpoints (optional fix/enhancement)
+FIXED: Fixed the kid being able to glide sideways through the top sections of walls/tapestries while in freefall.
+FIXED: Fixed the kid dropping through tiles when dropping down from a tapestry.
+FIXED: Fixed the landing animation aborting when landing against a gate or tapestry+floor instead of a wall.
+FIXED: Changed the RGB/BGR hack: check whether SDL2 bug occurs before applying RGB24 workaround.
+FIXED: Fixed crashing from guards on level 14.
+FIXED: Fixed fake tiles randomly appeared in place of the disappearing sword.
 FIXED: Fixed crashing on certain custom DAT files.
 FIXED: Don't crash if some (or all) data files are missing.
 CHANGE: Increased sound buffer size to remove noise.
-DONE: Visual C++ (NMake) support
 CHANGE: Increased sound output settings to CD quality. (That is: 44100 Hz, 16-bit, Stereo.)
+FIXED: Audio: Changed 16-bit to signed. (@vanfanel wrote this is needed on the Raspberry PI.)
 FIXED: Fix joypad/joystick movement
 CHANGE: Same threshold for both joystick axes
-DONE: Removed some old unneeded files.
-FIXED: Audio: Changed 16-bit to signed. (@vanfanel wrote this is needed on the Raspberry PI.)
-FIXED: Fixed bug (and compiler warning) in redraw_at_cur_mob(). (Reported by @petervas.)
 CHANGE: Controller: Remapped Quit to Start (was B).
+FIXED: Fixed bug (and compiler warning) in redraw_at_cur_mob(). (Reported by @petervas.)
 DONE: Added ability to organise mods into their own directories
 DONE: Use a custom configuration file (mod.ini) for each mod
 CHANGE: Change default of use_fixes_and_enhancements to false
-CHANGE: Changed COUNT to sizeof in memset.
-DONE: Added missing color ids, using the color names of the default EGA palette
-CHANGE: Set minimum CMake version required to 2.8
-DONE: Added comments to explain the available options in SDLPoP.ini
-DONE: Added some comments in land().
-FIXED: Added range checks in load_frame().
-FIXED: Added newline at the end of error messages that didn't already have one.
 FIXED: Don't repeat Alt+Enter.
-CHANGE: Renamed `source/` to `src/`. (In the with-folders branch.)
-FIXED: Make NMakefile and unistd_win.h non-executable
-DONE: Add optimization level (O2) to Makefile, silence uninitialized warning
-DONE: Remove CMakeLists.txt in root directory
 FIXED: Alt+Enter should not un-pause the game.
 FIXED: Improved fix for "standing on thin air" bug
 FIXED: Fix new falling bug caused by "glide through wall" fix
 FIXED: Fix unintended sword strike immediately after drawing sword
 FIXED: Fix retreating out of a room without the room actually changing
 FIXED: Fix running jump through tapestry
+DONE: Added test level for jumping through tapestry
 FIXED: Fix guards being pushed into walls
 FIXED: Fix jumping through a wall above a closed gate
-DONE: Added optimization (-O2) to Dev-C++ release project as well.
-DONE: Added test level for jumping through tapestry
 CHANGE: Debug timer: display in top left corner, toggle with T
-FIXED: Add a way to actually enable debug cheats
+FIXED: Added a way to enable debug cheats: use command-line parameter "debug"
 DONE: Allow choosing a levelset from the command line (mod="My Mod Name")
-DONE: Add .editorconfig
-DONE: Slightly different formatting for CusPop options in SDLPoP.ini
 DONE: CusPop option: start upside down
 DONE: CusPop option: start in blind mode (slightly buggy)
 DONE: CusPop option: set level before which the copy protection level appears
 DONE: CusPop option: set up edges of the level
 DONE: CusPop option: enable dungeon WDA in palace environment
 CHANGE: Mod names as separate command line arguments
-DONE: Add info on the "mod" command line option to doc/Readme.txt
-FIXED: Do not accept filenames as valid parameters in check_param()
-CHANGE: Moved source to src/. (That is, merged the with-folders branch into master.)
-DONE: Added maximum path length macro POP_MAX_PATH set to 256
+FIXED: Do not accept filenames as valid command-line parameters in check_param()
 CHANGE: Use a separate Hall of Fame file when playing a custom levelset
 DONE: Allow disabling the time limit completely
 CHANGE: Use a separate QUICKSAVE.SAV / PRINCE.SAV when playing a custom levelset
+CHANGE: Replays get saved to the replays/ directory, have more recognizable names, and are played back in reverse creation order.
+CHANGE: Gameplay options are now stored differently in replays.
+DONE: Allow changing the folder where replays are kept.
+DONE: CusPop option: change the hard-coded color palette
+DONE: CusPop option: change the first level (starting level)
+DONE: CusPop option: skip title sequence
+DONE: CusPop option: set up effect of Shift+L in non-cheat mode
+DONE: CusPop option: set up cutscenes
+FIXED: Alternate fix for drawing bug when gates are stacked on top of each other.
+FIXED: Alternate fix for drawing bug when climbing up to a floot with a big pillar top behind.
+FIXED: Fix chompers not starting when grabbing a ledge.
+DONE: Improved controller support; migrated to SDL_GameController API (reported by @EndeavourAccuracy).
+DONE: Implemented two settings for joystick control: horizontal-only (default; idea and original implementation by @EndeavourAccuracy) and all-directional.
+FIXED: Reduced flickering when text is drawn.
+
+Build changes, source code, refactoring:
+DONE: OSX port upgraded from SDL to SDL2. Mixer library added in makefile and documentation. Tested.
+DONE: Merged both makefiles. Now make is fully portable.
+CHANGE: Updated CMakeLists.txt
+FIXED: Removed duplicate const to avoid warnings in default gcc settings on OSX. Commented an always-true if.
+DONE: Removed unneeded libraries from Dev-C++ projects.
+DONE: Add OSX build configuration for CMake
+FIXED: config: compile with USE_MIXER undefined
+FIXED: Added extern to all variables in data.h.
+FIXED: Removed duplicate definition of timer_stopped.
+DONE: Also changed 0 to timer_0 where appropriate.
+DONE: Visual C++ (NMake) support
+CHANGE: Changed COUNT to sizeof in memset.
+DONE: Added missing color ids, using the color names of the default EGA palette
+CHANGE: Set minimum CMake version required to 2.8
+DONE: Added some comments in land().
+FIXED: Added range checks in load_frame().
+FIXED: Added newline at the end of error messages that didn't already have one.
+FIXED: Make NMakefile and unistd_win.h non-executable
+DONE: Add optimization level (O2) to Makefile, silence uninitialized warning
+DONE: Remove CMakeLists.txt in root directory
+DONE: Added optimization (-O2) to Dev-C++ release project as well.
+DONE: Add .editorconfig
+DONE: Added maximum path length macro POP_MAX_PATH set to 256
 CHANGE: Refactor so that HOF path is obtained from get_hof_path()
+CHANGE: Refactor: removed options_type (replacement: options are stored using SDL_RWops streams).

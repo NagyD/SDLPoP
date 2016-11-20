@@ -27,6 +27,7 @@ Contributors:
 * mfn (fixed a small bug when USE_MIXER is undefined)
 * diddledan (Visual C++ (NMake) support)
 * zaps166 (small Makefile fixes)
+* usineur (faster music loading)
 
 Forum board: http://forum.princed.org/viewforum.php?f=126
 GitHub: https://github.com/NagyD/SDLPoP
@@ -108,11 +109,13 @@ Controlling the kid:
 You can also use the numeric keypad.
 
 Gamepad equivalents:
-* arrows = D-Pad/joysticks
-* A = down
-* X = shift
-* Y = up
-* Start = quit
+* D-Pad: arrows
+* Joystick: left/right (for all-directional joystick movement, set joystick_only_horizontal to false in SDLPoP.ini)
+* A: down
+* Y: up
+* X or triggers: shift
+* Start: quit
+* Back: restart level (Ctrl+A)
 
 Controlling the game:
 * Esc: pause game
@@ -218,10 +221,11 @@ Q: How do replays work?
 A:
 Starting from version 1.16, you can capture or view replays in SDLPoP.
 To start recording, press Ctrl+Tab while in game. To stop recording, press Ctrl+Tab again.
-Your replays get saved in the SDLPoP folder as files with a .P1R extension (REPLAY_001.P1R, REPLAY_002.P1R, and so on).
+Your replays get saved in the "replays/" directory as files with a .P1R extension.
+You can change where replays are kept using the setting 'replays_folder' in SDLPoP.ini.
 
 To view a replay, you can press Tab while on the title screen.
-The game then looks for replays with the REPLAY_XXX.P1R pattern and plays those in order (you can cycle by pressing Tab again).
+To cycle to the next replay (in reverse creation order), press Tab again.
 You can also double-click on a replay file (and tell the OS that the file needs to be opened with the SDLPoP executable).
 SDLPoP will then immediately play that replay. Dragging and dropping onto the executable also works.
 

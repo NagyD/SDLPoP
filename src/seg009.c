@@ -1047,7 +1047,10 @@ const rect_type far *__pascal draw_text(const rect_type far *rect_ptr,int x_alig
 void __pascal far show_text(const rect_type far *rect_ptr,int x_align,int y_align,const char far *text) {
 	// stub
 	//printf("show_text: %s\n",text);
+	int temp = screen_updates_suspended;
+	screen_updates_suspended = 1;
 	draw_text(rect_ptr, x_align, y_align, text, strlen(text));
+	screen_updates_suspended = temp;
 	request_screen_update();
 }
 
