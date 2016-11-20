@@ -385,6 +385,7 @@ FIXED: Fix chompers not starting when grabbing a ledge.
 DONE: Improved controller support; migrated to SDL_GameController API (reported by @EndeavourAccuracy).
 DONE: Implemented two settings for joystick control: horizontal-only (default; idea and original implementation by @EndeavourAccuracy) and all-directional.
 FIXED: Reduced flickering when text is drawn.
+DONE: Added info screen shown at startup, with some explanation about SDLPoP.
 
 Build changes, source code, refactoring:
 DONE: OSX port upgraded from SDL to SDL2. Mixer library added in makefile and documentation. Tested.

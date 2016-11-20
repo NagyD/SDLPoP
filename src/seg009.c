@@ -2591,6 +2591,7 @@ void idle() {
 					case SDL_CONTROLLER_BUTTON_A:          joy_AY_buttons_state = 1;  break; /*** A (down) ***/
 					case SDL_CONTROLLER_BUTTON_Y:          joy_AY_buttons_state = -1; break; /*** Y (up) ***/
 					case SDL_CONTROLLER_BUTTON_X:          joy_X_button_state = 1;    break; /*** X (shift) ***/
+					case SDL_CONTROLLER_BUTTON_B:          joy_B_button_state = 1;    break; /*** B (unused) ***/
 
 					case SDL_CONTROLLER_BUTTON_START:
 						last_key_scancode = SDL_SCANCODE_R | WITH_CTRL; /*** start (restart game) ***/
@@ -2614,6 +2615,7 @@ void idle() {
 					case SDL_CONTROLLER_BUTTON_A:          joy_AY_buttons_state = 0; break; /*** A (down) ***/
 					case SDL_CONTROLLER_BUTTON_Y:          joy_AY_buttons_state = 0; break; /*** Y (up) ***/
 					case SDL_CONTROLLER_BUTTON_X:          joy_X_button_state = 0;   break; /*** X (shift) ***/
+					case SDL_CONTROLLER_BUTTON_B:          joy_B_button_state = 0;   break; /*** B (unused) ***/
 
 					default: break;
 				}

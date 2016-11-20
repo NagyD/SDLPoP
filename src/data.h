@@ -570,6 +570,7 @@ extern int joy_right_stick_states[2];
 extern int joy_hat_states[2]; // horizontal, vertical
 extern int joy_AY_buttons_state;
 extern int joy_X_button_state;
+extern int joy_B_button_state;
 
 extern int screen_updates_suspended;
 
@@ -636,6 +637,7 @@ extern byte enable_mixer INIT(= 1);
 extern byte enable_fade INIT(= 1);
 extern byte enable_flash INIT(= 1);
 extern byte enable_text INIT(= 1);
+extern byte enable_info_screen INIT(= 1);
 extern byte joystick_only_horizontal INIT(= 0);
 extern byte enable_quicksave INIT(= 1);
 extern byte enable_quicksave_penalty INIT(= 1);

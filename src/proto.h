@@ -72,6 +72,7 @@ void __pascal far load_title_images(int bgcolor);
 void __pascal far show_copyprot(int where);
 void __pascal far show_loading();
 void __pascal far show_quotes();
+void show_splash();
 #ifdef USE_QUICKSAVE
 void check_quick_op();
 void restore_room_after_quick_load();
