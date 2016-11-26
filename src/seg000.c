@@ -333,6 +333,7 @@ void restore_room_after_quick_load() {
 	load_room_links();
 	//draw_level_first();
 	//gen_palace_wall_colors();
+	is_guard_notice = 0; // prevent guard turning around immediately
 	draw_game_frame(); // for falling
 	//redraw_screen(1); // for room_L
 
