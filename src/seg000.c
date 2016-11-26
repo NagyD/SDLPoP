@@ -125,6 +125,7 @@ void __pascal far init_game_main() {
 	load_sounds(0, 43);
 	load_opt_sounds(43, 56); //added
 	hof_read();
+	show_splash(); // added
 	show_use_fixes_and_enhancements_prompt(); // added
 	start_game();
 }
@@ -1939,4 +1940,53 @@ void __pascal far show_quotes() {
 		start_timer(timer_0,0x384);
 	}
 	need_quotes = 0;
+}
+
+const rect_type splash_text_1_rect = {0, 0, 50, 320};
+const rect_type splash_text_2_rect = {50, 0, 200, 320};
+
+const char* splash_text_1 = "SDLPoP " SDLPOP_VERSION;
+const char* splash_text_2 =
+		"To quick load/save, press F6/F9 in-game.\n"
+		"\n"
+		"To record replays, press Ctrl+Tab in-game.\n"
+		"To view replays, press Tab on the title screen.\n"
+		"\n"
+		"Edit SDLPoP.ini to customize SDLPoP.\n"
+		"Mods also work with SDLPoP.\n"
+		"\n"
+		"For more information, read doc/Readme.txt.\n"
+		"Questions? Visit http://forum.princed.org\n"
+		"\n"
+		"Press any key to continue...";
+
+void show_splash() {
+	if (!enable_info_screen || start_level != 0) return;
+	screen_updates_suspended = 0;
+	current_target_surface = onscreen_surface_;
+	draw_rect(&screen_rect, 0);
+	show_text_with_color(&splash_text_1_rect, 0, 0, splash_text_1, color_15_brightwhite);
+	show_text_with_color(&splash_text_2_rect, 0, -1, splash_text_2, color_7_lightgray);
+
+	int key = 0;
+	do {
+		idle();
+		key = key_test_quit();
+
+		if (joy_hat_states[0] != 0 || joy_X_button_state != 0 || joy_AY_buttons_state != 0 || joy_B_button_state != 0) {
+			joy_hat_states[0] = 0;
+			joy_AY_buttons_state = 0;
+			joy_X_button_state = 0;
+			joy_B_button_state = 0;
+			key_states[SDL_SCANCODE_LSHIFT] = 1; // close the splash screen using the gamepad
+		}
+
+	} while(key == 0 && !(key_states[SDL_SCANCODE_LSHIFT] || key_states[SDL_SCANCODE_RSHIFT]));
+
+	if (key & WITH_CTRL || (enable_quicksave && key == SDL_SCANCODE_F9) || (enable_replay && key == SDL_SCANCODE_TAB)) {
+		extern int last_key_scancode; // defined in seg009.c
+		last_key_scancode = key; // can immediately do Ctrl+L, etc from the splash screen
+	}
+	key_states[SDL_SCANCODE_LSHIFT] = 0; // don't immediately start the game if shift was pressed!
+	key_states[SDL_SCANCODE_RSHIFT] = 0;
 }

@@ -328,10 +328,11 @@ static int global_ini_callback(const char *section, const char *name, const char
         process_boolean("enable_fade", &enable_fade);
         process_boolean("enable_flash", &enable_flash);
         process_boolean("enable_text", &enable_text);
-        process_boolean("start_fullscreen", &start_fullscreen);
-        process_word("pop_window_width", &pop_window_width, NULL);
-        process_word("pop_window_height", &pop_window_height, NULL);
-        process_boolean("use_correct_aspect_ratio", &use_correct_aspect_ratio);
+		process_boolean("enable_info_screen", &enable_info_screen);
+		process_boolean("start_fullscreen", &start_fullscreen);
+		process_word("pop_window_width", &pop_window_width, NULL);
+		process_word("pop_window_height", &pop_window_height, NULL);
+		process_boolean("use_correct_aspect_ratio", &use_correct_aspect_ratio);
         process_boolean("joystick_only_horizontal", &joystick_only_horizontal);
 
         if (strcasecmp(name, "levelset") == 0) {
