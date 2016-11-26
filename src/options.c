@@ -502,10 +502,65 @@ void check_mod_param() {
 	}
 }
 
+#ifdef _WIN32
+#include <windows.h>
+char* mod_dll_name = "mod.dll";
+#else
+#include <dlfcn.h>
+char* mod_dll_name = "mod.so";
+#endif
+
+#define MOD_MAIN_SYMBOL "mod_main@8"
+
 void load_mod_options() {
-    // load mod-specific INI configuration
+
     if (use_custom_levelset) {
-        char filename[POP_MAX_PATH];
+		char filename[POP_MAX_PATH];
+
+#ifndef IS_SDLPOP_MOD_EXE
+        // check for the existence of a custom executable in the mod directory, launch that if it exists
+		snprintf(filename, sizeof(filename), "mods/%s/%s", levelset_name, mod_dll_name);
+		if (access(filename, F_OK) != -1) {
+
+			typedef int (__stdcall * main_func_type)(int, char**);
+			main_func_type main_func;
+
+	#ifdef _WIN32
+
+			HINSTANCE dll_handle = LoadLibrary(filename);
+			if (dll_handle == NULL) {
+				printf("LoadLibrary: unable to load %s\n", filename);
+				exit(1);
+			}
+
+			main_func = (main_func_type) GetProcAddress(dll_handle, MOD_MAIN_SYMBOL);
+
+			if (main_func == NULL) {
+				printf("GetProcAddress: unable to find address of " MOD_MAIN_SYMBOL " in %s\n", filename);
+				exit(1);
+			}
+
+	#else
+			void* handle = dlopen(filename);
+			if (handle == NULL) {
+				printf("dlopen: unable to load %s\n", filename);
+				exit(1);
+			}
+
+			main_func = dlsym(handle, MOD_MAIN_SYMBOL);
+			if (main_func == NULL) {
+				printf("dlsym: unable to find address of " MOD_MAIN_SYMBOL " in %s\n", filename);
+				exit(1);
+			}
+
+	#endif // _WIN32
+
+			main_func(g_argc, g_argv); // yield complete control to the mod dll
+			exit(0);
+		}
+#endif // IS_SDLPOP_MOD_EXE
+
+        // load mod-specific INI configuration
         snprintf(filename, sizeof(filename), "mods/%s/%s", levelset_name, "mod.ini");
         ini_load(filename, mod_ini_callback);
     }
