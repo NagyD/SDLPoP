@@ -50,6 +50,6 @@ add_executable(prince ${SOURCE_FILES})
 if(WIN32)
     target_link_libraries(prince mingw32 SDL2main SDL2 SDL2.dll SDL2_image SDL2_mixer)
 else()
-    target_link_libraries(prince SDL2main SDL2 SDL2_image SDL2_mixer)
+    target_link_libraries(prince SDL2main SDL2 SDL2_image SDL2_mixer m)
 endif()
 
