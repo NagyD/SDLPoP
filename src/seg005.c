@@ -78,7 +78,16 @@ void __pascal far do_fall() {
 			// To prevent in_wall() from being called we need to update Char.curr_col here.
 			// (in_wall() only makes things worse, because it tries to 'eject' the kid from the wall the wrong way.
 			// For this reason, the kid can end up behind a closed gate below, like is possible in Level 7)
-			determine_col();
+
+			// The fix is calling determine_col() here.
+
+			// One caveat: the kid can also land on the rightmost edge of a closed gate tile, when doing a running jump
+			// to the left from two floors up. This 'trick' can be used in original PoP, but is 'fixed' by this change.
+			// To still allow this trick to be possible, we can check that we not jumping into a gate tile.
+			// (By the way, strangely enough, in unmodified PoP the trick even works with a tapestry + floor tile...)
+
+			if (get_tile_at_char() != tiles_4_gate)
+				determine_col();
 		}
         #endif
 
