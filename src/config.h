@@ -181,6 +181,9 @@ The authors of this program may be contacted at http://forum.princed.org
 // If you grab a ledge that is one or more floors down, the chompers on that row will not start.
 #define FIX_CHOMPERS_NOT_STARTING
 
+// Guards will often not reappear in another room if they have been pushed (partly or entirely) offscreen.
+#define FIX_OFFSCREEN_GUARDS_DISAPPEARING
+
 
 // Debug features:
 

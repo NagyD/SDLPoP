@@ -108,7 +108,60 @@ void __pascal far enter_guard() {
 	frame = Char.frame; // hm?
 	guard_tile = level.guards_tile[room_minus_1];
 
+#ifndef FIX_OFFSCREEN_GUARDS_DISAPPEARING
 	if (guard_tile >= 30) return;
+#else
+	if (guard_tile >= 30) {
+		if (!fix_offscreen_guards_disappearing) return;
+
+		// try to see if there are offscreen guards in the left and right rooms that might be visible from this room
+		word left_guard_tile = 31;
+		word right_guard_tile = 31;
+		if (room_L > 0) left_guard_tile = level.guards_tile[room_L-1];
+		if (room_R > 0) right_guard_tile = level.guards_tile[room_R-1];
+
+		int other_guard_x;
+		sbyte other_guard_dir;
+		int delta_x;
+		int other_room_minus_1;
+		if (right_guard_tile >= 0 && right_guard_tile < 30) {
+			other_room_minus_1 = room_R - 1;
+			other_guard_x = level.guards_x[other_room_minus_1];
+			other_guard_dir = level.guards_dir[other_room_minus_1];
+			// left edge of the guard matters
+			if (other_guard_dir == dir_0_right) other_guard_x -= 9; // only retrieve a guard if they will be visible
+			if (other_guard_dir == dir_FF_left) other_guard_x += 1; // getting these right was mostly trial and error
+			// only retrieve offscreen guards
+			if (!(other_guard_x < 58 + 4)) return;
+			delta_x = 140; // guard leaves to the left
+			guard_tile = right_guard_tile;
+		}
+		else if (left_guard_tile >= 0 && left_guard_tile < 30) {
+			other_room_minus_1 = room_L - 1;
+			other_guard_x = level.guards_x[other_room_minus_1];
+			other_guard_dir = level.guards_dir[other_room_minus_1];
+			// right edge of the guard matters
+			if (other_guard_dir == dir_0_right) other_guard_x -= 9;
+			if (other_guard_dir == dir_FF_left) other_guard_x += 1;
+			// only retrieve offscreen guards
+			if (!(other_guard_x > 190 - 4)) return;
+			delta_x = -140; // guard leaves to the right
+			guard_tile = left_guard_tile;
+		}
+		else return;
+
+		// retrieve guard from adjacent room
+		level.guards_x[room_minus_1] = level.guards_x[other_room_minus_1] + delta_x;
+		level.guards_color[room_minus_1] = level.guards_color[other_room_minus_1];
+		level.guards_dir[room_minus_1] = level.guards_dir[other_room_minus_1];
+		level.guards_seq_hi[room_minus_1] = level.guards_seq_hi[other_room_minus_1];
+		level.guards_seq_lo[room_minus_1] = level.guards_seq_lo[other_room_minus_1];
+		level.guards_skill[room_minus_1] = level.guards_skill[other_room_minus_1];
+
+		level.guards_tile[other_room_minus_1] = 0xFF;
+		level.guards_seq_hi[other_room_minus_1] = 0;
+	}
+#endif
 
 	Char.room = drawn_room;
 	Char.curr_row = guard_tile / 10;
