@@ -184,6 +184,9 @@ The authors of this program may be contacted at http://forum.princed.org
 // As soon as a level door has completely opened, the feather fall effect is interrupted because the sound stops.
 #define FIX_FEATHER_INTERRUPTED_BY_LEVELDOOR
 
+// Guards will often not reappear in another room if they have been pushed (partly or entirely) offscreen.
+#define FIX_OFFSCREEN_GUARDS_DISAPPEARING
+
 
 // Debug features:
 
