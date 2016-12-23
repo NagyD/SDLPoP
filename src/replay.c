@@ -53,7 +53,7 @@ dword curr_tick = 0;
 dword saved_random_seed;
 byte special_move = 0;
 
-FILE* replay_fp;
+FILE* replay_fp = NULL;
 const char replay_version[9] = "V1.17";
 byte replay_file_open = 0;
 int current_replay_number = 0;
@@ -443,6 +443,7 @@ void save_recorded_replay() {
         fwrite(&num_replay_ticks, sizeof(num_replay_ticks), 1, replay_fp);
         fwrite(moves, num_replay_ticks, 1, replay_fp);
         fclose(replay_fp);
+        replay_fp = NULL;
     }
 }
 
@@ -514,6 +515,7 @@ void load_replay() {
         fread(&num_replay_ticks, sizeof(num_replay_ticks), 1, replay_fp);
         fread(moves, num_replay_ticks, 1, replay_fp);
         fclose(replay_fp);
+        replay_fp = NULL;
         replay_file_open = 0;
     }
 }
