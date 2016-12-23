@@ -54,3 +54,5 @@ Makefile.win
 # CLion
 .idea/
 src/.idea/
+src/cmake-build*/
+build/

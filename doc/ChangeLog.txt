@@ -386,6 +386,10 @@ DONE: Improved controller support; migrated to SDL_GameController API (reported 
 DONE: Implemented two settings for joystick control: horizontal-only (default; idea and original implementation by @EndeavourAccuracy) and all-directional.
 FIXED: Reduced flickering when text is drawn.
 DONE: Added info screen shown at startup, with some explanation about SDLPoP.
+FIXED: Fixed quickload penalty being applied even after time has stopped (after Jaffar has been killed)
+FIXED: Fixed guards sometimes turning around immediately after quickloading (because is_guard_notice is not set to zero)
+FIXED: Silenced warnings being printed about image 255, after entering an exit door.
+FIXED: Fixed feather fall effect being interrupted by a level door opening.
 
 Build changes, source code, refactoring:
 DONE: OSX port upgraded from SDL to SDL2. Mixer library added in makefile and documentation. Tested.

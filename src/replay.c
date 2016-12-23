@@ -413,11 +413,11 @@ void save_recorded_replay() {
 	} while (access(filename, F_OK) != -1); // check if file already exists
 
 	// create the "replays" folder if it does not exist already
-	#if defined WIN32 || _WIN32 || WIN64 || _WIN64
+#if defined WIN32 || _WIN32 || WIN64 || _WIN64
 	mkdir (replays_folder);
-	#else
+#else
 	mkdir (replays_folder, 0700);
-	#endif
+#endif
 
     replay_fp = fopen(filename, "wb");
     if (replay_fp != NULL) {
