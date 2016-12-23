@@ -417,3 +417,4 @@ DONE: Add .editorconfig
 DONE: Added maximum path length macro POP_MAX_PATH set to 256
 CHANGE: Refactor so that HOF path is obtained from get_hof_path()
 CHANGE: Refactor: removed options_type (replacement: options are stored using SDL_RWops streams).
+DONE: Added the 'mod' build target for customized SDLPoP executables in CMakeLists.txt.

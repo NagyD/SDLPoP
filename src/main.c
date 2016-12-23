@@ -28,3 +28,17 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
+
+#ifdef IS_SDLPOP_MOD_EXE
+
+#ifdef _WIN32
+#define EXPORT __declspec(dllexport)
+#else
+#define EXPORT
+#endif
+
+EXPORT __stdcall int mod_main(int argc, char *argv[]) {
+	main(argc, argv);
+	return 0;
+}
+#endif //IS_SDLPOP_MOD_EXE
