@@ -181,6 +181,9 @@ The authors of this program may be contacted at http://forum.princed.org
 // If you grab a ledge that is one or more floors down, the chompers on that row will not start.
 #define FIX_CHOMPERS_NOT_STARTING
 
+// As soon as a level door has completely opened, the feather fall effect is interrupted because the sound stops.
+#define FIX_FEATHER_INTERRUPTED_BY_LEVELDOOR
+
 
 // Debug features:
 

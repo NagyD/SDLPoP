@@ -333,6 +333,7 @@ void restore_room_after_quick_load() {
 	load_room_links();
 	//draw_level_first();
 	//gen_palace_wall_colors();
+	is_guard_notice = 0; // prevent guard turning around immediately
 	draw_game_frame(); // for falling
 	//redraw_screen(1); // for room_L
 
@@ -380,7 +381,10 @@ int quick_load() {
 
 		#ifdef USE_QUICKLOAD_PENALTY
 		// Subtract one minute from the remaining time (if it is above 5 minutes)
-		if (enable_quicksave_penalty) {
+		if (enable_quicksave_penalty &&
+			// don't apply the penalty after time has already stopped!
+			(current_level < 13 || (current_level == 13 && leveldoor_open < 2))
+		) {
 			int ticks_elapsed = 720 * (rem_min - old_rem_min) + (rem_tick - old_rem_tick);
 			// don't restore time at all if the elapsed time is between 0 and 1 minutes
 			if (ticks_elapsed > 0 && ticks_elapsed < 720) {
