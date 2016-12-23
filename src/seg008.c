@@ -1714,9 +1714,17 @@ void __pascal far show_time() {
 		if (rem_tick == 0) {
 			rem_tick = 719; // 720=12*60 ticks = 1 minute
 			--rem_min;
+#ifndef ALLOW_INFINITE_TIME
 			if (rem_min != 0 && (rem_min <= 5 || rem_min % 5 == 0)) {
 				is_show_time = 1;
 			}
+#else
+			if (rem_min > 0 && (rem_min <= 5 || rem_min % 5 == 0)) {
+				is_show_time = 1;
+			} else if (rem_min < 0) {
+				is_show_time = ((~rem_min) % 5 == 0 ) ? 1 : 0;
+			}
+#endif
 		} else {
 			if (rem_min == 1 && rem_tick % 12 == 0) {
 				is_show_time = 1;
@@ -1742,7 +1750,21 @@ void __pascal far show_time() {
 		} else {
 
 #ifdef ALLOW_INFINITE_TIME
-			if (rem_min == 0) // may also be negative, don't report "expired" in that case!
+			if (rem_min < 0) {
+				if (~rem_min == 0) {
+					// don't display time elapsed in the first minute
+					text_time_remaining = 0;
+					text_time_total = 0;
+				}
+				else if (~rem_min == 1) {
+					snprintf(sprintf_temp, sizeof(sprintf_temp), "1 MINUTE PASSED");
+				} else {
+					snprintf(sprintf_temp, sizeof(sprintf_temp), "%d MINUTES PASSED", ~rem_min);
+				}
+				display_text_bottom(sprintf_temp);
+			}
+
+			else if (rem_min == 0) // may also be negative, don't report "expired" in that case!
 #endif
 
 			display_text_bottom("TIME HAS EXPIRED!");
