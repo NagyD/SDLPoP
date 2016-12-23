@@ -2234,10 +2234,12 @@ image_type far * __pascal far method_3_blit_mono(image_type far *image,int xpos,
     SDL_Surface* colored_image = SDL_ConvertSurfaceFormat(image, SDL_PIXELFORMAT_ARGB8888, 0);
 
     SDL_SetSurfaceBlendMode(colored_image, SDL_BLENDMODE_NONE);
+	/* Causes problems with SDL 2.0.5 (see #105)
 	if (SDL_SetColorKey(colored_image, SDL_TRUE, 0) != 0) {
 		sdlperror("SDL_SetColorKey");
 		quit(1);
 	}
+	*/
 
 	if (SDL_LockSurface(colored_image) != 0) {
 		sdlperror("SDL_LockSurface");
