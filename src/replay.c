@@ -28,7 +28,7 @@ The authors of this program may be contacted at http://forum.princed.org
 #define MAX_REPLAY_DURATION 345600 // 8 hours: 720 * 60 * 8 ticks
 byte moves[MAX_REPLAY_DURATION] = {0}; // static memory for now because it is easier (should this be dynamic?)
 byte replay_options[POP_MAX_OPTIONS_SIZE]; // Need to know what gameplay options are active during recording, for reproducability
-size_t replay_options_size;
+dword replay_options_size;
 byte stored_options[POP_MAX_OPTIONS_SIZE];
 
 char replay_levelset_name[POP_MAX_PATH];
@@ -60,8 +60,8 @@ int current_replay_number = 0;
 int next_replay_number = 0;
 
 byte* savestate_buffer = NULL;
-size_t savestate_offset = 0;
-size_t savestate_size = 0;
+dword savestate_offset = 0;
+dword savestate_size = 0;
 #define MAX_SAVESTATE_SIZE 4096
 
 // These are defined in seg000.c:
@@ -432,8 +432,8 @@ void save_recorded_replay() {
 
 		// save the options
 		byte temp_options[POP_MAX_OPTIONS_SIZE];
-		size_t options_size = save_options_to_buffer(temp_options, sizeof(temp_options));
-		fwrite(&options_size, sizeof(size_t), 1, replay_fp);
+		dword options_size = save_options_to_buffer(temp_options, sizeof(temp_options));
+		fwrite(&options_size, sizeof(options_size), 1, replay_fp);
 		fwrite(temp_options, options_size, 1, replay_fp);
 
         // save the rest of the replay data
