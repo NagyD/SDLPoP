@@ -701,6 +701,27 @@ extern const rect_type timer_rect INIT(= {1, 2, 8, 55});
 extern byte is_timer_displayed INIT(= 0);
 #endif
 
+// customized cutscene set-up: handled as index into a lookup table (can't rely on function pointers being stable!)
+extern byte tbl_cutscenes_by_index[16] INIT(= {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15});
+extern cutscene_ptr_type tbl_cutscenes_lookup[16] INIT(= {
+		NULL,
+		NULL,
+		cutscene_2_6,
+		NULL,
+		cutscene_4,
+		NULL,
+		cutscene_2_6,
+		NULL,
+		cutscene_8,
+		cutscene_9,
+		NULL,
+		NULL,
+		cutscene_12,
+		NULL,
+		NULL,
+		NULL,
+});
+
 #undef INIT
 #undef extern
 
