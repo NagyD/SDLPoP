@@ -623,6 +623,7 @@ extern dword num_replay_ticks INIT(= 0);
 extern byte need_start_replay INIT(= 0);
 extern byte need_replay_cycle INIT(= 0);
 extern char replays_folder[POP_MAX_PATH] INIT(= "replays");
+extern byte special_move;
 #endif // USE_REPLAY
 
 extern byte start_fullscreen INIT(= 0);

@@ -1015,6 +1015,13 @@ enum colorids {
 	color_15_brightwhite = 15,
 };
 
+#ifdef USE_REPLAY
+enum replay_special_moves {
+	MOVE_RESTART_LEVEL = 1, // player pressed Ctrl+A
+	MOVE_EFFECT_END = 2,    // music stops, causing the end of feather effect or level 1 crouch immobilization
+};
+#endif
+
 #define COUNT(array) (sizeof(array)/sizeof(array[0]))
 
 // These are or'ed with SDL_SCANCODE_* constants in last_key_scancode.

@@ -37,24 +37,19 @@ byte moves[MAX_REPLAY_DURATION] = {0}; // static memory for now because it is ea
 char replay_levelset_name[POP_MAX_PATH];
 char stored_levelset_name[POP_MAX_PATH];
 
-enum special_moves {
-    MOVE_RESTART_LEVEL = 1,
-};
-
 // 1-byte structure representing which controls were active at a particular game tick
-typedef union replay_move {
+typedef union replay_move_type {
     struct {
         sbyte x : 2;
         sbyte y : 2;
         byte shift : 1;
-        byte special : 3;
+        byte special : 3; // enum replay_special_moves, see types.h
     };
     byte bits;
-} replay_move;
+} replay_move_type;
 
 dword curr_tick = 0;
 dword saved_random_seed;
-byte special_move = 0;
 
 FILE* replay_fp = NULL;
 byte replay_file_open = 0;
@@ -457,7 +452,7 @@ void add_replay_move() {
         text_time_remaining = 24;
     }
 
-    replay_move curr_move = {{0}};
+    replay_move_type curr_move = {{0}};
     curr_move.x = control_x;
     curr_move.y = control_y;
     if (control_shift) curr_move.shift = 1;
@@ -540,7 +535,7 @@ void do_replay_move() {
 		return;
     }
 
-    replay_move curr_move;
+    replay_move_type curr_move;
     curr_move.bits = moves[curr_tick];
 
     control_x = curr_move.x;
@@ -550,7 +545,11 @@ void do_replay_move() {
     if (curr_move.special == MOVE_RESTART_LEVEL) { // restart level
         stop_sounds();
         is_restart_level = 1;
-    }
+    } else if (curr_move.special == MOVE_EFFECT_END) {
+		stop_sounds();
+		need_level1_music = 0;
+		is_feather_fall = 0;
+	}
 
 //    if (curr_tick > 5 ) printf("rem_tick: %d\t curr_tick: %d\tlast 5 moves: %d, %d, %d, %d, %d\n", rem_tick, curr_tick,
 //                               moves[curr_tick-4], moves[curr_tick-3], moves[curr_tick-2], moves[curr_tick-1], moves[curr_tick]);
