@@ -702,11 +702,14 @@ void key_press_while_recording(int* key_ptr) {
 void key_press_while_replaying(int* key_ptr) {
     int key = *key_ptr;
     switch(key) {
-        default:
-            // cannot manually do most stuff during a replay!
-            *key_ptr = 0;
+		case 0:                                 // 'no key pressed'
+			break;
+		default:
+            // cannot manually do most stuff during a replay, so cancel the pressed key...
+            *key_ptr = 1; // don't set to zero (we would be unable to unpause a replay because all keys are ignored)
+			              // (1 is not in use as a scancode, see https://wiki.libsdl.org/SDLScancodeLookup)
             break;
-        // but these are allowable actions:
+        // ...but these are allowable actions:
         case SDL_SCANCODE_ESCAPE:               // pause
         case SDL_SCANCODE_ESCAPE | WITH_SHIFT:
         case SDL_SCANCODE_SPACE:                // time
