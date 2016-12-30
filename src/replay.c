@@ -255,6 +255,7 @@ void check_if_opening_replay_file() {
 				int ok = read_replay_header(&header, replay_fp, error_message);
 				if (!ok) {
 					printf("Error opening replay file: %s\n", error_message);
+					return;
 				}
 				if (header.uses_custom_levelset) {
 					strncpy(replay_levelset_name, header.levelset_name, sizeof(replay_levelset_name)); // use the replays's levelset
