@@ -81,6 +81,8 @@ typedef struct replay_info_type {
 } replay_info_type;
 
 int read_replay_header(replay_header_type* header, FILE* fp) {
+	// Explicitly go to the beginning, because the current filepos might be nonzero.
+	fseek(fp, 0, SEEK_SET);
 	// read the version strings
 	fread(header->magic, 3, 1, fp);
 	// some backwards compatibility with older replay format: if old format, don't read the levelset name
