@@ -26,6 +26,7 @@ The authors of this program may be contacted at http://forum.princed.org
 #ifdef USE_REPLAY
 
 const char replay_magic_number[3] = "P1R";
+const word replay_format_class = 0;          // unique number associated with this SDLPoP implementation / fork
 
 #define REPLAY_FORMAT_CURR_VERSION       100 // current version number of the replay format
 #define REPLAY_FORMAT_MIN_VERSION        100 // SDLPoP will open replays with this version number and higher
@@ -68,7 +69,6 @@ extern const char quick_version[9];
 
 // header information read from the first part of a replay file
 typedef struct replay_header_type {
-	char magic[3];
 	byte uses_custom_levelset;
 	char levelset_name[POP_MAX_PATH];
 } replay_header_type;
@@ -83,11 +83,17 @@ typedef struct replay_info_type {
 int read_replay_header(replay_header_type* header, FILE* fp) {
 	// Explicitly go to the beginning, because the current filepos might be nonzero.
 	fseek(fp, 0, SEEK_SET);
-	// read the version strings
-	fread(header->magic, 3, 1, fp);
-	// some backwards compatibility with older replay format: if old format, don't read the levelset name
-	if (strncmp(header->magic, replay_magic_number, 3) != 0) {
+	// read the magic number
+	char magic[3] = "";
+	fread(magic, 3, 1, fp);
+	if (strncmp(magic, replay_magic_number, 3) != 0) {
 		return 0; // incompatible, magic number not correct!
+	}
+	// read the unique number associated with this SDLPoP implementation / fork (for normal SDLPoP: 0)
+	word class;
+	fread(&class, sizeof(class), 1, fp);
+	if (class != replay_format_class) {
+		return 0; // incompatible, replay format is associated with a different implementation of SDLPoP
 	}
 	// read the format version number
 	byte version_number = (byte) fgetc(fp);
@@ -211,7 +217,7 @@ void check_if_opening_replay_file() {
 				current_replay_number = -1; // don't cycle when pressing Tab
 				// We should read the header in advance so we know the levelset name
 				// then the game can immediately load the correct resources
-				replay_header_type header = {{0}};
+				replay_header_type header = {0};
 				int ok = read_replay_header(&header, replay_fp);
 				if (!ok) {
 					printf("Error: unexpected replay format!\n");
@@ -589,6 +595,7 @@ void save_recorded_replay() {
     replay_fp = fopen(filename, "wb");
     if (replay_fp != NULL) {
         fwrite(replay_magic_number, COUNT(replay_magic_number), 1, replay_fp); // magic number "P1R"
+		fwrite(&replay_format_class, sizeof(replay_format_class), 1, replay_fp);
 		putc(REPLAY_FORMAT_CURR_VERSION, replay_fp);
 		putc(REPLAY_FORMAT_DEPRECATION_NUMBER, replay_fp);
 		Sint64 seconds = time(NULL);
@@ -655,7 +662,7 @@ void load_replay() {
     if (savestate_buffer == NULL)
         savestate_buffer = malloc(MAX_SAVESTATE_SIZE);
     if (replay_fp != NULL && savestate_buffer != NULL) {
-        replay_header_type header = {{0}};
+        replay_header_type header = {0};
 		int ok = read_replay_header(&header, replay_fp);
 		if (!ok) {
 			printf("Warning: unexpected replay format!\n");
