@@ -610,8 +610,6 @@ void check_seqtable_matches_original();
 #endif
 
 // OPTIONS.C
-size_t save_options_to_buffer(void* options_buffer, size_t max_size);
-void load_options_from_buffer(void* options_buffer, size_t options_size);
 void disable_fixes_and_enhancements();
 void load_global_options();
 void check_mod_param();

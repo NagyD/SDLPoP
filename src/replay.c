@@ -25,43 +25,40 @@ The authors of this program may be contacted at http://forum.princed.org
 
 #ifdef USE_REPLAY
 
+const char replay_magic_number[3] = "P1R";
+
+#define REPLAY_FORMAT_CURR_VERSION       100 // current version number of the replay format
+#define REPLAY_FORMAT_MIN_VERSION        100 // SDLPoP will open replays with this version number and higher
+#define REPLAY_FORMAT_DEPRECATION_NUMBER 1   // SDLPoP won't open replays with a higher deprecation number
+
 #define MAX_REPLAY_DURATION 345600 // 8 hours: 720 * 60 * 8 ticks
 byte moves[MAX_REPLAY_DURATION] = {0}; // static memory for now because it is easier (should this be dynamic?)
-byte replay_options[POP_MAX_OPTIONS_SIZE]; // Need to know what gameplay options are active during recording, for reproducability
-size_t replay_options_size;
-byte stored_options[POP_MAX_OPTIONS_SIZE];
 
 char replay_levelset_name[POP_MAX_PATH];
 char stored_levelset_name[POP_MAX_PATH];
 
-enum special_moves {
-    MOVE_RESTART_LEVEL = 1,
-};
-
 // 1-byte structure representing which controls were active at a particular game tick
-typedef union replay_move {
+typedef union replay_move_type {
     struct {
         sbyte x : 2;
         sbyte y : 2;
         byte shift : 1;
-        byte special : 3;
+        byte special : 3; // enum replay_special_moves, see types.h
     };
     byte bits;
-} replay_move;
+} replay_move_type;
 
 dword curr_tick = 0;
 dword saved_random_seed;
-byte special_move = 0;
 
 FILE* replay_fp = NULL;
-const char replay_version[9] = "V1.17";
 byte replay_file_open = 0;
 int current_replay_number = 0;
 int next_replay_number = 0;
 
 byte* savestate_buffer = NULL;
-size_t savestate_offset = 0;
-size_t savestate_size = 0;
+dword savestate_offset = 0;
+dword savestate_size = 0;
 #define MAX_SAVESTATE_SIZE 4096
 
 // These are defined in seg000.c:
@@ -71,8 +68,7 @@ extern const char quick_version[9];
 
 // header information read from the first part of a replay file
 typedef struct replay_header_type {
-	char replay_version[9];
-	char quick_version[9];
+	char magic[3];
 	byte uses_custom_levelset;
 	char levelset_name[POP_MAX_PATH];
 } replay_header_type;
@@ -84,19 +80,34 @@ typedef struct replay_info_type {
 	replay_header_type header;
 } replay_info_type;
 
-void read_replay_header(replay_header_type* header, FILE* fp) {
+int read_replay_header(replay_header_type* header, FILE* fp) {
 	// read the version strings
-	fread(header->replay_version, sizeof(header->replay_version), 1, fp);
-	fread(header->quick_version, sizeof(header->quick_version), 1, fp);
+	fread(header->magic, 3, 1, fp);
 	// some backwards compatibility with older replay format: if old format, don't read the levelset name
-	if (strncmp(header->replay_version, "V1.16", 5) == 0) {
-		return;
+	if (strncmp(header->magic, replay_magic_number, 3) != 0) {
+		return 0; // incompatible, magic number not correct!
 	}
+	// read the format version number
+	byte version_number = (byte) fgetc(fp);
+	if (version_number < REPLAY_FORMAT_MIN_VERSION) {
+		return 0; // incompatible, replay format is too old
+	}
+
+	// read the format deprecation number
+	byte deprecation_number = (byte) fgetc(fp);
+	if (deprecation_number > REPLAY_FORMAT_DEPRECATION_NUMBER) {
+		return 0; // incompatible, replay format is too new
+	}
+
+	// creation time (seconds since 1970) is embedded in the format, but not used in SDLPoP right now
+	fseek(replay_fp, sizeof(Sint64), SEEK_CUR);
+
 	// read the levelset_name
 	byte levelset_name_len_read = (byte) fgetc(fp);
 	header->uses_custom_levelset = (levelset_name_len_read != 0);
 	fread(header->levelset_name, sizeof(char), levelset_name_len_read, fp);
 	header->levelset_name[levelset_name_len_read] = '\0';
+	return 1;
 }
 
 size_t num_replay_files = 0; // number of listed replays
@@ -143,8 +154,10 @@ void list_replay_files() {
 				// read and store the levelset name associated with the replay
 				FILE* fp = fopen(replay_info->filename, "rb");
 				if (fp != NULL) {
-					read_replay_header(&replay_info->header, fp);
+					int ok = read_replay_header(&replay_info->header, fp);
+					if (!ok) --num_replay_files; // scrap the file if it is not compatible
 					fclose(fp);
+
 				}
 			}
 		}
@@ -197,7 +210,10 @@ void check_if_opening_replay_file() {
 				// We should read the header in advance so we know the levelset name
 				// then the game can immediately load the correct resources
 				replay_header_type header = {{0}};
-				read_replay_header(&header, replay_fp);
+				int ok = read_replay_header(&header, replay_fp);
+				if (!ok) {
+					printf("Error: unexpected replay format!\n");
+				}
 				if (header.uses_custom_levelset) {
 					strncpy(replay_levelset_name, header.levelset_name, sizeof(replay_levelset_name)); // use the replays's levelset
 				}
@@ -207,6 +223,144 @@ void check_if_opening_replay_file() {
 		}
 	}
 }
+
+int process_rw_write(SDL_RWops* rw, void* data, size_t data_size) {
+	return SDL_RWwrite(rw, data, data_size, 1);
+}
+
+int process_rw_read(SDL_RWops* rw, void* data, size_t data_size) {
+	return SDL_RWread(rw, data, data_size, 1);
+	// if this returns 0, most likely the end of the stream has been reached
+}
+
+// The functions options_process_* below each process (read/write) a section of options variables (using SDL_RWops)
+// This is I/O for the *binary* representation of the relevant options - this gets saved as part of a replay.
+
+typedef int rw_process_func_type(SDL_RWops* rw, void* data, size_t data_size);
+typedef void process_options_section_func_type(SDL_RWops* rw, rw_process_func_type process_func);
+
+#define process(x) if (!process_func(rw, &(x), sizeof(x))) return
+
+void options_process_features(SDL_RWops* rw, rw_process_func_type process_func) {
+	process(enable_copyprot);
+	process(enable_quicksave);
+	process(enable_quicksave_penalty);
+}
+
+void options_process_enhancements(SDL_RWops* rw, rw_process_func_type process_func) {
+	process(use_fixes_and_enhancements);
+	process(enable_crouch_after_climbing);
+	process(enable_freeze_time_during_end_music);
+	process(enable_remember_guard_hp);
+}
+
+void options_process_fixes(SDL_RWops* rw, rw_process_func_type process_func) {
+	process(fix_gate_sounds);
+	process(fix_two_coll_bug);
+	process(fix_infinite_down_bug);
+	process(fix_gate_drawing_bug);
+	process(fix_bigpillar_climb);
+	process(fix_jump_distance_at_edge);
+	process(fix_edge_distance_check_when_climbing);
+	process(fix_painless_fall_on_guard);
+	process(fix_wall_bump_triggers_tile_below);
+	process(fix_stand_on_thin_air);
+	process(fix_press_through_closed_gates);
+	process(fix_grab_falling_speed);
+	process(fix_skeleton_chomper_blood);
+	process(fix_move_after_drink);
+	process(fix_loose_left_of_potion);
+	process(fix_guard_following_through_closed_gates);
+	process(fix_safe_landing_on_spikes);
+	process(fix_glide_through_wall);
+	process(fix_drop_through_tapestry);
+	process(fix_land_against_gate_or_tapestry);
+	process(fix_unintended_sword_strike);
+	process(fix_retreat_without_leaving_room);
+	process(fix_running_jump_through_tapestry);
+	process(fix_push_guard_into_wall);
+	process(fix_jump_through_wall_above_gate);
+	process(fix_chompers_not_starting);
+	process(fix_feather_interrupted_by_leveldoor);
+	process(fix_offscreen_guards_disappearing);
+}
+
+void options_process_custom_general(SDL_RWops* rw, rw_process_func_type process_func) {
+	process(start_minutes_left);
+	process(start_ticks_left);
+	process(start_hitp);
+	process(max_hitp_allowed);
+	process(saving_allowed_first_level);
+	process(saving_allowed_last_level);
+	process(start_upside_down);
+	process(start_in_blind_mode);
+	process(copyprot_level);
+	process(drawn_tile_top_level_edge);
+	process(drawn_tile_left_level_edge);
+	process(level_edge_hit_tile);
+	process(allow_triggering_any_tile);
+	process(enable_wda_in_palace);
+	process(vga_palette);
+	process(first_level);
+	process(skip_title);
+	process(shift_L_allowed_until_level);
+	process(shift_L_reduced_minutes);
+	process(shift_L_reduced_ticks);
+}
+
+void options_process_custom_per_level(SDL_RWops* rw, rw_process_func_type process_func) {
+	process(tbl_level_type);
+	process(tbl_level_color);
+	process(tbl_guard_type);
+	process(tbl_guard_hp);
+	process(tbl_cutscenes_by_index);
+}
+
+#undef process
+
+// struct for keeping track of both the normal and the replay options (which we want to easily switch between)
+// (separately for each 'section', so adding future options becomes easy without messing up the format!)
+typedef struct replay_options_section_type {
+	dword data_size;
+	byte replay_data[POP_MAX_OPTIONS_SIZE]; // binary representation of the options that are active during the replay
+	byte stored_data[POP_MAX_OPTIONS_SIZE]; // normal options are restored from this, after the replay is finished
+	process_options_section_func_type* section_func;
+} replay_options_section_type;
+
+replay_options_section_type replay_options_sections[] = {
+		{.section_func = options_process_features},
+		{.section_func = options_process_enhancements},
+		{.section_func = options_process_fixes},
+		{.section_func = options_process_custom_general},
+		{.section_func = options_process_custom_per_level},
+};
+
+// output the current options to a memory buffer (e.g. to remember them before a replay is loaded)
+size_t save_options_to_buffer(void* options_buffer, size_t max_size, process_options_section_func_type* process_section_func) {
+	SDL_RWops* rw = SDL_RWFromMem(options_buffer, max_size);
+	process_section_func(rw, process_rw_write);
+	Sint64 section_size = SDL_RWtell(rw);
+	if (section_size < 0) section_size = 0;
+	SDL_RWclose(rw);
+	return (size_t) section_size;
+}
+
+void apply_cutscene_pointers() {
+	int i;
+	for (i = 0; i < 16; ++i) {
+		tbl_cutscenes[i] = tbl_cutscenes_lookup[tbl_cutscenes_by_index[i]];
+	}
+}
+
+// restore the options from a memory buffer (e.g. reapply the original options after a replay is finished)
+void load_options_from_buffer(void* options_buffer, size_t options_size, process_options_section_func_type* process_section_func) {
+	SDL_RWops* rw = SDL_RWFromMem(options_buffer, options_size);
+	process_section_func(rw, process_rw_read);
+	apply_cutscene_pointers();
+	SDL_RWclose(rw);
+}
+
+
 
 void init_record_replay() {
     if (!enable_replay) return;
@@ -298,7 +452,7 @@ void add_replay_move() {
         text_time_remaining = 24;
     }
 
-    replay_move curr_move = {{0}};
+    replay_move_type curr_move = {{0}};
     curr_move.x = control_x;
     curr_move.y = control_y;
     if (control_shift) curr_move.shift = 1;
@@ -327,10 +481,14 @@ void stop_recording() {
 
 void apply_replay_options() {
 	// store the current options, so they can be restored later
-	save_options_to_buffer(stored_options, sizeof(stored_options));
+	for (int i = 0; i < COUNT(replay_options_sections); ++i) {
+		save_options_to_buffer(replay_options_sections[i].stored_data, POP_MAX_OPTIONS_SIZE, replay_options_sections[i].section_func);
+	}
 
 	// apply the options from the memory buffer (max. replay_options_size bytes will be read)
-	load_options_from_buffer(replay_options, replay_options_size);
+	for (int i = 0; i < COUNT(replay_options_sections); ++i) {
+		load_options_from_buffer(replay_options_sections[i].replay_data, replay_options_sections[i].data_size, replay_options_sections[i].section_func);
+	}
 
     if (!use_fixes_and_enhancements) disable_fixes_and_enhancements();
     enable_replay = 1; // just to be safe...
@@ -343,7 +501,10 @@ void apply_replay_options() {
 }
 
 void restore_normal_options() {
-	load_options_from_buffer(stored_options, sizeof(stored_options));
+	// apply the stored options
+	for (int i = 0; i < COUNT(replay_options_sections); ++i) {
+		load_options_from_buffer(replay_options_sections[i].stored_data, POP_MAX_OPTIONS_SIZE, replay_options_sections[i].section_func);
+	}
 
 	start_level = 0; // may have been set to a different value by the replay
 
@@ -374,7 +535,7 @@ void do_replay_move() {
 		return;
     }
 
-    replay_move curr_move;
+    replay_move_type curr_move;
     curr_move.bits = moves[curr_tick];
 
     control_x = curr_move.x;
@@ -384,7 +545,11 @@ void do_replay_move() {
     if (curr_move.special == MOVE_RESTART_LEVEL) { // restart level
         stop_sounds();
         is_restart_level = 1;
-    }
+    } else if (curr_move.special == MOVE_EFFECT_END) {
+		stop_sounds();
+		need_level1_music = 0;
+		is_feather_fall = 0;
+	}
 
 //    if (curr_tick > 5 ) printf("rem_tick: %d\t curr_tick: %d\tlast 5 moves: %d, %d, %d, %d, %d\n", rem_tick, curr_tick,
 //                               moves[curr_tick-4], moves[curr_tick-3], moves[curr_tick-2], moves[curr_tick-1], moves[curr_tick]);
@@ -421,20 +586,24 @@ void save_recorded_replay() {
 
     replay_fp = fopen(filename, "wb");
     if (replay_fp != NULL) {
-        fwrite(replay_version, COUNT(replay_version), 1, replay_fp);
-        fwrite(quick_version, COUNT(quick_version), 1, replay_fp);
-		// include the name of the levelset (is empty for original levels)
-		fputc(strnlen(levelset_name, UINT8_MAX), replay_fp);
+        fwrite(replay_magic_number, COUNT(replay_magic_number), 1, replay_fp); // magic number "P1R"
+		putc(REPLAY_FORMAT_CURR_VERSION, replay_fp);
+		putc(REPLAY_FORMAT_DEPRECATION_NUMBER, replay_fp);
+		Sint64 seconds = time(NULL);
+		fwrite(&seconds, sizeof(seconds), 1, replay_fp);
+		putc(strnlen(levelset_name, UINT8_MAX), replay_fp); // length of the levelset name (is zero for original levels)
 		fputs(levelset_name, replay_fp);
         // embed a savestate into the replay
         fwrite(&savestate_size, sizeof(savestate_size), 1, replay_fp);
         fwrite(savestate_buffer, savestate_size, 1, replay_fp);
 
-		// save the options
+		// save the options, organized per section
 		byte temp_options[POP_MAX_OPTIONS_SIZE];
-		size_t options_size = save_options_to_buffer(temp_options, sizeof(temp_options));
-		fwrite(&options_size, sizeof(size_t), 1, replay_fp);
-		fwrite(temp_options, options_size, 1, replay_fp);
+		for (int i = 0; i < COUNT(replay_options_sections); ++i) {
+			dword section_size = save_options_to_buffer(temp_options, sizeof(temp_options), replay_options_sections[i].section_func);
+			fwrite(&section_size, sizeof(section_size), 1, replay_fp);
+			fwrite(temp_options, section_size, 1, replay_fp);
+		}
 
         // save the rest of the replay data
         fwrite(&start_level, sizeof(start_level), 1, replay_fp);
@@ -448,7 +617,7 @@ void save_recorded_replay() {
 }
 
 byte open_next_replay_file() {
-	if (next_replay_number > num_replay_files) {
+	if (next_replay_number > num_replay_files-1) {
 		return 0; // reached the last replay file, return to title screen
 	}
 	current_replay_number = next_replay_number;
@@ -485,28 +654,23 @@ void load_replay() {
         savestate_buffer = malloc(MAX_SAVESTATE_SIZE);
     if (replay_fp != NULL && savestate_buffer != NULL) {
         replay_header_type header = {{0}};
-		read_replay_header(&header, replay_fp);
-		/* // Todo: decide if a warning or error is needed here (advantage: safe; disadvantage: annoying)
-        if (strcmp(header.replay_version, replay_version) != 0) {
-            printf("Warning: unexpected replay format!\n");
-        }
-        if (strcmp(header.quick_version, quick_version) != 0) {
-            printf("Warning: unexpected savestate format!\n");
-        }*/
+		int ok = read_replay_header(&header, replay_fp);
+		if (!ok) {
+			printf("Warning: unexpected replay format!\n");
+		}
+
 		memcpy(replay_levelset_name, header.levelset_name, sizeof(header.levelset_name));
 
 		// load the savestate
         fread(&savestate_size, sizeof(savestate_size), 1, replay_fp);
         fread(savestate_buffer, savestate_size, 1, replay_fp);
 
-		// load the replay options
-		if (strncmp(header.replay_version, "V1.16", 5) == 0) {
-			// backward compatibility: only the first 38 (of 64) written bytes are equal to the newer format
-			fread(replay_options, 64, 1, replay_fp);
-			replay_options_size = 38;
-		} else {
-			fread(&replay_options_size, sizeof(replay_options_size), 1, replay_fp);
-			fread(replay_options, replay_options_size, 1, replay_fp);
+		// load the replay options, organized per section
+		for (int i = 0; i < COUNT(replay_options_sections); ++i) {
+			dword section_size = 0;
+			fread(&section_size, sizeof(section_size), 1, replay_fp);
+			fread(replay_options_sections[i].replay_data, section_size, 1, replay_fp);
+			replay_options_sections[i].data_size = section_size;
 		}
 
 		// load the rest of the replay data
@@ -537,11 +701,14 @@ void key_press_while_recording(int* key_ptr) {
 void key_press_while_replaying(int* key_ptr) {
     int key = *key_ptr;
     switch(key) {
-        default:
-            // cannot manually do most stuff during a replay!
-            *key_ptr = 0;
+		case 0:                                 // 'no key pressed'
+			break;
+		default:
+            // cannot manually do most stuff during a replay, so cancel the pressed key...
+            *key_ptr = 1; // don't set to zero (we would be unable to unpause a replay because all keys are ignored)
+			              // (1 is not in use as a scancode, see https://wiki.libsdl.org/SDLScancodeLookup)
             break;
-        // but these are allowable actions:
+        // ...but these are allowable actions:
         case SDL_SCANCODE_ESCAPE:               // pause
         case SDL_SCANCODE_ESCAPE | WITH_SHIFT:
         case SDL_SCANCODE_SPACE:                // time

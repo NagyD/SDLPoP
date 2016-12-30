@@ -286,6 +286,10 @@ void __pascal far control_crouched() {
 				play_sound(sound_25_presentation); // presentation (level 1 start)
 				need_level1_music = 2;
 			} else {
+#ifdef USE_REPLAY
+				if (recording) special_move = MOVE_EFFECT_END;
+				if (!replaying) // during replays, crouch immobilization gets cancelled in do_replay_move()
+#endif
 				need_level1_music = 0;
 			}
 		}

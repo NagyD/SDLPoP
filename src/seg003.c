@@ -446,6 +446,10 @@ void __pascal far timers() {
 		--resurrect_time;
 	}
 	if (is_feather_fall && !check_sound_playing()) {
+#ifdef USE_REPLAY
+		if (recording) special_move = MOVE_EFFECT_END;
+		if (!replaying) // during replays, feather effect gets cancelled in do_replay_move()
+#endif
 		is_feather_fall = 0;
 	}
 	// Special event: mouse
