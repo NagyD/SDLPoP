@@ -29,8 +29,8 @@ const char replay_magic_number[3] = "P1R";
 const word replay_format_class = 0;          // unique number associated with this SDLPoP implementation / fork
 const char* implementation_name = "SDLPoP v" SDLPOP_VERSION;
 
-#define REPLAY_FORMAT_CURR_VERSION       100 // current version number of the replay format
-#define REPLAY_FORMAT_MIN_VERSION        100 // SDLPoP will open replays with this version number and higher
+#define REPLAY_FORMAT_CURR_VERSION       101 // current version number of the replay format
+#define REPLAY_FORMAT_MIN_VERSION        101 // SDLPoP will open replays with this version number and higher
 #define REPLAY_FORMAT_DEPRECATION_NUMBER 1   // SDLPoP won't open replays with a higher deprecation number
 
 #define MAX_REPLAY_DURATION 345600 // 8 hours: 720 * 60 * 8 ticks
@@ -82,32 +82,27 @@ typedef struct replay_info_type {
 	replay_header_type header;
 } replay_info_type;
 
-int read_replay_header(replay_header_type* header, FILE* fp) {
+#define REPLAY_HEADER_ERROR_MESSAGE_MAX 512
+
+int read_replay_header(replay_header_type* header, FILE* fp, char* error_message) {
 	// Explicitly go to the beginning, because the current filepos might be nonzero.
 	fseek(fp, 0, SEEK_SET);
 	// read the magic number
 	char magic[3] = "";
 	fread(magic, 3, 1, fp);
 	if (strncmp(magic, replay_magic_number, 3) != 0) {
+		if (error_message != NULL) {
+			snprintf(error_message, REPLAY_HEADER_ERROR_MESSAGE_MAX, "not a valid replay file!");
+		}
 		return 0; // incompatible, magic number not correct!
 	}
 	// read the unique number associated with this SDLPoP implementation / fork (for normal SDLPoP: 0)
 	word class;
 	fread(&class, sizeof(class), 1, fp);
-	if (class != replay_format_class) {
-		return 0; // incompatible, replay format is associated with a different implementation of SDLPoP
-	}
 	// read the format version number
 	byte version_number = (byte) fgetc(fp);
-	if (version_number < REPLAY_FORMAT_MIN_VERSION) {
-		return 0; // incompatible, replay format is too old
-	}
-
 	// read the format deprecation number
 	byte deprecation_number = (byte) fgetc(fp);
-	if (deprecation_number > REPLAY_FORMAT_DEPRECATION_NUMBER) {
-		return 0; // incompatible, replay format is too new
-	}
 
 	// creation time (seconds since 1970) is embedded in the format, but not used in SDLPoP right now
 	fseek(replay_fp, sizeof(Sint64), SEEK_CUR);
@@ -122,7 +117,38 @@ int read_replay_header(replay_header_type* header, FILE* fp) {
 	len_read = (byte) fgetc(fp);
 	fread(header->implementation_name, sizeof(char), len_read, fp);
 	header->implementation_name[len_read] = '\0';
-	return 1;
+
+	if (class != replay_format_class) {
+		// incompatible, replay format is associated with a different implementation of SDLPoP
+		if (error_message != NULL) {
+			snprintf(error_message, REPLAY_HEADER_ERROR_MESSAGE_MAX,
+					 "replay created with \"%s\"...\nIncompatible replay class identifier! (expected %d, found %d)",
+					 header->implementation_name, replay_format_class, class);
+		}
+		return 0;
+	}
+
+	if (version_number < REPLAY_FORMAT_MIN_VERSION) {
+		// incompatible, replay format is too old
+		if (error_message != NULL) {
+			snprintf(error_message, REPLAY_HEADER_ERROR_MESSAGE_MAX,
+					 "replay created with \"%s\"...\nReplay format version too old! (minimum %d, found %d)",
+					 header->implementation_name, REPLAY_FORMAT_MIN_VERSION, version_number);
+		}
+		return 0;
+	}
+
+	if (deprecation_number > REPLAY_FORMAT_DEPRECATION_NUMBER) {
+		// incompatible, replay format is too new
+		if (error_message != NULL) {
+			snprintf(error_message, REPLAY_HEADER_ERROR_MESSAGE_MAX,
+					 "replay created with \"%s\"...\nReplay deprecation number too new! (max %d, found %d)",
+					 header->implementation_name, REPLAY_FORMAT_DEPRECATION_NUMBER, deprecation_number);
+		}
+		return 0;
+	}
+
+	return 1; // success
 }
 
 size_t num_replay_files = 0; // number of listed replays
@@ -169,7 +195,7 @@ void list_replay_files() {
 				// read and store the levelset name associated with the replay
 				FILE* fp = fopen(replay_info->filename, "rb");
 				if (fp != NULL) {
-					int ok = read_replay_header(&replay_info->header, fp);
+					int ok = read_replay_header(&replay_info->header, fp, NULL);
 					if (!ok) --num_replay_files; // scrap the file if it is not compatible
 					fclose(fp);
 
@@ -225,9 +251,10 @@ void check_if_opening_replay_file() {
 				// We should read the header in advance so we know the levelset name
 				// then the game can immediately load the correct resources
 				replay_header_type header = {0};
-				int ok = read_replay_header(&header, replay_fp);
+				char error_message[REPLAY_HEADER_ERROR_MESSAGE_MAX];
+				int ok = read_replay_header(&header, replay_fp, error_message);
 				if (!ok) {
-					printf("Error: unexpected replay format!\n");
+					printf("Error opening replay file: %s\n", error_message);
 				}
 				if (header.uses_custom_levelset) {
 					strncpy(replay_levelset_name, header.levelset_name, sizeof(replay_levelset_name)); // use the replays's levelset
@@ -674,9 +701,10 @@ void load_replay() {
         savestate_buffer = malloc(MAX_SAVESTATE_SIZE);
     if (replay_fp != NULL && savestate_buffer != NULL) {
         replay_header_type header = {0};
-		int ok = read_replay_header(&header, replay_fp);
+		char error_message[REPLAY_HEADER_ERROR_MESSAGE_MAX];
+		int ok = read_replay_header(&header, replay_fp, error_message);
 		if (!ok) {
-			printf("Warning: unexpected replay format!\n");
+			printf("Warning opening replay file: %s!\n", error_message);
 		}
 
 		memcpy(replay_levelset_name, header.levelset_name, sizeof(header.levelset_name));
