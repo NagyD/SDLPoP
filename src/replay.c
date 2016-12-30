@@ -27,6 +27,7 @@ The authors of this program may be contacted at http://forum.princed.org
 
 const char replay_magic_number[3] = "P1R";
 const word replay_format_class = 0;          // unique number associated with this SDLPoP implementation / fork
+const char* implementation_name = "SDLPoP v" SDLPOP_VERSION;
 
 #define REPLAY_FORMAT_CURR_VERSION       100 // current version number of the replay format
 #define REPLAY_FORMAT_MIN_VERSION        100 // SDLPoP will open replays with this version number and higher
@@ -71,6 +72,7 @@ extern const char quick_version[9];
 typedef struct replay_header_type {
 	byte uses_custom_levelset;
 	char levelset_name[POP_MAX_PATH];
+	char implementation_name[POP_MAX_PATH];
 } replay_header_type;
 
 // information needed to keep track of all listed replay files, and to sort them by their creation date
@@ -111,10 +113,15 @@ int read_replay_header(replay_header_type* header, FILE* fp) {
 	fseek(replay_fp, sizeof(Sint64), SEEK_CUR);
 
 	// read the levelset_name
-	byte levelset_name_len_read = (byte) fgetc(fp);
-	header->uses_custom_levelset = (levelset_name_len_read != 0);
-	fread(header->levelset_name, sizeof(char), levelset_name_len_read, fp);
-	header->levelset_name[levelset_name_len_read] = '\0';
+	byte len_read = (byte) fgetc(fp);
+	header->uses_custom_levelset = (len_read != 0);
+	fread(header->levelset_name, sizeof(char), len_read, fp);
+	header->levelset_name[len_read] = '\0';
+
+	// read the implementation_name
+	len_read = (byte) fgetc(fp);
+	fread(header->implementation_name, sizeof(char), len_read, fp);
+	header->implementation_name[len_read] = '\0';
 	return 1;
 }
 
@@ -600,8 +607,12 @@ void save_recorded_replay() {
 		putc(REPLAY_FORMAT_DEPRECATION_NUMBER, replay_fp);
 		Sint64 seconds = time(NULL);
 		fwrite(&seconds, sizeof(seconds), 1, replay_fp);
+		// levelset_name
 		putc(strnlen(levelset_name, UINT8_MAX), replay_fp); // length of the levelset name (is zero for original levels)
 		fputs(levelset_name, replay_fp);
+		// implementation name
+		putc(strnlen(implementation_name, UINT8_MAX), replay_fp);
+		fputs(implementation_name, replay_fp);
         // embed a savestate into the replay
         fwrite(&savestate_size, sizeof(savestate_size), 1, replay_fp);
         fwrite(savestate_buffer, savestate_size, 1, replay_fp);
