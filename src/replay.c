@@ -105,7 +105,7 @@ int read_replay_header(replay_header_type* header, FILE* fp, char* error_message
 	byte deprecation_number = (byte) fgetc(fp);
 
 	// creation time (seconds since 1970) is embedded in the format, but not used in SDLPoP right now
-	fseek(replay_fp, sizeof(Sint64), SEEK_CUR);
+	fseek(fp, sizeof(Sint64), SEEK_CUR);
 
 	// read the levelset_name
 	byte len_read = (byte) fgetc(fp);
@@ -151,7 +151,7 @@ int read_replay_header(replay_header_type* header, FILE* fp, char* error_message
 	return 1; // success
 }
 
-size_t num_replay_files = 0; // number of listed replays
+int num_replay_files = 0; // number of listed replays
 size_t max_replay_files = 128; // initially, may grow if there are > 128 replay files found
 replay_info_type* replay_list = NULL;
 
@@ -194,12 +194,12 @@ void list_replay_files() {
 				}
 				// read and store the levelset name associated with the replay
 				FILE* fp = fopen(replay_info->filename, "rb");
+				int ok = 0;
 				if (fp != NULL) {
-					int ok = read_replay_header(&replay_info->header, fp, NULL);
-					if (!ok) --num_replay_files; // scrap the file if it is not compatible
+					ok = read_replay_header(&replay_info->header, fp, NULL);
 					fclose(fp);
-
 				}
+				if (!ok) --num_replay_files; // scrap the file if it is not compatible
 			}
 		}
 	}
@@ -255,6 +255,9 @@ void check_if_opening_replay_file() {
 				int ok = read_replay_header(&header, replay_fp, error_message);
 				if (!ok) {
 					printf("Error opening replay file: %s\n", error_message);
+					fclose(replay_fp);
+					replay_fp = NULL;
+					replay_file_open = 0;
 					return;
 				}
 				if (header.uses_custom_levelset) {
@@ -560,9 +563,9 @@ void start_replay() {
 	need_start_replay = 0;
 	list_replay_files();
 	if (num_replay_files == 0) return;
+	if (!load_replay()) return;
 	replaying = 1;
-    curr_tick = 0;
-    load_replay();
+	curr_tick = 0;
     apply_replay_options();
 }
 
@@ -680,23 +683,27 @@ byte open_next_replay_file() {
 void replay_cycle() {
     need_replay_cycle = 0;
     stop_sounds();
-    if (current_replay_number == -1 /* opened .P1R file directly */ || !open_next_replay_file()) {
+    if (current_replay_number == -1 /* opened .P1R file directly, so cycling is disabled */ ||
+			!open_next_replay_file() ||
+			!load_replay()
+		) {
 		// there is no replay to be cycled to after the current one --> restart the game
 		replaying = 0;
 		restore_normal_options();
 		start_game();
 		return;
 	}
-    load_replay();
     curr_tick = 0;
     apply_replay_options();
     restore_savestate_from_buffer();
 }
 
-void load_replay() {
+int load_replay() {
     if (!replay_file_open) {
         next_replay_number = 0;
-		open_next_replay_file();
+		if (!open_next_replay_file()) {
+			return 0;
+		}
     }
     if (savestate_buffer == NULL)
         savestate_buffer = malloc(MAX_SAVESTATE_SIZE);
@@ -705,7 +712,11 @@ void load_replay() {
 		char error_message[REPLAY_HEADER_ERROR_MESSAGE_MAX];
 		int ok = read_replay_header(&header, replay_fp, error_message);
 		if (!ok) {
-			printf("Warning opening replay file: %s!\n", error_message);
+			printf("Error loading replay: %s!\n", error_message);
+			fclose(replay_fp);
+			replay_fp = NULL;
+			replay_file_open = 0;
+			return 0;
 		}
 
 		memcpy(replay_levelset_name, header.levelset_name, sizeof(header.levelset_name));
@@ -730,7 +741,9 @@ void load_replay() {
         fclose(replay_fp);
         replay_fp = NULL;
         replay_file_open = 0;
+		return 1; // success
     }
+	return 0;
 }
 
 void key_press_while_recording(int* key_ptr) {
