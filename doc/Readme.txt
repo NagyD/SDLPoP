@@ -28,6 +28,7 @@ Contributors:
 * diddledan (Visual C++ (NMake) support)
 * zaps166 (small Makefile fixes)
 * usineur (faster music loading)
+* yaqxsw (icon)
 
 Forum board: http://forum.princed.org/viewforum.php?f=126
 GitHub: https://github.com/NagyD/SDLPoP

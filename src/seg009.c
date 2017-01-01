@@ -1939,6 +1939,13 @@ void __pascal far set_gr_mode(byte grmode) {
 										  SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 										  pop_window_width, pop_window_height, flags);
 	renderer_ = SDL_CreateRenderer(window_, -1 , SDL_RENDERER_ACCELERATED );
+
+	SDL_Surface* icon = IMG_Load("data/icon.png");
+	if (icon == NULL) {
+		sdlperror("Could not load icon");
+	} else {
+		SDL_SetWindowIcon(window_, icon);
+	}
 	
 	// Allow us to use a consistent set of screen co-ordinates, even if the screen size changes
 	if (use_correct_aspect_ratio) {
