@@ -306,7 +306,7 @@ DONE: Added support for named values in the INI file.
 DONE: Improved gamepad support.
 DONE: Added support for displaying the game with the original 4:3 aspect ratio.
 
-2016 November ??
+2017 January ??
 =================
 (version 1.17)
 
@@ -326,6 +326,13 @@ CHANGE: Folders in the data/ directory no longer have the .DAT extension, so the
 FIXED: Removed Dev-C++ note from Linux Makefile.
 FIXED: Use Mix_Music instead of Mix_Chunk to play music files. This reduces loading time. (contributed by @usineur)
 FIXED: Fixed Dávid's name in the header comments.
+CHANGE: The replay format was changed -- older replays will no longer work!
+CHANGE: Replay format: added magic number 0x50 0x31 0x52 ("P1R")
+CHANGE: Replay format: replaced version strings with class, version and deprecation numbers that can be used to determine whether a replay is compatible.
+CHANGE: Replay format: added the time of the recording (Unix time) to the replay format.
+CHANGE: Replay format: added the name of the program that created the replay to the replay format.
+CHANGE: Replay format: stored replay options are now split up into several sections.
+CHANGE: Replay format: use 32-bit sizes independent of platform (32 or 64 bits).
 
 Game additions, changes, bug fixes:
 CHANGE: Let time just run when quickloading immediately after quicksave
@@ -369,7 +376,8 @@ DONE: CusPop option: enable dungeon WDA in palace environment
 CHANGE: Mod names as separate command line arguments
 FIXED: Do not accept filenames as valid command-line parameters in check_param()
 CHANGE: Use a separate Hall of Fame file when playing a custom levelset
-DONE: Allow disabling the time limit completely
+DONE: Allow disabling the time limit completely (by setting 'start_minutes_left' to -1 in SDLPoP.ini)
+DONE: When time is unlimited, show how much time has passed instead of how much time is remaining
 CHANGE: Use a separate QUICKSAVE.SAV / PRINCE.SAV when playing a custom levelset
 CHANGE: Replays get saved to the replays/ directory, have more recognizable names, and are played back in reverse creation order.
 CHANGE: Gameplay options are now stored differently in replays.
@@ -390,6 +398,14 @@ FIXED: Fixed quickload penalty being applied even after time has stopped (after 
 FIXED: Fixed guards sometimes turning around immediately after quickloading (because is_guard_notice is not set to zero)
 FIXED: Silenced warnings being printed about image 255, after entering an exit door.
 FIXED: Fixed feather fall effect being interrupted by a level door opening.
+FIXED: Removed audible 'click' after the swinging sword sound. (contributed by @zaps166)
+FIXED: Fixed graphics bug with SDL 2.0.5 (contributed by @zaps166)
+FIXED: Fixed offscreen guards not reappearing in adjacent rooms.
+FIXED: Incompatible replays will be skipped in the cycle order.
+FIXED: Added more informative error messages if a replay is incompatible.
+FIXED: Fixed being unable to unpause while replaying.
+FIXED: Fixed replays running out of sync when the end of a temporary effect is triggered by the music stopping (level 1 start, feather fall).
+FIXED: Fixed several bugs that could cause crashes when a replay file is loaded.
 
 Build changes, source code, refactoring:
 DONE: OSX port upgraded from SDL to SDL2. Mixer library added in makefile and documentation. Tested.
@@ -417,3 +433,6 @@ DONE: Add .editorconfig
 DONE: Added maximum path length macro POP_MAX_PATH set to 256
 CHANGE: Refactor so that HOF path is obtained from get_hof_path()
 CHANGE: Refactor: removed options_type (replacement: options are stored using SDL_RWops streams).
+DONE: Added new exceptions to .gitignore.
+FIXED: Ignore replay options in SDLPoP.ini if USE_REPLAY is not defined
+DONE: Added -std=gnu99 to the Dev-C++ project files.
