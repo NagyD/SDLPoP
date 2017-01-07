@@ -613,6 +613,13 @@ int __pascal far set_joy_mode() {
 			is_joyst_mode = 1;
 		}
 	}
+	if (enable_controller_rumble && is_joyst_mode) {
+		sdl_haptic = SDL_HapticOpen(0);
+		SDL_HapticRumbleInit(sdl_haptic); // initialize the device for simple rumble
+	} else {
+		sdl_haptic = NULL;
+	}
+
 	is_keyboard_mode = !is_joyst_mode;
 	return is_joyst_mode;
 }
@@ -1920,7 +1927,8 @@ int __pascal far check_sound_playing() {
 
 // seg009:38ED
 void __pascal far set_gr_mode(byte grmode) {
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_NOPARACHUTE | SDL_INIT_GAMECONTROLLER ) != 0) {
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_NOPARACHUTE |
+				 SDL_INIT_GAMECONTROLLER | SDL_INIT_HAPTIC ) != 0) {
 		sdlperror("SDL_Init");
 		quit(1);
 	}

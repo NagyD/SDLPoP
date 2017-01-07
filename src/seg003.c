@@ -647,6 +647,9 @@ int __pascal far flash_if_hurt() {
 		do_flash_no_delay(flash_color); // don't add delay to the flash
 		return 1;
 	} else if (hitp_delta < 0) {
+		if (is_joyst_mode && enable_controller_rumble && sdl_haptic != NULL) {
+			SDL_HapticRumblePlay(sdl_haptic, 1.0, 100); // rumble at full strength for 100 milliseconds
+		}
 		do_flash_no_delay(color_12_brightred); // red
 		return 1;
 	}
