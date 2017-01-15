@@ -36,6 +36,22 @@ word need_redraw_because_flipped;
 
 // seg000:0000
 void far pop_main() {
+	if (check_param("--version") || check_param("-v")) {
+		printf ("SDLPoP v%s\n", SDLPOP_VERSION);
+		exit(0);
+	}
+	
+	if (check_param("--help") || check_param("-h") || check_param("-?")) {
+		printf ("See doc/Readme.txt\n");
+		exit(0);
+	}
+	
+	const char* temp = check_param("seed=");
+	if (temp != NULL) {
+		random_seed = atoi(temp+5);
+		seed_was_init = 1;
+	}
+	
 	// debug only: check that the sequence table deobfuscation did not mess things up
 	#ifdef CHECK_SEQTABLE_MATCHES_ORIGINAL
 	check_seqtable_matches_original();
@@ -540,7 +556,9 @@ int __pascal far process_key() {
 			need_show_text = 1;
 		break;
 		case SDL_SCANCODE_V | WITH_CTRL: // ctrl-v
-			answer_text = "PRINCE OF PERSIA  V1.0";
+			//answer_text = "PRINCE OF PERSIA  V1.0";
+			snprintf(sprintf_temp, sizeof(sprintf_temp), "SDLPoP v%s\n", SDLPOP_VERSION);
+			answer_text = sprintf_temp;
 			need_show_text = 1;
 		break;
 		case SDL_SCANCODE_L | WITH_SHIFT: // shift-l
