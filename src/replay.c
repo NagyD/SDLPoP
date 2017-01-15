@@ -19,9 +19,18 @@ The authors of this program may be contacted at http://forum.princed.org
 */
 
 #include "common.h"
-#include <dirent.h>
+
 #include <time.h>
 #include <sys/stat.h>
+
+#ifdef _MSC_VER
+#include <windows.h>
+#include <direct.h>
+#define INT8_MAX   0x7f
+#define UINT8_MAX   (INT8_MAX * 2 + 1)
+#else
+#include <dirent.h>
+#endif
 
 #ifdef USE_REPLAY
 
@@ -162,6 +171,81 @@ static int compare_replay_creation_time(const void* a, const void* b)
 	return (int) difftime( ((replay_info_type*)b)->creation_time, ((replay_info_type*)a)->creation_time );
 }
 
+#ifdef _MSC_VER
+
+void list_replay_files() {
+	char path[POP_MAX_PATH];
+	WIN32_FIND_DATA fdata;
+	HANDLE dhandle;
+
+	if (replay_list == NULL) {
+		// need to allocate enough memory to store info about all replay files in the directory
+		replay_list = malloc( max_replay_files * sizeof( replay_info_type ) ); // will realloc() later if > 256 files exist
+	}
+
+	_getcwd( path, POP_MAX_PATH );
+	snprintf( path, POP_MAX_PATH, "%s\\%s\\%s", path, replays_folder, "*.p1r" );
+
+	num_replay_files = 0;
+
+	size_t size = MultiByteToWideChar( 0, 0, path, strlen( path ), 0, 0 );
+	WCHAR    *pathFin = malloc( sizeof(WCHAR) * (size + 1));
+	memset( pathFin, 0, sizeof( WCHAR ) * (size + 1) );
+
+	size = MultiByteToWideChar( 0, 0, path, (int)size, pathFin, (int)size );
+	pathFin[size] = 0;
+
+	dhandle = FindFirstFile( pathFin, &fdata );
+	free( pathFin );
+
+	if(dhandle==-1)
+		return;
+
+	while (1) {
+		char *filename = malloc(wcslen( fdata.cFileName ) + 1);
+		memset( filename, 0, wcslen( fdata.cFileName ) + 1 );
+		size_t tmp = 0;
+
+		wcstombs_s( &tmp, filename, wcslen( fdata.cFileName ) + 1, fdata.cFileName, wcslen( fdata.cFileName ) );
+
+		++num_replay_files;
+		if (num_replay_files > max_replay_files) {
+			// too many files, expand the memory available for replay_list
+			max_replay_files += 128;
+			replay_list = realloc( replay_list, max_replay_files * sizeof( replay_info_type ) );
+		}
+		replay_info_type* replay_info = &replay_list[num_replay_files - 1]; // current replay file
+		memset( replay_info, 0, sizeof( replay_info_type ) );
+		// store the filename of the replay
+		snprintf( replay_info->filename, POP_MAX_PATH, "%s/%s", replays_folder, filename );
+		free( filename );
+
+		// get the creation time
+		struct stat st;
+		if (stat( replay_info->filename, &st ) == 0) {
+			replay_info->creation_time = st.st_ctime;
+		}
+		// read and store the levelset name associated with the replay
+		FILE* fp = fopen( replay_info->filename, "rb" );
+		int ok = 0;
+		if (fp != NULL) {
+			ok = read_replay_header( &replay_info->header, fp, NULL );
+			fclose( fp );
+		}
+		if (!ok) --num_replay_files; // scrap the file if it is not compatible
+		
+		if (!FindNextFile( dhandle, &fdata ))
+			break;
+	}
+
+	FindClose( dhandle );
+
+	if (num_replay_files > 1) {
+		// sort listed replays by their creation date
+		qsort( replay_list, num_replay_files, sizeof( replay_info_type ), compare_replay_creation_time );
+	}
+};
+#else
 void list_replay_files() {
 	DIR* dp;
 	struct dirent* ep;
@@ -209,6 +293,7 @@ void list_replay_files() {
 		qsort(replay_list, num_replay_files, sizeof(replay_info_type), compare_replay_creation_time);
 	}
 };
+#endif
 
 byte open_replay_file(const char *filename) {
     if (replay_file_open) fclose(replay_fp);
@@ -793,4 +878,53 @@ void key_press_while_replaying(int* key_ptr) {
     }
 }
 
+#else // USE_REPLAY
+
+void add_replay_move() {
+
+}
+
+void check_if_opening_replay_file() {
+
+}
+
+void do_replay_move() {
+
+}
+
+void init_record_replay() {
+
+}
+
+void key_press_while_recording( int* key_ptr ) {
+
+}
+
+void key_press_while_replaying( int* key_ptr ) {
+
+}
+
+void replay_cycle() {
+
+}
+
+void replay_restore_level() {
+
+}
+
+void save_recorded_replay() {
+
+}
+
+void start_recording() {
+
+}
+
+void start_replay() {
+
+}
+
+void stop_recording() {
+
+}
 #endif // USE_REPLAY
