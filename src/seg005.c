@@ -45,6 +45,7 @@ void __pascal far do_fall() {
 		#ifdef FIX_GLIDE_THROUGH_WALL
         if (fix_glide_through_wall) {
 			// Fix for the kid falling through walls after turning around while running (especially when weightless)
+			determine_col();
 			get_tile_at_char();
 			if (curr_tile2 == tiles_20_wall ||
 					((curr_tile2 == tiles_12_doortop || curr_tile2 == tiles_7_doortop_with_floor) &&
