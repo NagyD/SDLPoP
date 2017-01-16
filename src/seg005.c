@@ -275,6 +275,14 @@ void __pascal far control() {
 		if (fix_move_after_drink && char_frame >= frame_191_drink && char_frame <= frame_205_drink)
 			release_arrows();
 		#endif
+
+		#ifdef FIX_MOVE_AFTER_SHEATHE
+		if (fix_move_after_sheathe &&
+				Char.curr_seq >= seqtbl_offsets[seq_92_put_sword_away] &&
+				Char.curr_seq < seqtbl_offsets[seq_93_put_sword_away_fast]
+		)
+			release_arrows();
+		#endif
 	}
 }
 

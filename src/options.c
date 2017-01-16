@@ -55,6 +55,7 @@ void disable_fixes_and_enhancements() {
     fix_chompers_not_starting = 0;
 	fix_feather_interrupted_by_leveldoor = 0;
 	fix_offscreen_guards_disappearing = 0;
+	fix_move_after_sheathe = 0;
 }
 
 // .ini file parser adapted from https://gist.github.com/OrangeTide/947070
@@ -274,6 +275,7 @@ static int global_ini_callback(const char *section, const char *name, const char
         process_boolean("fix_chompers_not_starting", &fix_chompers_not_starting);
         process_boolean("fix_feather_interrupted_by_leveldoor", &fix_feather_interrupted_by_leveldoor);
         process_boolean("fix_offscreen_guards_disappearing", &fix_offscreen_guards_disappearing);
+        process_boolean("fix_move_after_sheathe", &fix_move_after_sheathe);
     }
 
     if (check_ini_section("CustomGameplay")) {
