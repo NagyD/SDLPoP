@@ -226,16 +226,19 @@ byte open_replay_file(const char *filename) {
 void change_working_dir_to_sdlpop_root() {
 	char* exe_path = g_argv[0];
 	// strip away everything after the last slash or backslash in the path
-	size_t len;
-	for (len = strlen(exe_path); len >= 0; --len) {
+	int len;
+	for (len = strlen(exe_path); len > 0; --len) {
 		if (exe_path[len] == '\\' || exe_path[len] == '/') {
 			break;
 		}
 	}
-	char exe_dir[POP_MAX_PATH];
-	strncpy(exe_dir, exe_path, len);
-	exe_dir[len] = '\0';
-	chdir(exe_dir);
+	if (len > 0) {
+		char exe_dir[POP_MAX_PATH];
+		strncpy(exe_dir, exe_path, len);
+		exe_dir[len] = '\0';
+		chdir(exe_dir);
+	}
+
 };
 
 // Called in pop_main(); check whether a replay file is being opened directly (double-clicked, dragged onto .exe, etc.)
