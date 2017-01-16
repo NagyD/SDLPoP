@@ -251,10 +251,15 @@ void check_if_opening_replay_file() {
 				// We should read the header in advance so we know the levelset name
 				// then the game can immediately load the correct resources
 				replay_header_type header = {0};
-				char error_message[REPLAY_HEADER_ERROR_MESSAGE_MAX];
-				int ok = read_replay_header(&header, replay_fp, error_message);
+				char header_error_message[REPLAY_HEADER_ERROR_MESSAGE_MAX];
+				int ok = read_replay_header(&header, replay_fp, header_error_message);
 				if (!ok) {
-					printf("Error opening replay file: %s\n", error_message);
+					char error_message[REPLAY_HEADER_ERROR_MESSAGE_MAX];
+					snprintf(error_message, REPLAY_HEADER_ERROR_MESSAGE_MAX,
+							 "Error opening replay file: %s\n",
+							 header_error_message);
+					fprintf(stderr, error_message);
+					SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "SDLPoP", error_message, NULL);
 					fclose(replay_fp);
 					replay_fp = NULL;
 					replay_file_open = 0;
