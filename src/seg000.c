@@ -475,7 +475,10 @@ int __pascal far process_key() {
 			if (key == SDL_SCANCODE_TAB || need_start_replay) {
 				start_replay();
 			}
-			else
+			else if (key == (SDL_SCANCODE_TAB | WITH_CTRL)) {
+				start_level = first_level;
+				start_recording();
+			} else
 			#endif
 			if (key == (SDL_SCANCODE_L | WITH_CTRL)) { // ctrl-L
 				if (!load_game()) return 0;
