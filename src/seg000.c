@@ -1113,6 +1113,10 @@ void __pascal far check_the_end() {
 		drawn_room = next_room;
 		load_room_links();
 		if (current_level == 14 && drawn_room == 5) {
+#ifdef USE_REPLAY
+			if (recording) stop_recording();
+			if (replaying) stop_replay_and_restart_game();
+#endif
 			// Special event: end of game
 			end_sequence();
 		}

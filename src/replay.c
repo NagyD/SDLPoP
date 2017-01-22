@@ -577,15 +577,19 @@ void start_replay() {
     apply_replay_options();
 }
 
+void stop_replay_and_restart_game() {
+	replaying = 0;
+	restore_normal_options();
+	start_game();
+}
+
 void do_replay_move() {
     if (curr_tick == 0) {
         random_seed = saved_random_seed;
         seed_was_init = 1;
     }
     if (curr_tick == num_replay_ticks) { // replay is finished
-        replaying = 0;
-		restore_normal_options();
-        start_game();
+        stop_replay_and_restart_game();
 		return;
     }
 
