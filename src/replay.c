@@ -526,9 +526,12 @@ void add_replay_move() {
 }
 
 void stop_recording() {
-    save_recorded_replay();
-    recording = 0;
-    display_text_bottom("REPLAY SAVED");
+	recording = 0;
+	if (save_recorded_replay()) {
+		display_text_bottom("REPLAY SAVED");
+	} else {
+		display_text_bottom("REPLAY CANCELED");
+	}
     text_time_total = 24;
     text_time_remaining = 24;
 }
@@ -614,26 +617,40 @@ void do_replay_move() {
     ++curr_tick;
 }
 
-const char* original_levels_name = "Prince of Persia";
+int save_recorded_replay() {
+	// prompt for replay filename
+	rect_type rect;
+	short bgcolor = color_8_darkgray;
+	short color = color_15_brightwhite;
+	current_target_surface = onscreen_surface_;
+	method_1_blit_rect(offscreen_surface, onscreen_surface_, &copyprot_dialog->peel_rect, &copyprot_dialog->peel_rect, 0);
+	draw_dialog_frame(copyprot_dialog);
+	shrink2_rect(&rect, &copyprot_dialog->text_rect, 2, 1);
+	show_text_with_color(&rect, 0, 0, "Save replay\nenter the filename...\n\n", color_15_brightwhite);
+	screen_updates_suspended = 0;
+	request_screen_update();
+	clear_kbd_buf();
 
-void save_recorded_replay() {
+	rect_type text_rect;
+	rect_type input_rect = {104,   64,  118,  256};
+	offset4_rect_add(&text_rect, &input_rect, -2, 0, 2, 0);
+	//peel_type* peel = read_peel_from_screen(&input_rect);
+	draw_rect(&text_rect, bgcolor);
+	current_target_surface = onscreen_surface_;
+	need_full_redraw = 1; // lazy: instead of neatly restoring the dialog peel, just redraw the whole screen
 
-	const char* name = (use_custom_levelset) ? levelset_name : original_levels_name;
+	char input_filename[POP_MAX_PATH] = "";
+	int input_length;
+	do {
+		input_length = input_str(&input_rect, input_filename, 64, "", 0, 0, color, bgcolor);
+	} while (input_length == 0); // filename must be at least 1 character
 
-	time_t now;
-	time(&now);
-	struct tm *tm_now = localtime(&now);
+	if (input_length < 0) {
+		return 0;  // Escape was pressed -> discard the replay
+	}
 
-	char timestamp[32];
-	strftime(timestamp, sizeof(timestamp), "%Y-%m-%d", tm_now);
-
-	char filename[POP_MAX_PATH];
-    word replay_number = 1;
-    do {
-		snprintf(filename, sizeof(filename), "%s/%s %s L%d - %d.p1r",
-				 replays_folder, timestamp, name, current_level, replay_number);
-		++replay_number;
-	} while (access(filename, F_OK) != -1); // check if file already exists
+	char full_filename[POP_MAX_PATH] = "";
+	snprintf(full_filename, sizeof(full_filename), "%s/%s.p1r", replays_folder, input_filename);
 
 	// create the "replays" folder if it does not exist already
 #if defined WIN32 || _WIN32 || WIN64 || _WIN64
@@ -642,7 +659,9 @@ void save_recorded_replay() {
 	mkdir (replays_folder, 0700);
 #endif
 
-    replay_fp = fopen(filename, "wb");
+	// NOTE: We currently overwrite the replay file if it exists already. Maybe warn / ask for confirmation??
+
+    replay_fp = fopen(full_filename, "wb");
     if (replay_fp != NULL) {
         fwrite(replay_magic_number, COUNT(replay_magic_number), 1, replay_fp); // magic number "P1R"
 		fwrite(&replay_format_class, sizeof(replay_format_class), 1, replay_fp);
@@ -677,6 +696,7 @@ void save_recorded_replay() {
         fclose(replay_fp);
         replay_fp = NULL;
     }
+	return 1;
 }
 
 byte open_next_replay_file() {
