@@ -614,6 +614,10 @@ void __pascal far play_seq() {
 						play_sound(sound_18_drink); // drink
 						break;
 					case SND_LEVEL: // level
+#ifdef USE_REPLAY
+						if (recording || replaying) break; // don't do end level music in replays
+#endif
+
 						if (is_sound_on) {
 							if (current_level == 4) {
 								play_sound(sound_32_shadow_music); // end level with shadow (level 4)
