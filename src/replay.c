@@ -623,12 +623,11 @@ int save_recorded_replay() {
 	short bgcolor = color_8_darkgray;
 	short color = color_15_brightwhite;
 	current_target_surface = onscreen_surface_;
+	screen_updates_suspended = 1;
 	method_1_blit_rect(offscreen_surface, onscreen_surface_, &copyprot_dialog->peel_rect, &copyprot_dialog->peel_rect, 0);
 	draw_dialog_frame(copyprot_dialog);
 	shrink2_rect(&rect, &copyprot_dialog->text_rect, 2, 1);
 	show_text_with_color(&rect, 0, 0, "Save replay\nenter the filename...\n\n", color_15_brightwhite);
-	screen_updates_suspended = 0;
-	request_screen_update();
 	clear_kbd_buf();
 
 	rect_type text_rect;
@@ -637,6 +636,7 @@ int save_recorded_replay() {
 	//peel_type* peel = read_peel_from_screen(&input_rect);
 	draw_rect(&text_rect, bgcolor);
 	current_target_surface = onscreen_surface_;
+	screen_updates_suspended = 0;
 	need_full_redraw = 1; // lazy: instead of neatly restoring the dialog peel, just redraw the whole screen
 
 	char input_filename[POP_MAX_PATH] = "";
