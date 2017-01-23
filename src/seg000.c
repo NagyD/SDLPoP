@@ -434,6 +434,11 @@ void check_quick_op() {
 		text_time_remaining = 24;
 	}
 	if (need_quick_load) {
+#ifdef USE_REPLAY
+		if (recording) {
+			stop_recording(); // quickloading would mess up the replay!
+		}
+#endif
 		if (quick_load()) {
 			display_text_bottom("QUICKLOAD");
 		} else {
@@ -599,12 +604,6 @@ int __pascal far process_key() {
 		break;
 		case SDL_SCANCODE_F9:
 		case SDL_SCANCODE_F9 | WITH_SHIFT:
-#ifdef USE_REPLAY
-			if (recording) {
-				answer_text = "NO QUICKLOAD"; // quickloading would mess up the replay!
-				need_show_text = 1;
-			} else
-#endif
 			need_quick_load = 1;
 		break;
 #ifdef USE_REPLAY
