@@ -578,6 +578,7 @@ void start_replay() {
 
 void stop_replay_and_restart_game() {
 	replaying = 0;
+	skipping_replay = 0;
 	restore_normal_options();
 	start_game();
 }
@@ -694,6 +695,7 @@ byte open_next_replay_file() {
 
 void replay_cycle() {
     need_replay_cycle = 0;
+	skipping_replay = 0;
     stop_sounds();
     if (current_replay_number == -1 /* opened .P1R file directly, so cycling is disabled */ ||
 			!open_next_replay_file() ||
@@ -802,6 +804,14 @@ void key_press_while_replaying(int* key_ptr) {
             need_replay_cycle = 1;
 			restore_normal_options();
             break;
+		case SDL_SCANCODE_F:                    // skip forward to next room
+			skipping_replay = 1;
+			replay_seek_target = replay_seek_0_next_room;
+			break;
+		case SDL_SCANCODE_F | WITH_SHIFT:       // skip forward to start of next level
+			skipping_replay = 1;
+			replay_seek_target = replay_seek_1_next_level;
+			break;
     }
 }
 

@@ -628,6 +628,8 @@ extern byte special_move;
 extern dword saved_random_seed;
 extern dword preserved_seed;
 extern sbyte keep_last_seed;
+extern byte skipping_replay;
+extern byte replay_seek_target;
 #endif // USE_REPLAY
 
 extern byte start_fullscreen INIT(= 0);

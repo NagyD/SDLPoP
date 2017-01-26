@@ -1880,6 +1880,11 @@ void free_sound(sound_buffer_type far *buffer) {
 
 // seg009:7220
 void __pascal far play_sound_from_buffer(sound_buffer_type far *buffer) {
+	
+#ifdef USE_REPLAY
+	if (replaying && skipping_replay) return;
+#endif
+
 	// stub
 	if (buffer == NULL) {
 		printf("Tried to play NULL sound.\n");
@@ -1994,6 +1999,9 @@ void __pascal far set_gr_mode(byte grmode) {
 }
 
 void request_screen_update() {
+#ifdef USE_REPLAY
+	if (replaying && skipping_replay) return;
+#endif
 	if (!screen_updates_suspended) {
 		SDL_UpdateTexture(sdl_texture_, NULL, onscreen_surface_->pixels, onscreen_surface_->pitch);
 		SDL_RenderClear(renderer_);
@@ -2491,6 +2499,9 @@ Uint32 timer_callback(Uint32 interval, void *param) {
 }
 
 void __pascal start_timer(int timer_index, int length) {
+#ifdef USE_REPLAY
+	if (replaying && skipping_replay) return;
+#endif
 #ifndef USE_COMPAT_TIMER
 	if (timer_handles[timer_index]) {
 		remove_timer(timer_index);
@@ -2708,6 +2719,10 @@ int __pascal do_wait(int timer_index) {
 }
 
 void __pascal do_simple_wait(int timer_index) {
+#ifdef USE_REPLAY
+	if (replaying && skipping_replay) return;
+#endif
+
 	while (! has_timer_stopped(timer_index)) {
 		idle();
 	}

@@ -621,8 +621,8 @@ int __pascal far process_key() {
 			else { // should start recording
 				start_recording();
 			}
-			break;
-#endif // USE_RECORD_REPLAY
+		break;
+#endif // USE_REPLAY
 #endif // USE_QUICKSAVE
 	}
 	if (cheats_enabled) {
