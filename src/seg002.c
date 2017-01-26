@@ -358,10 +358,6 @@ void __pascal far exit_room() {
 
 // seg002:0486
 int __pascal far goto_other_room(short direction) {
-#ifdef USE_REPLAY
-	if (skipping_replay && replay_seek_target == replay_seek_0_next_room) skipping_replay = 0;
-#endif
-
 	short opposite_dir;
 	Char.room = ((byte*)&level.roomlinks[Char.room - 1])[direction];
 	if (direction == 0) {
@@ -471,6 +467,9 @@ short __pascal far leave_room() {
 		break;
 	}
 	goto_other_room(leave_dir);
+#ifdef USE_REPLAY
+	if (skipping_replay && replay_seek_target == replay_seek_0_next_room) skipping_replay = 0;
+#endif
 	return leave_dir;
 }
 
