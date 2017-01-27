@@ -51,7 +51,6 @@ typedef union replay_move_type {
 } replay_move_type;
 
 dword curr_tick = 0;
-dword saved_random_seed;
 
 FILE* replay_fp = NULL;
 byte replay_file_open = 0;
@@ -592,26 +591,27 @@ void do_replay_move() {
         stop_replay_and_restart_game();
 		return;
     }
+	if (current_level == next_level) {
+		replay_move_type curr_move;
+		curr_move.bits = moves[curr_tick];
 
-    replay_move_type curr_move;
-    curr_move.bits = moves[curr_tick];
+		control_x = curr_move.x;
+		control_y = curr_move.y;
+		control_shift = (curr_move.shift) ? -1 : 0;
 
-    control_x = curr_move.x;
-    control_y = curr_move.y;
-    control_shift = (curr_move.shift) ? -1 : 0;
-
-    if (curr_move.special == MOVE_RESTART_LEVEL) { // restart level
-        stop_sounds();
-        is_restart_level = 1;
-    } else if (curr_move.special == MOVE_EFFECT_END) {
-		stop_sounds();
-		need_level1_music = 0;
-		is_feather_fall = 0;
-	}
+		if (curr_move.special == MOVE_RESTART_LEVEL) { // restart level
+			stop_sounds();
+			is_restart_level = 1;
+		} else if (curr_move.special == MOVE_EFFECT_END) {
+			stop_sounds();
+			need_level1_music = 0;
+			is_feather_fall = 0;
+		}
 
 //    if (curr_tick > 5 ) printf("rem_tick: %d\t curr_tick: %d\tlast 5 moves: %d, %d, %d, %d, %d\n", rem_tick, curr_tick,
 //                               moves[curr_tick-4], moves[curr_tick-3], moves[curr_tick-2], moves[curr_tick-1], moves[curr_tick]);
-    ++curr_tick;
+		++curr_tick;
+	}
 }
 
 const char* original_levels_name = "Prince of Persia";

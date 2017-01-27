@@ -630,6 +630,12 @@ void __pascal far play_seq() {
 				break;
 			case SEQ_END_LEVEL: // end level
 				++next_level;
+#ifdef USE_REPLAY
+				// Preserve the seed in this frame, to ensure reproducibility of the replay in the next level,
+				// regardless of how long the sound is still playing *after* this frame.
+				// Animations (e.g. torch) can change the seed!
+				keep_last_seed = 1;
+#endif
 				break;
 			case SEQ_GET_ITEM: // get item
 				if (*(SEQTBL_0 + Char.curr_seq++) == 1) {
