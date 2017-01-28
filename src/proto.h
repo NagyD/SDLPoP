@@ -626,6 +626,7 @@ void start_recording();
 void add_replay_move();
 void stop_recording();
 void start_replay();
+void stop_replay_and_restart_game();
 void do_replay_move();
 void save_recorded_replay();
 void replay_cycle();
