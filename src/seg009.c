@@ -1110,7 +1110,7 @@ int __pascal far showmessage(char far *text,int arg_4,void far *arg_0) {
 	} while(key == 0);
 	//restore_dialog_peel_2(copyprot_dialog->peel);
 	//current_target_surface = old_target;
-	redraw_screen(0); // lazy: instead of neatly restoring only the relevant part, just redraw the whole screen
+	need_full_redraw = 1; // lazy: instead of neatly restoring only the relevant part, just redraw the whole screen
 	return key;
 }
 

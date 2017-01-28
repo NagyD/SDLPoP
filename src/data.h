@@ -394,6 +394,8 @@ extern byte redraw_frames_fore[30];
 extern byte tile_object_redraw[30];
 // data:4C64
 extern byte redraw_frames_above[10];
+// data:4CE2
+extern word need_full_redraw;
 // data:588E
 extern short n_curr_objs;
 // data:5BAC
