@@ -329,6 +329,7 @@ void options_process_fixes(SDL_RWops* rw, rw_process_func_type process_func) {
 	process(fix_chompers_not_starting);
 	process(fix_feather_interrupted_by_leveldoor);
 	process(fix_offscreen_guards_disappearing);
+	process(fix_move_after_sheathe);
 }
 
 void options_process_custom_general(SDL_RWops* rw, rw_process_func_type process_func) {

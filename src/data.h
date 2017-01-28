@@ -677,6 +677,7 @@ extern byte fix_jump_through_wall_above_gate INIT(= 1);
 extern byte fix_chompers_not_starting INIT(= 1);
 extern byte fix_feather_interrupted_by_leveldoor INIT(= 1);
 extern byte fix_offscreen_guards_disappearing INIT(= 1);
+extern byte fix_move_after_sheathe INIT(= 1);
 
 // Custom Gameplay settings
 extern word start_minutes_left INIT(= 60);

@@ -45,6 +45,7 @@ void __pascal far do_fall() {
 		#ifdef FIX_GLIDE_THROUGH_WALL
         if (fix_glide_through_wall) {
 			// Fix for the kid falling through walls after turning around while running (especially when weightless)
+			determine_col();
 			get_tile_at_char();
 			if (curr_tile2 == tiles_20_wall ||
 					((curr_tile2 == tiles_12_doortop || curr_tile2 == tiles_7_doortop_with_floor) &&
@@ -272,6 +273,14 @@ void __pascal far control() {
 
 		#ifdef FIX_MOVE_AFTER_DRINK
 		if (fix_move_after_drink && char_frame >= frame_191_drink && char_frame <= frame_205_drink)
+			release_arrows();
+		#endif
+
+		#ifdef FIX_MOVE_AFTER_SHEATHE
+		if (fix_move_after_sheathe &&
+				Char.curr_seq >= seqtbl_offsets[seq_92_put_sword_away] &&
+				Char.curr_seq < seqtbl_offsets[seq_93_put_sword_away_fast]
+		)
 			release_arrows();
 		#endif
 	}

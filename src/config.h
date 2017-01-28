@@ -187,6 +187,9 @@ The authors of this program may be contacted at http://forum.princed.org
 // Guards will often not reappear in another room if they have been pushed (partly or entirely) offscreen.
 #define FIX_OFFSCREEN_GUARDS_DISAPPEARING
 
+// Controls do not get released properly when putting the sword away, leading to unintended movement.
+#define FIX_MOVE_AFTER_SHEATHE
+
 
 // Debug features:
 
