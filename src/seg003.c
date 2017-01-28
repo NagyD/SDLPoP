@@ -107,6 +107,12 @@ void __pascal far play_level(int level_number) {
 		stop_sounds();
 		#ifdef USE_REPLAY
 		if (replaying) replay_restore_level();
+		if (skipping_replay) {
+			if (replay_seek_target == replay_seek_0_next_room ||
+				replay_seek_target == replay_seek_1_next_level
+			)
+				skipping_replay = 0; // resume replay from here
+		}
 		#endif
 		draw_level_first();
 		show_copyprot(0);

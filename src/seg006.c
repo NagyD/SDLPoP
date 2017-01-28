@@ -635,6 +635,7 @@ void __pascal far play_seq() {
 				// regardless of how long the sound is still playing *after* this frame.
 				// Animations (e.g. torch) can change the seed!
 				keep_last_seed = 1;
+				if (replaying && skipping_replay) stop_sounds();
 #endif
 				break;
 			case SEQ_GET_ITEM: // get item

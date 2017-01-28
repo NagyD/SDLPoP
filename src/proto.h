@@ -618,7 +618,7 @@ void show_use_fixes_and_enhancements_prompt();
 
 // REPLAY.C
 #ifdef USE_REPLAY
-void check_if_opening_replay_file();
+void start_with_replay_file(const char *filename);
 void init_record_replay();
 void replay_restore_level();
 int restore_savestate_from_buffer();
@@ -626,7 +626,7 @@ void start_recording();
 void add_replay_move();
 void stop_recording();
 void start_replay();
-void stop_replay_and_restart_game();
+void end_replay();
 void do_replay_move();
 int save_recorded_replay();
 void replay_cycle();

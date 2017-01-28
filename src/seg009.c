@@ -113,7 +113,7 @@ const char* __pascal far check_param(const char *param) {
 
 		// List of params that expect a specifier ('sub-') arg directly after it (e.g. the mod's name, after "mod" arg)
 		// Such sub-args may conflict with the normal params (so, we should 'skip over' them)
-		static const char params_with_one_subparam[][8] = { "mod", /*...*/ };
+		static const char params_with_one_subparam[][16] = { "mod", "validate", /*...*/ };
 
 		bool curr_arg_has_one_subparam = false;
 		int i;
@@ -1880,6 +1880,11 @@ void free_sound(sound_buffer_type far *buffer) {
 
 // seg009:7220
 void __pascal far play_sound_from_buffer(sound_buffer_type far *buffer) {
+	
+#ifdef USE_REPLAY
+	if (replaying && skipping_replay) return;
+#endif
+
 	// stub
 	if (buffer == NULL) {
 		printf("Tried to play NULL sound.\n");
@@ -1943,6 +1948,10 @@ void __pascal far set_gr_mode(byte grmode) {
 	if (use_correct_aspect_ratio && pop_window_width == 640 && pop_window_height == 400) {
 		pop_window_height = 480;
 	}
+
+#ifdef USE_REPLAY
+	if (!is_validate_mode) // run without a window if validating a replay
+#endif
 	window_ = SDL_CreateWindow(WINDOW_TITLE,
 										  SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 										  pop_window_width, pop_window_height, flags);
@@ -1994,6 +2003,9 @@ void __pascal far set_gr_mode(byte grmode) {
 }
 
 void request_screen_update() {
+#ifdef USE_REPLAY
+	if (replaying && skipping_replay) return;
+#endif
 	if (!screen_updates_suspended) {
 		SDL_UpdateTexture(sdl_texture_, NULL, onscreen_surface_->pixels, onscreen_surface_->pitch);
 		SDL_RenderClear(renderer_);
@@ -2491,6 +2503,9 @@ Uint32 timer_callback(Uint32 interval, void *param) {
 }
 
 void __pascal start_timer(int timer_index, int length) {
+#ifdef USE_REPLAY
+	if (replaying && skipping_replay) return;
+#endif
 #ifndef USE_COMPAT_TIMER
 	if (timer_handles[timer_index]) {
 		remove_timer(timer_index);
@@ -2708,6 +2723,10 @@ int __pascal do_wait(int timer_index) {
 }
 
 void __pascal do_simple_wait(int timer_index) {
+#ifdef USE_REPLAY
+	if ((replaying && skipping_replay) || is_validate_mode) return;
+#endif
+
 	while (! has_timer_stopped(timer_index)) {
 		idle();
 	}

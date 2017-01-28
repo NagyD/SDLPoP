@@ -1020,6 +1020,12 @@ enum replay_special_moves {
 	MOVE_RESTART_LEVEL = 1, // player pressed Ctrl+A
 	MOVE_EFFECT_END = 2,    // music stops, causing the end of feather effect or level 1 crouch immobilization
 };
+
+enum replay_seek_targets {
+	replay_seek_0_next_room = 0,
+	replay_seek_1_next_level = 1,
+	replay_seek_2_end = 2,
+};
 #endif
 
 #define COUNT(array) (sizeof(array)/sizeof(array[0]))

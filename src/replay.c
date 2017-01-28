@@ -147,7 +147,23 @@ int read_replay_header(replay_header_type* header, FILE* fp, char* error_message
 		return 0;
 	}
 
-	return 1; // success
+	if (is_validate_mode) {
+		static byte is_replay_info_printed = 0;
+		if (!is_replay_info_printed) {
+			printf("\nReplay created with %s.\n", header->implementation_name);
+			printf("Format: class identifier %d, version number %d, deprecation number %d.\n",
+				   class, version_number, deprecation_number);
+			if (header->levelset_name[0] == '\0') {
+				printf("Levelset: original Prince of Persia.\n");
+			} else {
+				printf("Levelset: %s.\n", header->levelset_name);
+			}
+			putchar('\n');
+			is_replay_info_printed = 1; // do this only once
+		}
+	}
+
+	return 1;
 }
 
 int num_replay_files = 0; // number of listed replays
@@ -241,39 +257,36 @@ void change_working_dir_to_sdlpop_root() {
 };
 
 // Called in pop_main(); check whether a replay file is being opened directly (double-clicked, dragged onto .exe, etc.)
-void check_if_opening_replay_file() {
-	if (!enable_replay) return;
-	if (g_argc > 1) {
-		char *filename = g_argv[1]; // file dragged on top of executable or double clicked
-		char *e = strrchr(filename, '.');
-		if (e != NULL && strcasecmp(e, ".P1R") == 0) { // valid replay filename passed as first arg
-			if (open_replay_file(filename)) {
-				change_working_dir_to_sdlpop_root();
-				current_replay_number = -1; // don't cycle when pressing Tab
-				// We should read the header in advance so we know the levelset name
-				// then the game can immediately load the correct resources
-				replay_header_type header = {0};
-				char header_error_message[REPLAY_HEADER_ERROR_MESSAGE_MAX];
-				int ok = read_replay_header(&header, replay_fp, header_error_message);
-				if (!ok) {
-					char error_message[REPLAY_HEADER_ERROR_MESSAGE_MAX];
-					snprintf(error_message, REPLAY_HEADER_ERROR_MESSAGE_MAX,
-							 "Error opening replay file: %s\n",
-							 header_error_message);
-					fprintf(stderr, error_message);
-					SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "SDLPoP", error_message, NULL);
-					fclose(replay_fp);
-					replay_fp = NULL;
-					replay_file_open = 0;
-					return;
-				}
-				if (header.uses_custom_levelset) {
-					strncpy(replay_levelset_name, header.levelset_name, sizeof(replay_levelset_name)); // use the replays's levelset
-				}
-				rewind(replay_fp); // replay file is still open and will be read in load_replay() later
-				need_start_replay = 1; // will later call start_replay(), from init_record_replay()
-			};
+void start_with_replay_file(const char *filename) {
+	if (open_replay_file(filename)) {
+		change_working_dir_to_sdlpop_root();
+		current_replay_number = -1; // don't cycle when pressing Tab
+		// We should read the header in advance so we know the levelset name
+		// then the game can immediately load the correct resources
+		replay_header_type header = {0};
+		char header_error_message[REPLAY_HEADER_ERROR_MESSAGE_MAX];
+		int ok = read_replay_header(&header, replay_fp, header_error_message);
+		if (!ok) {
+			char error_message[REPLAY_HEADER_ERROR_MESSAGE_MAX];
+			snprintf(error_message, REPLAY_HEADER_ERROR_MESSAGE_MAX,
+					 "Error opening replay file: %s\n",
+					 header_error_message);
+			fprintf(stderr, error_message);
+			fclose(replay_fp);
+			replay_fp = NULL;
+			replay_file_open = 0;
+
+			if (is_validate_mode) // Validating replays is cmd-line only, so, no sense continuing from here.
+				exit(0);
+
+			SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "SDLPoP", error_message, NULL);
+			return;
 		}
+		if (header.uses_custom_levelset) {
+			strncpy(replay_levelset_name, header.levelset_name, sizeof(replay_levelset_name)); // use the replays's levelset
+		}
+		rewind(replay_fp); // replay file is still open and will be read in load_replay() later
+		need_start_replay = 1; // will later call start_replay(), from init_record_replay()
 	}
 }
 
@@ -569,30 +582,78 @@ void restore_normal_options() {
 	use_custom_levelset = (levelset_name[0] == '\0') ? 0 : 1;
 }
 
+static void print_remaining_time() {
+	if (rem_min > 0) {
+		printf("Remaining time: %d min, %d sec, %d ticks. ",
+			   rem_min - 1, rem_tick / 12, rem_tick % 12);
+	} else {
+		printf("Elapsed time:   %d min, %d sec, %d ticks. ",
+			   -(rem_min + 1), (719 - rem_tick) / 12, (719 - rem_tick) % 12);
+	}
+	printf("(rem_min=%d, rem_tick=%d)\n", rem_min, rem_tick);
+}
+
 void start_replay() {
 	if (!enable_replay) return;
 	need_start_replay = 0;
-	list_replay_files();
-	if (num_replay_files == 0) return;
+	if (!is_validate_mode) {
+		list_replay_files();
+		if (num_replay_files == 0) return;
+	}
 	if (!load_replay()) return;
+	apply_replay_options();
 	replaying = 1;
 	curr_tick = 0;
-    apply_replay_options();
 }
 
-void stop_replay_and_restart_game() {
-	replaying = 0;
-	restore_normal_options();
-	start_game();
+void end_replay() {
+	if (!is_validate_mode) {
+		replaying = 0;
+		skipping_replay = 0;
+		restore_normal_options();
+		start_game();
+	} else {
+		printf("\nReplay ended in level %d, room %d.\n", current_level, drawn_room);
+
+		if (Kid.alive < 0)
+			printf("Kid is alive.\n");
+		else {
+			if (text_time_total == 288 && text_time_remaining <= 1) {
+				printf("Kid is dead. (Did not press button to continue.)\n");
+			} else {
+				printf("Kid is dead.\n");
+			}
+		}
+
+		print_remaining_time();
+
+		int minute_ticks = curr_tick % 720;
+		printf("Play duration:  %d min, %d sec, %d ticks. (curr_tick=%d)\n\n",
+			   curr_tick / 720, minute_ticks / 12, minute_ticks % 12, curr_tick);
+
+		if (num_replay_ticks != curr_tick) {
+			printf("WARNING: Play duration does not match replay length. (%d ticks)\n", num_replay_ticks);
+		} else {
+			printf("Play duration matches replay length. (%d ticks)\n", num_replay_ticks);
+		}
+		exit(0);
+	}
 }
 
 void do_replay_move() {
     if (curr_tick == 0) {
         random_seed = saved_random_seed;
         seed_was_init = 1;
+
+		if (is_validate_mode) {
+			printf("Replay started in level %d, room %d.\n", current_level, drawn_room);
+			print_remaining_time();
+			skipping_replay = 1;
+			replay_seek_target = replay_seek_2_end;
+		}
     }
     if (curr_tick == num_replay_ticks) { // replay is finished
-        stop_replay_and_restart_game();
+		end_replay();
 		return;
     }
 	if (current_level == next_level) {
@@ -601,7 +662,12 @@ void do_replay_move() {
 
 		control_x = curr_move.x;
 		control_y = curr_move.y;
-		control_shift = (curr_move.shift) ? -1 : 0;
+
+		// Ignore shift if the kid is dead: restart moves are hard-coded as a 'special move'.
+		if (rem_min != 0 && Kid.alive > 6)
+			control_shift = 0;
+		else
+			control_shift = (curr_move.shift) ? -1 : 0;
 
 		if (curr_move.special == MOVE_RESTART_LEVEL) { // restart level
 			stop_sounds();
@@ -715,6 +781,7 @@ byte open_next_replay_file() {
 
 void replay_cycle() {
     need_replay_cycle = 0;
+	skipping_replay = 0;
     stop_sounds();
     if (current_replay_number == -1 /* opened .P1R file directly, so cycling is disabled */ ||
 			!open_next_replay_file() ||
@@ -823,6 +890,14 @@ void key_press_while_replaying(int* key_ptr) {
             need_replay_cycle = 1;
 			restore_normal_options();
             break;
+		case SDL_SCANCODE_F:                    // skip forward to next room
+			skipping_replay = 1;
+			replay_seek_target = replay_seek_0_next_room;
+			break;
+		case SDL_SCANCODE_F | WITH_SHIFT:       // skip forward to start of next level
+			skipping_replay = 1;
+			replay_seek_target = replay_seek_1_next_level;
+			break;
     }
 }
 
