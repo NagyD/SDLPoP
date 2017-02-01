@@ -93,6 +93,7 @@ A:
 * demo -- Run in demo mode: only the first two levels will be playable, and quotes from magazine reviews will be displayed.
 * record -- Start recording immediately. (See the Replays section.)
 * replay or a *.P1R filename -- Start replaying immediately. (See the Replays section.)
+* validate "replays/replay.p1r" -- Print out information about a replay file and quit. (See the Replays section.)
 * mod "Mod Name" -- Run with custom data files from the folder "mods/Mod Name/"
 * debug -- Enable debug cheats.
 * --version, -v -- Display SDLPoP version and quit.
@@ -138,8 +139,10 @@ Controlling the game:
 * F9: quickload
 
 Viewing or recording replays:
-* Ctrl+Tab (in game): start or stop recording
+* Ctrl+Tab (in game, or on title screen): start or stop recording
 * Tab (on title screen): view/cycle through the saved replays in the SDLPoP directory
+* F (while viewing a replay): skip forward to the next room
+* Shift-F (while viewing a replay): skip forward to the next level
 
 Cheats:
 * Shift-L: go to next level
@@ -224,24 +227,25 @@ REPLAYS
 Q: How do replays work?
 A:
 Starting from version 1.16, you can capture or view replays in SDLPoP.
-To start recording, press Ctrl+Tab while in game. To stop recording, press Ctrl+Tab again.
+To start recording, press Ctrl+Tab on the title screen or while in game. To stop recording, press Ctrl+Tab again.
 Your replays get saved in the "replays/" directory as files with a .P1R extension.
-You can change where replays are kept using the setting 'replays_folder' in SDLPoP.ini.
+You can change the location where replays are kept using the setting 'replays_folder' in SDLPoP.ini.
+
+If you want to start recording on a specific level, you can use the command "prince.exe record <lvl_number>",
+where <lvl_number> is the level on which you want to start.
 
 To view a replay, you can press Tab while on the title screen.
 To cycle to the next replay (in reverse creation order), press Tab again.
 You can also double-click on a replay file (and tell the OS that the file needs to be opened with the SDLPoP executable).
 SDLPoP will then immediately play that replay. Dragging and dropping onto the executable also works.
+While viewing a replay, you can press F to skip forward to the next room, or Shift+F to skip to the next level.
 
 Your settings specified in SDLPoP.ini (including whether you are playing with bugfixes on or off) are remembered in the replay.
 It shouldn't matter how SDLPoP.ini is set up when you are viewing the replay later.
 Note that any cheats you use do not get saved as part of the replay.
 
-If you want to start recording on a specific level, you can use the command "prince.exe record <lvl_number>",
-where <lvl_number> is the level on which you want to start.
-
-Also beware that the format of the replay files is not yet final and may change in the future!
-So it is possible that replays you record now will not work well in future versions.
+To print out information about the replay from the command-line, you can use the 'validate' command-line parameter.
+Example usage: prince validate "replays/replay.p1r"
 
 DEVELOPING
 ==========
