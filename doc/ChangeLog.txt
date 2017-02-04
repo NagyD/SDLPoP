@@ -1,4 +1,4 @@
-Change log and history.
+﻿Change log and history.
 For recent changes, look at GitHub: https://github.com/NagyD/SDLPoP/commits/master
 
 2012 July 28
@@ -306,7 +306,7 @@ DONE: Added support for named values in the INI file.
 DONE: Improved gamepad support.
 DONE: Added support for displaying the game with the original 4:3 aspect ratio.
 
-2017 January ??
+2017 February ??
 =================
 (version 1.17)
 
@@ -326,6 +326,64 @@ CHANGE: Folders in the data/ directory no longer have the .DAT extension, so the
 FIXED: Removed Dev-C++ note from Linux Makefile.
 FIXED: Use Mix_Music instead of Mix_Chunk to play music files. This reduces loading time. (contributed by @usineur)
 FIXED: Fixed Dávid's name in the header comments.
+DONE: Added an icon.
+
+Miscellaneous game additions, changes, bug fixes:
+CHANGE: Let time just run when quickloading immediately after quicksave
+FIXED: Changed the RGB/BGR hack: check whether SDL2 bug occurs before applying RGB24 workaround.
+FIXED: Fixed fake tiles randomly appeared in place of the disappearing sword.
+FIXED: Fixed crashing on certain custom DAT files.
+FIXED: Don't crash if some (or all) data files are missing.
+CHANGE: Increased sound buffer size to remove noise.
+CHANGE: Increased sound output settings to CD quality. (That is: 44100 Hz, 16-bit, Stereo.)
+FIXED: Audio: Changed 16-bit to signed. (@vanfanel wrote this is needed on the Raspberry PI.)
+FIXED: Fixed bug (and compiler warning) in redraw_at_cur_mob(). (Reported by @petervas.)
+CHANGE: Change default of use_fixes_and_enhancements to false
+FIXED: Don't repeat Alt+Enter.
+FIXED: Alt+Enter should not un-pause the game.
+CHANGE: Debug timer: display in top left corner, toggle with T
+FIXED: Added a way to enable debug cheats: use command-line parameter "debug"
+FIXED: Do not accept filenames as valid command-line parameters in check_param()
+FIXED: Reduced flickering when text is drawn.
+DONE: Added info screen shown at startup, with some explanation about SDLPoP.
+FIXED: Fixed quickload penalty being applied even after time has stopped (after Jaffar has been killed)
+FIXED: Fixed guards sometimes turning around immediately after quickloading (because is_guard_notice is not set to zero)
+FIXED: Silenced warnings being printed about image 255, after entering an exit door.
+FIXED: Fixed graphics bug with SDL 2.0.5 (contributed by @zaps166)
+DONE: Added command-line parameter --version, -v: Display SDLPoP version and quit.
+DONE: Added command-line parameter --help, -h: Display help and quit (points to the Readme).
+DONE: Added command-line parameter seed=number: Set initial random seed, for testing.
+
+Improved controller support:
+DONE: Improved controller support; migrated to SDL_GameController API (reported by @EndeavourAccuracy).
+DONE: Implemented two settings for joystick control: horizontal-only (default; idea and original implementation by @EndeavourAccuracy) and all-directional.
+CHANGE: Controller: Remapped Quit to Start (was B).
+DONE: Added haptic feedback (when the kid is hurt) for controllers with a rumble motor.
+
+Support for playing mods/custom levelsets:
+DONE: Added ability to organise mods into their own directories
+DONE: Use a custom configuration file (mod.ini) for each mod
+DONE: Allow choosing a levelset from the command line; usage: prince mod "Mod Name"
+CHANGE: Use a separate Hall of Fame file when playing a custom levelset
+CHANGE: Use a separate QUICKSAVE.SAV / PRINCE.SAV when playing a custom levelset
+
+New customization/modding features:
+DONE: CusPop option: start upside down
+DONE: CusPop option: start in blind mode (slightly buggy)
+DONE: CusPop option: set level before which the copy protection level appears
+DONE: CusPop option: set up edges of the level
+DONE: CusPop option: enable dungeon WDA in palace environment
+DONE: Allow disabling the time limit completely (by setting 'start_minutes_left' to -1 in SDLPoP.ini)
+DONE: When time is unlimited, show how much time has passed instead of how much time is remaining
+DONE: CusPop option: change the hard-coded color palette
+DONE: CusPop option: change the first level (starting level)
+DONE: CusPop option: skip title sequence
+DONE: CusPop option: set up effect of Shift+L in non-cheat mode
+DONE: CusPop option: set up cutscenes
+
+Replay improvements:
+CHANGE: Replays get saved to the replays/ directory, have more recognizable names, and are played back in reverse creation order.
+DONE: Allow changing the folder where replays are kept.
 CHANGE: The replay format was changed -- older replays will no longer work!
 CHANGE: Replay format: added magic number 0x50 0x31 0x52 ("P1R")
 CHANGE: Replay format: replaced version strings with class, version and deprecation numbers that can be used to determine whether a replay is compatible.
@@ -333,79 +391,43 @@ CHANGE: Replay format: added the time of the recording (Unix time) to the replay
 CHANGE: Replay format: added the name of the program that created the replay to the replay format.
 CHANGE: Replay format: stored replay options are now split up into several sections.
 CHANGE: Replay format: use 32-bit sizes independent of platform (32 or 64 bits).
-
-Game additions, changes, bug fixes:
-CHANGE: Let time just run when quickloading immediately after quicksave
-DONE: Added remembering guard hitpoints (optional fix/enhancement)
-FIXED: Fixed the kid being able to glide sideways through the top sections of walls/tapestries while in freefall.
-FIXED: Fixed the kid dropping through tiles when dropping down from a tapestry.
-FIXED: Fixed the landing animation aborting when landing against a gate or tapestry+floor instead of a wall.
-FIXED: Changed the RGB/BGR hack: check whether SDL2 bug occurs before applying RGB24 workaround.
-FIXED: Fixed crashing from guards on level 14.
-FIXED: Fixed fake tiles randomly appeared in place of the disappearing sword.
-FIXED: Fixed crashing on certain custom DAT files.
-FIXED: Don't crash if some (or all) data files are missing.
-CHANGE: Increased sound buffer size to remove noise.
-CHANGE: Increased sound output settings to CD quality. (That is: 44100 Hz, 16-bit, Stereo.)
-FIXED: Audio: Changed 16-bit to signed. (@vanfanel wrote this is needed on the Raspberry PI.)
-FIXED: Fix joypad/joystick movement
-CHANGE: Same threshold for both joystick axes
-CHANGE: Controller: Remapped Quit to Start (was B).
-FIXED: Fixed bug (and compiler warning) in redraw_at_cur_mob(). (Reported by @petervas.)
-DONE: Added ability to organise mods into their own directories
-DONE: Use a custom configuration file (mod.ini) for each mod
-CHANGE: Change default of use_fixes_and_enhancements to false
-FIXED: Don't repeat Alt+Enter.
-FIXED: Alt+Enter should not un-pause the game.
-FIXED: Improved fix for "standing on thin air" bug
-FIXED: Fix new falling bug caused by "glide through wall" fix
-FIXED: Fix unintended sword strike immediately after drawing sword
-FIXED: Fix retreating out of a room without the room actually changing
-FIXED: Fix running jump through tapestry
-DONE: Added test level for jumping through tapestry
-FIXED: Fix guards being pushed into walls
-FIXED: Fix jumping through a wall above a closed gate
-CHANGE: Debug timer: display in top left corner, toggle with T
-FIXED: Added a way to enable debug cheats: use command-line parameter "debug"
-DONE: Allow choosing a levelset from the command line (mod="My Mod Name")
-DONE: CusPop option: start upside down
-DONE: CusPop option: start in blind mode (slightly buggy)
-DONE: CusPop option: set level before which the copy protection level appears
-DONE: CusPop option: set up edges of the level
-DONE: CusPop option: enable dungeon WDA in palace environment
-CHANGE: Mod names as separate command line arguments
-FIXED: Do not accept filenames as valid command-line parameters in check_param()
-CHANGE: Use a separate Hall of Fame file when playing a custom levelset
-DONE: Allow disabling the time limit completely (by setting 'start_minutes_left' to -1 in SDLPoP.ini)
-DONE: When time is unlimited, show how much time has passed instead of how much time is remaining
-CHANGE: Use a separate QUICKSAVE.SAV / PRINCE.SAV when playing a custom levelset
-CHANGE: Replays get saved to the replays/ directory, have more recognizable names, and are played back in reverse creation order.
 CHANGE: Gameplay options are now stored differently in replays.
-DONE: Allow changing the folder where replays are kept.
-DONE: CusPop option: change the hard-coded color palette
-DONE: CusPop option: change the first level (starting level)
-DONE: CusPop option: skip title sequence
-DONE: CusPop option: set up effect of Shift+L in non-cheat mode
-DONE: CusPop option: set up cutscenes
-FIXED: Alternate fix for drawing bug when gates are stacked on top of each other.
-FIXED: Alternate fix for drawing bug when climbing up to a floot with a big pillar top behind.
-FIXED: Fix chompers not starting when grabbing a ledge.
-DONE: Improved controller support; migrated to SDL_GameController API (reported by @EndeavourAccuracy).
-DONE: Implemented two settings for joystick control: horizontal-only (default; idea and original implementation by @EndeavourAccuracy) and all-directional.
-FIXED: Reduced flickering when text is drawn.
-DONE: Added info screen shown at startup, with some explanation about SDLPoP.
-FIXED: Fixed quickload penalty being applied even after time has stopped (after Jaffar has been killed)
-FIXED: Fixed guards sometimes turning around immediately after quickloading (because is_guard_notice is not set to zero)
-FIXED: Silenced warnings being printed about image 255, after entering an exit door.
-FIXED: Fixed feather fall effect being interrupted by a level door opening.
-FIXED: Removed audible 'click' after the swinging sword sound. (contributed by @zaps166)
-FIXED: Fixed graphics bug with SDL 2.0.5 (contributed by @zaps166)
-FIXED: Fixed offscreen guards not reappearing in adjacent rooms.
 FIXED: Incompatible replays will be skipped in the cycle order.
 FIXED: Added more informative error messages if a replay is incompatible.
 FIXED: Fixed being unable to unpause while replaying.
 FIXED: Fixed replays running out of sync when the end of a temporary effect is triggered by the music stopping (level 1 start, feather fall).
 FIXED: Fixed several bugs that could cause crashes when a replay file is loaded.
+DONE: Replay: show error message in a dialog box if replay loading failed.
+DONE: Replay: stop the replay upon reaching the Princess room.
+CHANGE: Don't play end level music while recording or replaying. (Reduces waiting time and improves reproducibility.)
+DONE: Added a save dialog for replays. This replaces the automatically generated filenames for replays. Pressing Escape discards a replay.
+DONE: Replay: start recording immediately if Ctrl+Tab pressed on the title screen.
+DONE: When trying to quickload while recording, show the 'save replay' dialog.
+FIXED: Fixed replay reproducibility across multiple levels. (Preserve the random seed to prevent going out-of-sync.)
+DONE: Press F or Shift+F to skip forward through replays (F: skip to next room, Shift+F: skip to next level).
+DONE: Added command-line option for validating replays, usage: prince validate "replays/replay.p1r"
+
+Fixes for gameplay and drawing bugs, that are also present in the original Prince of Persia for DOS:
+DONE: Added remembering guard hitpoints. (optional fix/enhancement)
+FIXED: Fixed the kid being able to glide sideways through the top sections of walls/tapestries while in freefall.
+FIXED: Fixed the kid dropping through tiles when dropping down from a tapestry.
+FIXED: Fixed the landing animation aborting when landing against a gate or tapestry+floor instead of a wall.
+FIXED: Fixed crashing from guards on level 14.
+FIXED: Improved fix for "standing on thin air" bug.
+FIXED: Fixed new falling bug caused by "glide through wall" fix, as well as a second wall glitch.
+FIXED: Fixed unintended sword strike immediately after drawing sword.
+FIXED: Fixed retreating out of a room without the room actually changing.
+FIXED: Fixed running jump through tapestry.
+DONE: Added test level for jumping through tapestry.
+FIXED: Fixed guards being pushed into walls.
+FIXED: Fixed jumping through a wall above a closed gate.
+FIXED: Alternate fix for drawing bug when gates are stacked on top of each other.
+FIXED: Alternate fix for drawing bug when climbing up to a floot with a big pillar top behind.
+FIXED: Fixed chompers not starting when grabbing a ledge.
+FIXED: Fixed offscreen guards not reappearing in adjacent rooms.
+FIXED: Fixed feather fall effect being interrupted by a level door opening.
+FIXED: Removed audible 'click' after the swinging sword sound. (contributed by @zaps166)
+FIXED: Fixed unintended movement after putting the sword away (because controls do not get released properly).
 
 Build changes, source code, refactoring:
 DONE: OSX port upgraded from SDL to SDL2. Mixer library added in makefile and documentation. Tested.
