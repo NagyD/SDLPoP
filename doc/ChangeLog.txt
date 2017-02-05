@@ -306,7 +306,7 @@ DONE: Added support for named values in the INI file.
 DONE: Improved gamepad support.
 DONE: Added support for displaying the game with the original 4:3 aspect ratio.
 
-2017 February ??
+2017 February 5
 =================
 (version 1.17)
 
