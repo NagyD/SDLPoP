@@ -458,3 +458,9 @@ CHANGE: Refactor: removed options_type (replacement: options are stored using SD
 DONE: Added new exceptions to .gitignore.
 FIXED: Ignore replay options in SDLPoP.ini if USE_REPLAY is not defined
 DONE: Added -std=gnu99 to the Dev-C++ project files.
+
+(no release date yet)
+=================
+(upcoming version)
+
+FIXED: Fixed allow_triggering_any_tile hack to work with stuck-closed chompers.
