@@ -639,12 +639,14 @@ short __pascal far trigger_1(short target_type,short room,short tilepos,short bu
 	result = -1;
 	if (target_type == tiles_4_gate) {
 		result = trigger_gate(room, tilepos, button_type);
-	} else if (target_type == tiles_16_level_door_left || allow_triggering_any_tile) { //allow_triggering_any_tile hack
+	} else if (target_type == tiles_16_level_door_left) {
 		if (curr_room_modif[tilepos] != 0) {
 			result = -1;
 		} else {
 			result = 1;
 		}
+	} else if (allow_triggering_any_tile) { //allow_triggering_any_tile hack
+		result = 1;
 	}
 	return result;
 }
