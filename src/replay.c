@@ -271,7 +271,7 @@ void start_with_replay_file(const char *filename) {
 			snprintf(error_message, REPLAY_HEADER_ERROR_MESSAGE_MAX,
 					 "Error opening replay file: %s\n",
 					 header_error_message);
-			fprintf(stderr, error_message);
+			fprintf(stderr, "%s", error_message);
 			fclose(replay_fp);
 			replay_fp = NULL;
 			replay_file_open = 0;
