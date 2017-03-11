@@ -478,7 +478,7 @@ Uint32 temp_shift_release_callback(Uint32 interval, void *param) {
 int __pascal far process_key() {
 	char sprintf_temp[80];
 	int key;
-	const char* answer_text;
+	const char* answer_text = NULL;
 	word need_show_text;
 	need_show_text = 0;
 	key = key_test_quit();
