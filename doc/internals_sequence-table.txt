@@ -1,0 +1,165 @@
+### What is the difference between autocontrol, control and anim?
+
+Autocontrol: where keypresses are generated. (guards, demo)
+Control: where sequences are activated based on keystrokes and other things.
+Anim: where sequences are interpreted.
+
+### What is the difference between frame, image and resource?
+
+frame: An index into the frame table.
+	Also an unit of time = 1/12 seconds. (1/10 s when fighting.)
+image: 0-based index within a chtab
+resource: ID in DAT file, image + palette_resource_id + 1
+
+### What is a chtab?
+
+It's a collection of images, with a common palette.
+The game uses these chtabs:
+0: sword (in someone's hand) (PRINCE, 700)
+1: flame, sword (on floor), potion (PRINCE, 150)
+2: kid (KID, 400)
+3: princess in intro (PV, 800)
+4: Jaffar in intro (PV, 850), princess in cutscenes (PV, 900)
+5: guard (GUARD/SKEL/FAT/SHADOW/VIZIER, 750)
+6: environment (except wall) (VDUNGEON/VPALACE, 200)
+7: environment wall (VDUNGEON/VPALACE, 360)
+8: princess room (PV, 950)
+9: princess bed (PV, 980)
+
+### What tables are there?
+
+seqtbl[]: contains the sequence codes
+seqtbl_offsets[]: contains the offsets (addresses) of the various sequences
+frame_table_kid[]: contains the data of the kid's frames
+frame_tbl_guard[]: contains the data of the guards' frames
+frame_tbl_cuts[]: contains the data of the cutscenes' frames (princess, Jaffar)
+sword_tbl[]: contains the data of the sword's frames
+
+### What's in the frame tables?
+
+(used in load_frame())
+For each frame:
+image
+	0-based index
+sword
+	bits 0..5: sword frame (0-based index into the sword table)
+	bits 6..7: chtab (add 2: 00=2, 01=3, 10=4, 11=5)
+dx
+	delta x from char's position to image's position (+ = forward)
+dy
+	delta y from char's position to image's position (+ = down)
+flags
+	bits 0..4: x-position of weight (backward, that is right on the image)
+	bit 5: "thin" this frame for collision detection (used in set_char_collision())
+	bit 6: needs floor (used in check_on_floor() and check_press())
+	bit 7: even/odd pixel (used in load_frame_to_obj())
+
+### What's in the sequence table?
+
+The sequence table is a list of frame indexes and commands.
+
+sequence codes: (used in play_seq())
+0x00..0xF0: show frame with this index
+0xF1: end level
+0xF2 n: play sound
+0xF3 n: get item if n=1
+0xF4: knock down (loose floors will shake in char's row)
+0xF5: knock up (loose floors will shake in row above char's row)
+0xF6: nothing
+0xF7 l h: jump to hl if slow-fall is active
+0xF8 x y: set falling speed (x: + = forward, y: + = down)
+0xF9 n: set action
+0xFA y: move y pixels (+ = down)
+0xFB x: move x pixels (+ = forward)
+0xFC: go down one row (does not change y coordinate)
+0xFD: go up one row (does not change y coordinate)
+0xFE: flip
+0xFF l h: jump to hl
+
+### What's in the sequence offset table?
+
+sequence indexes:
+See internals_sequence-index.csv
+
+### How are images drawn at given coordinates?
+
+Coordinates give the bottom left of the image.
+For flipped images, it's the bottom right of the flipped image.
+
+### How are x coordinates counted?
+
+Char:
+58=left
+198=right
+one tile is 14 units wide
+|
+|load_frame_to_obj()
+V
+Object:
+0=left
+280=right
+one tile is 28 units wide
+|
+|calc_screen_x_coord()
+V
+Screen:
+0=left
+320=right
+one tile is 32 units wide
+
+### What is stored about characters?
+
+(struct char_type)
+frame
+	Index of current frame.
+	The used frame table depends on charid.
+x
+	x-position in the Char coordinate system.
+y
+	y-position
+direction
+	0x00 (>=0): right (image is flipped)
+	0x56: none (for guards)
+	0xFF (<0): left (image is not flipped)
+curr_col
+	Current column, 0..9 is in the current room.
+curr_row
+	Current row, 0..2 is in the current room.
+action
+	0: stand
+	1: run, jump
+	2: hang, climb
+	3: in midair
+	4: in freefall
+	5: bumped
+	6: hang straight
+	7: turn
+	99: char is hurt by sword
+fall_x
+	x-speed of falling (+ = forward)
+fall_y
+	y-speed of falling (+ = down)
+room
+	Current room.
+repeat
+	(used in safe_step())
+	0: may step off edge
+	1: won't step off edge
+charid
+	Who is this?
+	Its value decides which frame table to use (in load_frame()), and various things about char's behaviour.
+	0: kid
+	1: shadow
+	2: guard
+	4: skeleton
+	5: princess
+	6: vizier (in intro)
+	0x18: mouse
+sword
+	0: not holding sword
+	2: holding sword
+alive
+	<0: is alive
+	>=0: is dead
+curr_seq
+	Current position (address) in the sequence table.
