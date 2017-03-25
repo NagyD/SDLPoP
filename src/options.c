@@ -234,8 +234,8 @@ static int global_ini_callback(const char *section, const char *name, const char
             }
             return 1;
         }
-    }
 #endif
+    }
 
     if (check_ini_section("Enhancements")) {
         if (strcasecmp(name, "use_fixes_and_enhancements") == 0) {
