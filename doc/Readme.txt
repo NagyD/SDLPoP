@@ -279,6 +279,11 @@ GNU/Linux:
 		make all
 	and the game should compile.
 
+	You can create a desktop/menu icon with:
+		sudo make install
+	and remove it with:
+		sudo make uninstall
+
 Mac OS X:
 	Get SDL2 and dependencies
 		a) Install "port" from http://www.macports.org/

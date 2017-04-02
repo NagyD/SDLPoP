@@ -24,6 +24,12 @@ all: $(BIN)
 clean:
 	$(RM) $(OBJ) $(BIN)
 
+install:
+	./install.sh
+
+uninstall:
+	./uninstall.sh
+
 $(BIN): $(OBJ)
 	$(CC) $(LDFLAGS) $(OBJ) -o $@ $(LIBS) -lm
 
@@ -31,3 +37,4 @@ $(BIN): $(OBJ)
 	$(CC) $(CFLAGS) $(LDFLAGS) -c $<
 
 .PHONY: all clean
+

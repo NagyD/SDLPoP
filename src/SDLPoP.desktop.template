@@ -1,0 +1,11 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=SDLPoP
+Comment=An open-source port of Prince of Persia
+StartupNotify=false
+Exec=$ROOT/prince
+Icon=$ROOT/data/icon.png
+Terminal=false
+Type=Application
+Categories=Application;Game;ArcadeGame;
+Path=$ROOT/
