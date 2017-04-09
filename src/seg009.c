@@ -2803,6 +2803,9 @@ void __pascal far set_bg_attr(int vga_pal_index,int hc_pal_index) {
 			sdlperror("SDL_BlitSurface");
 			quit(1);
 		}
+#ifdef USE_LIGHTING
+		if (hc_pal_index == 0) update_lighting(&rect_top);
+#endif
 		if (upside_down) {
 			flip_screen(offscreen_surface);
 		}

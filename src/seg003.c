@@ -235,6 +235,7 @@ void __pascal far redraw_screen(int drawing_different_room) {
 	if (drawing_different_room) {
 		draw_rect(&rect_top, 0);
 	}
+
 	different_room = 0;
 	if (is_blind_mode) {
 		draw_rect(&rect_top, 0);
@@ -245,6 +246,9 @@ void __pascal far redraw_screen(int drawing_different_room) {
 		}
 		need_drects = 0;
 		redraw_room();
+#ifdef USE_LIGHTING
+	redraw_lighting();
+#endif
 		if (is_keyboard_mode) {
 			clear_kbd_buf();
 		}
@@ -290,6 +294,7 @@ void __pascal far redraw_screen(int drawing_different_room) {
 		}
 	}
 	exit_room_timer = 2;
+
 }
 
 // seg003:04F8
