@@ -11,15 +11,19 @@ const Uint8 ambient_level = 128;
 
 // Called once at startup.
 void init_lighting() {
+	if (!enable_lighting) return;
+
 	lighting_mask = IMG_Load(mask_filename);
 	if (lighting_mask == NULL) {
 		sdlperror("IMG_Load (lighting_mask)");
+		enable_lighting = 0;
 		return;
 	}
 
 	screen_overlay = SDL_CreateRGBSurface(0, 320, 192, 32, 0xFF << 0, 0xFF << 8, 0xFF << 16, 0xFF << 24);
 	if (screen_overlay == NULL) {
 		sdlperror("SDL_CreateRGBSurface (screen_overlay)");
+		enable_lighting = 0;
 		return;
 	}
 
@@ -41,6 +45,7 @@ void init_lighting() {
 // Recreate the lighting overlay based on the torches in the current room.
 // Called when the current room changes.
 void redraw_lighting() {
+	if (!enable_lighting) return;
 	if (lighting_mask == NULL) return;
 	if (curr_room_tiles == NULL) return;
 	if (is_cutscene) return;
@@ -79,6 +84,7 @@ void redraw_lighting() {
 // Copy a part of the lighting overlay onto the screen.
 // Called when the screen is updated.
 void update_lighting(const rect_type far *target_rect_ptr) {
+	if (!enable_lighting) return;
 	if (lighting_mask == NULL) return;
 	if (curr_room_tiles == NULL) return;
 	if (is_cutscene) return;

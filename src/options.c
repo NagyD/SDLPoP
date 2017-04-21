@@ -235,6 +235,9 @@ static int global_ini_callback(const char *section, const char *name, const char
             return 1;
         }
 #endif
+#ifdef USE_LIGHTING
+        process_boolean("enable_lighting", &enable_lighting);
+#endif
     }
 
     if (check_ini_section("Enhancements")) {
