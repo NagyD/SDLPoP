@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2015  Dávid Nagy
+Copyright (C) 2013-2017  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -614,6 +614,10 @@ void __pascal far play_seq() {
 						play_sound(sound_18_drink); // drink
 						break;
 					case SND_LEVEL: // level
+#ifdef USE_REPLAY
+						if (recording || replaying) break; // don't do end level music in replays
+#endif
+
 						if (is_sound_on) {
 							if (current_level == 4) {
 								play_sound(sound_32_shadow_music); // end level with shadow (level 4)
@@ -626,6 +630,13 @@ void __pascal far play_seq() {
 				break;
 			case SEQ_END_LEVEL: // end level
 				++next_level;
+#ifdef USE_REPLAY
+				// Preserve the seed in this frame, to ensure reproducibility of the replay in the next level,
+				// regardless of how long the sound is still playing *after* this frame.
+				// Animations (e.g. torch) can change the seed!
+				keep_last_seed = 1;
+				if (replaying && skipping_replay) stop_sounds();
+#endif
 				break;
 			case SEQ_GET_ITEM: // get item
 				if (*(SEQTBL_0 + Char.curr_seq++) == 1) {
@@ -820,7 +831,7 @@ void __pascal far check_action() {
 		if (frame == frame_109_crouch
 
 			#ifdef FIX_STAND_ON_THIN_AIR
-			|| (options.fix_stand_on_thin_air &&
+			|| (fix_stand_on_thin_air &&
 				frame >= frame_110_stand_up_from_crouch_1 && frame <= frame_119_stand_up_from_crouch_10)
 			#endif
 
@@ -959,7 +970,7 @@ void __pascal far check_on_floor() {
 			} else {
 
 #ifdef FIX_STAND_ON_THIN_AIR
-				if (options.fix_stand_on_thin_air &&
+				if (fix_stand_on_thin_air &&
 					Char.frame >= frame_110_stand_up_from_crouch_1 && Char.frame <= frame_119_stand_up_from_crouch_10)
 				{
 					// We need to prevent the Kid from stepping off a ledge accidentally while standing up.
@@ -1042,7 +1053,7 @@ void __pascal far start_fall() {
 
 		#ifdef FIX_RUNNING_JUMP_THROUGH_TAPESTRY
 		    // Also treat tapestries (when approached to the left) like a wall here.
-		|| (options.fix_running_jump_through_tapestry && Char.direction == dir_FF_left &&
+		|| (fix_running_jump_through_tapestry && Char.direction == dir_FF_left &&
 			(tile == tiles_12_doortop || tile == tiles_7_doortop_with_floor))
         #endif
 
@@ -1062,7 +1073,7 @@ void __pascal far check_grab() {
 	word old_x;
 
 	#ifdef FIX_GRAB_FALLING_SPEED
-	#define MAX_GRAB_FALLING_SPEED (options.fix_grab_falling_speed ? 30 : 32)
+	#define MAX_GRAB_FALLING_SPEED (fix_grab_falling_speed ? 30 : 32)
 	#else
 	#define MAX_GRAB_FALLING_SPEED 32
 	#endif
@@ -1087,6 +1098,9 @@ void __pascal far check_grab() {
 			grab_timer = 12;
 			play_sound(sound_9_grab); // grab
 			is_screaming = 0;
+#ifdef FIX_CHOMPERS_NOT_STARTING
+			if (fix_chompers_not_starting) start_chompers();
+#endif
 		}
 	}
 }
@@ -1221,7 +1235,7 @@ void __pascal far control_kid() {
 			}
 		} else {
 			if (key) {
-				start_level = 1;
+				start_level = first_level; // 1
 				start_game();
 			}
 		}
@@ -1496,7 +1510,7 @@ void __pascal far check_press() {
 			// the pressed tile is the one that the char is standing on
 			if (! (cur_frame.flags & FRAME_NEEDS_FLOOR)) return;
 			#ifdef FIX_PRESS_THROUGH_CLOSED_GATES
-			if (options.fix_press_through_closed_gates) determine_col();
+			if (fix_press_through_closed_gates) determine_col();
 			#endif
 			get_tile_at_char();
 		}
@@ -1536,7 +1550,7 @@ void __pascal far check_spike_below() {
 				! tile_is_floor(curr_tile2) &&
 				curr_room != 0 &&
 #ifdef FIX_INFINITE_DOWN_BUG
-				(options.fix_infinite_down_bug ? (row <= 2) : (room == curr_room))
+				(fix_infinite_down_bug ? (row <= 2) : (room == curr_room))
 #else
 				room == curr_room
 #endif

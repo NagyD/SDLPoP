@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2015  Dávid Nagy
+Copyright (C) 2013-2017  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -162,7 +162,7 @@ void __pascal far check_bumped() {
 #ifdef FIX_TWO_COLL_BUG
 		if (bump_col_left_of_wall >= 0) {
 			check_bumped_look_right();
-			if (!options.fix_two_coll_bug) return; // check for the left-oriented collision only with the fix enabled
+			if (!fix_two_coll_bug) return; // check for the left-oriented collision only with the fix enabled
 		}
 		if (bump_col_right_of_wall >= 0) {
 			check_bumped_look_left();
@@ -445,7 +445,7 @@ void __pascal far check_chomped_kid() {
 // seg004:07BF
 void __pascal far chomped() {
 	#ifdef FIX_SKELETON_CHOMPER_BLOOD
-	if (!(options.fix_skeleton_chomper_blood && Char.charid == charid_4_skeleton))
+	if (!(fix_skeleton_chomper_blood && Char.charid == charid_4_skeleton))
 	#endif
 		curr_room_modif[curr_tilepos] |= 0x80; // put blood
 	if (Char.frame != frame_178_chomped && Char.room == curr_room) {
@@ -495,7 +495,7 @@ void __pascal far check_guard_bumped() {
 
 			#ifdef FIX_PUSH_GUARD_INTO_WALL
             // Should also check for a wall BEHIND the guard, instead of only the current tile
-			(options.fix_push_guard_into_wall && get_tile_behind_char() == tiles_20_wall) ||
+			(fix_push_guard_into_wall && get_tile_behind_char() == tiles_20_wall) ||
 			#endif
 
 			get_tile_at_char() == tiles_20_wall ||

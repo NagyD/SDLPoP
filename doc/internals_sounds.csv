@@ -1,0 +1,58 @@
+index;meaning
+0;prince crashing into the floor (hard land)
+1;falling (screaming)
+2;tile crashing (loose floor breaks)
+3;button pressed
+4;gate closing (also used in intro)
+5;gate opening
+6;gate closing fast
+7;gate stop (after opening or closing)
+8;touching a wall (bumping)
+9;grab a ledge (after falling)
+10;sword vs. sword (sword hits other sword)
+11;sword moving (sword hits nothing)
+12;Guard hurt (by sword)
+13;Kid hurt (by sword or potion)
+14;level door closing (slam)
+15;level door sliding (opening or closing)
+16;medium land (lose 1 HP)
+17;soft land (crouch)
+18;drink
+19;taking out the sword
+20;loose floor shaking 1
+21;loose floor shaking 2
+22;loose floor shaking 3
+23;footstep
+24;death not in fight (kid was not holding sword)
+25;presentation (level 6 shadow, level 4 mirror, level 1 start)
+26;arrived to princess
+27;cutscene 2, 4, 6, 12
+28;death in fight (kid was holding sword)
+29;meet Jaffar
+30;big potion
+31;
+32;end level with shadow (level 4), killed by shadow
+33;small potion
+34;
+35;cutscene 8, 9
+36;time over
+37;get sword, Guard's death
+38;press button blink
+39;low weight (slow fall)
+40;cutscene 12 short time
+41;end level, united with shadow
+42;
+43;Jaffar's death
+44;skel alive
+45;jump through mirror
+46;something chomped
+47;chomper
+48;something spiked
+49;spikes
+50;story 2: princess waiting
+51;princess door opening
+52;story 4: Jaffar leaves
+53;story 3: Jaffar comes
+54;main theme
+55;story 1: In the absence
+56;winning theme

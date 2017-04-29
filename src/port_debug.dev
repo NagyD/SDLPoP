@@ -7,14 +7,14 @@ Ver=2
 ObjFiles=
 Includes=
 Libs=
-PrivateResource=
+PrivateResource=port_debug_private.rc
 ResourceIncludes=
 MakeIncludes=
-Compiler=-Wall_@@_-std=gnu99_@@_
+Compiler=-Wall -std=gnu99_@@_
 CppCompiler=-Wall_@@_
 Linker=-l"mingw32"_@@_-l"SDL2main"_@@_-l"SDL2.dll"_@@_-l"SDL2_image"_@@_-l"SDL2_mixer"_@@_
 IsCpp=0
-Icon=
+Icon=port_debug.ico
 ExeOutput=
 ObjectOutput=
 OverrideOutput=1

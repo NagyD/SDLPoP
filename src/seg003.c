@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2015  Dávid Nagy
+Copyright (C) 2013-2017  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -46,31 +46,11 @@ void __pascal far init_game(int level) {
 	play_level(level);
 }
 
-// data:0FA0
-const cutscene_ptr_type tbl_cutscenes[16] = {
-	NULL,
-	NULL,
-	cutscene_2_6,
-	NULL,
-	cutscene_4,
-	NULL,
-	cutscene_2_6,
-	NULL,
-	cutscene_8,
-	cutscene_9,
-	NULL,
-	NULL,
-	cutscene_12,
-	NULL,
-	NULL,
-	NULL,
-};
-
 // seg003:005C
 void __pascal far play_level(int level_number) {
 	cutscene_ptr_type cutscene_func;
 #ifdef USE_COPYPROT
-	if (options.enable_copyprot && level_number == copyprot_level) {
+	if (enable_copyprot && level_number == copyprot_level) {
 		level_number = 15;
 	}
 #endif
@@ -127,13 +107,19 @@ void __pascal far play_level(int level_number) {
 		stop_sounds();
 		#ifdef USE_REPLAY
 		if (replaying) replay_restore_level();
+		if (skipping_replay) {
+			if (replay_seek_target == replay_seek_0_next_room ||
+				replay_seek_target == replay_seek_1_next_level
+			)
+				skipping_replay = 0; // resume replay from here
+		}
 		#endif
 		draw_level_first();
 		show_copyprot(0);
 		level_number = play_level_2();
 		// hacked...
 #ifdef USE_COPYPROT
-		if (options.enable_copyprot && level_number == copyprot_level && !demo_mode) {
+		if (enable_copyprot && level_number == copyprot_level && !demo_mode) {
 			level_number = 15;
 		} else {
 			if (level_number == 16) {
@@ -317,11 +303,11 @@ int __pascal far play_level_2() {
 	while (1) { // main loop
 #ifdef USE_QUICKSAVE
 		check_quick_op();
-#endif // USE_QUICKSAVE
+#endif
 
 #ifdef USE_REPLAY
 		if (need_replay_cycle) replay_cycle();
-#endif // USE_QUICKSAVE
+#endif
 
 		if (Kid.sword == sword_2_drawn) {
 			// speed when fighting (smaller is faster)
@@ -334,6 +320,16 @@ int __pascal far play_level_2() {
 		hitp_delta = 0;
 		timers();
 		play_frame();
+
+#ifdef USE_REPLAY
+		// At the exact "end of level" frame, preserve the seed to ensure reproducibility,
+		// regardless of how long the sound is still playing *after* this frame (torch animation modifies the seed!)
+		if (keep_last_seed == 1) {
+			preserved_seed = random_seed;
+			keep_last_seed = -1; // disable repeat
+		}
+#endif
+
 		if (is_restart_level) {
 			is_restart_level = 0;
 			return current_level;
@@ -352,13 +348,17 @@ int __pascal far play_level_2() {
 				#ifdef USE_DEBUG_CHEATS
                 if (debug_cheats_enabled && is_timer_displayed) {
 					char timer_text[16];
-					snprintf(timer_text, 16, "%02d:%02d:%02d", rem_min - 1, rem_tick / 12, rem_tick % 12);
+					if (rem_min < 0) {
+						snprintf(timer_text, 16, "%02d:%02d:%02d", -(rem_min + 1), (719 - rem_tick) / 12, (719 - rem_tick) % 12);
+					} else {
+						snprintf(timer_text, 16, "%02d:%02d:%02d", rem_min - 1, rem_tick / 12, rem_tick % 12);
+					}
 					screen_updates_suspended = 1;
 					draw_rect(&timer_rect, color_0_black);
 					show_text(&timer_rect, -1, -1, timer_text);
 					screen_updates_suspended = 0;
 				}
-                #endif
+				#endif
 
 				request_screen_update(); // request screen update manually
 				do_simple_wait(1);
@@ -366,6 +366,14 @@ int __pascal far play_level_2() {
 				stop_sounds();
 				hitp_beg_lev = hitp_max;
 				checkpoint = 0;
+
+				#ifdef USE_REPLAY
+				if (keep_last_seed == -1) {
+					random_seed = preserved_seed; // Ensure reproducibility in the next level.
+					keep_last_seed = 0;
+				}
+				#endif
+
 				return next_level;
 			}
 		}
@@ -465,6 +473,10 @@ void __pascal far timers() {
 		--resurrect_time;
 	}
 	if (is_feather_fall && !check_sound_playing()) {
+#ifdef USE_REPLAY
+		if (recording) special_move = MOVE_EFFECT_END;
+		if (!replaying) // during replays, feather effect gets cancelled in do_replay_move()
+#endif
 		is_feather_fall = 0;
 	}
 	// Special event: mouse
@@ -544,7 +556,7 @@ void __pascal far bump_into_opponent() {
 		if (ABS(distance) <= 15) {
 
 			#ifdef FIX_PAINLESS_FALL_ON_GUARD
-			if (options.fix_painless_fall_on_guard) {
+			if (fix_painless_fall_on_guard) {
 				if (Char.fall_y >= 33) return; // don't bump; dead
 				else if (Char.fall_y >= 22) { // medium land
 					take_hp(1);
@@ -662,6 +674,9 @@ int __pascal far flash_if_hurt() {
 		do_flash_no_delay(flash_color); // don't add delay to the flash
 		return 1;
 	} else if (hitp_delta < 0) {
+		if (is_joyst_mode && enable_controller_rumble && sdl_haptic != NULL) {
+			SDL_HapticRumblePlay(sdl_haptic, 1.0, 100); // rumble at full strength for 100 milliseconds
+		}
 		do_flash_no_delay(color_12_brightred); // red
 		return 1;
 	}

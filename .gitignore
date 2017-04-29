@@ -42,6 +42,7 @@ mods/*/
 *.hex
 *.bat
 prince
+!data/PRINCE/
 
 # Debug files
 *.dSYM/
@@ -49,7 +50,13 @@ prince
 # Dev-C++
 *.layout
 Makefile.win
+src/*_private.*
 
 # CLion
 .idea/
 src/.idea/
+src/cmake-build*/
+build/
+
+# Windows thumbnail cache
+Thumbs.db

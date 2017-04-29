@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2015  Dávid Nagy
+Copyright (C) 2013-2017  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -43,8 +43,9 @@ void __pascal far do_fall() {
 		check_grab();
 
 		#ifdef FIX_GLIDE_THROUGH_WALL
-        if (options.fix_glide_through_wall) {
+        if (fix_glide_through_wall) {
 			// Fix for the kid falling through walls after turning around while running (especially when weightless)
+			determine_col();
 			get_tile_at_char();
 			if (curr_tile2 == tiles_20_wall ||
 					((curr_tile2 == tiles_12_doortop || curr_tile2 == tiles_7_doortop_with_floor) &&
@@ -70,7 +71,7 @@ void __pascal far do_fall() {
 	} else {
 
 		#ifdef FIX_JUMP_THROUGH_WALL_ABOVE_GATE
-		if (options.fix_jump_through_wall_above_gate) {
+		if (fix_jump_through_wall_above_gate) {
 			// At this point, Char.curr_col has not yet been updated since check_bumped()
 			// Basically, Char.curr_col is still set to the column of the wall itself (even though the kid
 			// may have 'bumped' against the wall, with Char.x being offset)
@@ -78,7 +79,16 @@ void __pascal far do_fall() {
 			// To prevent in_wall() from being called we need to update Char.curr_col here.
 			// (in_wall() only makes things worse, because it tries to 'eject' the kid from the wall the wrong way.
 			// For this reason, the kid can end up behind a closed gate below, like is possible in Level 7)
-			determine_col();
+
+			// The fix is calling determine_col() here.
+
+			// One caveat: the kid can also land on the rightmost edge of a closed gate tile, when doing a running jump
+			// to the left from two floors up. This 'trick' can be used in original PoP, but is 'fixed' by this change.
+			// To still allow this trick to be possible, we can check that we not jumping into a gate tile.
+			// (By the way, strangely enough, in unmodified PoP the trick even works with a tapestry + floor tile...)
+
+			if (get_tile_at_char() != tiles_4_gate)
+				determine_col();
 		}
         #endif
 
@@ -86,7 +96,7 @@ void __pascal far do_fall() {
 			in_wall();
 		}
 		#ifdef FIX_DROP_THROUGH_TAPESTRY
-		else if (options.fix_drop_through_tapestry && get_tile_at_char() == tiles_12_doortop && Char.direction == dir_FF_left) {
+		else if (fix_drop_through_tapestry && get_tile_at_char() == tiles_12_doortop && Char.direction == dir_FF_left) {
 			if (distance_to_edge_weight() >= 8) // only intervene if the kid is actually IN FRONT of the tapestry
 				in_wall();
 		}
@@ -115,7 +125,7 @@ void __pascal far land() {
 		}
 
         #ifdef FIX_LAND_AGAINST_GATE_OR_TAPESTRY
-		else if (options.fix_land_against_gate_or_tapestry) {
+		else if (fix_land_against_gate_or_tapestry) {
 			// A closed gate right in front of the landing spot should not behave like an open floor tile, but like a wall
 			// Similar for a tapestry tile (with floor)
 			get_tile_infrontof_char();
@@ -146,7 +156,7 @@ void __pascal far land() {
 				return;
 			}
 			#ifdef FIX_SAFE_LANDING_ON_SPIKES
-			else if (options.fix_safe_landing_on_spikes && curr_room_modif[curr_tilepos] == 0) {
+			else if (fix_safe_landing_on_spikes && curr_room_modif[curr_tilepos] == 0) {
 				// spikes ARE dangerous, just not out yet.
 				spiked();
 				return;
@@ -256,13 +266,21 @@ void __pascal far control() {
 
 		#ifdef ALLOW_CROUCH_AFTER_CLIMBING
 		// When ducking with down+forward, give time to release the forward control (prevents unintended crouch-hops)
-		else if (options.enable_crouch_after_climbing && Char.curr_seq >= seqtbl_offsets[seq_50_crouch] &&
+		else if (enable_crouch_after_climbing && Char.curr_seq >= seqtbl_offsets[seq_50_crouch] &&
 				Char.curr_seq < seqtbl_offsets[seq_49_stand_up_from_crouch]) // while stooping
 			if (control_forward < 1) control_forward = 0;
 		#endif
 
 		#ifdef FIX_MOVE_AFTER_DRINK
-		if (options.fix_move_after_drink && char_frame >= frame_191_drink && char_frame <= frame_205_drink)
+		if (fix_move_after_drink && char_frame >= frame_191_drink && char_frame <= frame_205_drink)
+			release_arrows();
+		#endif
+
+		#ifdef FIX_MOVE_AFTER_SHEATHE
+		if (fix_move_after_sheathe &&
+				Char.curr_seq >= seqtbl_offsets[seq_92_put_sword_away] &&
+				Char.curr_seq < seqtbl_offsets[seq_93_put_sword_away_fast]
+		)
 			release_arrows();
 		#endif
 	}
@@ -277,6 +295,10 @@ void __pascal far control_crouched() {
 				play_sound(sound_25_presentation); // presentation (level 1 start)
 				need_level1_music = 2;
 			} else {
+#ifdef USE_REPLAY
+				if (recording) special_move = MOVE_EFFECT_END;
+				if (!replaying) // during replays, crouch immobilization gets cancelled in do_replay_move()
+#endif
 				need_level1_music = 0;
 			}
 		}
@@ -395,7 +417,7 @@ void __pascal far down_pressed() {
 			get_tile_at_char();
 			if (can_grab() &&
 				#ifdef ALLOW_CROUCH_AFTER_CLIMBING
-				(!(options.enable_crouch_after_climbing && control_forward == -1)) &&
+				(!(enable_crouch_after_climbing && control_forward == -1)) &&
 				#endif
 				(Char.direction >= dir_0_right ||
 				get_tile_at_char() != tiles_4_gate ||
@@ -423,6 +445,22 @@ void __pascal far go_up_leveldoor() {
 void __pascal far control_turning() {
 	if (control_shift >= 0 && control_x < 0 && control_y >= 0) {
 		seqtbl_offset_char(seq_43_start_run_after_turn); // start run and run (after turning)
+	}
+
+	// Added:
+	// When using a joystick, the kid may sometimes jump/duck/turn unintendedly after turning around.
+	// To prevent this: clear the remembered controls, so that if the stick has already moved to another/neutral position,
+	// the kid will not jump, duck, or turn again.
+	if (is_joyst_mode) {
+		if (control_up < 0 && control_y >= 0) {
+			control_up = 0;
+		}
+		if (control_down < 0 && control_y <= 0) {
+			control_down = 0;
+		}
+		if (control_backward < 0 && control_x == 0) {
+			control_backward = 0;
+		}
 	}
 }
 
@@ -456,7 +494,7 @@ void __pascal far forward_pressed() {
 	short distance;
 	distance = get_edge_distance();
 	#ifdef ALLOW_CROUCH_AFTER_CLIMBING
-	if (options.enable_crouch_after_climbing && control_down < 0) {
+	if (enable_crouch_after_climbing && control_down < 0) {
 		down_pressed();
 		control_forward = 0;
 		return;
@@ -634,7 +672,7 @@ void __pascal far jump_up() {
 	#ifdef FIX_JUMP_DISTANCE_AT_EDGE
 	// When climbing up two floors, turning around and jumping upward, the kid falls down.
 	// This fix makes the workaround of Trick 25 unnecessary.
-	if (options.fix_jump_distance_at_edge && distance == 3 && edge_type == 0) {
+	if (fix_jump_distance_at_edge && distance == 3 && edge_type == 0) {
 		Char.x = char_dx_forward(-1);
 	}
 	#endif
@@ -725,7 +763,7 @@ void __pascal far grab_up_with_floor_behind() {
 	#ifdef FIX_EDGE_DISTANCE_CHECK_WHEN_CLIMBING
 	// When climbing to a higher floor, the game unnecessarily checks how far away the edge below is;
 	// This contributes to sometimes "teleporting" considerable distances when climbing from firm ground
-	#define JUMP_STRAIGHT_CONDITION (options.fix_edge_distance_check_when_climbing)						\
+	#define JUMP_STRAIGHT_CONDITION (fix_edge_distance_check_when_climbing)						\
 									? (distance < 4 && edge_type != 1)									\
 									: (distance < 4 && edge_distance < 4 && edge_type != 1)
 	#else
@@ -799,7 +837,7 @@ void __pascal far draw_sword() {
 	seq_id = seq_55_draw_sword; // draw sword
 	control_forward = control_shift2 = release_arrows();
 #ifdef FIX_UNINTENDED_SWORD_STRIKE
-	if (options.fix_unintended_sword_strike) {
+	if (fix_unintended_sword_strike) {
 		ctrl1_shift2 = 1; // prevent restoring control_shift2 to -1 in rest_ctrl_1()
 	}
 #endif

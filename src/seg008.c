@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2015  Dávid Nagy
+Copyright (C) 2013-2017  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -325,7 +325,7 @@ int __pascal far get_tile_to_draw(int room, int column, int row, byte *ptr_tilet
 	}
 #endif
 #ifdef FIX_LOOSE_LEFT_OF_POTION
-	else if (options.fix_loose_left_of_potion && tiletype == tiles_11_loose) {
+	else if (fix_loose_left_of_potion && tiletype == tiles_11_loose) {
 		if ((*ptr_modifier & 0x7F) == 0) {
 			*ptr_tiletype = tiles_1_floor;
 		}
@@ -722,7 +722,7 @@ image_type* get_image(short chtab_id, int id) {
 		return NULL;
     }
 	if (id < 0 || id >= chtab->n_images) {
-		printf("Tried to use image %d of chtab %d, not in 0..%d\n", id, chtab_id, chtab->n_images-1);
+		if (id != 255) printf("Tried to use image %d of chtab %d, not in 0..%d\n", id, chtab_id, chtab->n_images-1);
 		return NULL;
 	}
 	return chtab->images[id];
@@ -1070,17 +1070,21 @@ void __pascal far draw_gate_back() {
 	if (gate_bottom_y + 12 < draw_main_y) {
 		add_backtable(id_chtab_6_environment, 50 /*gate bottom with B*/, draw_xh, 0, gate_bottom_y, blitters_0_no_transp, 0);
 	} else {
-#ifndef FIX_GATE_DRAWING_BUG
 		// The following line (erroneously) erases the top-right of the tile below-left (because it is drawn non-transparently).
 		// -- But it draws something that was already drawn! (in draw_tile_right()).
-		add_backtable(id_chtab_6_environment, tile_table[tiles_4_gate].right_id, draw_xh, 0, tile_table[tiles_4_gate].right_y + draw_main_y, blitters_0_no_transp, 0);
+		add_backtable(id_chtab_6_environment, tile_table[tiles_4_gate].right_id, draw_xh, 0,
+					  tile_table[tiles_4_gate].right_y + draw_main_y, blitters_0_no_transp, 0);
 		// And this line tries to fix it. But it fails if it was a gate or a pillar.
 		if (can_see_bottomleft()) draw_tile_topright();
+#ifdef FIX_GATE_DRAWING_BUG
+		if (fix_gate_drawing_bug) {
+			draw_tile_anim_topright(); // redraw the erased top-right section of the gate below-left
+		}
+#endif
 		// The following 3 lines draw things that are drawn after this anyway.
 		draw_tile_bottom(0);
 		draw_loose(0);
 		draw_tile_base();
-#endif
 		add_backtable(id_chtab_6_environment, 51 /*gate bottom*/, draw_xh, 0, gate_bottom_y - 2, blitters_10h_transp, 0);
 	}
 	ybottom = gate_bottom_y - 12;
@@ -1401,7 +1405,15 @@ const word floor_left_overlay[] = {32, 151, 151, 150, 150, 151, 32, 32};
 
 // seg008:1E3A
 void __pascal far draw_floor_overlay() {
-#ifndef FIX_BIGPILLAR_CLIMB
+#ifdef FIX_BIGPILLAR_CLIMB
+	if (tile_left != tiles_0_empty) {
+		// Bug: When climbing up to a floor with a big pillar top behind, turned right, Kid sees through floor.
+		// The bigpillar_top tile should be treated similarly to an empty tile here.
+		if (!fix_bigpillar_climb || (tile_left != tiles_9_bigpillar_top)) {
+			return;
+		}
+	}
+#else
 	if (tile_left != tiles_0_empty) return;
 #endif
 	if (curr_tile == tiles_1_floor ||
@@ -1691,7 +1703,11 @@ void __pascal far show_time() {
 	word rem_sec;
 	if (Kid.alive < 0 &&
 		#ifdef FREEZE_TIME_DURING_END_MUSIC
-		(!(options.enable_freeze_time_during_end_music && next_level != current_level)) &&
+		(!(enable_freeze_time_during_end_music && next_level != current_level)) &&
+		#endif
+		#ifdef ALLOW_INFINITE_TIME
+		// prevent overflow
+		(!(rem_min == INT16_MIN && rem_tick == 1)) &&
 		#endif
 		rem_min != 0 &&
 		(current_level < 13 || (current_level == 13 && leveldoor_open == 0)) &&
@@ -1702,9 +1718,17 @@ void __pascal far show_time() {
 		if (rem_tick == 0) {
 			rem_tick = 719; // 720=12*60 ticks = 1 minute
 			--rem_min;
+#ifndef ALLOW_INFINITE_TIME
 			if (rem_min != 0 && (rem_min <= 5 || rem_min % 5 == 0)) {
 				is_show_time = 1;
 			}
+#else
+			if (rem_min > 0 && (rem_min <= 5 || rem_min % 5 == 0)) {
+				is_show_time = 1;
+			} else if (rem_min < 0) {
+				is_show_time = ((~rem_min) % 5 == 0 ) ? 1 : 0;
+			}
+#endif
 		} else {
 			if (rem_min == 1 && rem_tick % 12 == 0) {
 				is_show_time = 1;
@@ -1728,6 +1752,25 @@ void __pascal far show_time() {
 			}
 			display_text_bottom(sprintf_temp);
 		} else {
+
+#ifdef ALLOW_INFINITE_TIME
+			if (rem_min < 0) {
+				if (~rem_min == 0) {
+					// don't display time elapsed in the first minute
+					text_time_remaining = 0;
+					text_time_total = 0;
+				}
+				else if (~rem_min == 1) {
+					snprintf(sprintf_temp, sizeof(sprintf_temp), "1 MINUTE PASSED");
+				} else {
+					snprintf(sprintf_temp, sizeof(sprintf_temp), "%d MINUTES PASSED", ~rem_min);
+				}
+				display_text_bottom(sprintf_temp);
+			}
+
+			else if (rem_min == 0) // may also be negative, don't report "expired" in that case!
+#endif
+
 			display_text_bottom("TIME HAS EXPIRED!");
 		}
 		is_show_time = 0;

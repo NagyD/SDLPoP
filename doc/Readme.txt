@@ -11,10 +11,24 @@ Contributors:
 * StaticReturn (Mac OS X: Makefile (for older SDL1 version), bug reports)
 * Poirot (ecalot on GitHub) (Mac OS X: Now compatible with Falcury SDL2 port; editor)
 * kees (bugfixes)
-* Falcury (porting to SDL2, bugfixes, improvements, additions)
+* Falcury
+	* porting to SDL2
+	* quicksave improvements
+	* replay files
+	* SDLPoP.ini: added basic support and constantly adding new options
+	* mod folders
+	* fake tiles
+	* readable sequence table
+	* CMake support
+	* and various other bugfixes, improvements, additions
 * segra (segrax on GitHub) (Joystick support, resizable window)
 * DarkPrince (bug reports)
 * Andrey Vasilkin / digi@os2.snc.ru (eComStation (OS/2) support)
+* mfn (fixed a small bug when USE_MIXER is undefined)
+* diddledan (Visual C++ (NMake) support)
+* zaps166 (small Makefile fixes)
+* usineur (faster music loading)
+* yaqxsw (icon)
 
 Forum board: http://forum.princed.org/viewforum.php?f=126
 GitHub: https://github.com/NagyD/SDLPoP
@@ -43,7 +57,7 @@ Sources that helped in making the disassembly:
 LICENSE
 =======
 
-This program is open source under the GNU General Public License terms, see gpl-3.0.txt.
+This program is open source under the GNU General Public License terms, see gpl-3.0.txt and src/GPLv3.h.
 
 USAGE
 =====
@@ -73,14 +87,19 @@ eComStation (OS/2):
 Q: What command-line options are there?
 A:
 * megahit -- Enable cheats.
-* a number from 1 to 14 -- Start the given level.
+* a number from 1 to 14 -- Start the given level. (if cheats are enabled)
 * draw -- Draw directly to the screen, skipping the offscreen buffer.
 * full -- Run in full screen mode.
 * demo -- Run in demo mode: only the first two levels will be playable, and quotes from magazine reviews will be displayed.
 * record -- Start recording immediately. (See the Replays section.)
 * replay or a *.P1R filename -- Start replaying immediately. (See the Replays section.)
+* validate "replays/replay.p1r" -- Print out information about a replay file and quit. (See the Replays section.)
 * mod "Mod Name" -- Run with custom data files from the folder "mods/Mod Name/"
 * edit -- Start in editor mode. (See Editor.txt for details.)
+* debug -- Enable debug cheats.
+* --version, -v -- Display SDLPoP version and quit.
+* --help, -h, -? -- Display help and quit. (Currently it only points to this Readme...)
+* seed=number -- Set initial random seed, for testing.
 
 Q: What keys can I use?
 A:
@@ -96,11 +115,13 @@ Controlling the kid:
 You can also use the numeric keypad.
 
 Gamepad equivalents:
-* left/right = left/right
-* A = down
-* B = quit
-* X = shift
-* Y = up
+* D-Pad: arrows
+* Joystick: left/right (for all-directional joystick movement, set joystick_only_horizontal to false in SDLPoP.ini)
+* A: down
+* Y: up
+* X or triggers: shift
+* Start: quit
+* Back: restart level (Ctrl+A)
 
 Controlling the game:
 * Esc: pause game
@@ -120,8 +141,10 @@ Controlling the game:
 * Alt-E: Enable/disable editor mode. Note that after disabling editor mode, cheats remain enabled, even without megahit command line.
 
 Viewing or recording replays:
-* Ctrl+Tab (in game): start or stop recording
+* Ctrl+Tab (in game, or on title screen): start or stop recording
 * Tab (on title screen): view/cycle through the saved replays in the SDLPoP directory
+* F (while viewing a replay): skip forward to the next room
+* Shift-F (while viewing a replay): skip forward to the next level
 
 Cheats:
 * Shift-L: go to next level
@@ -141,10 +164,15 @@ Cheats:
 * Shift-S: Restore lost hit-point. (Like a small red potion.)
 * Shift-T: Give more hit-points. (Like a big red potion.)
 
+Debug cheats:
+* [: shift kid 1 pixel to the left
+* ]: shift kid 1 pixel to the right
+* t: toggle timer
+
 Q: Where is the music?
 A:
 Since version 1.13, the game supports loading music from the data/music folder.
-The music is not included in releases because it is very big, and it does not change between versions.
+Until 1.15, music was not included in releases because it is very big, and it does not change between versions.
 You need to get the music from here: (38 MB)
 	http://www.popot.org/get_the_games/various/PoP1_DOS_music.zip
 It's the last link here: http://www.popot.org/get_the_games.php?game=1
@@ -162,11 +190,12 @@ You can either copy the modified .DAT files to the folder of the game, or the ga
 
 Since version 1.17, the game can also load from mod folders that have been placed in the "mods/" directory.
 If you use this method, only the files different from the original V1.0 data are required in the mod's folder.
-To choose which mod to play, do one of the following:
-* Open SDLPoP.ini and change the 'levelset' option to the name of the mod folder.
+To choose which mod from the "mods/" folder to play, do one of the following:
+* Open SDLPoP.ini and change the 'levelset' option to the name of the mod's folder.
 * Use the command line option "mod", like so: prince.exe mod "Mod Name"
+Hall-of-Fame and saved game files will also be placed in the mod's folder.
 
-Another way is to start the game while the current directory is the mod's directory.
+Another way to play a mod is to start the game while the current directory is the mod's directory.
 You can do this from the command line, or with batch files / shell scripts.
 This is useful if you want to compare the behavior of this port and the original DOS version (to find bugs).
 	Especially if you're editing the level and don't want to copy LEVELS.DAT from one place to the other.
@@ -175,12 +204,14 @@ This is useful if you want to compare the behavior of this port and the original
 
 Note that this port does not recognize if the PRINCE.EXE of the mod was changed.
 Since version 1.16, you can configure some options in SDLPoP.ini: starting time, level types, etc.
+In addition, since version 1.17, mods in the "mods/" folder can use a custom configuration file "mod.ini".
+Options in this file can override (most of) the gameplay-related options in SDLPoP.ini.
 
 Beware, some mods (especially the harder ones) might rely on bugs that are fixed in SDLPoP.
-Since version 1.16, SDLPoP will ask you whether gameplay quirks should be fixed or not.
+Since version 1.16, SDLPoP can ask you whether gameplay quirks should be fixed or not.
 You can set your choice permanently in the file 'SDLPoP.ini':
 - Set the option 'use_fixes_and_enhancements' to 'false' to get the exact behavior of the original game.
-- Alternatively, set the option 'use_fixes_and_enhancements' to 'true'. You can then also enable or disable 
+- Alternatively, set the option 'use_fixes_and_enhancements' to 'true'. You can then also enable or disable
   individual fixes and enhancements, depending on your preference.
 
 Furthermore, SDLPoP opens up new possibilities for mod making.
@@ -200,23 +231,25 @@ REPLAYS
 Q: How do replays work?
 A:
 Starting from version 1.16, you can capture or view replays in SDLPoP.
-To start recording, press Ctrl+Tab while in game. To stop recording, press Ctrl+Tab again.
-Your replays get saved in the SDLPoP folder as files with a .P1R extension (REPLAY_001.P1R, REPLAY_002.P1R, and so on).
+To start recording, press Ctrl+Tab on the title screen or while in game. To stop recording, press Ctrl+Tab again.
+Your replays get saved in the "replays/" directory as files with a .P1R extension.
+You can change the location where replays are kept using the setting 'replays_folder' in SDLPoP.ini.
 
-To view a replay, you can press Tab while on the title screen. 
-The game then looks for replays with the REPLAY_XXX.P1R pattern and plays those in order (you can cycle by pressing Tab again).
+If you want to start recording on a specific level, you can use the command "prince.exe record <lvl_number>",
+where <lvl_number> is the level on which you want to start.
+
+To view a replay, you can press Tab while on the title screen.
+To cycle to the next replay (in reverse creation order), press Tab again.
 You can also double-click on a replay file (and tell the OS that the file needs to be opened with the SDLPoP executable).
 SDLPoP will then immediately play that replay. Dragging and dropping onto the executable also works.
+While viewing a replay, you can press F to skip forward to the next room, or Shift+F to skip to the next level.
 
 Your settings specified in SDLPoP.ini (including whether you are playing with bugfixes on or off) are remembered in the replay.
 It shouldn't matter how SDLPoP.ini is set up when you are viewing the replay later.
 Note that any cheats you use do not get saved as part of the replay.
 
-If you want to start recording on a specific level, you can use the command "prince.exe record <lvl_number>",
-where <lvl_number> is the level on which you want to start.
-
-Also beware that the format of the replay files is not yet final and may change in the future!
-So it is possible that replays you record now will not work well in future versions.
+To print out information about the replay from the command-line, you can use the 'validate' command-line parameter.
+Example usage: prince validate "replays/replay.p1r"
 
 DEVELOPING
 ==========

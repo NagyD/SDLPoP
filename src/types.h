@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2015  Dávid Nagy
+Copyright (C) 2013-2017  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -424,7 +424,7 @@ SDL_COMPILE_TIME_ASSERT(image_data_size, sizeof(image_data_type) == 6);
 typedef struct dat_type {
 	struct dat_type* next_dat;
 	FILE* handle;
-	char filename[64];
+	char filename[POP_MAX_PATH];
 	dat_table_type* dat_table;
 	// handle and dat_table are NULL if the DAT is a directory.
 } dat_type;
@@ -490,6 +490,7 @@ typedef enum data_location {
 enum sound_type {
 #ifdef USE_MIXER
 	sound_chunk = 3,
+	sound_music = 4,
 #endif
 	sound_speaker = 0,
 	sound_digi = 1,
@@ -539,6 +540,7 @@ typedef struct sound_buffer_type {
 		midi_type midi;
 #ifdef USE_MIXER
 		Mix_Chunk *chunk;
+		Mix_Music *music;
 #endif
 	};
 } sound_buffer_type;
@@ -1030,6 +1032,19 @@ enum colorids {
 	color_15_brightwhite = 15,
 };
 
+#ifdef USE_REPLAY
+enum replay_special_moves {
+	MOVE_RESTART_LEVEL = 1, // player pressed Ctrl+A
+	MOVE_EFFECT_END = 2,    // music stops, causing the end of feather effect or level 1 crouch immobilization
+};
+
+enum replay_seek_targets {
+	replay_seek_0_next_room = 0,
+	replay_seek_1_next_level = 1,
+	replay_seek_2_end = 2,
+};
+#endif
+
 #define COUNT(array) (sizeof(array)/sizeof(array[0]))
 
 // These are or'ed with SDL_SCANCODE_* constants in last_key_scancode.
@@ -1038,63 +1053,6 @@ enum key_modifiers {
 	WITH_CTRL  = 0x4000,
 	WITH_ALT   = 0x2000,
 };
-
-
-typedef union options_type {
-	// Need a predictable total size for forward compatibility (options data stored in replays for correct behavior!)
-	byte data[64];
-	struct {
-		byte use_fixes_and_enhancements; // kill-switch for all changes that modify gameplay behavior
-
-		// Main game options
-		byte enable_copyprot;
-
-		// Technical options
-		byte enable_mixer;
-		byte enable_fade;
-		byte enable_flash;
-		byte enable_text;
-
-		// Additional features on/off
-		byte enable_quicksave;
-		byte enable_quicksave_penalty;
-		byte enable_replay;
-
-		// Gameplay changes
-		byte enable_crouch_after_climbing;
-		byte enable_freeze_time_during_end_music;
-
-		// Bug fixes
-		byte fix_gate_sounds;
-		byte fix_two_coll_bug;
-		byte fix_infinite_down_bug;
-		byte fix_gate_drawing_bug;
-		byte fix_bigpillar_climb;
-		byte fix_jump_distance_at_edge;
-		byte fix_edge_distance_check_when_climbing;
-		byte fix_painless_fall_on_guard;
-		byte fix_wall_bump_triggers_tile_below;
-		byte fix_stand_on_thin_air;
-		byte fix_press_through_closed_gates;
-		byte fix_grab_falling_speed;
-		byte fix_skeleton_chomper_blood;
-		byte fix_move_after_drink;
-		byte fix_loose_left_of_potion;
-		byte fix_guard_following_through_closed_gates;
-		byte fix_safe_landing_on_spikes;
-
-		byte use_correct_aspect_ratio;
-		byte enable_remember_guard_hp;
-		byte fix_glide_through_wall;
-		byte fix_drop_through_tapestry;
-		byte fix_land_against_gate_or_tapestry;
-		byte fix_unintended_sword_strike;
-		byte fix_retreat_without_leaving_room;
-		byte fix_running_jump_through_tapestry;
-		byte fix_push_guard_into_wall;
-		byte fix_jump_through_wall_above_gate;
-	};
-} options_type;
 
 #ifdef USE_EDITOR
 

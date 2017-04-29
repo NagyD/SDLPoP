@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2015  Dávid Nagy
+Copyright (C) 2013-2017  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -441,6 +441,9 @@ Possible values of trob_type:
 			++curr_modifier;
 			if (curr_modifier >= 43) {
 				trob.type = -1;
+#ifdef FIX_FEATHER_INTERRUPTED_BY_LEVELDOOR
+				if (!(fix_feather_interrupted_by_leveldoor && is_feather_fall))
+#endif
 				stop_sounds();
 				if (leveldoor_open == 0 || leveldoor_open == 2) {
 					leveldoor_open = 1;
@@ -636,12 +639,14 @@ short __pascal far trigger_1(short target_type,short room,short tilepos,short bu
 	result = -1;
 	if (target_type == tiles_4_gate) {
 		result = trigger_gate(room, tilepos, button_type);
-	} else if (target_type == tiles_16_level_door_left || allow_triggering_any_tile) { //allow_triggering_any_tile hack
+	} else if (target_type == tiles_16_level_door_left) {
 		if (curr_room_modif[tilepos] != 0) {
 			result = -1;
 		} else {
 			result = 1;
 		}
+	} else if (allow_triggering_any_tile) { //allow_triggering_any_tile hack
+		result = 1;
 	}
 	return result;
 }
@@ -1253,7 +1258,7 @@ void __pascal far play_door_sound_if_visible(int sound_id) {
 
 #ifdef FIX_GATE_SOUNDS
 	sbyte has_sound_condition;
-	if (options.fix_gate_sounds)
+	if (fix_gate_sounds)
 		has_sound_condition = 	(gate_room == room_L && tilepos % 10 == 9) ||
 							  	(gate_room == drawn_room && tilepos % 10 != 9);
 	else has_sound_condition = 	gate_room == room_L ? tilepos % 10 == 9 :

@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2015  Dávid Nagy
+Copyright (C) 2013-2017  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ The authors of this program may be contacted at http://forum.princed.org
 #include "common.h"
 #include <fcntl.h>
 #include <setjmp.h>
+#include <math.h>
 
 // data:009C
 word cheats_enabled = 0;
@@ -38,6 +39,22 @@ word need_redraw_because_flipped;
 
 // seg000:0000
 void far pop_main() {
+	if (check_param("--version") || check_param("-v")) {
+		printf ("SDLPoP v%s\n", SDLPOP_VERSION);
+		exit(0);
+	}
+	
+	if (check_param("--help") || check_param("-h") || check_param("-?")) {
+		printf ("See doc/Readme.txt\n");
+		exit(0);
+	}
+	
+	const char* temp = check_param("seed=");
+	if (temp != NULL) {
+		random_seed = atoi(temp+5);
+		seed_was_init = 1;
+	}
+	
 	// debug only: check that the sequence table deobfuscation did not mess things up
 	#ifdef CHECK_SEQTABLE_MATCHES_ORIGINAL
 	check_seqtable_matches_original();
@@ -47,7 +64,31 @@ void far pop_main() {
 	editor_enabled = check_param("edit") != NULL;
 #endif
 
-	load_options();
+	load_global_options();
+
+#ifdef USE_REPLAY
+	if (g_argc > 1) {
+		char *filename = g_argv[1]; // file dragged on top of executable or double clicked
+		char *e = strrchr(filename, '.');
+		if (e != NULL && strcasecmp(e, ".P1R") == 0) { // valid replay filename passed as first arg
+			start_with_replay_file(filename);
+		}
+	}
+
+	temp = check_param("validate");
+	if (temp != NULL) {
+		is_validate_mode = 1;
+		start_with_replay_file(temp);
+	}
+#endif
+
+	check_mod_param();
+	load_mod_options();
+
+	// CusPop option
+	is_blind_mode = start_in_blind_mode;
+	// Bug: with start_in_blind_mode enabled, moving objects are not displayed until blind mode is toggled off+on??
+
 	apply_seqtbl_patches();
 
 	char sprintf_temp[100];
@@ -124,6 +165,7 @@ void __pascal far init_game_main() {
 	load_sounds(0, 43);
 	load_opt_sounds(43, 56); //added
 	hof_read();
+	show_splash(); // added
 	show_use_fixes_and_enhancements_prompt(); // added
 	start_game();
 }
@@ -173,6 +215,12 @@ void __pascal far start_game() {
 		letts_used[copyprot_letter[which_entry]-'A'] = 1;
 	}
 #endif
+	if (skip_title) { // CusPop option: skip the title sequence (level loads instantly)
+		int level_number = (start_level != 0) ? start_level : first_level;
+		init_game(level_number);
+		return;
+	}
+
 	if (start_level == 0) {
 #ifdef USE_EDITOR
 	editor_active = 0;
@@ -291,9 +339,20 @@ const char* quick_file = "QUICKSAVE.SAV";
 const char quick_version[] = "V1.16b4 ";
 char quick_control[] = "........";
 
+const char* get_quick_path(char* custom_path_buffer, size_t max_len) {
+	if (!use_custom_levelset) {
+		return quick_file;
+	}
+	// if playing a custom levelset, try to use the mod folder
+	snprintf(custom_path_buffer, max_len, "mods/%s/%s", levelset_name, quick_file /*QUICKSAVE.SAV*/ );
+	return custom_path_buffer;
+}
+
 int quick_save() {
 	int ok = 0;
-	quick_fp = fopen(quick_file, "wb");
+	char custom_quick_path[POP_MAX_PATH];
+	const char* path = get_quick_path(custom_quick_path, sizeof(custom_quick_path));
+	quick_fp = fopen(path, "wb");
 	if (quick_fp != NULL) {
 		process_save((void*) quick_version, COUNT(quick_version));
 		ok = quick_process(process_save);
@@ -317,6 +376,7 @@ void restore_room_after_quick_load() {
 	load_room_links();
 	//draw_level_first();
 	//gen_palace_wall_colors();
+	is_guard_notice = 0; // prevent guard turning around immediately
 	draw_game_frame(); // for falling
 	//redraw_screen(1); // for room_L
 
@@ -330,9 +390,10 @@ void restore_room_after_quick_load() {
 }
 
 int quick_load() {
-
 	int ok = 0;
-	quick_fp = fopen(quick_file, "rb");
+	char custom_quick_path[POP_MAX_PATH];
+	const char* path = get_quick_path(custom_quick_path, sizeof(custom_quick_path));
+	quick_fp = fopen(path, "rb");
 	if (quick_fp != NULL) {
 		// check quicksave version is compatible
 		process_load(quick_control, COUNT(quick_control));
@@ -348,7 +409,7 @@ int quick_load() {
 		screen_updates_suspended = 0;
 		request_screen_update();
 		screen_updates_suspended = 1;
-		word old_rem_min = rem_min;
+		short old_rem_min = rem_min;
 		word old_rem_tick = rem_tick;
 
 		ok = quick_process(process_load);
@@ -363,7 +424,10 @@ int quick_load() {
 
 		#ifdef USE_QUICKLOAD_PENALTY
 		// Subtract one minute from the remaining time (if it is above 5 minutes)
-		if (options.enable_quicksave_penalty) {
+		if (enable_quicksave_penalty &&
+			// don't apply the penalty after time has already stopped!
+			(current_level < 13 || (current_level == 13 && leveldoor_open < 2))
+		) {
 			int ticks_elapsed = 720 * (rem_min - old_rem_min) + (rem_tick - old_rem_tick);
 			// don't restore time at all if the elapsed time is between 0 and 1 minutes
 			if (ticks_elapsed > 0 && ticks_elapsed < 720) {
@@ -372,7 +436,9 @@ int quick_load() {
 			}
 			else {
 				if (rem_min == 6) rem_tick = 719; // crop to "5 minutes" exactly, if hitting the threshold in <1 minute
-				if (rem_min > 5) --rem_min;
+				if (rem_min > 5 /*be lenient, not much time left*/ || rem_min < 0 /*time runs 'forward' if < 0*/) {
+					--rem_min;
+				}
 			}
 
 		}
@@ -385,7 +451,7 @@ int need_quick_save = 0;
 int need_quick_load = 0;
 
 void check_quick_op() {
-	if (!options.enable_quicksave) return;
+	if (!enable_quicksave) return;
 	if (need_quick_save) {
 		if (!is_feather_fall && quick_save()) {
 			display_text_bottom("QUICKSAVE");
@@ -397,6 +463,11 @@ void check_quick_op() {
 		text_time_remaining = 24;
 	}
 	if (need_quick_load) {
+#ifdef USE_REPLAY
+		if (recording) {
+			stop_recording(); // quickloading would mess up the replay!
+		}
+#endif
 		if (quick_load()) {
 			display_text_bottom("QUICKLOAD");
 		} else {
@@ -422,7 +493,7 @@ Uint32 temp_shift_release_callback(Uint32 interval, void *param) {
 int __pascal far process_key() {
 	char sprintf_temp[80];
 	int key;
-	const char* answer_text;
+	const char* answer_text = NULL;
 	word need_show_text;
 	need_show_text = 0;
 	key = key_test_quit();
@@ -433,15 +504,18 @@ int __pascal far process_key() {
 			if (key == SDL_SCANCODE_F9) need_quick_load = 1;
 			#endif
 			#ifdef USE_REPLAY
-			if (key == SDL_SCANCODE_TAB) {
+			if (key == SDL_SCANCODE_TAB || need_start_replay) {
 				start_replay();
 			}
-			else
+			else if (key == (SDL_SCANCODE_TAB | WITH_CTRL)) {
+				start_level = first_level;
+				start_recording();
+			} else
 			#endif
 			if (key == (SDL_SCANCODE_L | WITH_CTRL)) { // ctrl-L
 				if (!load_game()) return 0;
 			} else {
-				start_level = 1;
+				start_level = first_level; // 1
 			}
 			draw_rect(&screen_rect, 0);
 #ifdef USE_FADE
@@ -521,14 +595,17 @@ int __pascal far process_key() {
 			//editor uses ctrl+v for pasting
 			if (!editor_enabled) {
 			#endif
-			answer_text = "PRINCE OF PERSIA  V1.0";
+			//answer_text = "PRINCE OF PERSIA  V1.0";
+			snprintf(sprintf_temp, sizeof(sprintf_temp), "SDLPoP v%s\n", SDLPOP_VERSION);
+			answer_text = sprintf_temp;
+
 			need_show_text = 1;
 			#ifdef USE_EDITOR
 			}
 			#endif
 		break;
 		case SDL_SCANCODE_L | WITH_SHIFT: // shift-l
-			if (current_level <= 3 || cheats_enabled) {
+			if (current_level < shift_L_allowed_until_level /* 4 */ || cheats_enabled) {
 				// if shift is not released within the delay, the cutscene is skipped
 				Uint32 delay = 250;
 				key_states[SDL_SCANCODE_LSHIFT] = 0;
@@ -544,16 +621,16 @@ int __pascal far process_key() {
 				} else {
 					if (current_level == 15 && cheats_enabled) {
 #ifdef USE_COPYPROT
-                        if (options.enable_copyprot) {
+                        if (enable_copyprot) {
                         	next_level = copyprot_level;
                         	copyprot_level = -1;
                         }
 #endif
 					} else {
 						next_level = current_level + 1;
-						if (!cheats_enabled && rem_min > 15) {
-							rem_min = 15;
-							rem_tick = 719;
+						if (!cheats_enabled && rem_min > shift_L_reduced_minutes /* 15 */) {
+							rem_min = shift_L_reduced_minutes; // 15
+							rem_tick = shift_L_reduced_ticks; // 719
 						}
 					}
 				}
@@ -578,8 +655,8 @@ int __pascal far process_key() {
 			else { // should start recording
 				start_recording();
 			}
-			break;
-#endif // USE_RECORD_REPLAY
+		break;
+#endif // USE_REPLAY
 #endif // USE_QUICKSAVE
 	}
 #ifdef USE_EDITOR
@@ -600,13 +677,28 @@ int __pascal far process_key() {
 			case SDL_SCANCODE_MINUS:
 			case SDL_SCANCODE_KP_MINUS:		// '-' --> subtract time cheat
 				if (rem_min > 1) --rem_min;
+
+#ifdef ALLOW_INFINITE_TIME
+				else if (rem_min < -1) ++rem_min; // if negative/infinite, time runs 'forward'
+				else if (rem_min == -1) rem_tick = 720; // resets the timer to 00:00:00
+#endif
+
 				text_time_total = 0;
 				text_time_remaining = 0;
 				is_show_time = 1;
 			break;
 			case SDL_SCANCODE_EQUALS | WITH_SHIFT: // '+'
 			case SDL_SCANCODE_KP_PLUS:	   // '+' --> add time cheat
+
+#ifdef ALLOW_INFINITE_TIME
+				if (rem_min < 0) { // if negative/infinite, time runs 'forward'
+					if (rem_min > INT16_MIN) --rem_min;
+				}
+				else ++rem_min;
+#else
 				++rem_min;
+#endif
+
 				text_time_total = 0;
 				text_time_remaining = 0;
 				is_show_time = 1;
@@ -782,6 +874,12 @@ void __pascal far draw_game_frame() {
 			// In this case, restart the game.
 			start_level = 0;
 			need_quotes = 1;
+
+#ifdef USE_REPLAY
+			if (recording) stop_recording();
+			if (replaying) end_replay();
+#endif
+
 			start_game();
 		} else {
 			// Otherwise, just clear it.
@@ -1071,6 +1169,10 @@ void __pascal far check_the_end() {
 		drawn_room = next_room;
 		load_room_links();
 		if (current_level == 14 && drawn_room == 5) {
+#ifdef USE_REPLAY
+			if (recording) stop_recording();
+			if (replaying) end_replay();
+#endif
 			// Special event: end of game
 			end_sequence();
 		}
@@ -1094,23 +1196,96 @@ void __pascal far check_fall_flo() {
 	}
 }
 
+void get_joystick_state(int raw_x, int raw_y, int axis_state[2]) {
+
+#define JOY_THRESHOLD 8000
+#define DEGREES_TO_RADIANS (M_PI/180.0)
+
+	// check if the X/Y position is within the 'dead zone' of the joystick
+	int dist_squared = raw_x*raw_x + raw_y*raw_y;
+	if (dist_squared < JOY_THRESHOLD*JOY_THRESHOLD) {
+		axis_state[0] = 0;
+		axis_state[1] = 0;
+	} else {
+		double angle = atan2(raw_y, raw_x); // angle of the joystick: 0 = right, >0 = downward, <0 = upward
+		//printf("Joystick angle is %f degrees\n", angle/DEGREES_TO_RADIANS);
+
+		if (fabs(angle) < (60*DEGREES_TO_RADIANS)) // 120 degree range facing right
+			axis_state[0] = 1;
+
+		else if (fabs(angle) > (120*DEGREES_TO_RADIANS)) // 120 degree range facing left
+			axis_state[0] = -1;
+
+		else {
+			// joystick is neutral horizontally, so the control should be released
+			// however: prevent stop running if the Kid was already running / trying to do a running-jump
+			// (this tweak makes it a bit easier to do (multiple) running jumps)
+			if (!(angle < 0 /*facing upward*/ && Kid.action == actions_1_run_jump)) {
+				axis_state[0] = 0;
+			}
+		}
+
+		if (angle < (-30*DEGREES_TO_RADIANS) && angle > (-150*DEGREES_TO_RADIANS)) // 120 degree range facing up
+			axis_state[1] = -1;
+
+		// down slightly less sensitive than up (prevent annoyance when your thumb slips down a bit by accident)
+		// (not sure if this adjustment is really necessary)
+		else if (angle > (35*DEGREES_TO_RADIANS) && angle < (145*DEGREES_TO_RADIANS)) // 110 degree range facing down
+			axis_state[1] = 1;
+
+		else {
+			// joystick is neutral vertically, so the control should be released
+			// however: should prevent unintended standing up when attempting to crouch-hop
+			if (!((Kid.frame >= frame_108_fall_land_2 && Kid.frame <= frame_112_stand_up_from_crouch_3)
+				  && angle > 0 /*facing downward*/))
+			{
+				axis_state[1] = 0;
+			}
+		}
+	}
+}
+
+void get_joystick_state_hor_only(int raw_x, int axis_state[2]) {
+	if (raw_x > JOY_THRESHOLD) {
+		axis_state[0] = 1;
+	} else if (raw_x < -JOY_THRESHOLD) {
+		axis_state[0] = -1;
+	} else axis_state[0] = 0;
+
+	// disregard all vertical input from the joystick controls (only use Y and A buttons or D-pad for up/down)
+	axis_state[1] = 0;
+}
+
 // seg000:1051
 void __pascal far read_joyst_control() {
-	// stub
-	if (gamepad_states[0] == -1)
+
+	if (joystick_only_horizontal) {
+		get_joystick_state_hor_only(joy_axis[SDL_CONTROLLER_AXIS_LEFTX], joy_left_stick_states);
+		get_joystick_state_hor_only(joy_axis[SDL_CONTROLLER_AXIS_RIGHTX], joy_right_stick_states);
+	} else {
+		get_joystick_state(joy_axis[SDL_CONTROLLER_AXIS_LEFTX], joy_axis[SDL_CONTROLLER_AXIS_LEFTY], joy_left_stick_states);
+		get_joystick_state(joy_axis[SDL_CONTROLLER_AXIS_RIGHTX], joy_axis[SDL_CONTROLLER_AXIS_RIGHTY], joy_right_stick_states);
+	}
+
+	if (joy_left_stick_states[0] == -1 || joy_right_stick_states[0] == -1 || joy_hat_states[0] == -1)
 		control_x = -1;
 	
-	if (gamepad_states[0] == 1)
+	if (joy_left_stick_states[0] == 1 || joy_right_stick_states[0] == 1 || joy_hat_states[0] == 1)
 		control_x = 1;
 
-	if (gamepad_states[1] == -1)
+	if (joy_left_stick_states[1] == -1 || joy_right_stick_states[1] == -1 || joy_hat_states[1] == -1 || joy_AY_buttons_state == -1)
 		control_y = -1;
 
-	if (gamepad_states[1] == 1)
+	if (joy_left_stick_states[1] == 1 || joy_right_stick_states[1] == 1 || joy_hat_states[1] == 1 || joy_AY_buttons_state == 1)
 		control_y = 1;
 
-	if (gamepad_states[2] == 1)
+	if (joy_X_button_state == 1 ||
+			joy_axis[SDL_CONTROLLER_AXIS_TRIGGERLEFT] > 8000 ||
+			joy_axis[SDL_CONTROLLER_AXIS_TRIGGERRIGHT] > 8000)
+	{
 		control_shift = -1;
+	}
+
 }
 
 // seg000:10EA
@@ -1302,6 +1477,10 @@ void __pascal far load_more_opt_graf(const char *filename) {
 
 // seg000:148D
 int __pascal far do_paused() {
+#ifdef USE_REPLAY
+	if (replaying && skipping_replay) return 0;
+#endif
+
 	word key;
 	key = 0;
 	next_room = 0;
@@ -1592,19 +1771,32 @@ void __pascal far load_kid_sprite() {
 	load_chtab_from_file(id_chtab_2_kid, 400, "KID.DAT", 1<<7);
 }
 
+const char* save_file = "PRINCE.SAV";
+
+const char* get_save_path(char* custom_path_buffer, size_t max_len) {
+	if (!use_custom_levelset) {
+		return save_file;
+	}
+	// if playing a custom levelset, try to use the mod folder
+	snprintf(custom_path_buffer, max_len, "mods/%s/%s", levelset_name, save_file /*PRINCE.SAV*/ );
+	return custom_path_buffer;
+}
+
 // seg000:1D45
 void __pascal far save_game() {
 	word success;
 	int handle;
 	success = 0;
+	char custom_save_path[POP_MAX_PATH];
+	const char* save_path = get_save_path(custom_save_path, sizeof(custom_save_path));
 	// no O_TRUNC
-	handle = open("PRINCE.SAV", O_WRONLY | O_CREAT | O_BINARY, 0600);
+	handle = open(save_path, O_WRONLY | O_CREAT | O_BINARY, 0600);
 	if (handle == -1) goto loc_1DB8;
 	if (write(handle, &rem_min, 2) == 2) goto loc_1DC9;
 	loc_1D9B:
 	close(handle);
 	if (!success) {
-		unlink("PRINCE.SAV");
+		unlink(save_path);
 	}
 	loc_1DB8:
 	if (!success) goto loc_1E18;
@@ -1628,7 +1820,9 @@ short __pascal far load_game() {
 	int handle;
 	word success;
 	success = 0;
-	handle = open("PRINCE.SAV", O_RDONLY | O_BINARY);
+	char custom_save_path[POP_MAX_PATH];
+	const char* save_path = get_save_path(custom_save_path, sizeof(custom_save_path));
+	handle = open(save_path, O_RDONLY | O_BINARY);
 	if (handle == -1) goto loc_1E99;
 	if (read(handle, &rem_min, 2) == 2) goto loc_1E9E;
 	loc_1E8E:
@@ -1640,7 +1834,7 @@ short __pascal far load_game() {
 	if (read(handle, &start_level, 2) != 2) goto loc_1E8E;
 	if (read(handle, &hitp_beg_lev, 2) != 2) goto loc_1E8E;
 #ifdef USE_COPYPROT
-	if (options.enable_copyprot && copyprot_level > 0) {
+	if (enable_copyprot && copyprot_level > 0) {
 		copyprot_level = start_level;
 	}
 #endif
@@ -1691,6 +1885,27 @@ void __pascal far free_optional_sounds() {
 	}
 	*/
 	// stub
+}
+
+const byte tbl_snd_is_music[] = {
+		0,0,0,0,0,0,0,0,0,0, //9
+		0,0,0,0,0,0,0,0,0,0, //19
+		0,0,0,0,1,1,1,1,1,1, //29
+		1,0,1,1,1,1,1,1,0,1, //39
+		1,1,0,1,0,0,0,0,0,0, //49
+		1,0,1,1,1,1,1
+};
+
+void reload_non_music_sounds() {
+	int i;
+	for (i = 0; i < COUNT(tbl_snd_is_music); ++i) {
+		if (!tbl_snd_is_music[i]) {
+			free_sound(sound_pointers[i]);
+			sound_pointers[i] = NULL;
+		}
+	}
+	load_sounds(0, 43);
+	load_opt_sounds(44, 56);
 }
 
 // seg000:22BB
@@ -1811,4 +2026,55 @@ void __pascal far show_quotes() {
 		start_timer(timer_0,0x384);
 	}
 	need_quotes = 0;
+}
+
+const rect_type splash_text_1_rect = {0, 0, 50, 320};
+const rect_type splash_text_2_rect = {50, 0, 200, 320};
+
+const char* splash_text_1 = "SDLPoP " SDLPOP_VERSION;
+const char* splash_text_2 =
+		"To quick load/save, press F6/F9 in-game.\n"
+		"\n"
+#ifdef USE_REPLAY
+		"To record replays, press Ctrl+Tab in-game.\n"
+		"To view replays, press Tab on the title screen.\n"
+		"\n"
+#endif
+		"Edit SDLPoP.ini to customize SDLPoP.\n"
+		"Mods also work with SDLPoP.\n"
+		"\n"
+		"For more information, read doc/Readme.txt.\n"
+		"Questions? Visit http://forum.princed.org\n"
+		"\n"
+		"Press any key to continue...";
+
+void show_splash() {
+	if (!enable_info_screen || start_level != 0) return;
+	screen_updates_suspended = 0;
+	current_target_surface = onscreen_surface_;
+	draw_rect(&screen_rect, 0);
+	show_text_with_color(&splash_text_1_rect, 0, 0, splash_text_1, color_15_brightwhite);
+	show_text_with_color(&splash_text_2_rect, 0, -1, splash_text_2, color_7_lightgray);
+
+	int key = 0;
+	do {
+		idle();
+		key = key_test_quit();
+
+		if (joy_hat_states[0] != 0 || joy_X_button_state != 0 || joy_AY_buttons_state != 0 || joy_B_button_state != 0) {
+			joy_hat_states[0] = 0;
+			joy_AY_buttons_state = 0;
+			joy_X_button_state = 0;
+			joy_B_button_state = 0;
+			key_states[SDL_SCANCODE_LSHIFT] = 1; // close the splash screen using the gamepad
+		}
+
+	} while(key == 0 && !(key_states[SDL_SCANCODE_LSHIFT] || key_states[SDL_SCANCODE_RSHIFT]));
+
+	if (key & WITH_CTRL || (enable_quicksave && key == SDL_SCANCODE_F9) || (enable_replay && key == SDL_SCANCODE_TAB)) {
+		extern int last_key_scancode; // defined in seg009.c
+		last_key_scancode = key; // can immediately do Ctrl+L, etc from the splash screen
+	}
+	key_states[SDL_SCANCODE_LSHIFT] = 0; // don't immediately start the game if shift was pressed!
+	key_states[SDL_SCANCODE_RSHIFT] = 0;
 }

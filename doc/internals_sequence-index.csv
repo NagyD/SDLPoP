@@ -1,0 +1,115 @@
+index;who;meaning
+1;kid; start run and run (also in ending)
+2;kid; stand (also resurrect)
+3;kid; standing jump
+4;kid; run-jump
+5;kid; turn (also level entry)
+6;kid; run-turn
+7;kid; fall after stand, run, step, crouch (also level 1 entry)
+8;kid; // jump up and grab (when?)
+9;;
+10;kid; climb up
+11;kid; end of climb down (release ledge with floor below)
+12;;
+13;kid; stop run (also in ending)
+14;kid; jump up with wall or floor above
+15;kid; grab a ledge (after falling)
+16;kid; jump up and grab (no floor behind)
+17;kid; soft land (crouch)
+18;kid; fall after standing jump
+19;kid; fall after jumping up
+20;kid; hard land (crouch, lose 1 HP)
+21;kid; fall after running jump
+22;kid, guard; dead (after falling, or because of loose floor)
+23;kid; release ledge and fall
+24;kid; jump up and grab (with floor behind)
+25;kid; hang against wall (straight)
+26;kid; crouch while running
+27;;
+28;kid; jump up with nothing above
+29;kid;safe step to edge (1 unit)
+30;kid;safe step to edge (2 units)
+31;kid;safe step to edge (3 units)
+32;kid;safe step to edge (4 units)
+33;kid;safe step to edge (5 units)
+34;kid;safe step to edge (6 units)
+35;kid;safe step to edge (7 units)
+36;kid;safe step to edge (8 units)
+37;kid;safe step to edge (9 units)
+38;kid;safe step to edge (10 units)
+39;kid; safe step to edge (11 units) / safe step with no edge near / step off edge
+40;kid;safe step to edge (12 units)
+41;kid;safe step to edge (13 units)
+42;kid;safe step to edge (14 units)
+43;kid; start run and run (after turning)
+44;kid; step on edge
+45;kid; fall after bumped
+46;kid; bump into wall after run-jump (crouch)
+47;kid; bump into wall or opponent
+48;;
+49;kid; stand up from crouch
+50;kid; crouch
+51;kid, guard; spiked
+52;kid;loose floor fell on kid
+53;;
+54;kid, guard; chomped
+55;kid; draw sword
+56;guard; forward with sword (guard)
+57;kid, guard; back with sword
+58;guard; strike with sword (guard)
+59;;
+60;kid, guard; turn with sword (after switching places)
+61;kid, guard; parry after striking with sword
+62;kid, guard; defend (parry) with sword
+63;guard; stand active after landing / when entering room (skeleton)
+64;kid, (guard?); pushed back (by gate) with sword
+65;kid, guard; pushed forward (by wall,gate) with sword
+66;kid, guard; strike after parrying (restrike?) with sword
+67;;
+68;kid; climb down
+69;kid, guard; attack was parried
+70;kid; go up on level door
+71;kid, guard; dying (not stabbed: k, potion)
+72;;
+73;kid; climb up to closed gate (or chomper/mirror) and down
+74;kid, guard; being hit with sword
+75;kid; strike with sword (kid)
+76;;
+77;guard; stand inactive (when entering room)
+78;kid; drink
+79;kid; crouch-hop
+80;guard; stand flipped (guard)
+81;kid, guard; fall after backing with sword / kid is pushed off the ledge / killed and pushed off ledge
+82;guard; guard is pushed off the ledge
+83;guard; fall after forwarding with sword (when guard follows kid down) / fall with sword (e.g. guard without floor)
+84;kid; run (level 13 entry)
+85;kid, guard; dying (stabbed)
+86;kid; forward with sword (kid)
+87;guard; stand inactive (when kid leaves sight)
+88;skeleton; skel wake up
+89;kid; turn and draw sword
+90;guard; stand active
+91;kid; get sword
+92;kid, shadow; put sword away (guard died)
+93;kid; put sword away fast (down pressed)
+94;princess (intro); princess stand [PV1]
+95;Jaffar (intro); Jaffar stand [PV1]
+96;Jaffar (intro); Jaffar walk [PV1]
+97;Jaffar (intro); Jaffar stop [PV1]
+98;princess (intro); princess turn around [PV1]
+99;princess (intro); princess step back [PV1]
+100;Jaffar (intro); Jaffar end conjuring and walk [PV1]
+101;mouse; mouse stands up (ending)
+102;Jaffar (intro); Jaffar conjuring [PV1]
+103;princess (cutscenes); princess lying (cutscene 4) [PV2]
+104;kid; // start fall (when?)
+105;mouse; mouse go forward
+106;mouse; mouse stop (cutscene 8)
+107;mouse; mouse stand up and go
+108;princess (cutscenes); princess turn and hug (ending) [PV2]
+109;princess (cutscenes); princess standing (ending) [PV2]
+110;princess (cutscenes); princess crouching (cutscene 8) [PV2]
+111;princess (cutscenes); princess stand up (cutscene 8) [PV2]
+112;princess (cutscenes); princess crouch down and stroke (cutscene 9) [PV2]
+113;princess (intro); princess look down [PV1]
+114;mouse; mouse stand (cutscene 9)

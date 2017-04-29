@@ -1,5 +1,4 @@
 # Project: SDLPoP
-# Makefile created by Dev-C++ 4.9.9.2
 
 CC = gcc
 RM = rm -f
@@ -26,7 +25,7 @@ clean:
 	$(RM) $(OBJ) $(BIN)
 
 $(BIN): $(OBJ)
-	$(CC) $(LDFLAGS) $(OBJ) -o $@ $(LIBS)
+	$(CC) $(LDFLAGS) $(OBJ) -o $@ $(LIBS) -lm
 
 %.o: %.c $(HFILES)
 	$(CC) $(CFLAGS) $(LDFLAGS) -c $<

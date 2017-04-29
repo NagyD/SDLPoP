@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2015  Dávid Nagy
+Copyright (C) 2013-2017  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -113,7 +113,7 @@ const char* __pascal far check_param(const char *param) {
 
 		// List of params that expect a specifier ('sub-') arg directly after it (e.g. the mod's name, after "mod" arg)
 		// Such sub-args may conflict with the normal params (so, we should 'skip over' them)
-		static const char params_with_one_subparam[][8] = { "mod", /*...*/ };
+		static const char params_with_one_subparam[][16] = { "mod", "validate", /*...*/ };
 
 		bool curr_arg_has_one_subparam = false;
 		int i;
@@ -145,19 +145,38 @@ int __pascal far pop_wait(int timer_index,int time) {
 	return do_wait(timer_index);
 }
 
+static FILE* open_dat_from_root_or_data_dir(const char* filename) {
+	FILE* fp = NULL;
+	fp = fopen(filename, "rb");
+
+	// if failed, try if the DAT file can be opened in the data/ directory, instead of the main folder
+	if (fp == NULL) {
+		char data_path[POP_MAX_PATH];
+		snprintf(data_path, sizeof(data_path), "data/%s", filename);
+
+		// verify that this is a regular file and not a directory (otherwise, don't open)
+		struct stat path_stat;
+		stat(data_path, &path_stat);
+		if (S_ISREG(path_stat.st_mode)) {
+			fp = fopen(data_path, "rb");
+		}
+	}
+	return fp;
+}
+
 // seg009:0F58
 dat_type *__pascal open_dat(const char *filename,int drive) {
 	FILE* fp = NULL;
 	if (!use_custom_levelset) {
-		fp = fopen(filename, "rb");
+		fp = open_dat_from_root_or_data_dir(filename);
 	}
 	else {
-		char filename_mod[256];
+		char filename_mod[POP_MAX_PATH];
 		// before checking the root directory, first try mods/MODNAME/
 		snprintf(filename_mod, sizeof(filename_mod), "mods/%s/%s", levelset_name, filename);
 		fp = fopen(filename_mod, "rb");
 		if (fp == NULL) {
-			fp = fopen(filename, "rb");
+			fp = open_dat_from_root_or_data_dir(filename);
 		}
 	}
 	dat_header_type dat_header;
@@ -587,13 +606,20 @@ int __pascal far set_joy_mode() {
 	if (SDL_NumJoysticks() < 1) {
 		is_joyst_mode = 0;
 	} else {
-		sdl_controller_ = SDL_JoystickOpen( 0 );
+		sdl_controller_ = SDL_GameControllerOpen(0);
 		if (sdl_controller_ == NULL) {
 			is_joyst_mode = 0;
 		} else {
 			is_joyst_mode = 1;
 		}
 	}
+	if (enable_controller_rumble && is_joyst_mode) {
+		sdl_haptic = SDL_HapticOpen(0);
+		SDL_HapticRumbleInit(sdl_haptic); // initialize the device for simple rumble
+	} else {
+		sdl_haptic = NULL;
+	}
+
 	is_keyboard_mode = !is_joyst_mode;
 	return is_joyst_mode;
 }
@@ -620,25 +646,6 @@ void __pascal far free_peel(peel_type *peel_ptr) {
 	SDL_FreeSurface(peel_ptr->peel);
 	free(peel_ptr);
 }
-
-const rgb_type vga_palette[] = {
-{0x00, 0x00, 0x00},
-{0x00, 0x00, 0x2A},
-{0x00, 0x2A, 0x00},
-{0x00, 0x2A, 0x2A},
-{0x2A, 0x00, 0x00},
-{0x2A, 0x00, 0x2A},
-{0x2A, 0x15, 0x00},
-{0x2A, 0x2A, 0x2A},
-{0x15, 0x15, 0x15},
-{0x15, 0x15, 0x3F},
-{0x15, 0x3F, 0x15},
-{0x15, 0x3F, 0x3F},
-{0x3F, 0x15, 0x15},
-{0x3F, 0x15, 0x3F},
-{0x3F, 0x3F, 0x15},
-{0x3F, 0x3F, 0x3F},
-};
 
 // seg009:182F
 void __pascal far set_hc_pal() {
@@ -1047,7 +1054,10 @@ const rect_type far *__pascal draw_text(const rect_type far *rect_ptr,int x_alig
 void __pascal far show_text(const rect_type far *rect_ptr,int x_align,int y_align,const char far *text) {
 	// stub
 	//printf("show_text: %s\n",text);
+	int temp = screen_updates_suspended;
+	screen_updates_suspended = 1;
 	draw_text(rect_ptr, x_align, y_align, text, strlen(text));
+	screen_updates_suspended = temp;
 	request_screen_update();
 }
 
@@ -1100,7 +1110,7 @@ int __pascal far showmessage(char far *text,int arg_4,void far *arg_0) {
 	} while(key == 0);
 	//restore_dialog_peel_2(copyprot_dialog->peel);
 	//current_target_surface = old_target;
-	redraw_screen(0); // lazy: instead of neatly restoring only the relevant part, just redraw the whole screen
+	need_full_redraw = 1; // lazy: instead of neatly restoring only the relevant part, just redraw the whole screen
 	return key;
 }
 
@@ -1496,6 +1506,7 @@ void stop_digi() {
 	SDL_UnlockAudio();
 #else
 	Mix_HaltChannel(-1);
+	Mix_HaltMusic();
 	digi_playing = 0;
 #endif
 }
@@ -1586,6 +1597,9 @@ void channel_finished(int channel) {
 	event.user.code = userevent_SOUND;
 	SDL_PushEvent(&event);
 }
+void music_finished() {
+	channel_finished(-1);
+}
 #endif
 
 int digi_unavailable = 0;
@@ -1619,6 +1633,7 @@ void init_digi() {
 	}
 	Mix_AllocateChannels(1);
 	Mix_ChannelFinished(channel_finished);
+	Mix_HookMusicFinished(music_finished);
 #endif
 	digi_audiospec = desired;
 }
@@ -1636,7 +1651,7 @@ void load_sound_names() {
 	sound_names = (char**) calloc(sizeof(char*) * max_sound_id, 1);
 	while (!feof(fp)) {
 		int index;
-		char name[256];
+		char name[POP_MAX_PATH];
 		if (fscanf(fp, "%d=%255s\n", &index, /*sizeof(name)-1,*/ name) != 2) {
 			perror(names_path);
 			continue;
@@ -1673,7 +1688,7 @@ sound_buffer_type* load_sound(int index) {
 			const char* exts[]={"ogg","mp3","flac","wav"};
 			int i;
 			for (i = 0; i < COUNT(exts); ++i) {
-				char filename[256];
+				char filename[POP_MAX_PATH];
 				const char* ext=exts[i];
 				struct stat info;
 
@@ -1682,16 +1697,16 @@ sound_buffer_type* load_sound(int index) {
 				if (stat(filename, &info))
 					continue;
 				//printf("Trying to load %s\n", filename);
-				Mix_Chunk* chunk = Mix_LoadWAV(filename);
-				if (chunk == NULL) {
+				Mix_Music* music = Mix_LoadMUS(filename);
+				if (music == NULL) {
 					sdlperror(filename);
 					//sdlperror("Mix_LoadWAV");
 					continue;
 				}
 				//printf("Loaded sound from %s\n", filename);
 				result = malloc(sizeof(sound_buffer_type));
-				result->type = sound_chunk;
-				result->chunk = chunk;
+				result->type = sound_music;
+				result->music = music;
 				break;
 			}
 		} else {
@@ -1721,6 +1736,16 @@ void __pascal far play_chunk_sound(sound_buffer_type far *buffer) {
 	//printf("playing chunk sound %p\n", buffer);
 	if (Mix_PlayChannel(sound_channel, buffer->chunk, 0) == -1) {
 		sdlperror("Mix_PlayChannel");
+	}
+	digi_playing = 1;
+}
+
+void __pascal far play_music_sound(sound_buffer_type far *buffer) {
+	init_digi();
+	if (digi_unavailable) return;
+	stop_sounds();
+	if (Mix_PlayMusic(buffer->music, 0) == -1) {
+		sdlperror("Mix_PlayMusic");
 	}
 	digi_playing = 1;
 }
@@ -1846,19 +1871,27 @@ void free_sound(sound_buffer_type far *buffer) {
 	if (buffer->type == sound_chunk) {
 		Mix_FreeChunk(buffer->chunk);
 	}
+	if (buffer->type == sound_music) {
+		Mix_FreeMusic(buffer->music);
+	}
 #endif
 	free(buffer);
 }
 
 // seg009:7220
 void __pascal far play_sound_from_buffer(sound_buffer_type far *buffer) {
+	
+#ifdef USE_REPLAY
+	if (replaying && skipping_replay) return;
+#endif
+
 	// stub
 	if (buffer == NULL) {
 		printf("Tried to play NULL sound.\n");
 		//quit(1);
 		return;
 	}
-	switch (buffer->type & 3) {
+	switch (buffer->type & 7) {
 		case sound_speaker:
 			play_speaker_sound(buffer);
 		break;
@@ -1868,6 +1901,9 @@ void __pascal far play_sound_from_buffer(sound_buffer_type far *buffer) {
 #ifdef USE_MIXER
 		case sound_chunk:
 			play_chunk_sound(buffer);
+		break;
+		case sound_music:
+			play_music_sound(buffer);
 		break;
 #endif
 		default:
@@ -1896,7 +1932,8 @@ int __pascal far check_sound_playing() {
 
 // seg009:38ED
 void __pascal far set_gr_mode(byte grmode) {
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_NOPARACHUTE | SDL_INIT_JOYSTICK ) != 0) {
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_NOPARACHUTE |
+				 SDL_INIT_GAMECONTROLLER | SDL_INIT_HAPTIC ) != 0) {
 		sdlperror("SDL_Init");
 		quit(1);
 	}
@@ -1908,16 +1945,27 @@ void __pascal far set_gr_mode(byte grmode) {
 	flags |= SDL_WINDOW_RESIZABLE;
 
 	// Should use different default window dimensions when using 4:3 aspect ratio
-	if (options.use_correct_aspect_ratio && pop_window_width == 640 && pop_window_height == 400) {
+	if (use_correct_aspect_ratio && pop_window_width == 640 && pop_window_height == 400) {
 		pop_window_height = 480;
 	}
+
+#ifdef USE_REPLAY
+	if (!is_validate_mode) // run without a window if validating a replay
+#endif
 	window_ = SDL_CreateWindow(WINDOW_TITLE,
 										  SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 										  pop_window_width, pop_window_height, flags);
 	renderer_ = SDL_CreateRenderer(window_, -1 , SDL_RENDERER_ACCELERATED );
+
+	SDL_Surface* icon = IMG_Load("data/icon.png");
+	if (icon == NULL) {
+		sdlperror("Could not load icon");
+	} else {
+		SDL_SetWindowIcon(window_, icon);
+	}
 	
 	// Allow us to use a consistent set of screen co-ordinates, even if the screen size changes
-	if (options.use_correct_aspect_ratio) {
+	if (use_correct_aspect_ratio) {
 		SDL_RenderSetLogicalSize(renderer_, 320*5, 200*6);
 	} else {
 		SDL_RenderSetLogicalSize(renderer_, 320, 200);
@@ -1958,6 +2006,9 @@ void __pascal far set_gr_mode(byte grmode) {
 }
 
 void request_screen_update() {
+#ifdef USE_REPLAY
+	if (replaying && skipping_replay) return;
+#endif
 	if (!screen_updates_suspended) {
 #ifdef USE_EDITOR
 		surface_type* onscreen_surface_copy;
@@ -2037,7 +2088,7 @@ int __pascal far get_text_color(int cga_color,int low_half,int high_half_mask) {
 }
 
 void load_from_opendats_metadata(int resource_id, const char* extension, FILE** out_fp, data_location* result, byte* checksum, int* size, dat_type** out_pointer) {
-	char image_filename[256];
+	char image_filename[POP_MAX_PATH];
 	FILE* fp = NULL;
 	dat_type* pointer;
 	*result = data_none;
@@ -2069,13 +2120,20 @@ void load_from_opendats_metadata(int resource_id, const char* extension, FILE** 
 			}
 		} else {
 			// If it's a directory:
-			snprintf(image_filename,sizeof(image_filename),"data/%s/res%d.%s",pointer->filename, resource_id, extension);
+			char filename_no_ext[POP_MAX_PATH];
+			// strip the .DAT file extension from the filename (use folders simply named TITLE, KID, VPALACE, etc.)
+			strncpy(filename_no_ext, pointer->filename, sizeof(filename_no_ext));
+			size_t len = strlen(filename_no_ext);
+			if (len >= 5 && filename_no_ext[len-4] == '.') {
+				filename_no_ext[len-4] = '\0'; // terminate, so ".DAT" is deleted from the filename
+			}
+			snprintf(image_filename,sizeof(image_filename),"data/%s/res%d.%s",filename_no_ext, resource_id, extension);
 			if (!use_custom_levelset) {
 				//printf("loading (binary) %s",image_filename);
 				fp = fopen(image_filename, "rb");
 			}
 			else {
-				char image_filename_mod[256];
+				char image_filename_mod[POP_MAX_PATH];
 				// before checking data/, first try mods/MODNAME/data/
 				snprintf(image_filename_mod, sizeof(image_filename_mod), "mods/%s/%s", levelset_name, image_filename);
 				//printf("loading (binary) %s",image_filename_mod);
@@ -2221,10 +2279,12 @@ image_type far * __pascal far method_3_blit_mono(image_type far *image,int xpos,
     SDL_Surface* colored_image = SDL_ConvertSurfaceFormat(image, SDL_PIXELFORMAT_ARGB8888, 0);
 
     SDL_SetSurfaceBlendMode(colored_image, SDL_BLENDMODE_NONE);
+	/* Causes problems with SDL 2.0.5 (see #105)
 	if (SDL_SetColorKey(colored_image, SDL_TRUE, 0) != 0) {
 		sdlperror("SDL_SetColorKey");
 		quit(1);
 	}
+	*/
 
 	if (SDL_LockSurface(colored_image) != 0) {
 		sdlperror("SDL_LockSurface");
@@ -2461,6 +2521,9 @@ Uint32 timer_callback(Uint32 interval, void *param) {
 }
 
 void __pascal start_timer(int timer_index, int length) {
+#ifdef USE_REPLAY
+	if (replaying && skipping_replay) return;
+#endif
 #ifndef USE_COMPAT_TIMER
 	if (timer_handles[timer_index]) {
 		remove_timer(timer_index);
@@ -2570,75 +2633,47 @@ void idle() {
 			case SDL_KEYUP:
 				key_states[event.key.keysym.scancode] = 0;
 				break;
+			case SDL_CONTROLLERAXISMOTION:
+				if (event.caxis.axis < 6) joy_axis[event.caxis.axis] = event.caxis.value;
+				break;
+			case SDL_CONTROLLERBUTTONDOWN:
+				switch (event.cbutton.button)
+				{
+					case SDL_CONTROLLER_BUTTON_DPAD_LEFT:  joy_hat_states[0] = -1; break; // left
+					case SDL_CONTROLLER_BUTTON_DPAD_RIGHT: joy_hat_states[0] = 1;  break; // right
+					case SDL_CONTROLLER_BUTTON_DPAD_UP:    joy_hat_states[1] = -1; break; // up
+					case SDL_CONTROLLER_BUTTON_DPAD_DOWN:  joy_hat_states[1] = 1;  break; // down
 
-			case SDL_JOYAXISMOTION:
-				if (event.jaxis.axis == 0) {
+					case SDL_CONTROLLER_BUTTON_A:          joy_AY_buttons_state = 1;  break; /*** A (down) ***/
+					case SDL_CONTROLLER_BUTTON_Y:          joy_AY_buttons_state = -1; break; /*** Y (up) ***/
+					case SDL_CONTROLLER_BUTTON_X:          joy_X_button_state = 1;    break; /*** X (shift) ***/
+					case SDL_CONTROLLER_BUTTON_B:          joy_B_button_state = 1;    break; /*** B (unused) ***/
 
-					if (event.jaxis.value < -8000)
-						gamepad_states[0] = -1;	// left
+					case SDL_CONTROLLER_BUTTON_START:
+						last_key_scancode = SDL_SCANCODE_R | WITH_CTRL; /*** start (restart game) ***/
+						break;
 
-					else if (event.jaxis.value > 8000)
-						gamepad_states[0] = 1; // right
+					case SDL_CONTROLLER_BUTTON_BACK:
+						last_key_scancode = SDL_SCANCODE_A | WITH_CTRL;  /*** back (restart level) ***/
+						break;
 
-					else
-						gamepad_states[0] = 0;
-				}
-
-				if (event.jaxis.axis == 1) {
-					if (event.jaxis.value < -8000)
-						gamepad_states[1] = -1; // up
-
-					else if (event.jaxis.value > 8000)
-						gamepad_states[1] = 1; // down
-
-					else
-						gamepad_states[1] = 0;
+					default: break;
 				}
 				break;
-			case SDL_JOYHATMOTION:
-				switch (event.jhat.value)
+			case SDL_CONTROLLERBUTTONUP:
+				switch (event.cbutton.button)
 				{
-					case 1: gamepad_states[1] = -1; break; // up
-					case 2: gamepad_states[0] = 1; break; // right
-					case 3: gamepad_states[0] = 1; gamepad_states[1] = -1; break; // right (and up)
-					case 4: gamepad_states[1] = 1; break;	// down
-					case 6: gamepad_states[0] = 1; gamepad_states[1] = 1; break; // right (and down)
-					case 8: gamepad_states[0] = -1; break; // left
-					case 9: gamepad_states[0] = -1; gamepad_states[1] = -1; break; // left (and up)
-					case 12: gamepad_states[0] = -1; gamepad_states[1] = 1; break; // left (and down)
-					default: gamepad_states[0] = 0; gamepad_states[1] = 0;  break;
-				}
-				break;
-			case SDL_JOYBUTTONDOWN:
-				switch (event.jbutton.button)
-				{
-					case 0: gamepad_states[1] = 1; break; /*** A (down) ***/
-					case 1: break; /*** B ***/
-					case 2: gamepad_states[2] = 1; break; /*** X (shift) ***/
-					case 3: gamepad_states[1] = -1; break; /*** Y (up) ***/
-					case 4: break; /*** left shoulder ***/
-					case 5: break; /*** right shoulder ***/
-					case 6: break; /*** back ***/
-					case 7: quit(0); break; /*** start (quit) ***/
-					case 8: break; /*** guide ***/
-					case 9: break; /*** left joystick ***/
-					case 10: break; /*** right joystick ***/
-				}
-				break;
-			case SDL_JOYBUTTONUP:
-				switch (event.jbutton.button)
-				{
-					case 0: gamepad_states[1] = 0; break; /*** A (down) ***/
-					case 1: break; /*** B ***/
-					case 2: gamepad_states[2] = 0; break; /*** X (shift) ***/
-					case 3: gamepad_states[1] = 0; break; /*** Y (up) ***/
-					case 4: break; /*** left shoulder ***/
-					case 5: break; /*** right shoulder ***/
-					case 6: break; /*** back ***/
-					case 7: break; /*** start ***/
-					case 8: break; /*** guide ***/
-					case 9: break; /*** left joystick ***/
-					case 10: break; /*** right joystick ***/
+					case SDL_CONTROLLER_BUTTON_DPAD_LEFT:  joy_hat_states[0] = 0; break; // left
+					case SDL_CONTROLLER_BUTTON_DPAD_RIGHT: joy_hat_states[0] = 0; break; // right
+					case SDL_CONTROLLER_BUTTON_DPAD_UP:    joy_hat_states[1] = 0; break; // up
+					case SDL_CONTROLLER_BUTTON_DPAD_DOWN:  joy_hat_states[1] = 0; break; // down
+
+					case SDL_CONTROLLER_BUTTON_A:          joy_AY_buttons_state = 0; break; /*** A (down) ***/
+					case SDL_CONTROLLER_BUTTON_Y:          joy_AY_buttons_state = 0; break; /*** Y (up) ***/
+					case SDL_CONTROLLER_BUTTON_X:          joy_X_button_state = 0;   break; /*** X (shift) ***/
+					case SDL_CONTROLLER_BUTTON_B:          joy_B_button_state = 0;   break; /*** B (unused) ***/
+
+					default: break;
 				}
 				break;
 			case SDL_TEXTINPUT:
@@ -2721,6 +2756,10 @@ int __pascal do_wait(int timer_index) {
 }
 
 void __pascal do_simple_wait(int timer_index) {
+#ifdef USE_REPLAY
+	if ((replaying && skipping_replay) || is_validate_mode) return;
+#endif
+
 	while (! has_timer_stopped(timer_index)) {
 		idle();
 	}
@@ -2764,7 +2803,7 @@ void __pascal far set_bg_attr(int vga_pal_index,int hc_pal_index) {
 	// stub
 #ifdef USE_FLASH
 	//palette[vga_pal_index] = vga_palette[hc_pal_index];
-	if (!options.enable_flash) return;
+	if (!enable_flash) return;
 	if (vga_pal_index == 0) {
 		/*
 		if (SDL_SetAlpha(offscreen_surface, SDL_SRCALPHA, 0) != 0) {

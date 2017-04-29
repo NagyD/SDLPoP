@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2015  Dávid Nagy
+Copyright (C) 2013-2017  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -66,11 +66,13 @@ short __pascal far load_game();
 void __pascal far clear_screen_and_sounds();
 void __pascal far parse_cmdline_sound();
 void __pascal far free_optional_sounds();
+void reload_non_music_sounds();
 void __pascal far free_optsnd_chtab();
 void __pascal far load_title_images(int bgcolor);
 void __pascal far show_copyprot(int where);
 void __pascal far show_loading();
 void __pascal far show_quotes();
+void show_splash();
 #ifdef USE_QUICKSAVE
 void check_quick_op();
 void restore_room_after_quick_load();
@@ -609,13 +611,15 @@ void check_seqtable_matches_original();
 #endif
 
 // OPTIONS.C
-void use_default_options();
 void disable_fixes_and_enhancements();
-void load_options();
+void load_global_options();
+void check_mod_param();
+void load_mod_options();
 void show_use_fixes_and_enhancements_prompt();
 
 // REPLAY.C
 #ifdef USE_REPLAY
+void start_with_replay_file(const char *filename);
 void init_record_replay();
 void replay_restore_level();
 int restore_savestate_from_buffer();
@@ -623,10 +627,11 @@ void start_recording();
 void add_replay_move();
 void stop_recording();
 void start_replay();
+void end_replay();
 void do_replay_move();
-void save_recorded_replay();
+int save_recorded_replay();
 void replay_cycle();
-void load_replay();
+int load_replay();
 void key_press_while_recording(int* key_ptr);
 void key_press_while_replaying(int* key_ptr);
 #endif

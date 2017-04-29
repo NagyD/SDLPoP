@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2015  Dávid Nagy
+Copyright (C) 2013-2017  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@ extern word resurrect_time;
 // data:42B4
 extern word dont_reset_time;
 // data:4F7E
-extern word rem_min;
+extern short rem_min;
 // data:4F82
 extern word rem_tick;
 // data:4608
@@ -128,6 +128,25 @@ extern /*const*/ word tbl_level_color[16] INIT(= {0, 0, 0, 1, 0, 0, 0, 1, 2, 2, 
 extern word current_level INIT(= -1);
 // data:3021
 extern byte graphics_mode INIT(= 0);
+// data:2BA6
+extern rgb_type vga_palette[16] INIT(= {
+		{0x00, 0x00, 0x00},
+		{0x00, 0x00, 0x2A},
+		{0x00, 0x2A, 0x00},
+		{0x00, 0x2A, 0x2A},
+		{0x2A, 0x00, 0x00},
+		{0x2A, 0x00, 0x2A},
+		{0x2A, 0x15, 0x00},
+		{0x2A, 0x2A, 0x2A},
+		{0x15, 0x15, 0x15},
+		{0x15, 0x15, 0x3F},
+		{0x15, 0x3F, 0x15},
+		{0x15, 0x3F, 0x3F},
+		{0x3F, 0x15, 0x15},
+		{0x3F, 0x15, 0x3F},
+		{0x3F, 0x3F, 0x15},
+		{0x3F, 0x3F, 0x3F},
+});
 
 // data:4CC0
 extern word room_L;
@@ -303,6 +322,25 @@ extern word demo_mode INIT(= 0);
 // data:42CA
 extern word is_cutscene;
 
+// data:0FA0
+extern cutscene_ptr_type tbl_cutscenes[16] INIT(= {
+		NULL,
+		NULL,
+		cutscene_2_6,
+		NULL,
+		cutscene_4,
+		NULL,
+		cutscene_2_6,
+		NULL,
+		cutscene_8,
+		cutscene_9,
+		NULL,
+		NULL,
+		cutscene_12,
+		NULL,
+		NULL,
+		NULL,
+});
 
 // data:408C
 extern short mobs_count;
@@ -356,6 +394,8 @@ extern byte redraw_frames_fore[30];
 extern byte tile_object_redraw[30];
 // data:4C64
 extern byte redraw_frames_above[10];
+// data:4CE2
+extern word need_full_redraw;
 // data:588E
 extern short n_curr_objs;
 // data:5BAC
@@ -524,9 +564,16 @@ extern SDL_Surface* onscreen_surface_;
 extern SDL_Renderer* renderer_;
 extern SDL_Window* window_;
 extern SDL_Texture* sdl_texture_;
-extern SDL_Joystick* sdl_controller_ INIT( = 0 );
 
-extern int gamepad_states[3] INIT( = { 0, 0, 0 } ); // hor, ver, shift
+extern SDL_GameController* sdl_controller_ INIT( = 0 );
+extern int joy_axis[6]; // hor/ver axes for left/right sticks + left and right triggers (in total 6 axes)
+extern int joy_left_stick_states[2]; // horizontal, vertical
+extern int joy_right_stick_states[2];
+extern int joy_hat_states[2]; // horizontal, vertical
+extern int joy_AY_buttons_state;
+extern int joy_X_button_state;
+extern int joy_B_button_state;
+extern SDL_Haptic* sdl_haptic;
 
 extern int screen_updates_suspended;
 
@@ -579,15 +626,69 @@ word need_full_redraw;
 extern byte recording INIT(= 0);
 extern byte replaying INIT(= 0);
 extern dword num_replay_ticks INIT(= 0);
+extern byte need_start_replay INIT(= 0);
 extern byte need_replay_cycle INIT(= 0);
+extern char replays_folder[POP_MAX_PATH] INIT(= "replays");
+extern byte special_move;
+extern dword saved_random_seed;
+extern dword preserved_seed;
+extern sbyte keep_last_seed;
+extern byte skipping_replay;
+extern byte replay_seek_target;
+extern byte is_validate_mode;
 #endif // USE_REPLAY
 
-extern options_type options INIT(= {{0}});
 extern byte start_fullscreen INIT(= 0);
 extern word pop_window_width INIT(= 640);
 extern word pop_window_height INIT(= 400);
 extern byte use_custom_levelset INIT(= 0);
-extern char levelset_name[256];
+extern char levelset_name[POP_MAX_PATH];
+
+extern byte use_fixes_and_enhancements INIT(= 0);
+extern byte enable_copyprot INIT(= 0);
+extern byte enable_mixer INIT(= 1);
+extern byte enable_fade INIT(= 1);
+extern byte enable_flash INIT(= 1);
+extern byte enable_text INIT(= 1);
+extern byte enable_info_screen INIT(= 1);
+extern byte enable_controller_rumble INIT(= 0);
+extern byte joystick_only_horizontal INIT(= 0);
+extern byte enable_quicksave INIT(= 1);
+extern byte enable_quicksave_penalty INIT(= 1);
+extern byte enable_replay INIT(= 1);
+extern byte enable_crouch_after_climbing INIT(= 1);
+extern byte enable_freeze_time_during_end_music INIT(= 1);
+extern byte fix_gate_sounds INIT(= 1);
+extern byte fix_two_coll_bug INIT(= 1);
+extern byte fix_infinite_down_bug INIT(= 1);
+extern byte fix_gate_drawing_bug INIT(= 0);
+extern byte fix_bigpillar_climb INIT(= 0);
+extern byte fix_jump_distance_at_edge INIT(= 1);
+extern byte fix_edge_distance_check_when_climbing INIT(= 1);
+extern byte fix_painless_fall_on_guard INIT(= 1);
+extern byte fix_wall_bump_triggers_tile_below INIT(= 1);
+extern byte fix_stand_on_thin_air INIT(= 1);
+extern byte fix_press_through_closed_gates INIT(= 1);
+extern byte fix_grab_falling_speed INIT(= 1);
+extern byte fix_skeleton_chomper_blood INIT(= 1);
+extern byte fix_move_after_drink INIT(= 1);
+extern byte fix_loose_left_of_potion INIT(= 1);
+extern byte fix_guard_following_through_closed_gates INIT(= 1);
+extern byte fix_safe_landing_on_spikes INIT(= 1);
+extern byte use_correct_aspect_ratio INIT(= 0);
+extern byte enable_remember_guard_hp INIT(= 1);
+extern byte fix_glide_through_wall INIT(= 1);
+extern byte fix_drop_through_tapestry INIT(= 1);
+extern byte fix_land_against_gate_or_tapestry INIT(= 1);
+extern byte fix_unintended_sword_strike INIT(= 1);
+extern byte fix_retreat_without_leaving_room INIT(= 1);
+extern byte fix_running_jump_through_tapestry INIT(= 1);
+extern byte fix_push_guard_into_wall INIT(= 1);
+extern byte fix_jump_through_wall_above_gate INIT(= 1);
+extern byte fix_chompers_not_starting INIT(= 1);
+extern byte fix_feather_interrupted_by_leveldoor INIT(= 1);
+extern byte fix_offscreen_guards_disappearing INIT(= 1);
+extern byte fix_move_after_sheathe INIT(= 1);
 
 // Custom Gameplay settings
 extern word start_minutes_left INIT(= 60);
@@ -603,12 +704,38 @@ extern byte drawn_tile_left_level_edge INIT(= tiles_20_wall);
 extern byte level_edge_hit_tile INIT(= tiles_20_wall);
 extern byte allow_triggering_any_tile INIT(= 0);
 extern byte enable_wda_in_palace INIT(= 0);
+extern word first_level INIT(= 1);
+extern byte skip_title INIT(= 0);
+extern word shift_L_allowed_until_level INIT(= 4);
+extern word shift_L_reduced_minutes INIT(= 15);
+extern word shift_L_reduced_ticks INIT(= 719);
 
 #ifdef USE_DEBUG_CHEATS
 extern byte debug_cheats_enabled INIT(= 0);
 extern const rect_type timer_rect INIT(= {1, 2, 8, 55});
 extern byte is_timer_displayed INIT(= 0);
 #endif
+
+// customized cutscene set-up: handled as index into a lookup table (can't rely on function pointers being stable!)
+extern byte tbl_cutscenes_by_index[16] INIT(= {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15});
+extern cutscene_ptr_type tbl_cutscenes_lookup[16] INIT(= {
+		NULL,
+		NULL,
+		cutscene_2_6,
+		NULL,
+		cutscene_4,
+		NULL,
+		cutscene_2_6,
+		NULL,
+		cutscene_8,
+		cutscene_9,
+		NULL,
+		NULL,
+		cutscene_12,
+		NULL,
+		NULL,
+		NULL,
+});
 
 #undef INIT
 #undef extern

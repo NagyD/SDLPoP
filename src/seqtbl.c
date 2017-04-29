@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2015  Dávid Nagy
+Copyright (C) 2013-2017  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -1136,7 +1136,7 @@ byte seqtbl[] = {
 
 void apply_seqtbl_patches() {
 #ifdef FIX_WALL_BUMP_TRIGGERS_TILE_BELOW
-    if (options.fix_wall_bump_triggers_tile_below)
+    if (fix_wall_bump_triggers_tile_below)
         SEQTBL_0[bumpfall + 1] = actions_3_in_midair; // instead of actions_5_bumped
 #endif
 }

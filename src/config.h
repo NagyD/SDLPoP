@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2015  Dávid Nagy
+Copyright (C) 2013-2017  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -27,7 +27,11 @@ The authors of this program may be contacted at http://forum.princed.org
 #define strcasecmp _stricmp
 #endif
 
-#define WINDOW_TITLE "Prince of Persia (SDLPoP) v1.16"
+#define POP_MAX_PATH 256
+#define POP_MAX_OPTIONS_SIZE 256
+
+#define SDLPOP_VERSION "1.17"
+#define WINDOW_TITLE "Prince of Persia (SDLPoP) v" SDLPOP_VERSION
 
 // Enable or disable fading.
 // Fading used to be very buggy, but now it works correctly.
@@ -86,6 +90,12 @@ The authors of this program may be contacted at http://forum.princed.org
 // Allow guard hitpoints not resetting to their default (maximum) value when re-entering the room
 #define REMEMBER_GUARD_HP
 
+// Enable completely disabling the time limit. To use this feature, set the starting time to -1.
+// This also disables the in-game messages that report how much time is left every minute.
+// The elasped time is still kept track of, so that the shortest times will appear in the Hall of Fame.
+#define ALLOW_INFINITE_TIME
+
+
 // Bugfixes:
 
 // The mentioned tricks can be found here: http://www.popot.org/documentation.php?doc=Tricks
@@ -101,11 +111,10 @@ The authors of this program may be contacted at http://forum.princed.org
 
 // When a gate is under another gate, the top of the bottom gate is not visible.
 // But this fix causes a drawing bug when a gate opens.
-//#define FIX_GATE_DRAWING_BUG
+#define FIX_GATE_DRAWING_BUG
 
 // When climbing up to a floor with a big pillar top behind, turned right, Kid sees through floor.
-// The current fix causes glitches you can see on bug_chomper.PNG and bug_climb.PNG .
-//#define FIX_BIGPILLAR_CLIMB
+#define FIX_BIGPILLAR_CLIMB
 
 // When climbing up two floors, turning around and jumping upward, the kid falls down.
 // This fix makes the workaround of Trick 25 unnecessary.
@@ -171,6 +180,19 @@ The authors of this program may be contacted at http://forum.princed.org
 
 // By doing a running jump into a wall, you can fall behind a closed gate two floors down. (e.g. skip in Level 7)
 #define FIX_JUMP_THROUGH_WALL_ABOVE_GATE
+
+// If you grab a ledge that is one or more floors down, the chompers on that row will not start.
+#define FIX_CHOMPERS_NOT_STARTING
+
+// As soon as a level door has completely opened, the feather fall effect is interrupted because the sound stops.
+#define FIX_FEATHER_INTERRUPTED_BY_LEVELDOOR
+
+// Guards will often not reappear in another room if they have been pushed (partly or entirely) offscreen.
+#define FIX_OFFSCREEN_GUARDS_DISAPPEARING
+
+// Controls do not get released properly when putting the sword away, leading to unintended movement.
+#define FIX_MOVE_AFTER_SHEATHE
+
 
 // Debug features:
 
