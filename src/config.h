@@ -30,8 +30,7 @@ The authors of this program may be contacted at http://forum.princed.org
 #define POP_MAX_PATH 256
 #define POP_MAX_OPTIONS_SIZE 256
 
-#define SDLPOP_VERSION "1.17"
-#define WINDOW_TITLE "Prince of Persia (SDLPoP) v" SDLPOP_VERSION
+#define SDLPOP_VERSION_NUMBER "1.17"
 
 // Enable or disable fading.
 // Fading used to be very buggy, but now it works correctly.
@@ -203,5 +202,15 @@ The authors of this program may be contacted at http://forum.princed.org
 // "[" and "]" : nudge x position by one pixel
 // "T" : display remaining time in minutes, seconds and ticks
 #define USE_DEBUG_CHEATS
+
+
+
+#ifdef USE_EDITOR
+#define SDLPOP_VERSION_NAME SDLPOP_VERSION_NUMBER " - editor"
+#else
+#define SDLPOP_VERSION_NAME SDLPOP_VERSION_NUMBER
+#endif
+
+#define WINDOW_TITLE "Prince of Persia (SDLPoP) v" SDLPOP_VERSION_NAME
 
 #endif

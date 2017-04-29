@@ -40,7 +40,7 @@ word need_redraw_because_flipped;
 // seg000:0000
 void far pop_main() {
 	if (check_param("--version") || check_param("-v")) {
-		printf ("SDLPoP v%s\n", SDLPOP_VERSION);
+		printf ("SDLPoP v%s\n", SDLPOP_VERSION_NAME);
 		exit(0);
 	}
 	
@@ -596,7 +596,7 @@ int __pascal far process_key() {
 			if (!editor_enabled) {
 			#endif
 			//answer_text = "PRINCE OF PERSIA  V1.0";
-			snprintf(sprintf_temp, sizeof(sprintf_temp), "SDLPoP v%s\n", SDLPOP_VERSION);
+			snprintf(sprintf_temp, sizeof(sprintf_temp), "SDLPoP v%s\n", SDLPOP_VERSION_NUMBER);
 			answer_text = sprintf_temp;
 
 			need_show_text = 1;
@@ -2031,7 +2031,9 @@ void __pascal far show_quotes() {
 const rect_type splash_text_1_rect = {0, 0, 50, 320};
 const rect_type splash_text_2_rect = {50, 0, 200, 320};
 
-const char* splash_text_1 = "SDLPoP " SDLPOP_VERSION;
+const char* splash_text_1 = "SDLPoP " SDLPOP_VERSION_NAME;
+
+#ifndef USE_EDITOR
 const char* splash_text_2 =
 		"To quick load/save, press F6/F9 in-game.\n"
 		"\n"
@@ -2047,6 +2049,22 @@ const char* splash_text_2 =
 		"Questions? Visit http://forum.princed.org\n"
 		"\n"
 		"Press any key to continue...";
+#else
+const char* splash_text_2 =
+		"\n"
+		"\n"
+		"To enable/disable the editing mode, press Alt+E.\n"
+		"\n"
+		"To save the level, press Alt+S.\n"
+		"\n"
+		"For full instructions on how to use, refer to:\n"
+		"doc/Editor.txt.\n"
+		"\n"
+		"\n"
+		"\n"
+		"Press any key to continue...";
+
+#endif
 
 void show_splash() {
 	if (!enable_info_screen || start_level != 0) return;

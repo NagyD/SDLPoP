@@ -17,9 +17,11 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${SDLPoP_SOURCE_DIR}/..")
 
 # if SDL_2, SDL2_image and SDL2_mixer are not in the toolchain/build environment, specify /include and /lib paths:
 
-set(DIR_SDL2 "C:/work/libraries/SDL2-2.0.5/x86_64-w64-mingw32")
-include_directories(${DIR_SDL2}/include)
-link_directories(${DIR_SDL2}/lib)
+if (1)
+    set(DIR_SDL2 "C:/work/libraries/SDL2-2.0.5/i686-w64-mingw32")
+    include_directories(${DIR_SDL2}/include)
+    link_directories(${DIR_SDL2}/lib)
+endif()
 
 set(SOURCE_FILES
     main.c
@@ -45,11 +47,11 @@ set(SOURCE_FILES
     types.h
     icon.rc
 )
-add_executable(prince ${SOURCE_FILES})
+add_executable(editor ${SOURCE_FILES})
 
 if(WIN32)
-    target_link_libraries(prince mingw32 SDL2main SDL2 SDL2.dll SDL2_image SDL2_mixer)
+    target_link_libraries(editor mingw32 SDL2main SDL2 SDL2.dll SDL2_image SDL2_mixer)
 else()
-    target_link_libraries(prince SDL2main SDL2 SDL2_image SDL2_mixer m)
+    target_link_libraries(editor SDL2main SDL2 SDL2_image SDL2_mixer m)
 endif()
 
