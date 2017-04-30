@@ -2573,7 +2573,7 @@ void idle() {
 #ifdef USE_SCREENSHOT
 				if (scancode == SDL_SCANCODE_F12) {
 					if (modifier & KMOD_SHIFT) {
-						save_level_screenshot();
+						save_level_screenshot((modifier & KMOD_CTRL) != 0);
 					} else {
 						save_screenshot();
 					}

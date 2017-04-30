@@ -641,6 +641,6 @@ void save_screenshot();
 void auto_screenshot();
 bool want_auto_screenshot();
 void init_screenshot();
-void save_level_screenshot();
+void save_level_screenshot(bool want_extras);
 #endif
 
