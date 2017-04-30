@@ -43,6 +43,7 @@ set(SOURCE_FILES
         replay.c
         types.h
         icon.rc
+        screenshot.c
         )
 add_executable(prince ${SOURCE_FILES})
 

@@ -60,3 +60,6 @@ build/
 
 # Windows thumbnail cache
 Thumbs.db
+
+# Screenshot saved from the game
+screenshot.png

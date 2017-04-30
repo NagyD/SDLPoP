@@ -634,3 +634,12 @@ int load_replay();
 void key_press_while_recording(int* key_ptr);
 void key_press_while_replaying(int* key_ptr);
 #endif
+
+// screenshot.c
+#ifdef USE_SCREENSHOT
+void save_screenshot();
+void auto_screenshot();
+bool want_auto_screenshot();
+void init_screenshot();
+#endif
+

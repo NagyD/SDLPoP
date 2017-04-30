@@ -123,6 +123,9 @@ void far pop_main() {
 			}
 		}
 	}
+#ifdef USE_SCREENSHOT
+	init_screenshot();
+#endif
 
 	init_game_main();
 }

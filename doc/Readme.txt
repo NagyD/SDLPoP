@@ -99,6 +99,7 @@ A:
 * --version, -v -- Display SDLPoP version and quit.
 * --help, -h, -? -- Display help and quit. (Currently it only points to this Readme...)
 * seed=number -- Set initial random seed, for testing.
+* --screenshot -- Must be used with megahit and a level number. When the level starts, a screenshot is saved to screenshot.png and the game quits.
 
 Q: What keys can I use?
 A:
@@ -137,6 +138,7 @@ Controlling the game:
 * Alt-Enter: toggle fullscreen
 * F6: quicksave
 * F9: quickload
+* F12: save a screenshot to screenshot.png
 
 Viewing or recording replays:
 * Ctrl+Tab (in game, or on title screen): start or stop recording

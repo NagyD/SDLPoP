@@ -71,7 +71,9 @@ void __pascal far play_level(int level_number) {
 				#ifdef USE_REPLAY
 				&& !(recording || replaying)
 				#endif
-
+#ifdef USE_SCREENSHOT
+				&& !want_auto_screenshot()
+#endif
 					) {
 				load_intro(level_number > 2, cutscene_func, 1);
 			}
@@ -224,6 +226,11 @@ void __pascal far draw_level_first() {
 
 	screen_updates_suspended = 0;
 	request_screen_update();
+	
+#ifdef USE_SCREENSHOT
+	auto_screenshot();
+#endif
+	
 	// Busy waiting!
 	start_timer(timer_1, 5);
 	do_simple_wait(1);

@@ -201,4 +201,8 @@ The authors of this program may be contacted at http://forum.princed.org
 // "T" : display remaining time in minutes, seconds and ticks
 #define USE_DEBUG_CHEATS
 
+
+// Enable screenshot features.
+#define USE_SCREENSHOT
+
 #endif
