@@ -2572,7 +2572,11 @@ void idle() {
 				// Handle these separately, so they won't interrupt things that are usually interrupted by a keypress. (pause, cutscene)
 #ifdef USE_SCREENSHOT
 				if (scancode == SDL_SCANCODE_F12) {
-					save_screenshot();
+					if (modifier & KMOD_SHIFT) {
+						save_level_screenshot();
+					} else {
+						save_screenshot();
+					}
 				} else
 #endif
 				if ((modifier & KMOD_ALT) &&

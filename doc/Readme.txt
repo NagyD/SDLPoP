@@ -100,6 +100,7 @@ A:
 * --help, -h, -? -- Display help and quit. (Currently it only points to this Readme...)
 * seed=number -- Set initial random seed, for testing.
 * --screenshot -- Must be used with megahit and a level number. When the level starts, a screenshot is saved to screenshot.png and the game quits.
+* --screenshot-level -- Similar to the above, except the whole level is screenshotted.
 
 Q: What keys can I use?
 A:
@@ -138,7 +139,7 @@ Controlling the game:
 * Alt-Enter: toggle fullscreen
 * F6: quicksave
 * F9: quickload
-* F12: save a screenshot to screenshot.png
+* F12: Save a screenshot to screenshot.png.
 
 Viewing or recording replays:
 * Ctrl+Tab (in game, or on title screen): start or stop recording
@@ -163,6 +164,7 @@ Cheats:
 * Shift-B: toggle hiding of non-animated objects
 * Shift-S: Restore lost hit-point. (Like a small red potion.)
 * Shift-T: Give more hit-points. (Like a big red potion.)
+* Shift+F12: Save a screenshot of the whole level to screenshot.png.
 
 Debug cheats:
 * [: shift kid 1 pixel to the left

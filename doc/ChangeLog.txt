@@ -465,3 +465,4 @@ DONE: Added -std=gnu99 to the Dev-C++ project files.
 
 FIXED: Fixed allow_triggering_any_tile hack to work with stuck-closed chompers.
 ADDED: You can make screenshots, both manually with a key or automatically from the command line.
+ADDED: You can also make screenshots of the whole level.
