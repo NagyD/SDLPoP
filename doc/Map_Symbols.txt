@@ -1,0 +1,66 @@
+﻿Here is the list of the possible annotations on level maps saved with Ctrl+Shift+F12 or --screenshot-level-extras.
+
+Items marked with [!] can't be found on the original levels.
+
+* Floors:
+	* white "~~~~": Regular loose floor.
+	* purple "~~~~": Stable loose floor: It can't be broken by the prince, only by another loose floor or a door event. [!]
+	* green "^^^^": Opener / raise button.
+	* red "vvvv": Closer / drop button.
+* Traps:
+	* green "safe": Spikes that won't hurt the prince. [!]
+	* green or red "stuck": Stuck chomper. [!]
+* Potions:
+	* grey "x": empty [!]
+	* red "+1": heal
+	* red "+++": life (extra HP)
+	* green "slow fall": slow-fall / feather fall
+	* green "flip": flips the screen upside-down
+	* blue "-1": hurt / poison
+	* blue "trig": trigger / open
+		* A yellow "blue trig" shows which tile is triggered. (Only if there is such a potion in the reachable rooms.)
+	* white number: Some other kind of potion. [!]
+* Door events:
+	Yellow numbers show:
+		1. what events are triggered by a button,
+		2. what events point to a tile.
+	In both cases, the same tile can have multiple numbers.
+	Case 2 shows only those events that can be triggered from the reachable rooms.
+* Special events: (in yellow)
+	Note: SDLPoP does not yet recognize if an event was placed elsewhere by a mod.
+	* level 1:
+		* "start trig": This tile is triggered (pressed) when the level starts.
+	* level 3:
+		* "<- chk point": The checkpoint is activated by leaving the room this way.
+		* "check point": The prince restarts here if the checkpoint was activated.
+		* "removed": This tile is removed when you restart at the checkpoint.
+		* "loud": The closing sounds of this gate can be heard in all rooms.
+		* "skel wake": This skeleton will wake if the exit is open.
+		* "skel cont": If a skeleton falls into this room, it will be placed here.
+	* level 4:
+		* "mirror": The mirror appears here when the exit is open.
+	* level 5:
+		* "stolen": This potion will be stolen by the shadow.
+	* level 6:
+		* "exit down": Complete the level by leaving the room this way.
+	* level 8:
+		* "mouse": The mouse will appear here if the exit is open.
+	* level 12:
+		* "disapp": This sword will disappear.
+		* "disapp ->": The sword will disappear when you leave the room this way.
+		* "floor": Floors appear here.
+		* "exit": Complete the level by entering this room.
+	* level 13:
+		* "fall": These loose floors fall if you're in the room below them.
+		* "meet ->": Jaffar's music is played when you leave the room this way.
+		* "Jffr trig": This tile is triggered when you enter any room from the right after Jaffar died.
+	* level 14:
+		* "end": You win the game by entering this room.
+* Starting position: Yellow "start" with an arrow showing the starting direction.
+	* This can be useful on level 7 or 13 where the prince starts off-screen
+		and thus he is not visible on the map if you made it from the command line.
+* Broken room links: White number on red background on the corresponding edge of the room. [!]
+	Note that such levels usually appear incorrectly. Consider yourself lucky if they don't fall apart on the map. :)
+	In the worst cases you get errors on the console: "Warning: room XX was mapped to the same place as room YY!"
+	Sometimes you can get a better map if you make the map manually from some room other than the starting room.
+* Room numbers: White number on grey background in the top-left corner.

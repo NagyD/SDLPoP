@@ -73,7 +73,7 @@ const int dy[4] = { 0,  0, -1, +1};
 int xpos[NUMBER_OF_ROOMS+1] = {0};
 int ypos[NUMBER_OF_ROOMS+1] = {0};
 
-// Show non-visible things, like: room bounds, room numbers, door events, loose floors, potion types, special events, ...
+// Show annotations for non-visible things, like: room bounds, room numbers, door events, loose floors, potion types, special events, ...
 // (this will make the function even more like a cheat)
 // TODO: guard HPs, skill? fake tiles?
 void draw_extras() {
@@ -104,14 +104,36 @@ void draw_extras() {
 		if (tile_type == tiles_6_closer) {
 			//show_text_with_color(&floor_rect, 0, -1, "XXXX", color_12_brightred);
 			floor_rect.top -= 2;
-			show_text_with_color(&floor_rect, 0, -1, "xxxx", color_12_brightred); // only the top half is visible, looks like an inverted "^"
+			show_text_with_color(&floor_rect, 0, -1, "xxxx", color_12_brightred); // Only the top half is visible, looks like an inverted "^" or a tiny "v".
 		}
 
-		// harmless spikes
-		if (tile_type == tiles_2_spike) {
-			if (modifier >= 5) { // harmless
-				rect_type spike_rect = {y+50, x, y+60, x+32};
-				show_text_with_color(&spike_rect, 0, -1, "safe", color_10_brightgreen);
+		bool is_trob_here = false;
+		for (int index = 0; index < trobs_count; ++index) {
+			trob = trobs[index];
+			if (trob.room == drawn_room && trob.tilepos == tilepos) {
+				is_trob_here = true;
+				break;
+			}
+		}
+		
+		if (!is_trob_here) { // It's not stuck if it's currently animated.
+			// harmless spikes
+			if (tile_type == tiles_2_spike) {
+				if (modifier >= 5) { // harmless
+					rect_type spike_rect = {y+50, x, y+60, x+32};
+					show_text_with_color(&spike_rect, 0, -1, "safe", color_10_brightgreen);
+				}
+			}
+			
+			// stuck chompers
+			if (tile_type == tiles_18_chomper) {
+				int frame = (modifier & 0x7F);
+				if (frame != 0) {
+					rect_type chomper_rect = {y, x-10, y+60, x+32+10};
+					int color = color_10_brightgreen;
+					if (frame == 2) color = color_12_brightred;
+					show_text_with_color(&chomper_rect, 0, 0, "stuck", color);
+				}
 			}
 		}
 		
@@ -146,7 +168,12 @@ void draw_extras() {
 		}
 		
 		// triggered door events
-		if (tile_type == tiles_6_closer || tile_type == tiles_15_opener) {
+		if (tile_type == tiles_6_closer || tile_type == tiles_15_opener
+			// These tiles are triggered even if they are not buttons!
+			|| (current_level == 1 && drawn_room == 5 && tilepos == 2) // triggered at start
+			|| (current_level == 13 && drawn_room == 24 && tilepos == 0) // triggered when player enters any room from the right after Jaffar died
+			|| (has_trigger_potion && drawn_room == 8 && tilepos == 0) // triggered when player drinks an open potion
+		) {
 			int first_event = modifier;
 			int last_event = modifier;
 			while (last_event<256 && get_doorlink_next(last_event)) last_event++;
@@ -156,7 +183,8 @@ void draw_extras() {
 				snprintf(events, sizeof(events), "%d", first_event+EVENT_OFFSET);
 			} else { // from-to
 				snprintf(events, sizeof(events), "%d:%d", first_event+EVENT_OFFSET, last_event+EVENT_OFFSET);
-			}*/
+			}
+			*/
 			char events[256] = "";
 			int events_pos = 0;
 			for (int event=first_event;event<=last_event;event++) {
@@ -166,6 +194,8 @@ void draw_extras() {
 			rect_type buttonmod_rect = {y/*+50-3*/, x, y+60-3, x+32};
 			show_text_with_color(&buttonmod_rect, 0, 1, events, color_14_brightyellow);
 		}
+		
+		// TODO: Add an option to merge events pointing to the same tile?
 		
 		// door events that point here
 		char events[256] = "";
@@ -202,6 +232,7 @@ void draw_extras() {
 		}
 		if (current_level == 3 && drawn_room == 2 && tilepos == 6) {
 			special_event = "check point"; // restart at checkpoint
+			// TODO: Show this room even if it is unreachable from the start via room links?
 		}
 		if (current_level == 3 && drawn_room == 1 && tilepos == 15 && tile_type == tiles_21_skeleton) {
 			special_event = "skel wake"; // skeleton wakes
@@ -219,7 +250,7 @@ void draw_extras() {
 		}
 		// not marked: level 6 shadow (it's already visible)
 		if (current_level == 6 && drawn_room == 1 && row == 2) {
-			special_event = "exit"; // exit by falling
+			special_event = "exit\ndown"; // exit by falling
 		}
 		// not marked: level 7 falling entry
 		if (current_level == 8 && drawn_room == 16 && tilepos == 9) {
@@ -278,6 +309,16 @@ void draw_extras() {
 				}
 			}
 		}
+		
+		// start pos
+		if (level.start_room == drawn_room && level.start_pos == tilepos) {
+			byte start_dir = level.start_dir;
+			if (current_level == 1 || current_level == 13) start_dir ^= 0xFF; // falling/running entry
+			char* start_text = (start_dir == dir_0_right) ? "start\n->" : "start\n<-";
+			rect_type start_rect = {y,x-10,y+63,x+32+10};
+			show_text_with_color(&start_rect, 0, 0, start_text, color_14_brightyellow);
+		}
+
 	}
 	
 	// room number
@@ -297,6 +338,7 @@ void draw_extras() {
 // Save a "screenshot" of the whole level.
 void save_level_screenshot(bool want_extras) {
 	// TODO: Disable in the intro or if a cutscene is active?
+	
 	// Restrict this to cheat mode. After all, it's like using H/J/U/N or opening the level in an editor.
 	if (!cheats_enabled) return;
 	
@@ -305,9 +347,13 @@ void save_level_screenshot(bool want_extras) {
 	//printf("random_seed = 0x%08X\n", random_seed);
 
 	// First, figure out where to put each room.
-	// TODO: Check for broken room links?
+	// We don't stop on broken room links, because the resulting map might still be usable.
 
 	bool processed[NUMBER_OF_ROOMS+1] = {false};
+	for (int room=1;room<=NUMBER_OF_ROOMS;room++) {
+		xpos[drawn_room] = -999;
+		ypos[drawn_room] = -999;
+	}
 	xpos[drawn_room] = 0;
 	ypos[drawn_room] = 0;
 	int queue[NUMBER_OF_ROOMS] = {drawn_room}; // We start mapping from the current room.
@@ -350,8 +396,13 @@ void save_level_screenshot(bool want_extras) {
 			if (x>=0 && y>=0 && x<MAX_MAP_SIZE && y<MAX_MAP_SIZE) {
 				if (map[y][x]) {
 					printf("Warning: room %d was mapped to the same place as room %d!\n", room, map[y][x]);
+					// Force broken link display for room links pointing into this room:
+					// TODO: Try to find some other place for this room?
+					xpos[room] = -999;
+					ypos[room] = -999;
+				} else {
+					map[y][x] = room;
 				}
-				map[y][x] = room;
 			}
 		}
 	}
@@ -387,6 +438,8 @@ void save_level_screenshot(bool want_extras) {
 
 	// TODO: Background color for places where there is no room?
 	
+	// TODO: Add an option for displaying all unreachable rooms?
+	
 	// Find out which door events are used:
 	has_trigger_potion = false;
 	memset(event_used, 0, sizeof(event_used));
@@ -395,7 +448,13 @@ void save_level_screenshot(bool want_extras) {
 			get_room_address(room);
 			for (int tilepos=0;tilepos<30;tilepos++) {
 				int tile_type = curr_room_tiles[tilepos] & 0x1F;
-				if (tile_type == tiles_6_closer || tile_type == tiles_15_opener) {
+				if (tile_type == tiles_6_closer || tile_type == tiles_15_opener
+					// These tiles are triggered even if they are not buttons!
+					// TODO: Force displaying of special trigger rooms even if they are unreachable via room links?
+					|| (current_level == 1 && room == 5 && tilepos == 2) // triggered at start
+					|| (current_level == 13 && room == 24 && tilepos == 0) // triggered when player enters any room from the right after Jaffar died
+					|| (has_trigger_potion && room == 8 && tilepos == 0) // triggered when player drinks an open potion
+				) {
 					int modifier = curr_room_modif[tilepos];
 					for (int index = modifier; index < 256; index++) {
 						event_used[index] = true;
