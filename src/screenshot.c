@@ -170,9 +170,11 @@ void draw_extras() {
 		// triggered door events
 		if (tile_type == tiles_6_closer || tile_type == tiles_15_opener
 			// These tiles are triggered even if they are not buttons!
+			/*
 			|| (current_level == 1 && drawn_room == 5 && tilepos == 2) // triggered at start
 			|| (current_level == 13 && drawn_room == 24 && tilepos == 0) // triggered when player enters any room from the right after Jaffar died
 			|| (has_trigger_potion && drawn_room == 8 && tilepos == 0) // triggered when player drinks an open potion
+			*/
 		) {
 			int first_event = modifier;
 			int last_event = modifier;
@@ -451,9 +453,11 @@ void save_level_screenshot(bool want_extras) {
 				if (tile_type == tiles_6_closer || tile_type == tiles_15_opener
 					// These tiles are triggered even if they are not buttons!
 					// TODO: Force displaying of special trigger rooms even if they are unreachable via room links?
+					/*
 					|| (current_level == 1 && room == 5 && tilepos == 2) // triggered at start
 					|| (current_level == 13 && room == 24 && tilepos == 0) // triggered when player enters any room from the right after Jaffar died
 					|| (has_trigger_potion && room == 8 && tilepos == 0) // triggered when player drinks an open potion
+					*/
 				) {
 					int modifier = curr_room_modif[tilepos];
 					for (int index = modifier; index < 256; index++) {
