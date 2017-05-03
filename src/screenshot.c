@@ -173,8 +173,8 @@ void draw_extras() {
 			/*
 			|| (current_level == 1 && drawn_room == 5 && tilepos == 2) // triggered at start
 			|| (current_level == 13 && drawn_room == 24 && tilepos == 0) // triggered when player enters any room from the right after Jaffar died
-			|| (has_trigger_potion && drawn_room == 8 && tilepos == 0) // triggered when player drinks an open potion
 			*/
+			|| (has_trigger_potion && drawn_room == 8 && tilepos == 0) // triggered when player drinks an open potion
 		) {
 			int first_event = modifier;
 			int last_event = modifier;
@@ -187,12 +187,15 @@ void draw_extras() {
 				snprintf(events, sizeof(events), "%d:%d", first_event+EVENT_OFFSET, last_event+EVENT_OFFSET);
 			}
 			*/
-			char events[256] = "";
+			char events[256*4] = ""; // More than enough space to list all the numbers from 0 to 255.
 			int events_pos = 0;
-			for (int event=first_event;event<=last_event;event++) {
-				events_pos += snprintf(events+events_pos, sizeof(events)-events_pos, "%d ", event+EVENT_OFFSET);
+			for (int event=first_event; event<=last_event && events_pos<sizeof(events); event++) {
+				int len = snprintf(events+events_pos, sizeof(events)-events_pos, "%d ", event+EVENT_OFFSET);
+				if (len < 0) break; // snprintf might return -1 if the buffer is too small.
+				events_pos += len;
 			}
-			if (events_pos) events[--events_pos]='\0'; // trim trailing space
+			--events_pos;
+			if (events_pos>0 && events_pos<sizeof(events)) events[events_pos]='\0'; // trim trailing space
 			rect_type buttonmod_rect = {y/*+50-3*/, x, y+60-3, x+32};
 			show_text_with_color(&buttonmod_rect, 0, 1, events, color_14_brightyellow);
 		}
@@ -200,14 +203,17 @@ void draw_extras() {
 		// TODO: Add an option to merge events pointing to the same tile?
 		
 		// door events that point here
-		char events[256] = "";
+		char events[256*4] = "";
 		int events_pos = 0;
-		for (int event=0;event<256;event++) {
+		for (int event=0; event<256 && events_pos<sizeof(events); event++) {
 			if (event_used[event] && get_doorlink_room(event) == drawn_room && get_doorlink_tile(event) == tilepos) {
-				events_pos += snprintf(events+events_pos, sizeof(events)-events_pos, "%d ", event+EVENT_OFFSET);
+				int len = snprintf(events+events_pos, sizeof(events)-events_pos, "%d ", event+EVENT_OFFSET);
+				if (len < 0) break;
+				events_pos += len;
 			}
 		}
-		if (events_pos) events[--events_pos]='\0'; // trim trailing space
+		--events_pos;
+		if (events_pos>0 && events_pos<sizeof(events)) events[events_pos]='\0'; // trim trailing space
 		if (*events) {
 			//printf("room %d, tile %d, events: %s\n", drawn_room, tilepos, events); // debug
 			rect_type events_rect = {y,x,y+63-3,x+32-7};
@@ -442,9 +448,24 @@ void save_level_screenshot(bool want_extras) {
 	
 	// TODO: Add an option for displaying all unreachable rooms?
 	
-	// Find out which door events are used:
 	has_trigger_potion = false;
+	
+	// Is there a trigger potion on the level?
+	for (int room=1;room<=NUMBER_OF_ROOMS;room++) {
+		if (processed[room]) {
+			get_room_address(room);
+			for (int tilepos=0;tilepos<30;tilepos++) {
+				int tile_type = curr_room_tiles[tilepos] & 0x1F;
+				if (tile_type == tiles_10_potion && curr_room_modif[tilepos] >> 3 == 6) {
+					has_trigger_potion = true;
+				}
+			}
+		}
+	}
+
 	memset(event_used, 0, sizeof(event_used));
+
+	// Find out which door events are used:
 	for (int room=1;room<=NUMBER_OF_ROOMS;room++) {
 		if (processed[room]) {
 			get_room_address(room);
@@ -456,17 +477,14 @@ void save_level_screenshot(bool want_extras) {
 					/*
 					|| (current_level == 1 && room == 5 && tilepos == 2) // triggered at start
 					|| (current_level == 13 && room == 24 && tilepos == 0) // triggered when player enters any room from the right after Jaffar died
-					|| (has_trigger_potion && room == 8 && tilepos == 0) // triggered when player drinks an open potion
 					*/
+					|| (has_trigger_potion && room == 8 && tilepos == 0) // triggered when player drinks an open potion
 				) {
 					int modifier = curr_room_modif[tilepos];
 					for (int index = modifier; index < 256; index++) {
 						event_used[index] = true;
 						if (!get_doorlink_next(index)) break;
 					}
-				}
-				if (tile_type == tiles_10_potion && curr_room_modif[tilepos] >> 3 == 6) {
-					has_trigger_potion = true;
 				}
 			}
 		}
