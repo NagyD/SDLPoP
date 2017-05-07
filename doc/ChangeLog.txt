@@ -470,3 +470,4 @@ ADDED: You can make screenshots, both manually with a key or automatically from 
 ADDED: You can also make screenshots of the whole level.
 ADDED: Whole-level screenshots can optionally show extra info, like door events.
 ADDED: You can also start level 0 (demo) and level 15 (potions) from the command line.
+ADDED: Automatically switch to keyboard or joystick/gamepad mode if there is input from that device.

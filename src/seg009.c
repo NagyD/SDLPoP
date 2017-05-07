@@ -2613,6 +2613,27 @@ void idle() {
 						if (modifier & KMOD_CTRL ) last_key_scancode |= WITH_CTRL ;
 						if (modifier & KMOD_ALT  ) last_key_scancode |= WITH_ALT  ;
 					}
+
+#ifdef USE_AUTO_INPUT_MODE
+					switch (scancode) {
+						// Keys that are used for keyboard control: (except shift)
+						case SDL_SCANCODE_LEFT:
+						case SDL_SCANCODE_RIGHT:
+						case SDL_SCANCODE_UP:
+						case SDL_SCANCODE_DOWN:
+						case SDL_SCANCODE_CLEAR:
+						case SDL_SCANCODE_HOME:
+						case SDL_SCANCODE_PAGEUP:
+						case SDL_SCANCODE_KP_2:
+						case SDL_SCANCODE_KP_4:
+						case SDL_SCANCODE_KP_5:
+						case SDL_SCANCODE_KP_6:
+						case SDL_SCANCODE_KP_7:
+						case SDL_SCANCODE_KP_8:
+						case SDL_SCANCODE_KP_9:
+							if (!is_keyboard_mode) last_key_scancode = SDL_SCANCODE_K | WITH_CTRL; // force keyboard mode
+					}
+#endif
 				}
 				break;
 			}
@@ -2620,9 +2641,15 @@ void idle() {
 				key_states[event.key.keysym.scancode] = 0;
 				break;
 			case SDL_CONTROLLERAXISMOTION:
+#ifdef USE_AUTO_INPUT_MODE
+				if (!is_joyst_mode) last_key_scancode = SDL_SCANCODE_J | WITH_CTRL; // force joystick mode
+#endif
 				if (event.caxis.axis < 6) joy_axis[event.caxis.axis] = event.caxis.value;
 				break;
 			case SDL_CONTROLLERBUTTONDOWN:
+#ifdef USE_AUTO_INPUT_MODE
+				if (!is_joyst_mode) last_key_scancode = SDL_SCANCODE_J | WITH_CTRL; // force joystick mode
+#endif
 				switch (event.cbutton.button)
 				{
 					case SDL_CONTROLLER_BUTTON_DPAD_LEFT:  joy_hat_states[0] = -1; break; // left
