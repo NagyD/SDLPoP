@@ -3,6 +3,7 @@ Name of program: SDLPoP
 
 Author: David from forum.princed.org (NagyD on GitHub)
 Contributors:
+	(Usernames refer to forum.princed.org or GitHub.)
 * Andrew (bug reports)
 * htamas (dungeon wall drawing algorithm, bug reports)
 * Norbert (EndeavourAccuracy on GitHub) (bug reports, suggestions, improved gamepad support)
@@ -47,11 +48,11 @@ The exact version is PoP 1.0, i.e. pop1_ida.zip .
 (But I also added some features from later versions.)
 
 Sources that helped in making the disassembly:
-* Modifications to prince.exe (hex editing) topic in the POPUW forum.
+* Modifications to prince.exe (hex editing) topic in the PoPUW forum.
 	- That forum is down, you can find some saved posts here: http://forum.princed.org/viewtopic.php?f=73&t=661
 	- HTamas posted the dungeon wall drawing algorithm in C-style pseudocode here, along with many hex-edit hacks.
 	- It was his work that prompted me to start the disassembly and later SDLPoP. Thank you!
-* PoP1 Technical Information by Mechner: http://www.popot.org/documentation.php?doc=OldDocuments
+* PoP1 Technical Information by Mechner: https://www.popot.org/documentation.php?doc=OldDocuments
 * PoP1 Apple II source code by Mechner: https://github.com/jmechner/Prince-of-Persia-Apple-II
 
 LICENSE
@@ -81,6 +82,7 @@ Mac OS X:
 
 eComStation (OS/2):
 	Unofficial binaries were posted here: http://forum.princed.org/viewtopic.php?p=18431#p18431
+		Alternate link: http://hobbes.nmsu.edu/h-search.php?key=sdlpop
 	Or you can compile for yourself using gcc, according to that post.
 	Thanks to digi@os2.snc.ru for the bugfixes!
 
@@ -127,7 +129,7 @@ Controlling the game:
 * Space: show time left
 * Ctrl-A: restart level
 * Ctrl-G: save game (on levels 3..13)
-* Ctrl-J: joystick mode (implemented by segrax) / gamepad mode (implemented by Norbert)
+* Ctrl-J: joystick mode / gamepad mode
 * Ctrl-K: keyboard mode
 * Ctrl-R: return to intro
 * Ctrl-S: sound on/off
@@ -170,10 +172,10 @@ Debug cheats:
 Q: Where is the music?
 A:
 Since version 1.13, the game supports loading music from the data/music folder.
-Until 1.15, music was not included in releases because it is very big, and it does not change between versions.
+Until 1.15, music was not included in releases because it is very big, and it does not change between SDLPoP versions.
 You need to get the music from here: (38 MB)
-	http://www.popot.org/get_the_games/various/PoP1_DOS_music.zip
-It's the last link here: http://www.popot.org/get_the_games.php?game=1
+	https://www.popot.org/get_the_games/various/PoP1_DOS_music.zip
+It's the last link here: https://www.popot.org/get_the_games.php?game=1
 Copy the OGG files to the data/music folder.
 
 Since version 1.15, music is included.
@@ -216,9 +218,10 @@ Furthermore, SDLPoP opens up new possibilities for mod making.
 For example:
 Falcury released a mod, called "Secrets of the Citadel" that "has been designed to be played using a modified version of SDLPoP".
 Description and download: http://forum.princed.org/viewtopic.php?f=73&t=3664
+	Alternate link: https://www.popot.org/custom_levels.php?mod=0000153
 
 Since version 1.16, there is support for fake tiles, for example walls that the prince can go through.
-The Apoplexy level editor supports these additional tiles since v3.0: http://www.popot.org/level_editors.php?editor=apoplexy
+The Apoplexy level editor supports these additional tiles since v3.0: https://www.popot.org/level_editors.php?editor=apoplexy
 (Just don't overuse them, please!)
 
 REPLAYS
@@ -253,35 +256,40 @@ DEVELOPING
 Q: How do I (re)compile it?
 A:
 Prerequisites for all platforms:
-	Make sure that you have the development versions of the "SDL", "SDL_image" and "SDL_mixer" (since 1.13) libraries installed.
-	(These in turn require the "libjpeg", "libpng" and "zlib" libraries.)
+	Make sure that you have the development versions of the "SDL", "SDL_image" and "SDL_mixer" (since SDLPoP 1.13) libraries installed.
 
 Windows:
 	If you are using Dev-C++:
-		I use Dev-C++ version 4.9.9.2 from here: http://sourceforge.net/projects/dev-cpp/files/Binaries/
-		You can download the libraries (except SDL2) from: http://sourceforge.net/projects/devpaks/files/
-		I used these files:
-			libjpeg-6b_4-1spec.DevPak
-			libpng-1.2.7-1spec.DevPak
-			zlib-1.2.3-1cm.DevPak
-		You can install the libraries at Tools -> Package Manager.
+		I originally used Dev-C++ version 4.9.9.2 from here: https://sourceforge.net/projects/dev-cpp/files/Binaries/
+			More recently, I'm using this version: https://sourceforge.net/projects/orwelldevcpp/
 		For Dev-C++ you need the MinGW Development Libraries of SDL2:
-			http://libsdl.org/download-2.0.php
-			http://libsdl.org/projects/SDL_image/
-			http://libsdl.org/projects/SDL_mixer/
+			https://libsdl.org/download-2.0.php
+			https://libsdl.org/projects/SDL_image/
+			https://libsdl.org/projects/SDL_mixer/
 		To install these, just extract the contents of the i686-w64-mingw32 folder from each archive to the Dev-Cpp folder.
 		To compile, open one of the .dev files and click the compile icon.
 
+	You can also use CMake.
+
 GNU/Linux:
-	The libraries can be installed with apt-get or a package manager.
+	You can install the libraries with apt-get or a package manager.
 		sudo apt-get install libsdl2-image-dev libsdl2-mixer-dev
-	Just type the command:
+
+	Alternatively, you can compile SDL2 and the other libraries from source.
+		https://libsdl.org/download-2.0.php
+		https://libsdl.org/projects/SDL_image/
+		https://libsdl.org/projects/SDL_mixer/
+	I recommend this if your distro does not have the newest SDL version, because older SDL versions have some known bugs.
+		Namely, sound becomes garbled in SDL versions older than 2.0.4 if the sound output is not 8-bit.
+
+	When you have the libraries, just type the command:
 		make all
 	and the game should compile.
 
+
 Mac OS X:
 	Get SDL2 and dependencies
-		a) Install "port" from http://www.macports.org/
+		a) Install "port" from https://www.macports.org/
 		b) sudo port install libsdl2 libsdl2_image libsdl2_mixer
 	or
 		a) Install "homebrew"
