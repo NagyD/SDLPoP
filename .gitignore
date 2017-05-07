@@ -60,3 +60,9 @@ build/
 
 # Windows thumbnail cache
 Thumbs.db
+
+# The desktop file has to be recreated from the template.
+src/SDLPoP.desktop
+
+# backup files
+*~
