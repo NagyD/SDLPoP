@@ -201,4 +201,8 @@ The authors of this program may be contacted at http://forum.princed.org
 // "T" : display remaining time in minutes, seconds and ticks
 #define USE_DEBUG_CHEATS
 
+
+// Darken those parts of the screen that are not near a torch.
+#define USE_LIGHTING
+
 #endif

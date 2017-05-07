@@ -150,6 +150,9 @@ void __pascal far init_game_main() {
 	// PRINCE.DAT: flame, sword on floor, potion
 	chtab_addrs[id_chtab_1_flameswordpotion] = load_sprites_from_file(150, 1<<3, 1);
 	close_dat(dathandle);
+#ifdef USE_LIGHTING
+	init_lighting();
+#endif
 	load_sounds(0, 43);
 	load_opt_sounds(43, 56); //added
 	hof_read();
@@ -1524,6 +1527,9 @@ void __pascal far copy_screen_rect(const rect_type far *source_rect_ptr) {
 		target_rect_ptr = source_rect_ptr;
 	}
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, target_rect_ptr, target_rect_ptr, 0);
+#ifdef USE_LIGHTING
+	update_lighting(target_rect_ptr);
+#endif
 }
 
 // seg000:15E9

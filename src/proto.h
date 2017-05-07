@@ -634,3 +634,10 @@ int load_replay();
 void key_press_while_recording(int* key_ptr);
 void key_press_while_replaying(int* key_ptr);
 #endif
+
+// lighting.c
+#ifdef USE_LIGHTING
+void init_lighting();
+void redraw_lighting();
+void update_lighting(const rect_type far *source_rect_ptr);
+#endif

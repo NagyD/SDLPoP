@@ -465,4 +465,4 @@ DONE: Added -std=gnu99 to the Dev-C++ project files.
 
 FIXED: Fixed allow_triggering_any_tile hack to work with stuck-closed chompers.
 DONE: Linux: Added .desktop file and make install/uninstall.
-
+DONE: Added option to enable lighting.

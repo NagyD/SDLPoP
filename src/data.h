@@ -686,6 +686,9 @@ extern byte fix_chompers_not_starting INIT(= 1);
 extern byte fix_feather_interrupted_by_leveldoor INIT(= 1);
 extern byte fix_offscreen_guards_disappearing INIT(= 1);
 extern byte fix_move_after_sheathe INIT(= 1);
+#ifdef USE_LIGHTING
+extern byte enable_lighting INIT(= 0);
+#endif
 
 // Custom Gameplay settings
 extern word start_minutes_left INIT(= 60);
