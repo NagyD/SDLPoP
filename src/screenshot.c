@@ -549,8 +549,7 @@ void init_screenshot() {
 	const char* screenshot_param = check_param("--screenshot");
 	if (screenshot_param != NULL) {
 		// We require megahit+levelnumber.
-		// TODO: Allow a parameter like --screenshot=levelnumber. (That would allow level 0 and 15 to be screenshotted.)
-		if (start_level <= 0) {
+		if (start_level < 0) {
 			printf("You must supply a level number if you want to make an automatic screenshot!\n");
 			exit(1);
 		} else {

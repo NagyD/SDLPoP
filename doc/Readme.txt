@@ -89,7 +89,7 @@ eComStation (OS/2):
 Q: What command-line options are there?
 A:
 * megahit -- Enable cheats.
-* a number from 1 to 14 -- Start the given level. (if cheats are enabled)
+* a number from 0 to 15 -- Start the given level. (if cheats are enabled)
 * draw -- Draw directly to the screen, skipping the offscreen buffer.
 * full -- Run in full screen mode.
 * demo -- Run in demo mode: only the first two levels will be playable, and quotes from magazine reviews will be displayed.

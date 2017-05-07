@@ -63,7 +63,7 @@ extern const rect_type screen_rect INIT(= {0, 0, 200, 320});
 // data:3D12
 extern word draw_mode;
 // data:42B8
-extern word start_level;
+extern short start_level INIT(= -1);
 // data:4CE6
 extern byte * guard_palettes;
 // data:4338
@@ -711,7 +711,7 @@ extern word shift_L_reduced_minutes INIT(= 15);
 extern word shift_L_reduced_ticks INIT(= 719);
 
 // data:009C
-word cheats_enabled INIT(= 0);
+extern word cheats_enabled INIT(= 0);
 #ifdef USE_DEBUG_CHEATS
 extern byte debug_cheats_enabled INIT(= 0);
 extern const rect_type timer_rect INIT(= {1, 2, 8, 55});

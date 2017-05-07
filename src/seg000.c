@@ -112,7 +112,7 @@ void far pop_main() {
 		|| recording
         #endif
 			) {
-		for (i = 14; i >= 0; --i) {
+		for (i = 15; i >= 0; --i) {
 			snprintf(sprintf_temp, sizeof(sprintf_temp), "%d", i);
 			if (check_param(sprintf_temp)) {
 				start_level = i;
@@ -207,12 +207,12 @@ void __pascal far start_game() {
 	}
 #endif
 	if (skip_title) { // CusPop option: skip the title sequence (level loads instantly)
-		int level_number = (start_level != 0) ? start_level : first_level;
+		int level_number = (start_level >= 0) ? start_level : first_level;
 		init_game(level_number);
 		return;
 	}
 
-	if (start_level == 0) {
+	if (start_level < 0) {
 		show_title();
 	} else {
 		init_game(start_level);
@@ -486,7 +486,7 @@ int __pascal far process_key() {
 	need_show_text = 0;
 	key = key_test_quit();
 
-	if (start_level == 0) {
+	if (start_level < 0) {
 		if (key || control_shift) {
 			#ifdef USE_QUICKSAVE
 			if (key == SDL_SCANCODE_F9) need_quick_load = 1;
@@ -566,7 +566,7 @@ int __pascal far process_key() {
 			need_show_text = 1;
 		break;
 		case SDL_SCANCODE_R | WITH_CTRL: // ctrl-r
-			start_level = 0;
+			start_level = -1;
 			start_game();
 		break;
 		case SDL_SCANCODE_S | WITH_CTRL: // ctrl-s
@@ -776,7 +776,7 @@ void __pascal far play_frame() {
 		// Special event: level 0 running exit
 		if (Kid.room == 24) {
 			draw_rect(&screen_rect, 0);
-			start_level = 0;
+			start_level = -1;
 			need_quotes = 1;
 			start_game();
 		}
@@ -849,7 +849,7 @@ void __pascal far draw_game_frame() {
 			// 36: died on demo/potions level
 			// 288: press button to continue
 			// In this case, restart the game.
-			start_level = 0;
+			start_level = -1;
 			need_quotes = 1;
 
 #ifdef USE_REPLAY
@@ -2025,7 +2025,7 @@ const char* splash_text_2 =
 		"Press any key to continue...";
 
 void show_splash() {
-	if (!enable_info_screen || start_level != 0) return;
+	if (!enable_info_screen || start_level >= 0) return;
 	screen_updates_suspended = 0;
 	current_target_surface = onscreen_surface_;
 	draw_rect(&screen_rect, 0);

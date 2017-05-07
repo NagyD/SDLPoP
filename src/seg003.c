@@ -56,7 +56,7 @@ void __pascal far play_level(int level_number) {
 #endif
 	for (;;) {
 		if (demo_mode && level_number > 2) {
-			start_level = 0;
+			start_level = -1;
 			need_quotes = 1;
 			start_game();
 		}

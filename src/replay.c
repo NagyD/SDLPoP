@@ -576,7 +576,7 @@ void restore_normal_options() {
 		load_options_from_buffer(replay_options_sections[i].stored_data, POP_MAX_OPTIONS_SIZE, replay_options_sections[i].section_func);
 	}
 
-	start_level = 0; // may have been set to a different value by the replay
+	start_level = -1; // may have been set to a different value by the replay
 
 	memcpy(levelset_name, stored_levelset_name, sizeof(levelset_name));
 	use_custom_levelset = (levelset_name[0] == '\0') ? 0 : 1;

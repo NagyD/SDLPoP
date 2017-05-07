@@ -628,7 +628,7 @@ void __pascal far end_sequence() {
 	}
 	while (check_sound_playing() && !key_test_quit()) idle();
 	fade_out_2(0x1000);
-	start_level = 0;
+	start_level = -1;
 	start_game();
 }
 
@@ -641,7 +641,7 @@ void __pascal far expired() {
 		offscreen_surface = make_offscreen_buffer(&screen_rect);
 		load_intro(1, &time_expired, 1);
 	}
-	start_level = 0;
+	start_level = -1;
 	start_game();
 }
 
