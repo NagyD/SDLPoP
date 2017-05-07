@@ -466,3 +466,6 @@ DONE: Added -std=gnu99 to the Dev-C++ project files.
 FIXED: Fixed allow_triggering_any_tile hack to work with stuck-closed chompers.
 DONE: Linux: Added .desktop file and make install/uninstall.
 DONE: Added option to enable lighting.
+ADDED: You can make screenshots, both manually with a key or automatically from the command line.
+ADDED: You can also make screenshots of the whole level.
+ADDED: Whole-level screenshots can optionally show extra info, like door events.

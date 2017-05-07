@@ -4,7 +4,7 @@ CC = gcc
 RM = rm -f
 
 HFILES = common.h config.h data.h proto.h types.h
-OBJ = main.o data.o seg000.o seg001.o seg002.o seg003.o seg004.o seg005.o seg006.o seg007.o seg008.o seg009.o seqtbl.o replay.o options.o lighting.o
+OBJ = main.o data.o seg000.o seg001.o seg002.o seg003.o seg004.o seg005.o seg006.o seg007.o seg008.o seg009.o seqtbl.o replay.o options.o lighting.o screenshot.o
 BIN = ../prince
 
 OS      := $(shell uname)

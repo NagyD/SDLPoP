@@ -23,9 +23,6 @@ The authors of this program may be contacted at http://forum.princed.org
 #include <setjmp.h>
 #include <math.h>
 
-// data:009C
-word cheats_enabled = 0;
-
 // data:461E
 dat_type * dathandle;
 
@@ -123,6 +120,9 @@ void far pop_main() {
 			}
 		}
 	}
+#ifdef USE_SCREENSHOT
+	init_screenshot();
+#endif
 
 	init_game_main();
 }

@@ -44,6 +44,7 @@ set(SOURCE_FILES
         types.h
         icon.rc
         lighting.c
+        screenshot.c
         )
 add_executable(prince ${SOURCE_FILES})
 

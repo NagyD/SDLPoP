@@ -2569,6 +2569,16 @@ void idle() {
 				int modifier = event.key.keysym.mod;
 				int scancode = event.key.keysym.scancode;
 
+				// Handle these separately, so they won't interrupt things that are usually interrupted by a keypress. (pause, cutscene)
+#ifdef USE_SCREENSHOT
+				if (scancode == SDL_SCANCODE_F12) {
+					if (modifier & KMOD_SHIFT) {
+						save_level_screenshot((modifier & KMOD_CTRL) != 0);
+					} else {
+						save_screenshot();
+					}
+				} else
+#endif
 				if ((modifier & KMOD_ALT) &&
 					scancode == SDL_SCANCODE_RETURN)
 				{

@@ -641,3 +641,13 @@ void init_lighting();
 void redraw_lighting();
 void update_lighting(const rect_type far *source_rect_ptr);
 #endif
+
+// screenshot.c
+#ifdef USE_SCREENSHOT
+void save_screenshot();
+void auto_screenshot();
+bool want_auto_screenshot();
+void init_screenshot();
+void save_level_screenshot(bool want_extras);
+#endif
+

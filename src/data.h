@@ -710,6 +710,8 @@ extern word shift_L_allowed_until_level INIT(= 4);
 extern word shift_L_reduced_minutes INIT(= 15);
 extern word shift_L_reduced_ticks INIT(= 719);
 
+// data:009C
+word cheats_enabled INIT(= 0);
 #ifdef USE_DEBUG_CHEATS
 extern byte debug_cheats_enabled INIT(= 0);
 extern const rect_type timer_rect INIT(= {1, 2, 8, 55});

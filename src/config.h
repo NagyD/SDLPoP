@@ -202,7 +202,12 @@ The authors of this program may be contacted at http://forum.princed.org
 #define USE_DEBUG_CHEATS
 
 
+
 // Darken those parts of the screen that are not near a torch.
 #define USE_LIGHTING
+
+// Enable screenshot features.
+#define USE_SCREENSHOT
+
 
 #endif
