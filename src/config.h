@@ -33,6 +33,8 @@ The authors of this program may be contacted at http://forum.princed.org
 #define SDLPOP_VERSION "1.17"
 #define WINDOW_TITLE "Prince of Persia (SDLPoP) v" SDLPOP_VERSION
 
+#define JOY_THRESHOLD 8000
+
 // Enable or disable fading.
 // Fading used to be very buggy, but now it works correctly.
 #define USE_FADE
