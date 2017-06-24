@@ -955,7 +955,7 @@ void __pascal far add_mob() {
 // seg007:1041
 short __pascal far get_curr_tile(short tilepos) {
 	curr_modifier = curr_room_modif[tilepos];
-	return curr_tile = curr_room_tiles[tilepos] & 0x1F; 
+	return curr_tile = curr_room_tiles[tilepos] & 0x1F;
 }
 
 // data:43DC
@@ -1237,14 +1237,15 @@ void __pascal far play_door_sound_if_visible(int sound_id) {
 #ifdef FIX_GATE_SOUNDS
 	sbyte has_sound_condition;
 	if (fix_gate_sounds)
-		has_sound_condition = 	(gate_room == room_L && tilepos % 10 == 9) ||
-							  	(gate_room == drawn_room && tilepos % 10 != 9);
-	else has_sound_condition = 	gate_room == room_L ? tilepos % 10 == 9 :
-							   	(gate_room == drawn_room && tilepos % 10 != 9);
+		has_sound_condition =   (gate_room == room_L && tilepos % 10 == 9) ||
+		                        (gate_room == drawn_room && tilepos % 10 != 9);
+	else
+		has_sound_condition =  gate_room == room_L ? tilepos % 10 == 9 :
+		                      (gate_room == drawn_room && tilepos % 10 != 9);
 	#define GATE_SOUND_CONDITION has_sound_condition
 #else
-	#define GATE_SOUND_CONDITION gate_room == room_L ? tilepos % 10 == 9 : 			\
-							   	(gate_room == drawn_room && tilepos % 10 != 9)
+	#define GATE_SOUND_CONDITION gate_room == room_L ? tilepos % 10 == 9 :          \
+	                            (gate_room == drawn_room && tilepos % 10 != 9)
 #endif
 	// Special event: sound of closing gates
 	if ((current_level == 3 && gate_room == 2) || GATE_SOUND_CONDITION) {

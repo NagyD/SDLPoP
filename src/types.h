@@ -43,8 +43,8 @@ The authors of this program may be contacted at http://forum.princed.org
 #define __pascal
 #define malloc_near malloc
 #define malloc_far  malloc
-#define free_near free
-#define free_far  free
+#define free_near   free
+#define free_far    free
 #define memset_near memset
 #define memset_far  memset
 #define memcpy_near memcpy
@@ -314,14 +314,14 @@ typedef struct objtable_type {
 
 typedef struct frame_type {
 	byte image;
-	
+
 	// 0x3F: sword image
 	// 0xC0: chtab
 	byte sword;
-	
+
 	sbyte dx;
 	sbyte dy;
-	
+
 	// 0x1F: weight x
 	// 0x20: thin
 	// 0x40: needs floor
@@ -571,63 +571,63 @@ typedef struct dialog_type {
 #pragma pack(pop)
 
 enum soundids {
-    sound_0_fell_to_death = 0,
-    sound_1_falling = 1,
-    sound_2_tile_crashing = 2,
-    sound_3_button_pressed = 3,
-    sound_4_gate_closing = 4,
-    sound_5_gate_opening = 5,
-    sound_6_gate_closing_fast = 6,
-    sound_7_gate_stop = 7,
-    sound_8_bumped = 8,
-    sound_9_grab = 9,
-    sound_10_sword_vs_sword = 10,
-    sound_11_sword_moving = 11,
-    sound_12_guard_hurt = 12,
-    sound_13_kid_hurt = 13,
-    sound_14_leveldoor_closing = 14,
-    sound_15_leveldoor_sliding = 15,
-    sound_16_medium_land = 16,
-    sound_17_soft_land = 17,
-    sound_18_drink = 18,
-    sound_19_draw_sword = 19,
-    sound_20_loose_shake_1 = 20,
-    sound_21_loose_shake_2 = 21,
-    sound_22_loose_shake_3 = 22,
-    sound_23_footstep = 23,
-    sound_24_death_regular = 24,
-    sound_25_presentation = 25,
-    sound_26_embrace = 26,
-    sound_27_cutscene_2_4_6_12 = 27,
-    sound_28_death_in_fight = 28,
-    sound_29_meet_Jaffar = 29,
-    sound_30_big_potion = 30,
-    //sound_31 = 31,
-    sound_32_shadow_music = 32,
-    sound_33_small_potion = 33,
-    //sound_34 = 34,
-    sound_35_cutscene_8_9 = 35,
-    sound_36_out_of_time = 36,
-    sound_37_victory = 37,
-    sound_38_blink = 38,
-    sound_39_low_weight = 39,
-    sound_40_cutscene_12_short_time = 40,
-    sound_41_end_level_music = 41,
-    //sound_42 = 42,
-    sound_43_victory_Jaffar = 43,
-    sound_44_skel_alive = 44,
-    sound_45_jump_through_mirror = 45,
-    sound_46_chomped = 46,
-    sound_47_chomper = 47,
-    sound_48_spiked = 48,
-    sound_49_spikes = 49,
-    sound_50_story_2_princess = 50,
-    sound_51_princess_door_opening = 51,
-    sound_52_story_4_Jaffar_leaves = 52,
-    sound_53_story_3_Jaffar_comes = 53,
-    sound_54_intro_music = 54,
-    sound_55_story_1_absence = 55,
-    sound_56_ending_music = 56,
+	sound_0_fell_to_death = 0,
+	sound_1_falling = 1,
+	sound_2_tile_crashing = 2,
+	sound_3_button_pressed = 3,
+	sound_4_gate_closing = 4,
+	sound_5_gate_opening = 5,
+	sound_6_gate_closing_fast = 6,
+	sound_7_gate_stop = 7,
+	sound_8_bumped = 8,
+	sound_9_grab = 9,
+	sound_10_sword_vs_sword = 10,
+	sound_11_sword_moving = 11,
+	sound_12_guard_hurt = 12,
+	sound_13_kid_hurt = 13,
+	sound_14_leveldoor_closing = 14,
+	sound_15_leveldoor_sliding = 15,
+	sound_16_medium_land = 16,
+	sound_17_soft_land = 17,
+	sound_18_drink = 18,
+	sound_19_draw_sword = 19,
+	sound_20_loose_shake_1 = 20,
+	sound_21_loose_shake_2 = 21,
+	sound_22_loose_shake_3 = 22,
+	sound_23_footstep = 23,
+	sound_24_death_regular = 24,
+	sound_25_presentation = 25,
+	sound_26_embrace = 26,
+	sound_27_cutscene_2_4_6_12 = 27,
+	sound_28_death_in_fight = 28,
+	sound_29_meet_Jaffar = 29,
+	sound_30_big_potion = 30,
+	//sound_31 = 31,
+	sound_32_shadow_music = 32,
+	sound_33_small_potion = 33,
+	//sound_34 = 34,
+	sound_35_cutscene_8_9 = 35,
+	sound_36_out_of_time = 36,
+	sound_37_victory = 37,
+	sound_38_blink = 38,
+	sound_39_low_weight = 39,
+	sound_40_cutscene_12_short_time = 40,
+	sound_41_end_level_music = 41,
+	//sound_42 = 42,
+	sound_43_victory_Jaffar = 43,
+	sound_44_skel_alive = 44,
+	sound_45_jump_through_mirror = 45,
+	sound_46_chomped = 46,
+	sound_47_chomper = 47,
+	sound_48_spiked = 48,
+	sound_49_spikes = 49,
+	sound_50_story_2_princess = 50,
+	sound_51_princess_door_opening = 51,
+	sound_52_story_4_Jaffar_leaves = 52,
+	sound_53_story_3_Jaffar_comes = 53,
+	sound_54_intro_music = 54,
+	sound_55_story_1_absence = 55,
+	sound_56_ending_music = 56,
 };
 
 enum timerids {
