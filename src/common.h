@@ -25,7 +25,6 @@ The authors of this program may be contacted at http://forum.princed.org
 extern "C" {
 #endif
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -34,6 +33,10 @@ extern "C" {
 #ifdef _MSC_VER
 #include <io.h>
 #include "unistd_win.h"
+// Copied from linux libc sys/stat.h:
+#define S_ISREG(m) (((m) & S_IFMT) == S_IFREG)
+#define INT16_MIN    ((int16_t)_I16_MIN)
+
 #else
 #include <unistd.h>
 #endif
