@@ -2047,7 +2047,7 @@ void show_splash() {
 
 	} while(key == 0 && !(key_states[SDL_SCANCODE_LSHIFT] || key_states[SDL_SCANCODE_RSHIFT]));
 
-	if (key & WITH_CTRL || (enable_quicksave && key == SDL_SCANCODE_F9) || (enable_replay && key == SDL_SCANCODE_TAB)) {
+	if ((key & WITH_CTRL) || (enable_quicksave && key == SDL_SCANCODE_F9) || (enable_replay && key == SDL_SCANCODE_TAB)) {
 		extern int last_key_scancode; // defined in seg009.c
 		last_key_scancode = key; // can immediately do Ctrl+L, etc from the splash screen
 	}

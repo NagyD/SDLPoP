@@ -790,6 +790,7 @@ void __pascal far hof_read() {
 		perror(hof_path);
 		hof_count = 0;
 	}
+	close(handle);
 }
 
 // seg001:0FC3
