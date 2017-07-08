@@ -2605,12 +2605,12 @@ void idle() {
 						case SDL_SCANCODE_APPLICATION:
 						case SDL_SCANCODE_PRINTSCREEN:
 						case SDL_SCANCODE_PAUSE:
-						break;
+							break;
 						default:
-						last_key_scancode = scancode;
-						if (modifier & KMOD_SHIFT) last_key_scancode |= WITH_SHIFT;
-						if (modifier & KMOD_CTRL ) last_key_scancode |= WITH_CTRL ;
-						if (modifier & KMOD_ALT  ) last_key_scancode |= WITH_ALT  ;
+							last_key_scancode = scancode;
+							if (modifier & KMOD_SHIFT) last_key_scancode |= WITH_SHIFT;
+							if (modifier & KMOD_CTRL ) last_key_scancode |= WITH_CTRL ;
+							if (modifier & KMOD_ALT  ) last_key_scancode |= WITH_ALT  ;
 					}
 				}
 				break;
