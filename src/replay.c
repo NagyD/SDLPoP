@@ -19,9 +19,20 @@ The authors of this program may be contacted at http://forum.princed.org
 */
 
 #include "common.h"
-#include <dirent.h>
 #include <time.h>
 #include <sys/stat.h>
+
+// Directory listing using dirent.h is available using MinGW on Windows, but not using MSVC (need to use Win32 API).
+// NOTE: If we are using MinGW, we'll opt to use the Win32 API as well: dirent.h would just wrap Win32 anyway!
+#ifdef _WIN32
+#define USE_WIN32_API_FOR_LISTING_REPLAY_FILES
+#endif
+
+#ifdef USE_WIN32_API_FOR_LISTING_REPLAY_FILES
+#include <windows.h>
+#else
+#include <dirent.h>
+#endif
 
 #ifdef USE_REPLAY
 
@@ -177,52 +188,136 @@ static int compare_replay_creation_time(const void* a, const void* b)
 	return (int) difftime( ((replay_info_type*)b)->creation_time, ((replay_info_type*)a)->creation_time );
 }
 
+// OS abstraction for listing directory contents (for list_replay_files() below)
+// - Under GNU/Linux, etc (or if compiling with MinGW on Windows), we can use dirent.h
+// - Under Windows, we'd like to directly call the Win32 API. (Note: MSVC does not include dirent.h)
+
+#ifdef USE_WIN32_API_FOR_LISTING_REPLAY_FILES
+
+typedef struct directory_listing_data_type {
+    char search_pattern[POP_MAX_PATH];
+    WIN32_FIND_DATA find_data;
+    HANDLE search_handle;
+
+} directory_listing_type;
+
+static inline bool init_directory_listing_and_find_first_file(directory_listing_type *data) {
+    snprintf( data->search_pattern, POP_MAX_PATH, "%s\\*.p1r", replays_folder);
+    data->search_handle = FindFirstFileA( data->search_pattern, &data->find_data );
+    return (data->search_handle != INVALID_HANDLE_VALUE);
+}
+
+static inline char* get_current_filename_from_directory_listing(directory_listing_type* data) {
+    return data->find_data.cFileName;
+}
+
+static inline bool find_next_file(directory_listing_type* data) {
+    return (bool) FindNextFileA( data->search_handle, &data->find_data );
+}
+
+static inline void directory_listing_close(directory_listing_type *data) {
+    FindClose(data->search_handle);
+}
+
+#else // use dirent.h API for listing replay files
+
+typedef struct directory_listing_data_type {
+    DIR* dp;
+    char* found_filename;
+
+} directory_listing_type;
+
+static inline bool init_directory_listing_and_find_first_file(directory_listing_type *data) {
+    bool ok = false;
+    data->dp = opendir(replays_folder);
+    if (data->dp != NULL) {
+        struct dirent* ep;
+        while ((ep = readdir(data->dp))) {
+            char *ext = strrchr(ep->d_name, '.');
+            if (ext != NULL && strcasecmp(ext, ".p1r") == 0) {
+                data->found_filename = ep->d_name;
+                ok = true;
+                break;
+            }
+        }
+    }
+    return ok;
+}
+
+static inline char* get_current_filename_from_directory_listing(directory_listing_type* data) {
+    return data->found_filename;
+}
+
+static inline bool find_next_file(directory_listing_type* data) {
+    bool ok = false;
+    struct dirent* ep;
+    while ((ep = readdir(data->dp))) {
+        char *ext = strrchr(ep->d_name, '.');
+        if (ext != NULL && strcasecmp(ext, ".p1r") == 0) {
+            data->found_filename = ep->d_name;
+            ok = true;
+            break;
+        }
+    }
+    return ok;
+}
+
+static inline void directory_listing_close(directory_listing_type *data) {
+    closedir(data->dp);
+}
+
+#endif
+
+
 void list_replay_files() {
-	DIR* dp;
-	struct dirent* ep;
 
     if (replay_list == NULL) {
         // need to allocate enough memory to store info about all replay files in the directory
-        replay_list = malloc(max_replay_files * sizeof(replay_info_type)); // will realloc() later if > 256 files exist
+        replay_list = malloc( max_replay_files * sizeof( replay_info_type ) ); // will realloc() later if > 256 files exist
     }
 
     num_replay_files = 0;
-	dp = opendir(replays_folder);
-	if (dp != NULL) {
-		while ((ep = readdir(dp))) {
-			char* ext = strrchr(ep->d_name, '.');
-			if (ext != NULL && strcasecmp(ext, ".p1r") == 0) {
-				++num_replay_files;
-                if (num_replay_files > max_replay_files) {
-                    // too many files, expand the memory available for replay_list
-                    max_replay_files += 128;
-                    replay_list = realloc(replay_list, max_replay_files * sizeof(replay_info_type));
-                }
-                replay_info_type* replay_info = &replay_list[num_replay_files-1]; // current replay file
-				memset(replay_info, 0, sizeof(replay_info_type));
-                // store the filename of the replay
-				snprintf(replay_info->filename, POP_MAX_PATH, "%s/%s", replays_folder, ep->d_name);
-				// get the creation time
-				struct stat st;
-				if (stat(replay_info->filename, &st) == 0) {
-					replay_info->creation_time = st.st_ctime;
-				}
-				// read and store the levelset name associated with the replay
-				FILE* fp = fopen(replay_info->filename, "rb");
-				int ok = 0;
-				if (fp != NULL) {
-					ok = read_replay_header(&replay_info->header, fp, NULL);
-					fclose(fp);
-				}
-				if (!ok) --num_replay_files; // scrap the file if it is not compatible
-			}
-		}
-	}
 
-	if (num_replay_files > 1) {
-		// sort listed replays by their creation date
-		qsort(replay_list, num_replay_files, sizeof(replay_info_type), compare_replay_creation_time);
-	}
+    directory_listing_type directory_listing = {0};
+    if (!init_directory_listing_and_find_first_file(&directory_listing)) {
+        return;
+    }
+
+    do {
+        ++num_replay_files;
+        if (num_replay_files > max_replay_files) {
+            // too many files, expand the memory available for replay_list
+            max_replay_files += 128;
+            replay_list = realloc( replay_list, max_replay_files * sizeof( replay_info_type ) );
+        }
+        replay_info_type* replay_info = &replay_list[num_replay_files - 1]; // current replay file
+        memset( replay_info, 0, sizeof( replay_info_type ) );
+        // store the filename of the replay
+        snprintf( replay_info->filename, POP_MAX_PATH, "%s/%s", replays_folder,
+                  get_current_filename_from_directory_listing(&directory_listing) );
+
+        // get the creation time
+        struct stat st;
+        if (stat( replay_info->filename, &st ) == 0) {
+            replay_info->creation_time = st.st_ctime;
+        }
+        // read and store the levelset name associated with the replay
+        FILE* fp = fopen( replay_info->filename, "rb" );
+        int ok = 0;
+        if (fp != NULL) {
+            ok = read_replay_header( &replay_info->header, fp, NULL );
+            fclose( fp );
+        }
+        if (!ok) --num_replay_files; // scrap the file if it is not compatible
+
+    } while (find_next_file(&directory_listing));
+
+    directory_listing_close(&directory_listing);
+
+    if (num_replay_files > 1) {
+        // sort listed replays by their creation date
+        qsort( replay_list, (size_t) num_replay_files, sizeof( replay_info_type ), compare_replay_creation_time );
+    }
 };
 
 byte open_replay_file(const char *filename) {
