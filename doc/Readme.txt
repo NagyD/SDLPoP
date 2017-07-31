@@ -266,7 +266,7 @@ DEVELOPING
 Q: How do I (re)compile it?
 A:
 Prerequisites for all platforms:
-	Make sure that you have the development versions of the "SDL", "SDL_image" and "SDL_mixer" (since SDLPoP 1.13) libraries installed.
+	Make sure that you have the development versions of the "SDL2", "SDL2_image" and "SDL2_mixer" (since SDLPoP 1.13) libraries installed.
 
 Windows:
 	If you are using Dev-C++:
@@ -279,7 +279,26 @@ Windows:
 		To install these, just extract the contents of the i686-w64-mingw32 folder from each archive to the Dev-Cpp folder.
 		To compile, open one of the .dev files and click the compile icon.
 
-	You can also use CMake.
+    Building with Visual Studio:
+        Run build.bat in the src/ directory.
+        For this to work, you first need to do two other things:
+            a) Run vsvarsall.bat from the command line, with either 'x86' or 'x64' as a parameter.
+               This batch file is included with all installations of MS Visual Studio, but its exact location may vary.
+               For VS2017, the command you should run might look like this:
+               call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" x86
+               This step sets up various environment variables, to enable running the compiler from the command line.
+            b) Set up the environment variable 'SDL2' to point to the SDL2 development library files.
+               To do this, you can use a command like so:
+               set "SDL2=C:\libraries\SDL2-2.0.5"
+               You can get the SDL2 library files from here: (download the Visual C++ 32/64-bit development package)
+               https://www.libsdl.org/download-2.0.php
+            (You could create a small batch file to automate the above steps on your system.)
+        Alternatively, you can also build SDLPoP using MSVC with NMake (use the makefile src/NMakefile).
+
+	You can also use CMake, in conjunction with the MinGW-w64 toolchain.
+	    You could either invoke CMake from the command line yourself, or use an IDE that uses CMake internally.
+	    As an example, CLion uses CMake as its project model.
+	    If you are using CLion as your IDE, you can simply load the src/ directory as a project.
 
 GNU/Linux:
 	You can install the libraries with apt-get or a package manager.

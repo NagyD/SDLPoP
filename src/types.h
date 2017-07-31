@@ -21,10 +21,18 @@ The authors of this program may be contacted at http://forum.princed.org
 #ifndef TYPES_H
 #define TYPES_H
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#ifdef USE_MIXER
-#include <SDL2/SDL_mixer.h>
+#if !defined(_MSC_VER)
+# include <SDL2/SDL.h>
+# include <SDL2/SDL_image.h>
+# ifdef USE_MIXER
+# include <SDL2/SDL_mixer.h>
+# endif
+#else
+# include <SDL.h>
+# include <SDL_image.h>
+# ifdef USE_MIXER
+# include <SDL_mixer.h>
+# endif
 #endif
 
 #if SDL_BYTEORDER != SDL_LIL_ENDIAN

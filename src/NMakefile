@@ -1,5 +1,5 @@
 
-OBJ = main.obj data.obj seg000.obj seg001.obj seg002.obj seg003.obj seg004.obj seg005.obj seg006.obj seg007.obj seg008.obj seg009.obj seqtbl.obj replay.obj options.obj
+OBJ = main.obj data.obj seg000.obj seg001.obj seg002.obj seg003.obj seg004.obj seg005.obj seg006.obj seg007.obj seg008.obj seg009.obj seqtbl.obj replay.obj options.obj lighting.obj screenshot.obj
 
 sdl = "..\SDL2-2.0.4"
 LIBS = $(sdl)\lib\x86\SDL2main.lib $(sdl)\lib\x86\SDL2.lib $(sdl)\lib\x86\SDL2_image.lib $(sdl)\lib\x86\SDL2_mixer.lib
@@ -12,13 +12,16 @@ cflags = $(cflags) /MDd /Od
 cflags = $(cflags) /MD /O2
 !ENDIF
 
+cflags = $(cflags) /nologo /fp:fast /GR- /wd4048
+
 all: prince.exe
 
 .c.obj:
-	$(cc) $(cdebug) $(cflags) $(cvars) /I. /I$(sdl)\include $<
+	$(cc) $(cdebug) $(cflags) $(cvars) /I. /I"$(sdl)\include" $<
 
 prince.exe: $(OBJ)
-	$(link) $(ldebug) $(conflags) -out:prince.exe $(conlibs) $(OBJ) $(LIBS)
+	$(link) $(ldebug) $(conflags) -out:..\prince.exe $(conlibs) $(OBJ) $(LIBS)
 
 clean:
 	del *.obj prince.exe
+	

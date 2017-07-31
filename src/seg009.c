@@ -145,6 +145,11 @@ int __pascal far pop_wait(int timer_index,int time) {
 	return do_wait(timer_index);
 }
 
+// S_ISREG may not be defined under MSVC
+#if defined(_MSC_VER) && !defined(S_ISREG)
+#define S_ISREG(mode)  (((mode) & S_IFMT) == S_IFREG)
+#endif
+
 static FILE* open_dat_from_root_or_data_dir(const char* filename) {
 	FILE* fp = NULL;
 	fp = fopen(filename, "rb");
@@ -975,13 +980,13 @@ const rect_type far *__pascal draw_text(const rect_type far *rect_ptr,int x_alig
 	num_lines = 0;
 	int rem_length = length;
 	const char* line_start = text;
-	static const int max_lines = 100;
-	const char* line_starts[max_lines];
-	int line_lengths[max_lines];
+    #define MAX_LINES 100
+	const char* line_starts[MAX_LINES];
+	int line_lengths[MAX_LINES];
 	do {
 		int line_length = find_linebreak(line_start, rem_length, rect_width, x_align);
 		if (line_length == 0) break;
-		if (num_lines >= max_lines) {
+		if (num_lines >= MAX_LINES) {
 			//... ERROR!
 			printf("draw_text(): Too many lines!\n");
 			quit(1);
@@ -1597,7 +1602,7 @@ void channel_finished(int channel) {
 	event.user.code = userevent_SOUND;
 	SDL_PushEvent(&event);
 }
-void music_finished() {
+void music_finished(void) {
 	channel_finished(-1);
 }
 #endif
