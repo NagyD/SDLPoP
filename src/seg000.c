@@ -1171,7 +1171,6 @@ void __pascal far check_fall_flo() {
 
 void get_joystick_state(int raw_x, int raw_y, int axis_state[2]) {
 
-#define JOY_THRESHOLD 8000
 #define DEGREES_TO_RADIANS (M_PI/180.0)
 
 	// check if the X/Y position is within the 'dead zone' of the joystick

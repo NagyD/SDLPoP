@@ -2612,6 +2612,32 @@ void idle() {
 							if (modifier & KMOD_CTRL ) last_key_scancode |= WITH_CTRL ;
 							if (modifier & KMOD_ALT  ) last_key_scancode |= WITH_ALT  ;
 					}
+
+#ifdef USE_AUTO_INPUT_MODE
+					switch (scancode) {
+						// Keys that are used for keyboard control:
+						case SDL_SCANCODE_LSHIFT:
+						case SDL_SCANCODE_RSHIFT:
+						case SDL_SCANCODE_LEFT:
+						case SDL_SCANCODE_RIGHT:
+						case SDL_SCANCODE_UP:
+						case SDL_SCANCODE_DOWN:
+						case SDL_SCANCODE_CLEAR:
+						case SDL_SCANCODE_HOME:
+						case SDL_SCANCODE_PAGEUP:
+						case SDL_SCANCODE_KP_2:
+						case SDL_SCANCODE_KP_4:
+						case SDL_SCANCODE_KP_5:
+						case SDL_SCANCODE_KP_6:
+						case SDL_SCANCODE_KP_7:
+						case SDL_SCANCODE_KP_8:
+						case SDL_SCANCODE_KP_9:
+							if (!is_keyboard_mode) {
+								is_keyboard_mode = 1;
+								is_joyst_mode = 0;
+							}
+					}
+#endif
 				}
 				break;
 			}
@@ -2619,9 +2645,24 @@ void idle() {
 				key_states[event.key.keysym.scancode] = 0;
 				break;
 			case SDL_CONTROLLERAXISMOTION:
-				if (event.caxis.axis < 6) joy_axis[event.caxis.axis] = event.caxis.value;
+				if (event.caxis.axis < 6) {
+					joy_axis[event.caxis.axis] = event.caxis.value;
+
+#ifdef USE_AUTO_INPUT_MODE
+					if (!is_joyst_mode && (event.caxis.value >= JOY_THRESHOLD || event.caxis.value <= -JOY_THRESHOLD)) {
+						is_joyst_mode = 1;
+						is_keyboard_mode = 0;
+					}
+#endif
+				}
 				break;
 			case SDL_CONTROLLERBUTTONDOWN:
+#ifdef USE_AUTO_INPUT_MODE
+				if (!is_joyst_mode) {
+					is_joyst_mode = 1;
+					is_keyboard_mode = 0;
+				}
+#endif
 				switch (event.cbutton.button)
 				{
 					case SDL_CONTROLLER_BUTTON_DPAD_LEFT:  joy_hat_states[0] = -1; break; // left
