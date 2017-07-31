@@ -1052,10 +1052,10 @@ void __pascal far start_fall() {
 	if (tile == tiles_20_wall
 
 		#ifdef FIX_RUNNING_JUMP_THROUGH_TAPESTRY
-		    // Also treat tapestries (when approached to the left) like a wall here.
+			// Also treat tapestries (when approached to the left) like a wall here.
 		|| (fix_running_jump_through_tapestry && Char.direction == dir_FF_left &&
 			(tile == tiles_12_doortop || tile == tiles_7_doortop_with_floor))
-        #endif
+		#endif
 
 			) {
 		if (fall_frame != 44 || distance_to_edge_weight() >= 6) {

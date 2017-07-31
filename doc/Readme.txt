@@ -133,8 +133,10 @@ Controlling the game:
 * Space: show time left
 * Ctrl-A: restart level
 * Ctrl-G: save game (on levels 3..13)
-* Ctrl-J: joystick mode / gamepad mode
+* Ctrl-J: joystick/gamepad mode
 * Ctrl-K: keyboard mode
+	The initial mode is joystick/gamepad if such a device is detected, otherwise keyboard mode.
+	The game will automatically change input mode when there is input from either device.
 * Ctrl-R: return to intro
 * Ctrl-S: sound on/off
 * Ctrl-V: show version

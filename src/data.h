@@ -84,11 +84,11 @@ extern word cplevel_entr[14];
 extern dialog_type* copyprot_dialog;
 // data:2944
 extern dialog_settings_type dialog_settings
-    INIT(= {
-         add_dialog_rect,
-         dialog_method_2_frame,
-         4, 4, 4, 4, 3, 4, 1
-    });
+	INIT(= {
+		add_dialog_rect,
+		dialog_method_2_frame,
+		4, 4, 4, 4, 3, 4, 1
+	});
 // data:2B76
 extern rect_type dialog_rect_1 INIT(= {60, 56, 124, 264});
 // data:2B7E
@@ -130,22 +130,22 @@ extern word current_level INIT(= -1);
 extern byte graphics_mode INIT(= 0);
 // data:2BA6
 extern rgb_type vga_palette[16] INIT(= {
-		{0x00, 0x00, 0x00},
-		{0x00, 0x00, 0x2A},
-		{0x00, 0x2A, 0x00},
-		{0x00, 0x2A, 0x2A},
-		{0x2A, 0x00, 0x00},
-		{0x2A, 0x00, 0x2A},
-		{0x2A, 0x15, 0x00},
-		{0x2A, 0x2A, 0x2A},
-		{0x15, 0x15, 0x15},
-		{0x15, 0x15, 0x3F},
-		{0x15, 0x3F, 0x15},
-		{0x15, 0x3F, 0x3F},
-		{0x3F, 0x15, 0x15},
-		{0x3F, 0x15, 0x3F},
-		{0x3F, 0x3F, 0x15},
-		{0x3F, 0x3F, 0x3F},
+	{0x00, 0x00, 0x00},
+	{0x00, 0x00, 0x2A},
+	{0x00, 0x2A, 0x00},
+	{0x00, 0x2A, 0x2A},
+	{0x2A, 0x00, 0x00},
+	{0x2A, 0x00, 0x2A},
+	{0x2A, 0x15, 0x00},
+	{0x2A, 0x2A, 0x2A},
+	{0x15, 0x15, 0x15},
+	{0x15, 0x15, 0x3F},
+	{0x15, 0x3F, 0x15},
+	{0x15, 0x3F, 0x3F},
+	{0x3F, 0x15, 0x15},
+	{0x3F, 0x15, 0x3F},
+	{0x3F, 0x3F, 0x15},
+	{0x3F, 0x3F, 0x3F},
 });
 
 // data:4CC0
@@ -324,22 +324,22 @@ extern word is_cutscene;
 
 // data:0FA0
 extern cutscene_ptr_type tbl_cutscenes[16] INIT(= {
-		NULL,
-		NULL,
-		cutscene_2_6,
-		NULL,
-		cutscene_4,
-		NULL,
-		cutscene_2_6,
-		NULL,
-		cutscene_8,
-		cutscene_9,
-		NULL,
-		NULL,
-		cutscene_12,
-		NULL,
-		NULL,
-		NULL,
+	NULL,
+	NULL,
+	cutscene_2_6,
+	NULL,
+	cutscene_4,
+	NULL,
+	cutscene_2_6,
+	NULL,
+	cutscene_8,
+	cutscene_9,
+	NULL,
+	NULL,
+	cutscene_12,
+	NULL,
+	NULL,
+	NULL,
 });
 
 // data:408C
@@ -484,7 +484,7 @@ extern short prev_char_col_left;
 extern short char_bottom_row;
 // data:3D34
 extern short guard_notice_timer;
-// data:42A0 
+// data:42A0
 extern short jumped_through_mirror;
 // data:2292
 extern const short y_clip[] INIT(= {-60, 3, 66, 129, 192});
@@ -721,22 +721,22 @@ extern byte is_timer_displayed INIT(= 0);
 // customized cutscene set-up: handled as index into a lookup table (can't rely on function pointers being stable!)
 extern byte tbl_cutscenes_by_index[16] INIT(= {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15});
 extern cutscene_ptr_type tbl_cutscenes_lookup[16] INIT(= {
-		NULL,
-		NULL,
-		cutscene_2_6,
-		NULL,
-		cutscene_4,
-		NULL,
-		cutscene_2_6,
-		NULL,
-		cutscene_8,
-		cutscene_9,
-		NULL,
-		NULL,
-		cutscene_12,
-		NULL,
-		NULL,
-		NULL,
+	NULL,
+	NULL,
+	cutscene_2_6,
+	NULL,
+	cutscene_4,
+	NULL,
+	cutscene_2_6,
+	NULL,
+	cutscene_8,
+	cutscene_9,
+	NULL,
+	NULL,
+	cutscene_12,
+	NULL,
+	NULL,
+	NULL,
 });
 
 #undef INIT

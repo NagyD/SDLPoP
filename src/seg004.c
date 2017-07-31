@@ -20,7 +20,7 @@ The authors of this program may be contacted at http://forum.princed.org
 
 #include "common.h"
 
-// data:432F 
+// data:432F
 sbyte bump_col_left_of_wall;
 // data:436E
 sbyte bump_col_right_of_wall;
@@ -473,7 +473,7 @@ void __pascal far check_gate_push() {
 		var_4 = tile_col;
 		if ((curr_tile2 == tiles_4_gate ||
 			get_tile(curr_room, --tile_col, tile_row) == tiles_4_gate) &&
-			(curr_row_coll_flags[tile_col] & prev_coll_flags[tile_col]) == 0xFF && 
+			(curr_row_coll_flags[tile_col] & prev_coll_flags[tile_col]) == 0xFF &&
 			can_bump_into_gate()
 		) {
 			bumped_sound();
@@ -494,7 +494,7 @@ void __pascal far check_guard_bumped() {
 		if (
 
 			#ifdef FIX_PUSH_GUARD_INTO_WALL
-            // Should also check for a wall BEHIND the guard, instead of only the current tile
+			// Should also check for a wall BEHIND the guard, instead of only the current tile
 			(fix_push_guard_into_wall && get_tile_behind_char() == tiles_20_wall) ||
 			#endif
 
@@ -534,7 +534,7 @@ void __pascal far check_chomped_guard() {
 // seg004:09B0
 int __pascal far check_chomped_here() {
 	if (curr_tile2 == tiles_18_chomper &&
-		(curr_room_modif[curr_tilepos] & 0x7F) == 2		
+		(curr_room_modif[curr_tilepos] & 0x7F) == 2
 	) {
 		coll_tile_left_xpos = x_bump[tile_col + 5] + 7;
 		if (get_left_wall_xpos(curr_room, tile_col, tile_row) < char_x_right_coll &&

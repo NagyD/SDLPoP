@@ -35,18 +35,18 @@ void far pop_main() {
 		printf ("SDLPoP v%s\n", SDLPOP_VERSION);
 		exit(0);
 	}
-	
+
 	if (check_param("--help") || check_param("-h") || check_param("-?")) {
 		printf ("See doc/Readme.txt\n");
 		exit(0);
 	}
-	
+
 	const char* temp = check_param("seed=");
 	if (temp != NULL) {
 		random_seed = atoi(temp+5);
 		seed_was_init = 1;
 	}
-	
+
 	// debug only: check that the sequence table deobfuscation did not mess things up
 	#ifdef CHECK_SEQTABLE_MATCHES_ORIGINAL
 	check_seqtable_matches_original();
@@ -110,8 +110,8 @@ void far pop_main() {
 	if (cheats_enabled
 		#ifdef USE_REPLAY
 		|| recording
-        #endif
-			) {
+		#endif
+	) {
 		for (i = 15; i >= 0; --i) {
 			snprintf(sprintf_temp, sizeof(sprintf_temp), "%d", i);
 			if (check_param(sprintf_temp)) {
@@ -601,10 +601,10 @@ int __pascal far process_key() {
 				} else {
 					if (current_level == 15 && cheats_enabled) {
 #ifdef USE_COPYPROT
-                        if (enable_copyprot) {
-                        	next_level = copyprot_level;
-                        	copyprot_level = -1;
-                        }
+						if (enable_copyprot) {
+							next_level = copyprot_level;
+							copyprot_level = -1;
+						}
 #endif
 					} else {
 						next_level = current_level + 1;
@@ -791,7 +791,7 @@ void __pascal far play_frame() {
 		// Special event: level 12 running exit
 		if (Kid.room == 23) {
 			++next_level;
-// Sounds must be stopped, because play_level_2() checks next_level only if there are no sounds playing. 
+// Sounds must be stopped, because play_level_2() checks next_level only if there are no sounds playing.
 			stop_sounds();
 			seamless = 1;
 		}
@@ -1171,7 +1171,6 @@ void __pascal far check_fall_flo() {
 
 void get_joystick_state(int raw_x, int raw_y, int axis_state[2]) {
 
-#define JOY_THRESHOLD 8000
 #define DEGREES_TO_RADIANS (M_PI/180.0)
 
 	// check if the X/Y position is within the 'dead zone' of the joystick
@@ -1242,7 +1241,7 @@ void __pascal far read_joyst_control() {
 
 	if (joy_left_stick_states[0] == -1 || joy_right_stick_states[0] == -1 || joy_hat_states[0] == -1)
 		control_x = -1;
-	
+
 	if (joy_left_stick_states[0] == 1 || joy_right_stick_states[0] == 1 || joy_hat_states[0] == 1)
 		control_x = 1;
 
@@ -1482,26 +1481,22 @@ int __pascal far do_paused() {
 // seg000:1500
 void __pascal far read_keyb_control() {
 
-	//if (key_states[0x48] || key_states[0x47] || key_states[0x49]) {
 	if (key_states[SDL_SCANCODE_UP] || key_states[SDL_SCANCODE_HOME] || key_states[SDL_SCANCODE_PAGEUP]
-		|| key_states[SDL_SCANCODE_KP_8] || key_states[SDL_SCANCODE_KP_7] || key_states[SDL_SCANCODE_KP_9]
-			) {
+	    || key_states[SDL_SCANCODE_KP_8] || key_states[SDL_SCANCODE_KP_7] || key_states[SDL_SCANCODE_KP_9]
+	) {
 		control_y = -1;
-		//} else if (key_states[0x4C] || key_states[0x50]) {
 	} else if (key_states[SDL_SCANCODE_CLEAR] || key_states[SDL_SCANCODE_DOWN]
-			   || key_states[SDL_SCANCODE_KP_5] || key_states[SDL_SCANCODE_KP_2]
-			) {
+	           || key_states[SDL_SCANCODE_KP_5] || key_states[SDL_SCANCODE_KP_2]
+	) {
 		control_y = 1;
 	}
-	//if (key_states[0x4B] || key_states[0x47]) {
 	if (key_states[SDL_SCANCODE_LEFT] || key_states[SDL_SCANCODE_HOME]
-		|| key_states[SDL_SCANCODE_KP_4] || key_states[SDL_SCANCODE_KP_7]
-			) {
+	    || key_states[SDL_SCANCODE_KP_4] || key_states[SDL_SCANCODE_KP_7]
+	) {
 		control_x = -1;
-		//} else if (key_states[0x4D] || key_states[0x49]) {
 	} else if (key_states[SDL_SCANCODE_RIGHT] || key_states[SDL_SCANCODE_PAGEUP]
-			   || key_states[SDL_SCANCODE_KP_6] || key_states[SDL_SCANCODE_KP_9]
-			) {
+	           || key_states[SDL_SCANCODE_KP_6] || key_states[SDL_SCANCODE_KP_9]
+	) {
 		control_x = 1;
 	}
 	control_shift = -(key_states[SDL_SCANCODE_LSHIFT] || key_states[SDL_SCANCODE_RSHIFT]);
@@ -1615,18 +1610,18 @@ void __pascal far show_title() {
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, &rect_titles, &rect_titles, blitters_0_no_transp);
 	draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, blitters_0_no_transp);
 	do_wait(timer_0);
-	
+
 	start_timer(timer_0,0x41);
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, &rect_titles, &rect_titles, blitters_0_no_transp);
 	draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, blitters_0_no_transp);
 	draw_image_2(2 /*a game by Jordan Mechner*/, chtab_title50, 96, 122, blitters_0_no_transp);
 	do_wait(timer_0);
-	
+
 	start_timer(timer_0,0x10E);
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, &rect_titles, &rect_titles, blitters_0_no_transp);
 	draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, blitters_0_no_transp);
 	do_wait(timer_0);
-	
+
 	start_timer(timer_0,0xEB);
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, &rect_titles, &rect_titles, blitters_0_no_transp);
 	draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, blitters_0_no_transp);
@@ -1648,9 +1643,9 @@ void __pascal far show_title() {
 	pop_wait(timer_0, 0x258);
 	fade_out_2(0x800);
 	release_title_images();
-	
+
 	load_intro(0, &pv_scene, 0);
-	
+
 	load_title_images(1);
 	current_target_surface = offscreen_surface;
 	draw_image_2(0 /*story frame*/, chtab_title40, 0, 0, blitters_0_no_transp);

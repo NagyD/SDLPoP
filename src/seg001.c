@@ -658,15 +658,15 @@ void __pascal far load_intro(int which_imgs,cutscene_ptr_type func,int free_soun
 	current_target_surface = offscreen_surface;
 	method_6_blit_img_to_scr(get_image(id_chtab_8_princessroom, 0), 0, 0, 0);
 	method_6_blit_img_to_scr(get_image(id_chtab_9_princessbed, 0), 0, 142, blitters_2_or);
-	
+
 	// Free the images that are not needed anymore.
 	free_all_chtabs_from(id_chtab_9_princessbed);
 	SDL_FreeSurface(get_image(id_chtab_8_princessroom, 0));
 	if (NULL != chtab_addrs[id_chtab_8_princessroom]) chtab_addrs[id_chtab_8_princessroom]->images[0] = NULL;
-	
+
 	load_chtab_from_file(id_chtab_3_princessinstory, 800, "PV.DAT", 1<<9);
 	load_chtab_from_file(id_chtab_4_jaffarinstory_princessincutscenes,
-                         50*which_imgs + 850, "PV.DAT", 1<<10);
+	                     50*which_imgs + 850, "PV.DAT", 1<<10);
 	for (current_star = 0; current_star < N_STARS; ++current_star) {
 		draw_star(current_star, 0);
 	}

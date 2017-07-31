@@ -712,15 +712,15 @@ int __pascal far get_loose_frame(byte modifier) {
 
 // Get an image, with index and NULL checks.
 image_type* get_image(short chtab_id, int id) {
-    if (chtab_id < 0 || chtab_id > COUNT(chtab_addrs)) {
+	if (chtab_id < 0 || chtab_id > COUNT(chtab_addrs)) {
 		printf("Tried to use chtab %d not in 0..%d\n", chtab_id, (int)COUNT(chtab_addrs));
 		return NULL;
-    }
-    chtab_type* chtab = chtab_addrs[chtab_id];
+	}
+	chtab_type* chtab = chtab_addrs[chtab_id];
 	if (chtab == NULL) {
 		printf("Tried to use null chtab %d\n", chtab_id);
 		return NULL;
-    }
+	}
 	if (id < 0 || id >= chtab->n_images) {
 		if (id != 255) printf("Tried to use image %d of chtab %d, not in 0..%d\n", id, chtab_id, chtab->n_images-1);
 		return NULL;
@@ -951,7 +951,7 @@ void __pascal far draw_mid(int index) {
 	word need_free_image;
 	image_type*far image;
 //	word image_flipped;
-	
+
 	blit_flip = 0;
 	need_free_image = 0;
 	need_free_mask = 0;
@@ -1073,7 +1073,7 @@ void __pascal far draw_gate_back() {
 		// The following line (erroneously) erases the top-right of the tile below-left (because it is drawn non-transparently).
 		// -- But it draws something that was already drawn! (in draw_tile_right()).
 		add_backtable(id_chtab_6_environment, tile_table[tiles_4_gate].right_id, draw_xh, 0,
-					  tile_table[tiles_4_gate].right_y + draw_main_y, blitters_0_no_transp, 0);
+		              tile_table[tiles_4_gate].right_y + draw_main_y, blitters_0_no_transp, 0);
 		// And this line tries to fix it. But it fails if it was a gate or a pillar.
 		if (can_see_bottomleft()) draw_tile_topright();
 #ifdef FIX_GATE_DRAWING_BUG
@@ -1186,26 +1186,26 @@ void __pascal far load_alter_mod(int tilepos) {
 			label_wall_continued:
 		{
 			// Here, ahead of time, we define the condition for a neighbouring tile to be seen as a wall connection
-            #ifndef USE_FAKE_TILES
-            #define read_adj_tile_modif_in_curr_room() 		// nop; access to modifier of adjacent tiles is not needed
-            #define read_adj_tile_modif_in_external_room() 	// nop
+			#ifndef USE_FAKE_TILES
+			#define read_adj_tile_modif_in_curr_room()      // nop; access to modifier of adjacent tiles is not needed
+			#define read_adj_tile_modif_in_external_room()  // nop
 			#define WALL_CONNECTION_CONDITION (adj_tile == tiles_20_wall)
 
-            #else // #ifdef USE_FAKE_TILES
-            // When determining wall connections for fake walls, we need access to the tile modifier of adjacent tiles
+			#else // #ifdef USE_FAKE_TILES
+			// When determining wall connections for fake walls, we need access to the tile modifier of adjacent tiles
 			#define read_adj_tile_modif_in_curr_room() \
-            int adj_tile_modif = curr_room_modif[adj_tile_index];
+			int adj_tile_modif = curr_room_modif[adj_tile_index];
 			#define read_adj_tile_modif_in_external_room() \
-            int adj_tile_modif = level.bg[adj_tile_index];
+			int adj_tile_modif = level.bg[adj_tile_index];
 			// Now redefine the condition for what tiletype / modifier combination counts as a valid "wall"
-            #define WALL_CONNECTION_CONDITION (								   										  \
-				(adj_tile == tiles_20_wall && adj_tile_modif != 4 && (adj_tile_modif >> 4) != 4 && 				 	  \
-							 adj_tile_modif != 6 && (adj_tile_modif >> 4) != 6) ||			 						  \
-				(adj_tile == tiles_0_empty && (adj_tile_modif == 5 || adj_tile_modif == 13 ||						  \
-							 (adj_tile_modif >= 50 && adj_tile_modif <= 53))) || 									  \
-				(adj_tile == tiles_1_floor && (adj_tile_modif == 5 || adj_tile_modif == 13 ||						  \
-							 (adj_tile_modif >= 50 && adj_tile_modif <= 53))))
-            #endif
+			#define WALL_CONNECTION_CONDITION (                                                                       \
+				(adj_tile == tiles_20_wall && adj_tile_modif != 4 && (adj_tile_modif >> 4) != 4 &&                    \
+				             adj_tile_modif != 6 && (adj_tile_modif >> 4) != 6) ||                                    \
+				(adj_tile == tiles_0_empty && (adj_tile_modif == 5 || adj_tile_modif == 13 ||                         \
+				             (adj_tile_modif >= 50 && adj_tile_modif <= 53))) ||                                      \
+				(adj_tile == tiles_1_floor && (adj_tile_modif == 5 || adj_tile_modif == 13 ||                         \
+				             (adj_tile_modif >= 50 && adj_tile_modif <= 53))))
+			#endif
 
 			if (graphics_mode != gmCga && graphics_mode != gmHgaHerc) {
 				wall_to_right = 1;

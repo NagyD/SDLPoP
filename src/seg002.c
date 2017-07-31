@@ -178,7 +178,7 @@ void __pascal far enter_guard() {
 
 	#ifdef REMEMBER_GUARD_HP
 	int remembered_hp = (curr_guard_color & 0xF0) >> 4;
-    #endif
+	#endif
 	curr_guard_color &= 0x0F; // added; only least significant 4 bits are used for guard color
 
 	// level 3 has skeletons with infinite lives
@@ -199,7 +199,7 @@ void __pascal far enter_guard() {
 	} else {
 		Char.curr_seq = level.guards_seq_lo[room_minus_1] + (seq_hi << 8);
 	}
-    play_seq();
+	play_seq();
 	guard_skill = level.guards_skill[room_minus_1];
 	if (guard_skill >= 12) {
 		guard_skill = 3;
@@ -408,15 +408,15 @@ short __pascal far leave_room() {
 		(frame >= frame_150_parry && frame < 163
 
 #ifdef FIX_RETREAT_WITHOUT_LEAVING_ROOM
-           // By repeatedly pressing 'back' in a swordfight, you can retreat out of a room without the room changing. (Trick 35)
+			// By repeatedly pressing 'back' in a swordfight, you can retreat out of a room without the room changing. (Trick 35)
 
-           // The game waits for a 'legal frame' (e.g. frame_170_stand_with_sword) until leaving is possible;
-           // However, this frame is never reached if you press 'back' in the correct pattern!
+			// The game waits for a 'legal frame' (e.g. frame_170_stand_with_sword) until leaving is possible;
+			// However, this frame is never reached if you press 'back' in the correct pattern!
 
-           // Solution: also allow the room to be changed on frame_157_walk_with_sword
-           // Note that this means that the delay for leaving rooms in a swordfight becomes noticably shorter.
+			// Solution: also allow the room to be changed on frame_157_walk_with_sword
+			// Note that this means that the delay for leaving rooms in a swordfight becomes noticably shorter.
 
-		   && (frame != frame_157_walk_with_sword || !fix_retreat_without_leaving_room)
+			&& (frame != frame_157_walk_with_sword || !fix_retreat_without_leaving_room)
 #endif
 
 		) ||

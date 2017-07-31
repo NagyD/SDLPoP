@@ -2,6 +2,7 @@ Playing custom levelsets with SDLPoP
 ====================================
 
 1. Place the folder with the mod's files inside this folder (the "mods/" directory).
+   Note to Linux users: All DAT files must be renamed to all-uppercase.
 
 2. Make sure that the name of the mod's folder is correct.
    For example: 
