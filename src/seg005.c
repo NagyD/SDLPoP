@@ -43,7 +43,7 @@ void __pascal far do_fall() {
 		check_grab();
 
 		#ifdef FIX_GLIDE_THROUGH_WALL
-        if (fix_glide_through_wall) {
+		if (fix_glide_through_wall) {
 			// Fix for the kid falling through walls after turning around while running (especially when weightless)
 			determine_col();
 			get_tile_at_char();
@@ -65,8 +65,8 @@ void __pascal far do_fall() {
 					Char.fall_x = 0; // not in in_wall(), but we do need to cancel horizontal movement
 				}
 			}
-        }
-        #endif
+		}
+		#endif
 
 	} else {
 
@@ -90,7 +90,7 @@ void __pascal far do_fall() {
 			if (get_tile_at_char() != tiles_4_gate)
 				determine_col();
 		}
-        #endif
+		#endif
 
 		if (get_tile_at_char() == tiles_20_wall) {
 			in_wall();
@@ -100,7 +100,7 @@ void __pascal far do_fall() {
 			if (distance_to_edge_weight() >= 8) // only intervene if the kid is actually IN FRONT of the tapestry
 				in_wall();
 		}
-        #endif
+		#endif
 
 		if (tile_is_floor(curr_tile2)) {
 			land();
@@ -124,7 +124,7 @@ void __pascal far land() {
 			Char.x = char_dx_forward(-3);
 		}
 
-        #ifdef FIX_LAND_AGAINST_GATE_OR_TAPESTRY
+		#ifdef FIX_LAND_AGAINST_GATE_OR_TAPESTRY
 		else if (fix_land_against_gate_or_tapestry) {
 			// A closed gate right in front of the landing spot should not behave like an open floor tile, but like a wall
 			// Similar for a tapestry tile (with floor)

@@ -39,18 +39,18 @@ void save_screenshot() {
 void switch_to_room(int room) {
 	drawn_room = room;
 	load_room_links();
-	
+
 	if (tbl_level_type[current_level]) {
 		gen_palace_wall_colors();
 	}
-	
+
 	// for guards
 	Guard.direction = dir_56_none;
 	guardhp_curr = 0; // otherwise guard HPs stay on screen
 	draw_guard_hp(0, 10); // otherwise guard HPs still stay on screen if some guards have extra HP
 	enter_guard(); // otherwise the guard won't show up
 	check_shadow(); // otherwise the shadow won't appear on level 6
-	
+
 	// for potion bubbles
 	for (int tilepos=0;tilepos<30;tilepos++) {
 		int tile_type = curr_room_tiles[tilepos] & 0x1F;
@@ -59,7 +59,7 @@ void switch_to_room(int room) {
 			if ((modifier & 7) == 0) curr_room_modif[tilepos]++;
 		}
 	}
-	
+
 	redraw_screen(1);
 }
 
@@ -86,10 +86,10 @@ void draw_extras() {
 		int col = tilepos%10;
 		int y = row * 63 + 3;
 		int x = col * 32;
-		
+
 		// special floors
 		rect_type floor_rect = {y+60-3, x, y+63-3, x+32};
-		
+
 		// loose floors
 		if (tile_type == tiles_11_loose) {
 			int color = color_15_brightwhite;
@@ -115,7 +115,7 @@ void draw_extras() {
 				break;
 			}
 		}
-		
+
 		if (!is_trob_here) { // It's not stuck if it's currently animated.
 			// harmless spikes
 			if (tile_type == tiles_2_spike) {
@@ -124,7 +124,7 @@ void draw_extras() {
 					show_text_with_color(&spike_rect, 0, -1, "safe", color_10_brightgreen);
 				}
 			}
-			
+
 			// stuck chompers
 			if (tile_type == tiles_18_chomper) {
 				int frame = (modifier & 0x7F);
@@ -136,7 +136,7 @@ void draw_extras() {
 				}
 			}
 		}
-		
+
 		// potion types
 		if (tile_type == tiles_10_potion) {
 			struct pot_type {
@@ -166,7 +166,7 @@ void draw_extras() {
 			rect_type pot_rect = {y+40, x, y+60, x+32};
 			show_text_with_color(&pot_rect, 0, -1, text, color);
 		}
-		
+
 		// triggered door events
 		if (tile_type == tiles_6_closer || tile_type == tiles_15_opener
 			// These tiles are triggered even if they are not buttons!
@@ -199,9 +199,9 @@ void draw_extras() {
 			rect_type buttonmod_rect = {y/*+50-3*/, x, y+60-3, x+32};
 			show_text_with_color(&buttonmod_rect, 0, 1, events, color_14_brightyellow);
 		}
-		
+
 		// TODO: Add an option to merge events pointing to the same tile?
-		
+
 		// door events that point here
 		char events[256*4] = "";
 		int events_pos = 0;
@@ -219,7 +219,7 @@ void draw_extras() {
 			rect_type events_rect = {y,x,y+63-3,x+32-7};
 			show_text_with_color(&events_rect, 0, 1, events, color_14_brightyellow);
 		}
-		
+
 		// special events
 		char* special_event = NULL;
 		if (current_level == 0 && drawn_room == 24) {
@@ -297,7 +297,7 @@ void draw_extras() {
 			rect_type event_rect = {y,x-10,y+63,x+32+10};
 			show_text_with_color(&event_rect, 0, 0, special_event, color_14_brightyellow);
 		}
-		
+
 		// Attempt to show broken room links:
 		byte* roomlinks = (byte*)(&level.roomlinks[drawn_room-1]);
 		for (int direction = 0; direction < 4; direction++) {
@@ -317,7 +317,7 @@ void draw_extras() {
 				}
 			}
 		}
-		
+
 		// start pos
 		if (level.start_room == drawn_room && level.start_pos == tilepos) {
 			byte start_dir = level.start_dir;
@@ -328,7 +328,7 @@ void draw_extras() {
 		}
 
 	}
-	
+
 	// room number
 	char room_num[4];
 	snprintf(room_num, sizeof(room_num), "%d", drawn_room);
@@ -346,10 +346,10 @@ void draw_extras() {
 // Save a "screenshot" of the whole level.
 void save_level_screenshot(bool want_extras) {
 	// TODO: Disable in the intro or if a cutscene is active?
-	
+
 	// Restrict this to cheat mode. After all, it's like using H/J/U/N or opening the level in an editor.
 	if (!cheats_enabled) return;
-	
+
 	upside_down = 0;
 
 	//printf("random_seed = 0x%08X\n", random_seed);
@@ -367,7 +367,7 @@ void save_level_screenshot(bool want_extras) {
 	int queue[NUMBER_OF_ROOMS] = {drawn_room}; // We start mapping from the current room.
 	int queue_start = 0;
 	int queue_end = 1;
-	
+
 	while (queue_start < queue_end) {
 		int room = queue[queue_start++];
 		byte* roomlinks = (byte*)(&level.roomlinks[room-1]);
@@ -383,7 +383,7 @@ void save_level_screenshot(bool want_extras) {
 			}
 		}
 	}
-	
+
 	int min_x=0, max_x=0, min_y=0, max_y=0;
 	for (int room=1;room<=NUMBER_OF_ROOMS;room++) {
 		if (xpos[room] < min_x) min_x = xpos[room];
@@ -391,7 +391,7 @@ void save_level_screenshot(bool want_extras) {
 		if (ypos[room] < min_y) min_y = ypos[room];
 		if (ypos[room] > max_y) max_y = ypos[room];
 	}
-	
+
 	int map_width = max_x-min_x+1;
 	int map_height = max_y-min_y+1;
 
@@ -414,7 +414,7 @@ void save_level_screenshot(bool want_extras) {
 			}
 		}
 	}
-	
+
 	// Debug printout of arrangement.
 	/*
 	printf("LEVEL %d\n", current_level);
@@ -431,12 +431,12 @@ void save_level_screenshot(bool want_extras) {
 	}
 	printf("\n");
 	*/
-	
+
 	// Now we have the arrangement, let's make the picture!
-	
+
 	int image_width = map_width*320;
 	int image_height = map_height*189+3+8;
-	
+
 	SDL_Surface* map_surface = SDL_CreateRGBSurface(0, image_width, image_height, 32, 0xFF, 0xFF<<8, 0xFF<<16, 0xFF<<24);
 	if (map_surface == NULL) {
 		sdlperror("SDL_CreateRGBSurface (map_surface)");
@@ -445,11 +445,11 @@ void save_level_screenshot(bool want_extras) {
 	}
 
 	// TODO: Background color for places where there is no room?
-	
+
 	// TODO: Add an option for displaying all unreachable rooms?
-	
+
 	has_trigger_potion = false;
-	
+
 	// Is there a trigger potion on the level?
 	for (int room=1;room<=NUMBER_OF_ROOMS;room++) {
 		if (processed[room]) {
@@ -489,7 +489,7 @@ void save_level_screenshot(bool want_extras) {
 			}
 		}
 	}
-	
+
 	// debug
 	/*
 	printf("Used events:");
@@ -520,11 +520,11 @@ void save_level_screenshot(bool want_extras) {
 				dest_rect.x = x*320;
 				dest_rect.y = y*189;
 				switch_to_room(room);
-				
+
 				if (want_extras) draw_extras();
-				
+
 				// TODO: Hide the status bar, or maybe show some custom text on it?
-				
+
 				SDL_BlitSurface(onscreen_surface_, NULL, map_surface, &dest_rect);
 			}
 		}
@@ -534,7 +534,7 @@ void save_level_screenshot(bool want_extras) {
 
 	IMG_SavePNG(map_surface, screenshot_filename);
 	printf("Saved level screenshot to \"%s\".\n", screenshot_filename);
-	
+
 	SDL_FreeSurface(map_surface);
 
 	//printf("random_seed = 0x%08X\n", random_seed);
@@ -570,13 +570,13 @@ bool want_auto_screenshot() {
 // Called when the level is drawn for the first time.
 void auto_screenshot() {
 	if (!want_auto) return;
-	
+
 	if (want_auto_whole_level) {
 		save_level_screenshot(want_auto_extras);
 	} else {
 		save_screenshot();
 	}
-	
+
 	quit(1);
 }
 
