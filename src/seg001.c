@@ -19,6 +19,7 @@ The authors of this program may be contacted at http://forum.princed.org
 */
 
 #include "common.h"
+#include <unistd.h>
 #include <fcntl.h>
 
 // data:4CB4

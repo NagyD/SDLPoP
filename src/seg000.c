@@ -20,6 +20,7 @@ The authors of this program may be contacted at http://forum.princed.org
 
 #include "common.h"
 #include <fcntl.h>
+#include <unistd.h>
 #include <setjmp.h>
 #include <math.h>
 
