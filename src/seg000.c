@@ -2004,7 +2004,7 @@ const rect_type splash_text_2_rect = {50, 0, 200, 320};
 
 const char* splash_text_1 = "SDLPoP " SDLPOP_VERSION;
 const char* splash_text_2 =
-		"To quick load/save, press F6/F9 in-game.\n"
+		"To quick save/load, press F6/F9 in-game.\n"
 		"\n"
 #ifdef USE_REPLAY
 		"To record replays, press Ctrl+Tab in-game.\n"
