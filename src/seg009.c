@@ -1927,6 +1927,7 @@ void __pascal far turn_sound_on_off(byte new_state) {
 	init_digi();
 	if (digi_unavailable) return;
 	Mix_Volume(-1, is_sound_on ? MIX_MAX_VOLUME : 0);
+	Mix_VolumeMusic(is_sound_on ? MIX_MAX_VOLUME : 0);
 #endif
 }
 
