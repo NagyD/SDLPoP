@@ -20,6 +20,7 @@ The authors of this program may be contacted at http://forum.princed.org
 
 #include "common.h"
 #include <time.h>
+#include <unistd.h>
 #include <sys/stat.h>
 
 // Directory listing using dirent.h is available using MinGW on Windows, but not using MSVC (need to use Win32 API).
