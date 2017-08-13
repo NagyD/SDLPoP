@@ -30,6 +30,7 @@ The authors of this program may be contacted at http://forum.princed.org
 
 #ifdef USE_WIN32_API_FOR_LISTING_REPLAY_FILES
 #include <windows.h>
+#include <wchar.h>
 #else
 #include <dirent.h>
 #endif
@@ -201,6 +202,8 @@ static int compare_replay_creation_time(const void* a, const void* b)
 
 FILE* fopen_UTF8(const char* filename, const char* mode);
 #define fopen fopen_UTF8
+int chdir_UTF8(const char* path);
+#define chdir chdir_UTF8
 
 // This hack is needed because SDL uses UTF-8 everywhere (even in argv!), but fopen on Windows uses whatever code page is currently set.
 FILE* fopen_UTF8(const char* filename_UTF8, const char* mode_UTF8) {
@@ -209,6 +212,13 @@ FILE* fopen_UTF8(const char* filename_UTF8, const char* mode_UTF8) {
 	FILE* result = _wfopen(filename_UTF16, mode_UTF16);
 	SDL_free(mode_UTF16);
 	SDL_free(filename_UTF16);
+	return result;
+}
+
+int chdir_UTF8(const char* path_UTF8) {
+	WCHAR* path_UTF16 = WIN_UTF8ToString(path_UTF8);
+	int result = _wchdir(path_UTF16);
+	SDL_free(path_UTF16);
 	return result;
 }
 
@@ -372,7 +382,11 @@ void change_working_dir_to_sdlpop_root() {
 		char exe_dir[POP_MAX_PATH];
 		strncpy(exe_dir, exe_path, len);
 		exe_dir[len] = '\0';
-		chdir(exe_dir);
+
+		int result = chdir(exe_dir);
+		if (result != 0) {
+			perror("Can't change into SDLPoP directory");
+		}
 	}
 
 };
