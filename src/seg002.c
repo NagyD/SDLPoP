@@ -477,7 +477,7 @@ short __pascal far leave_room() {
 void __pascal far Jaffar_exit() {
 	if (leveldoor_open == 2) {
 		get_tile(24, 0, 0);
-		trigger(0, 0, -1);
+		trigger_button(0, 0, -1);
 	}
 }
 

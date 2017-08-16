@@ -401,7 +401,7 @@ short __pascal far set_doorlink_timer(short index,byte value);
 short __pascal far get_doorlink_tile(short index);
 short __pascal far get_doorlink_next(short index);
 short __pascal far get_doorlink_room(short index);
-void __pascal far trigger(int playsound,int button_type,int modifier);
+void __pascal far trigger_button(int playsound,int button_type,int modifier);
 void __pascal far died_on_button();
 void __pascal far animate_button();
 void __pascal far start_level_door(short room,short tilepos);

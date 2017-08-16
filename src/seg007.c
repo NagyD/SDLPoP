@@ -745,7 +745,7 @@ short __pascal far get_doorlink_room(short index) {
 }
 
 // seg007:0C53
-void __pascal far trigger(int playsound,int button_type,int modifier) {
+void __pascal far trigger_button(int playsound,int button_type,int modifier) {
 	sbyte link_timer;
 	get_curr_tile(curr_tilepos);
 	if (button_type == 0) {
@@ -785,7 +785,7 @@ void __pascal far died_on_button() {
 	} else {
 		curr_room_tiles[curr_tilepos] = tiles_5_stuck;
 	}
-	trigger(1, button_type, modifier);
+	trigger_button(1, button_type, modifier);
 }
 
 // seg007:0D3A
@@ -1041,7 +1041,7 @@ void __pascal far loose_land() {
 			button_type = tiles_14_debris;
 		// fallthrough!
 		case tiles_6_closer:
-			trigger(1, button_type, -1);
+			trigger_button(1, button_type, -1);
 			tiletype = get_tile(curmob.room, curmob.xh >> 2, curmob.row);
 		// fallthrough!
 		case tiles_1_floor:

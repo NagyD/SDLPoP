@@ -1519,7 +1519,7 @@ void __pascal far check_press() {
 	}
 	if (curr_tile2 == tiles_15_opener || curr_tile2 == tiles_6_closer) {
 		if (Char.alive < 0) {
-			trigger(1, 0, -1);
+			trigger_button(1, 0, -1);
 		} else {
 			died_on_button();
 		}
@@ -1699,7 +1699,7 @@ void __pascal far proc_get_object() {
 			break;
 			case 5: // open
 				get_tile(8, 0, 0);
-				trigger(0, 0, -1);
+				trigger_button(0, 0, -1);
 			break;
 			case 4: // hurt
 				stop_sounds();

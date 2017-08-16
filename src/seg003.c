@@ -163,9 +163,9 @@ void __pascal far do_startpos() {
 		hitp_max = hitp_curr = x;
 	}
 	if (current_level == 1) {
-		// Special event: press tile + falling entry
+		// Special event: press button + falling entry
 		get_tile(5, 2, 0);
-		trigger(0, 0, -1);
+		trigger_button(0, 0, -1);
 		seqtbl_offset_char(seq_7_fall); // fall
 	} else if (current_level == 13) {
 		// Special event: running entry
