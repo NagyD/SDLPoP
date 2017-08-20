@@ -1116,18 +1116,17 @@ void __pascal far draw_mob() {
 	short tilepos;
 	short tile_col;
 	ypos = curmob.y;
-	if (curmob.room == drawn_room ) {
+	if (curmob.room == drawn_room) {
 		if (curmob.y >= 210) return;
 	} else if (curmob.room == room_B) {
 		if (ABS(ypos) >= 18) return;
 		curmob.y += 192;
 		ypos = curmob.y;
-	} else if (curmob.room != room_A) {
-		return;
-	} else if (curmob.y < 174) {
-		return;
-	} else {
+	} else if (curmob.room == room_A) {
+		if (curmob.y < 174) return;
 		ypos = curmob.y - 189;
+	} else {
+		return;
 	}
 	tile_col = curmob.xh >> 2;
 	tile_row = y_to_row_mod4(ypos);
