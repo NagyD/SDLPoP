@@ -583,7 +583,7 @@ void __pascal far draw_tile_base() {
 	} else if (curr_tile == tiles_11_loose) {
 		id = loose_fram_left[get_loose_frame(curr_modifier)];
 	} else if (curr_tile == tiles_15_opener && tile_left == tiles_0_empty && tbl_level_type[current_level] == 0) {
-		id = 148; // left half of open button with floor to the left
+		id = 148; // left half of open button with no floor to the left
 	} else {
 		id = tile_table[curr_tile].base_id;
 	}
