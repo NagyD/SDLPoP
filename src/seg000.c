@@ -20,7 +20,9 @@ The authors of this program may be contacted at http://forum.princed.org
 
 #include "common.h"
 #include <fcntl.h>
+#ifndef _MSC_VER // unistd.h does not exist in the Windows SDK.
 #include <unistd.h>
+#endif
 #include <setjmp.h>
 #include <math.h>
 
