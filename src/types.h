@@ -39,11 +39,9 @@ The authors of this program may be contacted at http://forum.princed.org
 #error This program is not (yet) prepared for big endian CPUs, please contact the author.
 #endif
 
-// This macro is from SDL_types.h.
-// It is #undefined at the end of that file, even though it can be useful outside that file.
+// This macro is originally from SDL_types.h / SDL_stdinc.h.
 /* Make sure the types really have the right sizes */
-#define SDL_COMPILE_TIME_ASSERT(name, x)               \
-       typedef int SDL_dummy_ ## name[(x) * 2 - 1]
+#define COMPILE_TIME_ASSERT(name, x)  typedef int compile_time_assert_dummy_ ## name[(x) * 2 - 1]
 
 // "far" and "near" makes sense only for 16-bit
 #define far
@@ -225,7 +223,7 @@ typedef struct level_type {
 	byte guards_color[24];
 	byte fill_3[18];
 } level_type;
-SDL_COMPILE_TIME_ASSERT(level_size, sizeof(level_type) == 2305);
+COMPILE_TIME_ASSERT(level_size, sizeof(level_type) == 2305);
 #pragma pack(pop)
 
 typedef SDL_Surface surface_type;
@@ -258,7 +256,7 @@ typedef struct dat_shpl_type {
 	byte n_images;
 	dat_pal_type palette;
 } dat_shpl_type;
-SDL_COMPILE_TIME_ASSERT(dat_shpl_size, sizeof(dat_shpl_type) == 100);
+COMPILE_TIME_ASSERT(dat_shpl_size, sizeof(dat_shpl_type) == 100);
 #pragma pack(pop)
 
 typedef struct char_type {
@@ -388,20 +386,20 @@ typedef struct dat_header_type {
 	Uint32 table_offset;
 	Uint16 table_size;
 } dat_header_type;
-SDL_COMPILE_TIME_ASSERT(dat_header_size, sizeof(dat_header_type) == 6);
+COMPILE_TIME_ASSERT(dat_header_size, sizeof(dat_header_type) == 6);
 
 typedef struct dat_res_type {
 	Uint16 id;
 	Uint32 offset;
 	Uint16 size;
 } dat_res_type;
-SDL_COMPILE_TIME_ASSERT(dat_res_size, sizeof(dat_res_type) == 8);
+COMPILE_TIME_ASSERT(dat_res_size, sizeof(dat_res_type) == 8);
 
 typedef struct dat_table_type {
 	Uint16 res_count;
 	dat_res_type entries[0];
 } dat_table_type;
-SDL_COMPILE_TIME_ASSERT(dat_table_size, sizeof(dat_table_type) == 2);
+COMPILE_TIME_ASSERT(dat_table_size, sizeof(dat_table_type) == 2);
 
 typedef struct image_data_type {
 	Uint16 height;
@@ -409,7 +407,7 @@ typedef struct image_data_type {
 	Uint16 flags;
 	byte data[0];
 } image_data_type;
-SDL_COMPILE_TIME_ASSERT(image_data_size, sizeof(image_data_type) == 6);
+COMPILE_TIME_ASSERT(image_data_size, sizeof(image_data_type) == 6);
 #pragma pack(pop)
 
 typedef struct dat_type {
@@ -467,7 +465,7 @@ typedef struct rawfont_type {
 	short space_between_chars;
 	word offsets[0];
 } rawfont_type;
-SDL_COMPILE_TIME_ASSERT(rawfont_type, sizeof(rawfont_type) == 10);
+COMPILE_TIME_ASSERT(rawfont_type, sizeof(rawfont_type) == 10);
 #pragma pack(pop)
 
 #endif
@@ -492,12 +490,12 @@ typedef struct note_type {
 	word frequency; // 0x00 or 0x01 = rest, 0x12 = end
 	byte length;
 } note_type;
-SDL_COMPILE_TIME_ASSERT(note_type, sizeof(note_type) == 3);
+COMPILE_TIME_ASSERT(note_type, sizeof(note_type) == 3);
 typedef struct speaker_type { // IBM
 	word tempo;
 	note_type notes[0];
 } speaker_type;
-SDL_COMPILE_TIME_ASSERT(speaker_type, sizeof(speaker_type) == 2);
+COMPILE_TIME_ASSERT(speaker_type, sizeof(speaker_type) == 2);
 
 typedef struct digi_type { // wave in 1.0 and 1.1
 	word sample_rate;
@@ -506,7 +504,7 @@ typedef struct digi_type { // wave in 1.0 and 1.1
 	byte sample_size; // =8
 	byte samples[0];
 } digi_type;
-SDL_COMPILE_TIME_ASSERT(digi_type, sizeof(digi_type) == 7);
+COMPILE_TIME_ASSERT(digi_type, sizeof(digi_type) == 7);
 
 typedef struct digi_new_type { // wave in 1.3 and 1.4 (and PoP2)
 	word sample_rate;
@@ -516,7 +514,7 @@ typedef struct digi_new_type { // wave in 1.3 and 1.4 (and PoP2)
 	word unknown2;
 	byte samples[0];
 } digi_new_type;
-SDL_COMPILE_TIME_ASSERT(digi_new_type, sizeof(digi_new_type) == 9);
+COMPILE_TIME_ASSERT(digi_new_type, sizeof(digi_new_type) == 9);
 
 typedef struct midi_type {
 	byte data[0];

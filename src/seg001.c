@@ -40,7 +40,7 @@ typedef struct hof_type {
 	char name[25];
 	short min,tick;
 } hof_type;
-SDL_COMPILE_TIME_ASSERT(hof_size, sizeof(hof_type) == 29);
+COMPILE_TIME_ASSERT(hof_size, sizeof(hof_type) == 29);
 #pragma pack(pop)
 
 #define MAX_HOF_COUNT 6
