@@ -19,7 +19,10 @@ The authors of this program may be contacted at http://forum.princed.org
 */
 
 #include "common.h"
+
+#ifndef _MSC_VER // unistd.h does not exist in the Windows SDK.
 #include <unistd.h>
+#endif
 #include <fcntl.h>
 
 // data:4CB4

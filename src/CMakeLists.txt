@@ -21,15 +21,15 @@ if (WIN32)
     endif (NOT (CMAKE_BUILD_TYPE STREQUAL "Debug"))
 
     # SDLPoP requires the SDL_2, SDL2_image and SDL2_mixer development libraries.
-    # You can pass the SDL2 location to CMake like so: -DSDL2="C:/work/libraries/SDL2-2.0.5"
+    # You can pass the SDL2 location to CMake like so: -DSDL2="C:/work/libraries/SDL2-2.0.6"
     # Or alternatively, specify the SDL2 location below:
 
-    #set(SDL2 "C:/work/libraries/SDL2-2.0.5")
+    #set(SDL2 "C:/work/libraries/SDL2-2.0.6")
 
     # If the location of SDL2 is not specified, we will try to guess it.
     if (NOT(DEFINED SDL2))
         cmake_policy(SET CMP0015 NEW) # suppress warning about relative paths
-        set(SDL2 "../../SDL2-2.0.5")
+        set(SDL2 "../../SDL2-2.0.6")
     endif()
 
     # Automatically detect whether we need the x86 or x64 version of the SDL2 library.
