@@ -31,6 +31,7 @@ The authors of this program may be contacted at http://forum.princed.org
 
 #ifdef USE_WIN32_API_FOR_LISTING_REPLAY_FILES
 #include <windows.h>
+#include <wchar.h>
 #else
 #include <dirent.h>
 #endif
@@ -195,29 +196,64 @@ static int compare_replay_creation_time(const void* a, const void* b)
 
 #ifdef USE_WIN32_API_FOR_LISTING_REPLAY_FILES
 
+// These macros are from the SDL2 source. (src/core/windows/SDL_windows.h)
+// The pointers returned by these macros must be freed with SDL_free().
+#define WIN_StringToUTF8(S) SDL_iconv_string("UTF-8", "UTF-16LE", (char *)(S), (SDL_wcslen(S)+1)*sizeof(WCHAR))
+#define WIN_UTF8ToString(S) (WCHAR *)SDL_iconv_string("UTF-16LE", "UTF-8", (char *)(S), SDL_strlen(S)+1)
+
+FILE* fopen_UTF8(const char* filename, const char* mode);
+#define fopen fopen_UTF8
+int chdir_UTF8(const char* path);
+#define chdir chdir_UTF8
+
+// This hack is needed because SDL uses UTF-8 everywhere (even in argv!), but fopen on Windows uses whatever code page is currently set.
+FILE* fopen_UTF8(const char* filename_UTF8, const char* mode_UTF8) {
+	WCHAR* filename_UTF16 = WIN_UTF8ToString(filename_UTF8);
+	WCHAR* mode_UTF16 = WIN_UTF8ToString(mode_UTF8);
+	FILE* result = _wfopen(filename_UTF16, mode_UTF16);
+	SDL_free(mode_UTF16);
+	SDL_free(filename_UTF16);
+	return result;
+}
+
+int chdir_UTF8(const char* path_UTF8) {
+	WCHAR* path_UTF16 = WIN_UTF8ToString(path_UTF8);
+	int result = _wchdir(path_UTF16);
+	SDL_free(path_UTF16);
+	return result;
+}
+
 typedef struct directory_listing_data_type {
 	char search_pattern[POP_MAX_PATH];
-	WIN32_FIND_DATA find_data;
+	WIN32_FIND_DATAW find_data;
 	HANDLE search_handle;
-
+	char* current_filename_UTF8;
 } directory_listing_type;
 
 static inline bool init_directory_listing_and_find_first_file(directory_listing_type *data) {
+	data->current_filename_UTF8 = NULL;
 	snprintf( data->search_pattern, POP_MAX_PATH, "%s\\*.p1r", replays_folder);
-	data->search_handle = FindFirstFileA( data->search_pattern, &data->find_data );
+	WCHAR* search_pattern_UTF16 = WIN_UTF8ToString(data->search_pattern);
+	data->search_handle = FindFirstFileW( search_pattern_UTF16, &data->find_data );
+	SDL_free(search_pattern_UTF16);
 	return (data->search_handle != INVALID_HANDLE_VALUE);
 }
 
 static inline char* get_current_filename_from_directory_listing(directory_listing_type* data) {
-	return data->find_data.cFileName;
+	SDL_free(data->current_filename_UTF8);
+	data->current_filename_UTF8 = NULL;
+	data->current_filename_UTF8 = WIN_StringToUTF8(data->find_data.cFileName);
+	return data->current_filename_UTF8;
 }
 
 static inline bool find_next_file(directory_listing_type* data) {
-	return (bool) FindNextFileA( data->search_handle, &data->find_data );
+	return (bool) FindNextFileW( data->search_handle, &data->find_data );
 }
 
 static inline void directory_listing_close(directory_listing_type *data) {
 	FindClose(data->search_handle);
+	SDL_free(data->current_filename_UTF8);
+	data->current_filename_UTF8 = NULL;
 }
 
 #else // use dirent.h API for listing replay files
@@ -347,7 +383,11 @@ void change_working_dir_to_sdlpop_root() {
 		char exe_dir[POP_MAX_PATH];
 		strncpy(exe_dir, exe_path, len);
 		exe_dir[len] = '\0';
-		chdir(exe_dir);
+
+		int result = chdir(exe_dir);
+		if (result != 0) {
+			perror("Can't change into SDLPoP directory");
+		}
 	}
 
 };
