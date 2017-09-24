@@ -980,7 +980,7 @@ const rect_type far *__pascal draw_text(const rect_type far *rect_ptr,int x_alig
 	num_lines = 0;
 	int rem_length = length;
 	const char* line_start = text;
-    #define MAX_LINES 100
+	#define MAX_LINES 100
 	const char* line_starts[MAX_LINES];
 	int line_lengths[MAX_LINES];
 	do {
@@ -1614,20 +1614,20 @@ void init_digi() {
 	// Open the audio device. Called once.
 	//printf("init_digi(): called\n");
 
-    SDL_AudioFormat desired_audioformat;
-    SDL_version version;
-    SDL_GetVersion(&version);
-    //printf("SDL Version = %d.%d.%d\n", version.major, version.minor, version.patch);
-    if (version.major <= 2 && version.minor <= 0 && version.patch <= 3) {
-        // In versions before 2.0.4, 16-bit audio samples don't work properly (the sound becomes garbled).
-        // See: https://bugzilla.libsdl.org/show_bug.cgi?id=2389
-        // Workaround: set the audio format to 8-bit, if we are linking against an older SDL2 version.
-        desired_audioformat = AUDIO_U8;
-    } else {
-        desired_audioformat = AUDIO_S16SYS;
-    }
+	SDL_AudioFormat desired_audioformat;
+	SDL_version version;
+	SDL_GetVersion(&version);
+	//printf("SDL Version = %d.%d.%d\n", version.major, version.minor, version.patch);
+	if (version.major <= 2 && version.minor <= 0 && version.patch <= 3) {
+		// In versions before 2.0.4, 16-bit audio samples don't work properly (the sound becomes garbled).
+		// See: https://bugzilla.libsdl.org/show_bug.cgi?id=2389
+		// Workaround: set the audio format to 8-bit, if we are linking against an older SDL2 version.
+		desired_audioformat = AUDIO_U8;
+	} else {
+		desired_audioformat = AUDIO_S16SYS;
+	}
 
-    SDL_AudioSpec *desired;
+	SDL_AudioSpec *desired;
 	desired = (SDL_AudioSpec *)malloc(sizeof(SDL_AudioSpec));
 	memset(desired, 0, sizeof(SDL_AudioSpec));
 	desired->freq = digi_samplerate; //buffer->digi.sample_rate;
