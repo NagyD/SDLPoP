@@ -39,11 +39,15 @@ The authors of this program may be contacted at http://forum.princed.org
 #error This program is not (yet) prepared for big endian CPUs, please contact the author.
 #endif
 
-// This macro is from SDL_types.h.
-// It is #undefined at the end of that file, even though it can be useful outside that file.
+// This macro is from SDL_types.h / SDL_stdinc.h .
+// It used to be #undefined at the end of that file, but since some time in 2006 it's kept available.
+// And SDL's definition changed in SDL 2.0.6, which caused a warning at this redefinition.
+// So we should just use the macro from SDL and not define our own.
 /* Make sure the types really have the right sizes */
+/*
 #define SDL_COMPILE_TIME_ASSERT(name, x)               \
        typedef int SDL_dummy_ ## name[(x) * 2 - 1]
+*/
 
 // "far" and "near" makes sense only for 16-bit
 #define far
