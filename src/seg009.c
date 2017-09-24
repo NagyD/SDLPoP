@@ -1623,6 +1623,7 @@ void init_digi() {
 		// See: https://bugzilla.libsdl.org/show_bug.cgi?id=2389
 		// Workaround: set the audio format to 8-bit, if we are linking against an older SDL2 version.
 		desired_audioformat = AUDIO_U8;
+		printf("Your SDL.dll is older than 2.0.4. Using 8-bit audio format to work around resampling bug.");
 	} else {
 		desired_audioformat = AUDIO_S16SYS;
 	}
