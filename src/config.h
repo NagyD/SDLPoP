@@ -215,4 +215,10 @@ The authors of this program may be contacted at http://forum.princed.org
 // Useful if SDL detected a gamepad but there is none.
 #define USE_AUTO_INPUT_MODE
 
+// Default SDL_Joystick button values
+#define SDL_JOYSTICK_BUTTON_Y 2
+#define SDL_JOYSTICK_BUTTON_X 3
+#define SDL_JOYSTICK_X_AXIS 0
+#define SDL_JOYSTICK_Y_AXIS 1
+
 #endif
