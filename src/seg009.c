@@ -1692,7 +1692,6 @@ void load_sound_names() {
 	}
 	fclose(fp);
 }
-#endif
 
 char* sound_name(int index) {
 	if (sound_names != NULL && index >= 0 && index < max_sound_id) {
@@ -1701,6 +1700,9 @@ char* sound_name(int index) {
 		return NULL;
 	}
 }
+
+void convert_digi_sound(sound_buffer_type *buffer);
+#endif
 
 sound_buffer_type* load_sound(int index) {
 	sound_buffer_type* result = NULL;
@@ -1750,6 +1752,11 @@ sound_buffer_type* load_sound(int index) {
 #ifdef USE_MIXER
 	if (result == NULL) {
 		fprintf(stderr, "Failed to load sound %d '%s'\n", index, sound_name(index));
+	} else {
+		// Convert waves to mixer chunks in advance.
+		if ((result->type & 7) == sound_digi) {
+			convert_digi_sound(result);
+		}
 	}
 #endif
 	return result;
@@ -1784,15 +1791,15 @@ Uint32 fourcc(char* string) {
 #endif
 
 int wave_version = -1;
-// seg009:74F0
-void __pascal far play_digi_sound(sound_buffer_type far *buffer) {
-	//if (!is_sound_on) return;
-	init_digi();
-	if (digi_unavailable) return;
-	//stop_digi();
-	stop_sounds();
-	//printf("play_digi_sound(): called\n");
 
+typedef struct waveinfo_type {
+	int sample_rate, sample_size, sample_count;
+	byte* samples;
+} waveinfo_type;
+
+bool determine_wave_version(sound_buffer_type *buffer, waveinfo_type* waveinfo);
+
+bool determine_wave_version(sound_buffer_type *buffer, waveinfo_type* waveinfo) {
 	int version = wave_version;
 	if (version == -1) {
 		// Determine the version of the wave data.
@@ -1802,33 +1809,45 @@ void __pascal far play_digi_sound(sound_buffer_type far *buffer) {
 		if (version == 1 || version == 2) wave_version = version;
 	}
 
-	int sample_rate, sample_size, sample_count;
-	const byte* samples;
 	switch (version) {
 		case 1: // 1.0 and 1.1
-			sample_rate = buffer->digi.sample_rate;
-			sample_size = buffer->digi.sample_size;
-			sample_count = buffer->digi.sample_count;
-			samples = buffer->digi.samples;
-			break;
+			waveinfo->sample_rate = buffer->digi.sample_rate;
+			waveinfo->sample_size = buffer->digi.sample_size;
+			waveinfo->sample_count = buffer->digi.sample_count;
+			waveinfo->samples = buffer->digi.samples;
+			return true;
 		case 2: // 1.3 and 1.4 (and PoP2)
-			sample_rate = buffer->digi_new.sample_rate;
-			sample_size = buffer->digi_new.sample_size;
-			sample_count = buffer->digi_new.sample_count;
-			samples = buffer->digi_new.samples;
-			break;
+			waveinfo->sample_rate = buffer->digi_new.sample_rate;
+			waveinfo->sample_size = buffer->digi_new.sample_size;
+			waveinfo->sample_count = buffer->digi_new.sample_count;
+			waveinfo->samples = buffer->digi_new.samples;
+			return true;
 		case 3: // ambiguous
 			printf("Warning: Ambiguous wave version.\n");
-			return;
+			return false;
 		default: // case 0, unknown
 			printf("Warning: Can't determine wave version.\n");
-			return;
+			return false;
 	}
+}
+
 #ifndef USE_MIXER
+// seg009:74F0
+void __pascal far play_digi_sound(sound_buffer_type far *buffer) {
+	//if (!is_sound_on) return;
+	init_digi();
+	if (digi_unavailable) return;
+	//stop_digi();
+	stop_sounds();
+	//printf("play_digi_sound(): called\n");
+
+	waveinfo_type waveinfo;
+	if (false == determine_wave_version(buffer, &waveinfo)) return;
+
 	SDL_AudioCVT cvt;
 	memset(&cvt, 0, sizeof(cvt));
 	int result = SDL_BuildAudioCVT(&cvt,
-		AUDIO_U8, 1, sample_rate,
+		AUDIO_U8, 1, waveinfo.sample_rate,
 		digi_audiospec->format, digi_audiospec->channels, digi_audiospec->freq
 	);
 	// The case of result == 0 is undocumented, but it may occur.
@@ -1837,9 +1856,9 @@ void __pascal far play_digi_sound(sound_buffer_type far *buffer) {
 		printf("(returned %d)\n", result);
 		quit(1);
 	}
-	int dlen = sample_count; // if format is AUDIO_U8
+	int dlen = waveinfo.sample_count; // if format is AUDIO_U8
 	cvt.buf = (Uint8*) malloc(dlen * cvt.len_mult);
-	memcpy(cvt.buf, samples, dlen);
+	memcpy(cvt.buf, waveinfo.samples, dlen);
 	cvt.len = dlen;
 	if (SDL_ConvertAudio(&cvt) != 0) {
 		sdlperror("SDL_ConvertAudio");
@@ -1855,9 +1874,18 @@ void __pascal far play_digi_sound(sound_buffer_type far *buffer) {
 	digi_remaining_pos = digi_buffer;
 	SDL_UnlockAudio();
 	SDL_PauseAudio(0);
+}
 #else
+void __pascal far play_digi_sound(sound_buffer_type far *buffer) {
+	printf("Warning: Tried to play a digi sound without converting it to a mixer chunk first!\n");
+}
+
+void convert_digi_sound(sound_buffer_type *buffer) {
+	waveinfo_type waveinfo;
+	if (false == determine_wave_version(buffer, &waveinfo)) return;
+
 	// Convert the DAT sound to WAV, so the Mixer can load it.
-	int size = sample_count;
+	int size = waveinfo.sample_count;
 	int rounded_size = (size+1)&(~1);
 	int alloc_size = sizeof(WAV_header_type) + rounded_size;
 	WAV_header_type* wav_data = malloc(alloc_size);
@@ -1868,13 +1896,13 @@ void __pascal far play_digi_sound(sound_buffer_type far *buffer) {
 	wav_data->Subchunk1Size = 16;
 	wav_data->AudioFormat = 1; // PCM
 	wav_data->NumChannels = 1; // Mono
-	wav_data->SampleRate = sample_rate;
-	wav_data->BitsPerSample = sample_size;
+	wav_data->SampleRate = waveinfo.sample_rate;
+	wav_data->BitsPerSample = waveinfo.sample_size;
 	wav_data->ByteRate = wav_data->SampleRate * wav_data->NumChannels * wav_data->BitsPerSample/8;
 	wav_data->BlockAlign = wav_data->NumChannels * wav_data->BitsPerSample/8;
 	wav_data->Subchunk2ID = fourcc("data");
 	wav_data->Subchunk2Size = size;
-	memcpy(wav_data->Data, samples, size);
+	memcpy(wav_data->Data, waveinfo.samples, size);
 	SDL_RWops* rw = SDL_RWFromConstMem(wav_data, alloc_size);
 	Mix_Chunk *chunk = Mix_LoadWAV_RW(rw, 1);
 	if (chunk == NULL) {
@@ -1889,9 +1917,8 @@ void __pascal far play_digi_sound(sound_buffer_type far *buffer) {
 	}
 	buffer->type = sound_chunk;
 	buffer->chunk = chunk;
-	play_chunk_sound(buffer);
-#endif
 }
+#endif
 
 void free_sound(sound_buffer_type far *buffer) {
 	if (buffer == NULL) return;
