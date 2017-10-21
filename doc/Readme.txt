@@ -320,24 +320,22 @@ GNU/Linux:
 	and remove it with:
 		sudo make uninstall
 
-Mac OS X:
+macOS:
 	Get SDL2 and dependencies
 		a) Install "port" from https://www.macports.org/
 		b) sudo port install libsdl2 libsdl2_image libsdl2_mixer
 	or
 		a) Install "homebrew"
-		b) brew install libsdl2 libsdl2_image
+		b) brew install sdl2 sdl2_image
 		c) brew install sdl2_mixer --with-libvorbis
 
 	Get development tools:
 		a) Install Xcode.
 		b) Install the "command line developer tools" by typing 'xcode-select --install' at the prompt.
-		c) Using terminal, in the root directory of SDLPOP, type: make
+		c) Using terminal, in the '/src' directory of SDLPoP, type: make
 
 	PLAY!
 		a) Type './prince' or './prince full'.
 		b) Hit Control-Q to quit.
 
-	Tested on OSX 10.9.5 and OSX 10.11.2.
-
-
+	Tested on OSX 10.9.5, OSX 10.11.2 and macOS 10.13.
