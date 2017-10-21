@@ -611,10 +611,18 @@ int __pascal far set_joy_mode() {
 	if (SDL_NumJoysticks() < 1) {
 		is_joyst_mode = 0;
 	} else {
-		sdl_controller_ = SDL_GameControllerOpen(0);
-		if (sdl_controller_ == NULL) {
-			is_joyst_mode = 0;
-		} else {
+		if (SDL_IsGameController(0)) {
+			sdl_controller_ = SDL_GameControllerOpen(0);
+			if (sdl_controller_ == NULL) {
+				is_joyst_mode = 0;
+			} else {
+				is_joyst_mode = 1;
+			}
+		}
+		// We have a joystick connected, but it's NOT compatible with the SDL_GameController
+		// interface, so we resort to the classic SDL_Joystick interface instead
+		else {
+			sdl_joystick_ = SDL_JoystickOpen(0);
 			is_joyst_mode = 1;
 		}
 	}
@@ -2721,6 +2729,50 @@ void idle() {
 					case SDL_CONTROLLER_BUTTON_B:          joy_B_button_state = 0;   break; /*** B (unused) ***/
 
 					default: break;
+				}
+				break;
+			case SDL_JOYBUTTONDOWN:
+#ifdef USE_AUTO_INPUT_MODE
+				if (!is_joyst_mode) {
+					is_joyst_mode = 1;
+					is_keyboard_mode = 0;
+				}
+#endif
+				switch (event.jbutton.button)
+				{
+					case SDL_JOYSTICK_BUTTON_Y:            joy_AY_buttons_state = -1; break; /*** Y (up) ***/
+					case SDL_JOYSTICK_BUTTON_X:            joy_X_button_state = 1;    break; /*** X (shift) ***/
+				}
+				break;
+			case SDL_JOYBUTTONUP:
+				switch (event.jbutton.button)
+				{
+					case SDL_JOYSTICK_BUTTON_Y:            joy_AY_buttons_state = 0; break; /*** Y (up) ***/
+					case SDL_JOYSTICK_BUTTON_X:            joy_X_button_state = 0;   break; /*** X (shift) ***/
+					break;
+
+				}
+				break;
+			case SDL_JOYAXISMOTION:
+#ifdef USE_AUTO_INPUT_MODE
+				if (!is_joyst_mode) {
+					is_joyst_mode = 1;
+					is_keyboard_mode = 0;
+				}
+#endif
+				switch (event.jaxis.axis) 
+				{
+					case SDL_JOYSTICK_X_AXIS:
+						if (event.jaxis.value < 0)  joy_hat_states[0] = -1; // left   
+						if (event.jaxis.value > 0)  joy_hat_states[0] = 1;  // right
+						if (event.jaxis.value == 0) joy_hat_states[0] = 0;  // axis released
+					break;
+
+					case SDL_JOYSTICK_Y_AXIS:
+						if (event.jaxis.value < 0)  joy_hat_states[1] = -1; // up
+						if (event.jaxis.value > 0)  joy_hat_states[1] = 1;  // down
+						if (event.jaxis.value == 0) joy_hat_states[1] = 0;  // axis released
+					break;
 				}
 				break;
 			case SDL_TEXTINPUT:
