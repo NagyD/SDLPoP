@@ -2760,60 +2760,59 @@ void idle() {
 				}
 				break;
 			case SDL_JOYBUTTONDOWN:
+			case SDL_JOYBUTTONUP:
+			case SDL_JOYAXISMOTION:
 				// Only handle the event if the joystick is incompatible with the SDL_GameController interface.
 				// (Otherwise it will interfere with the normal action of the SDL_GameController API.)
 				if (!using_sdl_joystick_interface) {
 					break;
 				}
 #ifdef USE_AUTO_INPUT_MODE
+				// TODO: Disregard SDL_JOYAXISMOTION events within joystick 'dead zone'
 				if (!is_joyst_mode) {
 					is_joyst_mode = 1;
 					is_keyboard_mode = 0;
 				}
 #endif
-				switch (event.jbutton.button)
-				{
-					case SDL_JOYSTICK_BUTTON_Y:            joy_AY_buttons_state = -1; break; /*** Y (up) ***/
-					case SDL_JOYSTICK_BUTTON_X:            joy_X_button_state = 1;    break; /*** X (shift) ***/
-					default: break;
+				if (event.type == SDL_JOYBUTTONDOWN) {
+					if      (event.jbutton.button == SDL_JOYSTICK_BUTTON_Y)   joy_AY_buttons_state = -1; // Y (up)
+					else if (event.jbutton.button == SDL_JOYSTICK_BUTTON_X)   joy_X_button_state = -1;   // X (shift)
 				}
-				break;
-			case SDL_JOYBUTTONUP:
-				switch (event.jbutton.button)
-				{
-					case SDL_JOYSTICK_BUTTON_Y:            joy_AY_buttons_state = 0; break; /*** Y (up) ***/
-					case SDL_JOYSTICK_BUTTON_X:            joy_X_button_state = 0;   break; /*** X (shift) ***/
-					default: break;
+				else if (event.type == SDL_JOYBUTTONUP) {
+					if      (event.jbutton.button == SDL_JOYSTICK_BUTTON_Y)   joy_AY_buttons_state = 0;  // Y (up)
+					else if (event.jbutton.button == SDL_JOYSTICK_BUTTON_X)   joy_X_button_state = 0;    // X (shift)
+				}
+				else if (event.type == SDL_JOYAXISMOTION) {
+					// TODO: Shouldn't there be a 'dead zone' (threshold) for the joystick axes here?
+					// event.jaxis.value has possible values INT16_MIN to INT16_MAX.
 
-				}
-				break;
-			case SDL_JOYAXISMOTION:
-				// Only handle the event if the joystick is incompatible with the SDL_GameController interface.
-                // (Otherwise it will interfere with the normal action of the SDL_GameController API.)
-                if (!using_sdl_joystick_interface) {
-                    break;
-                }
-#ifdef USE_AUTO_INPUT_MODE
-				if (!is_joyst_mode) {
-					is_joyst_mode = 1;
-					is_keyboard_mode = 0;
-				}
-#endif
-				switch (event.jaxis.axis) 
-				{
-					case SDL_JOYSTICK_X_AXIS:
-						if (event.jaxis.value < 0)  joy_hat_states[0] = -1; // left   
-						if (event.jaxis.value > 0)  joy_hat_states[0] = 1;  // right
+#if 1
+					if (event.jaxis.axis == SDL_JOYSTICK_X_AXIS) {
+						if (event.jaxis.value < 0) joy_hat_states[0] = -1; // left
+						if (event.jaxis.value > 0) joy_hat_states[0] = 1;  // right
 						if (event.jaxis.value == 0) joy_hat_states[0] = 0;  // axis released
-					break;
-
-					case SDL_JOYSTICK_Y_AXIS:
-						if (event.jaxis.value < 0)  joy_hat_states[1] = -1; // up
-						if (event.jaxis.value > 0)  joy_hat_states[1] = 1;  // down
+					} else if (event.jaxis.axis == SDL_JOYSTICK_Y_AXIS) {
+						if (event.jaxis.value < 0) joy_hat_states[1] = -1; // up
+						if (event.jaxis.value > 0) joy_hat_states[1] = 1;  // down
 						if (event.jaxis.value == 0) joy_hat_states[1] = 0;  // axis released
-					break;
+					}
+
+					// And should the joystick axes map into the dpad (hat) states?
+					// If all-directional control is the desired behavior for these joysticks,
+					// maybe it's better to let get_joystick_state() get called in read_joyst_control() instead?
+					// Something like this should work, in that case:
+#else
+					if (event.jaxis.axis == SDL_JOYSTICK_X_AXIS) {
+						joy_axis[SDL_CONTROLLER_AXIS_LEFTX] = event.jaxis.value;
+					}
+					else if (event.jaxis.axis == SDL_JOYSTICK_Y_AXIS) {
+						joy_axis[SDL_CONTROLLER_AXIS_LEFTY] = event.jaxis.value;
+					}
+#endif
+
 				}
 				break;
+
 			case SDL_TEXTINPUT:
 				last_text_input = event.text.text[0]; // UTF-8 formatted char text input
 				break;
