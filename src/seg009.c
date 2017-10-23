@@ -624,6 +624,7 @@ int __pascal far set_joy_mode() {
 		else {
 			sdl_joystick_ = SDL_JoystickOpen(0);
 			is_joyst_mode = 1;
+			using_sdl_joystick_interface = 1;
 		}
 	}
 	if (enable_controller_rumble && is_joyst_mode) {
@@ -2759,6 +2760,11 @@ void idle() {
 				}
 				break;
 			case SDL_JOYBUTTONDOWN:
+				// Only handle the event if the joystick is incompatible with the SDL_GameController interface.
+				// (Otherwise it will interfere with the normal action of the SDL_GameController API.)
+				if (!using_sdl_joystick_interface) {
+					break;
+				}
 #ifdef USE_AUTO_INPUT_MODE
 				if (!is_joyst_mode) {
 					is_joyst_mode = 1;
@@ -2769,6 +2775,7 @@ void idle() {
 				{
 					case SDL_JOYSTICK_BUTTON_Y:            joy_AY_buttons_state = -1; break; /*** Y (up) ***/
 					case SDL_JOYSTICK_BUTTON_X:            joy_X_button_state = 1;    break; /*** X (shift) ***/
+					default: break;
 				}
 				break;
 			case SDL_JOYBUTTONUP:
@@ -2776,11 +2783,16 @@ void idle() {
 				{
 					case SDL_JOYSTICK_BUTTON_Y:            joy_AY_buttons_state = 0; break; /*** Y (up) ***/
 					case SDL_JOYSTICK_BUTTON_X:            joy_X_button_state = 0;   break; /*** X (shift) ***/
-					break;
+					default: break;
 
 				}
 				break;
 			case SDL_JOYAXISMOTION:
+				// Only handle the event if the joystick is incompatible with the SDL_GameController interface.
+                // (Otherwise it will interfere with the normal action of the SDL_GameController API.)
+                if (!using_sdl_joystick_interface) {
+                    break;
+                }
 #ifdef USE_AUTO_INPUT_MODE
 				if (!is_joyst_mode) {
 					is_joyst_mode = 1;
