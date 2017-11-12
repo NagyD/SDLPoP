@@ -471,3 +471,14 @@ ADDED: You can also make screenshots of the whole level.
 ADDED: Whole-level screenshots can optionally show extra info, like door events.
 ADDED: You can also start level 0 (demo) and level 15 (potions) from the command line.
 ADDED: Automatically switch to keyboard or joystick/gamepad mode if there is input from that device.
+FIXED: Fixed indentation (use tabs) and alignment (use spaces).
+FIXED: Fixed compiling with MSVC and improve build scripts.
+FIXED: On Windows, use Unicode/UTF-8 (instead of the current codepage) for replay filenames and directory names.
+FIXED: Fixed the quicksave note in the splash: save = F6, load = F9.
+FIXED: Ctrl+S now also mutes music.
+FIXED: Fixed implicit-function-declaration warnings. (implemented by @Rondom)
+DONE: Use 8-bit audio samples as a workaround if using older (buggy) SDL2 versions (older than 2.0.4).
+FIXED: Removed redefinition of SDL_COMPILE_TIME_ASSERT.
+FIXED: Add (back) SDL_Joystick interface because not all joysticks are SDL_Controller compatible. (implemented by @vanfanel)
+DONE: Convert waves to mixer sounds when they are loaded, not when they are first played. (suggested by @vanfanel)
+FIXED: Updated Readme.txt - fix macOS instructions.
