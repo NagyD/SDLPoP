@@ -67,8 +67,9 @@ rect_type hof_rects[MAX_HOF_COUNT] = {
 // seg001:0004
 int __pascal far proc_cutscene_frame(int wait_frames) {
 	cutscene_wait_frames = wait_frames;
+	reset_timer(timer_0);
 	do {
-		start_timer(timer_0, cutscene_frame_time);
+		set_timer_length(timer_0, cutscene_frame_time);
 		play_both_seq();
 		draw_proom_drects(); // changed order of drects and flash
 		if (flash_time) {
@@ -106,7 +107,7 @@ int __pascal far proc_cutscene_frame(int wait_frames) {
 #else
 			idle();
 #endif
-		} while(!has_timer_stopped(0)); // busy waiting?
+		} while(!has_timer_stopped(timer_0)); // busy waiting?
 	} while(--cutscene_wait_frames);
 	return 0;
 }
@@ -552,11 +553,6 @@ void delay_ticks(Uint32 ticks) {
 	SDL_Delay(ticks *(1000/60));
 }
 
-// This flashes the background with the color specified, but does not add delay to show the flash
-void do_flash_no_delay(short color) {
-	if (color) set_bg_attr(0, color);
-}
-
 // seg001:0981
 void __pascal far remove_flash() {
 	// stub
@@ -834,7 +830,7 @@ int __pascal far fade_in_1() {
 #else
 	// stub
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, &screen_rect, &screen_rect, 0);
-	updateScreen();
+	update_screen();
 //	SDL_UpdateRect(onscreen_surface_, 0, 0, 0, 0); // debug
 	return 0;
 #endif

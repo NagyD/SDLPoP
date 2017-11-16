@@ -96,6 +96,7 @@ void far pop_main() {
 
 	current_target_surface = rect_sthg(onscreen_surface_, &screen_rect);
 	show_loading();
+	detect_vsync();
 	set_joy_mode();
 	cheats_enabled = check_param("megahit") != NULL;
 #ifdef USE_DEBUG_CHEATS
@@ -177,7 +178,6 @@ void __pascal far start_game() {
 	word entry_used[40];
 	byte letts_used[26];
 #endif
-	screen_updates_suspended = 0;
 	// Prevent filling of stack.
 	// start_game is called from many places to restart the game, for example:
 	// process_key, play_frame, draw_game_frame, play_level, control_kid, end_sequence, expired
@@ -395,11 +395,10 @@ int quick_load() {
 		}
 
 		stop_sounds();
-		start_timer(timer_0, 5); // briefly display a black screen as a visual cue
 		draw_rect(&screen_rect, 0);
-		screen_updates_suspended = 0;
-		request_screen_update();
-		screen_updates_suspended = 1;
+		update_screen();
+		delay_ticks(5); // briefly display a black screen as a visual cue
+
 		short old_rem_min = rem_min;
 		word old_rem_tick = rem_tick;
 
@@ -408,10 +407,7 @@ int quick_load() {
 		quick_fp = NULL;
 
 		restore_room_after_quick_load();
-
-		do_wait(timer_0);
-		screen_updates_suspended = 0;
-		request_screen_update();
+		update_screen();
 
 		#ifdef USE_QUICKLOAD_PENALTY
 		// Subtract one minute from the remaining time (if it is above 5 minutes)
@@ -1474,7 +1470,6 @@ int __pascal far do_paused() {
 		// busy waiting?
 		do {
 			idle();
-			//request_screen_update();
 		} while (! process_key());
 		erase_bottom_text(1);
 	}
@@ -1599,33 +1594,34 @@ void __pascal far show_title() {
 	offscreen_surface = make_offscreen_buffer(&screen_rect);
 	load_title_images(1);
 	current_target_surface = offscreen_surface;
-	do_wait(timer_0);
+	idle(); // modified
+	do_paused();
 
 	draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, blitters_0_no_transp);
 	fade_in_2(offscreen_surface, 0x1000); //STUB
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, &screen_rect, &screen_rect, blitters_0_no_transp);
-	play_sound_from_buffer(sound_pointers[54]); // main theme
+	play_sound_from_buffer(sound_pointers[sound_54_intro_music]); // main theme
 	start_timer(timer_0, 0x82);
 	draw_image_2(1 /*Broderbund Software presents*/, chtab_title50, 96, 106, blitters_0_no_transp);
 	do_wait(timer_0);
 
-	start_timer(timer_0,0xCD);
+	start_timer(timer_0, 0xCD);
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, &rect_titles, &rect_titles, blitters_0_no_transp);
 	draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, blitters_0_no_transp);
 	do_wait(timer_0);
 
-	start_timer(timer_0,0x41);
+	start_timer(timer_0, 0x41);
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, &rect_titles, &rect_titles, blitters_0_no_transp);
 	draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, blitters_0_no_transp);
 	draw_image_2(2 /*a game by Jordan Mechner*/, chtab_title50, 96, 122, blitters_0_no_transp);
 	do_wait(timer_0);
 
-	start_timer(timer_0,0x10E);
+	start_timer(timer_0, 0x10E);
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, &rect_titles, &rect_titles, blitters_0_no_transp);
 	draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, blitters_0_no_transp);
 	do_wait(timer_0);
 
-	start_timer(timer_0,0xEB);
+	start_timer(timer_0, 0xEB);
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, &rect_titles, &rect_titles, blitters_0_no_transp);
 	draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, blitters_0_no_transp);
 	draw_image_2(3 /*Prince Of Persia*/, chtab_title50, 24, 107, blitters_10h_transp);
@@ -1698,7 +1694,8 @@ void __pascal far transition_ltr() {
 		method_1_blit_rect(onscreen_surface_, offscreen_surface, &rect, &rect, 0);
 		rect.left += 2;
 		rect.right += 2;
-		pop_wait(timer_1, 0);
+		idle(); // modified
+		do_paused();
 	}
 }
 
@@ -1957,6 +1954,7 @@ void __pascal far show_copyprot(int where) {
 // seg000:2489
 void __pascal far show_loading() {
 	show_text(&screen_rect, 0, 0, "Loading. . . .");
+	update_screen();
 }
 
 // data:42C4
@@ -1997,7 +1995,7 @@ void __pascal far show_quotes() {
 		draw_rect(&screen_rect, 0);
 		show_text(&screen_rect, -1, 0, tbl_quotes[which_quote]);
 		which_quote = !which_quote;
-		start_timer(timer_0,0x384);
+		start_timer(timer_0, 0x384);
 	}
 	need_quotes = 0;
 }
@@ -2024,7 +2022,6 @@ const char* splash_text_2 =
 
 void show_splash() {
 	if (!enable_info_screen || start_level >= 0) return;
-	screen_updates_suspended = 0;
 	current_target_surface = onscreen_surface_;
 	draw_rect(&screen_rect, 0);
 	show_text_with_color(&splash_text_1_rect, 0, 0, splash_text_1, color_15_brightwhite);

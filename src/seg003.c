@@ -212,8 +212,6 @@ void __pascal far find_start_level_door() {
 
 // seg003:0326
 void __pascal far draw_level_first() {
-	screen_updates_suspended = 1;
-
 	next_room = Kid.room;
 	check_the_end();
 	if (tbl_level_type[current_level]) {
@@ -224,8 +222,9 @@ void __pascal far draw_level_first() {
 	redraw_screen(0);
 	draw_kid_hp(hitp_curr, hitp_max);
 
-	screen_updates_suspended = 0;
-	request_screen_update();
+#ifdef USE_QUICKSAVE
+	check_quick_op();
+#endif
 
 #ifdef USE_SCREENSHOT
 	auto_screenshot();
@@ -309,6 +308,7 @@ void __pascal far redraw_screen(int drawing_different_room) {
 // - The current level if it was restarted.
 // - The next level if the level was completed.
 int __pascal far play_level_2() {
+	reset_timer(timer_1);
 	while (1) { // main loop
 #ifdef USE_QUICKSAVE
 		check_quick_op();
@@ -317,13 +317,12 @@ int __pascal far play_level_2() {
 #ifdef USE_REPLAY
 		if (need_replay_cycle) replay_cycle();
 #endif
-
 		if (Kid.sword == sword_2_drawn) {
 			// speed when fighting (smaller is faster)
-			start_timer(timer_1, 6);
+			set_timer_length(timer_1, 6);
 		} else {
 			// speed when not fighting (smaller is faster)
-			start_timer(timer_1, 5);
+			set_timer_length(timer_1, 5);
 		}
 		guardhp_delta = 0;
 		hitp_delta = 0;
@@ -344,33 +343,10 @@ int __pascal far play_level_2() {
 			return current_level;
 		} else {
 			if (next_level == current_level || check_sound_playing()) {
-				screen_updates_suspended = 1;
 				draw_game_frame();
-				if (flash_if_hurt()) {
-					screen_updates_suspended = 0;
-					request_screen_update(); // display the flash
-					delay_ticks(2);          // and add a short delay
-				}
-				screen_updates_suspended = 0;
+				flash_if_hurt();
 				remove_flash_if_hurt();
-
-				#ifdef USE_DEBUG_CHEATS
-				if (debug_cheats_enabled && is_timer_displayed) {
-					char timer_text[16];
-					if (rem_min < 0) {
-						snprintf(timer_text, 16, "%02d:%02d:%02d", -(rem_min + 1), (719 - rem_tick) / 12, (719 - rem_tick) % 12);
-					} else {
-						snprintf(timer_text, 16, "%02d:%02d:%02d", rem_min - 1, rem_tick / 12, rem_tick % 12);
-					}
-					screen_updates_suspended = 1;
-					draw_rect(&timer_rect, color_0_black);
-					show_text(&timer_rect, -1, -1, timer_text);
-					screen_updates_suspended = 0;
-				}
-				#endif
-
-				request_screen_update(); // request screen update manually
-				do_simple_wait(1);
+				do_simple_wait(timer_1);
 			} else {
 				stop_sounds();
 				hitp_beg_lev = hitp_max;
@@ -680,13 +656,13 @@ void __pascal far do_mouse() {
 // seg003:0AFC
 int __pascal far flash_if_hurt() {
 	if (flash_time != 0) {
-		do_flash_no_delay(flash_color); // don't add delay to the flash
+		do_flash(flash_color);
 		return 1;
 	} else if (hitp_delta < 0) {
 		if (is_joyst_mode && enable_controller_rumble && sdl_haptic != NULL) {
 			SDL_HapticRumblePlay(sdl_haptic, 1.0, 100); // rumble at full strength for 100 milliseconds
 		}
-		do_flash_no_delay(color_12_brightred); // red
+		do_flash(color_12_brightred); // red
 		return 1;
 	}
 	return 0; // not flashed
