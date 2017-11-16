@@ -1975,6 +1975,37 @@ int __pascal far check_sound_playing() {
 	return speaker_playing || digi_playing || midi_playing;
 }
 
+float get_display_refresh_time() {
+	SDL_DisplayMode display_mode;
+	float refresh_time;
+	if (SDL_GetWindowDisplayMode(window_, &display_mode) == 0 && display_mode.refresh_rate > 0) {
+		refresh_time = 1000.0f / (float)display_mode.refresh_rate;
+	} else {
+		refresh_time = 1000.0f / 60.0f;
+	}
+	return refresh_time;
+}
+
+bool checked_vsync;
+bool vsync_enabled;
+
+void detect_vsync() {
+	if (!checked_vsync) {
+		SDL_RenderPresent(renderer_);
+		Uint64 start_counter = SDL_GetPerformanceCounter();
+		SDL_RenderPresent(renderer_);
+		SDL_RenderPresent(renderer_);
+		SDL_RenderPresent(renderer_);
+		SDL_RenderPresent(renderer_);
+		float time_elapsed = (SDL_GetPerformanceCounter() - start_counter) * milliseconds_per_counter;
+		float refresh_time = get_display_refresh_time();
+		if (time_elapsed > 3.0f * refresh_time) {
+			vsync_enabled = true;
+		}
+		checked_vsync = true;
+	}
+}
+
 // seg009:38ED
 void __pascal far set_gr_mode(byte grmode) {
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_NOPARACHUTE |
@@ -3279,33 +3310,30 @@ int has_timer_stopped(int timer_index) {
 #ifdef USE_REPLAY
 	if ((replaying && skipping_replay) || is_validate_mode) return true;
 #endif
-	// Before the *next* refresh occurs, we want to reserve CPU time so we can process the next frame in advance.
-	// Ideally, this would be as low as possible (reduce input latency!)
-	// On the other hand, we don't want to drop frames because we started too late on preparing the next one.
-	float milliseconds_for_cpu_overhead = 12.0f;
+	float milliseconds_for_cpu_overhead = 0.0f;
+	if (vsync_enabled) {
+		// Before the *next* refresh occurs, we want to reserve CPU time so we can process the next frame in advance.
+		// Ideally, this would be as low as possible (reduce input latency!)
+		// On the other hand, we don't want to drop frames because we started too late on preparing the next one.
+		milliseconds_for_cpu_overhead = 12.0f;
 
-	// The CPU time for the next frame must be shorter than the refresh time itself.
-	// This can become a problem on fast monitors.
-	// For example, for a 240Hz display, the time for cpu processing can at most be 1000.0f / 240.0f = 4.1667 ms.
-	SDL_DisplayMode display_mode;
-	float refresh_time;
-	if (SDL_GetWindowDisplayMode(window_, &display_mode) == 0 && display_mode.refresh_rate > 0) {
-		refresh_time = 1000.0f / (float)display_mode.refresh_rate;
-	} else {
-		refresh_time = 1000.0f / 60.0f;
-	}
-	float max_cpu_time = 0.75f * refresh_time;
-	if (milliseconds_for_cpu_overhead > max_cpu_time) {
-		milliseconds_for_cpu_overhead = max_cpu_time;
+		// The CPU time for the next frame must be shorter than the refresh time itself.
+		// This can become a problem on fast monitors.
+		// For example, for a 240Hz display, the time for cpu processing can at most be 1000.0f / 240.0f = 4.1667 ms.
+		float refresh_time = get_display_refresh_time();
+		float max_cpu_time = 0.75f * refresh_time;
+		if (milliseconds_for_cpu_overhead > max_cpu_time) {
+			milliseconds_for_cpu_overhead = max_cpu_time;
+		}
 	}
 
 	float timer_length_milliseconds = wait_time[timer_index] * milliseconds_per_tick;
 	Uint64 current_counter = SDL_GetPerformanceCounter();
 	float milliseconds_elapsed = (current_counter - timer_last_counter[timer_index]) * milliseconds_per_counter;
-	if (milliseconds_elapsed > (timer_length_milliseconds - milliseconds_for_cpu_overhead)) {
+	float milliseconds_left = timer_length_milliseconds - milliseconds_elapsed;
+	if (milliseconds_left < milliseconds_for_cpu_overhead) {
 		timer_last_counter[timer_index] = current_counter;
 //		printf("timer %d:   frametime (ms) = %5.1f    fps = %.1f\n", timer_index, milliseconds_elapsed, 1000.0f / milliseconds_elapsed);
-//		if (milliseconds_elapsed > timer_length_milliseconds + (refresh_time * 0.5f)) printf("Warning: dropped frame\n");
 		return true;
 	} else {
 		return false;

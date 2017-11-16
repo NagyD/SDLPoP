@@ -96,6 +96,7 @@ void far pop_main() {
 
 	current_target_surface = rect_sthg(onscreen_surface_, &screen_rect);
 	show_loading();
+	detect_vsync();
 	set_joy_mode();
 	cheats_enabled = check_param("megahit") != NULL;
 #ifdef USE_DEBUG_CHEATS
