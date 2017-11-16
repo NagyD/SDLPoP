@@ -2085,7 +2085,7 @@ void draw_overlays() {
 	SDL_FillRect(overlay_surface, NULL, 0);
 
 #ifdef USE_DEBUG_CHEATS
-	if (debug_cheats_enabled && is_timer_displayed) {
+	if (debug_cheats_enabled && is_timer_displayed && start_level > 0) {
 		char timer_text[32];
 		if (rem_min < 0) {
 			snprintf(timer_text, sizeof(timer_text), "%02d:%02d:%02d",
