@@ -622,6 +622,9 @@ extern word justblocked; // name from Apple II source
 // data:5F84
 extern word last_loose_sound;
 
+extern font_type hc_font INIT(= {0x01,0xFF, 7,2,1,1, NULL});
+extern textstate_type textstate INIT(= {0,0,0,15,&hc_font});
+
 #ifdef USE_REPLAY
 extern byte recording INIT(= 0);
 extern byte replaying INIT(= 0);
@@ -740,6 +743,25 @@ extern cutscene_ptr_type tbl_cutscenes_lookup[16] INIT(= {
 	NULL,
 	NULL,
 });
+
+
+#ifdef USE_MENU
+extern font_type small_font INIT(= {32, 126, 5, 2, 1, 1, NULL});
+extern const rect_type menubar_rect INIT(= {0, 0, 8, 320});
+extern byte menu_alpha INIT(= 200);
+extern menu_type game_menu;
+extern menu_type options_menu;
+extern menu_type capture_menu;
+extern menu_type cheat_menu;
+extern menubar_item_type game_menubar_item INIT(= {.id = 1, .associated_menu = &game_menu, .text = "Game"});
+extern menubar_item_type options_menubar_item INIT(= {.id = 2, .associated_menu = &options_menu, .text = "Options"});
+extern menubar_item_type capture_menubar_item INIT(= {.id = 3, .associated_menu = &capture_menu, .text = "Capture"});
+extern menubar_item_type cheats_menubar_item INIT(= {.id = 4, .associated_menu = &cheat_menu, .text = "Cheat"});
+extern int mouse_x, mouse_y;
+extern int menubar_state;
+extern int selected_menu_id;
+#endif
+
 
 #undef INIT
 #undef extern

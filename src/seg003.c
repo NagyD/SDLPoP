@@ -303,6 +303,7 @@ void __pascal far redraw_screen(int drawing_different_room) {
 
 }
 
+
 // seg003:04F8
 // Returns a level number:
 // - The current level if it was restarted.

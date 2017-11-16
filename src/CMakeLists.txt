@@ -66,6 +66,7 @@ set(SOURCE_FILES
         replay.c
         lighting.c
         screenshot.c
+        menu.c
         icon.rc
         )
 add_executable(prince ${SOURCE_FILES})

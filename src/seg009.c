@@ -725,8 +725,6 @@ void __pascal far draw_image_transp_vga(image_type far *image,int xpos,int ypos)
 
 #ifdef USE_TEXT
 
-font_type hc_font = {0x01,0xFF, 7,2,1,1, NULL};
-textstate_type textstate = {0,0,0,15,&hc_font};
 
 /*const*/ byte hc_font_data[] = {
 0x20,0x83,0x07,0x00,0x02,0x00,0x01,0x00,0x01,0x00,0xD2,0x00,0xD8,0x00,0xE5,0x00,
@@ -827,6 +825,18 @@ textstate_type textstate = {0,0,0,15,&hc_font};
 0x80,0xC6,0x73,0x80,0x7F,0xFF,0x00
 };
 
+
+static void load_font_character_offsets(rawfont_type* data) {
+	int n_chars = data->last_char - data->first_char + 1;
+	byte* pos = (byte*) &data->offsets[n_chars];
+	for (int index = 0; index < n_chars; ++index) {
+		data->offsets[index] = (word) (pos - (byte*) data);
+		image_data_type* image_data = (image_data_type*) pos;
+		int image_bytes = image_data->height * calc_stride(image_data);
+		pos = (byte*) &image_data->data + image_bytes;
+	}
+}
+
 font_type load_font_from_data(/*const*/ rawfont_type* data) {
 	font_type font;
 	font.first_char = data->first_char;
@@ -836,6 +846,10 @@ font_type load_font_from_data(/*const*/ rawfont_type* data) {
 	font.space_between_lines = data->space_between_lines;
 	font.space_between_chars = data->space_between_chars;
 	int n_chars = font.last_char - font.first_char + 1;
+	// Allow loading a font even if the offsets for each character image were not supplied in the raw data.
+	if (data->offsets[0] == 0) {
+		load_font_character_offsets(data);
+	}
 	chtab_type* chtab = malloc(sizeof(chtab_type) + sizeof(image_type* far) * n_chars);
 	int chr,index;
 	// Make a dummy palette for decode_image().
@@ -857,6 +871,9 @@ font_type load_font_from_data(/*const*/ rawfont_type* data) {
 	return font;
 }
 
+// Small font data (hardcoded), defined in menu.c
+extern byte hc_small_font_data[];
+
 void load_font() {
 	// Try to load font from a file.
 	dat_type* dathandle = open_dat("font", 0);
@@ -866,6 +883,11 @@ void load_font() {
 		// Use built-in font.
 		hc_font = load_font_from_data((/*const*/ rawfont_type*)hc_font_data);
 	}
+
+#ifdef USE_MENU
+	small_font = load_font_from_data((rawfont_type*)hc_small_font_data);
+#endif
+
 }
 
 // seg009:35C5
@@ -2084,6 +2106,10 @@ void draw_overlays() {
 	current_target_surface = overlay_surface;
 	SDL_FillRect(overlay_surface, NULL, 0);
 
+#ifdef USE_MENU
+	draw_menubar();
+#endif
+
 #ifdef USE_DEBUG_CHEATS
 	if (debug_cheats_enabled && is_timer_displayed && start_level > 0) {
 		char timer_text[32];
@@ -2841,6 +2867,15 @@ void process_events() {
 #endif
 				}
 				break;
+#ifdef USE_MENU
+			case SDL_MOUSEBUTTONDOWN:
+				if (menubar_state == 0) {
+					menubar_state = 1;
+				} else {
+					menubar_state = 0;
+				}
+				break;
+#endif
 			case SDL_QUIT:
 				quit(0);
 				break;

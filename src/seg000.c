@@ -128,6 +128,10 @@ void far pop_main() {
 	init_screenshot();
 #endif
 
+#ifdef USE_MENU
+	init_menu();
+#endif
+
 	init_game_main();
 }
 
