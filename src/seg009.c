@@ -2706,7 +2706,7 @@ void idle() {
 					joy_axis[event.caxis.axis] = event.caxis.value;
 
 #ifdef USE_AUTO_INPUT_MODE
-					if (!is_joyst_mode && (event.caxis.value >= JOY_THRESHOLD || event.caxis.value <= -JOY_THRESHOLD)) {
+					if (!is_joyst_mode && (event.caxis.value >= joystick_threshold || event.caxis.value <= -joystick_threshold)) {
 						is_joyst_mode = 1;
 						is_keyboard_mode = 0;
 					}
@@ -2767,8 +2767,22 @@ void idle() {
 				if (!using_sdl_joystick_interface) {
 					break;
 				}
+				if (event.type == SDL_JOYAXISMOTION) {
+					if (event.jaxis.axis == SDL_JOYSTICK_X_AXIS) {
+						joy_axis[SDL_CONTROLLER_AXIS_LEFTX] = event.jaxis.value;
+					}
+					else if (event.jaxis.axis == SDL_JOYSTICK_Y_AXIS) {
+						joy_axis[SDL_CONTROLLER_AXIS_LEFTY] = event.jaxis.value;
+					}
+					// Disregard SDL_JOYAXISMOTION events within joystick 'dead zone'
+					int joy_x = joy_axis[SDL_CONTROLLER_AXIS_LEFTX];
+					int joy_y = joy_axis[SDL_CONTROLLER_AXIS_LEFTX];
+					if ((dword)(joy_x*joy_x) + (dword)(joy_y*joy_y) < (dword)(joystick_threshold*joystick_threshold)) {
+						break;
+					}
+
+				}
 #ifdef USE_AUTO_INPUT_MODE
-				// TODO: Disregard SDL_JOYAXISMOTION events within joystick 'dead zone'
 				if (!is_joyst_mode) {
 					is_joyst_mode = 1;
 					is_keyboard_mode = 0;
@@ -2781,35 +2795,6 @@ void idle() {
 				else if (event.type == SDL_JOYBUTTONUP) {
 					if      (event.jbutton.button == SDL_JOYSTICK_BUTTON_Y)   joy_AY_buttons_state = 0;  // Y (up)
 					else if (event.jbutton.button == SDL_JOYSTICK_BUTTON_X)   joy_X_button_state = 0;    // X (shift)
-				}
-				else if (event.type == SDL_JOYAXISMOTION) {
-					// TODO: Shouldn't there be a 'dead zone' (threshold) for the joystick axes here?
-					// event.jaxis.value has possible values INT16_MIN to INT16_MAX.
-
-#if 1
-					if (event.jaxis.axis == SDL_JOYSTICK_X_AXIS) {
-						if (event.jaxis.value < 0) joy_hat_states[0] = -1; // left
-						if (event.jaxis.value > 0) joy_hat_states[0] = 1;  // right
-						if (event.jaxis.value == 0) joy_hat_states[0] = 0;  // axis released
-					} else if (event.jaxis.axis == SDL_JOYSTICK_Y_AXIS) {
-						if (event.jaxis.value < 0) joy_hat_states[1] = -1; // up
-						if (event.jaxis.value > 0) joy_hat_states[1] = 1;  // down
-						if (event.jaxis.value == 0) joy_hat_states[1] = 0;  // axis released
-					}
-
-					// And should the joystick axes map into the dpad (hat) states?
-					// If all-directional control is the desired behavior for these joysticks,
-					// maybe it's better to let get_joystick_state() get called in read_joyst_control() instead?
-					// Something like this should work, in that case:
-#else
-					if (event.jaxis.axis == SDL_JOYSTICK_X_AXIS) {
-						joy_axis[SDL_CONTROLLER_AXIS_LEFTX] = event.jaxis.value;
-					}
-					else if (event.jaxis.axis == SDL_JOYSTICK_Y_AXIS) {
-						joy_axis[SDL_CONTROLLER_AXIS_LEFTY] = event.jaxis.value;
-					}
-#endif
-
 				}
 				break;
 

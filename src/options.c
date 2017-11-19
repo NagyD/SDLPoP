@@ -144,38 +144,21 @@ static inline int ini_process_boolean(const char* curr_name, const char* value, 
 	return 0; // not the right option; should check another option_name
 }
 
-static inline int ini_process_word(const char* curr_name, const char* value, const char* option_name, word* target, ini_value_list_type* value_names) {
-	if(strcasecmp(curr_name, option_name) == 0) {
-		if (strcasecmp(value, "default") != 0) {
-			int named_value = ini_get_named_value(value, value_names);
-			*target = (named_value == INI_NO_VALID_NAME) ? ((word) strtoumax(value, NULL, 0)) : ((word) named_value);
-		}
-		return 1; // finished; don't look for more possible options that curr_name can be
-	}
-	return 0; // not the right option; should check another option_name
+#define ini_process_numeric_func(data_type) \
+static inline int ini_process_##data_type(const char* curr_name, const char* value, const char* option_name, data_type* target, ini_value_list_type* value_names) { \
+	if(strcasecmp(curr_name, option_name) == 0) { \
+		if (strcasecmp(value, "default") != 0) { \
+			int named_value = ini_get_named_value(value, value_names); \
+			*target = (named_value == INI_NO_VALID_NAME) ? ((data_type) strtoimax(value, NULL, 0)) : ((data_type) named_value); \
+		} \
+		return 1; /* finished; don't look for more possible options that curr_name can be */ \
+	} \
+	return 0; /* not the right option; should check another option_name */ \
 }
-
-static inline int ini_process_short(const char* curr_name, const char* value, const char* option_name, short* target, ini_value_list_type* value_names) {
-	if(strcasecmp(curr_name, option_name) == 0) {
-		if (strcasecmp(value, "default") != 0) {
-			int named_value = ini_get_named_value(value, value_names);
-			*target = (named_value == INI_NO_VALID_NAME) ? ((short) strtoimax(value, NULL, 0)) : ((short) named_value);
-		}
-		return 1; // finished; don't look for more possible options that curr_name can be
-	}
-	return 0; // not the right option; should check another option_name
-}
-
-static inline int ini_process_byte(const char* curr_name, const char* value, const char* option_name, byte* target, ini_value_list_type* value_names) {
-	if(strcasecmp(curr_name, option_name) == 0) {
-		if (strcasecmp(value, "default") != 0) {
-			int named_value = ini_get_named_value(value, value_names);
-			*target = (named_value == INI_NO_VALID_NAME) ? ((byte) strtoumax(value, NULL, 0)) : ((byte) named_value);
-		}
-		return 1; // finished; don't look for more possible options that curr_name can be
-	}
-	return 0; // not the right option; should check another option_name
-}
+ini_process_numeric_func(word)
+ini_process_numeric_func(short)
+ini_process_numeric_func(byte)
+ini_process_numeric_func(int)
 
 static int global_ini_callback(const char *section, const char *name, const char *value)
 {
@@ -193,6 +176,9 @@ static int global_ini_callback(const char *section, const char *name, const char
 	#define process_byte(option_name, target, value_names)                           \
 	if (ini_process_byte(name, value, option_name, target, value_names)) return 1;
 
+	#define process_int(option_name, target, value_names)                           \
+	if (ini_process_int(name, value, option_name, target, value_names)) return 1;
+
 	#define process_boolean(option_name, target)                        \
 	if (ini_process_boolean(name, value, option_name, target)) return 1;
 
@@ -209,6 +195,7 @@ static int global_ini_callback(const char *section, const char *name, const char
 		process_boolean("use_correct_aspect_ratio", &use_correct_aspect_ratio);
 		process_boolean("enable_controller_rumble", &enable_controller_rumble);
 		process_boolean("joystick_only_horizontal", &joystick_only_horizontal);
+		process_int("joystick_threshold", &joystick_threshold, NULL);
 
 		if (strcasecmp(name, "levelset") == 0) {
 			if (value[0] == '\0' || strcasecmp(value, "original") == 0 || strcasecmp(value, "default") == 0) {
