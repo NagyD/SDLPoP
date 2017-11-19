@@ -2012,6 +2012,12 @@ void __pascal far set_gr_mode(byte grmode) {
 	                           SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 	                           pop_window_width, pop_window_height, flags);
 	renderer_ = SDL_CreateRenderer(window_, -1 , SDL_RENDERER_ACCELERATED );
+	if (use_integer_scaling) {
+		SDL_RenderSetIntegerScale(renderer_, SDL_TRUE);
+		if (use_correct_aspect_ratio) {
+			printf("Warning: You should not enable both use_correct_aspect_ratio and use_integer_scaling!");
+		}
+	}
 
 	SDL_Surface* icon = IMG_Load("data/icon.png");
 	if (icon == NULL) {

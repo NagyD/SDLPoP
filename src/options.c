@@ -207,6 +207,7 @@ static int global_ini_callback(const char *section, const char *name, const char
 		process_word("pop_window_width", &pop_window_width, NULL);
 		process_word("pop_window_height", &pop_window_height, NULL);
 		process_boolean("use_correct_aspect_ratio", &use_correct_aspect_ratio);
+		process_boolean("use_integer_scaling", &use_integer_scaling);
 		process_boolean("enable_controller_rumble", &enable_controller_rumble);
 		process_boolean("joystick_only_horizontal", &joystick_only_horizontal);
 
