@@ -1986,6 +1986,19 @@ int __pascal far check_sound_playing() {
 	return speaker_playing || digi_playing || midi_playing;
 }
 
+void window_resized() {
+	if (use_integer_scaling) {
+		int window_width, window_height;
+		SDL_GetWindowSize(window_, &window_width, &window_height);
+		int render_width, render_height;
+		SDL_RenderGetLogicalSize(renderer_, &render_width, &render_height);
+		// Disable integer scaling if it would result in downscaling.
+		// Because then the only suitable integer scaling factor is zero, i.e. the picture disappears.
+		SDL_bool makes_sense = (window_width >= render_width && window_height >= render_height);
+		SDL_RenderSetIntegerScale(renderer_, makes_sense);
+	}
+}
+
 // seg009:38ED
 void __pascal far set_gr_mode(byte grmode) {
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_NOPARACHUTE |
@@ -2014,9 +2027,6 @@ void __pascal far set_gr_mode(byte grmode) {
 	renderer_ = SDL_CreateRenderer(window_, -1 , SDL_RENDERER_ACCELERATED );
 	if (use_integer_scaling) {
 		SDL_RenderSetIntegerScale(renderer_, SDL_TRUE);
-		if (use_correct_aspect_ratio) {
-			printf("Warning: You should not enable both use_correct_aspect_ratio and use_integer_scaling!");
-		}
 	}
 
 	SDL_Surface* icon = IMG_Load("data/icon.png");
@@ -2032,6 +2042,8 @@ void __pascal far set_gr_mode(byte grmode) {
 	} else {
 		SDL_RenderSetLogicalSize(renderer_, 320, 200);
 	}
+
+	window_resized();
 
 	/* Migration to SDL2: everything is still blitted to onscreen_surface_, however:
 	 * SDL2 renders textures to the screen instead of surfaces; so for now, every screen
@@ -2828,6 +2840,7 @@ void idle() {
 */
 				switch (event.window.event) {
 					case SDL_WINDOWEVENT_SIZE_CHANGED:
+						window_resized();
 					//case SDL_WINDOWEVENT_MOVED:
 					//case SDL_WINDOWEVENT_RESTORED:
 					case SDL_WINDOWEVENT_EXPOSED:
