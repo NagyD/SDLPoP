@@ -566,7 +566,8 @@ extern SDL_Window* window_;
 extern SDL_Texture* sdl_texture_;
 
 extern SDL_GameController* sdl_controller_ INIT( = 0 );
-extern SDL_Joystick* sdl_joystick_ INIT( = 0 ); // in case our joystick is not compatible with SDL_GameController
+extern SDL_Joystick* sdl_joystick_; // in case our joystick is not compatible with SDL_GameController
+extern byte using_sdl_joystick_interface;
 extern int joy_axis[6]; // hor/ver axes for left/right sticks + left and right triggers (in total 6 axes)
 extern int joy_left_stick_states[2]; // horizontal, vertical
 extern int joy_right_stick_states[2];
@@ -651,6 +652,7 @@ extern byte enable_text INIT(= 1);
 extern byte enable_info_screen INIT(= 1);
 extern byte enable_controller_rumble INIT(= 0);
 extern byte joystick_only_horizontal INIT(= 0);
+extern int joystick_threshold INIT(= 8000);
 extern byte enable_quicksave INIT(= 1);
 extern byte enable_quicksave_penalty INIT(= 1);
 extern byte enable_replay INIT(= 1);

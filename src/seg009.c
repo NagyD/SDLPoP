@@ -624,6 +624,7 @@ int __pascal far set_joy_mode() {
 		else {
 			sdl_joystick_ = SDL_JoystickOpen(0);
 			is_joyst_mode = 1;
+			using_sdl_joystick_interface = 1;
 		}
 	}
 	if (enable_controller_rumble && is_joyst_mode) {
@@ -2705,7 +2706,7 @@ void idle() {
 					joy_axis[event.caxis.axis] = event.caxis.value;
 
 #ifdef USE_AUTO_INPUT_MODE
-					if (!is_joyst_mode && (event.caxis.value >= JOY_THRESHOLD || event.caxis.value <= -JOY_THRESHOLD)) {
+					if (!is_joyst_mode && (event.caxis.value >= joystick_threshold || event.caxis.value <= -joystick_threshold)) {
 						is_joyst_mode = 1;
 						is_keyboard_mode = 0;
 					}
@@ -2759,49 +2760,44 @@ void idle() {
 				}
 				break;
 			case SDL_JOYBUTTONDOWN:
-#ifdef USE_AUTO_INPUT_MODE
-				if (!is_joyst_mode) {
-					is_joyst_mode = 1;
-					is_keyboard_mode = 0;
-				}
-#endif
-				switch (event.jbutton.button)
-				{
-					case SDL_JOYSTICK_BUTTON_Y:            joy_AY_buttons_state = -1; break; /*** Y (up) ***/
-					case SDL_JOYSTICK_BUTTON_X:            joy_X_button_state = 1;    break; /*** X (shift) ***/
-				}
-				break;
 			case SDL_JOYBUTTONUP:
-				switch (event.jbutton.button)
-				{
-					case SDL_JOYSTICK_BUTTON_Y:            joy_AY_buttons_state = 0; break; /*** Y (up) ***/
-					case SDL_JOYSTICK_BUTTON_X:            joy_X_button_state = 0;   break; /*** X (shift) ***/
+			case SDL_JOYAXISMOTION:
+				// Only handle the event if the joystick is incompatible with the SDL_GameController interface.
+				// (Otherwise it will interfere with the normal action of the SDL_GameController API.)
+				if (!using_sdl_joystick_interface) {
 					break;
+				}
+				if (event.type == SDL_JOYAXISMOTION) {
+					if (event.jaxis.axis == SDL_JOYSTICK_X_AXIS) {
+						joy_axis[SDL_CONTROLLER_AXIS_LEFTX] = event.jaxis.value;
+					}
+					else if (event.jaxis.axis == SDL_JOYSTICK_Y_AXIS) {
+						joy_axis[SDL_CONTROLLER_AXIS_LEFTY] = event.jaxis.value;
+					}
+					// Disregard SDL_JOYAXISMOTION events within joystick 'dead zone'
+					int joy_x = joy_axis[SDL_CONTROLLER_AXIS_LEFTX];
+					int joy_y = joy_axis[SDL_CONTROLLER_AXIS_LEFTX];
+					if ((dword)(joy_x*joy_x) + (dword)(joy_y*joy_y) < (dword)(joystick_threshold*joystick_threshold)) {
+						break;
+					}
 
 				}
-				break;
-			case SDL_JOYAXISMOTION:
 #ifdef USE_AUTO_INPUT_MODE
 				if (!is_joyst_mode) {
 					is_joyst_mode = 1;
 					is_keyboard_mode = 0;
 				}
 #endif
-				switch (event.jaxis.axis) 
-				{
-					case SDL_JOYSTICK_X_AXIS:
-						if (event.jaxis.value < 0)  joy_hat_states[0] = -1; // left   
-						if (event.jaxis.value > 0)  joy_hat_states[0] = 1;  // right
-						if (event.jaxis.value == 0) joy_hat_states[0] = 0;  // axis released
-					break;
-
-					case SDL_JOYSTICK_Y_AXIS:
-						if (event.jaxis.value < 0)  joy_hat_states[1] = -1; // up
-						if (event.jaxis.value > 0)  joy_hat_states[1] = 1;  // down
-						if (event.jaxis.value == 0) joy_hat_states[1] = 0;  // axis released
-					break;
+				if (event.type == SDL_JOYBUTTONDOWN) {
+					if      (event.jbutton.button == SDL_JOYSTICK_BUTTON_Y)   joy_AY_buttons_state = -1; // Y (up)
+					else if (event.jbutton.button == SDL_JOYSTICK_BUTTON_X)   joy_X_button_state = -1;   // X (shift)
+				}
+				else if (event.type == SDL_JOYBUTTONUP) {
+					if      (event.jbutton.button == SDL_JOYSTICK_BUTTON_Y)   joy_AY_buttons_state = 0;  // Y (up)
+					else if (event.jbutton.button == SDL_JOYSTICK_BUTTON_X)   joy_X_button_state = 0;    // X (shift)
 				}
 				break;
+
 			case SDL_TEXTINPUT:
 				last_text_input = event.text.text[0]; // UTF-8 formatted char text input
 				break;
