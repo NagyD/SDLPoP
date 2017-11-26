@@ -510,6 +510,8 @@ image_type* get_image(short chtab_id, int id);
 
 // SEG009.C
 void sdlperror(const char* header);
+#define locate_file(filename) locate_file_(filename, alloca(POP_MAX_PATH), POP_MAX_PATH)
+const char* locate_file_(const char* filename, char* path_buffer, int buffer_size);
 int __pascal far read_key();
 void __pascal far clear_kbd_buf();
 word __pascal far prandom(word max);

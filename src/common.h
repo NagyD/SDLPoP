@@ -34,6 +34,16 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 
+#ifndef _MSC_VER // unistd.h does not exist in the Windows SDK.
+#include <unistd.h>
+#else
+#ifndef _UNISTD_H
+#define _UNISTD_H    1
+#define F_OK    0       /* Test for existence.  */
+#define access _access
+#endif
+#endif
+
 #include "config.h"
 #include "types.h"
 #include "proto.h"

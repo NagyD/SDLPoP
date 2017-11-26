@@ -359,7 +359,7 @@ static int mod_ini_callback(const char *section, const char *name, const char *v
 }
 
 void load_global_options() {
-	ini_load("SDLPoP.ini", global_ini_callback); // global configuration
+	ini_load(locate_file("SDLPoP.ini"), global_ini_callback); // global configuration
 }
 
 void check_mod_param() {
