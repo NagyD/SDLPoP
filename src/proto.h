@@ -540,6 +540,7 @@ int __pascal far get_line_width(const char far *text,int length);
 int __pascal far draw_text_character(byte character);
 void __pascal far draw_rect(const rect_type far *rect,int color);
 void draw_rect_with_alpha(const rect_type* rect, byte color, byte alpha);
+void draw_rect_contours(const rect_type* rect, byte color);
 surface_type far *__pascal rect_sthg(surface_type *surface,const rect_type far *rect);
 rect_type far *__pascal shrink2_rect(rect_type far *target_rect,const rect_type far *source_rect,int delta_x,int delta_y);
 void __pascal far set_curr_pos(int xpos,int ypos);
@@ -662,4 +663,6 @@ void save_level_screenshot(bool want_extras);
 #ifdef USE_MENU
 void init_menu();
 void draw_menubar();
+void draw_pause_overlay();
+int key_test_paused_menu(int key);
 #endif

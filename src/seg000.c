@@ -489,6 +489,13 @@ int __pascal far process_key() {
 	need_show_text = 0;
 	key = key_test_quit();
 
+#ifdef USE_MENU
+	if (is_paused) {
+		key = key_test_paused_menu(key);
+		if (key == 0) return 0;
+	}
+#endif
+
 	if (start_level < 0) {
 		if (key || control_shift) {
 			#ifdef USE_QUICKSAVE
@@ -1469,12 +1476,13 @@ int __pascal far do_paused() {
 	}
 	key = process_key();
 	if (is_paused) {
-		is_paused = 0;
 		display_text_bottom("GAME PAUSED");
 		// busy waiting?
 		do {
 			idle();
-		} while (! process_key());
+		} while (! process_key() && is_paused);
+		// TODO: Fix for pause toggle should be optional.
+		is_paused = 0;
 		erase_bottom_text(1);
 	}
 	return key || control_shift;

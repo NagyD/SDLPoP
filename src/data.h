@@ -262,7 +262,7 @@ extern char_type Kid;
 // data:295C
 extern word is_keyboard_mode INIT(= 0);
 // data:4E8A
-extern word is_paused;
+extern short is_paused;
 // data:42D0
 extern word is_restart_level;
 // data:31E4
@@ -622,6 +622,7 @@ extern word justblocked; // name from Apple II source
 // data:5F84
 extern word last_loose_sound;
 
+extern int last_key_scancode;
 extern font_type hc_font INIT(= {0x01,0xFF, 7,2,1,1, NULL});
 extern textstate_type textstate INIT(= {0,0,0,15,&hc_font});
 
@@ -757,7 +758,8 @@ extern menubar_item_type game_menubar_item INIT(= {.id = 1, .associated_menu = &
 extern menubar_item_type options_menubar_item INIT(= {.id = 2, .associated_menu = &options_menu, .text = "Options"});
 extern menubar_item_type capture_menubar_item INIT(= {.id = 3, .associated_menu = &capture_menu, .text = "Capture"});
 extern menubar_item_type cheats_menubar_item INIT(= {.id = 4, .associated_menu = &cheat_menu, .text = "Cheat"});
-extern int mouse_x, mouse_y;
+extern int mouse_state_changed;
+extern int mouse_x, mouse_y, mouse_clicked;
 extern int menubar_state;
 extern int selected_menu_id;
 #endif

@@ -22,6 +22,172 @@ The authors of this program may be contacted at http://forum.princed.org
 
 #ifdef USE_MENU
 
+
+typedef struct pause_menu_item_type {
+	int id;
+	int previous, next;
+	char text[MAX_MENU_ITEM_LENGTH];
+} pause_menu_item_type;
+
+enum pause_menu_item_ids {
+	PAUSE_MENU_RESUME,
+	PAUSE_MENU_SAVE_GAME,
+	PAUSE_MENU_LOAD_GAME,
+	PAUSE_MENU_RESTART_LEVEL,
+	PAUSE_MENU_SETTINGS,
+	PAUSE_MENU_QUIT_GAME,
+	SETTINGS_MENU_GENERAL,
+	SETTINGS_MENU_GAMEPLAY,
+	SETTINGS_MENU_VISUALS,
+	SETTINGS_MENU_MODS,
+	SETTINGS_MENU_BACK,
+};
+
+pause_menu_item_type pause_menu_items[] = {
+		{.id = PAUSE_MENU_RESUME,        .text = "RESUME"},
+		{.id = PAUSE_MENU_SAVE_GAME,     .text = "SAVE GAME"},
+		{.id = PAUSE_MENU_LOAD_GAME,     .text = "LOAD GAME"},
+		{.id = PAUSE_MENU_RESTART_LEVEL, .text = "RESTART LEVEL"},
+		{.id = PAUSE_MENU_SETTINGS,      .text = "SETTINGS"},
+		{.id = PAUSE_MENU_QUIT_GAME,     .text = "QUIT GAME"}
+};
+
+int highlighted_pause_menu_item = PAUSE_MENU_RESUME;
+int next_pause_menu_item;
+int previous_pause_menu_item;
+int drawn_menu;
+byte pause_menu_alpha;
+
+pause_menu_item_type settings_menu_items[] = {
+		{.id = SETTINGS_MENU_GENERAL, .text = "GENERAL"},
+		{.id = SETTINGS_MENU_GAMEPLAY, .text = "GAMEPLAY"},
+		{.id = SETTINGS_MENU_VISUALS, .text = "VISUALS"},
+		{.id = SETTINGS_MENU_MODS, .text = "MODS"},
+		{.id = SETTINGS_MENU_BACK, .text = "BACK"},
+};
+int active_settings_menu_item = 0;
+int menu_control_y;
+
+enum menu_setting_style_ids {
+	SETTING_STYLE_TOGGLE,
+	SETTING_STYLE_SLIDER,
+};
+
+enum setting_ids {
+	SETTING_ENABLE_INFO_SCREEN,
+	SETTING_ENABLE_SOUND,
+	SETTING_ENABLE_MUSIC,
+	SETTING_ENABLE_CONTROLLER_RUMBLE,
+	SETTING_JOYSTICK_THRESHOLD,
+	SETTING_JOYSTICK_ONLY_HORIZONTAL,
+	SETTING_FULLSCREEN,
+	SETTING_USE_CORRECT_ASPECT_RATIO,
+	SETTING_ENABLE_FADE,
+	SETTING_ENABLE_FLASH,
+	SETTING_ENABLE_LIGHTING,
+	SETTING_ENABLE_COPYPROT,
+	SETTING_ENABLE_QUICKSAVE,
+	SETTING_ENABLE_QUICKSAVE_PENALTY,
+	SETTING_ENABLE_REPLAY,
+	SETTING_USE_FIXES_AND_ENHANCEMENTS,
+	SETTING_ENABLE_CROUCH_AFTER_CLIMBING,
+	SETTING_ENABLE_FREEZE_TIME_DURING_END_MUSIC,
+	SETTING_ENABLE_REMEMBER_GUARD_HP,
+	SETTING_FIX_GATE_SOUNDS,
+	SETTING_TWO_COLL_BUG,
+	SETTING_FIX_INFINITE_DOWN_BUG,
+};
+
+typedef struct menu_setting_type {
+	int id;
+	int previous, next;
+	int style;
+	void* linked;
+	char text[64];
+	char explanation[256];
+} menu_setting_type;
+
+menu_setting_type general_settings[] = {
+		{.id = SETTING_ENABLE_INFO_SCREEN, .style = SETTING_STYLE_TOGGLE, .linked = &enable_info_screen,
+				.text = "Display info screen on launch",
+				.explanation = "Display the SDLPoP information screen when the game starts."},
+		{.id = SETTING_ENABLE_SOUND, .style = SETTING_STYLE_TOGGLE, .linked = &is_sound_on,
+				.text = "Enable sound",
+				.explanation = "Turn sound on or off."},
+		{.id = SETTING_ENABLE_MUSIC, .style = SETTING_STYLE_TOGGLE, .linked = &enable_mixer,
+				.text = "Enable music",
+				.explanation = "Turn music on or off."},
+		{.id = SETTING_ENABLE_CONTROLLER_RUMBLE, .style = SETTING_STYLE_TOGGLE, .linked = &enable_controller_rumble,
+				.text = "Enable controller rumble",
+				.explanation = "If using a controller with a rumble motor, provide haptic feedback when the kid is hurt."},
+		{.id = SETTING_JOYSTICK_THRESHOLD, .style = SETTING_STYLE_SLIDER,
+				.text = "Joystick threshold",
+				.explanation = "Joystick 'dead zone' sensitivity threshold."},
+		{.id = SETTING_JOYSTICK_ONLY_HORIZONTAL, .style = SETTING_STYLE_TOGGLE, .linked = &joystick_only_horizontal,
+				.text = "Horizontal joystick movement only",
+				.explanation = "Use joysticks for horizontal movement only, not all-directional. "
+						"This may make the game easier to control for some controllers."},
+};
+
+menu_setting_type visuals_settings[] = {
+		{.id = SETTING_FULLSCREEN, .style = SETTING_STYLE_TOGGLE, .linked = &start_fullscreen,
+				.text = "Start fullscreen",
+				.explanation = "Start the game in fullscreen mode.\nTo toggle fullscreen, press Alt+Enter."},
+		{.id = SETTING_USE_CORRECT_ASPECT_RATIO, .style = SETTING_STYLE_TOGGLE, .linked = &use_correct_aspect_ratio,
+				.text = "Use 4:3 aspect ratio",
+				.explanation = "Render the game in the originally intended 4:3 aspect ratio."
+				               "\nNB. Works best using a high resolution."},
+		{.id = SETTING_ENABLE_FADE, .style = SETTING_STYLE_TOGGLE, .linked = &enable_fade,
+				.text = "Fading enabled",
+				.explanation = "Turn fading on or off."},
+		{.id = SETTING_ENABLE_FLASH, .style = SETTING_STYLE_TOGGLE, .linked = &enable_flash,
+				.text = "Flashing enabled",
+				.explanation = "Turn flashing on or off."},
+		{.id = SETTING_ENABLE_LIGHTING, .style = SETTING_STYLE_TOGGLE, .linked = &enable_lighting,
+				.text = "Torch shadows enabled",
+				.explanation = "Darken those parts of the screen that are not near a torch."},
+};
+
+menu_setting_type gameplay_settings[] = {
+		{.id = SETTING_ENABLE_COPYPROT, .style = SETTING_STYLE_TOGGLE, .linked = &enable_copyprot,
+				.text = "Copy protection level"},
+		{.id = SETTING_ENABLE_QUICKSAVE, .style = SETTING_STYLE_TOGGLE, .linked = &enable_quicksave,
+				.text = "Enable quicksave (F6/F9)"},
+		{.id = SETTING_ENABLE_QUICKSAVE_PENALTY, .style = SETTING_STYLE_TOGGLE, .linked = &enable_quicksave_penalty,
+				.text = "Quicksave time penalty"},
+		{.id = SETTING_ENABLE_REPLAY, .style = SETTING_STYLE_TOGGLE, .linked = &enable_replay,
+				.text = "Enable replays"},
+		{.id = SETTING_USE_FIXES_AND_ENHANCEMENTS, .style = SETTING_STYLE_TOGGLE, .linked = &use_fixes_and_enhancements,
+				.text = "Enhanced mode (allow bug fixes)"},
+		{.id = SETTING_ENABLE_CROUCH_AFTER_CLIMBING, .style = SETTING_STYLE_TOGGLE, .linked = &enable_crouch_after_climbing,
+				.text = "Enable crouching after climbing"},
+		{.id = SETTING_ENABLE_FREEZE_TIME_DURING_END_MUSIC, .style = SETTING_STYLE_TOGGLE, .linked = &enable_freeze_time_during_end_music,
+				.text = "Freeze time during level end music"},
+		{.id = SETTING_ENABLE_REMEMBER_GUARD_HP, .style = SETTING_STYLE_TOGGLE, .linked = &enable_remember_guard_hp,
+				.text = "Remember guard hitpoints"},
+		{.id = SETTING_FIX_GATE_SOUNDS, .style = SETTING_STYLE_TOGGLE, .linked = &fix_gate_sounds,
+				.text = "Fix gate sounds bug"},
+		{.id = SETTING_TWO_COLL_BUG, .style = SETTING_STYLE_TOGGLE, .linked = &fix_two_coll_bug,
+				.text = "Fix two collisions bug"},
+		{.id = SETTING_FIX_INFINITE_DOWN_BUG, .style = SETTING_STYLE_TOGGLE, .linked = &fix_infinite_down_bug,
+				.text = "Fix infinite down bug"},
+};
+
+menu_setting_type mods_settings[] = {
+		{.id = 1, .style = SETTING_STYLE_SLIDER, .text = "Starting minutes left"},
+		{.id = 1, .style = SETTING_STYLE_SLIDER, .text = "Starting hitpoints"},
+		{.id = 1, .style = SETTING_STYLE_SLIDER, .text = "Max hitpoints allowed"},
+		{.id = 1, .style = SETTING_STYLE_SLIDER, .text = "Saving allowed: first level"},
+		{.id = 1, .style = SETTING_STYLE_SLIDER, .text = "Saving allowed: last level"},
+		{.id = 1, .style = SETTING_STYLE_SLIDER, .text = "Start with the screen flipped"},
+		{.id = 1, .style = SETTING_STYLE_SLIDER, .text = "Start in blind mode"},
+		{.id = 1, .style = SETTING_STYLE_SLIDER, .text = "Copy protection before level"},
+		{.id = 1, .style = SETTING_STYLE_SLIDER, .text = "Allow triggering any tile"},
+		{.id = 1, .style = SETTING_STYLE_SLIDER, .text = "Enable WDA in palace"},
+		{.id = 1, .style = SETTING_STYLE_SLIDER, .text = "First level"},
+};
+
+
 int menu_padding = 3;
 int menu_spacer_height = 3;
 int menu_item_height = 8;
@@ -47,8 +213,24 @@ void add_menu_item(menu_type* menu, menu_item_type new_item) {
 	}
 }
 
+void init_pause_menu_items(pause_menu_item_type* first_item, int item_count) {
+	if (item_count > 0) {
+		for (int i = 0; i < item_count; ++i) {
+			pause_menu_item_type* item = first_item + i;
+			item->previous = (first_item + MAX(0, i-1))->id;
+			item->next = (first_item + MIN(item_count-1, i+1))->id;
+		}
+		pause_menu_item_type* last_item = first_item + (item_count-1);
+		first_item->previous = last_item->id;
+		last_item->next = first_item->id;
+	}
+}
+
 
 void init_menu() {
+	init_pause_menu_items(pause_menu_items, COUNT(pause_menu_items));
+	init_pause_menu_items(settings_menu_items, COUNT(settings_menu_items));
+
 	menubar_state = 0;
 
 	font_type* saved_font = textstate.ptr_font;
@@ -117,11 +299,11 @@ void draw_menu_item(menu_type* menu, rect_type* menu_rect, menu_item_type* item,
 
 	bool hovering = (menu->hovering_item_index == item_index);
 	if (!hovering && !item->is_spacer) {
-		menu->hovering_item_index = item_index;
 		hovering = is_mouse_over_rect(&item_box_rect);
 	}
 
 	if (hovering) {
+		menu->hovering_item_index = item_index;
 		draw_rect_with_alpha(&item_box_rect, color_7_lightgray, menu_alpha);
 	}
 
@@ -218,6 +400,24 @@ void draw_menubar_item(menubar_item_type* menubar_item, int* offset_x) {
 
 };
 
+// Returns true if the mouse moved, false otherwise.
+bool read_mouse_state() {
+	int scaled_width = 0, scaled_height = 0;
+	SDL_GetRendererOutputSize(renderer_, &scaled_width, &scaled_height);
+	if (scaled_width > 0 && scaled_height > 0) {
+		float scale_x = 320.0f / scaled_width;
+		float scale_y = 200.0f / scaled_height;
+		int last_mouse_x = mouse_x;
+		int last_mouse_y = mouse_y;
+		SDL_GetMouseState(&mouse_x, &mouse_y);
+		mouse_x = (int) ((float) mouse_x * scale_x + 0.5f);
+		mouse_y = (int) ((float) mouse_y * scale_y + 0.5f);
+		bool mouse_moved = (last_mouse_x != mouse_x || last_mouse_y != mouse_y);
+		return mouse_moved;
+	}
+	return false;
+}
+
 void draw_menubar() {
 	int scaled_width = 0, scaled_height = 0;
 	SDL_GetRendererOutputSize(renderer_, &scaled_width, &scaled_height);
@@ -247,6 +447,289 @@ void draw_menubar() {
 		textstate.ptr_font = saved_font;
 	}
 }
+
+
+
+
+void pause_menu_clicked(int item_id) {
+	switch(item_id) {
+		default: break;
+		case PAUSE_MENU_RESUME:
+			is_paused = 0;
+			break;
+		case PAUSE_MENU_SAVE_GAME:
+			last_key_scancode = SDL_SCANCODE_F6;
+			break;
+		case PAUSE_MENU_LOAD_GAME:
+			last_key_scancode = SDL_SCANCODE_F9;
+			break;
+		case PAUSE_MENU_RESTART_LEVEL:
+			last_key_scancode = SDL_SCANCODE_A | WITH_CTRL;
+			break;
+		case PAUSE_MENU_SETTINGS:
+			drawn_menu = 1;
+			highlighted_pause_menu_item = SETTINGS_MENU_GENERAL;
+			active_settings_menu_item = 0;
+			break;
+		case PAUSE_MENU_QUIT_GAME:
+			last_key_scancode = SDL_SCANCODE_Q | WITH_CTRL;
+			break;
+		case SETTINGS_MENU_GENERAL:
+			active_settings_menu_item = SETTINGS_MENU_GENERAL;
+			break;
+		case SETTINGS_MENU_GAMEPLAY:
+			active_settings_menu_item = SETTINGS_MENU_GAMEPLAY;
+			break;
+		case SETTINGS_MENU_VISUALS:
+			active_settings_menu_item = SETTINGS_MENU_VISUALS;
+			break;
+		case SETTINGS_MENU_MODS:
+			active_settings_menu_item = SETTINGS_MENU_MODS;
+			break;
+		case SETTINGS_MENU_BACK:
+			drawn_menu = 0;
+			break;
+	}
+}
+
+void draw_pause_menu_item(pause_menu_item_type* item, rect_type* parent, int* y_offset, int inactive_text_color) {
+	rect_type text_rect = *parent;
+	text_rect.top += *y_offset;
+	int text_color = inactive_text_color;
+
+	rect_type selection_box = text_rect;
+	selection_box.bottom = selection_box.top + 8;
+	selection_box.top -= 3;
+
+	bool highlighted = (highlighted_pause_menu_item == item->id);
+	if (mouse_state_changed && is_mouse_over_rect(&selection_box)) {
+		highlighted_pause_menu_item = item->id;
+		highlighted = true;
+	}
+
+	if (highlighted) {
+		previous_pause_menu_item = item->previous;
+		next_pause_menu_item = item->next;
+		text_color = color_15_brightwhite;
+
+		draw_rect_contours(&selection_box, color_7_lightgray);
+#if 0 // do no unnecessary work...
+		draw_rect_with_alpha(&selection_box, color_7_lightgray, 230);
+		shrink2_rect(&selection_box, &selection_box, 1, 1);
+		draw_rect_with_alpha(&selection_box, color_0_black, pause_menu_alpha);
+#endif
+
+		if (mouse_clicked == 1) {
+//			printf("Clicked option %s\n", item->text);
+			pause_menu_clicked(item->id);
+		}
+
+	}
+	show_text_with_color(&text_rect, 0, -1, item->text, text_color);
+	*y_offset += 13;
+
+}
+
+void draw_pause_menu() {
+	pause_menu_alpha = 120;
+	draw_rect_with_alpha(&rect_top, color_0_black, pause_menu_alpha);
+	rect_type pause_rect_outer = {0, 110, 192, 210};
+	rect_type pause_rect_inner;
+	shrink2_rect(&pause_rect_inner, &pause_rect_outer, 5, 5);
+
+	if (!mouse_state_changed) {
+		if (menu_control_y == 1) {
+			highlighted_pause_menu_item = next_pause_menu_item;
+		} else if (menu_control_y == -1) {
+			highlighted_pause_menu_item = previous_pause_menu_item;
+		}
+	}
+
+	int y_offset = 50;
+	for (int i = 0; i < COUNT(pause_menu_items); ++i) {
+		draw_pause_menu_item(&pause_menu_items[i], &pause_rect_inner, &y_offset, color_15_brightwhite);
+	}
+}
+
+
+rect_type explanation_rect = {170, 20, 200, 300};
+int highlighted_setting_id = SETTING_ENABLE_INFO_SCREEN;
+
+void draw_setting_explanation(menu_setting_type* setting) {
+	show_text_with_color(&explanation_rect, 0, -1, setting->explanation, color_7_lightgray);
+}
+
+
+void draw_setting(menu_setting_type* setting, rect_type* parent, int* y_offset, int inactive_text_color) {
+	rect_type text_rect = *parent;
+	text_rect.top += *y_offset;
+	int text_color = inactive_text_color;
+	int selected_color = color_15_brightwhite;
+	int unselected_color = color_7_lightgray;
+
+	rect_type setting_box = text_rect;
+	setting_box.top -= 5;
+	setting_box.bottom = setting_box.top + 15;
+	setting_box.left -= 10;
+	setting_box.right += 10;
+
+	if (mouse_clicked && is_mouse_over_rect(&setting_box)) {
+		highlighted_setting_id = setting->id;
+	}
+
+	if (highlighted_setting_id == setting->id) {
+		SDL_Rect dest_rect;
+		rect_to_sdlrect(&setting_box, &dest_rect);
+		uint32_t rgb_color = SDL_MapRGBA(overlay_surface->format, 40, 40, 40, pause_menu_alpha);
+		if (SDL_FillRect(overlay_surface, &dest_rect, rgb_color) != 0) {
+			sdlperror("SDL_FillRect");
+			quit(1);
+		}
+//		draw_rect_with_alpha(&setting_box, color_8_darkgray, 200);
+		draw_setting_explanation(setting);
+	}
+
+	show_text_with_color(&text_rect, -1, -1, setting->text, text_color);
+
+	if (setting->style == SETTING_STYLE_TOGGLE) {
+		bool setting_enabled = true;
+		if (setting->linked != NULL) {
+			setting_enabled = *(byte*)setting->linked;
+		}
+		int OFF_color = (setting_enabled) ? unselected_color : selected_color;
+		int ON_color = (setting_enabled) ? selected_color : unselected_color;
+		show_text_with_color(&text_rect, 1, -1, "OFF", OFF_color);
+		text_rect.right -= 20;
+		show_text_with_color(&text_rect, 1, -1, "ON", ON_color);
+	} else if (setting->style == SETTING_STYLE_SLIDER) {
+		int slider_value = 8000;
+		float slider_position = 0.5f;
+		rect_type slider_rect = text_rect;
+		slider_rect.top += 1;
+		slider_rect.left = slider_rect.right - 20;
+		slider_rect.bottom = slider_rect.top + 3;
+		draw_rect_contours(&slider_rect, color_7_lightgray);
+
+		rect_type slider_pos_rect = slider_rect;
+		int slider_center_x = (int) (0.5f + (float)slider_rect.left +
+				slider_position*((float)(slider_rect.right - slider_rect.left)));
+		slider_pos_rect.left = slider_center_x - 1;
+		slider_pos_rect.right = slider_center_x + 1;
+		slider_pos_rect.top -= 1;
+		slider_pos_rect.bottom += 1;
+		draw_rect_with_alpha(&slider_pos_rect, color_15_brightwhite, 255);
+
+		text_rect.right -= 25;
+		char value_text[16];
+		snprintf(value_text, sizeof(value_text), "%d", slider_value);
+		show_text_with_color(&text_rect, 1, -1, value_text, selected_color);
+	}
+
+	*y_offset += 15;
+}
+
+void draw_settings_area() {
+	rect_type settings_area_rect = {0, 80, 170, 320};
+	shrink2_rect(&settings_area_rect, &settings_area_rect, 20, 20);
+
+	int y_offset = 0;
+	if (active_settings_menu_item == SETTINGS_MENU_GENERAL) {
+		for (int i = 0; i < COUNT(general_settings); ++i) {
+			draw_setting(&general_settings[i], &settings_area_rect, &y_offset, color_15_brightwhite);
+		}
+	} else if (active_settings_menu_item == SETTINGS_MENU_VISUALS) {
+		for (int i = 0; i < COUNT(visuals_settings); ++i) {
+			draw_setting(&visuals_settings[i], &settings_area_rect, &y_offset, color_15_brightwhite);
+		}
+	} else if (active_settings_menu_item == SETTINGS_MENU_GAMEPLAY) {
+		for (int i = 0; i < COUNT(gameplay_settings); ++i) {
+			draw_setting(&gameplay_settings[i], &settings_area_rect, &y_offset, color_15_brightwhite);
+		}
+	} else if (active_settings_menu_item == SETTINGS_MENU_MODS) {
+		for (int i = 0; i < COUNT(mods_settings); ++i) {
+			draw_setting(&mods_settings[i], &settings_area_rect, &y_offset, color_15_brightwhite);
+		}
+	}
+
+}
+
+void draw_settings_menu() {
+	pause_menu_alpha = 230;
+	draw_rect_with_alpha(&screen_rect, color_0_black, pause_menu_alpha);
+	rect_type pause_rect_outer = {0, 10, 192, 80};
+	rect_type pause_rect_inner;
+	shrink2_rect(&pause_rect_inner, &pause_rect_outer, 5, 5);
+
+	if (!mouse_state_changed) {
+		if (menu_control_y == 1) {
+			highlighted_pause_menu_item = next_pause_menu_item;
+		} else if (menu_control_y == -1) {
+			highlighted_pause_menu_item = previous_pause_menu_item;
+		}
+	}
+
+//	highlighted_pause_menu_item = -1;
+	int y_offset = 50;
+	for (int i = 0; i < COUNT(settings_menu_items); ++i) {
+		pause_menu_item_type* item = &settings_menu_items[i];
+		int text_color = (active_settings_menu_item == item->id) ? color_15_brightwhite : color_7_lightgray;
+		draw_pause_menu_item(&settings_menu_items[i], &pause_rect_inner, &y_offset, text_color);
+	}
+
+	draw_settings_area();
+}
+
+void reset_paused_menu() {
+	drawn_menu = 0;
+	highlighted_pause_menu_item = PAUSE_MENU_RESUME;
+}
+
+void draw_pause_overlay() {
+	if (!is_paused) return;
+	mouse_state_changed = read_mouse_state();
+	font_type* saved_font = textstate.ptr_font;
+	textstate.ptr_font = &small_font;
+
+	if (is_paused == 1) {
+		is_paused = -1; // reset the menu if the menu is drawn for the first time
+		reset_paused_menu();
+	}
+
+	if (drawn_menu == 0) {
+		draw_pause_menu();
+	} else if (drawn_menu == 1) {
+		draw_settings_menu();
+	}
+	textstate.ptr_font = saved_font;
+}
+
+int key_test_paused_menu(int key) {
+	switch(key) {
+		default:
+			menu_control_y = 0;
+			return key;
+		case SDL_SCANCODE_UP:
+			menu_control_y = -1;
+			return 0;
+		case SDL_SCANCODE_DOWN:
+			menu_control_y = 1;
+			return 0;
+		case SDL_SCANCODE_RIGHT:
+		case SDL_SCANCODE_LEFT:
+			return 0;
+		case SDL_SCANCODE_RETURN:
+			mouse_clicked = 1;
+			return 0;
+		case SDL_SCANCODE_ESCAPE:
+			if (drawn_menu == 1) {
+				reset_paused_menu();
+				return 0;
+			}
+			return key;
+	}
+}
+
+
 
 // Small font (hardcoded).
 // The alphanumeric characters were adapted from the freeware font '04b_03' by Yuji Oshimoto. See: http://www.04.jp.org/

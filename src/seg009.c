@@ -35,7 +35,6 @@ void sdlperror(const char* header) {
 
 dat_type* dat_chain_ptr = NULL;
 
-int last_key_scancode;
 char last_text_input;
 
 // seg009:000D
@@ -2107,7 +2106,8 @@ void draw_overlays() {
 	SDL_FillRect(overlay_surface, NULL, 0);
 
 #ifdef USE_MENU
-	draw_menubar();
+//	draw_menubar();
+	draw_pause_overlay();
 #endif
 
 #ifdef USE_DEBUG_CHEATS
@@ -2493,6 +2493,41 @@ void draw_rect_with_alpha(const rect_type* rect, byte color, byte alpha) {
 	}
 }
 
+void draw_rect_contours(const rect_type* rect, byte color) {
+	SDL_Rect dest_rect;
+	rect_to_sdlrect(rect, &dest_rect);
+	rgb_type palette_color = palette[color];
+	uint32_t rgb_color = SDL_MapRGBA(overlay_surface->format, palette_color.r<<2, palette_color.g<<2, palette_color.b<<2, 0xFF);
+	if (SDL_LockSurface(current_target_surface) != 0) {
+		sdlperror("SDL_LockSurface");
+		quit(1);
+	}
+	int bytes_per_pixel = current_target_surface->format->BytesPerPixel;
+	int pitch = current_target_surface->pitch;
+	byte* pixels = current_target_surface->pixels;
+	int xmin = MIN(dest_rect.x,               current_target_surface->w);
+	int xmax = MIN(dest_rect.x + dest_rect.w, current_target_surface->w);
+	int ymin = MIN(dest_rect.y,               current_target_surface->h);
+	int ymax = MIN(dest_rect.y + dest_rect.h, current_target_surface->h);
+	byte* row = pixels + ymin*pitch;
+	// TODO: handle 24 bit surfaces (currently, 32 bit surface is assumed....)
+	uint32_t* pixel =  (uint32_t*) (row + xmin*bytes_per_pixel);
+	for (int x = xmin; x < xmax; ++x) {
+		*pixel++ = rgb_color;
+	}
+	for (int y = ymin+1; y < ymax-1; ++y) {
+		row += pitch;
+		*(uint32_t*)(row + xmin*bytes_per_pixel) = rgb_color;
+		*(uint32_t*)(row + (xmax-1)*bytes_per_pixel) = rgb_color;
+	}
+	pixel = (uint32_t*) (pixels + (ymax-1)*pitch + xmin*bytes_per_pixel);
+	for (int x = xmin; x < xmax; ++x) {
+		*pixel++ = rgb_color;
+	}
+
+	SDL_UnlockSurface(current_target_surface);
+}
+
 void blit_xor(SDL_Surface* target_surface, SDL_Rect* dest_rect, SDL_Surface* image, SDL_Rect* src_rect) {
 	if (dest_rect->w != src_rect->w || dest_rect->h != src_rect->h) {
 		printf("blit_xor: dest_rect and src_rect have different sizes\n");
@@ -2633,7 +2668,7 @@ void toggle_fullscreen() {
 	}
 	else {
 		SDL_SetWindowFullscreen(window_, SDL_WINDOW_FULLSCREEN_DESKTOP);
-		SDL_ShowCursor(SDL_DISABLE);
+//		SDL_ShowCursor(SDL_DISABLE);
 	}
 }
 
@@ -2869,6 +2904,7 @@ void process_events() {
 				break;
 #ifdef USE_MENU
 			case SDL_MOUSEBUTTONDOWN:
+				mouse_clicked = 1;
 				if (menubar_state == 0) {
 					menubar_state = 1;
 				} else {
@@ -2903,6 +2939,7 @@ void idle() {
 
 	process_events();
 	update_screen();
+	mouse_clicked = 0;
 }
 word word_1D63A = 1;
 int __pascal do_wait(int timer_index) {
