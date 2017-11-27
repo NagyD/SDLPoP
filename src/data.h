@@ -578,6 +578,7 @@ extern int joy_X_button_state;
 extern int joy_B_button_state;
 extern SDL_Haptic* sdl_haptic;
 
+extern Uint64 perf_counters_per_tick;
 extern float milliseconds_per_counter;
 
 #ifdef USE_MIXER

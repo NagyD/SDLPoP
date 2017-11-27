@@ -96,7 +96,6 @@ void far pop_main() {
 
 	current_target_surface = rect_sthg(onscreen_surface_, &screen_rect);
 	show_loading();
-	detect_vsync();
 	set_joy_mode();
 	cheats_enabled = check_param("megahit") != NULL;
 #ifdef USE_DEBUG_CHEATS
@@ -748,9 +747,6 @@ int __pascal far process_key() {
 			#ifdef USE_DEBUG_CHEATS
 			case SDL_SCANCODE_T:
 				is_timer_displayed = 1 - is_timer_displayed; // toggle
-				if (!is_timer_displayed) {
-					need_full_redraw = 1;
-				}
 			break;
 			#endif
 		}
