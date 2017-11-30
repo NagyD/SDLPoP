@@ -2776,7 +2776,7 @@ void process_events() {
 						break;
 
 					case SDL_CONTROLLER_BUTTON_BACK:
-						last_key_scancode = SDL_SCANCODE_A | WITH_CTRL;  /*** back (restart level) ***/
+						last_key_scancode = SDL_SCANCODE_ESCAPE;  /*** back (pause game) ***/
 						break;
 
 					default: break;

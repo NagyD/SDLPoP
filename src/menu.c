@@ -99,7 +99,7 @@ enum setting_ids {
 	SETTING_FIX_INFINITE_DOWN_BUG,
 };
 
-typedef struct menu_setting_type {
+typedef struct setting_type {
 	int id;
 	int previous, next;
 	int style;
@@ -151,13 +151,20 @@ setting_type visuals_settings[] = {
 
 setting_type gameplay_settings[] = {
 		{.id = SETTING_ENABLE_COPYPROT, .style = SETTING_STYLE_TOGGLE, .linked = &enable_copyprot,
-				.text = "Copy protection level"},
+				.text = "Copy protection level",
+				.explanation = "Enable or disable the potions (copy protection) level."},
 		{.id = SETTING_ENABLE_QUICKSAVE, .style = SETTING_STYLE_TOGGLE, .linked = &enable_quicksave,
-				.text = "Enable quicksave (F6/F9)"},
+				.text = "Enable quicksave",
+				.explanation = "Enable quicksave/load feature.\nPress F6 to quicksave, F9 to quickload."},
 		{.id = SETTING_ENABLE_QUICKSAVE_PENALTY, .style = SETTING_STYLE_TOGGLE, .linked = &enable_quicksave_penalty,
-				.text = "Quicksave time penalty"},
+				.text = "Quicksave time penalty",
+				.explanation = "Try to let time run out when quickloading (similar to dying).\n"
+						"Actually, the 'remaining time' will still be restored, "
+						"but a penalty (up to one minute) will be applied."},
 		{.id = SETTING_ENABLE_REPLAY, .style = SETTING_STYLE_TOGGLE, .linked = &enable_replay,
-				.text = "Enable replays"},
+				.text = "Enable replays", .explanation = "Enable recording/replay feature.\n"
+						"Press Ctrl+Tab in-game to start recording.\n"
+						"To stop, press Ctrl+Tab again."},
 		{.id = SETTING_USE_FIXES_AND_ENHANCEMENTS, .style = SETTING_STYLE_TOGGLE, .linked = &use_fixes_and_enhancements,
 				.text = "Enhanced mode (allow bug fixes)"},
 		{.id = SETTING_ENABLE_CROUCH_AFTER_CLIMBING, .style = SETTING_STYLE_TOGGLE, .linked = &enable_crouch_after_climbing,
@@ -421,20 +428,26 @@ void draw_menubar_item(menubar_item_type* menubar_item, int* offset_x) {
 
 // Returns true if the mouse moved, false otherwise.
 bool read_mouse_state() {
-	int scaled_width = 0, scaled_height = 0;
-	SDL_GetRendererOutputSize(renderer_, &scaled_width, &scaled_height);
-	if (scaled_width > 0 && scaled_height > 0) {
-		float scale_x = 320.0f / scaled_width;
-		float scale_y = 200.0f / scaled_height;
-		int last_mouse_x = mouse_x;
-		int last_mouse_y = mouse_y;
-		SDL_GetMouseState(&mouse_x, &mouse_y);
-		mouse_x = (int) ((float) mouse_x * scale_x + 0.5f);
-		mouse_y = (int) ((float) mouse_y * scale_y + 0.5f);
-		bool mouse_moved = (last_mouse_x != mouse_x || last_mouse_y != mouse_y);
-		return (mouse_moved || mouse_clicked);
-	}
-	return false;
+	float scale_x, scale_y;
+	SDL_RenderGetScale(renderer_, &scale_x, &scale_y);
+	int logical_width, logical_height;
+	SDL_RenderGetLogicalSize(renderer_, &logical_width, &logical_height);
+	int logical_scale_x = logical_width / 320; // These may be higher than 1, if 4:3 aspect ratio scaling is enabled.
+	int logical_scale_y = logical_height / 200;
+	scale_x *= logical_scale_x;
+	scale_y *= logical_scale_y;
+	if (!(scale_x > 0 && scale_y > 0 && logical_scale_x > 0 && logical_scale_y > 0)) return false;
+	SDL_Rect viewport;
+	SDL_RenderGetViewport(renderer_, &viewport); // Get the width/height of the 'black bars' around the rendering area.
+	viewport.x /= logical_scale_x;
+	viewport.y /= logical_scale_y;
+	int last_mouse_x = mouse_x;
+	int last_mouse_y = mouse_y;
+	SDL_GetMouseState(&mouse_x, &mouse_y);
+	mouse_x = (int) ((float)mouse_x/scale_x - viewport.x + 0.5f);
+	mouse_y = (int) ((float)mouse_y/scale_y - viewport.y + 0.5f);
+	bool mouse_moved = (last_mouse_x != mouse_x || last_mouse_y != mouse_y);
+	return (mouse_moved || mouse_clicked);
 }
 
 void draw_menubar() {
@@ -474,17 +487,31 @@ int next_setting_id = 0;
 int previous_setting_id = 0;
 
 
-void pause_menu_clicked(int item_id) {
+void enter_settings_subsection(int settings_menu_id, setting_type* settings) {
+	if (active_settings_menu_item != settings_menu_id) {
+		highlighted_setting_id = settings[0].id;
+	}
+	active_settings_menu_item = settings_menu_id;
+	if (!mouse_state_changed) highlighted_pause_menu_item = 0;
+	controlled_area = 1;
+}
+
+void pause_menu_clicked(pause_menu_item_type* item) {
+	//printf("Clicked option %s\n", item->text);
 	clicked_or_pressed_enter = false; // prevent "click-through" because the screen changes
-	switch(item_id) {
+	play_sound(sound_22_loose_shake_3);
+	play_next_sound();
+	switch(item->id) {
 		default: break;
 		case PAUSE_MENU_RESUME:
 			is_paused = 0;
 			break;
 		case PAUSE_MENU_SAVE_GAME:
+			// TODO: Manual save games.
 			last_key_scancode = SDL_SCANCODE_F6;
 			break;
 		case PAUSE_MENU_LOAD_GAME:
+			// TODO: Manual save games.
 			last_key_scancode = SDL_SCANCODE_F9;
 			break;
 		case PAUSE_MENU_RESTART_LEVEL:
@@ -499,37 +526,16 @@ void pause_menu_clicked(int item_id) {
 			last_key_scancode = SDL_SCANCODE_Q | WITH_CTRL;
 			break;
 		case SETTINGS_MENU_GENERAL:
-			if (active_settings_menu_item != SETTINGS_MENU_GENERAL) {
-				highlighted_setting_id = general_settings[0].id;
-			}
-			active_settings_menu_item = SETTINGS_MENU_GENERAL;
-			if (!mouse_state_changed) highlighted_pause_menu_item = 0;
-			controlled_area = 1;
+			enter_settings_subsection(SETTINGS_MENU_GENERAL, general_settings);
 			break;
 		case SETTINGS_MENU_GAMEPLAY:
-			if (active_settings_menu_item != SETTINGS_MENU_GAMEPLAY) {
-				highlighted_setting_id = gameplay_settings[0].id;
-			}
-			active_settings_menu_item = SETTINGS_MENU_GAMEPLAY;
-			if (!mouse_state_changed) highlighted_pause_menu_item = 0;
-			controlled_area = 1;
-
+			enter_settings_subsection(SETTINGS_MENU_GAMEPLAY, gameplay_settings);
 			break;
 		case SETTINGS_MENU_VISUALS:
-			if (active_settings_menu_item != SETTINGS_MENU_VISUALS) {
-				highlighted_setting_id = visuals_settings[0].id;
-			}
-			active_settings_menu_item = SETTINGS_MENU_VISUALS;
-			if (!mouse_state_changed) highlighted_pause_menu_item = 0;
-			controlled_area = 1;
+			enter_settings_subsection(SETTINGS_MENU_VISUALS, visuals_settings);
 			break;
 		case SETTINGS_MENU_MODS:
-			if (active_settings_menu_item != SETTINGS_MENU_MODS) {
-				highlighted_setting_id = mods_settings[0].id;
-			}
-			active_settings_menu_item = SETTINGS_MENU_MODS;
-			if (!mouse_state_changed) highlighted_pause_menu_item = 0;
-			controlled_area = 1;
+			enter_settings_subsection(SETTINGS_MENU_MODS, mods_settings);
 			break;
 		case SETTINGS_MENU_BACK:
 			drawn_menu = 0;
@@ -565,9 +571,12 @@ void draw_pause_menu_item(pause_menu_item_type* item, rect_type* parent, int* y_
 		draw_rect_with_alpha(&selection_box, color_0_black, pause_menu_alpha);
 #endif
 
-		if (clicked_or_pressed_enter == 1) {
-//			printf("Clicked option %s\n", item->text);
-			pause_menu_clicked(item->id);
+		if (mouse_clicked) {
+			if (is_mouse_over_rect(&selection_box)) {
+				pause_menu_clicked(item);
+			}
+		} else if (clicked_or_pressed_enter == 1) {
+			pause_menu_clicked(item);
 		}
 
 	}
@@ -585,8 +594,12 @@ void draw_pause_menu() {
 
 	if (!mouse_state_changed) {
 		if (menu_control_y == 1) {
+			play_sound(sound_21_loose_shake_2);
+			play_next_sound();
 			highlighted_pause_menu_item = next_pause_menu_item;
 		} else if (menu_control_y == -1) {
+			play_sound(sound_21_loose_shake_2);
+			play_next_sound();
 			highlighted_pause_menu_item = previous_pause_menu_item;
 		}
 	}
@@ -598,6 +611,8 @@ void draw_pause_menu() {
 }
 
 void turn_setting_on(setting_type* setting) {
+	play_sound(sound_10_sword_vs_sword);
+	play_next_sound();
 	switch(setting->id) {
 		default:
 			if (setting->linked != NULL) {
@@ -623,6 +638,8 @@ void turn_setting_on(setting_type* setting) {
 }
 
 void turn_setting_off(setting_type* setting) {
+	play_sound(sound_10_sword_vs_sword);
+	play_next_sound();
 	switch(setting->id) {
 		default:
 			if (setting->linked != NULL) {
@@ -661,7 +678,7 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 	setting_box.left -= 10;
 	setting_box.right += 10;
 
-	if (clicked_or_pressed_enter && is_mouse_over_rect(&setting_box)) {
+	if (mouse_clicked && is_mouse_over_rect(&setting_box)) {
 		highlighted_setting_id = setting->id;
 		controlled_area = 1;
 	}
@@ -690,7 +707,7 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 
 		// Toggling the setting: either by clicking on "ON" or "OFF", or by pressing left/right.
 		if (highlighted_setting_id == setting->id) {
-			if (clicked_or_pressed_enter) {
+			if (mouse_clicked) {
 				if (setting_enabled) {
 					rect_type OFF_hitbox = setting_box;
 					OFF_hitbox.left = setting_box.right - 27;
@@ -785,12 +802,16 @@ void draw_settings_menu() {
 
 	if (!mouse_state_changed) {
 		if (menu_control_y == 1) {
+			play_sound(sound_21_loose_shake_2);
+			play_next_sound();
 			if (controlled_area == 0) {
 				highlighted_pause_menu_item = next_pause_menu_item;
 			} else if (controlled_area == 1) {
 				highlighted_setting_id = next_setting_id;
 			}
 		} else if (menu_control_y == -1) {
+			play_sound(sound_21_loose_shake_2);
+			play_next_sound();
 			if (controlled_area == 0) {
 				highlighted_pause_menu_item = previous_pause_menu_item;
 			} else if (controlled_area == 1) {
@@ -834,7 +855,27 @@ void draw_pause_overlay() {
 	textstate.ptr_font = saved_font;
 }
 
+bool are_controller_buttons_released;
+
 int key_test_paused_menu(int key) {
+	if (is_joyst_mode) {
+		if (joy_hat_states[0] == 0 && joy_hat_states[1] == 0 && joy_AY_buttons_state == 0 && joy_B_button_state == 0) {
+			are_controller_buttons_released = true;
+		} else if (are_controller_buttons_released) {
+			are_controller_buttons_released = false;
+			if (!(joy_hat_states[0] == 0 && joy_hat_states[1] == 0)) {
+				menu_control_x = joy_hat_states[0];
+				menu_control_y = joy_hat_states[1];
+				return 0;
+			}
+			if (joy_AY_buttons_state == 1 /* A pressed */) {
+				key = SDL_SCANCODE_RETURN;
+			} else if (joy_B_button_state == 1) {
+				key = SDL_SCANCODE_ESCAPE;
+			}
+		}
+	}
+
 	switch(key) {
 		default:
 			menu_control_y = 0;
@@ -861,6 +902,8 @@ int key_test_paused_menu(int key) {
 			return 0;
 		case SDL_SCANCODE_ESCAPE:
 			if (drawn_menu == 1) {
+				play_sound(sound_22_loose_shake_3);
+				play_next_sound();
 				if (controlled_area == 1) {
 					controlled_area = 0;
 					highlighted_pause_menu_item = active_settings_menu_item;
