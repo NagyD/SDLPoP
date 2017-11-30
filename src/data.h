@@ -759,8 +759,10 @@ extern menubar_item_type game_menubar_item INIT(= {.id = 1, .associated_menu = &
 extern menubar_item_type options_menubar_item INIT(= {.id = 2, .associated_menu = &options_menu, .text = "Options"});
 extern menubar_item_type capture_menubar_item INIT(= {.id = 3, .associated_menu = &capture_menu, .text = "Capture"});
 extern menubar_item_type cheats_menubar_item INIT(= {.id = 4, .associated_menu = &cheat_menu, .text = "Cheat"});
-extern int mouse_state_changed;
-extern int mouse_x, mouse_y, mouse_clicked;
+extern bool mouse_state_changed;
+extern int mouse_x, mouse_y;
+extern bool mouse_clicked;
+extern bool clicked_or_pressed_enter;
 extern int menubar_state;
 extern int selected_menu_id;
 #endif

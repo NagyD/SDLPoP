@@ -67,6 +67,7 @@ pause_menu_item_type settings_menu_items[] = {
 };
 int active_settings_menu_item = 0;
 int menu_control_y;
+int menu_control_x;
 
 enum menu_setting_style_ids {
 	SETTING_STYLE_TOGGLE,
@@ -105,9 +106,9 @@ typedef struct menu_setting_type {
 	void* linked;
 	char text[64];
 	char explanation[256];
-} menu_setting_type;
+} setting_type;
 
-menu_setting_type general_settings[] = {
+setting_type general_settings[] = {
 		{.id = SETTING_ENABLE_INFO_SCREEN, .style = SETTING_STYLE_TOGGLE, .linked = &enable_info_screen,
 				.text = "Display info screen on launch",
 				.explanation = "Display the SDLPoP information screen when the game starts."},
@@ -129,7 +130,7 @@ menu_setting_type general_settings[] = {
 						"This may make the game easier to control for some controllers."},
 };
 
-menu_setting_type visuals_settings[] = {
+setting_type visuals_settings[] = {
 		{.id = SETTING_FULLSCREEN, .style = SETTING_STYLE_TOGGLE, .linked = &start_fullscreen,
 				.text = "Start fullscreen",
 				.explanation = "Start the game in fullscreen mode.\nTo toggle fullscreen, press Alt+Enter."},
@@ -148,7 +149,7 @@ menu_setting_type visuals_settings[] = {
 				.explanation = "Darken those parts of the screen that are not near a torch."},
 };
 
-menu_setting_type gameplay_settings[] = {
+setting_type gameplay_settings[] = {
 		{.id = SETTING_ENABLE_COPYPROT, .style = SETTING_STYLE_TOGGLE, .linked = &enable_copyprot,
 				.text = "Copy protection level"},
 		{.id = SETTING_ENABLE_QUICKSAVE, .style = SETTING_STYLE_TOGGLE, .linked = &enable_quicksave,
@@ -173,7 +174,7 @@ menu_setting_type gameplay_settings[] = {
 				.text = "Fix infinite down bug"},
 };
 
-menu_setting_type mods_settings[] = {
+setting_type mods_settings[] = {
 		{.id = 1, .style = SETTING_STYLE_SLIDER, .text = "Starting minutes left"},
 		{.id = 1, .style = SETTING_STYLE_SLIDER, .text = "Starting hitpoints"},
 		{.id = 1, .style = SETTING_STYLE_SLIDER, .text = "Max hitpoints allowed"},
@@ -226,10 +227,28 @@ void init_pause_menu_items(pause_menu_item_type* first_item, int item_count) {
 	}
 }
 
+void init_settings_list(setting_type* first_setting, int setting_count) {
+	if (setting_count > 0) {
+		for (int i = 0; i < setting_count; ++i) {
+			setting_type* item = first_setting + i;
+			item->previous = (first_setting + MAX(0, i-1))->id;
+			item->next = (first_setting + MIN(setting_count-1, i+1))->id;
+		}
+		setting_type* last_item = first_setting + (setting_count-1);
+		first_setting->previous = last_item->id;
+		last_item->next = first_setting->id;
+	}
+}
+
 
 void init_menu() {
 	init_pause_menu_items(pause_menu_items, COUNT(pause_menu_items));
 	init_pause_menu_items(settings_menu_items, COUNT(settings_menu_items));
+
+	init_settings_list(general_settings, COUNT(general_settings));
+	init_settings_list(visuals_settings, COUNT(visuals_settings));
+	init_settings_list(gameplay_settings, COUNT(gameplay_settings));
+	init_settings_list(mods_settings, COUNT(mods_settings));
 
 	menubar_state = 0;
 
@@ -413,7 +432,7 @@ bool read_mouse_state() {
 		mouse_x = (int) ((float) mouse_x * scale_x + 0.5f);
 		mouse_y = (int) ((float) mouse_y * scale_y + 0.5f);
 		bool mouse_moved = (last_mouse_x != mouse_x || last_mouse_y != mouse_y);
-		return mouse_moved;
+		return (mouse_moved || mouse_clicked);
 	}
 	return false;
 }
@@ -448,10 +467,15 @@ void draw_menubar() {
 	}
 }
 
-
+rect_type explanation_rect = {170, 20, 200, 300};
+int highlighted_setting_id = SETTING_ENABLE_INFO_SCREEN;
+int controlled_area = 0;
+int next_setting_id = 0;
+int previous_setting_id = 0;
 
 
 void pause_menu_clicked(int item_id) {
+	clicked_or_pressed_enter = false; // prevent "click-through" because the screen changes
 	switch(item_id) {
 		default: break;
 		case PAUSE_MENU_RESUME:
@@ -475,19 +499,41 @@ void pause_menu_clicked(int item_id) {
 			last_key_scancode = SDL_SCANCODE_Q | WITH_CTRL;
 			break;
 		case SETTINGS_MENU_GENERAL:
+			if (active_settings_menu_item != SETTINGS_MENU_GENERAL) {
+				highlighted_setting_id = general_settings[0].id;
+			}
 			active_settings_menu_item = SETTINGS_MENU_GENERAL;
+			if (!mouse_state_changed) highlighted_pause_menu_item = 0;
+			controlled_area = 1;
 			break;
 		case SETTINGS_MENU_GAMEPLAY:
+			if (active_settings_menu_item != SETTINGS_MENU_GAMEPLAY) {
+				highlighted_setting_id = gameplay_settings[0].id;
+			}
 			active_settings_menu_item = SETTINGS_MENU_GAMEPLAY;
+			if (!mouse_state_changed) highlighted_pause_menu_item = 0;
+			controlled_area = 1;
+
 			break;
 		case SETTINGS_MENU_VISUALS:
+			if (active_settings_menu_item != SETTINGS_MENU_VISUALS) {
+				highlighted_setting_id = visuals_settings[0].id;
+			}
 			active_settings_menu_item = SETTINGS_MENU_VISUALS;
+			if (!mouse_state_changed) highlighted_pause_menu_item = 0;
+			controlled_area = 1;
 			break;
 		case SETTINGS_MENU_MODS:
+			if (active_settings_menu_item != SETTINGS_MENU_MODS) {
+				highlighted_setting_id = mods_settings[0].id;
+			}
 			active_settings_menu_item = SETTINGS_MENU_MODS;
+			if (!mouse_state_changed) highlighted_pause_menu_item = 0;
+			controlled_area = 1;
 			break;
 		case SETTINGS_MENU_BACK:
 			drawn_menu = 0;
+			highlighted_pause_menu_item = PAUSE_MENU_RESUME;
 			break;
 	}
 }
@@ -519,7 +565,7 @@ void draw_pause_menu_item(pause_menu_item_type* item, rect_type* parent, int* y_
 		draw_rect_with_alpha(&selection_box, color_0_black, pause_menu_alpha);
 #endif
 
-		if (mouse_clicked == 1) {
+		if (clicked_or_pressed_enter == 1) {
 //			printf("Clicked option %s\n", item->text);
 			pause_menu_clicked(item->id);
 		}
@@ -551,16 +597,58 @@ void draw_pause_menu() {
 	}
 }
 
+void turn_setting_on(setting_type* setting) {
+	switch(setting->id) {
+		default:
+			if (setting->linked != NULL) {
+				*(byte*)(setting->linked) = 1;
+			}
+			break;
+		case SETTING_USE_CORRECT_ASPECT_RATIO:
+			use_correct_aspect_ratio = 1;
+			apply_aspect_ratio();
+			break;
+		case SETTING_ENABLE_LIGHTING:
+			enable_lighting = 1;
+			extern image_type* lighting_mask; // TODO: cleanup
+			if (lighting_mask == NULL) {
+				init_lighting();
+			}
+			need_full_redraw = 1;
+			break;
+		case SETTING_ENABLE_SOUND:
+			turn_sound_on_off(15);
+			break;
+	}
+}
 
-rect_type explanation_rect = {170, 20, 200, 300};
-int highlighted_setting_id = SETTING_ENABLE_INFO_SCREEN;
-
-void draw_setting_explanation(menu_setting_type* setting) {
-	show_text_with_color(&explanation_rect, 0, -1, setting->explanation, color_7_lightgray);
+void turn_setting_off(setting_type* setting) {
+	switch(setting->id) {
+		default:
+			if (setting->linked != NULL) {
+				*(byte*)(setting->linked) = 0;
+			}
+			break;
+		case SETTING_USE_CORRECT_ASPECT_RATIO:
+			use_correct_aspect_ratio = 0;
+			apply_aspect_ratio();
+			break;
+		case SETTING_ENABLE_LIGHTING:
+			enable_lighting = 0;
+			need_full_redraw = 1;
+			break;
+		case SETTING_ENABLE_SOUND:
+			turn_sound_on_off(0);
+			break;
+	}
 }
 
 
-void draw_setting(menu_setting_type* setting, rect_type* parent, int* y_offset, int inactive_text_color) {
+void draw_setting_explanation(setting_type* setting) {
+	show_text_with_color(&explanation_rect, 0, -1, setting->explanation, color_7_lightgray);
+}
+
+void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int inactive_text_color) {
 	rect_type text_rect = *parent;
 	text_rect.top += *y_offset;
 	int text_color = inactive_text_color;
@@ -573,14 +661,17 @@ void draw_setting(menu_setting_type* setting, rect_type* parent, int* y_offset, 
 	setting_box.left -= 10;
 	setting_box.right += 10;
 
-	if (mouse_clicked && is_mouse_over_rect(&setting_box)) {
+	if (clicked_or_pressed_enter && is_mouse_over_rect(&setting_box)) {
 		highlighted_setting_id = setting->id;
+		controlled_area = 1;
 	}
 
 	if (highlighted_setting_id == setting->id) {
+		next_setting_id = setting->next;
+		previous_setting_id = setting->previous;
 		SDL_Rect dest_rect;
 		rect_to_sdlrect(&setting_box, &dest_rect);
-		uint32_t rgb_color = SDL_MapRGBA(overlay_surface->format, 40, 40, 40, pause_menu_alpha);
+		uint32_t rgb_color = SDL_MapRGBA(overlay_surface->format, 40, 40, 40, 240);
 		if (SDL_FillRect(overlay_surface, &dest_rect, rgb_color) != 0) {
 			sdlperror("SDL_FillRect");
 			quit(1);
@@ -596,11 +687,41 @@ void draw_setting(menu_setting_type* setting, rect_type* parent, int* y_offset, 
 		if (setting->linked != NULL) {
 			setting_enabled = *(byte*)setting->linked;
 		}
+
+		// Toggling the setting: either by clicking on "ON" or "OFF", or by pressing left/right.
+		if (highlighted_setting_id == setting->id) {
+			if (clicked_or_pressed_enter) {
+				if (setting_enabled) {
+					rect_type OFF_hitbox = setting_box;
+					OFF_hitbox.left = setting_box.right - 27;
+					if (is_mouse_over_rect(&OFF_hitbox)) {
+						turn_setting_off(setting);
+						setting_enabled = false;
+					}
+				} else {
+					rect_type ON_hitbox = setting_box;
+					ON_hitbox.left = setting_box.right - 54;
+					ON_hitbox.right = setting_box.right - 27;
+					if (is_mouse_over_rect(&ON_hitbox)) {
+						turn_setting_on(setting);
+						setting_enabled = true;
+					}
+				}
+			} else if (setting_enabled && menu_control_x > 0) {
+				turn_setting_off(setting);
+				setting_enabled = false;
+			} else if (!setting_enabled && menu_control_x < 0) {
+				turn_setting_on(setting);
+				setting_enabled = true;
+			}
+		}
+
 		int OFF_color = (setting_enabled) ? unselected_color : selected_color;
 		int ON_color = (setting_enabled) ? selected_color : unselected_color;
 		show_text_with_color(&text_rect, 1, -1, "OFF", OFF_color);
 		text_rect.right -= 20;
 		show_text_with_color(&text_rect, 1, -1, "ON", ON_color);
+
 	} else if (setting->style == SETTING_STYLE_SLIDER) {
 		int slider_value = 8000;
 		float slider_position = 0.5f;
@@ -653,6 +774,8 @@ void draw_settings_area() {
 
 }
 
+
+
 void draw_settings_menu() {
 	pause_menu_alpha = 230;
 	draw_rect_with_alpha(&screen_rect, color_0_black, pause_menu_alpha);
@@ -662,9 +785,17 @@ void draw_settings_menu() {
 
 	if (!mouse_state_changed) {
 		if (menu_control_y == 1) {
-			highlighted_pause_menu_item = next_pause_menu_item;
+			if (controlled_area == 0) {
+				highlighted_pause_menu_item = next_pause_menu_item;
+			} else if (controlled_area == 1) {
+				highlighted_setting_id = next_setting_id;
+			}
 		} else if (menu_control_y == -1) {
-			highlighted_pause_menu_item = previous_pause_menu_item;
+			if (controlled_area == 0) {
+				highlighted_pause_menu_item = previous_pause_menu_item;
+			} else if (controlled_area == 1) {
+				highlighted_setting_id = previous_setting_id;
+			}
 		}
 	}
 
@@ -707,23 +838,38 @@ int key_test_paused_menu(int key) {
 	switch(key) {
 		default:
 			menu_control_y = 0;
+			menu_control_x = 0;
 			return key;
 		case SDL_SCANCODE_UP:
 			menu_control_y = -1;
+			menu_control_x = 0;
 			return 0;
 		case SDL_SCANCODE_DOWN:
 			menu_control_y = 1;
+			menu_control_x = 0;
 			return 0;
 		case SDL_SCANCODE_RIGHT:
+			menu_control_y = 0;
+			menu_control_x = 1;
+			return 0;
 		case SDL_SCANCODE_LEFT:
+			menu_control_y = 0;
+			menu_control_x = -1;
 			return 0;
 		case SDL_SCANCODE_RETURN:
-			mouse_clicked = 1;
+			clicked_or_pressed_enter = 1;
 			return 0;
 		case SDL_SCANCODE_ESCAPE:
 			if (drawn_menu == 1) {
-				reset_paused_menu();
-				return 0;
+				if (controlled_area == 1) {
+					controlled_area = 0;
+					highlighted_pause_menu_item = active_settings_menu_item;
+					active_settings_menu_item = 0;
+					return 0;
+				} else {
+					reset_paused_menu();
+					return 0;
+				}
 			}
 			return key;
 	}
@@ -806,19 +952,19 @@ byte hc_small_font_data[] = {
 		BINARY_4( 1,_,_,_ ),
 		BINARY_4( 1,_,_,_ ),
 
-		IMAGE_DATA(5, 2, 1), // (
+		IMAGE_DATA(5, 3, 1), // (
 		BINARY_4( _,1,_,_ ),
 		BINARY_4( 1,_,_,_ ),
 		BINARY_4( 1,_,_,_ ),
 		BINARY_4( 1,_,_,_ ),
 		BINARY_4( _,1,_,_ ),
 
-		IMAGE_DATA(5, 2, 1), // )
-		BINARY_4( 1,_,_,_ ),
+		IMAGE_DATA(5, 3, 1), // )
 		BINARY_4( _,1,_,_ ),
+		BINARY_4( _,_,1,_ ),
+		BINARY_4( _,_,1,_ ),
+		BINARY_4( _,_,1,_ ),
 		BINARY_4( _,1,_,_ ),
-		BINARY_4( _,1,_,_ ),
-		BINARY_4( 1,_,_,_ ),
 
 		IMAGE_DATA(4, 5, 1),
 		BINARY_8( _,_,_,_,_,_,_,_ ), // *

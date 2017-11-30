@@ -1996,15 +1996,13 @@ int __pascal far check_sound_playing() {
 	return speaker_playing || digi_playing || midi_playing;
 }
 
-float get_display_refresh_time() {
-	SDL_DisplayMode display_mode;
-	float refresh_time;
-	if (SDL_GetWindowDisplayMode(window_, &display_mode) == 0 && display_mode.refresh_rate > 0) {
-		refresh_time = 1000.0f / (float)display_mode.refresh_rate;
+void apply_aspect_ratio() {
+	// Allow us to use a consistent set of screen co-ordinates, even if the screen size changes
+	if (use_correct_aspect_ratio) {
+		SDL_RenderSetLogicalSize(renderer_, 320*5, 200*6); // 4:3
 	} else {
-		refresh_time = 1000.0f / 60.0f;
+		SDL_RenderSetLogicalSize(renderer_, 320, 200); // 16:10
 	}
-	return refresh_time;
 }
 
 // seg009:38ED
@@ -2044,12 +2042,7 @@ void __pascal far set_gr_mode(byte grmode) {
 		SDL_SetWindowIcon(window_, icon);
 	}
 
-	// Allow us to use a consistent set of screen co-ordinates, even if the screen size changes
-	if (use_correct_aspect_ratio) {
-		SDL_RenderSetLogicalSize(renderer_, 320*5, 200*6);
-	} else {
-		SDL_RenderSetLogicalSize(renderer_, 320, 200);
-	}
+	apply_aspect_ratio();
 
 	/* Migration to SDL2: everything is still blitted to onscreen_surface_, however:
 	 * SDL2 renders textures to the screen instead of surfaces; so for now, every screen
@@ -2087,11 +2080,6 @@ void draw_overlays() {
 	current_target_surface = overlay_surface;
 	SDL_FillRect(overlay_surface, NULL, 0);
 
-#ifdef USE_MENU
-//	draw_menubar();
-	draw_pause_overlay();
-#endif
-
 #ifdef USE_DEBUG_CHEATS
 	if (is_timer_displayed && start_level > 0) {
 		char timer_text[32];
@@ -2113,11 +2101,16 @@ void draw_overlays() {
 	}
 #endif
 
+#ifdef USE_MENU
+//	draw_menubar();
+	draw_pause_overlay();
+#endif
+
 	current_target_surface = saved_target_surface;
 }
 
 void update_screen() {
-	bool need_draw_overlay = (is_timer_displayed);
+	bool need_draw_overlay = (is_timer_displayed || is_paused);
 
 	if (need_draw_overlay) {
 		SDL_FillRect(merged_surface, NULL, 0);
@@ -2893,7 +2886,8 @@ void process_events() {
 				break;
 #ifdef USE_MENU
 			case SDL_MOUSEBUTTONDOWN:
-				mouse_clicked = 1;
+				mouse_clicked = true;
+				clicked_or_pressed_enter = true;
 				if (menubar_state == 0) {
 					menubar_state = 1;
 				} else {
@@ -2927,6 +2921,7 @@ void idle() {
 	process_events();
 	update_screen();
 	mouse_clicked = 0;
+	clicked_or_pressed_enter = 0;
 }
 word word_1D63A = 1;
 int __pascal do_wait(int timer_index) {
