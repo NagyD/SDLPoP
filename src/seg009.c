@@ -2004,6 +2004,7 @@ void apply_aspect_ratio() {
 	} else {
 		SDL_RenderSetLogicalSize(renderer_, 320, 200); // 16:10
 	}
+	window_resized();
 }
 
 void window_resized() {
@@ -2879,6 +2880,7 @@ void process_events() {
 					//case SDL_WINDOWEVENT_MOVED:
 					//case SDL_WINDOWEVENT_RESTORED:
 					case SDL_WINDOWEVENT_EXPOSED:
+						window_resized();
 						update_screen();
 						break;
 				}

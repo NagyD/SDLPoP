@@ -83,6 +83,7 @@ enum setting_ids {
 	SETTING_JOYSTICK_ONLY_HORIZONTAL,
 	SETTING_FULLSCREEN,
 	SETTING_USE_CORRECT_ASPECT_RATIO,
+	SETTING_USE_INTEGER_SCALING,
 	SETTING_ENABLE_FADE,
 	SETTING_ENABLE_FLASH,
 	SETTING_ENABLE_LIGHTING,
@@ -138,6 +139,10 @@ setting_type visuals_settings[] = {
 				.text = "Use 4:3 aspect ratio",
 				.explanation = "Render the game in the originally intended 4:3 aspect ratio."
 				               "\nNB. Works best using a high resolution."},
+		{.id = SETTING_USE_INTEGER_SCALING, .style = SETTING_STYLE_TOGGLE, .linked = &use_integer_scaling,
+				.text = "Use integer scaling",
+				.explanation = "Enable pixel perfect scaling. That is, make all pixels the same size by forcing integer scale factors.\n"
+						"Combing with 4:3 aspect ratio requires at least 1600x1200."},
 		{.id = SETTING_ENABLE_FADE, .style = SETTING_STYLE_TOGGLE, .linked = &enable_fade,
 				.text = "Fading enabled",
 				.explanation = "Turn fading on or off."},
@@ -623,6 +628,10 @@ void turn_setting_on(setting_type* setting) {
 			use_correct_aspect_ratio = 1;
 			apply_aspect_ratio();
 			break;
+		case SETTING_USE_INTEGER_SCALING:
+			use_integer_scaling = 1;
+			window_resized();
+			break;
 		case SETTING_ENABLE_LIGHTING:
 			enable_lighting = 1;
 			extern image_type* lighting_mask; // TODO: cleanup
@@ -649,6 +658,10 @@ void turn_setting_off(setting_type* setting) {
 		case SETTING_USE_CORRECT_ASPECT_RATIO:
 			use_correct_aspect_ratio = 0;
 			apply_aspect_ratio();
+			break;
+		case SETTING_USE_INTEGER_SCALING:
+			use_integer_scaling = 0;
+			SDL_RenderSetIntegerScale(renderer_, SDL_FALSE);
 			break;
 		case SETTING_ENABLE_LIGHTING:
 			enable_lighting = 0;
