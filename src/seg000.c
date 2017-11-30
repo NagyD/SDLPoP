@@ -1181,7 +1181,7 @@ void get_joystick_state(int raw_x, int raw_y, int axis_state[2]) {
 
 	// check if the X/Y position is within the 'dead zone' of the joystick
 	int dist_squared = raw_x*raw_x + raw_y*raw_y;
-	if (dist_squared < JOY_THRESHOLD*JOY_THRESHOLD) {
+	if (dist_squared < joystick_threshold*joystick_threshold) {
 		axis_state[0] = 0;
 		axis_state[1] = 0;
 	} else {
@@ -1224,9 +1224,9 @@ void get_joystick_state(int raw_x, int raw_y, int axis_state[2]) {
 }
 
 void get_joystick_state_hor_only(int raw_x, int axis_state[2]) {
-	if (raw_x > JOY_THRESHOLD) {
+	if (raw_x > joystick_threshold) {
 		axis_state[0] = 1;
-	} else if (raw_x < -JOY_THRESHOLD) {
+	} else if (raw_x < -joystick_threshold) {
 		axis_state[0] = -1;
 	} else axis_state[0] = 0;
 
