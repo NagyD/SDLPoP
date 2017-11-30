@@ -1999,9 +1999,22 @@ int __pascal far check_sound_playing() {
 void apply_aspect_ratio() {
 	// Allow us to use a consistent set of screen co-ordinates, even if the screen size changes
 	if (use_correct_aspect_ratio) {
-		SDL_RenderSetLogicalSize(renderer_, 320*5, 200*6); // 4:3
+		SDL_RenderSetLogicalSize(renderer_, 320 * 5, 200 * 6); // 4:3
 	} else {
 		SDL_RenderSetLogicalSize(renderer_, 320, 200); // 16:10
+	}
+}
+
+void window_resized() {
+	if (use_integer_scaling) {
+		int window_width, window_height;
+		SDL_GetWindowSize(window_, &window_width, &window_height);
+		int render_width, render_height;
+		SDL_RenderGetLogicalSize(renderer_, &render_width, &render_height);
+		// Disable integer scaling if it would result in downscaling.
+		// Because then the only suitable integer scaling factor is zero, i.e. the picture disappears.
+		SDL_bool makes_sense = (window_width >= render_width && window_height >= render_height);
+		SDL_RenderSetIntegerScale(renderer_, makes_sense);
 	}
 }
 
@@ -2034,6 +2047,9 @@ void __pascal far set_gr_mode(byte grmode) {
 	// Make absolutely sure that VSync will be off, to prevent timer issues.
 	SDL_SetHint(SDL_HINT_RENDER_VSYNC, "0");
 	renderer_ = SDL_CreateRenderer(window_, -1 , SDL_RENDERER_ACCELERATED);
+	if (use_integer_scaling) {
+		SDL_RenderSetIntegerScale(renderer_, SDL_TRUE);
+	}
 
 	SDL_Surface* icon = IMG_Load("data/icon.png");
 	if (icon == NULL) {
@@ -2043,6 +2059,8 @@ void __pascal far set_gr_mode(byte grmode) {
 	}
 
 	apply_aspect_ratio();
+
+	window_resized();
 
 	/* Migration to SDL2: everything is still blitted to onscreen_surface_, however:
 	 * SDL2 renders textures to the screen instead of surfaces; so for now, every screen
@@ -2862,8 +2880,8 @@ void process_events() {
 */
 				switch (event.window.event) {
 					case SDL_WINDOWEVENT_SIZE_CHANGED:
-						//case SDL_WINDOWEVENT_MOVED:
-						//case SDL_WINDOWEVENT_RESTORED:
+					//case SDL_WINDOWEVENT_MOVED:
+					//case SDL_WINDOWEVENT_RESTORED:
 					case SDL_WINDOWEVENT_EXPOSED:
 						update_screen();
 						break;
