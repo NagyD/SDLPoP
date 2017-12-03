@@ -2904,11 +2904,9 @@ void process_events() {
 			case SDL_MOUSEBUTTONDOWN:
 				mouse_clicked = true;
 				clicked_or_pressed_enter = true;
-				if (menubar_state == 0) {
-					menubar_state = 1;
-				} else {
-					menubar_state = 0;
-				}
+				break;
+			case SDL_MOUSEWHEEL:
+				menu_scroll(-event.wheel.y);
 				break;
 #endif
 			case SDL_QUIT:

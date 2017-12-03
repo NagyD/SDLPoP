@@ -66,6 +66,7 @@ pause_menu_item_type settings_menu_items[] = {
 		{.id = SETTINGS_MENU_BACK, .text = "BACK"},
 };
 int active_settings_menu_item = 0;
+int scroll_position = 0;
 int menu_control_y;
 int menu_control_x;
 
@@ -98,13 +99,41 @@ enum setting_ids {
 	SETTING_FIX_GATE_SOUNDS,
 	SETTING_TWO_COLL_BUG,
 	SETTING_FIX_INFINITE_DOWN_BUG,
+	SETTING_FIX_GATE_DRAWING_BUG,
+	SETTING_FIX_BIGPILLAR_CLIMB,
+	SETTING_FIX_JUMP_DISTANCE_AT_EDGE,
+	SETTING_FIX_EDGE_DISTANCE_CHECK_WHEN_CLIMBING,
+	SETTING_FIX_PAINLESS_FALL_ON_GUARD,
+	SETTING_FIX_WALL_BUMP_TRIGGERS_TILE_BELOW,
+	SETTING_FIX_STAND_ON_THIN_AIR,
+	SETTING_FIX_PRESS_THROUGH_CLOSED_GATES,
+	SETTING_FIX_GRAB_FALLING_SPEED,
+	SETTING_FIX_SKELETON_CHOMPER_BLOOD,
+	SETTING_FIX_MOVE_AFTER_DRINK,
+	SETTING_FIX_LOOSE_LEFT_OF_POTION,
+	SETTING_FIX_GUARD_FOLLOWING_THROUGH_CLOSED_GATES,
+	SETTING_FIX_SAFE_LANDING_ON_SPIKES,
+	SETTING_FIX_GLIDE_THROUGH_WALL,
+	SETTING_FIX_DROP_THROUGH_TAPESTRY,
+	SETTING_FIX_LAND_AGAINST_GATE_OR_TAPESTRY,
+	SETTING_FIX_UNINTENDED_SWORD_STRIKE,
+	SETTING_FIX_RETREAT_WITHOUT_LEAVING_ROOM,
+	SETTING_FIX_RUNNING_JUMP_THROUGH_TAPESTRY,
+	SETTING_FIX_PUSH_GUARD_INTO_WALL,
+	SETTING_FIX_JUMP_THROUGH_WALL_ABOVE_GATE,
+	SETTING_FIX_CHOMPERS_NOT_STARTING,
+	SETTING_FIX_FEATHER_INTERRUPTED_BY_LEVELDOOR,
+	SETTING_FIX_OFFSCREEN_GUARDS_DISAPPEARING,
 };
 
 typedef struct setting_type {
+	int index;
 	int id;
 	int previous, next;
 	int style;
 	void* linked;
+	void* required;
+	int min, max; // for sliders
 	char text[64];
 	char explanation[256];
 } setting_type;
@@ -123,6 +152,7 @@ setting_type general_settings[] = {
 				.text = "Enable controller rumble",
 				.explanation = "If using a controller with a rumble motor, provide haptic feedback when the kid is hurt."},
 		{.id = SETTING_JOYSTICK_THRESHOLD, .style = SETTING_STYLE_SLIDER,
+				.linked = &joystick_threshold, .min = 0, .max = INT16_MAX,
 				.text = "Joystick threshold",
 				.explanation = "Joystick 'dead zone' sensitivity threshold."},
 		{.id = SETTING_JOYSTICK_ONLY_HORIZONTAL, .style = SETTING_STYLE_TOGGLE, .linked = &joystick_only_horizontal,
@@ -167,38 +197,238 @@ setting_type gameplay_settings[] = {
 						"Actually, the 'remaining time' will still be restored, "
 						"but a penalty (up to one minute) will be applied."},
 		{.id = SETTING_ENABLE_REPLAY, .style = SETTING_STYLE_TOGGLE, .linked = &enable_replay,
-				.text = "Enable replays", .explanation = "Enable recording/replay feature.\n"
+				.text = "Enable replays",
+				.explanation = "Enable recording/replay feature.\n"
 						"Press Ctrl+Tab in-game to start recording.\n"
 						"To stop, press Ctrl+Tab again."},
 		{.id = SETTING_USE_FIXES_AND_ENHANCEMENTS, .style = SETTING_STYLE_TOGGLE, .linked = &use_fixes_and_enhancements,
-				.text = "Enhanced mode (allow bug fixes)"},
-		{.id = SETTING_ENABLE_CROUCH_AFTER_CLIMBING, .style = SETTING_STYLE_TOGGLE, .linked = &enable_crouch_after_climbing,
-				.text = "Enable crouching after climbing"},
-		{.id = SETTING_ENABLE_FREEZE_TIME_DURING_END_MUSIC, .style = SETTING_STYLE_TOGGLE, .linked = &enable_freeze_time_during_end_music,
-				.text = "Freeze time during level end music"},
-		{.id = SETTING_ENABLE_REMEMBER_GUARD_HP, .style = SETTING_STYLE_TOGGLE, .linked = &enable_remember_guard_hp,
-				.text = "Remember guard hitpoints"},
-		{.id = SETTING_FIX_GATE_SOUNDS, .style = SETTING_STYLE_TOGGLE, .linked = &fix_gate_sounds,
-				.text = "Fix gate sounds bug"},
-		{.id = SETTING_TWO_COLL_BUG, .style = SETTING_STYLE_TOGGLE, .linked = &fix_two_coll_bug,
-				.text = "Fix two collisions bug"},
-		{.id = SETTING_FIX_INFINITE_DOWN_BUG, .style = SETTING_STYLE_TOGGLE, .linked = &fix_infinite_down_bug,
-				.text = "Fix infinite down bug"},
+				.text = "Enhanced mode (allow bug fixes)",
+				.explanation = ""},
+		{.id = SETTING_ENABLE_CROUCH_AFTER_CLIMBING, .style = SETTING_STYLE_TOGGLE,
+				.linked = &enable_crouch_after_climbing, .required = &use_fixes_and_enhancements,
+				.text = "Enable crouching after climbing",
+				.explanation = "Adds a way to crouch immediately after climbing up: press down and forward simultaneously. "
+						"In the original game, this could not be done (pressing down always causes the kid to climb down)."},
+		{.id = SETTING_ENABLE_FREEZE_TIME_DURING_END_MUSIC, .style = SETTING_STYLE_TOGGLE,
+				.linked = &enable_freeze_time_during_end_music, .required = &use_fixes_and_enhancements,
+				.text = "Freeze time during level end music",
+				.explanation = "Time runs out while the level ending music plays; however, the music can be skipped by disabling sound. "
+						"This option stops time while the ending music is playing (so there is no need to disable sound)."},
+		{.id = SETTING_ENABLE_REMEMBER_GUARD_HP, .style = SETTING_STYLE_TOGGLE,
+				.linked = &enable_remember_guard_hp, .required = &use_fixes_and_enhancements,
+				.text = "Remember guard hitpoints",
+				.explanation = "Enable guard hitpoints not resetting to their default (maximum) value when re-entering the room."},
+		{.id = SETTING_FIX_GATE_SOUNDS, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fix_gate_sounds, .required = &use_fixes_and_enhancements,
+				.text = "Fix gate sounds bug",
+				.explanation = "If a room is linked to itself on the left, the closing sounds of the gates in that room can't be heard."},
+		{.id = SETTING_TWO_COLL_BUG, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fix_two_coll_bug, .required = &use_fixes_and_enhancements,
+				.text = "Fix two collisions bug",
+				.explanation = "An open gate or chomper may enable the Kid to go through walls. (Trick 7, 37, 62)"},
+		{.id = SETTING_FIX_INFINITE_DOWN_BUG, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fix_infinite_down_bug, .required = &use_fixes_and_enhancements,
+				.text = "Fix infinite down bug",
+				.explanation = "If a room is linked to itself at the bottom, and the Kid's column has no floors, the game hangs."},
+		{.id = SETTING_FIX_GATE_DRAWING_BUG, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fix_gate_drawing_bug, .required = &use_fixes_and_enhancements,
+				.text = "Fix gate drawing bug",
+				.explanation = "When a gate is under another gate, the top of the bottom gate is not visible."},
+		{.id = SETTING_FIX_BIGPILLAR_CLIMB, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fix_bigpillar_climb, .required = &use_fixes_and_enhancements,
+				.text = "Fix big pillar climbing bug",
+				.explanation = "When climbing up to a floor with a big pillar top behind, turned right, Kid sees through floor."},
+		{.id = SETTING_FIX_JUMP_DISTANCE_AT_EDGE, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fix_jump_distance_at_edge, .required = &use_fixes_and_enhancements,
+				.text = "Fix jump distance at edge",
+				.explanation = "When climbing up two floors, turning around and jumping upward, the kid falls down. "
+						"This fix makes the workaround of Trick 25 unnecessary."},
+		{.id = SETTING_FIX_EDGE_DISTANCE_CHECK_WHEN_CLIMBING, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fix_edge_distance_check_when_climbing, .required = &use_fixes_and_enhancements,
+				.text = "Fix edge distance check when climbing",
+				.explanation = "When climbing to a higher floor, the game unnecessarily checks how far away the edge below is. "
+						"Sometimes you will \"teleport\" some distance when climbing from firm ground."},
+		{.id = SETTING_FIX_PAINLESS_FALL_ON_GUARD, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fix_painless_fall_on_guard, .required = &use_fixes_and_enhancements,
+				.text = "Fix painless fall on guard",
+				.explanation = "Falling from a great height directly on top of guards does not hurt."},
+		{.id = SETTING_FIX_WALL_BUMP_TRIGGERS_TILE_BELOW, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fix_wall_bump_triggers_tile_below, .required = &use_fixes_and_enhancements,
+				.text = "Fix wall bump triggering tile below",
+				.explanation = "Bumping against a wall may cause a loose floor below to drop, even though it has not been touched. (Trick 18, 34)"},
+		{.id = SETTING_FIX_STAND_ON_THIN_AIR, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fix_stand_on_thin_air, .required = &use_fixes_and_enhancements,
+				.text = "Fix standing on thin air",
+				.explanation = "When pressing a loose tile, you can temporarily stand on thin air by standing up from crouching."},
+		{.id = SETTING_FIX_PRESS_THROUGH_CLOSED_GATES, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fix_press_through_closed_gates, .required = &use_fixes_and_enhancements,
+				.text = "Fix pressing through closed gates",
+				.explanation = "Buttons directly to the right of gates can be pressed even though the gate is closed (Trick 1)"},
+		{.id = SETTING_FIX_GRAB_FALLING_SPEED, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fix_grab_falling_speed, .required = &use_fixes_and_enhancements,
+				.text = "Fix grab falling speed",
+				.explanation = "By jumping and bumping into a wall, you can sometimes grab a ledge two stories down (which should not be possible)."},
+		{.id = SETTING_FIX_SKELETON_CHOMPER_BLOOD, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fix_skeleton_chomper_blood, .required = &use_fixes_and_enhancements,
+				.text = "Fix skeleton chomper blood",
+				.explanation = "When chomped, skeletons cause the chomper to become bloody even though skeletons do not have blood."},
+		{.id = SETTING_FIX_MOVE_AFTER_DRINK, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fix_move_after_drink, .required = &use_fixes_and_enhancements,
+				.text = "Fix movement after drinking",
+				.explanation = "Controls do not get released properly when drinking a potion, sometimes causing unintended movements."},
+		{.id = SETTING_FIX_LOOSE_LEFT_OF_POTION, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fix_loose_left_of_potion, .required = &use_fixes_and_enhancements,
+				.text = "Fix loose floor left of potion",
+				.explanation = "A drawing bug occurs when a loose tile is placed to the left of a potion (or sword)."},
+		{.id = SETTING_FIX_GUARD_FOLLOWING_THROUGH_CLOSED_GATES, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fix_guard_following_through_closed_gates, .required = &use_fixes_and_enhancements,
+				.text = "Fix guards passing closed gates",
+				.explanation = "Guards may \"follow\" the kid to the room on the left or right, even though there is a closed gate in between."},
+		{.id = SETTING_FIX_SAFE_LANDING_ON_SPIKES, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fix_safe_landing_on_spikes, .required = &use_fixes_and_enhancements,
+				.text = "Fix safe landing on spikes",
+				.explanation = "When landing on the edge of a spikes tile, it is considered safe. (Trick 65)"},
+		{.id = SETTING_FIX_GLIDE_THROUGH_WALL, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fix_glide_through_wall, .required = &use_fixes_and_enhancements,
+				.text = "Fix gliding through walls",
+				.explanation = "The kid may glide through walls after turning around while running (especially when weightless)."},
+		{.id = SETTING_FIX_DROP_THROUGH_TAPESTRY, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fix_drop_through_tapestry, .required = &use_fixes_and_enhancements,
+				.text = "Fix dropping through tapestries",
+				.explanation = "The kid can drop down through a closed gate, when there is a tapestry (doortop) above the gate."},
+		{.id = SETTING_FIX_LAND_AGAINST_GATE_OR_TAPESTRY, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fix_land_against_gate_or_tapestry, .required = &use_fixes_and_enhancements,
+				.text = "Fix land against gate or tapestry",
+				.explanation = "When dropping down and landing right in front of a wall, the entire landing animation should normally play. "
+						"However, when falling against a closed gate or a tapestry(+floor) tile, the animation aborts."},
+		{.id = SETTING_FIX_UNINTENDED_SWORD_STRIKE, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fix_unintended_sword_strike, .required = &use_fixes_and_enhancements,
+				.text = "Fix unintended sword strike",
+				.explanation = "Sometimes, the kid may automatically strike immediately after drawing the sword. "
+						"This especially happens when dropping down from a higher floor and then turning towards the opponent."},
+		{.id = SETTING_FIX_RETREAT_WITHOUT_LEAVING_ROOM, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fix_retreat_without_leaving_room, .required = &use_fixes_and_enhancements,
+				.text = "Fix retreat without leaving room",
+				.explanation = "By repeatedly pressing 'back' in a swordfight, you can retreat out of a room without the room changing. (Trick 35)"},
+		{.id = SETTING_FIX_RUNNING_JUMP_THROUGH_TAPESTRY, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fix_running_jump_through_tapestry, .required = &use_fixes_and_enhancements,
+				.text = "Fix running jumps through tapestries",
+				.explanation = "The kid can jump through a tapestry with a running jump to the left, if there is a floor above it."},
+		{.id = SETTING_FIX_PUSH_GUARD_INTO_WALL, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fix_push_guard_into_wall, .required = &use_fixes_and_enhancements,
+				.text = "Fix pushing guards into walls",
+				.explanation = "Guards can be pushed into walls, because the game does not correctly check for walls located behind a guard."},
+		{.id = SETTING_FIX_JUMP_THROUGH_WALL_ABOVE_GATE, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fix_jump_through_wall_above_gate, .required = &use_fixes_and_enhancements,
+				.text = "Fix jump through wall above gate",
+				.explanation = "By doing a running jump into a wall, you can fall behind a closed gate two floors down. (e.g. skip in Level 7)"},
+		{.id = SETTING_FIX_CHOMPERS_NOT_STARTING, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fix_chompers_not_starting, .required = &use_fixes_and_enhancements,
+				.text = "Fix chompers not starting",
+				.explanation = "If you grab a ledge that is one or more floors down, the chompers on that row will not start."},
+		{.id = SETTING_FIX_FEATHER_INTERRUPTED_BY_LEVELDOOR, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fix_feather_interrupted_by_leveldoor, .required = &use_fixes_and_enhancements,
+				.text = "Fix feather fall interrupted by leveldoor",
+				.explanation = "As soon as a level door has completely opened, the feather fall effect is interrupted because the sound stops."},
+		{.id = SETTING_FIX_OFFSCREEN_GUARDS_DISAPPEARING, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fix_offscreen_guards_disappearing, .required = &use_fixes_and_enhancements,
+				.text = "Fix offscreen guards disappearing",
+				.explanation = "Guards will often not reappear in another room if they have been pushed (partly or entirely) offscreen."},
+};
+
+enum {
+	SETTING_START_MINUTES_LEFT,
+	SETTING_START_TICKS_LEFT,
+	SETTING_START_HITP,
+	SETTING_MAX_HITP_ALLOWED,
+	SETTING_SAVING_ALLOWED_FIRST_LEVEL,
+	SETTING_SAVING_ALLOWED_LAST_LEVEL,
+	SETTING_START_UPSIDE_DOWN,
+	SETTING_START_IN_BLIND_MODE,
+	SETTING_COPYPROT_LEVEL,
+	SETTING_DRAWN_TILE_TOP_LEVEL_EDGE,
+	SETTING_DRAWN_TILE_LEFT_LEVEL_EDGE,
+	SETTING_LEVEL_EDGE_HIT_TILE,
+	SETTING_ALLOW_TRIGGERING_ANY_TILE,
+	SETTING_ENABLE_WDA_IN_PALACE,
+	SETTING_FIRST_LEVEL,
+	SETTING_SKIP_TITLE,
+	SETTING_SHIFT_L_ALLOWED_UNTIL_LEVEL,
+	SETTING_SHIFT_L_REDUCED_TICKS,
+
+
 };
 
 setting_type mods_settings[] = {
-		{.id = 1, .style = SETTING_STYLE_SLIDER, .text = "Starting minutes left"},
-		{.id = 1, .style = SETTING_STYLE_SLIDER, .text = "Starting hitpoints"},
-		{.id = 1, .style = SETTING_STYLE_SLIDER, .text = "Max hitpoints allowed"},
-		{.id = 1, .style = SETTING_STYLE_SLIDER, .text = "Saving allowed: first level"},
-		{.id = 1, .style = SETTING_STYLE_SLIDER, .text = "Saving allowed: last level"},
-		{.id = 1, .style = SETTING_STYLE_SLIDER, .text = "Start with the screen flipped"},
-		{.id = 1, .style = SETTING_STYLE_SLIDER, .text = "Start in blind mode"},
-		{.id = 1, .style = SETTING_STYLE_SLIDER, .text = "Copy protection before level"},
-		{.id = 1, .style = SETTING_STYLE_SLIDER, .text = "Allow triggering any tile"},
-		{.id = 1, .style = SETTING_STYLE_SLIDER, .text = "Enable WDA in palace"},
-		{.id = 1, .style = SETTING_STYLE_SLIDER, .text = "First level"},
+		{.id = SETTING_START_MINUTES_LEFT, .style = SETTING_STYLE_SLIDER,
+				.text = "Starting minutes left",
+				.explanation = ""},
+		{.id = SETTING_START_TICKS_LEFT, .style = SETTING_STYLE_SLIDER,
+				.text = "Starting ticks left",
+				.explanation = ""},
+		{.id = SETTING_START_HITP, .style = SETTING_STYLE_SLIDER,
+				.text = "Starting hitpoints",
+				.explanation = ""},
+		{.id = SETTING_MAX_HITP_ALLOWED, .style = SETTING_STYLE_SLIDER,
+				.text = "Max hitpoints allowed",
+				.explanation = ""},
+		{.id = SETTING_SAVING_ALLOWED_FIRST_LEVEL, .style = SETTING_STYLE_SLIDER,
+				.text = "Saving allowed: first level",
+				.explanation = ""},
+		{.id = SETTING_SAVING_ALLOWED_LAST_LEVEL, .style = SETTING_STYLE_SLIDER,
+				.text = "Saving allowed: last level",
+				.explanation = ""},
+		{.id = SETTING_START_UPSIDE_DOWN, .style = SETTING_STYLE_SLIDER,
+				.text = "Start with the screen flipped",
+				.explanation = ""},
+		{.id = SETTING_START_IN_BLIND_MODE, .style = SETTING_STYLE_SLIDER,
+				.text = "Start in blind mode",
+				.explanation = ""},
+		{.id = SETTING_COPYPROT_LEVEL, .style = SETTING_STYLE_SLIDER,
+				.text = "Copy protection before level",
+				.explanation = ""},
+		{.id = SETTING_ALLOW_TRIGGERING_ANY_TILE, .style = SETTING_STYLE_SLIDER,
+				.text = "Allow triggering any tile",
+				.explanation = "",
+				.explanation = "Enable triggering any tile. For example a button could make loose floors fall, or start a stuck chomper. (default = OFF)"},
+		{.id = SETTING_ENABLE_WDA_IN_PALACE, .style = SETTING_STYLE_SLIDER,
+				.text = "Enable WDA in palace",
+				.explanation = "Enable the dungeon wall drawing algorithm in the palace environment."
+						"\nN.B. Use with a modified VPALACE.DAT that provides dungeon-like wall graphics!"},
+		{.id = SETTING_FIRST_LEVEL, .style = SETTING_STYLE_SLIDER,
+				.text = "First level",
+				.explanation = "Level that will be loaded when starting a new game."
+						"\n(default = OFF)"},
+		{.id = SETTING_SKIP_TITLE, .style = SETTING_STYLE_TOGGLE, .linked = &skip_title,
+				.text = "Skip title sequence",
+				.explanation = "Always skip the title sequence: the first level will be loaded immediately."
+						"\n(default = OFF)"},
 };
+
+typedef struct settings_area_type {
+	setting_type* settings;
+	int setting_count;
+} settings_area_type;
+
+settings_area_type general_settings_area = { .settings = general_settings, .setting_count = COUNT(general_settings)};
+settings_area_type gameplay_settings_area = { .settings = gameplay_settings, .setting_count = COUNT(gameplay_settings)};
+settings_area_type visuals_settings_area = { .settings = visuals_settings, .setting_count = COUNT(visuals_settings)};
+settings_area_type mods_settings_area = { .settings = mods_settings, .setting_count = COUNT(mods_settings)};
+
+settings_area_type* get_settings_area(int menu_item_id) {
+	switch(menu_item_id) {
+		default:
+			return NULL;
+		case SETTINGS_MENU_GENERAL:
+			return &general_settings_area;
+		case SETTINGS_MENU_GAMEPLAY:
+			return &gameplay_settings_area;
+		case SETTINGS_MENU_VISUALS:
+			return &visuals_settings_area;
+		case SETTINGS_MENU_MODS:
+			return &mods_settings_area;
+	}
+}
 
 
 int menu_padding = 3;
@@ -243,12 +473,13 @@ void init_settings_list(setting_type* first_setting, int setting_count) {
 	if (setting_count > 0) {
 		for (int i = 0; i < setting_count; ++i) {
 			setting_type* item = first_setting + i;
+			item->index = i;
 			item->previous = (first_setting + MAX(0, i-1))->id;
 			item->next = (first_setting + MIN(setting_count-1, i+1))->id;
 		}
-		setting_type* last_item = first_setting + (setting_count-1);
-		first_setting->previous = last_item->id;
-		last_item->next = first_setting->id;
+//		setting_type* last_item = first_setting + (setting_count-1);
+//		first_setting->previous = last_item->id;
+//		last_item->next = first_setting->id;
 	}
 }
 
@@ -490,6 +721,9 @@ int highlighted_setting_id = SETTING_ENABLE_INFO_SCREEN;
 int controlled_area = 0;
 int next_setting_id = 0;
 int previous_setting_id = 0;
+int at_scroll_up_boundary;
+int at_scroll_down_boundary;
+
 
 
 void enter_settings_subsection(int settings_menu_id, setting_type* settings) {
@@ -499,6 +733,7 @@ void enter_settings_subsection(int settings_menu_id, setting_type* settings) {
 	active_settings_menu_item = settings_menu_id;
 	if (!mouse_state_changed) highlighted_pause_menu_item = 0;
 	controlled_area = 1;
+	scroll_position = 0;
 }
 
 void pause_menu_clicked(pause_menu_item_type* item) {
@@ -643,6 +878,9 @@ void turn_setting_on(setting_type* setting) {
 		case SETTING_ENABLE_SOUND:
 			turn_sound_on_off(15);
 			break;
+		case SETTING_USE_FIXES_AND_ENHANCEMENTS:
+			turn_fixes_and_enhancements_on_off(1);
+			break;
 	}
 }
 
@@ -669,6 +907,10 @@ void turn_setting_off(setting_type* setting) {
 			break;
 		case SETTING_ENABLE_SOUND:
 			turn_sound_on_off(0);
+			break;
+		case SETTING_USE_FIXES_AND_ENHANCEMENTS:
+			use_fixes_and_enhancements = 0;
+			turn_fixes_and_enhancements_on_off(0);
 			break;
 	}
 }
@@ -699,6 +941,9 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 	if (highlighted_setting_id == setting->id) {
 		next_setting_id = setting->next;
 		previous_setting_id = setting->previous;
+		at_scroll_up_boundary = (setting->index == scroll_position);
+		at_scroll_down_boundary = (setting->index == scroll_position + 8);
+
 		SDL_Rect dest_rect;
 		rect_to_sdlrect(&setting_box, &dest_rect);
 		uint32_t rgb_color = SDL_MapRGBA(overlay_surface->format, 40, 40, 40, 240);
@@ -710,9 +955,17 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 		draw_setting_explanation(setting);
 	}
 
+	bool disabled = false;
+	if (setting->required != NULL) {
+		disabled = !(*(byte*)setting->required);
+	}
+	if (disabled) {
+		text_color = color_7_lightgray;
+	}
+
 	show_text_with_color(&text_rect, -1, -1, setting->text, text_color);
 
-	if (setting->style == SETTING_STYLE_TOGGLE) {
+	if (setting->style == SETTING_STYLE_TOGGLE && !disabled) {
 		bool setting_enabled = true;
 		if (setting->linked != NULL) {
 			setting_enabled = *(byte*)setting->linked;
@@ -779,32 +1032,32 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 	*y_offset += 15;
 }
 
-void draw_settings_area() {
-	rect_type settings_area_rect = {0, 80, 170, 320};
-	shrink2_rect(&settings_area_rect, &settings_area_rect, 20, 20);
-
-	int y_offset = 0;
-	if (active_settings_menu_item == SETTINGS_MENU_GENERAL) {
-		for (int i = 0; i < COUNT(general_settings); ++i) {
-			draw_setting(&general_settings[i], &settings_area_rect, &y_offset, color_15_brightwhite);
-		}
-	} else if (active_settings_menu_item == SETTINGS_MENU_VISUALS) {
-		for (int i = 0; i < COUNT(visuals_settings); ++i) {
-			draw_setting(&visuals_settings[i], &settings_area_rect, &y_offset, color_15_brightwhite);
-		}
-	} else if (active_settings_menu_item == SETTINGS_MENU_GAMEPLAY) {
-		for (int i = 0; i < COUNT(gameplay_settings); ++i) {
-			draw_setting(&gameplay_settings[i], &settings_area_rect, &y_offset, color_15_brightwhite);
-		}
-	} else if (active_settings_menu_item == SETTINGS_MENU_MODS) {
-		for (int i = 0; i < COUNT(mods_settings); ++i) {
-			draw_setting(&mods_settings[i], &settings_area_rect, &y_offset, color_15_brightwhite);
+void menu_scroll(int y) {
+	settings_area_type* current_settings_area = get_settings_area(active_settings_menu_item);
+	int max_scroll = MAX(0, current_settings_area->setting_count - 9);
+	if (drawn_menu == 1 && controlled_area == 1) {
+		if (y < 0 && scroll_position > 0) {
+			--scroll_position;
+		} else if (y > 0 && scroll_position < max_scroll) {
+			++scroll_position;
 		}
 	}
-
 }
 
+void draw_settings_area(settings_area_type* settings_area) {
+	if (settings_area == NULL) return;
+	rect_type settings_area_rect = {0, 80, 170, 320};
+	shrink2_rect(&settings_area_rect, &settings_area_rect, 20, 20);
+	int y_offset = 0;
+	int num_drawn_settings = 0;
 
+	for (int i = 0; (i < settings_area->setting_count) && (num_drawn_settings <= 9); ++i) {
+		if (i >= scroll_position) {
+			++num_drawn_settings;
+			draw_setting(&settings_area->settings[i], &settings_area_rect, &y_offset, color_15_brightwhite);
+		}
+	}
+}
 
 void draw_settings_menu() {
 	pause_menu_alpha = 230;
@@ -812,6 +1065,8 @@ void draw_settings_menu() {
 	rect_type pause_rect_outer = {0, 10, 192, 80};
 	rect_type pause_rect_inner;
 	shrink2_rect(&pause_rect_inner, &pause_rect_outer, 5, 5);
+
+	settings_area_type* settings_area = get_settings_area(active_settings_menu_item);
 
 	if (!mouse_state_changed) {
 		if (menu_control_y == 1) {
@@ -821,6 +1076,9 @@ void draw_settings_menu() {
 				highlighted_pause_menu_item = next_pause_menu_item;
 			} else if (controlled_area == 1) {
 				highlighted_setting_id = next_setting_id;
+				if (at_scroll_down_boundary) {
+					menu_scroll(1);
+				}
 			}
 		} else if (menu_control_y == -1) {
 			play_sound(sound_21_loose_shake_2);
@@ -829,11 +1087,13 @@ void draw_settings_menu() {
 				highlighted_pause_menu_item = previous_pause_menu_item;
 			} else if (controlled_area == 1) {
 				highlighted_setting_id = previous_setting_id;
+				if (at_scroll_up_boundary) {
+					menu_scroll(-1);
+				}
 			}
 		}
 	}
 
-//	highlighted_pause_menu_item = -1;
 	int y_offset = 50;
 	for (int i = 0; i < COUNT(settings_menu_items); ++i) {
 		pause_menu_item_type* item = &settings_menu_items[i];
@@ -841,7 +1101,7 @@ void draw_settings_menu() {
 		draw_pause_menu_item(&settings_menu_items[i], &pause_rect_inner, &y_offset, text_color);
 	}
 
-	draw_settings_area();
+	draw_settings_area(settings_area);
 }
 
 void reset_paused_menu() {

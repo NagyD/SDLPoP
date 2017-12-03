@@ -618,7 +618,7 @@ void check_seqtable_matches_original();
 #endif
 
 // OPTIONS.C
-void disable_fixes_and_enhancements();
+void turn_fixes_and_enhancements_on_off(byte new_state);
 void load_global_options();
 void check_mod_param();
 void load_mod_options();
@@ -663,6 +663,7 @@ void save_level_screenshot(bool want_extras);
 #ifdef USE_MENU
 void init_menu();
 void draw_menubar();
+void menu_scroll(int y);
 void draw_pause_overlay();
 int key_test_paused_menu(int key);
 #endif

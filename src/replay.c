@@ -698,7 +698,7 @@ void apply_replay_options() {
 		load_options_from_buffer(replay_options_sections[i].replay_data, replay_options_sections[i].data_size, replay_options_sections[i].section_func);
 	}
 
-	if (!use_fixes_and_enhancements) disable_fixes_and_enhancements();
+	if (!use_fixes_and_enhancements) turn_fixes_and_enhancements_on_off(0);
 	enable_replay = 1; // just to be safe...
 
 	memcpy(stored_levelset_name, levelset_name, sizeof(levelset_name));

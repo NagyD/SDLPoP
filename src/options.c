@@ -23,39 +23,40 @@ The authors of this program may be contacted at http://forum.princed.org
 #include <inttypes.h>
 
 
-void disable_fixes_and_enhancements() {
-	enable_crouch_after_climbing = 0;
-	enable_freeze_time_during_end_music = 0;
-	enable_remember_guard_hp = 0;
-	fix_gate_sounds = 0;
-	fix_two_coll_bug = 0;
-	fix_infinite_down_bug = 0;
-	fix_gate_drawing_bug = 0;
-	fix_bigpillar_climb = 0;
-	fix_jump_distance_at_edge = 0;
-	fix_edge_distance_check_when_climbing = 0;
-	fix_painless_fall_on_guard = 0;
-	fix_wall_bump_triggers_tile_below = 0;
-	fix_stand_on_thin_air = 0;
-	fix_press_through_closed_gates = 0;
-	fix_grab_falling_speed = 0;
-	fix_skeleton_chomper_blood = 0;
-	fix_move_after_drink = 0;
-	fix_loose_left_of_potion = 0;
-	fix_guard_following_through_closed_gates = 0;
-	fix_safe_landing_on_spikes = 0;
-	fix_glide_through_wall = 0;
-	fix_drop_through_tapestry = 0;
-	fix_land_against_gate_or_tapestry = 0;
-	fix_unintended_sword_strike = 0;
-	fix_retreat_without_leaving_room = 0;
-	fix_running_jump_through_tapestry= 0;
-	fix_push_guard_into_wall = 0;
-	fix_jump_through_wall_above_gate = 0;
-	fix_chompers_not_starting = 0;
-	fix_feather_interrupted_by_leveldoor = 0;
-	fix_offscreen_guards_disappearing = 0;
-	fix_move_after_sheathe = 0;
+void turn_fixes_and_enhancements_on_off(byte new_state) {
+	use_fixes_and_enhancements = new_state;
+	enable_crouch_after_climbing = new_state;
+	enable_freeze_time_during_end_music = new_state;
+	enable_remember_guard_hp = new_state;
+	fix_gate_sounds = new_state;
+	fix_two_coll_bug = new_state;
+	fix_infinite_down_bug = new_state;
+	fix_gate_drawing_bug = new_state;
+	fix_bigpillar_climb = new_state;
+	fix_jump_distance_at_edge = new_state;
+	fix_edge_distance_check_when_climbing = new_state;
+	fix_painless_fall_on_guard = new_state;
+	fix_wall_bump_triggers_tile_below = new_state;
+	fix_stand_on_thin_air = new_state;
+	fix_press_through_closed_gates = new_state;
+	fix_grab_falling_speed = new_state;
+	fix_skeleton_chomper_blood = new_state;
+	fix_move_after_drink = new_state;
+	fix_loose_left_of_potion = new_state;
+	fix_guard_following_through_closed_gates = new_state;
+	fix_safe_landing_on_spikes = new_state;
+	fix_glide_through_wall = new_state;
+	fix_drop_through_tapestry = new_state;
+	fix_land_against_gate_or_tapestry = new_state;
+	fix_unintended_sword_strike = new_state;
+	fix_retreat_without_leaving_room = new_state;
+	fix_running_jump_through_tapestry= new_state;
+	fix_push_guard_into_wall = new_state;
+	fix_jump_through_wall_above_gate = new_state;
+	fix_chompers_not_starting = new_state;
+	fix_feather_interrupted_by_leveldoor = new_state;
+	fix_offscreen_guards_disappearing = new_state;
+	fix_move_after_sheathe = new_state;
 }
 
 // .ini file parser adapted from https://gist.github.com/OrangeTide/947070
@@ -382,7 +383,7 @@ void load_mod_options() {
 		ini_load(filename, mod_ini_callback);
 	}
 
-	if (!use_fixes_and_enhancements) disable_fixes_and_enhancements();
+	if (!use_fixes_and_enhancements) turn_fixes_and_enhancements_on_off(0);
 }
 
 void show_use_fixes_and_enhancements_prompt() {
@@ -422,7 +423,7 @@ void show_use_fixes_and_enhancements_prompt() {
 				break;
 		}
 	}
-	if (!use_fixes_and_enhancements) disable_fixes_and_enhancements();
+	if (!use_fixes_and_enhancements) turn_fixes_and_enhancements_on_off(0);
 }
 
 
