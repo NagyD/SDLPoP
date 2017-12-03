@@ -103,6 +103,7 @@ int __pascal far proc_cutscene_frame(int wait_frames) {
 				}
 			} else {
 				idle();
+				delay_ticks(1);
 			}
 #else
 			idle();
@@ -353,7 +354,10 @@ void __pascal far end_sequence_anim() {
 	seqtbl_offset_kid_char(seq_101_mouse_stands_up); // mouse stands up
 	if (proc_cutscene_frame(41)) return;
 	fade_out_1();
-	while (check_sound_playing()) idle();
+	while (check_sound_playing()) {
+		idle();
+		delay_ticks(1);
+	}
 }
 
 // seg001:04D3
@@ -369,6 +373,7 @@ void __pascal far time_expired() {
 	while (check_sound_playing()) {
 		idle();
 		do_paused();
+		delay_ticks(1);
 	}
 }
 
@@ -626,7 +631,10 @@ void __pascal far end_sequence() {
 		draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, blitters_0_no_transp);
 		transition_ltr();
 	}
-	while (check_sound_playing() && !key_test_quit()) idle();
+	while (check_sound_playing() && !key_test_quit()) {
+		idle();
+		delay_ticks(1);
+	}
 	fade_out_2(0x1000);
 	start_level = -1;
 	start_game();
@@ -674,6 +682,7 @@ void __pascal far load_intro(int which_imgs,cutscene_ptr_type func,int free_soun
 	while (check_sound_playing()) {
 		idle();
 		do_paused();
+		delay_ticks(1);
 	}
 	need_drects = 1;
 	reset_cutscene();

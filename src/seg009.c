@@ -2105,9 +2105,6 @@ void update_screen() {
 	SDL_RenderClear(renderer_);
 	SDL_RenderCopy(renderer_, sdl_texture_, NULL, NULL);
 	SDL_RenderPresent(renderer_);
-
-	// Prevent 100% CPU usage.
-	SDL_Delay(5);
 }
 
 // seg009:9289
@@ -2856,11 +2853,22 @@ void idle() {
 	process_events();
 	update_screen();
 }
+
+void do_timer_delay(int timer_index) {
+	Uint64 current_counter = SDL_GetPerformanceCounter();
+	float milliseconds_elapsed = (current_counter - timer_last_counter[timer_index]) * milliseconds_per_counter;
+	float milliseconds_left = MAX(0, wait_time[timer_index] * milliseconds_per_tick - milliseconds_elapsed);
+	if (milliseconds_left > 0) {
+		SDL_Delay((Uint32) (milliseconds_left));
+	}
+}
+
 word word_1D63A = 1;
 int __pascal do_wait(int timer_index) {
 	while (! has_timer_stopped(timer_index)) {
 		idle();
 		int key = do_paused();
+		do_timer_delay(timer_index);
 		if (key != 0 && (word_1D63A != 0 || key == 0x1B)) return 1;
 	}
 	return 0;
@@ -2873,6 +2881,7 @@ void __pascal do_simple_wait(int timer_index) {
 
 	while (! has_timer_stopped(timer_index)) {
 		idle();
+		do_timer_delay(timer_index);
 	}
 }
 
@@ -3302,9 +3311,13 @@ int has_timer_stopped(int timer_index) {
 #endif
 	Uint64 current_counter = SDL_GetPerformanceCounter();
 	int ticks_elapsed = (int)((current_counter / perf_counters_per_tick) - (timer_last_counter[timer_index] / perf_counters_per_tick));
-	if (ticks_elapsed >= wait_time[timer_index]) {
+	int overshoot = ticks_elapsed - wait_time[timer_index];
+	if (overshoot >= 0) {
 //		float milliseconds_elapsed = (current_counter - timer_last_counter[timer_index]) * milliseconds_per_counter;
 //		printf("timer %d:   frametime (ms) = %5.1f    fps = %.1f    timer ticks elapsed = %d\n", timer_index, milliseconds_elapsed, 1000.0f / milliseconds_elapsed, ticks_elapsed);
+		if (overshoot > 0 && overshoot <= 3) {
+			current_counter -= overshoot * perf_counters_per_tick;
+		}
 		timer_last_counter[timer_index] = current_counter;
 		return true;
 	} else {
