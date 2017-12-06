@@ -523,6 +523,7 @@ dat_type *__pascal open_dat(const char *file,int drive);
 void __pascal far set_loaded_palette(dat_pal_type far *palette_ptr);
 chtab_type* __pascal load_sprites_from_file(int resource,int palette_bits, int quit_on_error);
 void __pascal far free_chtab(chtab_type *chtab_ptr);
+image_type* decode_image(image_data_type* image_data, dat_pal_type* palette);
 image_type*far __pascal far load_image(int index, dat_pal_type* palette);
 void __pascal far draw_image_transp(image_type far *image,image_type far *mask,int xpos,int ypos);
 int __pascal far set_joy_mode();

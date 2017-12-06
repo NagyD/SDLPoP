@@ -22,6 +22,34 @@ The authors of this program may be contacted at http://forum.princed.org
 
 #ifdef USE_MENU
 
+byte arrowhead_up_image_data[];
+byte arrowhead_down_image_data[];
+byte arrowhead_left_image_data[];
+byte arrowhead_right_image_data[];
+image_type* arrowhead_up_image;
+image_type* arrowhead_down_image;
+image_type* arrowhead_left_image;
+image_type* arrowhead_right_image;
+
+void load_arrowhead_images() {
+	// Make a dummy palette for decode_image().
+	dat_pal_type dat_pal;
+	memset(&dat_pal, 0, sizeof(dat_pal));
+	dat_pal.vga[1].r = dat_pal.vga[1].g = dat_pal.vga[1].b = 0x3F; // white
+	if (arrowhead_up_image == NULL) {
+		arrowhead_up_image = decode_image((image_data_type*) arrowhead_up_image_data, &dat_pal);
+	}
+	if (arrowhead_down_image == NULL) {
+		arrowhead_down_image = decode_image((image_data_type*) arrowhead_down_image_data, &dat_pal);
+	}
+//	dat_pal.vga[1] = vga_palette[color_7_lightgray];
+	if (arrowhead_left_image == NULL) {
+		arrowhead_left_image = decode_image((image_data_type*) arrowhead_left_image_data, &dat_pal);
+	}
+	if (arrowhead_right_image == NULL) {
+		arrowhead_right_image = decode_image((image_data_type*) arrowhead_right_image_data, &dat_pal);
+	}
+}
 
 typedef struct pause_menu_item_type {
 	int id;
@@ -65,14 +93,24 @@ pause_menu_item_type settings_menu_items[] = {
 		{.id = SETTINGS_MENU_MODS, .text = "MODS"},
 		{.id = SETTINGS_MENU_BACK, .text = "BACK"},
 };
-int active_settings_menu_item = 0;
+int active_settings_subsection = 0;
 int scroll_position = 0;
 int menu_control_y;
 int menu_control_x;
 
 enum menu_setting_style_ids {
-	SETTING_STYLE_TOGGLE,
-	SETTING_STYLE_SLIDER,
+	SETTING_STYLE_TOGGLE = 0,
+	SETTING_STYLE_SLIDER = 1,
+	SETTING_STYLE_NUMBER = 2,
+};
+
+enum menu_setting_style_number_width_ids {
+	SETTING_BYTE  = 0,
+	SETTING_SBYTE = 1,
+	NUMBER_WORD  = 2,
+	NUMBER_SHORT = 3,
+	//SETTING_DWORD = 4,
+	SETTING_INT   = 5,
 };
 
 enum setting_ids {
@@ -130,10 +168,11 @@ typedef struct setting_type {
 	int index;
 	int id;
 	int previous, next;
-	int style;
+	byte style;
+	byte number_type;
 	void* linked;
 	void* required;
-	int min, max; // for sliders
+	int min, max; // for sliders and number types
 	char text[64];
 	char explanation[256];
 } setting_type;
@@ -360,42 +399,51 @@ enum {
 };
 
 setting_type mods_settings[] = {
-		{.id = SETTING_START_MINUTES_LEFT, .style = SETTING_STYLE_SLIDER,
+		{.id = SETTING_START_MINUTES_LEFT, .style = SETTING_STYLE_NUMBER,
+				.linked = &start_minutes_left, .number_type = NUMBER_SHORT, .min = -1, .max = INT16_MAX,
 				.text = "Starting minutes left",
-				.explanation = ""},
-		{.id = SETTING_START_TICKS_LEFT, .style = SETTING_STYLE_SLIDER,
+				.explanation = "Starting minutes left. (default = 60)\n"
+						"To disable the time limit completely, set this to -1."},
+		{.id = SETTING_START_TICKS_LEFT, .style = SETTING_STYLE_NUMBER,
+				.linked = &start_ticks_left, .number_type = NUMBER_WORD, .max = UINT16_MAX,
 				.text = "Starting ticks left",
-				.explanation = ""},
-		{.id = SETTING_START_HITP, .style = SETTING_STYLE_SLIDER,
+				.explanation = "Starting number of ticks left in the first minute. (default = 719)\n"
+						"1 tick = 1/12 second, so by default there are 59.92 seconds left in the first minute."},
+		{.id = SETTING_START_HITP, .style = SETTING_STYLE_NUMBER,
+				.linked = &start_hitp, .number_type = NUMBER_WORD, .max = UINT16_MAX,
 				.text = "Starting hitpoints",
-				.explanation = ""},
-		{.id = SETTING_MAX_HITP_ALLOWED, .style = SETTING_STYLE_SLIDER,
+				.explanation = "Starting hitpoints. (default = 3)"},
+		{.id = SETTING_MAX_HITP_ALLOWED, .style = SETTING_STYLE_NUMBER,
+				.linked = &max_hitp_allowed, .number_type = NUMBER_WORD, .max = UINT16_MAX,
 				.text = "Max hitpoints allowed",
-				.explanation = ""},
-		{.id = SETTING_SAVING_ALLOWED_FIRST_LEVEL, .style = SETTING_STYLE_SLIDER,
+				.explanation = "Maximum number of hitpoints you can get. (default = 10)"},
+		{.id = SETTING_SAVING_ALLOWED_FIRST_LEVEL, .style = SETTING_STYLE_NUMBER,
+				.linked = &saving_allowed_first_level, .number_type = NUMBER_WORD, .max = 15,
 				.text = "Saving allowed: first level",
-				.explanation = ""},
-		{.id = SETTING_SAVING_ALLOWED_LAST_LEVEL, .style = SETTING_STYLE_SLIDER,
+				.explanation = "First level where you can save the game. (default = 3)"},
+		{.id = SETTING_SAVING_ALLOWED_LAST_LEVEL, .style = SETTING_STYLE_NUMBER, .max = 15,
+				.linked = &saving_allowed_last_level, .number_type = NUMBER_WORD,
 				.text = "Saving allowed: last level",
-				.explanation = ""},
-		{.id = SETTING_START_UPSIDE_DOWN, .style = SETTING_STYLE_SLIDER,
+				.explanation = "Last level where you can save the game. (default = 13)"},
+		{.id = SETTING_START_UPSIDE_DOWN, .style = SETTING_STYLE_TOGGLE, .linked = &start_upside_down,
 				.text = "Start with the screen flipped",
-				.explanation = ""},
-		{.id = SETTING_START_IN_BLIND_MODE, .style = SETTING_STYLE_SLIDER,
+				.explanation = "Start the game with the screen flipped upside down, similar to Shift+I (default = OFF)"},
+		{.id = SETTING_START_IN_BLIND_MODE, .style = SETTING_STYLE_TOGGLE, .linked = &start_in_blind_mode,
 				.text = "Start in blind mode",
-				.explanation = ""},
-		{.id = SETTING_COPYPROT_LEVEL, .style = SETTING_STYLE_SLIDER,
+				.explanation = "Start in blind mode, similar to Shift+B (default = OFF)"},
+		{.id = SETTING_COPYPROT_LEVEL, .style = SETTING_STYLE_NUMBER,
+				.linked = &copyprot_level, .number_type = NUMBER_WORD, .max = 15,
 				.text = "Copy protection before level",
-				.explanation = ""},
-		{.id = SETTING_ALLOW_TRIGGERING_ANY_TILE, .style = SETTING_STYLE_SLIDER,
+				.explanation = "The potions level will appear before this level. Set to -1 to disable. (default = 2)"},
+		{.id = SETTING_ALLOW_TRIGGERING_ANY_TILE, .style = SETTING_STYLE_TOGGLE, .linked = &allow_triggering_any_tile,
 				.text = "Allow triggering any tile",
-				.explanation = "",
 				.explanation = "Enable triggering any tile. For example a button could make loose floors fall, or start a stuck chomper. (default = OFF)"},
-		{.id = SETTING_ENABLE_WDA_IN_PALACE, .style = SETTING_STYLE_SLIDER,
+		{.id = SETTING_ENABLE_WDA_IN_PALACE, .style = SETTING_STYLE_TOGGLE, .linked = &enable_wda_in_palace,
 				.text = "Enable WDA in palace",
-				.explanation = "Enable the dungeon wall drawing algorithm in the palace environment."
+				.explanation = "Enable the dungeon wall drawing algorithm in the palace."
 						"\nN.B. Use with a modified VPALACE.DAT that provides dungeon-like wall graphics!"},
-		{.id = SETTING_FIRST_LEVEL, .style = SETTING_STYLE_SLIDER,
+		{.id = SETTING_FIRST_LEVEL, .style = SETTING_STYLE_NUMBER,
+				.linked = &first_level, .number_type = NUMBER_WORD, .max = 15,
 				.text = "First level",
 				.explanation = "Level that will be loaded when starting a new game."
 						"\n(default = OFF)"},
@@ -485,6 +533,8 @@ void init_settings_list(setting_type* first_setting, int setting_count) {
 
 
 void init_menu() {
+	load_arrowhead_images();
+
 	init_pause_menu_items(pause_menu_items, COUNT(pause_menu_items));
 	init_pause_menu_items(settings_menu_items, COUNT(settings_menu_items));
 
@@ -727,10 +777,10 @@ int at_scroll_down_boundary;
 
 
 void enter_settings_subsection(int settings_menu_id, setting_type* settings) {
-	if (active_settings_menu_item != settings_menu_id) {
+	if (active_settings_subsection != settings_menu_id) {
 		highlighted_setting_id = settings[0].id;
 	}
-	active_settings_menu_item = settings_menu_id;
+	active_settings_subsection = settings_menu_id;
 	if (!mouse_state_changed) highlighted_pause_menu_item = 0;
 	controlled_area = 1;
 	scroll_position = 0;
@@ -760,7 +810,8 @@ void pause_menu_clicked(pause_menu_item_type* item) {
 		case PAUSE_MENU_SETTINGS:
 			drawn_menu = 1;
 			highlighted_pause_menu_item = SETTINGS_MENU_GENERAL;
-			active_settings_menu_item = 0;
+			active_settings_subsection = 0;
+			controlled_area = 0;
 			break;
 		case PAUSE_MENU_QUIT_GAME:
 			last_key_scancode = SDL_SCANCODE_Q | WITH_CTRL;
@@ -915,6 +966,77 @@ void turn_setting_off(setting_type* setting) {
 	}
 }
 
+int get_value(setting_type* setting) {
+	int value = 0;
+	if (setting->linked != NULL) {
+		switch(setting->number_type) {
+			default:
+			case SETTING_BYTE:
+				value = *(byte*) setting->linked;
+				break;
+			case SETTING_SBYTE:
+				value = *(sbyte*) setting->linked;
+				break;
+			case NUMBER_WORD:
+				value = *(word*) setting->linked;
+				break;
+			case NUMBER_SHORT:
+				value = *(short*) setting->linked;
+				break;
+			case SETTING_INT:
+				value = *(int*) setting->linked;
+				break;
+		}
+	}
+	return value;
+}
+
+void increase_setting(setting_type* setting, int old_value) {
+	if (setting->linked != NULL && old_value < setting->max) {
+		switch(setting->number_type) {
+			default:
+			case SETTING_BYTE:
+				*(byte*) setting->linked += 1;
+				break;
+			case SETTING_SBYTE:
+				*(sbyte*) setting->linked += 1;
+				break;
+			case NUMBER_WORD:
+				*(word*) setting->linked += 1;
+				break;
+			case NUMBER_SHORT:
+				*(short*) setting->linked += 1;
+				break;
+			case SETTING_INT:
+				*(int*) setting->linked += 1;
+				break;
+		}
+	}
+}
+
+void decrease_setting(setting_type* setting, int old_value) {
+	if (setting->linked != NULL && old_value > setting->min) {
+		switch(setting->number_type) {
+			default:
+			case SETTING_BYTE:
+				*(byte*) setting->linked -= 1;
+				break;
+			case SETTING_SBYTE:
+				*(sbyte*) setting->linked -= 1;
+				break;
+			case NUMBER_WORD:
+				*(word*) setting->linked -= 1;
+				break;
+			case NUMBER_SHORT:
+				*(short*) setting->linked -= 1;
+				break;
+			case SETTING_INT:
+				*(int*) setting->linked -= 1;
+				break;
+		}
+	}
+}
+
 
 void draw_setting_explanation(setting_type* setting) {
 	show_text_with_color(&explanation_rect, 0, -1, setting->explanation, color_7_lightgray);
@@ -946,12 +1068,15 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 
 		SDL_Rect dest_rect;
 		rect_to_sdlrect(&setting_box, &dest_rect);
-		uint32_t rgb_color = SDL_MapRGBA(overlay_surface->format, 40, 40, 40, 240);
+		uint32_t rgb_color = SDL_MapRGBA(overlay_surface->format, 55, 55, 55, 240);
 		if (SDL_FillRect(overlay_surface, &dest_rect, rgb_color) != 0) {
 			sdlperror("SDL_FillRect");
 			quit(1);
 		}
-//		draw_rect_with_alpha(&setting_box, color_8_darkgray, 200);
+		rect_type left_side_of_setting_box = setting_box;
+		left_side_of_setting_box.left = setting_box.left - 2;
+		left_side_of_setting_box.right = setting_box.left;
+		draw_rect_with_alpha(&left_side_of_setting_box, color_15_brightwhite, pause_menu_alpha);
 		draw_setting_explanation(setting);
 	}
 
@@ -1027,13 +1152,52 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 		char value_text[16];
 		snprintf(value_text, sizeof(value_text), "%d", slider_value);
 		show_text_with_color(&text_rect, 1, -1, value_text, selected_color);
+
+	} else if (setting->style == SETTING_STYLE_NUMBER) {
+		int value = get_value(setting);
+		if (highlighted_setting_id == setting->id) {
+			if (mouse_clicked) {
+
+				rect_type right_hitbox = {setting_box.top, text_rect.right - 5, setting_box.bottom, text_rect.right + 10};
+				if (is_mouse_over_rect(&right_hitbox)) {
+					increase_setting(setting, value);
+				} else {
+					char value_text[16];
+					snprintf(value_text, sizeof(value_text), "%d", value);
+					int value_text_width = get_line_width(value_text, strlen(value_text));
+					rect_type left_hitbox = right_hitbox;
+					left_hitbox.left -= (value_text_width + 10);
+					left_hitbox.right -= (value_text_width + 5);
+					if (is_mouse_over_rect(&left_hitbox)) {
+						decrease_setting(setting, value);
+					}
+				}
+
+			} else if (menu_control_x > 0) {
+				increase_setting(setting, value);
+			} else if (menu_control_x < 0) {
+				decrease_setting(setting, value);
+			}
+		}
+
+		value = get_value(setting); // May have been updated.
+		char value_text[16];
+		snprintf(value_text, sizeof(value_text), "%d", value);
+		show_text_with_color(&text_rect, 1, -1, value_text, selected_color);
+
+		if (highlighted_setting_id == setting->id) {
+			int value_text_width = get_line_width(value_text, strlen(value_text));
+			draw_image_transp_vga(arrowhead_right_image, text_rect.right + 2, text_rect.top);
+			draw_image_transp_vga(arrowhead_left_image, text_rect.right - value_text_width - 6, text_rect.top);
+		}
+
 	}
 
 	*y_offset += 15;
 }
 
 void menu_scroll(int y) {
-	settings_area_type* current_settings_area = get_settings_area(active_settings_menu_item);
+	settings_area_type* current_settings_area = get_settings_area(active_settings_subsection);
 	int max_scroll = MAX(0, current_settings_area->setting_count - 9);
 	if (drawn_menu == 1 && controlled_area == 1) {
 		if (y < 0 && scroll_position > 0) {
@@ -1051,11 +1215,17 @@ void draw_settings_area(settings_area_type* settings_area) {
 	int y_offset = 0;
 	int num_drawn_settings = 0;
 
-	for (int i = 0; (i < settings_area->setting_count) && (num_drawn_settings <= 9); ++i) {
+	for (int i = 0; (i < settings_area->setting_count) && (num_drawn_settings < 9); ++i) {
 		if (i >= scroll_position) {
 			++num_drawn_settings;
 			draw_setting(&settings_area->settings[i], &settings_area_rect, &y_offset, color_15_brightwhite);
 		}
+	}
+	if (scroll_position > 0) {
+		draw_image_transp_vga(arrowhead_up_image, 200, 10);
+	}
+	if (scroll_position + num_drawn_settings < settings_area->setting_count) {
+		draw_image_transp_vga(arrowhead_down_image, 200, 151);
 	}
 }
 
@@ -1066,7 +1236,7 @@ void draw_settings_menu() {
 	rect_type pause_rect_inner;
 	shrink2_rect(&pause_rect_inner, &pause_rect_outer, 5, 5);
 
-	settings_area_type* settings_area = get_settings_area(active_settings_menu_item);
+	settings_area_type* settings_area = get_settings_area(active_settings_subsection);
 
 	if (!mouse_state_changed) {
 		if (menu_control_y == 1) {
@@ -1097,7 +1267,7 @@ void draw_settings_menu() {
 	int y_offset = 50;
 	for (int i = 0; i < COUNT(settings_menu_items); ++i) {
 		pause_menu_item_type* item = &settings_menu_items[i];
-		int text_color = (active_settings_menu_item == item->id) ? color_15_brightwhite : color_7_lightgray;
+		int text_color = (active_settings_subsection == item->id) ? color_15_brightwhite : color_7_lightgray;
 		draw_pause_menu_item(&settings_menu_items[i], &pause_rect_inner, &y_offset, text_color);
 	}
 
@@ -1179,8 +1349,8 @@ int key_test_paused_menu(int key) {
 				play_next_sound();
 				if (controlled_area == 1) {
 					controlled_area = 0;
-					highlighted_pause_menu_item = active_settings_menu_item;
-					active_settings_menu_item = 0;
+					highlighted_pause_menu_item = active_settings_subsection;
+					active_settings_subsection = 0;
 					return 0;
 				} else {
 					reset_paused_menu();
@@ -1881,6 +2051,40 @@ byte hc_small_font_data[] = {
 		BINARY_4( _,_,_,_ ),
 
 
+};
+
+byte arrowhead_up_image_data[] = {
+		IMAGE_DATA(4, 7, 1),
+		BINARY_8( _,_,_,1,_,_,_,_ ),
+		BINARY_8( _,_,1,1,1,_,_,_ ),
+		BINARY_8( _,1,1,1,1,1,_,_ ),
+		BINARY_8( 1,1,1,1,1,1,1,_ ),
+};
+
+byte arrowhead_down_image_data[] = {
+		IMAGE_DATA(4, 7, 1),
+		BINARY_8( 1,1,1,1,1,1,1,_ ),
+		BINARY_8( _,1,1,1,1,1,_,_ ),
+		BINARY_8( _,_,1,1,1,_,_,_ ),
+		BINARY_8( _,_,_,1,_,_,_,_ ),
+};
+
+byte arrowhead_left_image_data[] = {
+		IMAGE_DATA(5, 3, 1),
+		BINARY_8( _,_,1,_,_,_,_,_ ),
+		BINARY_8( _,1,1,_,_,_,_,_ ),
+		BINARY_8( 1,1,1,_,_,_,_,_ ),
+		BINARY_8( _,1,1,_,_,_,_,_ ),
+		BINARY_8( _,_,1,_,_,_,_,_ ),
+};
+
+byte arrowhead_right_image_data[] = {
+		IMAGE_DATA(5, 3, 1),
+		BINARY_8( 1,_,_,_,_,_,_,_ ),
+		BINARY_8( 1,1,_,_,_,_,_,_ ),
+		BINARY_8( 1,1,1,_,_,_,_,_ ),
+		BINARY_8( 1,1,_,_,_,_,_,_ ),
+		BINARY_8( 1,_,_,_,_,_,_,_ ),
 };
 
 #endif //USE_MENU
