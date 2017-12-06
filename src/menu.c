@@ -1323,7 +1323,12 @@ int key_test_paused_menu(int key) {
 		default:
 			menu_control_y = 0;
 			menu_control_x = 0;
-			return key;
+			if (key & WITH_CTRL) {
+				is_paused = 0;
+				return key; // Allow Ctrl+R, etc.
+			} else {
+				return 0;
+			}
 		case SDL_SCANCODE_UP:
 			menu_control_y = -1;
 			menu_control_x = 0;
@@ -1341,9 +1346,11 @@ int key_test_paused_menu(int key) {
 			menu_control_x = -1;
 			return 0;
 		case SDL_SCANCODE_RETURN:
+		case SDL_SCANCODE_SPACE:
 			clicked_or_pressed_enter = 1;
 			return 0;
 		case SDL_SCANCODE_ESCAPE:
+		case SDL_SCANCODE_BACKSPACE:
 			if (drawn_menu == 1) {
 				play_sound(sound_22_loose_shake_3);
 				play_next_sound();
