@@ -1987,6 +1987,7 @@ int __pascal far check_sound_playing() {
 }
 
 void window_resized() {
+#if SDL_VERSION_ATLEAST(2,0,5) // SDL_RenderSetIntegerScale
 	if (use_integer_scaling) {
 		int window_width, window_height;
 		SDL_GetWindowSize(window_, &window_width, &window_height);
@@ -1997,6 +1998,7 @@ void window_resized() {
 		SDL_bool makes_sense = (window_width >= render_width && window_height >= render_height);
 		SDL_RenderSetIntegerScale(renderer_, makes_sense);
 	}
+#endif
 }
 
 // seg009:38ED
@@ -2026,7 +2028,11 @@ void __pascal far set_gr_mode(byte grmode) {
 	                           pop_window_width, pop_window_height, flags);
 	renderer_ = SDL_CreateRenderer(window_, -1 , SDL_RENDERER_ACCELERATED );
 	if (use_integer_scaling) {
+#if SDL_VERSION_ATLEAST(2,0,5) // SDL_RenderSetIntegerScale
 		SDL_RenderSetIntegerScale(renderer_, SDL_TRUE);
+#else
+		printf("Warning: You need SDL 2.0.5 or newer for the use_integer_scaling option.\n");
+#endif
 	}
 
 	SDL_Surface* icon = IMG_Load("data/icon.png");
