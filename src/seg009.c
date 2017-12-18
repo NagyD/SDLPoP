@@ -2031,7 +2031,7 @@ void __pascal far set_gr_mode(byte grmode) {
 #if SDL_VERSION_ATLEAST(2,0,5) // SDL_RenderSetIntegerScale
 		SDL_RenderSetIntegerScale(renderer_, SDL_TRUE);
 #else
-		printf("Warning: You need SDL 2.0.5 or newer for the use_integer_scaling option.\n");
+		printf("Warning: You need to compile with SDL 2.0.5 or newer for the use_integer_scaling option.\n");
 #endif
 	}
 
