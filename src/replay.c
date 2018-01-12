@@ -451,43 +451,45 @@ void options_process_features(SDL_RWops* rw, rw_process_func_type process_func) 
 	process(enable_quicksave_penalty);
 }
 
+fixes_options_type fixes_options_replay;
+
 void options_process_enhancements(SDL_RWops* rw, rw_process_func_type process_func) {
 	process(use_fixes_and_enhancements);
-	process(enable_crouch_after_climbing);
-	process(enable_freeze_time_during_end_music);
-	process(enable_remember_guard_hp);
+	process(fixes_options_replay.enable_crouch_after_climbing);
+	process(fixes_options_replay.enable_freeze_time_during_end_music);
+	process(fixes_options_replay.enable_remember_guard_hp);
 }
 
 void options_process_fixes(SDL_RWops* rw, rw_process_func_type process_func) {
-	process(fix_gate_sounds);
-	process(fix_two_coll_bug);
-	process(fix_infinite_down_bug);
-	process(fix_gate_drawing_bug);
-	process(fix_bigpillar_climb);
-	process(fix_jump_distance_at_edge);
-	process(fix_edge_distance_check_when_climbing);
-	process(fix_painless_fall_on_guard);
-	process(fix_wall_bump_triggers_tile_below);
-	process(fix_stand_on_thin_air);
-	process(fix_press_through_closed_gates);
-	process(fix_grab_falling_speed);
-	process(fix_skeleton_chomper_blood);
-	process(fix_move_after_drink);
-	process(fix_loose_left_of_potion);
-	process(fix_guard_following_through_closed_gates);
-	process(fix_safe_landing_on_spikes);
-	process(fix_glide_through_wall);
-	process(fix_drop_through_tapestry);
-	process(fix_land_against_gate_or_tapestry);
-	process(fix_unintended_sword_strike);
-	process(fix_retreat_without_leaving_room);
-	process(fix_running_jump_through_tapestry);
-	process(fix_push_guard_into_wall);
-	process(fix_jump_through_wall_above_gate);
-	process(fix_chompers_not_starting);
-	process(fix_feather_interrupted_by_leveldoor);
-	process(fix_offscreen_guards_disappearing);
-	process(fix_move_after_sheathe);
+	process(fixes_options_replay.fix_gate_sounds);
+	process(fixes_options_replay.fix_two_coll_bug);
+	process(fixes_options_replay.fix_infinite_down_bug);
+	process(fixes_options_replay.fix_gate_drawing_bug);
+	process(fixes_options_replay.fix_bigpillar_climb);
+	process(fixes_options_replay.fix_jump_distance_at_edge);
+	process(fixes_options_replay.fix_edge_distance_check_when_climbing);
+	process(fixes_options_replay.fix_painless_fall_on_guard);
+	process(fixes_options_replay.fix_wall_bump_triggers_tile_below);
+	process(fixes_options_replay.fix_stand_on_thin_air);
+	process(fixes_options_replay.fix_press_through_closed_gates);
+	process(fixes_options_replay.fix_grab_falling_speed);
+	process(fixes_options_replay.fix_skeleton_chomper_blood);
+	process(fixes_options_replay.fix_move_after_drink);
+	process(fixes_options_replay.fix_loose_left_of_potion);
+	process(fixes_options_replay.fix_guard_following_through_closed_gates);
+	process(fixes_options_replay.fix_safe_landing_on_spikes);
+	process(fixes_options_replay.fix_glide_through_wall);
+	process(fixes_options_replay.fix_drop_through_tapestry);
+	process(fixes_options_replay.fix_land_against_gate_or_tapestry);
+	process(fixes_options_replay.fix_unintended_sword_strike);
+	process(fixes_options_replay.fix_retreat_without_leaving_room);
+	process(fixes_options_replay.fix_running_jump_through_tapestry);
+	process(fixes_options_replay.fix_push_guard_into_wall);
+	process(fixes_options_replay.fix_jump_through_wall_above_gate);
+	process(fixes_options_replay.fix_chompers_not_starting);
+	process(fixes_options_replay.fix_feather_interrupted_by_leveldoor);
+	process(fixes_options_replay.fix_offscreen_guards_disappearing);
+	process(fixes_options_replay.fix_move_after_sheathe);
 }
 
 void options_process_custom_general(SDL_RWops* rw, rw_process_func_type process_func) {
@@ -698,7 +700,8 @@ void apply_replay_options() {
 		load_options_from_buffer(replay_options_sections[i].replay_data, replay_options_sections[i].data_size, replay_options_sections[i].section_func);
 	}
 
-	if (!use_fixes_and_enhancements) turn_fixes_and_enhancements_on_off(0);
+	fixes_saved = fixes_options_replay;
+	turn_fixes_and_enhancements_on_off(use_fixes_and_enhancements);
 	enable_replay = 1; // just to be safe...
 
 	memcpy(stored_levelset_name, levelset_name, sizeof(levelset_name));

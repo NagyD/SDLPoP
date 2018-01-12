@@ -542,7 +542,7 @@ void __pascal far bump_into_opponent() {
 		if (ABS(distance) <= 15) {
 
 			#ifdef FIX_PAINLESS_FALL_ON_GUARD
-			if (fix_painless_fall_on_guard) {
+			if (fixes.fix_painless_fall_on_guard) {
 				if (Char.fall_y >= 33) return; // don't bump; dead
 				else if (Char.fall_y >= 22) { // medium land
 					take_hp(1);

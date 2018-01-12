@@ -1049,4 +1049,45 @@ enum key_modifiers {
 	WITH_ALT   = 0x2000,
 };
 
+#define MAX_OPTION_VALUE_NAME_LENGTH 20
+typedef struct names_list_type {
+	const char (* names)[][MAX_OPTION_VALUE_NAME_LENGTH];
+	word num_names;
+} names_list_type;
+
+typedef struct fixes_options_type {
+	byte enable_crouch_after_climbing;
+	byte enable_freeze_time_during_end_music;
+	byte enable_remember_guard_hp;
+	byte fix_gate_sounds;
+	byte fix_two_coll_bug;
+	byte fix_infinite_down_bug;
+	byte fix_gate_drawing_bug;
+	byte fix_bigpillar_climb;
+	byte fix_jump_distance_at_edge;
+	byte fix_edge_distance_check_when_climbing;
+	byte fix_painless_fall_on_guard;
+	byte fix_wall_bump_triggers_tile_below;
+	byte fix_stand_on_thin_air;
+	byte fix_press_through_closed_gates;
+	byte fix_grab_falling_speed;
+	byte fix_skeleton_chomper_blood;
+	byte fix_move_after_drink;
+	byte fix_loose_left_of_potion;
+	byte fix_guard_following_through_closed_gates;
+	byte fix_safe_landing_on_spikes;
+	byte fix_glide_through_wall;
+	byte fix_drop_through_tapestry;
+	byte fix_land_against_gate_or_tapestry;
+	byte fix_unintended_sword_strike;
+	byte fix_retreat_without_leaving_room;
+	byte fix_running_jump_through_tapestry;
+	byte fix_push_guard_into_wall;
+	byte fix_jump_through_wall_above_gate;
+	byte fix_chompers_not_starting;
+	byte fix_feather_interrupted_by_leveldoor;
+	byte fix_offscreen_guards_disappearing;
+	byte fix_move_after_sheathe;
+} fixes_options_type;
+
 #endif

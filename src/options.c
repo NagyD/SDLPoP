@@ -24,39 +24,20 @@ The authors of this program may be contacted at http://forum.princed.org
 
 
 void turn_fixes_and_enhancements_on_off(byte new_state) {
-	use_fixes_and_enhancements = new_state;
-	enable_crouch_after_climbing = new_state;
-	enable_freeze_time_during_end_music = new_state;
-	enable_remember_guard_hp = new_state;
-	fix_gate_sounds = new_state;
-	fix_two_coll_bug = new_state;
-	fix_infinite_down_bug = new_state;
-	fix_gate_drawing_bug = new_state;
-	fix_bigpillar_climb = new_state;
-	fix_jump_distance_at_edge = new_state;
-	fix_edge_distance_check_when_climbing = new_state;
-	fix_painless_fall_on_guard = new_state;
-	fix_wall_bump_triggers_tile_below = new_state;
-	fix_stand_on_thin_air = new_state;
-	fix_press_through_closed_gates = new_state;
-	fix_grab_falling_speed = new_state;
-	fix_skeleton_chomper_blood = new_state;
-	fix_move_after_drink = new_state;
-	fix_loose_left_of_potion = new_state;
-	fix_guard_following_through_closed_gates = new_state;
-	fix_safe_landing_on_spikes = new_state;
-	fix_glide_through_wall = new_state;
-	fix_drop_through_tapestry = new_state;
-	fix_land_against_gate_or_tapestry = new_state;
-	fix_unintended_sword_strike = new_state;
-	fix_retreat_without_leaving_room = new_state;
-	fix_running_jump_through_tapestry= new_state;
-	fix_push_guard_into_wall = new_state;
-	fix_jump_through_wall_above_gate = new_state;
-	fix_chompers_not_starting = new_state;
-	fix_feather_interrupted_by_leveldoor = new_state;
-	fix_offscreen_guards_disappearing = new_state;
-	fix_move_after_sheathe = new_state;
+	static byte old_state = 0;
+	if (old_state != new_state) {
+		use_fixes_and_enhancements = new_state;
+		if (new_state == 0) {
+			fixes_saved = fixes; // Remember which fixes have the 'true' setting.
+		} else {
+			fixes = fixes_saved; // Activate the fixes with the 'true' setting.
+		}
+	}
+	if (new_state == 0) {
+		memset(&fixes, 0, sizeof(fixes)); // Deactivate all fixes.
+	}
+	old_state = new_state;
+
 }
 
 // .ini file parser adapted from https://gist.github.com/OrangeTide/947070
@@ -100,15 +81,9 @@ int ini_load(const char *filename,
 	return 0;
 }
 
-#define MAX_NAME_LENGTH 20
-typedef struct ini_value_list_type {
-	const char (* names)[][MAX_NAME_LENGTH];
-	word num_names;
-} ini_value_list_type;
-
-const char level_type_names[][MAX_NAME_LENGTH] = {"dungeon", "palace"};
-const char guard_type_names[][MAX_NAME_LENGTH] = {"guard", "fat", "skel", "vizier", "shadow"};
-const char tile_type_names[][MAX_NAME_LENGTH] = {
+const char level_type_names[][MAX_OPTION_VALUE_NAME_LENGTH] = {"dungeon", "palace"};
+const char guard_type_names[][MAX_OPTION_VALUE_NAME_LENGTH] = {"guard", "fat", "skel", "vizier", "shadow"};
+const char tile_type_names[][MAX_OPTION_VALUE_NAME_LENGTH] = {
 				"empty", "floor", "spike", "pillar", "gate",                                        // 0..4
 				"stuck", "closer", "doortop_with_floor", "bigpillar_bottom", "bigpillar_top",       // 5..9
 				"potion", "loose", "doortop", "mirror", "debris",                                   // 10..14
@@ -118,18 +93,18 @@ const char tile_type_names[][MAX_NAME_LENGTH] = {
 				"torch_with_debris", // 30
 };
 
-ini_value_list_type level_type_names_list = {&level_type_names, COUNT(level_type_names)};
-ini_value_list_type guard_type_names_list = {&guard_type_names, COUNT(guard_type_names)};
-ini_value_list_type tile_type_names_list = {&tile_type_names, COUNT(tile_type_names)};
+names_list_type level_type_names_list = {&level_type_names, COUNT(level_type_names)};
+names_list_type guard_type_names_list = {&guard_type_names, COUNT(guard_type_names)};
+names_list_type tile_type_names_list = {&tile_type_names, COUNT(tile_type_names)};
 
 #define INI_NO_VALID_NAME -9999
 
-static inline int ini_get_named_value(const char* value, ini_value_list_type* value_names) {
+static inline int ini_get_named_value(const char* value, names_list_type* value_names) {
 	if (value_names != NULL) {
 		int i;
 		char *base_ptr = (char *) value_names->names;
 		for (i = 0; i < value_names->num_names; ++i) {
-			char *name = (base_ptr + i * MAX_NAME_LENGTH);
+			char *name = (base_ptr + i * MAX_OPTION_VALUE_NAME_LENGTH);
 			if (strcasecmp(value, name) == 0) return i;
 		}
 	}
@@ -146,7 +121,7 @@ static inline int ini_process_boolean(const char* curr_name, const char* value, 
 }
 
 #define ini_process_numeric_func(data_type) \
-static inline int ini_process_##data_type(const char* curr_name, const char* value, const char* option_name, data_type* target, ini_value_list_type* value_names) { \
+static inline int ini_process_##data_type(const char* curr_name, const char* value, const char* option_name, data_type* target, names_list_type* value_names) { \
 	if(strcasecmp(curr_name, option_name) == 0) { \
 		if (strcasecmp(value, "default") != 0) { \
 			int named_value = ini_get_named_value(value, value_names); \
@@ -184,6 +159,7 @@ static int global_ini_callback(const char *section, const char *name, const char
 	if (ini_process_boolean(name, value, option_name, target)) return 1;
 
 	if (check_ini_section("General")) {
+		process_boolean("enable_pause_menu", &enable_pause_menu);
 		process_boolean("enable_copyprot", &enable_copyprot);
 		process_boolean("enable_mixer", &enable_mixer);
 		process_boolean("enable_fade", &enable_fade);
@@ -236,38 +212,38 @@ static int global_ini_callback(const char *section, const char *name, const char
 			else if (strcasecmp(value, "prompt") == 0) use_fixes_and_enhancements = 2;
 			return 1;
 		}
-		process_boolean("enable_crouch_after_climbing", &enable_crouch_after_climbing);
-		process_boolean("enable_freeze_time_during_end_music", &enable_freeze_time_during_end_music);
-		process_boolean("enable_remember_guard_hp", &enable_remember_guard_hp);
-		process_boolean("fix_gate_sounds", &fix_gate_sounds);
-		process_boolean("fix_two_coll_bug", &fix_two_coll_bug);
-		process_boolean("fix_infinite_down_bug", &fix_infinite_down_bug);
-		process_boolean("fix_gate_drawing_bug", &fix_gate_drawing_bug);
-		process_boolean("fix_bigpillar_climb", &fix_bigpillar_climb);
-		process_boolean("fix_jump_distance_at_edge", &fix_jump_distance_at_edge);
-		process_boolean("fix_edge_distance_check_when_climbing", &fix_edge_distance_check_when_climbing);
-		process_boolean("fix_painless_fall_on_guard", &fix_painless_fall_on_guard);
-		process_boolean("fix_wall_bump_triggers_tile_below", &fix_wall_bump_triggers_tile_below);
-		process_boolean("fix_stand_on_thin_air", &fix_stand_on_thin_air);
-		process_boolean("fix_press_through_closed_gates", &fix_press_through_closed_gates);
-		process_boolean("fix_grab_falling_speed", &fix_grab_falling_speed);
-		process_boolean("fix_skeleton_chomper_blood", &fix_skeleton_chomper_blood);
-		process_boolean("fix_move_after_drink", &fix_move_after_drink);
-		process_boolean("fix_loose_left_of_potion", &fix_loose_left_of_potion);
-		process_boolean("fix_guard_following_through_closed_gates", &fix_guard_following_through_closed_gates);
-		process_boolean("fix_safe_landing_on_spikes", &fix_safe_landing_on_spikes);
-		process_boolean("fix_glide_through_wall", &fix_glide_through_wall);
-		process_boolean("fix_drop_through_tapestry", &fix_drop_through_tapestry);
-		process_boolean("fix_land_against_gate_or_tapestry", &fix_land_against_gate_or_tapestry);
-		process_boolean("fix_unintended_sword_strike", &fix_unintended_sword_strike);
-		process_boolean("fix_retreat_without_leaving_room", &fix_retreat_without_leaving_room);
-		process_boolean("fix_running_jump_through_tapestry", &fix_running_jump_through_tapestry);
-		process_boolean("fix_push_guard_into_wall", &fix_push_guard_into_wall);
-		process_boolean("fix_jump_through_wall_above_gate", &fix_jump_through_wall_above_gate);
-		process_boolean("fix_chompers_not_starting", &fix_chompers_not_starting);
-		process_boolean("fix_feather_interrupted_by_leveldoor", &fix_feather_interrupted_by_leveldoor);
-		process_boolean("fix_offscreen_guards_disappearing", &fix_offscreen_guards_disappearing);
-		process_boolean("fix_move_after_sheathe", &fix_move_after_sheathe);
+		process_boolean("enable_crouch_after_climbing", &fixes_ini_defaults.enable_crouch_after_climbing);
+		process_boolean("enable_freeze_time_during_end_music", &fixes_ini_defaults.enable_freeze_time_during_end_music);
+		process_boolean("enable_remember_guard_hp", &fixes_ini_defaults.enable_remember_guard_hp);
+		process_boolean("fix_gate_sounds", &fixes_ini_defaults.fix_gate_sounds);
+		process_boolean("fix_two_coll_bug", &fixes_ini_defaults.fix_two_coll_bug);
+		process_boolean("fix_infinite_down_bug", &fixes_ini_defaults.fix_infinite_down_bug);
+		process_boolean("fix_gate_drawing_bug", &fixes_ini_defaults.fix_gate_drawing_bug);
+		process_boolean("fix_bigpillar_climb", &fixes_ini_defaults.fix_bigpillar_climb);
+		process_boolean("fix_jump_distance_at_edge", &fixes_ini_defaults.fix_jump_distance_at_edge);
+		process_boolean("fix_edge_distance_check_when_climbing", &fixes_ini_defaults.fix_edge_distance_check_when_climbing);
+		process_boolean("fix_painless_fall_on_guard", &fixes_ini_defaults.fix_painless_fall_on_guard);
+		process_boolean("fix_wall_bump_triggers_tile_below", &fixes_ini_defaults.fix_wall_bump_triggers_tile_below);
+		process_boolean("fix_stand_on_thin_air", &fixes_ini_defaults.fix_stand_on_thin_air);
+		process_boolean("fix_press_through_closed_gates", &fixes_ini_defaults.fix_press_through_closed_gates);
+		process_boolean("fix_grab_falling_speed", &fixes_ini_defaults.fix_grab_falling_speed);
+		process_boolean("fix_skeleton_chomper_blood", &fixes_ini_defaults.fix_skeleton_chomper_blood);
+		process_boolean("fix_move_after_drink", &fixes_ini_defaults.fix_move_after_drink);
+		process_boolean("fix_loose_left_of_potion", &fixes_ini_defaults.fix_loose_left_of_potion);
+		process_boolean("fix_guard_following_through_closed_gates", &fixes_ini_defaults.fix_guard_following_through_closed_gates);
+		process_boolean("fix_safe_landing_on_spikes", &fixes_ini_defaults.fix_safe_landing_on_spikes);
+		process_boolean("fix_glide_through_wall", &fixes_ini_defaults.fix_glide_through_wall);
+		process_boolean("fix_drop_through_tapestry", &fixes_ini_defaults.fix_drop_through_tapestry);
+		process_boolean("fix_land_against_gate_or_tapestry", &fixes_ini_defaults.fix_land_against_gate_or_tapestry);
+		process_boolean("fix_unintended_sword_strike", &fixes_ini_defaults.fix_unintended_sword_strike);
+		process_boolean("fix_retreat_without_leaving_room", &fixes_ini_defaults.fix_retreat_without_leaving_room);
+		process_boolean("fix_running_jump_through_tapestry", &fixes_ini_defaults.fix_running_jump_through_tapestry);
+		process_boolean("fix_push_guard_into_wall", &fixes_ini_defaults.fix_push_guard_into_wall);
+		process_boolean("fix_jump_through_wall_above_gate", &fixes_ini_defaults.fix_jump_through_wall_above_gate);
+		process_boolean("fix_chompers_not_starting", &fixes_ini_defaults.fix_chompers_not_starting);
+		process_boolean("fix_feather_interrupted_by_leveldoor", &fixes_ini_defaults.fix_feather_interrupted_by_leveldoor);
+		process_boolean("fix_offscreen_guards_disappearing", &fixes_ini_defaults.fix_offscreen_guards_disappearing);
+		process_boolean("fix_move_after_sheathe", &fixes_ini_defaults.fix_move_after_sheathe);
 	}
 
 	if (check_ini_section("CustomGameplay")) {
@@ -361,6 +337,9 @@ static int mod_ini_callback(const char *section, const char *name, const char *v
 }
 
 void load_global_options() {
+	// By default, all the fixes are used, unless otherwise specified.
+	// So, if one of these options is omitted from the INI file, they default to true.
+	memset(&fixes_ini_defaults, 1, sizeof(fixes_ini_defaults));
 	ini_load("SDLPoP.ini", global_ini_callback); // global configuration
 }
 
@@ -383,47 +362,9 @@ void load_mod_options() {
 		ini_load(filename, mod_ini_callback);
 	}
 
-	if (!use_fixes_and_enhancements) turn_fixes_and_enhancements_on_off(0);
+	fixes_saved = fixes_ini_defaults;
+	turn_fixes_and_enhancements_on_off(use_fixes_and_enhancements);
 }
 
-void show_use_fixes_and_enhancements_prompt() {
-	if (use_fixes_and_enhancements != 2) return;
-	draw_rect(&screen_rect, 0);
-	show_text(&screen_rect, 0, 0,
-		"\n"
-		"Enable bug fixes and\n"
-		"gameplay enhancements?\n"
-		"\n"
-		"NOTE:\n"
-		"This option disables some game quirks.\n"
-		"Certain tricks will no longer work by default.\n"
-		"\n"
-		"\n"
-		"Y:  enhanced behavior \n"
-		"N:  original behavior    \n"
-		"\n"
-		"Y / N ?\n"
-		"\n"
-		"\n"
-		"\n"
-		"You can fine-tune your preferences\n"
-		"and/or bypass this screen by editing the file\n"
-		"'SDLPoP.ini'"
-	);
-	while (use_fixes_and_enhancements == 2 ) {
-		idle();
-		switch (key_test_quit()) {
-			case SDL_SCANCODE_Y:
-				use_fixes_and_enhancements = 1;
-				printf("Enabling game fixes and enhancements.\n");
-				break;
-			case SDL_SCANCODE_N:
-				use_fixes_and_enhancements = 0;
-				printf("Disabling game fixes and enhancements.\n");
-				break;
-		}
-	}
-	if (!use_fixes_and_enhancements) turn_fixes_and_enhancements_on_off(0);
-}
 
 

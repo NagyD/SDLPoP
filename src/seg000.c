@@ -164,7 +164,6 @@ void __pascal far init_game_main() {
 	load_opt_sounds(43, 56); //added
 	hof_read();
 	show_splash(); // added
-	show_use_fixes_and_enhancements_prompt(); // added
 	start_game();
 }
 
@@ -489,7 +488,7 @@ int __pascal far process_key() {
 	key = key_test_quit();
 
 #ifdef USE_MENU
-	if (is_paused) {
+	if (is_paused && is_menu_shown) {
 		key = key_test_paused_menu(key);
 		if (key == 0) return 0;
 	}
@@ -539,6 +538,9 @@ int __pascal far process_key() {
 		case SDL_SCANCODE_ESCAPE: // esc
 		case SDL_SCANCODE_ESCAPE | WITH_SHIFT: // allow pause while grabbing
 			is_paused = 1;
+			if (enable_pause_menu) {
+				is_menu_shown = 1;
+			}
 		break;
 		case SDL_SCANCODE_SPACE: // space
 			is_show_time = 1;
@@ -647,6 +649,12 @@ int __pascal far process_key() {
 		break;
 #endif // USE_REPLAY
 #endif // USE_QUICKSAVE
+#ifdef USE_MENU
+		case SDL_SCANCODE_M | WITH_CTRL:
+			is_paused = 1;
+			is_menu_shown = 1;
+		break;
+#endif
 	}
 	if (cheats_enabled) {
 		switch (key) {
@@ -1473,12 +1481,24 @@ int __pascal far do_paused() {
 	key = process_key();
 	if (is_paused) {
 		display_text_bottom("GAME PAUSED");
-		// busy waiting?
-		do {
-			idle();
-		} while (! process_key() && is_paused);
-		// TODO: Fix for pause toggle should be optional.
-		is_paused = 0;
+#ifdef USE_MENU
+		if (enable_pause_menu) {
+			is_menu_shown = 1;
+		}
+		if (is_menu_shown) {
+			do {
+				idle();
+			} while (!process_key() && is_paused); // busy waiting?
+			is_paused = 0;
+			is_menu_shown = 0;
+		} else
+#endif
+		{
+			is_paused = 0;
+			do {
+				idle();
+			} while (!process_key()); // busy waiting?
+		}
 		erase_bottom_text(1);
 	}
 	return key || control_shift;

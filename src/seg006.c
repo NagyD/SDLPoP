@@ -831,7 +831,7 @@ void __pascal far check_action() {
 		if (frame == frame_109_crouch
 
 			#ifdef FIX_STAND_ON_THIN_AIR
-			|| (fix_stand_on_thin_air &&
+			|| (fixes.fix_stand_on_thin_air &&
 				frame >= frame_110_stand_up_from_crouch_1 && frame <= frame_119_stand_up_from_crouch_10)
 			#endif
 
@@ -970,7 +970,7 @@ void __pascal far check_on_floor() {
 			} else {
 
 #ifdef FIX_STAND_ON_THIN_AIR
-				if (fix_stand_on_thin_air &&
+				if (fixes.fix_stand_on_thin_air &&
 					Char.frame >= frame_110_stand_up_from_crouch_1 && Char.frame <= frame_119_stand_up_from_crouch_10)
 				{
 					// We need to prevent the Kid from stepping off a ledge accidentally while standing up.
@@ -1053,7 +1053,7 @@ void __pascal far start_fall() {
 
 		#ifdef FIX_RUNNING_JUMP_THROUGH_TAPESTRY
 			// Also treat tapestries (when approached to the left) like a wall here.
-		|| (fix_running_jump_through_tapestry && Char.direction == dir_FF_left &&
+		|| (fixes.fix_running_jump_through_tapestry && Char.direction == dir_FF_left &&
 			(tile == tiles_12_doortop || tile == tiles_7_doortop_with_floor))
 		#endif
 
@@ -1073,7 +1073,7 @@ void __pascal far check_grab() {
 	word old_x;
 
 	#ifdef FIX_GRAB_FALLING_SPEED
-	#define MAX_GRAB_FALLING_SPEED (fix_grab_falling_speed ? 30 : 32)
+	#define MAX_GRAB_FALLING_SPEED (fixes.fix_grab_falling_speed ? 30 : 32)
 	#else
 	#define MAX_GRAB_FALLING_SPEED 32
 	#endif
@@ -1099,7 +1099,7 @@ void __pascal far check_grab() {
 			play_sound(sound_9_grab); // grab
 			is_screaming = 0;
 #ifdef FIX_CHOMPERS_NOT_STARTING
-			if (fix_chompers_not_starting) start_chompers();
+			if (fixes.fix_chompers_not_starting) start_chompers();
 #endif
 		}
 	}
@@ -1510,7 +1510,7 @@ void __pascal far check_press() {
 			// the pressed tile is the one that the char is standing on
 			if (! (cur_frame.flags & FRAME_NEEDS_FLOOR)) return;
 			#ifdef FIX_PRESS_THROUGH_CLOSED_GATES
-			if (fix_press_through_closed_gates) determine_col();
+			if (fixes.fix_press_through_closed_gates) determine_col();
 			#endif
 			get_tile_at_char();
 		}
@@ -1550,7 +1550,7 @@ void __pascal far check_spike_below() {
 				! tile_is_floor(curr_tile2) &&
 				curr_room != 0 &&
 #ifdef FIX_INFINITE_DOWN_BUG
-				(fix_infinite_down_bug ? (row <= 2) : (room == curr_room))
+				(fixes.fix_infinite_down_bug ? (row <= 2) : (room == curr_room))
 #else
 				room == curr_room
 #endif

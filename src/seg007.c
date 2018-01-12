@@ -442,7 +442,7 @@ Possible values of trob_type:
 			if (curr_modifier >= 43) {
 				trob.type = -1;
 #ifdef FIX_FEATHER_INTERRUPTED_BY_LEVELDOOR
-				if (!(fix_feather_interrupted_by_leveldoor && is_feather_fall))
+				if (!(fixes.fix_feather_interrupted_by_leveldoor && is_feather_fall))
 #endif
 				stop_sounds();
 				if (leveldoor_open == 0 || leveldoor_open == 2) {
@@ -1235,7 +1235,7 @@ void __pascal far play_door_sound_if_visible(int sound_id) {
 
 #ifdef FIX_GATE_SOUNDS
 	sbyte has_sound_condition;
-	if (fix_gate_sounds)
+	if (fixes.fix_gate_sounds)
 		has_sound_condition =   (gate_room == room_L && tilepos % 10 == 9) ||
 		                        (gate_room == drawn_room && tilepos % 10 != 9);
 	else

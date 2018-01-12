@@ -663,40 +663,11 @@ extern int joystick_threshold INIT(= 8000);
 extern byte enable_quicksave INIT(= 1);
 extern byte enable_quicksave_penalty INIT(= 1);
 extern byte enable_replay INIT(= 1);
-extern byte enable_crouch_after_climbing INIT(= 1);
-extern byte enable_freeze_time_during_end_music INIT(= 1);
-extern byte fix_gate_sounds INIT(= 1);
-extern byte fix_two_coll_bug INIT(= 1);
-extern byte fix_infinite_down_bug INIT(= 1);
-extern byte fix_gate_drawing_bug INIT(= 0);
-extern byte fix_bigpillar_climb INIT(= 0);
-extern byte fix_jump_distance_at_edge INIT(= 1);
-extern byte fix_edge_distance_check_when_climbing INIT(= 1);
-extern byte fix_painless_fall_on_guard INIT(= 1);
-extern byte fix_wall_bump_triggers_tile_below INIT(= 1);
-extern byte fix_stand_on_thin_air INIT(= 1);
-extern byte fix_press_through_closed_gates INIT(= 1);
-extern byte fix_grab_falling_speed INIT(= 1);
-extern byte fix_skeleton_chomper_blood INIT(= 1);
-extern byte fix_move_after_drink INIT(= 1);
-extern byte fix_loose_left_of_potion INIT(= 1);
-extern byte fix_guard_following_through_closed_gates INIT(= 1);
-extern byte fix_safe_landing_on_spikes INIT(= 1);
 extern byte use_correct_aspect_ratio INIT(= 0);
 extern byte use_integer_scaling INIT(= 0);
-extern byte enable_remember_guard_hp INIT(= 1);
-extern byte fix_glide_through_wall INIT(= 1);
-extern byte fix_drop_through_tapestry INIT(= 1);
-extern byte fix_land_against_gate_or_tapestry INIT(= 1);
-extern byte fix_unintended_sword_strike INIT(= 1);
-extern byte fix_retreat_without_leaving_room INIT(= 1);
-extern byte fix_running_jump_through_tapestry INIT(= 1);
-extern byte fix_push_guard_into_wall INIT(= 1);
-extern byte fix_jump_through_wall_above_gate INIT(= 1);
-extern byte fix_chompers_not_starting INIT(= 1);
-extern byte fix_feather_interrupted_by_leveldoor INIT(= 1);
-extern byte fix_offscreen_guards_disappearing INIT(= 1);
-extern byte fix_move_after_sheathe INIT(= 1);
+extern fixes_options_type fixes;
+extern fixes_options_type fixes_ini_defaults;
+extern fixes_options_type fixes_saved;
 #ifdef USE_LIGHTING
 extern byte enable_lighting INIT(= 0);
 #endif
@@ -728,6 +699,7 @@ extern byte debug_cheats_enabled INIT(= 0);
 extern byte is_timer_displayed INIT(= 0);
 #endif
 
+extern bool debug_drawing_mode;
 // customized cutscene set-up: handled as index into a lookup table (can't rely on function pointers being stable!)
 extern byte tbl_cutscenes_by_index[16] INIT(= {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15});
 extern cutscene_ptr_type tbl_cutscenes_lookup[16] INIT(= {
@@ -748,16 +720,15 @@ extern cutscene_ptr_type tbl_cutscenes_lookup[16] INIT(= {
 	NULL,
 	NULL,
 });
-
-
 #ifdef USE_MENU
 extern font_type small_font INIT(= {32, 126, 5, 2, 1, 1, NULL});
 extern bool mouse_state_changed;
 extern int mouse_x, mouse_y;
 extern bool mouse_clicked;
 extern bool clicked_or_pressed_enter;
+extern sbyte is_menu_shown;
+extern byte enable_pause_menu INIT(= 1);
 #endif
-
 
 #undef INIT
 #undef extern

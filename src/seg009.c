@@ -2095,7 +2095,12 @@ void __pascal far set_gr_mode(byte grmode) {
 #endif
 }
 
+bool drawing_overlays = false;
+
 void draw_overlays() {
+	if (drawing_overlays) return; // Prevent recursion when update_screen() is called from within draw_overlays().
+	drawing_overlays = true;
+
 	surface_type* saved_target_surface = current_target_surface;
 	current_target_surface = overlay_surface;
 	SDL_FillRect(overlay_surface, NULL, 0);
@@ -2126,10 +2131,11 @@ void draw_overlays() {
 #endif
 
 	current_target_surface = saved_target_surface;
+	drawing_overlays = false;
 }
 
 void update_screen() {
-	bool need_draw_overlay = (is_timer_displayed || is_paused);
+	bool need_draw_overlay = (is_timer_displayed || is_menu_shown);
 
 	if (need_draw_overlay) {
 		SDL_FillRect(merged_surface, NULL, 0);
@@ -2431,6 +2437,10 @@ image_type far * __pascal far method_3_blit_mono(image_type far *image,int xpos,
 	}
 	SDL_FreeSurface(colored_image);
 
+	if (debug_drawing_mode) {
+		update_screen();
+	}
+
 	return image;
 }
 
@@ -2492,6 +2502,9 @@ void draw_rect_with_alpha(const rect_type* rect, byte color, byte alpha) {
 		sdlperror("SDL_FillRect");
 		quit(1);
 	}
+	if (debug_drawing_mode) {
+		update_screen();
+	}
 }
 
 void draw_rect_contours(const rect_type* rect, byte color) {
@@ -2527,6 +2540,10 @@ void draw_rect_contours(const rect_type* rect, byte color) {
 	}
 
 	SDL_UnlockSurface(current_target_surface);
+
+	if (debug_drawing_mode) {
+		update_screen();
+	}
 }
 
 void blit_xor(SDL_Surface* target_surface, SDL_Rect* dest_rect, SDL_Surface* image, SDL_Rect* src_rect) {
@@ -2600,7 +2617,6 @@ image_type far * __pascal far method_6_blit_img_to_scr(image_type far *image,int
 		return image;
 	}
 	SDL_SetSurfaceBlendMode(image, SDL_BLENDMODE_NONE);
-	SDL_SetSurfaceBlendMode(current_target_surface, SDL_BLENDMODE_NONE);
 	SDL_SetSurfaceAlphaMod(image, 255);
 
 	if (blit == blitters_0_no_transp) {
@@ -2617,6 +2633,9 @@ image_type far * __pascal far method_6_blit_img_to_scr(image_type far *image,int
 	if (SDL_SetSurfaceAlphaMod(image, 0) != 0) {
 		sdlperror("SDL_SetAlpha");
 		quit(1);
+	}
+	if (debug_drawing_mode) {
+		update_screen();
 	}
 	return image;
 }

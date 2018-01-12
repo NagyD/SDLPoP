@@ -325,7 +325,7 @@ int __pascal far get_tile_to_draw(int room, int column, int row, byte *ptr_tilet
 	}
 #endif
 #ifdef FIX_LOOSE_LEFT_OF_POTION
-	else if (fix_loose_left_of_potion && tiletype == tiles_11_loose) {
+	else if (fixes.fix_loose_left_of_potion && tiletype == tiles_11_loose) {
 		if ((*ptr_modifier & 0x7F) == 0) {
 			*ptr_tiletype = tiles_1_floor;
 		}
@@ -1077,7 +1077,7 @@ void __pascal far draw_gate_back() {
 		// And this line tries to fix it. But it fails if it was a gate or a pillar.
 		if (can_see_bottomleft()) draw_tile_topright();
 #ifdef FIX_GATE_DRAWING_BUG
-		if (fix_gate_drawing_bug) {
+		if (fixes.fix_gate_drawing_bug) {
 			draw_tile_anim_topright(); // redraw the erased top-right section of the gate below-left
 		}
 #endif
@@ -1405,7 +1405,7 @@ void __pascal far draw_floor_overlay() {
 	if (tile_left != tiles_0_empty) {
 		// Bug: When climbing up to a floor with a big pillar top behind, turned right, Kid sees through floor.
 		// The bigpillar_top tile should be treated similarly to an empty tile here.
-		if (!fix_bigpillar_climb || (tile_left != tiles_9_bigpillar_top)) {
+		if (!fixes.fix_bigpillar_climb || (tile_left != tiles_9_bigpillar_top)) {
 			return;
 		}
 	}
@@ -1699,7 +1699,7 @@ void __pascal far show_time() {
 	word rem_sec;
 	if (Kid.alive < 0 &&
 		#ifdef FREEZE_TIME_DURING_END_MUSIC
-		(!(enable_freeze_time_during_end_music && next_level != current_level)) &&
+		(!(fixes.enable_freeze_time_during_end_music && next_level != current_level)) &&
 		#endif
 		#ifdef ALLOW_INFINITE_TIME
 		// prevent overflow
