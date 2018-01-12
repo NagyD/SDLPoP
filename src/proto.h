@@ -663,7 +663,6 @@ void save_level_screenshot(bool want_extras);
 // menu.c
 #ifdef USE_MENU
 void init_menu();
-void draw_menubar();
 void menu_scroll(int y);
 void draw_pause_overlay();
 int key_test_paused_menu(int key);

@@ -51,6 +51,8 @@ void load_arrowhead_images() {
 	}
 }
 
+#define MAX_MENU_ITEM_LENGTH 32
+
 typedef struct pause_menu_item_type {
 	int id;
 	int previous, next;
@@ -107,8 +109,8 @@ enum menu_setting_style_ids {
 enum menu_setting_style_number_width_ids {
 	SETTING_BYTE  = 0,
 	SETTING_SBYTE = 1,
-	NUMBER_WORD  = 2,
-	NUMBER_SHORT = 3,
+	SETTING_WORD  = 2,
+	SETTING_SHORT = 3,
 	//SETTING_DWORD = 4,
 	SETTING_INT   = 5,
 };
@@ -400,29 +402,29 @@ enum {
 
 setting_type mods_settings[] = {
 		{.id = SETTING_START_MINUTES_LEFT, .style = SETTING_STYLE_NUMBER,
-				.linked = &start_minutes_left, .number_type = NUMBER_SHORT, .min = -1, .max = INT16_MAX,
+				.linked = &start_minutes_left, .number_type = SETTING_SHORT, .min = -1, .max = INT16_MAX,
 				.text = "Starting minutes left",
 				.explanation = "Starting minutes left. (default = 60)\n"
 						"To disable the time limit completely, set this to -1."},
 		{.id = SETTING_START_TICKS_LEFT, .style = SETTING_STYLE_NUMBER,
-				.linked = &start_ticks_left, .number_type = NUMBER_WORD, .max = UINT16_MAX,
+				.linked = &start_ticks_left, .number_type = SETTING_WORD, .max = UINT16_MAX,
 				.text = "Starting ticks left",
 				.explanation = "Starting number of ticks left in the first minute. (default = 719)\n"
 						"1 tick = 1/12 second, so by default there are 59.92 seconds left in the first minute."},
 		{.id = SETTING_START_HITP, .style = SETTING_STYLE_NUMBER,
-				.linked = &start_hitp, .number_type = NUMBER_WORD, .max = UINT16_MAX,
+				.linked = &start_hitp, .number_type = SETTING_WORD, .max = UINT16_MAX,
 				.text = "Starting hitpoints",
 				.explanation = "Starting hitpoints. (default = 3)"},
 		{.id = SETTING_MAX_HITP_ALLOWED, .style = SETTING_STYLE_NUMBER,
-				.linked = &max_hitp_allowed, .number_type = NUMBER_WORD, .max = UINT16_MAX,
+				.linked = &max_hitp_allowed, .number_type = SETTING_WORD, .max = UINT16_MAX,
 				.text = "Max hitpoints allowed",
 				.explanation = "Maximum number of hitpoints you can get. (default = 10)"},
 		{.id = SETTING_SAVING_ALLOWED_FIRST_LEVEL, .style = SETTING_STYLE_NUMBER,
-				.linked = &saving_allowed_first_level, .number_type = NUMBER_WORD, .max = 15,
+				.linked = &saving_allowed_first_level, .number_type = SETTING_WORD, .max = 15,
 				.text = "Saving allowed: first level",
 				.explanation = "First level where you can save the game. (default = 3)"},
 		{.id = SETTING_SAVING_ALLOWED_LAST_LEVEL, .style = SETTING_STYLE_NUMBER, .max = 15,
-				.linked = &saving_allowed_last_level, .number_type = NUMBER_WORD,
+				.linked = &saving_allowed_last_level, .number_type = SETTING_WORD,
 				.text = "Saving allowed: last level",
 				.explanation = "Last level where you can save the game. (default = 13)"},
 		{.id = SETTING_START_UPSIDE_DOWN, .style = SETTING_STYLE_TOGGLE, .linked = &start_upside_down,
@@ -432,7 +434,7 @@ setting_type mods_settings[] = {
 				.text = "Start in blind mode",
 				.explanation = "Start in blind mode, similar to Shift+B (default = OFF)"},
 		{.id = SETTING_COPYPROT_LEVEL, .style = SETTING_STYLE_NUMBER,
-				.linked = &copyprot_level, .number_type = NUMBER_WORD, .max = 15,
+				.linked = &copyprot_level, .number_type = SETTING_WORD, .max = 15,
 				.text = "Copy protection before level",
 				.explanation = "The potions level will appear before this level. Set to -1 to disable. (default = 2)"},
 		{.id = SETTING_ALLOW_TRIGGERING_ANY_TILE, .style = SETTING_STYLE_TOGGLE, .linked = &allow_triggering_any_tile,
@@ -443,7 +445,7 @@ setting_type mods_settings[] = {
 				.explanation = "Enable the dungeon wall drawing algorithm in the palace."
 						"\nN.B. Use with a modified VPALACE.DAT that provides dungeon-like wall graphics!"},
 		{.id = SETTING_FIRST_LEVEL, .style = SETTING_STYLE_NUMBER,
-				.linked = &first_level, .number_type = NUMBER_WORD, .max = 15,
+				.linked = &first_level, .number_type = SETTING_WORD, .max = 15,
 				.text = "First level",
 				.explanation = "Level that will be loaded when starting a new game."
 						"\n(default = OFF)"},
@@ -475,32 +477,6 @@ settings_area_type* get_settings_area(int menu_item_id) {
 			return &visuals_settings_area;
 		case SETTINGS_MENU_MODS:
 			return &mods_settings_area;
-	}
-}
-
-
-int menu_padding = 3;
-int menu_spacer_height = 3;
-int menu_item_height = 8;
-
-void add_menu_item(menu_type* menu, menu_item_type new_item) {
-	if (menu->num_items < MAX_MENU_ITEMS) {
-		menu_item_type* item = &menu->items[menu->num_items++];
-		*item = new_item;
-
-		if (new_item.is_spacer) {
-			menu->height += menu_spacer_height;
-		} else {
-			menu->height += menu_item_height;
-		}
-
-		int item_text_1_width = get_line_width(new_item.text_left, strlen(new_item.text_left));
-		int item_text_2_width = get_line_width(new_item.text_right, strlen(new_item.text_right));
-		int item_text_total_width = item_text_1_width + item_text_2_width + 10;
-
-		if (item_text_total_width > menu->max_item_text_width) {
-			menu->max_item_text_width = item_text_total_width;
-		}
 	}
 }
 
@@ -542,175 +518,11 @@ void init_menu() {
 	init_settings_list(visuals_settings, COUNT(visuals_settings));
 	init_settings_list(gameplay_settings, COUNT(gameplay_settings));
 	init_settings_list(mods_settings, COUNT(mods_settings));
-
-	menubar_state = 0;
-
-	font_type* saved_font = textstate.ptr_font;
-	textstate.ptr_font = &small_font;
-
-	add_menu_item(&game_menu, (menu_item_type){.text_left = "Restart game", .text_right = "Ctrl+R"});
-	add_menu_item(&game_menu, (menu_item_type){.text_left = "Restart level", .text_right = "Ctrl+A"});
-	add_menu_item(&game_menu, (menu_item_type){.is_spacer = 1});
-	add_menu_item(&game_menu, (menu_item_type){.text_left = "Levelset", .text_right = ">"});
-	add_menu_item(&game_menu, (menu_item_type){.is_spacer = 1});
-	add_menu_item(&game_menu, (menu_item_type){.text_left = "Save game...", .text_right = ""});
-	add_menu_item(&game_menu, (menu_item_type){.text_left = "Load game...", .text_right = ""});
-	add_menu_item(&game_menu, (menu_item_type){.is_spacer = 1});
-	add_menu_item(&game_menu, (menu_item_type){.text_left = "Quicksave", .text_right = "F6"});
-	add_menu_item(&game_menu, (menu_item_type){.text_left = "Quickload", .text_right = "F9"});
-	add_menu_item(&game_menu, (menu_item_type){.is_spacer = 1});
-	add_menu_item(&game_menu, (menu_item_type){.text_left = "Load replay...", .text_right = ""});
-	add_menu_item(&game_menu, (menu_item_type){.is_spacer = 1});
-	add_menu_item(&game_menu, (menu_item_type){.text_left = "Quit", .text_right = "Ctrl+Q"});
-
-	add_menu_item(&options_menu, (menu_item_type){.text_left = "Video", .text_right = ">"});
-	add_menu_item(&options_menu, (menu_item_type){.text_left = "Sound", .text_right = ">"});
-	add_menu_item(&options_menu, (menu_item_type){.text_left = "Controller", .text_right = ">"});
-	add_menu_item(&options_menu, (menu_item_type){.text_left = "Bug fixes / enhancements", .text_right = ">"});
-	add_menu_item(&options_menu, (menu_item_type){.is_spacer = 1});
-	add_menu_item(&options_menu, (menu_item_type){.text_left = "Edit configuration file...", .text_right = ""});
-	add_menu_item(&options_menu, (menu_item_type){.text_left = "Reload configuration file", .text_right = ""});
-
-	add_menu_item(&capture_menu, (menu_item_type){.text_left = "Screenshot", .text_right = "Shift+F12"});
-	add_menu_item(&capture_menu, (menu_item_type){.text_left = "Level screenshot", .text_right = "Ctrl+Shift+F12"});
-	add_menu_item(&capture_menu, (menu_item_type){.is_spacer = 1});
-	add_menu_item(&capture_menu, (menu_item_type){.text_left = "Replay", .text_right = "Ctrl+Tab"});
-	add_menu_item(&capture_menu, (menu_item_type){.text_left = "Record from", .text_right = ">"});
-
-	add_menu_item(&cheat_menu, (menu_item_type){.text_left = "Enable cheats", .text_right = ""});
-	add_menu_item(&cheat_menu, (menu_item_type){.is_spacer = 1});
-	add_menu_item(&cheat_menu, (menu_item_type){.text_left = "Next level", .text_right = "Shift+L"});
-	add_menu_item(&cheat_menu, (menu_item_type){.text_left = "Health", .text_right = "Shift+S"});
-	add_menu_item(&cheat_menu, (menu_item_type){.text_left = "Life", .text_right = "Shift+T"});
-	add_menu_item(&cheat_menu, (menu_item_type){.text_left = "Feather fall", .text_right = "Shift+W"});
-	add_menu_item(&cheat_menu, (menu_item_type){.text_left = "Resurrect", .text_right = "R"});
-	add_menu_item(&cheat_menu, (menu_item_type){.text_left = "Kill guard", .text_right = "K"});
-	add_menu_item(&cheat_menu, (menu_item_type){.text_left = "Increase time", .text_right = "+"});
-	add_menu_item(&cheat_menu, (menu_item_type){.text_left = "Decrease time", .text_right = "-"});
-	add_menu_item(&cheat_menu, (menu_item_type){.is_spacer = 1});
-	add_menu_item(&cheat_menu, (menu_item_type){.text_left = "Look at room", .text_right = ">"});
-	add_menu_item(&cheat_menu, (menu_item_type){.text_left = "Show adjacent rooms", .text_right = "C"});
-	add_menu_item(&cheat_menu, (menu_item_type){.text_left = "Show diagonal rooms", .text_right = "Shift+C"});
-	add_menu_item(&cheat_menu, (menu_item_type){.is_spacer = 1});
-	add_menu_item(&cheat_menu, (menu_item_type){.text_left = "Flip screen", .text_right = "Shift+I"});
-	add_menu_item(&cheat_menu, (menu_item_type){.text_left = "Blind mode", .text_right = "Shift+B"});
-
-	textstate.ptr_font = saved_font;
 }
 
 bool is_mouse_over_rect(rect_type* rect) {
 	return (mouse_x >= rect->left && mouse_x < rect->right && mouse_y >= rect->top && mouse_y < rect->bottom);
 }
-
-void draw_menu_item(menu_type* menu, rect_type* menu_rect, menu_item_type* item, int item_index, int* offset_y) {
-	rect_type item_box_rect = *menu_rect;
-	int height = (item->is_spacer) ? menu_spacer_height : menu_item_height;
-
-	item_box_rect.top += *offset_y;
-	item_box_rect.bottom = item_box_rect.top + height;
-
-	bool hovering = (menu->hovering_item_index == item_index);
-	if (!hovering && !item->is_spacer) {
-		hovering = is_mouse_over_rect(&item_box_rect);
-	}
-
-	if (hovering) {
-		menu->hovering_item_index = item_index;
-		draw_rect_with_alpha(&item_box_rect, color_7_lightgray, menu_alpha);
-	}
-
-	if (item->is_spacer) {
-		rect_type spacer_rect = item_box_rect;
-		spacer_rect.left += menu_padding;
-		spacer_rect.right -= menu_padding;
-		spacer_rect.top += 1;
-		spacer_rect.bottom -= 1;
-		draw_rect_with_alpha(&spacer_rect, color_8_darkgray, menu_alpha);
-	} else {
-		rect_type item_text_rect = item_box_rect;
-		item_text_rect.left += menu_padding;
-		item_text_rect.right -= menu_padding;
-		item_text_rect.top += 1;
-		item_text_rect.bottom += 1;
-		int text_color = (hovering) ? color_0_black : color_15_brightwhite;
-		show_text_with_color(&item_text_rect, -1, -1, item->text_left, text_color);
-		show_text_with_color(&item_text_rect, 1, -1, item->text_right, text_color);
-	}
-
-	*offset_y += height;
-}
-
-void draw_menu(menu_type* menu, int left) {
-	rect_type menu_rect;
-	menu_rect.top = menubar_rect.bottom;
-	menu_rect.left = left;
-	menu_rect.bottom = menu_rect.top + menu->height;
-	menu_rect.right = left + menu->max_item_text_width + 2*menu_padding;
-	draw_rect_with_alpha(&menu_rect, color_0_black, menu_alpha);
-
-	int offset_y = 0;
-	for (int i = 0; i < menu->num_items; ++i) {
-		menu_item_type* item = &menu->items[i];
-		draw_menu_item(menu, &menu_rect, item, i, &offset_y);
-	}
-
-}
-
-void draw_menubar_item(menubar_item_type* menubar_item, int* offset_x) {
-
-	int padding = 3;
-	int text_width = get_line_width(menubar_item->text, strlen(menubar_item->text));
-	int box_width = text_width + 2*padding;
-	int box_left = *offset_x;
-	rect_type box_rect = {0, box_left, menubar_rect.bottom, box_left + box_width};
-
-	int item_state = 0;
-	if (menubar_state == 1) {
-		if (menubar_item->id == selected_menu_id && mouse_y >= menubar_rect.bottom) {
-			item_state = 1; // menu is already selected
-		} else if (is_mouse_over_rect(&box_rect)) {
-			// Select this menu instead of another one
-			selected_menu_id = menubar_item->id;
-			menubar_item->associated_menu->hovering_item_index = -1;
-			item_state = 1;
-		}
-	} else if (menubar_state == 0 && is_mouse_over_rect(&box_rect)) {
-		item_state = 2;
-	}
-
-	bool draw_box;
-	byte box_color;
-	int text_color;
-	if (item_state == 1) { // menu is selected
-		draw_box = true;
-		box_color = color_0_black;
-		text_color = color_15_brightwhite;
-	} else if (item_state == 2) { // menu is being hovered over
-		draw_box = true;
-		box_color = color_7_lightgray;
-		text_color = color_0_black;
-	} else {
-		draw_box = false;
-		box_color = color_7_lightgray;
-		text_color = color_0_black;
-	}
-
-	if (draw_box) {
-		draw_rect_with_alpha(&box_rect, box_color, menu_alpha);
-	}
-	rect_type text_rect = box_rect;
-	text_rect.left += padding;
-	text_rect.top += 1; // prevent text from touching the very top of the screen
-	text_rect.bottom += 1;
-	show_text_with_color(&text_rect, -1, -1, menubar_item->text, text_color);
-
-	*offset_x += box_width; // prepare for next menu item to be drawn
-
-	if (item_state == 1 && menubar_item->associated_menu != NULL) {
-		draw_menu(menubar_item->associated_menu, box_left);
-	}
-
-};
 
 // Returns true if the mouse moved, false otherwise.
 bool read_mouse_state() {
@@ -734,36 +546,6 @@ bool read_mouse_state() {
 	mouse_y = (int) ((float)mouse_y/scale_y - viewport.y + 0.5f);
 	bool mouse_moved = (last_mouse_x != mouse_x || last_mouse_y != mouse_y);
 	return (mouse_moved || mouse_clicked);
-}
-
-void draw_menubar() {
-	int scaled_width = 0, scaled_height = 0;
-	SDL_GetRendererOutputSize(renderer_, &scaled_width, &scaled_height);
-	if (scaled_width > 0 && scaled_height > 0) {
-		float scale_x = 320.0f / scaled_width ;
-		float scale_y = 200.0f / scaled_height;
-		SDL_GetMouseState(&mouse_x, &mouse_y);
-		mouse_x = (int) ((float) mouse_x * scale_x + 0.5f);
-		mouse_y = (int) ((float) mouse_y * scale_y + 0.5f);
-
-		font_type* saved_font = textstate.ptr_font;
-		textstate.ptr_font = &small_font;
-
-		draw_rect_with_alpha(&menubar_rect, color_15_brightwhite, menu_alpha);
-		int left = 0;
-		draw_menubar_item(&game_menubar_item, &left);
-		draw_menubar_item(&options_menubar_item, &left);
-		draw_menubar_item(&capture_menubar_item, &left);
-		if (cheats_enabled) {
-			draw_menubar_item(&cheats_menubar_item, &left);
-		}
-
-		if (mouse_y < menubar_rect.bottom && mouse_x >= left) {
-			selected_menu_id = -1;
-		}
-
-		textstate.ptr_font = saved_font;
-	}
 }
 
 rect_type explanation_rect = {170, 20, 200, 300};
@@ -977,10 +759,10 @@ int get_value(setting_type* setting) {
 			case SETTING_SBYTE:
 				value = *(sbyte*) setting->linked;
 				break;
-			case NUMBER_WORD:
+			case SETTING_WORD:
 				value = *(word*) setting->linked;
 				break;
-			case NUMBER_SHORT:
+			case SETTING_SHORT:
 				value = *(short*) setting->linked;
 				break;
 			case SETTING_INT:
@@ -1001,10 +783,10 @@ void increase_setting(setting_type* setting, int old_value) {
 			case SETTING_SBYTE:
 				*(sbyte*) setting->linked += 1;
 				break;
-			case NUMBER_WORD:
+			case SETTING_WORD:
 				*(word*) setting->linked += 1;
 				break;
-			case NUMBER_SHORT:
+			case SETTING_SHORT:
 				*(short*) setting->linked += 1;
 				break;
 			case SETTING_INT:
@@ -1024,10 +806,10 @@ void decrease_setting(setting_type* setting, int old_value) {
 			case SETTING_SBYTE:
 				*(sbyte*) setting->linked -= 1;
 				break;
-			case NUMBER_WORD:
+			case SETTING_WORD:
 				*(word*) setting->linked -= 1;
 				break;
-			case NUMBER_SHORT:
+			case SETTING_SHORT:
 				*(short*) setting->linked -= 1;
 				break;
 			case SETTING_INT:
@@ -1051,6 +833,7 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 
 	rect_type setting_box = text_rect;
 	setting_box.top -= 5;
+	setting_box.bottom = setting_box.top + 15;
 	setting_box.bottom = setting_box.top + 15;
 	setting_box.left -= 10;
 	setting_box.right += 10;

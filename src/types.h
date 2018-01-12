@@ -1040,36 +1040,6 @@ enum replay_seek_targets {
 };
 #endif
 
-#ifdef USE_MENU
-
-#define MAX_MENU_ITEMS 24
-#define MAX_MENU_ITEM_LENGTH 32
-
-typedef struct menu_item_type {
-	byte hidden;
-	byte is_spacer;
-	int id;
-	char text_left[MAX_MENU_ITEM_LENGTH];
-	char text_right[MAX_MENU_ITEM_LENGTH];
-} menu_item_type;
-
-typedef struct menu_type {
-	int height;
-	int max_item_text_width;
-	int num_items;
-	int hovering_item_index;
-	menu_item_type items[MAX_MENU_ITEMS];
-} menu_type;
-
-typedef struct menubar_item_type {
-	int id;
-	menu_type* associated_menu;
-	char text[MAX_MENU_ITEM_LENGTH];
-} menubar_item_type;
-
-
-#endif
-
 #define COUNT(array) (sizeof(array)/sizeof(array[0]))
 
 // These are or'ed with SDL_SCANCODE_* constants in last_key_scancode.

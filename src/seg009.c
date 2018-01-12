@@ -2122,7 +2122,6 @@ void draw_overlays() {
 #endif
 
 #ifdef USE_MENU
-//	draw_menubar();
 	draw_pause_overlay();
 #endif
 
