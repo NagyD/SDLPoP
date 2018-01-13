@@ -934,6 +934,7 @@ void replay_cycle() {
 	curr_tick = 0;
 	apply_replay_options();
 	restore_savestate_from_buffer();
+	show_level();
 }
 
 int load_replay() {
