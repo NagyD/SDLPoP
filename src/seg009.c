@@ -2863,26 +2863,24 @@ void do_timer_delay(int timer_index) {
 	}
 }
 
-word word_1D63A = 1;
-int __pascal do_wait(int timer_index) {
-	while (! has_timer_stopped(timer_index)) {
-		idle();
-		int key = do_paused();
-		do_timer_delay(timer_index);
-		if (key != 0 && (word_1D63A != 0 || key == 0x1B)) return 1;
-	}
-	return 0;
-}
-
 void __pascal do_simple_wait(int timer_index) {
 #ifdef USE_REPLAY
 	if ((replaying && skipping_replay) || is_validate_mode) return;
 #endif
-
+	update_screen();
+	do_timer_delay(timer_index);
+	// Note: it's possible that the timer is not yet finished at this point, because SDL_Delay() is not very accurate.
 	while (! has_timer_stopped(timer_index)) {
-		idle();
-		do_timer_delay(timer_index);
+		SDL_Delay(1);
 	}
+	process_events();
+}
+
+word word_1D63A = 1;
+int __pascal do_wait(int timer_index) {
+	do_simple_wait(timer_index);
+	int key = do_paused();
+	return (key != 0 && (word_1D63A != 0 || key == 0x1B));
 }
 
 #ifdef USE_COMPAT_TIMER
