@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2017  Dávid Nagy
+Copyright (C) 2013-2018  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -509,6 +509,8 @@ image_type* get_image(short chtab_id, int id);
 
 // SEG009.C
 void sdlperror(const char* header);
+#define locate_file(filename) locate_file_(filename, alloca(POP_MAX_PATH), POP_MAX_PATH)
+const char* locate_file_(const char* filename, char* path_buffer, int buffer_size);
 int __pascal far read_key();
 void __pascal far clear_kbd_buf();
 word __pascal far prandom(word max);

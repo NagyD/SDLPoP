@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2017  Dávid Nagy
+Copyright (C) 2013-2018  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,10 +19,7 @@ The authors of this program may be contacted at http://forum.princed.org
 */
 
 #include "common.h"
-#include <fcntl.h>
-#include <stdlib.h>
 #include <time.h>
-#include <sys/stat.h>
 #include <errno.h>
 
 // Most functions in this file are different from those in the original game.
@@ -32,6 +29,43 @@ void sdlperror(const char* header) {
 	printf("%s: %s\n",header,error);
 	//quit(1);
 }
+
+char exe_dir[POP_MAX_PATH] = ".";
+bool found_exe_dir = false;
+
+void find_exe_dir() {
+	if (found_exe_dir) return;
+	strncpy(exe_dir, g_argv[0], sizeof(exe_dir));
+	char* last_slash = NULL;
+	char* pos = exe_dir;
+	for (char c = *pos; c != '\0'; c = *(++pos)) {
+		if (c == '/' || c == '\\') {
+			last_slash = pos;
+		}
+	}
+	if (last_slash != NULL) {
+		*last_slash = '\0';
+	}
+	found_exe_dir = true;
+}
+
+static inline bool file_exists(const char* filename) {
+    return (access(filename, F_OK) != -1);
+}
+
+const char* locate_file_(const char* filename, char* path_buffer, int buffer_size) {
+	if(file_exists(filename)) {
+		return filename;
+	} else {
+		// If failed, it may be that SDLPoP is being run from the wrong different working directory.
+		// We can try to rescue the situation by loading from the directory of the executable.
+		find_exe_dir();
+        snprintf(path_buffer, buffer_size, "%s/%s", exe_dir, filename);
+        return (const char*) path_buffer;
+	}
+}
+
+
 
 dat_type* dat_chain_ptr = NULL;
 
@@ -157,6 +191,11 @@ static FILE* open_dat_from_root_or_data_dir(const char* filename) {
 	if (fp == NULL) {
 		char data_path[POP_MAX_PATH];
 		snprintf(data_path, sizeof(data_path), "data/%s", filename);
+
+        if (!file_exists(data_path)) {
+            find_exe_dir();
+            snprintf(data_path, sizeof(data_path), "%s/data/%s", exe_dir, filename);
+        }
 
 		// verify that this is a regular file and not a directory (otherwise, don't open)
 		struct stat path_stat;
@@ -1683,7 +1722,7 @@ const int max_sound_id = 58;
 char** sound_names = NULL;
 
 void load_sound_names() {
-	const char* names_path = "data/music/names.txt";
+	const char* names_path = locate_file("data/music/names.txt");
 	if (sound_names != NULL) return;
 	FILE* fp = fopen(names_path,"rt");
 	if (fp==NULL) return;
@@ -1731,16 +1770,16 @@ sound_buffer_type* load_sound(int index) {
 			for (i = 0; i < COUNT(exts); ++i) {
 				char filename[POP_MAX_PATH];
 				const char* ext=exts[i];
-				struct stat info;
 
 				snprintf(filename, sizeof(filename), "data/music/%s.%s", sound_name(index), ext);
+                const char* located_filename = locate_file(filename);
 				// Skip nonexistent files:
-				if (stat(filename, &info))
+				if (!file_exists(located_filename))
 					continue;
 				//printf("Trying to load %s\n", filename);
-				Mix_Music* music = Mix_LoadMUS(filename);
+				Mix_Music* music = Mix_LoadMUS(located_filename);
 				if (music == NULL) {
-					sdlperror(filename);
+					sdlperror(located_filename);
 					//sdlperror("Mix_LoadWAV");
 					continue;
 				}
@@ -2008,6 +2047,7 @@ void apply_aspect_ratio() {
 }
 
 void window_resized() {
+#if SDL_VERSION_ATLEAST(2,0,5) // SDL_RenderSetIntegerScale
 	if (use_integer_scaling) {
 		int window_width, window_height;
 		SDL_GetWindowSize(window_, &window_width, &window_height);
@@ -2018,6 +2058,7 @@ void window_resized() {
 		SDL_bool makes_sense = (window_width >= render_width && window_height >= render_height);
 		SDL_RenderSetIntegerScale(renderer_, makes_sense);
 	}
+#endif
 }
 
 // seg009:38ED
@@ -2050,10 +2091,14 @@ void __pascal far set_gr_mode(byte grmode) {
 	SDL_SetHint(SDL_HINT_RENDER_VSYNC, "0");
 	renderer_ = SDL_CreateRenderer(window_, -1 , SDL_RENDERER_ACCELERATED);
 	if (use_integer_scaling) {
+#if SDL_VERSION_ATLEAST(2,0,5) // SDL_RenderSetIntegerScale
 		SDL_RenderSetIntegerScale(renderer_, SDL_TRUE);
+#else
+		printf("Warning: You need to compile with SDL 2.0.5 or newer for the use_integer_scaling option.\n");
+#endif
 	}
 
-	SDL_Surface* icon = IMG_Load("data/icon.png");
+	SDL_Surface* icon = IMG_Load(locate_file("data/icon.png"));
 	if (icon == NULL) {
 		sdlperror("Could not load icon");
 	} else {
@@ -2249,16 +2294,16 @@ void load_from_opendats_metadata(int resource_id, const char* extension, FILE** 
 			snprintf(image_filename,sizeof(image_filename),"data/%s/res%d.%s",filename_no_ext, resource_id, extension);
 			if (!use_custom_levelset) {
 				//printf("loading (binary) %s",image_filename);
-				fp = fopen(image_filename, "rb");
+				fp = fopen(locate_file(image_filename), "rb");
 			}
 			else {
 				char image_filename_mod[POP_MAX_PATH];
 				// before checking data/, first try mods/MODNAME/data/
 				snprintf(image_filename_mod, sizeof(image_filename_mod), "mods/%s/%s", levelset_name, image_filename);
 				//printf("loading (binary) %s",image_filename_mod);
-				fp = fopen(image_filename_mod, "rb");
+				fp = fopen(locate_file(image_filename_mod), "rb");
 				if (fp == NULL) {
-					fp = fopen(image_filename, "rb");
+					fp = fopen(locate_file(image_filename), "rb");
 				}
 			}
 

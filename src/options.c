@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2017  Dávid Nagy
+Copyright (C) 2013-2018  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -340,7 +340,7 @@ void load_global_options() {
 	// By default, all the fixes are used, unless otherwise specified.
 	// So, if one of these options is omitted from the INI file, they default to true.
 	memset(&fixes_ini_defaults, 1, sizeof(fixes_ini_defaults));
-	ini_load("SDLPoP.ini", global_ini_callback); // global configuration
+	ini_load(locate_file("SDLPoP.ini"), global_ini_callback); // global configuration
 }
 
 void check_mod_param() {
