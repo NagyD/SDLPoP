@@ -1663,6 +1663,7 @@ void __pascal far show_title() {
 	while (check_sound_playing()) {
 		idle();
 		do_paused();
+		delay_ticks(1);
 	}
 //	method_1_blit_rect(onscreen_surface_, offscreen_surface, &screen_rect, &screen_rect, blitters_0_no_transp);
 	play_sound_from_buffer(sound_pointers[sound_55_story_1_absence]); // story 1: In the absence
@@ -1684,6 +1685,7 @@ void __pascal far show_title() {
 	while (check_sound_playing()) {
 		idle();
 		do_paused();
+		delay_ticks(1);
 	}
 	transition_ltr();
 	pop_wait(timer_0, 0x78);
@@ -1702,6 +1704,7 @@ void __pascal far show_title() {
 	while (check_sound_playing()) {
 		idle();
 		do_paused();
+		delay_ticks(1);
 	}
 	fade_out_2(0x1800);
 	free_surface(offscreen_surface);
@@ -2067,6 +2070,7 @@ void show_splash() {
 			joy_B_button_state = 0;
 			key_states[SDL_SCANCODE_LSHIFT] = 1; // close the splash screen using the gamepad
 		}
+		delay_ticks(1);
 
 	} while(key == 0 && !(key_states[SDL_SCANCODE_LSHIFT] || key_states[SDL_SCANCODE_RSHIFT]));
 

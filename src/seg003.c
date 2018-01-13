@@ -303,6 +303,36 @@ void __pascal far redraw_screen(int drawing_different_room) {
 
 }
 
+#ifdef CHECK_TIMING
+typedef struct test_timing_state_type {
+	bool already_had_first_frame;
+	Uint64 level_start_counter;
+	int ticks_left_at_level_start;
+	float seconds_left_at_level_start;
+} test_timing_state_type;
+
+void test_timings(test_timing_state_type* state) {
+
+	if (!state->already_had_first_frame) {
+		state->level_start_counter = SDL_GetPerformanceCounter();
+		state->ticks_left_at_level_start = (rem_min-1)*720 + rem_tick;
+		state->seconds_left_at_level_start = (1.0f / 60.0f) * (5 * state->ticks_left_at_level_start);
+		printf("Seconds left = %f\n", state->seconds_left_at_level_start);
+		state->already_had_first_frame = true;
+	} else if (rem_tick % 12 == 11) {
+		Uint64 current_counter = SDL_GetPerformanceCounter();
+		float actual_seconds_elapsed = (float)(current_counter - state->level_start_counter) / (float)SDL_GetPerformanceFrequency();
+
+		int ticks_left = (rem_min-1)*720 + rem_tick;
+		float game_seconds_left = (1.0f / 60.0f) * (5 * ticks_left);
+		float game_seconds_elapsed = state->seconds_left_at_level_start - game_seconds_left;
+
+		printf("rem_min: %d   game elapsed (s): %.2f    actual elapsed (s): %.2f     delta: %.2f\n",
+		       rem_min, game_seconds_elapsed, actual_seconds_elapsed, actual_seconds_elapsed - game_seconds_elapsed);
+	}
+
+}
+#endif
 
 // seg003:04F8
 // Returns a level number:
@@ -310,9 +340,15 @@ void __pascal far redraw_screen(int drawing_different_room) {
 // - The next level if the level was completed.
 int __pascal far play_level_2() {
 	reset_timer(timer_1);
+#ifdef CHECK_TIMING
+	test_timing_state_type test_timing_state = {0};
+#endif
 	while (1) { // main loop
 #ifdef USE_QUICKSAVE
 		check_quick_op();
+#endif
+#ifdef CHECK_TIMING
+		test_timings(&test_timing_state);
 #endif
 
 #ifdef USE_REPLAY
