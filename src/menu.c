@@ -53,14 +53,18 @@ void load_arrowhead_images() {
 
 #define MAX_MENU_ITEM_LENGTH 32
 
-typedef struct pause_menu_item_type {
+typedef struct pause_menu_item_type pause_menu_item_type;
+struct pause_menu_item_type {
 	int id;
-	int previous, next;
+	pause_menu_item_type* previous;
+	pause_menu_item_type* next;
+	void* required;
 	char text[MAX_MENU_ITEM_LENGTH];
-} pause_menu_item_type;
+};
 
 enum pause_menu_item_ids {
 	PAUSE_MENU_RESUME,
+	PAUSE_MENU_CHEATS,
 	PAUSE_MENU_SAVE_GAME,
 	PAUSE_MENU_LOAD_GAME,
 	PAUSE_MENU_RESTART_LEVEL,
@@ -75,6 +79,7 @@ enum pause_menu_item_ids {
 
 pause_menu_item_type pause_menu_items[] = {
 		{.id = PAUSE_MENU_RESUME,        .text = "RESUME"},
+		{.id = PAUSE_MENU_CHEATS,        .text = "CHEATS", .required = &cheats_enabled},
 		{.id = PAUSE_MENU_SAVE_GAME,     .text = "SAVE GAME"},
 		{.id = PAUSE_MENU_LOAD_GAME,     .text = "LOAD GAME"},
 		{.id = PAUSE_MENU_RESTART_LEVEL, .text = "RESTART LEVEL"},
@@ -83,8 +88,8 @@ pause_menu_item_type pause_menu_items[] = {
 };
 
 int highlighted_pause_menu_item = PAUSE_MENU_RESUME;
-int next_pause_menu_item;
-int previous_pause_menu_item;
+pause_menu_item_type* next_pause_menu_item;
+pause_menu_item_type* previous_pause_menu_item;
 int drawn_menu;
 byte pause_menu_alpha;
 
@@ -131,6 +136,7 @@ enum setting_ids {
 	SETTING_ENABLE_FADE,
 	SETTING_ENABLE_FLASH,
 	SETTING_ENABLE_LIGHTING,
+	SETTING_ENABLE_CHEATS,
 	SETTING_ENABLE_COPYPROT,
 	SETTING_ENABLE_QUICKSAVE,
 	SETTING_ENABLE_QUICKSAVE_PENALTY,
@@ -237,8 +243,11 @@ setting_type visuals_settings[] = {
 };
 
 setting_type gameplay_settings[] = {
+		{.id = SETTING_ENABLE_CHEATS, .style = SETTING_STYLE_TOGGLE, .linked = &cheats_enabled,
+				.text = "Enable cheats",
+				.explanation = "Turn cheats on or off."},
 		{.id = SETTING_ENABLE_COPYPROT, .style = SETTING_STYLE_TOGGLE, .linked = &enable_copyprot,
-				.text = "Copy protection level",
+				.text = "Enable copy protection level",
 				.explanation = "Enable or disable the potions (copy protection) level."},
 		{.id = SETTING_ENABLE_QUICKSAVE, .style = SETTING_STYLE_TOGGLE, .linked = &enable_quicksave,
 				.text = "Enable quicksave",
@@ -537,12 +546,12 @@ void init_pause_menu_items(pause_menu_item_type* first_item, int item_count) {
 	if (item_count > 0) {
 		for (int i = 0; i < item_count; ++i) {
 			pause_menu_item_type* item = first_item + i;
-			item->previous = (first_item + MAX(0, i-1))->id;
-			item->next = (first_item + MIN(item_count-1, i+1))->id;
+			item->previous = (first_item + MAX(0, i-1));
+			item->next = (first_item + MIN(item_count-1, i+1));
 		}
 		pause_menu_item_type* last_item = first_item + (item_count-1);
-		first_item->previous = last_item->id;
-		last_item->next = first_item->id;
+		first_item->previous = last_item;
+		last_item->next = first_item;
 	}
 }
 
@@ -671,6 +680,12 @@ void pause_menu_clicked(pause_menu_item_type* item) {
 }
 
 void draw_pause_menu_item(pause_menu_item_type* item, rect_type* parent, int* y_offset, int inactive_text_color) {
+	if (item->required != NULL) {
+		if (*(sbyte*)item->required == false) {
+			return; // skip this item (disabled)
+		}
+	}
+
 	rect_type text_rect = *parent;
 	text_rect.top += *y_offset;
 	int text_color = inactive_text_color;
@@ -688,8 +703,20 @@ void draw_pause_menu_item(pause_menu_item_type* item, rect_type* parent, int* y_
 	if (highlighted) {
 		previous_pause_menu_item = item->previous;
 		next_pause_menu_item = item->next;
+		// Skip over disabled items (such as the CHEATS menu in non-cheat mode)
+		if (previous_pause_menu_item->required != NULL) {
+			while (*(sbyte*)previous_pause_menu_item->required == false) {
+				previous_pause_menu_item = previous_pause_menu_item->previous;
+				if (previous_pause_menu_item->required == NULL) break;
+			}
+		}
+		if (next_pause_menu_item->required != NULL) {
+			while (*(sbyte*)next_pause_menu_item->required == false) {
+				next_pause_menu_item = next_pause_menu_item->next;
+				if (next_pause_menu_item->required == NULL) break;
+			}
+		}
 		text_color = color_15_brightwhite;
-
 		draw_rect_contours(&selection_box, color_7_lightgray);
 #if 0 // do no unnecessary work...
 		draw_rect_with_alpha(&selection_box, color_7_lightgray, 230);
@@ -722,11 +749,11 @@ void draw_pause_menu() {
 		if (menu_control_y == 1) {
 			play_sound(sound_21_loose_shake_2);
 			play_next_sound();
-			highlighted_pause_menu_item = next_pause_menu_item;
+			highlighted_pause_menu_item = next_pause_menu_item->id;
 		} else if (menu_control_y == -1) {
 			play_sound(sound_21_loose_shake_2);
 			play_next_sound();
-			highlighted_pause_menu_item = previous_pause_menu_item;
+			highlighted_pause_menu_item = previous_pause_menu_item->id;
 		}
 	}
 
@@ -1085,38 +1112,46 @@ void draw_settings_area(settings_area_type* settings_area) {
 }
 
 void draw_settings_menu() {
-	pause_menu_alpha = 230;
+	settings_area_type* settings_area = get_settings_area(active_settings_subsection);
+	pause_menu_alpha = (settings_area == NULL) ? 220 : 255;
 	draw_rect_with_alpha(&screen_rect, color_0_black, pause_menu_alpha);
 
 	rect_type pause_rect_outer = {0, 10, 192, 80};
 	rect_type pause_rect_inner;
 	shrink2_rect(&pause_rect_inner, &pause_rect_outer, 5, 5);
 
-	settings_area_type* settings_area = get_settings_area(active_settings_subsection);
-
 	if (!mouse_state_changed) {
-		if (menu_control_y == 1) {
-			play_sound(sound_21_loose_shake_2);
-			play_next_sound();
-			if (controlled_area == 0) {
-				highlighted_pause_menu_item = next_pause_menu_item;
-			} else if (controlled_area == 1) {
+		bool highlighted_item_changed = false;
+		if (controlled_area == 0) {
+			int old_highlighted_item_id = highlighted_pause_menu_item;
+			if (menu_control_y == 1) {
+				highlighted_pause_menu_item = next_pause_menu_item->id;
+			} else if (menu_control_y == -1) {
+				highlighted_pause_menu_item = previous_pause_menu_item->id;
+			}
+			if (old_highlighted_item_id != highlighted_pause_menu_item) {
+				highlighted_item_changed = true;
+			}
+		} else if (controlled_area == 1) {
+			int old_highlighted_setting_id = highlighted_setting_id;
+			if (menu_control_y == 1) {
 				highlighted_setting_id = next_setting_id;
 				if (at_scroll_down_boundary) {
 					menu_scroll(1);
 				}
-			}
-		} else if (menu_control_y == -1) {
-			play_sound(sound_21_loose_shake_2);
-			play_next_sound();
-			if (controlled_area == 0) {
-				highlighted_pause_menu_item = previous_pause_menu_item;
-			} else if (controlled_area == 1) {
+			} else if (menu_control_y == -1) {
 				highlighted_setting_id = previous_setting_id;
 				if (at_scroll_up_boundary) {
 					menu_scroll(-1);
 				}
 			}
+			if (old_highlighted_setting_id != highlighted_setting_id) {
+				highlighted_item_changed = true;
+			}
+		}
+		if (highlighted_item_changed) {
+			play_sound(sound_21_loose_shake_2);
+			play_next_sound();
 		}
 	}
 

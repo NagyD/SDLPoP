@@ -1484,6 +1484,7 @@ int __pascal far do_paused() {
 		if (is_menu_shown) {
 			do {
 				idle();
+				SDL_Delay(5);
 			} while (!process_key() && is_paused); // busy waiting?
 			is_paused = 0;
 			is_menu_shown = 0;
