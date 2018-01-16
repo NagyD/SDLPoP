@@ -1682,6 +1682,8 @@ void __pascal far show_title() {
 	init_game(0);
 }
 
+Uint64 last_transition_counter;
+
 // seg000:1BB3
 void __pascal far transition_ltr() {
 	short position;
@@ -1690,12 +1692,31 @@ void __pascal far transition_ltr() {
 	rect.bottom = 200;
 	rect.left = 0;
 	rect.right = 2;
+	int transition_fps = 180;
+	Uint64 counters_per_frame = perf_frequency / transition_fps;
+	last_transition_counter = SDL_GetPerformanceCounter();
 	for (position = 0; position < 320; position += 2) {
 		method_1_blit_rect(onscreen_surface_, offscreen_surface, &rect, &rect, 0);
 		rect.left += 2;
 		rect.right += 2;
 		idle(); // modified
 		do_paused();
+		// Add an appropriate delay until the next frame, so that the animation isn't instantaneous on fast CPUs.
+		for (;;) {
+			Uint64 current_counter = SDL_GetPerformanceCounter();
+			int frametimes_elapsed = (int)((current_counter / counters_per_frame) - (last_transition_counter / counters_per_frame));
+			if (frametimes_elapsed > 0) {
+				int overshoot = frametimes_elapsed - 1;
+				if (overshoot > 0 && overshoot <= 3) {
+					current_counter -= overshoot * counters_per_frame;
+				}
+				last_transition_counter = current_counter;
+				break; // Proceed to the next frame.
+			} else {
+				SDL_Delay(1);
+			}
+		}
+
 	}
 }
 

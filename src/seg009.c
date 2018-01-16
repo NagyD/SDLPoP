@@ -2885,10 +2885,10 @@ SDL_TimerID global_timer = NULL;
 #endif
 // seg009:78E9
 void __pascal far init_timer(int frequency) {
+	perf_frequency = SDL_GetPerformanceFrequency();
 #ifndef USE_COMPAT_TIMER
 	fps = frequency;
 	milliseconds_per_tick = 1000.0f / (float)fps;
-	Uint64 perf_frequency = SDL_GetPerformanceFrequency();
 	perf_counters_per_tick = perf_frequency / fps;
 	milliseconds_per_counter = 1000.0f / perf_frequency;
 #else
