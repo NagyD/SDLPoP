@@ -38,9 +38,9 @@ void __pascal far init_game(int level) {
 	upside_down = 0; // N.B. upside_down is also reset in set_start_pos()
 	resurrect_time = 0;
 	if (!dont_reset_time) {
-		rem_min = start_minutes_left;   // 60
-		rem_tick = start_ticks_left;    // 719
-		hitp_beg_lev = start_hitp;      // 3
+		rem_min = custom->start_minutes_left;   // 60
+		rem_tick = custom->start_ticks_left;    // 719
+		hitp_beg_lev = custom->start_hitp;      // 3
 	}
 	need_level1_music = (level == 1);
 	play_level(level);
@@ -50,7 +50,7 @@ void __pascal far init_game(int level) {
 void __pascal far play_level(int level_number) {
 	cutscene_ptr_type cutscene_func;
 #ifdef USE_COPYPROT
-	if (enable_copyprot && level_number == copyprot_level) {
+	if (enable_copyprot && level_number == custom->copyprot_level) {
 		level_number = 15;
 	}
 #endif
@@ -121,12 +121,12 @@ void __pascal far play_level(int level_number) {
 		level_number = play_level_2();
 		// hacked...
 #ifdef USE_COPYPROT
-		if (enable_copyprot && level_number == copyprot_level && !demo_mode) {
+		if (enable_copyprot && level_number == custom->copyprot_level && !demo_mode) {
 			level_number = 15;
 		} else {
 			if (level_number == 16) {
-				level_number = copyprot_level;
-				copyprot_level = -1;
+				level_number = custom->copyprot_level;
+				custom->copyprot_level = -1;
 			}
 		}
 #endif
@@ -183,7 +183,7 @@ void __pascal far set_start_pos() {
 	Char.charid = charid_0_kid;
 	is_screaming = 0;
 	knock = 0;
-	upside_down = start_upside_down; // 0
+	upside_down = custom->start_upside_down; // 0
 	is_feather_fall = 0;
 	Char.fall_y = 0;
 	Char.fall_x = 0;
@@ -214,7 +214,7 @@ void __pascal far find_start_level_door() {
 void __pascal far draw_level_first() {
 	next_room = Kid.room;
 	check_the_end();
-	if (tbl_level_type[current_level]) {
+	if (custom->tbl_level_type[current_level]) {
 		gen_palace_wall_colors();
 	}
 	draw_rect(&screen_rect, 0);
@@ -578,7 +578,7 @@ void __pascal far bump_into_opponent() {
 		if (ABS(distance) <= 15) {
 
 			#ifdef FIX_PAINLESS_FALL_ON_GUARD
-			if (fixes.fix_painless_fall_on_guard) {
+			if (fixes->fix_painless_fall_on_guard) {
 				if (Char.fall_y >= 33) return; // don't bump; dead
 				else if (Char.fall_y >= 22) { // medium land
 					take_hp(1);

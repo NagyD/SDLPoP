@@ -73,7 +73,7 @@ void far pop_main() {
 	load_mod_options();
 
 	// CusPop option
-	is_blind_mode = start_in_blind_mode;
+	is_blind_mode = custom->start_in_blind_mode;
 	// Bug: with start_in_blind_mode enabled, moving objects are not displayed until blind mode is toggled off+on??
 
 	apply_seqtbl_patches();
@@ -207,8 +207,8 @@ void __pascal far start_game() {
 		letts_used[copyprot_letter[which_entry]-'A'] = 1;
 	}
 #endif
-	if (skip_title) { // CusPop option: skip the title sequence (level loads instantly)
-		int level_number = (start_level >= 0) ? start_level : first_level;
+	if (custom->skip_title) { // CusPop option: skip the title sequence (level loads instantly)
+		int level_number = (start_level >= 0) ? start_level : custom->first_level;
 		init_game(level_number);
 		return;
 	}
@@ -500,14 +500,14 @@ int __pascal far process_key() {
 				start_replay();
 			}
 			else if (key == (SDL_SCANCODE_TAB | WITH_CTRL)) {
-				start_level = first_level;
+				start_level = custom->first_level;
 				start_recording();
 			} else
 			#endif
 			if (key == (SDL_SCANCODE_L | WITH_CTRL)) { // ctrl-L
 				if (!load_game()) return 0;
 			} else {
-				start_level = first_level; // 1
+				start_level = custom->first_level; // 1
 			}
 			draw_rect(&screen_rect, 0);
 #ifdef USE_FADE
@@ -550,7 +550,7 @@ int __pascal far process_key() {
 		case SDL_SCANCODE_G | WITH_CTRL: // ctrl-g
 			// CusPoP: first and last level where saving is allowed
 //			if (current_level > 2 && current_level < 14) { // original
-			if (current_level >= saving_allowed_first_level && current_level <= saving_allowed_last_level) {
+			if (current_level >= custom->saving_allowed_first_level && current_level <= custom->saving_allowed_last_level) {
 				save_game();
 			}
 		break;
@@ -592,7 +592,7 @@ int __pascal far process_key() {
 			need_show_text = 1;
 		break;
 		case SDL_SCANCODE_L | WITH_SHIFT: // shift-l
-			if (current_level < shift_L_allowed_until_level /* 4 */ || cheats_enabled) {
+			if (current_level < custom->shift_L_allowed_until_level /* 4 */ || cheats_enabled) {
 				// if shift is not released within the delay, the cutscene is skipped
 				Uint32 delay = 250;
 				key_states[SDL_SCANCODE_LSHIFT] = 0;
@@ -609,15 +609,15 @@ int __pascal far process_key() {
 					if (current_level == 15 && cheats_enabled) {
 #ifdef USE_COPYPROT
 						if (enable_copyprot) {
-							next_level = copyprot_level;
-							copyprot_level = -1;
+							next_level = custom->copyprot_level;
+							custom->copyprot_level = -1;
 						}
 #endif
 					} else {
 						next_level = current_level + 1;
-						if (!cheats_enabled && rem_min > shift_L_reduced_minutes /* 15 */) {
-							rem_min = shift_L_reduced_minutes; // 15
-							rem_tick = shift_L_reduced_ticks; // 719
+						if (!cheats_enabled && rem_min > custom->shift_L_reduced_minutes /* 15 */) {
+							rem_min = custom->shift_L_reduced_minutes; // 15
+							rem_tick = custom->shift_L_reduced_ticks; // 719
 						}
 					}
 				}
@@ -822,7 +822,7 @@ void __pascal far draw_game_frame() {
 	} else {
 		if (different_room) {
 			drawn_room = next_room;
-			if (tbl_level_type[current_level]) {
+			if (custom->tbl_level_type[current_level]) {
 				gen_palace_wall_colors();
 			}
 			redraw_screen(1);
@@ -1000,14 +1000,14 @@ void __pascal far load_lev_spr(int level) {
 	free_optsnd_chtab();
 	snprintf(filename, sizeof(filename), "%s%s.DAT",
 		tbl_envir_gr[graphics_mode],
-		tbl_envir_ki[tbl_level_type[current_level]]
+		tbl_envir_ki[custom->tbl_level_type[current_level]]
 	);
 	load_chtab_from_file(id_chtab_6_environment, 200, filename, 1<<5);
 	load_more_opt_graf(filename);
-	guardtype = tbl_guard_type[current_level];
+	guardtype = custom->tbl_guard_type[current_level];
 	if (guardtype != -1) {
 		if (guardtype == 0) {
-			dathandle = open_dat(tbl_level_type[current_level] ? "GUARD1.DAT" : "GUARD2.DAT", 0);
+			dathandle = open_dat(custom->tbl_level_type[current_level] ? "GUARD1.DAT" : "GUARD2.DAT", 0);
 		}
 		load_chtab_from_file(id_chtab_5_guard, 750, tbl_guard_dat[guardtype], 1<<8);
 		if (dathandle) {
@@ -1019,10 +1019,10 @@ void __pascal far load_lev_spr(int level) {
 
 	// Level colors (1.3)
 	if (graphics_mode == gmMcgaVga && level_var_palettes != NULL) {
-		int level_color = tbl_level_color[current_level];
+		int level_color = custom->tbl_level_color[current_level];
 		if (level_color != 0) {
 			byte* env_pal = level_var_palettes + 0x30*(level_color-1);
-			byte* wall_pal = env_pal + 0x30 * tbl_level_type[current_level];
+			byte* wall_pal = env_pal + 0x30 * custom->tbl_level_type[current_level];
 			set_pal_arr(0x50, 0x10, (rgb_type*)env_pal, 1);
 			set_pal_arr(0x60, 0x10, (rgb_type*)wall_pal, 1);
 			set_chtab_palette(chtab_addrs[id_chtab_6_environment], env_pal, 0x10);
@@ -1309,7 +1309,7 @@ void __pascal far add_life() {
 	++hpmax;
 	// CusPop: set maximum number of hitpoints (max_hitp_allowed, default = 10)
 //	if (hpmax > 10) hpmax = 10; // original
-	if (hpmax > max_hitp_allowed) hpmax = max_hitp_allowed;
+	if (hpmax > custom->max_hitp_allowed) hpmax = custom->max_hitp_allowed;
 	hitp_max = hpmax;
 	set_health_life();
 }
@@ -1486,8 +1486,7 @@ int __pascal far do_paused() {
 				idle();
 				SDL_Delay(5);
 			} while (!process_key() && is_paused); // busy waiting?
-			is_paused = 0;
-			is_menu_shown = 0;
+			menu_was_closed();
 		} else
 #endif
 		{
@@ -1833,8 +1832,8 @@ short __pascal far load_game() {
 	if (read(handle, &start_level, 2) != 2) goto loc_1E8E;
 	if (read(handle, &hitp_beg_lev, 2) != 2) goto loc_1E8E;
 #ifdef USE_COPYPROT
-	if (enable_copyprot && copyprot_level > 0) {
-		copyprot_level = start_level;
+	if (enable_copyprot && custom->copyprot_level > 0) {
+		custom->copyprot_level = start_level;
 	}
 #endif
 	success = 1;

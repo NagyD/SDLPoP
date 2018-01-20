@@ -1055,6 +1055,7 @@ typedef struct names_list_type {
 	word num_names;
 } names_list_type;
 
+#pragma pack(push,1)
 typedef struct fixes_options_type {
 	byte enable_crouch_after_climbing;
 	byte enable_freeze_time_during_end_music;
@@ -1089,5 +1090,34 @@ typedef struct fixes_options_type {
 	byte fix_offscreen_guards_disappearing;
 	byte fix_move_after_sheathe;
 } fixes_options_type;
+
+typedef struct custom_options_type {
+	word start_minutes_left;
+	word start_ticks_left;
+	word start_hitp;
+	word max_hitp_allowed;
+	word saving_allowed_first_level;
+	word saving_allowed_last_level;
+	byte start_upside_down;
+	byte start_in_blind_mode;
+	word copyprot_level;
+	byte drawn_tile_top_level_edge;
+	byte drawn_tile_left_level_edge;
+	byte level_edge_hit_tile;
+	byte allow_triggering_any_tile;
+	byte enable_wda_in_palace;
+	rgb_type vga_palette[16]; // TODO: Configuring the palette from the MODS menu?
+	word first_level;
+	byte skip_title;
+	word shift_L_allowed_until_level;
+	word shift_L_reduced_minutes;
+	word shift_L_reduced_ticks;
+	byte tbl_level_type[16]; // TODO: Configuring per-level options from the MODS menu.
+	word tbl_level_color[16];
+	short tbl_guard_type[16];
+	byte tbl_guard_hp[16];
+	byte tbl_cutscene[16]; // TODO: Correctly handle custom cutscene configuration in the MODS menu.
+} custom_options_type;
+#pragma pack(pop)
 
 #endif

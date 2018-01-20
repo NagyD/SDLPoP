@@ -442,7 +442,7 @@ Possible values of trob_type:
 			if (curr_modifier >= 43) {
 				trob.type = -1;
 #ifdef FIX_FEATHER_INTERRUPTED_BY_LEVELDOOR
-				if (!(fixes.fix_feather_interrupted_by_leveldoor && is_feather_fall))
+				if (!(fixes->fix_feather_interrupted_by_leveldoor && is_feather_fall))
 #endif
 				stop_sounds();
 				if (leveldoor_open == 0 || leveldoor_open == 2) {
@@ -645,7 +645,7 @@ short __pascal far trigger_1(short target_type,short room,short tilepos,short bu
 		} else {
 			result = 1;
 		}
-	} else if (allow_triggering_any_tile) { //allow_triggering_any_tile hack
+	} else if (custom->allow_triggering_any_tile) { //allow_triggering_any_tile hack
 		result = 1;
 	}
 	return result;
@@ -877,7 +877,7 @@ void __pascal far loose_shake(int arg_0) {
 int __pascal far remove_loose(int room, int tilepos) {
 	curr_room_tiles[tilepos] = tiles_0_empty;
 	// note: the level type is used to determine the modifier of the empty space left behind
-	return tbl_level_type[current_level];
+	return custom->tbl_level_type[current_level];
 }
 
 // seg007:0ED5
@@ -1235,7 +1235,7 @@ void __pascal far play_door_sound_if_visible(int sound_id) {
 
 #ifdef FIX_GATE_SOUNDS
 	sbyte has_sound_condition;
-	if (fixes.fix_gate_sounds)
+	if (fixes->fix_gate_sounds)
 		has_sound_condition =   (gate_room == room_L && tilepos % 10 == 9) ||
 		                        (gate_room == drawn_room && tilepos % 10 != 9);
 	else

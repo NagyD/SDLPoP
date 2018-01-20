@@ -24,20 +24,13 @@ The authors of this program may be contacted at http://forum.princed.org
 
 
 void turn_fixes_and_enhancements_on_off(byte new_state) {
-	static byte old_state = 0;
-	if (old_state != new_state) {
-		use_fixes_and_enhancements = new_state;
-		if (new_state == 0) {
-			fixes_saved = fixes; // Remember which fixes have the 'true' setting.
-		} else {
-			fixes = fixes_saved; // Activate the fixes with the 'true' setting.
-		}
-	}
-	if (new_state == 0) {
-		memset(&fixes, 0, sizeof(fixes)); // Deactivate all fixes.
-	}
-	old_state = new_state;
+	use_fixes_and_enhancements = new_state;
+	fixes = (new_state) ? &fixes_saved : &fixes_disabled_state;
+}
 
+void turn_custom_options_on_off(byte new_state) {
+	use_custom_options = new_state;
+	custom = (new_state) ? &custom_saved : &custom_defaults;
 }
 
 // .ini file parser adapted from https://gist.github.com/OrangeTide/947070
@@ -212,56 +205,56 @@ static int global_ini_callback(const char *section, const char *name, const char
 			else if (strcasecmp(value, "prompt") == 0) use_fixes_and_enhancements = 2;
 			return 1;
 		}
-		process_boolean("enable_crouch_after_climbing", &fixes_ini_defaults.enable_crouch_after_climbing);
-		process_boolean("enable_freeze_time_during_end_music", &fixes_ini_defaults.enable_freeze_time_during_end_music);
-		process_boolean("enable_remember_guard_hp", &fixes_ini_defaults.enable_remember_guard_hp);
-		process_boolean("fix_gate_sounds", &fixes_ini_defaults.fix_gate_sounds);
-		process_boolean("fix_two_coll_bug", &fixes_ini_defaults.fix_two_coll_bug);
-		process_boolean("fix_infinite_down_bug", &fixes_ini_defaults.fix_infinite_down_bug);
-		process_boolean("fix_gate_drawing_bug", &fixes_ini_defaults.fix_gate_drawing_bug);
-		process_boolean("fix_bigpillar_climb", &fixes_ini_defaults.fix_bigpillar_climb);
-		process_boolean("fix_jump_distance_at_edge", &fixes_ini_defaults.fix_jump_distance_at_edge);
-		process_boolean("fix_edge_distance_check_when_climbing", &fixes_ini_defaults.fix_edge_distance_check_when_climbing);
-		process_boolean("fix_painless_fall_on_guard", &fixes_ini_defaults.fix_painless_fall_on_guard);
-		process_boolean("fix_wall_bump_triggers_tile_below", &fixes_ini_defaults.fix_wall_bump_triggers_tile_below);
-		process_boolean("fix_stand_on_thin_air", &fixes_ini_defaults.fix_stand_on_thin_air);
-		process_boolean("fix_press_through_closed_gates", &fixes_ini_defaults.fix_press_through_closed_gates);
-		process_boolean("fix_grab_falling_speed", &fixes_ini_defaults.fix_grab_falling_speed);
-		process_boolean("fix_skeleton_chomper_blood", &fixes_ini_defaults.fix_skeleton_chomper_blood);
-		process_boolean("fix_move_after_drink", &fixes_ini_defaults.fix_move_after_drink);
-		process_boolean("fix_loose_left_of_potion", &fixes_ini_defaults.fix_loose_left_of_potion);
-		process_boolean("fix_guard_following_through_closed_gates", &fixes_ini_defaults.fix_guard_following_through_closed_gates);
-		process_boolean("fix_safe_landing_on_spikes", &fixes_ini_defaults.fix_safe_landing_on_spikes);
-		process_boolean("fix_glide_through_wall", &fixes_ini_defaults.fix_glide_through_wall);
-		process_boolean("fix_drop_through_tapestry", &fixes_ini_defaults.fix_drop_through_tapestry);
-		process_boolean("fix_land_against_gate_or_tapestry", &fixes_ini_defaults.fix_land_against_gate_or_tapestry);
-		process_boolean("fix_unintended_sword_strike", &fixes_ini_defaults.fix_unintended_sword_strike);
-		process_boolean("fix_retreat_without_leaving_room", &fixes_ini_defaults.fix_retreat_without_leaving_room);
-		process_boolean("fix_running_jump_through_tapestry", &fixes_ini_defaults.fix_running_jump_through_tapestry);
-		process_boolean("fix_push_guard_into_wall", &fixes_ini_defaults.fix_push_guard_into_wall);
-		process_boolean("fix_jump_through_wall_above_gate", &fixes_ini_defaults.fix_jump_through_wall_above_gate);
-		process_boolean("fix_chompers_not_starting", &fixes_ini_defaults.fix_chompers_not_starting);
-		process_boolean("fix_feather_interrupted_by_leveldoor", &fixes_ini_defaults.fix_feather_interrupted_by_leveldoor);
-		process_boolean("fix_offscreen_guards_disappearing", &fixes_ini_defaults.fix_offscreen_guards_disappearing);
-		process_boolean("fix_move_after_sheathe", &fixes_ini_defaults.fix_move_after_sheathe);
+		process_boolean("enable_crouch_after_climbing", &fixes_defaults.enable_crouch_after_climbing);
+		process_boolean("enable_freeze_time_during_end_music", &fixes_defaults.enable_freeze_time_during_end_music);
+		process_boolean("enable_remember_guard_hp", &fixes_defaults.enable_remember_guard_hp);
+		process_boolean("fix_gate_sounds", &fixes_defaults.fix_gate_sounds);
+		process_boolean("fix_two_coll_bug", &fixes_defaults.fix_two_coll_bug);
+		process_boolean("fix_infinite_down_bug", &fixes_defaults.fix_infinite_down_bug);
+		process_boolean("fix_gate_drawing_bug", &fixes_defaults.fix_gate_drawing_bug);
+		process_boolean("fix_bigpillar_climb", &fixes_defaults.fix_bigpillar_climb);
+		process_boolean("fix_jump_distance_at_edge", &fixes_defaults.fix_jump_distance_at_edge);
+		process_boolean("fix_edge_distance_check_when_climbing", &fixes_defaults.fix_edge_distance_check_when_climbing);
+		process_boolean("fix_painless_fall_on_guard", &fixes_defaults.fix_painless_fall_on_guard);
+		process_boolean("fix_wall_bump_triggers_tile_below", &fixes_defaults.fix_wall_bump_triggers_tile_below);
+		process_boolean("fix_stand_on_thin_air", &fixes_defaults.fix_stand_on_thin_air);
+		process_boolean("fix_press_through_closed_gates", &fixes_defaults.fix_press_through_closed_gates);
+		process_boolean("fix_grab_falling_speed", &fixes_defaults.fix_grab_falling_speed);
+		process_boolean("fix_skeleton_chomper_blood", &fixes_defaults.fix_skeleton_chomper_blood);
+		process_boolean("fix_move_after_drink", &fixes_defaults.fix_move_after_drink);
+		process_boolean("fix_loose_left_of_potion", &fixes_defaults.fix_loose_left_of_potion);
+		process_boolean("fix_guard_following_through_closed_gates", &fixes_defaults.fix_guard_following_through_closed_gates);
+		process_boolean("fix_safe_landing_on_spikes", &fixes_defaults.fix_safe_landing_on_spikes);
+		process_boolean("fix_glide_through_wall", &fixes_defaults.fix_glide_through_wall);
+		process_boolean("fix_drop_through_tapestry", &fixes_defaults.fix_drop_through_tapestry);
+		process_boolean("fix_land_against_gate_or_tapestry", &fixes_defaults.fix_land_against_gate_or_tapestry);
+		process_boolean("fix_unintended_sword_strike", &fixes_defaults.fix_unintended_sword_strike);
+		process_boolean("fix_retreat_without_leaving_room", &fixes_defaults.fix_retreat_without_leaving_room);
+		process_boolean("fix_running_jump_through_tapestry", &fixes_defaults.fix_running_jump_through_tapestry);
+		process_boolean("fix_push_guard_into_wall", &fixes_defaults.fix_push_guard_into_wall);
+		process_boolean("fix_jump_through_wall_above_gate", &fixes_defaults.fix_jump_through_wall_above_gate);
+		process_boolean("fix_chompers_not_starting", &fixes_defaults.fix_chompers_not_starting);
+		process_boolean("fix_feather_interrupted_by_leveldoor", &fixes_defaults.fix_feather_interrupted_by_leveldoor);
+		process_boolean("fix_offscreen_guards_disappearing", &fixes_defaults.fix_offscreen_guards_disappearing);
+		process_boolean("fix_move_after_sheathe", &fixes_defaults.fix_move_after_sheathe);
 	}
 
 	if (check_ini_section("CustomGameplay")) {
-		process_word("start_minutes_left", &start_minutes_left, NULL);
-		process_word("start_ticks_left", &start_ticks_left, NULL);
-		process_word("start_hitp", &start_hitp, NULL);
-		process_word("max_hitp_allowed", &max_hitp_allowed, NULL);
-		process_word("saving_allowed_first_level", &saving_allowed_first_level, NULL);
-		process_word("saving_allowed_last_level", &saving_allowed_last_level, NULL);
-		process_boolean("start_upside_down", &start_upside_down);
-		process_boolean("start_in_blind_mode", &start_in_blind_mode);
-		process_word("copyprot_level", &copyprot_level, NULL);
-		process_byte("drawn_tile_top_level_edge", &drawn_tile_top_level_edge, &tile_type_names_list);
-		process_byte("drawn_tile_left_level_edge", &drawn_tile_left_level_edge, &tile_type_names_list);
-		process_byte("level_edge_hit_tile", &level_edge_hit_tile, &tile_type_names_list);
-		process_boolean("allow_triggering_any_tile", &allow_triggering_any_tile);
+		process_word("start_minutes_left", &custom_defaults.start_minutes_left, NULL);
+		process_word("start_ticks_left", &custom_defaults.start_ticks_left, NULL);
+		process_word("start_hitp", &custom_defaults.start_hitp, NULL);
+		process_word("max_hitp_allowed", &custom_defaults.max_hitp_allowed, NULL);
+		process_word("saving_allowed_first_level", &custom_defaults.saving_allowed_first_level, NULL);
+		process_word("saving_allowed_last_level", &custom_defaults.saving_allowed_last_level, NULL);
+		process_boolean("start_upside_down", &custom_defaults.start_upside_down);
+		process_boolean("start_in_blind_mode", &custom_defaults.start_in_blind_mode);
+		process_word("copyprot_level", &custom_defaults.copyprot_level, NULL);
+		process_byte("drawn_tile_top_level_edge", &custom_defaults.drawn_tile_top_level_edge, &tile_type_names_list);
+		process_byte("drawn_tile_left_level_edge", &custom_defaults.drawn_tile_left_level_edge, &tile_type_names_list);
+		process_byte("level_edge_hit_tile", &custom_defaults.level_edge_hit_tile, &tile_type_names_list);
+		process_boolean("allow_triggering_any_tile", &custom_defaults.allow_triggering_any_tile);
 		// TODO: Maybe allow automatically choosing the correct WDA, depending on the loaded VDUNGEON.DAT?
-		process_boolean("enable_wda_in_palace", &enable_wda_in_palace);
+		process_boolean("enable_wda_in_palace", &custom_defaults.enable_wda_in_palace);
 
 		// Options that change the hard-coded color palette (options 'vga_color_0', 'vga_color_1', ...)
 		static const char prefix[] = "vga_color_";
@@ -291,11 +284,11 @@ static int global_ini_callback(const char *section, const char *name, const char
 			palette_color->b = rgb[2] / 4;
 			return 1;
 		}
-		process_word("first_level", &first_level, NULL);
-		process_boolean("skip_title", &skip_title);
-		process_word("shift_L_allowed_until_level", &shift_L_allowed_until_level, NULL);
-		process_word("shift_L_reduced_minutes", &shift_L_reduced_minutes, NULL);
-		process_word("shift_L_reduced_ticks", &shift_L_reduced_ticks, NULL);
+		process_word("first_level", &custom_defaults.first_level, NULL);
+		process_boolean("skip_title", &custom_defaults.skip_title);
+		process_word("shift_L_allowed_until_level", &custom_defaults.shift_L_allowed_until_level, NULL);
+		process_word("shift_L_reduced_minutes", &custom_defaults.shift_L_reduced_minutes, NULL);
+		process_word("shift_L_reduced_ticks", &custom_defaults.shift_L_reduced_ticks, NULL);
 	} // end of section [CustomGameplay]
 
 	// [Level 1], etc.
@@ -303,10 +296,10 @@ static int global_ini_callback(const char *section, const char *name, const char
 	if (strncasecmp(section, "Level ", 6) == 0 && sscanf(section+6, "%d", &ini_level) == 1) {
 		if (ini_level >= 0 && ini_level <= 15) {
 			// TODO: And maybe allow new types in addition to the existing ones.
-			process_byte("level_type", &tbl_level_type[ini_level], &level_type_names_list);
-			process_word("level_color", &tbl_level_color[ini_level], NULL);
-			process_short("guard_type", &tbl_guard_type[ini_level], &guard_type_names_list);
-			process_byte("guard_hp", &tbl_guard_hp[ini_level], NULL);
+			process_byte("level_type", &custom_saved.tbl_level_type[ini_level], &level_type_names_list);
+			process_word("level_color", &custom_saved.tbl_level_color[ini_level], NULL);
+			process_short("guard_type", &custom_saved.tbl_guard_type[ini_level], &guard_type_names_list);
+			process_byte("guard_hp", &custom_saved.tbl_guard_hp[ini_level], NULL);
 
 			byte cutscene_index = 0xFF;
 			if (ini_process_byte(name, value, "cutscene", &cutscene_index, NULL) == 1) {
@@ -339,7 +332,7 @@ static int mod_ini_callback(const char *section, const char *name, const char *v
 void load_global_options() {
 	// By default, all the fixes are used, unless otherwise specified.
 	// So, if one of these options is omitted from the INI file, they default to true.
-	memset(&fixes_ini_defaults, 1, sizeof(fixes_ini_defaults));
+	memset(&fixes_defaults, 1, sizeof(fixes_defaults));
 	ini_load(locate_file("SDLPoP.ini"), global_ini_callback); // global configuration
 }
 
@@ -362,8 +355,12 @@ void load_mod_options() {
 		ini_load(filename, mod_ini_callback);
 	}
 
-	fixes_saved = fixes_ini_defaults;
+	fixes_saved = fixes_defaults;
 	turn_fixes_and_enhancements_on_off(use_fixes_and_enhancements);
+	custom_saved = custom_defaults;
+#ifdef USE_MENU
+	load_ingame_settings();
+#endif
 }
 
 

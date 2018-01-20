@@ -40,7 +40,7 @@ void switch_to_room(int room) {
 	drawn_room = room;
 	load_room_links();
 
-	if (tbl_level_type[current_level]) {
+	if (custom->tbl_level_type[current_level]) {
 		gen_palace_wall_colors();
 	}
 

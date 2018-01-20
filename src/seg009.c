@@ -2726,11 +2726,9 @@ void toggle_fullscreen() {
 	uint32_t flags = SDL_GetWindowFlags(window_);
 	if (flags & SDL_WINDOW_FULLSCREEN_DESKTOP) {
 		SDL_SetWindowFullscreen(window_, 0);
-		SDL_ShowCursor(SDL_ENABLE);
 	}
 	else {
 		SDL_SetWindowFullscreen(window_, SDL_WINDOW_FULLSCREEN_DESKTOP);
-//		SDL_ShowCursor(SDL_DISABLE);
 	}
 }
 

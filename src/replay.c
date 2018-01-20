@@ -493,33 +493,33 @@ void options_process_fixes(SDL_RWops* rw, rw_process_func_type process_func) {
 }
 
 void options_process_custom_general(SDL_RWops* rw, rw_process_func_type process_func) {
-	process(start_minutes_left);
-	process(start_ticks_left);
-	process(start_hitp);
-	process(max_hitp_allowed);
-	process(saving_allowed_first_level);
-	process(saving_allowed_last_level);
-	process(start_upside_down);
-	process(start_in_blind_mode);
-	process(copyprot_level);
-	process(drawn_tile_top_level_edge);
-	process(drawn_tile_left_level_edge);
-	process(level_edge_hit_tile);
-	process(allow_triggering_any_tile);
-	process(enable_wda_in_palace);
+	process(custom->start_minutes_left);
+	process(custom->start_ticks_left);
+	process(custom->start_hitp);
+	process(custom->max_hitp_allowed);
+	process(custom->saving_allowed_first_level);
+	process(custom->saving_allowed_last_level);
+	process(custom->start_upside_down);
+	process(custom->start_in_blind_mode);
+	process(custom->copyprot_level);
+	process(custom->drawn_tile_top_level_edge);
+	process(custom->drawn_tile_left_level_edge);
+	process(custom->level_edge_hit_tile);
+	process(custom->allow_triggering_any_tile);
+	process(custom->enable_wda_in_palace);
 	process(vga_palette);
-	process(first_level);
-	process(skip_title);
-	process(shift_L_allowed_until_level);
-	process(shift_L_reduced_minutes);
-	process(shift_L_reduced_ticks);
+	process(custom->first_level);
+	process(custom->skip_title);
+	process(custom->shift_L_allowed_until_level);
+	process(custom->shift_L_reduced_minutes);
+	process(custom->shift_L_reduced_ticks);
 }
 
 void options_process_custom_per_level(SDL_RWops* rw, rw_process_func_type process_func) {
-	process(tbl_level_type);
-	process(tbl_level_color);
-	process(tbl_guard_type);
-	process(tbl_guard_hp);
+	process(custom->tbl_level_type);
+	process(custom->tbl_level_color);
+	process(custom->tbl_guard_type);
+	process(custom->tbl_guard_hp);
 	process(tbl_cutscenes_by_index);
 }
 

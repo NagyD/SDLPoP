@@ -622,10 +622,12 @@ void check_seqtable_matches_original();
 
 // OPTIONS.C
 void turn_fixes_and_enhancements_on_off(byte new_state);
+void turn_custom_options_on_off(byte new_state);
 void load_global_options();
 void check_mod_param();
 void load_mod_options();
-void show_use_fixes_and_enhancements_prompt();
+int process_rw_write(SDL_RWops* rw, void* data, size_t data_size);
+int process_rw_read(SDL_RWops* rw, void* data, size_t data_size);
 
 // REPLAY.C
 #ifdef USE_REPLAY
@@ -668,4 +670,6 @@ void init_menu();
 void menu_scroll(int y);
 void draw_pause_overlay();
 int key_test_paused_menu(int key);
+void load_ingame_settings();
+void menu_was_closed();
 #endif
