@@ -2060,10 +2060,16 @@ void __pascal far set_gr_mode(byte grmode) {
 	 * The function handling the screen updates is request_screen_update()
 	 * */
 	onscreen_surface_ = SDL_CreateRGBSurface(0, 320, 200, 24, 0xFF, 0xFF << 8, 0xFF << 16, 0) ;
-	onscreen_surface_2x = SDL_CreateRGBSurface(0, 320*2, 200*2, 24, 0xFF, 0xFF << 8, 0xFF << 16, 0) ;
-	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
-	// It seems that SDL will use the quality setting that was active at the time of calling SDL_CreateTexture().
-	sdl_texture_ = SDL_CreateTexture(renderer_, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, 320*2, 200*2);
+	int scale = 1;
+	if (scaling_type == 1) {
+		scale = 2;
+		onscreen_surface_2x = SDL_CreateRGBSurface(0, 320*scale, 200*scale, 24, 0xFF, 0xFF << 8, 0xFF << 16, 0) ;
+	}
+	if (scaling_type == 1 || scaling_type == 2) {
+		// It seems that SDL will use the quality setting that was active at the time of calling SDL_CreateTexture().
+		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
+	}
+	sdl_texture_ = SDL_CreateTexture(renderer_, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, 320*scale, 200*scale);
 	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
 	screen_updates_suspended = 0;
 
@@ -2092,11 +2098,17 @@ void request_screen_update() {
 	if (replaying && skipping_replay) return;
 #endif
 	if (!screen_updates_suspended) {
-		// Make "fuzzy pixels" like DOSBox does:
-		// First scale to double size with nearest-neighbor scaling, then scale to full screen with smooth scaling.
-		// The result is not as blurry as if we did only a smooth scaling, but not as sharp as if we did only nearest-neighbor scaling.
-		SDL_BlitScaled(onscreen_surface_, NULL, onscreen_surface_2x, NULL);
-		SDL_UpdateTexture(sdl_texture_, NULL, onscreen_surface_2x->pixels, onscreen_surface_2x->pitch);
+		SDL_Surface* surface;
+		if (scaling_type == 1) {
+			// Make "fuzzy pixels" like DOSBox does:
+			// First scale to double size with nearest-neighbor scaling, then scale to full screen with smooth scaling.
+			// The result is not as blurry as if we did only a smooth scaling, but not as sharp as if we did only nearest-neighbor scaling.
+			SDL_BlitScaled(onscreen_surface_, NULL, onscreen_surface_2x, NULL);
+			surface = onscreen_surface_2x;
+		} else {
+			surface = onscreen_surface_;
+		}
+		SDL_UpdateTexture(sdl_texture_, NULL, surface->pixels, surface->pitch);
 		SDL_RenderClear(renderer_);
 		SDL_RenderCopy(renderer_, sdl_texture_, NULL, NULL);
 		SDL_RenderPresent(renderer_);
