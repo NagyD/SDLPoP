@@ -3019,33 +3019,30 @@ void idle() {
 #endif
 }
 
-void do_timer_delay(int timer_index) {
-	Uint64 current_counter = SDL_GetPerformanceCounter();
-	float milliseconds_elapsed = (current_counter - timer_last_counter[timer_index]) * milliseconds_per_counter;
-	float milliseconds_left = MAX(0, wait_time[timer_index] * milliseconds_per_tick - milliseconds_elapsed);
-	if (milliseconds_left > 0) {
-		SDL_Delay((Uint32) (milliseconds_left));
-	}
-}
-
 void __pascal do_simple_wait(int timer_index) {
 #ifdef USE_REPLAY
 	if ((replaying && skipping_replay) || is_validate_mode) return;
 #endif
 	update_screen();
-	do_timer_delay(timer_index);
-	// Note: it's possible that the timer is not yet finished at this point, because SDL_Delay() is not very accurate.
 	while (! has_timer_stopped(timer_index)) {
 		SDL_Delay(1);
+		process_events();
 	}
-	process_events();
 }
 
 word word_1D63A = 1;
 int __pascal do_wait(int timer_index) {
-	do_simple_wait(timer_index);
-	int key = do_paused();
-	return (key != 0 && (word_1D63A != 0 || key == 0x1B));
+#ifdef USE_REPLAY
+	if ((replaying && skipping_replay) || is_validate_mode) return 0;
+#endif
+	update_screen();
+	while (! has_timer_stopped(timer_index)) {
+		SDL_Delay(1);
+		process_events();
+		int key = do_paused();
+		if (key != 0 && (word_1D63A != 0 || key == 0x1B)) return 1;
+	}
+	return 0;
 }
 
 #ifdef USE_COMPAT_TIMER
@@ -3053,10 +3050,10 @@ SDL_TimerID global_timer = NULL;
 #endif
 // seg009:78E9
 void __pascal far init_timer(int frequency) {
+	perf_frequency = SDL_GetPerformanceFrequency();
 #ifndef USE_COMPAT_TIMER
 	fps = frequency;
 	milliseconds_per_tick = 1000.0f / (float)fps;
-	Uint64 perf_frequency = SDL_GetPerformanceFrequency();
 	perf_counters_per_tick = perf_frequency / fps;
 	milliseconds_per_counter = 1000.0f / perf_frequency;
 #else
