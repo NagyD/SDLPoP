@@ -689,6 +689,7 @@ extern custom_options_type custom_defaults INIT(= {
 });
 extern custom_options_type* custom INIT(= &custom_defaults);
 
+extern byte scaling_type INIT(= 0);
 #ifdef USE_LIGHTING
 extern byte enable_lighting INIT(= 0);
 #endif

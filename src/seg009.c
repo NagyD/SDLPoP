@@ -2066,6 +2066,8 @@ void window_resized() {
 #endif
 }
 
+SDL_Surface* onscreen_surface_2x;
+
 // seg009:38ED
 void __pascal far set_gr_mode(byte grmode) {
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_NOPARACHUTE |
@@ -2123,7 +2125,17 @@ void __pascal far set_gr_mode(byte grmode) {
 	onscreen_surface_ = SDL_CreateRGBSurface(0, 320, 200, 24, 0xFF, 0xFF << 8, 0xFF << 16, 0) ;
 	overlay_surface = SDL_CreateRGBSurface(0, 320, 200, 32, 0xFF, 0xFF << 8, 0xFF << 16, 0xFF << 24) ;
 	merged_surface = SDL_CreateRGBSurface(0, 320, 200, 24, 0xFF, 0xFF << 8, 0xFF << 16, 0) ;
-	sdl_texture_ = SDL_CreateTexture(renderer_, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, 320, 200);
+	int scale = 1;
+	if (scaling_type == 1) {
+		scale = 2;
+		onscreen_surface_2x = SDL_CreateRGBSurface(0, 320*scale, 200*scale, 24, 0xFF, 0xFF << 8, 0xFF << 16, 0) ;
+	}
+	if (scaling_type == 1 || scaling_type == 2) {
+		// It seems that SDL will use the quality setting that was active at the time of calling SDL_CreateTexture().
+		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
+	}
+	sdl_texture_ = SDL_CreateTexture(renderer_, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, 320*scale, 200*scale);
+	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
 
 	if (onscreen_surface_ == NULL || overlay_surface == NULL || merged_surface == NULL) {
 		sdlperror("SDL_SetVideoMode");
@@ -2186,15 +2198,24 @@ void draw_overlays() {
 void update_screen() {
 	bool need_draw_overlay = (is_timer_displayed || is_menu_shown);
 
+	SDL_Surface* surface;
 	if (need_draw_overlay) {
 		SDL_FillRect(merged_surface, NULL, 0);
 		draw_overlays();
 		SDL_BlitSurface(onscreen_surface_, NULL, merged_surface, NULL);
 		SDL_BlitSurface(overlay_surface, NULL, merged_surface, NULL);
+		surface = merged_surface;
 		SDL_UpdateTexture(sdl_texture_, NULL, merged_surface->pixels, merged_surface->pitch);
 	} else {
-		SDL_UpdateTexture(sdl_texture_, NULL, onscreen_surface_->pixels, onscreen_surface_->pitch);
+		surface = onscreen_surface_;
 	}
+
+	if (scaling_type == 1) {
+		SDL_BlitScaled(surface, NULL, onscreen_surface_2x, NULL);
+		surface = onscreen_surface_2x;
+	}
+
+	SDL_UpdateTexture(sdl_texture_, NULL, surface->pixels, surface->pitch);
 	SDL_RenderClear(renderer_);
 	SDL_RenderCopy(renderer_, sdl_texture_, NULL, NULL);
 	SDL_RenderPresent(renderer_);

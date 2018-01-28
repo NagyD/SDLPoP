@@ -483,3 +483,4 @@ FIXED: Add (back) SDL_Joystick interface because not all joysticks are SDL_Contr
 DONE: Convert waves to mixer sounds when they are loaded, not when they are first played. (suggested by @vanfanel)
 FIXED: Updated Readme.txt - fix macOS instructions.
 DONE: Added option to force pixel perfect scaling (integer scale factors).
+DONE: Added option to change scaling method (sharp, fuzzy, blurry).
