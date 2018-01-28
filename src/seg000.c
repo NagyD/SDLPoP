@@ -1692,7 +1692,9 @@ void __pascal far transition_ltr() {
 	rect.bottom = 200;
 	rect.left = 0;
 	rect.right = 2;
-	int transition_fps = 180;
+	// Estimated transition fps based on the speed of the transition on an Apple IIe.
+	// See: https://www.youtube.com/watch?v=7m7j2VuWhQ0
+	int transition_fps = 120;
 	Uint64 counters_per_frame = perf_frequency / transition_fps;
 	last_transition_counter = SDL_GetPerformanceCounter();
 	for (position = 0; position < 320; position += 2) {
