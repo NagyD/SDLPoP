@@ -623,6 +623,7 @@ void check_seqtable_matches_original();
 // OPTIONS.C
 void turn_fixes_and_enhancements_on_off(byte new_state);
 void turn_custom_options_on_off(byte new_state);
+void set_options_to_default();
 void load_global_options();
 void check_mod_param();
 void load_mod_options();

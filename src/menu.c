@@ -93,6 +93,14 @@ pause_menu_item_type* next_pause_menu_item;
 pause_menu_item_type* previous_pause_menu_item;
 int drawn_menu;
 byte pause_menu_alpha;
+int current_dialog_box;
+const char* current_dialog_text;
+
+enum confirmation_dialog_ids {
+	DIALOG_NONE,
+	DIALOG_RESTORE_DEFAULT_SETTINGS,
+	DIALOG_CONFIRM_QUIT,
+};
 
 pause_menu_item_type settings_menu_items[] = {
 		{.id = SETTINGS_MENU_GENERAL, .text = "GENERAL"},
@@ -105,6 +113,7 @@ int active_settings_subsection = 0;
 int scroll_position = 0;
 int menu_control_y;
 int menu_control_x;
+int menu_control_back;
 
 enum menu_setting_style_ids {
 	SETTING_STYLE_TOGGLE = 0,
@@ -236,8 +245,7 @@ setting_type general_settings[] = {
 				.explanation = "Use joysticks for horizontal movement only, not all-directional. "
 						"This may make the game easier to control for some controllers."},
 		{.id = SETTING_RESET_ALL_SETTINGS, .style = SETTING_STYLE_TEXT_ONLY,
-				.text = "Reset defaults...", .explanation = "Revert all settings to their default state.\n"
-				"To change the defaults, edit the configuration file 'SDLPoP.ini'."},
+				.text = "Restore defaults...", .explanation = "Revert all settings to the default state."},
 };
 
 setting_type visuals_settings[] = {
@@ -266,7 +274,7 @@ setting_type visuals_settings[] = {
 setting_type gameplay_settings[] = {
 		{.id = SETTING_ENABLE_CHEATS, .style = SETTING_STYLE_TOGGLE, .linked = &cheats_enabled,
 				.text = "Enable cheats",
-				.explanation = "Turn cheats on or off."},
+				.explanation = "Turn cheats on or off.\nAlso, display the CHEATS option on the pause menu."},
 		{.id = SETTING_ENABLE_COPYPROT, .style = SETTING_STYLE_TOGGLE, .linked = &enable_copyprot,
 				.text = "Enable copy protection level",
 				.explanation = "Enable or disable the potions (copy protection) level."},
@@ -664,7 +672,8 @@ void pause_menu_clicked(pause_menu_item_type* item) {
 			controlled_area = 0;
 			break;
 		case PAUSE_MENU_QUIT_GAME:
-			last_key_scancode = SDL_SCANCODE_Q | WITH_CTRL;
+			current_dialog_box = DIALOG_CONFIRM_QUIT;
+			current_dialog_text = "Quit SDLPoP?";
 			break;
 		case SETTINGS_MENU_GENERAL:
 			enter_settings_subsection(SETTINGS_MENU_GENERAL, general_settings);
@@ -724,11 +733,6 @@ void draw_pause_menu_item(pause_menu_item_type* item, rect_type* parent, int* y_
 		}
 		text_color = color_15_brightwhite;
 		draw_rect_contours(&selection_box, color_7_lightgray);
-#if 0 // do no unnecessary work...
-		draw_rect_with_alpha(&selection_box, color_7_lightgray, 230);
-		shrink2_rect(&selection_box, &selection_box, 1, 1);
-		draw_rect_with_alpha(&selection_box, color_0_black, pause_menu_alpha);
-#endif
 
 		if (mouse_clicked) {
 			if (is_mouse_over_rect(&selection_box)) {
@@ -771,84 +775,57 @@ void draw_pause_menu() {
 
 bool were_settings_changed;
 
-void turn_setting_on(setting_type* setting) {
+void turn_setting_on_off(int setting_id, byte new_state, void* linked) {
 	were_settings_changed = true;
-	play_sound(sound_10_sword_vs_sword);
-	play_next_sound();
-	switch(setting->id) {
+	switch(setting_id) {
 		default:
-			if (setting->linked != NULL) {
-				*(byte*)(setting->linked) = 1;
+			if (linked != NULL) {
+				*(byte*)(linked) = new_state;
 			}
 			break;
 		case SETTING_FULLSCREEN:
-			start_fullscreen = 1;
-			SDL_SetWindowFullscreen(window_, SDL_WINDOW_FULLSCREEN_DESKTOP);
+			start_fullscreen = new_state;
+			SDL_SetWindowFullscreen(window_, (new_state != 0) * SDL_WINDOW_FULLSCREEN_DESKTOP);
 			break;
 		case SETTING_USE_CORRECT_ASPECT_RATIO:
-			use_correct_aspect_ratio = 1;
+			use_correct_aspect_ratio = new_state;
 			apply_aspect_ratio();
 			break;
 		case SETTING_USE_INTEGER_SCALING:
-			use_integer_scaling = 1;
-			window_resized();
+			use_integer_scaling = new_state;
+			if (new_state) {
+				window_resized();
+			} else {
+#if SDL_VERSION_ATLEAST(2,0,5) // SDL_RenderSetIntegerScale
+				SDL_RenderSetIntegerScale(renderer_, SDL_FALSE);
+#endif
+			}
 			break;
 		case SETTING_ENABLE_LIGHTING:
-			enable_lighting = 1;
+			enable_lighting = new_state;
 			extern image_type* lighting_mask; // TODO: cleanup
-			if (lighting_mask == NULL) {
+			if (new_state && lighting_mask == NULL) {
 				init_lighting();
 			}
 			need_full_redraw = 1;
 			break;
 		case SETTING_ENABLE_SOUND:
-			turn_sound_on_off(15);
+			turn_sound_on_off((new_state != 0) * 15);
 			break;
 		case SETTING_USE_FIXES_AND_ENHANCEMENTS:
-			turn_fixes_and_enhancements_on_off(1);
+			turn_fixes_and_enhancements_on_off(new_state);
 			break;
 		case SETTING_USE_CUSTOM_OPTIONS:
-			turn_custom_options_on_off(1);
+			turn_custom_options_on_off(new_state);
 			break;
 	}
 }
 
-void turn_setting_off(setting_type* setting) {
-	were_settings_changed = true;
+void turn_setting_on_off_with_sound(setting_type* setting, byte new_state) {
 	play_sound(sound_10_sword_vs_sword);
 	play_next_sound();
-	switch(setting->id) {
-		default:
-			if (setting->linked != NULL) {
-				*(byte*)(setting->linked) = 0;
-			}
-			break;
-		case SETTING_FULLSCREEN:
-			start_fullscreen = 0;
-			SDL_SetWindowFullscreen(window_, 0);
-			break;
-		case SETTING_USE_CORRECT_ASPECT_RATIO:
-			use_correct_aspect_ratio = 0;
-			apply_aspect_ratio();
-			break;
-		case SETTING_USE_INTEGER_SCALING:
-			use_integer_scaling = 0;
-			SDL_RenderSetIntegerScale(renderer_, SDL_FALSE);
-			break;
-		case SETTING_ENABLE_LIGHTING:
-			enable_lighting = 0;
-			need_full_redraw = 1;
-			break;
-		case SETTING_ENABLE_SOUND:
-			turn_sound_on_off(0);
-			break;
-		case SETTING_USE_FIXES_AND_ENHANCEMENTS:
-			turn_fixes_and_enhancements_on_off(0);
-			break;
-		case SETTING_USE_CUSTOM_OPTIONS:
-			turn_custom_options_on_off(0);
-			break;
-	}
+	turn_setting_on_off(setting->id, new_state, setting->linked);
+
 }
 
 int get_value(setting_type* setting) {
@@ -989,7 +966,7 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 
 		SDL_Rect dest_rect;
 		rect_to_sdlrect(&setting_box, &dest_rect);
-		uint32_t rgb_color = SDL_MapRGBA(overlay_surface->format, 55, 55, 55, 240);
+		uint32_t rgb_color = SDL_MapRGBA(overlay_surface->format, 55, 55, 55, 255);
 		if (SDL_FillRect(overlay_surface, &dest_rect, rgb_color) != 0) {
 			sdlperror("SDL_FillRect");
 			quit(1);
@@ -997,7 +974,7 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 		rect_type left_side_of_setting_box = setting_box;
 		left_side_of_setting_box.left = setting_box.left - 2;
 		left_side_of_setting_box.right = setting_box.left;
-		draw_rect_with_alpha(&left_side_of_setting_box, color_15_brightwhite, pause_menu_alpha);
+		draw_rect(&left_side_of_setting_box, color_15_brightwhite);
 		draw_setting_explanation(setting);
 	}
 
@@ -1024,7 +1001,7 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 					rect_type OFF_hitbox = setting_box;
 					OFF_hitbox.left = setting_box.right - 27;
 					if (is_mouse_over_rect(&OFF_hitbox)) {
-						turn_setting_off(setting);
+						turn_setting_on_off_with_sound(setting, 0);
 						setting_enabled = false;
 					}
 				} else {
@@ -1032,15 +1009,15 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 					ON_hitbox.left = setting_box.right - 54;
 					ON_hitbox.right = setting_box.right - 27;
 					if (is_mouse_over_rect(&ON_hitbox)) {
-						turn_setting_on(setting);
+						turn_setting_on_off_with_sound(setting, 1);
 						setting_enabled = true;
 					}
 				}
 			} else if (setting_enabled && menu_control_x > 0) {
-				turn_setting_off(setting);
+				turn_setting_on_off_with_sound(setting, 0);
 				setting_enabled = false;
 			} else if (!setting_enabled && menu_control_x < 0) {
-				turn_setting_on(setting);
+				turn_setting_on_off_with_sound(setting, 1);
 				setting_enabled = true;
 			}
 		}
@@ -1050,29 +1027,6 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 		show_text_with_color(&text_rect, 1, -1, "OFF", OFF_color);
 		text_rect.right -= 20;
 		show_text_with_color(&text_rect, 1, -1, "ON", ON_color);
-
-	} else if (setting->style == SETTING_STYLE_SLIDER) {
-		int slider_value = 8000;
-		float slider_position = 0.5f;
-		rect_type slider_rect = text_rect;
-		slider_rect.top += 1;
-		slider_rect.left = slider_rect.right - 20;
-		slider_rect.bottom = slider_rect.top + 3;
-		draw_rect_contours(&slider_rect, color_7_lightgray);
-
-		rect_type slider_pos_rect = slider_rect;
-		int slider_center_x = (int) (0.5f + (float)slider_rect.left +
-				slider_position*((float)(slider_rect.right - slider_rect.left)));
-		slider_pos_rect.left = slider_center_x - 1;
-		slider_pos_rect.right = slider_center_x + 1;
-		slider_pos_rect.top -= 1;
-		slider_pos_rect.bottom += 1;
-		draw_rect_with_alpha(&slider_pos_rect, color_15_brightwhite, 255);
-
-		text_rect.right -= 25;
-		char value_text[16];
-		snprintf(value_text, sizeof(value_text), "%d", slider_value);
-		show_text_with_color(&text_rect, 1, -1, value_text, selected_color);
 
 	} else if (setting->style == SETTING_STYLE_NUMBER && !disabled) {
 		int value = get_value(setting);
@@ -1113,8 +1067,12 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 	} else {
 		// show text only
 		if (highlighted_setting_id == setting->id) {
-			// TODO: reset settings to defaults
-
+			if (setting->id == SETTING_RESET_ALL_SETTINGS) {
+				if (pressed_enter || (mouse_clicked && is_mouse_over_rect(&setting_box))) {
+					current_dialog_box = DIALOG_RESTORE_DEFAULT_SETTINGS;
+					current_dialog_text = "Restore all settings to their default values?";
+				}
+			}
 		}
 	}
 
@@ -1123,12 +1081,14 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 
 void menu_scroll(int y) {
 	settings_area_type* current_settings_area = get_settings_area(active_settings_subsection);
-	int max_scroll = MAX(0, current_settings_area->setting_count - 9);
-	if (drawn_menu == 1 && controlled_area == 1) {
-		if (y < 0 && scroll_position > 0) {
-			--scroll_position;
-		} else if (y > 0 && scroll_position < max_scroll) {
-			++scroll_position;
+	if (current_settings_area != NULL) {
+		int max_scroll = MAX(0, current_settings_area->setting_count - 9);
+		if (drawn_menu == 1 && controlled_area == 1) {
+			if (y < 0 && scroll_position > 0) {
+				--scroll_position;
+			} else if (y > 0 && scroll_position < max_scroll) {
+				++scroll_position;
+			}
 		}
 	}
 }
@@ -1213,8 +1173,107 @@ void reset_paused_menu() {
 	highlighted_pause_menu_item = PAUSE_MENU_RESUME;
 }
 
+enum dialog_button_ids {
+	DIALOG_BUTTON_CANCEL,
+	DIALOG_BUTTON_OK,
+};
+
+void confirmation_dialog_result(int which_dialog, int button) {
+	if (which_dialog == DIALOG_RESTORE_DEFAULT_SETTINGS && button == DIALOG_BUTTON_OK) {
+		play_sound(sound_10_sword_vs_sword);
+		play_next_sound();
+		were_settings_changed = true;
+		set_options_to_default();
+		turn_setting_on_off(SETTING_USE_CORRECT_ASPECT_RATIO, use_correct_aspect_ratio, NULL);
+		turn_setting_on_off(SETTING_USE_INTEGER_SCALING, use_integer_scaling, NULL);
+		turn_setting_on_off(SETTING_ENABLE_LIGHTING, enable_lighting, NULL);
+		turn_setting_on_off(SETTING_ENABLE_SOUND, is_sound_on, NULL);
+	} else if (which_dialog == DIALOG_CONFIRM_QUIT && button == DIALOG_BUTTON_OK) {
+		last_key_scancode = SDL_SCANCODE_Q | WITH_CTRL;
+	}
+}
+
+rect_type cancel_text_rect = {104, 162,  118,  212};
+rect_type cancel_highlight_rect = {103, 162,  116,  212};
+rect_type ok_text_rect = {104, 108,  118,  158};
+rect_type ok_highlight_rect = {103, 108,  116,  158};
+
+void draw_confirmation_dialog(int which_dialog, const char* text) {
+	int highlighted_button = DIALOG_BUTTON_OK;
+	int old_highlighted_button = -1;
+	for (;;) {
+		process_events();
+		key_test_paused_menu(key_test_quit());
+
+		if (menu_control_back == 1) {
+			confirmation_dialog_result(which_dialog, DIALOG_BUTTON_CANCEL);
+			break;
+		}
+
+		if (read_mouse_state()) {
+			if (is_mouse_over_rect(&ok_highlight_rect)) {
+				highlighted_button = DIALOG_BUTTON_OK;
+			} else if (is_mouse_over_rect(&cancel_highlight_rect)) {
+				highlighted_button = DIALOG_BUTTON_CANCEL;
+			}
+		}
+
+		if (menu_control_x < 0) {
+			highlighted_button = DIALOG_BUTTON_OK;
+		} else if (menu_control_x > 0) {
+			highlighted_button = DIALOG_BUTTON_CANCEL;
+		} else if (clicked_or_pressed_enter) {
+			confirmation_dialog_result(which_dialog, highlighted_button);
+			break;
+		}
+
+		if (highlighted_button != old_highlighted_button) {
+			old_highlighted_button = highlighted_button;
+			// Need to redraw the dialog box.
+			uint32_t clear_color = SDL_MapRGBA(current_target_surface->format, 0, 0, 0, 255);
+			SDL_FillRect(overlay_surface, NULL, clear_color);
+			draw_rect(&copyprot_dialog->peel_rect, color_0_black);
+			dialog_method_2_frame(copyprot_dialog);
+			rect_type rect;
+			shrink2_rect(&rect, &copyprot_dialog->text_rect, 2, 1);
+			rect.bottom -= 14;
+			show_text_with_color(&rect, 0, 0, text, color_15_brightwhite);
+			clear_kbd_buf();
+
+			rect_type* highlight_rect;
+			int ok_text_color, cancel_text_color;
+			if (highlighted_button == DIALOG_BUTTON_OK) {
+				highlight_rect = &ok_highlight_rect;
+				ok_text_color = color_15_brightwhite;
+				cancel_text_color = color_7_lightgray;
+			} else {
+				highlight_rect = &cancel_highlight_rect;
+				ok_text_color = color_7_lightgray;
+				cancel_text_color = color_15_brightwhite;
+			}
+			draw_rect(highlight_rect, color_8_darkgray);
+			show_text_with_color(&ok_text_rect, 0, 0, "OK", ok_text_color);
+			show_text_with_color(&cancel_text_rect, 0, 0, "Cancel", cancel_text_color);
+			update_screen();
+		}
+
+		SDL_Delay(1); // Prevent 100% cpu usage.
+
+	}
+	current_dialog_box = 0;
+	clicked_or_pressed_enter = 0;
+	pressed_enter = 0;
+	mouse_clicked = 0;
+}
+
 void draw_pause_overlay() {
 	if (!is_menu_shown) return;
+
+	if (current_dialog_box != DIALOG_NONE) {
+		draw_confirmation_dialog(current_dialog_box, current_dialog_text);
+		return;
+	}
+
 	mouse_state_changed = read_mouse_state();
 	font_type* saved_font = textstate.ptr_font;
 	textstate.ptr_font = &small_font;
@@ -1230,33 +1289,44 @@ void draw_pause_overlay() {
 		draw_settings_menu();
 	}
 	textstate.ptr_font = saved_font;
+
 }
 
 bool are_controller_buttons_released;
+Uint64 controller_timeout_counter;
 
 int key_test_paused_menu(int key) {
+	menu_control_x = 0;
+	menu_control_y = 0;
+	menu_control_back = 0;
+
 	if (is_joyst_mode) {
+		float needed_timeout_s = 0.1f;
 		if (joy_hat_states[0] == 0 && joy_hat_states[1] == 0 && joy_AY_buttons_state == 0 && joy_B_button_state == 0) {
 			are_controller_buttons_released = true;
+			controller_timeout_counter = 0;
 		} else if (are_controller_buttons_released) {
+			needed_timeout_s = 0.3f;
 			are_controller_buttons_released = false;
-			if (!(joy_hat_states[0] == 0 && joy_hat_states[1] == 0)) {
-				menu_control_x = joy_hat_states[0];
-				menu_control_y = joy_hat_states[1];
-				return 0;
-			}
 			if (joy_AY_buttons_state == 1 /* A pressed */) {
 				key = SDL_SCANCODE_RETURN;
 			} else if (joy_B_button_state == 1) {
 				key = SDL_SCANCODE_ESCAPE;
 			}
 		}
+
+		Uint64 current_counter = SDL_GetPerformanceCounter();
+		if (current_counter > controller_timeout_counter && !(joy_hat_states[0] == 0 && joy_hat_states[1] == 0)) {
+			menu_control_x = joy_hat_states[0];
+			menu_control_y = joy_hat_states[1];
+			controller_timeout_counter = current_counter + (Uint64)((float)SDL_GetPerformanceFrequency() * needed_timeout_s);
+			return 0;
+		}
+
 	}
 
 	switch(key) {
 		default:
-			menu_control_y = 0;
-			menu_control_x = 0;
 			if (key & WITH_CTRL) {
 				is_paused = 0;
 				return key; // Allow Ctrl+R, etc.
@@ -1265,26 +1335,24 @@ int key_test_paused_menu(int key) {
 			}
 		case SDL_SCANCODE_UP:
 			menu_control_y = -1;
-			menu_control_x = 0;
 			return 0;
 		case SDL_SCANCODE_DOWN:
 			menu_control_y = 1;
-			menu_control_x = 0;
 			return 0;
 		case SDL_SCANCODE_RIGHT:
-			menu_control_y = 0;
 			menu_control_x = 1;
 			return 0;
 		case SDL_SCANCODE_LEFT:
-			menu_control_y = 0;
 			menu_control_x = -1;
 			return 0;
 		case SDL_SCANCODE_RETURN:
 		case SDL_SCANCODE_SPACE:
 			clicked_or_pressed_enter = 1;
+			pressed_enter = 1;
 			return 0;
 		case SDL_SCANCODE_ESCAPE:
 		case SDL_SCANCODE_BACKSPACE:
+			menu_control_back = 1;
 			if (drawn_menu == 1) {
 				play_sound(sound_22_loose_shake_3);
 				play_next_sound();
@@ -1352,7 +1420,7 @@ void load_ingame_settings() {
 		}
 	}
 	// If there is a SDLPoP.cfg file, let it override the settings
-	SDL_RWops* rw = SDL_RWFromFile(locate_file("SDLPoP.cfg"), "rb");
+	SDL_RWops* rw = SDL_RWFromFile(cfg_filename, "rb");
 	if (rw != NULL) {
 		process_ingame_settings(rw, process_rw_read);
 		SDL_RWclose(rw);

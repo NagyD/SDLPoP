@@ -123,6 +123,11 @@ int __pascal far key_test_quit() {
 		#ifdef USE_REPLAY
 		if (recording) save_recorded_replay();
 		#endif
+		#ifdef USE_MENU
+		if (is_menu_shown) {
+			menu_was_closed();
+		}
+		#endif
 
 		quit(0);
 	}
@@ -703,7 +708,7 @@ void __pascal far free_peel(peel_type *peel_ptr) {
 void __pascal far set_hc_pal() {
 	// stub
 	if (graphics_mode == gmMcgaVga) {
-		set_pal_arr(0, 16, vga_palette, 1);
+		set_pal_arr(0, 16, custom->vga_palette, 1);
 	} else {
 		// ...
 	}
@@ -2148,7 +2153,6 @@ void draw_overlays() {
 
 	surface_type* saved_target_surface = current_target_surface;
 	current_target_surface = overlay_surface;
-	SDL_FillRect(overlay_surface, NULL, 0);
 
 #ifdef USE_DEBUG_CHEATS
 	if (is_timer_displayed && start_level > 0) {
@@ -2524,13 +2528,16 @@ const rect_type far * __pascal far method_5_rect(const rect_type far *rect,int b
 	rect_to_sdlrect(rect, &dest_rect);
 	rgb_type palette_color = palette[color];
 #ifndef USE_ALPHA
-	uint32_t rgb_color = SDL_MapRGB(onscreen_surface_->format, palette_color.r<<2, palette_color.g<<2, palette_color.b<<2);
+	uint32_t rgb_color = SDL_MapRGBA(current_target_surface->format, palette_color.r<<2, palette_color.g<<2, palette_color.b<<2, 255);
 #else
 	uint32_t rgb_color = SDL_MapRGBA(current_target_surface->format, palette_color.r<<2, palette_color.g<<2, palette_color.b<<2, color == 0 ? SDL_ALPHA_TRANSPARENT : SDL_ALPHA_OPAQUE);
 #endif
 	if (safe_SDL_FillRect(current_target_surface, &dest_rect, rgb_color) != 0) {
 		sdlperror("SDL_FillRect");
 		quit(1);
+	}
+	if (debug_drawing_mode) {
+		update_screen();
 	}
 	return rect;
 }
@@ -2850,11 +2857,12 @@ void process_events() {
 					case SDL_CONTROLLER_BUTTON_B:          joy_B_button_state = 1;    break; /*** B (unused) ***/
 
 					case SDL_CONTROLLER_BUTTON_START:
-						last_key_scancode = SDL_SCANCODE_R | WITH_CTRL; /*** start (restart game) ***/
-						break;
-
 					case SDL_CONTROLLER_BUTTON_BACK:
+#ifdef USE_MENU
+						last_key_scancode = SDL_SCANCODE_M | WITH_CTRL;  /*** bring up pause menu ***/
+#else
 						last_key_scancode = SDL_SCANCODE_ESCAPE;  /*** back (pause game) ***/
+#endif
 						break;
 
 					default: break;
@@ -2960,14 +2968,26 @@ void process_events() {
 				break;
 #ifdef USE_MENU
 			case SDL_MOUSEBUTTONDOWN:
-				mouse_clicked = true;
-				clicked_or_pressed_enter = true;
+				if (!is_menu_shown) {
+					is_paused = 1;
+					is_menu_shown = 1;
+				} else {
+					mouse_clicked = true;
+					clicked_or_pressed_enter = true;
+				}
 				break;
 			case SDL_MOUSEWHEEL:
-				menu_scroll(-event.wheel.y);
+				if (is_menu_shown) {
+					menu_scroll(-event.wheel.y);
+				}
 				break;
 #endif
 			case SDL_QUIT:
+#ifdef USE_MENU
+				if (is_menu_shown) {
+					menu_was_closed();
+				}
+#endif
 				quit(0);
 				break;
 		}
@@ -2992,8 +3012,11 @@ void idle() {
 
 	process_events();
 	update_screen();
+#ifdef USE_MENU
 	mouse_clicked = 0;
 	clicked_or_pressed_enter = 0;
+	pressed_enter = 0;
+#endif
 }
 
 void do_timer_delay(int timer_index) {

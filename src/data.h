@@ -124,25 +124,23 @@ extern word current_level INIT(= -1);
 // data:3021
 extern byte graphics_mode INIT(= 0);
 // data:2BA6
-extern rgb_type vga_palette[16] INIT(= {
-	{0x00, 0x00, 0x00},
-	{0x00, 0x00, 0x2A},
-	{0x00, 0x2A, 0x00},
-	{0x00, 0x2A, 0x2A},
-	{0x2A, 0x00, 0x00},
-	{0x2A, 0x00, 0x2A},
-	{0x2A, 0x15, 0x00},
-	{0x2A, 0x2A, 0x2A},
-	{0x15, 0x15, 0x15},
-	{0x15, 0x15, 0x3F},
-	{0x15, 0x3F, 0x15},
-	{0x15, 0x3F, 0x3F},
-	{0x3F, 0x15, 0x15},
-	{0x3F, 0x15, 0x3F},
-	{0x3F, 0x3F, 0x15},
-	{0x3F, 0x3F, 0x3F},
-});
-
+#define VGA_PALETTE_DEFAULT { \
+	{0x00, 0x00, 0x00},\
+	{0x00, 0x00, 0x2A},\
+	{0x00, 0x2A, 0x00},\
+	{0x00, 0x2A, 0x2A},\
+	{0x2A, 0x00, 0x00},\
+	{0x2A, 0x00, 0x2A},\
+	{0x2A, 0x15, 0x00},\
+	{0x2A, 0x2A, 0x2A},\
+	{0x15, 0x15, 0x15},\
+	{0x15, 0x15, 0x3F},\
+	{0x15, 0x3F, 0x15},\
+	{0x15, 0x3F, 0x3F},\
+	{0x3F, 0x15, 0x15},\
+	{0x3F, 0x15, 0x3F},\
+	{0x3F, 0x3F, 0x15},\
+	{0x3F, 0x3F, 0x3F},}
 // data:4CC0
 extern word room_L;
 // data:4CCE
@@ -652,7 +650,6 @@ extern byte enable_quicksave_penalty INIT(= 1);
 extern byte enable_replay INIT(= 1);
 extern byte use_correct_aspect_ratio INIT(= 0);
 extern byte use_integer_scaling INIT(= 0);
-extern fixes_options_type fixes_defaults;
 extern fixes_options_type fixes_saved;
 extern fixes_options_type fixes_disabled_state;
 extern fixes_options_type* fixes INIT(= &fixes_disabled_state);
@@ -674,6 +671,7 @@ extern custom_options_type custom_defaults INIT(= {
 		.level_edge_hit_tile = tiles_20_wall,
 		.allow_triggering_any_tile = 0,
 		.enable_wda_in_palace = 0,
+        .vga_palette = VGA_PALETTE_DEFAULT,
 		.first_level = 1,
 		.skip_title = 0,
 		.shift_L_allowed_until_level = 4,
@@ -728,6 +726,7 @@ extern bool mouse_state_changed;
 extern int mouse_x, mouse_y;
 extern bool mouse_clicked;
 extern bool clicked_or_pressed_enter;
+extern bool pressed_enter;
 extern sbyte is_menu_shown;
 extern byte enable_pause_menu INIT(= 1);
 #endif

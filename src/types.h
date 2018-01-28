@@ -1106,7 +1106,7 @@ typedef struct custom_options_type {
 	byte level_edge_hit_tile;
 	byte allow_triggering_any_tile;
 	byte enable_wda_in_palace;
-	rgb_type vga_palette[16]; // TODO: Configuring the palette from the MODS menu?
+	rgb_type vga_palette[16];
 	word first_level;
 	byte skip_title;
 	word shift_L_allowed_until_level;

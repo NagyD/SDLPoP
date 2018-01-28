@@ -507,7 +507,7 @@ void options_process_custom_general(SDL_RWops* rw, rw_process_func_type process_
 	process(custom->level_edge_hit_tile);
 	process(custom->allow_triggering_any_tile);
 	process(custom->enable_wda_in_palace);
-	process(vga_palette);
+	process(custom->vga_palette);
 	process(custom->first_level);
 	process(custom->skip_title);
 	process(custom->shift_L_allowed_until_level);

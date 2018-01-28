@@ -205,56 +205,57 @@ static int global_ini_callback(const char *section, const char *name, const char
 			else if (strcasecmp(value, "prompt") == 0) use_fixes_and_enhancements = 2;
 			return 1;
 		}
-		process_boolean("enable_crouch_after_climbing", &fixes_defaults.enable_crouch_after_climbing);
-		process_boolean("enable_freeze_time_during_end_music", &fixes_defaults.enable_freeze_time_during_end_music);
-		process_boolean("enable_remember_guard_hp", &fixes_defaults.enable_remember_guard_hp);
-		process_boolean("fix_gate_sounds", &fixes_defaults.fix_gate_sounds);
-		process_boolean("fix_two_coll_bug", &fixes_defaults.fix_two_coll_bug);
-		process_boolean("fix_infinite_down_bug", &fixes_defaults.fix_infinite_down_bug);
-		process_boolean("fix_gate_drawing_bug", &fixes_defaults.fix_gate_drawing_bug);
-		process_boolean("fix_bigpillar_climb", &fixes_defaults.fix_bigpillar_climb);
-		process_boolean("fix_jump_distance_at_edge", &fixes_defaults.fix_jump_distance_at_edge);
-		process_boolean("fix_edge_distance_check_when_climbing", &fixes_defaults.fix_edge_distance_check_when_climbing);
-		process_boolean("fix_painless_fall_on_guard", &fixes_defaults.fix_painless_fall_on_guard);
-		process_boolean("fix_wall_bump_triggers_tile_below", &fixes_defaults.fix_wall_bump_triggers_tile_below);
-		process_boolean("fix_stand_on_thin_air", &fixes_defaults.fix_stand_on_thin_air);
-		process_boolean("fix_press_through_closed_gates", &fixes_defaults.fix_press_through_closed_gates);
-		process_boolean("fix_grab_falling_speed", &fixes_defaults.fix_grab_falling_speed);
-		process_boolean("fix_skeleton_chomper_blood", &fixes_defaults.fix_skeleton_chomper_blood);
-		process_boolean("fix_move_after_drink", &fixes_defaults.fix_move_after_drink);
-		process_boolean("fix_loose_left_of_potion", &fixes_defaults.fix_loose_left_of_potion);
-		process_boolean("fix_guard_following_through_closed_gates", &fixes_defaults.fix_guard_following_through_closed_gates);
-		process_boolean("fix_safe_landing_on_spikes", &fixes_defaults.fix_safe_landing_on_spikes);
-		process_boolean("fix_glide_through_wall", &fixes_defaults.fix_glide_through_wall);
-		process_boolean("fix_drop_through_tapestry", &fixes_defaults.fix_drop_through_tapestry);
-		process_boolean("fix_land_against_gate_or_tapestry", &fixes_defaults.fix_land_against_gate_or_tapestry);
-		process_boolean("fix_unintended_sword_strike", &fixes_defaults.fix_unintended_sword_strike);
-		process_boolean("fix_retreat_without_leaving_room", &fixes_defaults.fix_retreat_without_leaving_room);
-		process_boolean("fix_running_jump_through_tapestry", &fixes_defaults.fix_running_jump_through_tapestry);
-		process_boolean("fix_push_guard_into_wall", &fixes_defaults.fix_push_guard_into_wall);
-		process_boolean("fix_jump_through_wall_above_gate", &fixes_defaults.fix_jump_through_wall_above_gate);
-		process_boolean("fix_chompers_not_starting", &fixes_defaults.fix_chompers_not_starting);
-		process_boolean("fix_feather_interrupted_by_leveldoor", &fixes_defaults.fix_feather_interrupted_by_leveldoor);
-		process_boolean("fix_offscreen_guards_disappearing", &fixes_defaults.fix_offscreen_guards_disappearing);
-		process_boolean("fix_move_after_sheathe", &fixes_defaults.fix_move_after_sheathe);
+		process_boolean("enable_crouch_after_climbing", &fixes_saved.enable_crouch_after_climbing);
+		process_boolean("enable_freeze_time_during_end_music", &fixes_saved.enable_freeze_time_during_end_music);
+		process_boolean("enable_remember_guard_hp", &fixes_saved.enable_remember_guard_hp);
+		process_boolean("fix_gate_sounds", &fixes_saved.fix_gate_sounds);
+		process_boolean("fix_two_coll_bug", &fixes_saved.fix_two_coll_bug);
+		process_boolean("fix_infinite_down_bug", &fixes_saved.fix_infinite_down_bug);
+		process_boolean("fix_gate_drawing_bug", &fixes_saved.fix_gate_drawing_bug);
+		process_boolean("fix_bigpillar_climb", &fixes_saved.fix_bigpillar_climb);
+		process_boolean("fix_jump_distance_at_edge", &fixes_saved.fix_jump_distance_at_edge);
+		process_boolean("fix_edge_distance_check_when_climbing", &fixes_saved.fix_edge_distance_check_when_climbing);
+		process_boolean("fix_painless_fall_on_guard", &fixes_saved.fix_painless_fall_on_guard);
+		process_boolean("fix_wall_bump_triggers_tile_below", &fixes_saved.fix_wall_bump_triggers_tile_below);
+		process_boolean("fix_stand_on_thin_air", &fixes_saved.fix_stand_on_thin_air);
+		process_boolean("fix_press_through_closed_gates", &fixes_saved.fix_press_through_closed_gates);
+		process_boolean("fix_grab_falling_speed", &fixes_saved.fix_grab_falling_speed);
+		process_boolean("fix_skeleton_chomper_blood", &fixes_saved.fix_skeleton_chomper_blood);
+		process_boolean("fix_move_after_drink", &fixes_saved.fix_move_after_drink);
+		process_boolean("fix_loose_left_of_potion", &fixes_saved.fix_loose_left_of_potion);
+		process_boolean("fix_guard_following_through_closed_gates", &fixes_saved.fix_guard_following_through_closed_gates);
+		process_boolean("fix_safe_landing_on_spikes", &fixes_saved.fix_safe_landing_on_spikes);
+		process_boolean("fix_glide_through_wall", &fixes_saved.fix_glide_through_wall);
+		process_boolean("fix_drop_through_tapestry", &fixes_saved.fix_drop_through_tapestry);
+		process_boolean("fix_land_against_gate_or_tapestry", &fixes_saved.fix_land_against_gate_or_tapestry);
+		process_boolean("fix_unintended_sword_strike", &fixes_saved.fix_unintended_sword_strike);
+		process_boolean("fix_retreat_without_leaving_room", &fixes_saved.fix_retreat_without_leaving_room);
+		process_boolean("fix_running_jump_through_tapestry", &fixes_saved.fix_running_jump_through_tapestry);
+		process_boolean("fix_push_guard_into_wall", &fixes_saved.fix_push_guard_into_wall);
+		process_boolean("fix_jump_through_wall_above_gate", &fixes_saved.fix_jump_through_wall_above_gate);
+		process_boolean("fix_chompers_not_starting", &fixes_saved.fix_chompers_not_starting);
+		process_boolean("fix_feather_interrupted_by_leveldoor", &fixes_saved.fix_feather_interrupted_by_leveldoor);
+		process_boolean("fix_offscreen_guards_disappearing", &fixes_saved.fix_offscreen_guards_disappearing);
+		process_boolean("fix_move_after_sheathe", &fixes_saved.fix_move_after_sheathe);
 	}
 
 	if (check_ini_section("CustomGameplay")) {
-		process_word("start_minutes_left", &custom_defaults.start_minutes_left, NULL);
-		process_word("start_ticks_left", &custom_defaults.start_ticks_left, NULL);
-		process_word("start_hitp", &custom_defaults.start_hitp, NULL);
-		process_word("max_hitp_allowed", &custom_defaults.max_hitp_allowed, NULL);
-		process_word("saving_allowed_first_level", &custom_defaults.saving_allowed_first_level, NULL);
-		process_word("saving_allowed_last_level", &custom_defaults.saving_allowed_last_level, NULL);
-		process_boolean("start_upside_down", &custom_defaults.start_upside_down);
-		process_boolean("start_in_blind_mode", &custom_defaults.start_in_blind_mode);
-		process_word("copyprot_level", &custom_defaults.copyprot_level, NULL);
-		process_byte("drawn_tile_top_level_edge", &custom_defaults.drawn_tile_top_level_edge, &tile_type_names_list);
-		process_byte("drawn_tile_left_level_edge", &custom_defaults.drawn_tile_left_level_edge, &tile_type_names_list);
-		process_byte("level_edge_hit_tile", &custom_defaults.level_edge_hit_tile, &tile_type_names_list);
-		process_boolean("allow_triggering_any_tile", &custom_defaults.allow_triggering_any_tile);
+		process_boolean("use_custom_options", &use_custom_options);
+		process_word("start_minutes_left", &custom_saved.start_minutes_left, NULL);
+		process_word("start_ticks_left", &custom_saved.start_ticks_left, NULL);
+		process_word("start_hitp", &custom_saved.start_hitp, NULL);
+		process_word("max_hitp_allowed", &custom_saved.max_hitp_allowed, NULL);
+		process_word("saving_allowed_first_level", &custom_saved.saving_allowed_first_level, NULL);
+		process_word("saving_allowed_last_level", &custom_saved.saving_allowed_last_level, NULL);
+		process_boolean("start_upside_down", &custom_saved.start_upside_down);
+		process_boolean("start_in_blind_mode", &custom_saved.start_in_blind_mode);
+		process_word("copyprot_level", &custom_saved.copyprot_level, NULL);
+		process_byte("drawn_tile_top_level_edge", &custom_saved.drawn_tile_top_level_edge, &tile_type_names_list);
+		process_byte("drawn_tile_left_level_edge", &custom_saved.drawn_tile_left_level_edge, &tile_type_names_list);
+		process_byte("level_edge_hit_tile", &custom_saved.level_edge_hit_tile, &tile_type_names_list);
+		process_boolean("allow_triggering_any_tile", &custom_saved.allow_triggering_any_tile);
 		// TODO: Maybe allow automatically choosing the correct WDA, depending on the loaded VDUNGEON.DAT?
-		process_boolean("enable_wda_in_palace", &custom_defaults.enable_wda_in_palace);
+		process_boolean("enable_wda_in_palace", &custom_saved.enable_wda_in_palace);
 
 		// Options that change the hard-coded color palette (options 'vga_color_0', 'vga_color_1', ...)
 		static const char prefix[] = "vga_color_";
@@ -278,17 +279,17 @@ static int global_ini_callback(const char *section, const char *name, const char
 					start = end; // start parsing the next entry here
 				}
 			}
-			rgb_type* palette_color = &vga_palette[ini_palette_color];
+			rgb_type* palette_color = &custom_saved.vga_palette[ini_palette_color];
 			palette_color->r = rgb[0] / 4; // the palette uses values 0..63, not 0..255
 			palette_color->g = rgb[1] / 4;
 			palette_color->b = rgb[2] / 4;
 			return 1;
 		}
-		process_word("first_level", &custom_defaults.first_level, NULL);
-		process_boolean("skip_title", &custom_defaults.skip_title);
-		process_word("shift_L_allowed_until_level", &custom_defaults.shift_L_allowed_until_level, NULL);
-		process_word("shift_L_reduced_minutes", &custom_defaults.shift_L_reduced_minutes, NULL);
-		process_word("shift_L_reduced_ticks", &custom_defaults.shift_L_reduced_ticks, NULL);
+		process_word("first_level", &custom_saved.first_level, NULL);
+		process_boolean("skip_title", &custom_saved.skip_title);
+		process_word("shift_L_allowed_until_level", &custom_saved.shift_L_allowed_until_level, NULL);
+		process_word("shift_L_reduced_minutes", &custom_saved.shift_L_reduced_minutes, NULL);
+		process_word("shift_L_reduced_ticks", &custom_saved.shift_L_reduced_ticks, NULL);
 	} // end of section [CustomGameplay]
 
 	// [Level 1], etc.
@@ -329,10 +330,34 @@ static int mod_ini_callback(const char *section, const char *name, const char *v
 	return 0;
 }
 
-void load_global_options() {
+void set_options_to_default() {
+	enable_pause_menu = 1;
+	enable_copyprot = 0;
+	enable_mixer = 1;
+	enable_fade = 1;
+	enable_flash = 1;
+	enable_text = 1;
+	enable_info_screen = 1;
+	start_fullscreen = 0;
+	use_correct_aspect_ratio = 0;
+	use_integer_scaling = 0;
+	enable_controller_rumble = 1;
+	joystick_only_horizontal = 1;
+	joystick_threshold = 8000;
+	enable_quicksave = 1;
+	enable_quicksave_penalty = 1;
+	enable_replay = 1;
+	enable_lighting = 0;
 	// By default, all the fixes are used, unless otherwise specified.
 	// So, if one of these options is omitted from the INI file, they default to true.
-	memset(&fixes_defaults, 1, sizeof(fixes_defaults));
+	memset(&fixes_saved, 1, sizeof(fixes_saved));
+	custom_saved = custom_defaults;
+	turn_fixes_and_enhancements_on_off(0);
+	turn_custom_options_on_off(0);
+}
+
+void load_global_options() {
+	set_options_to_default();
 	ini_load(locate_file("SDLPoP.ini"), global_ini_callback); // global configuration
 }
 
@@ -355,9 +380,8 @@ void load_mod_options() {
 		ini_load(filename, mod_ini_callback);
 	}
 
-	fixes_saved = fixes_defaults;
 	turn_fixes_and_enhancements_on_off(use_fixes_and_enhancements);
-	custom_saved = custom_defaults;
+	turn_custom_options_on_off(use_custom_options);
 #ifdef USE_MENU
 	load_ingame_settings();
 #endif

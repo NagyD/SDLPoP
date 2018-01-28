@@ -574,6 +574,9 @@ int __pascal far process_key() {
 		break;
 		case SDL_SCANCODE_R | WITH_CTRL: // ctrl-r
 			start_level = -1;
+#ifdef USE_MENU
+			if (is_menu_shown) menu_was_closed();
+#endif
 			start_game();
 		break;
 		case SDL_SCANCODE_S | WITH_CTRL: // ctrl-s
