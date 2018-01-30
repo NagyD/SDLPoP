@@ -550,7 +550,10 @@ extern SDL_Surface* overlay_surface;
 extern SDL_Surface* merged_surface;
 extern SDL_Renderer* renderer_;
 extern SDL_Window* window_;
-extern SDL_Texture* sdl_texture_;
+extern SDL_Texture* texture_sharp;
+extern SDL_Texture* texture_fuzzy;
+extern SDL_Texture* texture_blurry;
+extern SDL_Texture* target_texture;
 
 extern SDL_GameController* sdl_controller_ INIT( = 0 );
 extern SDL_Joystick* sdl_joystick_; // in case our joystick is not compatible with SDL_GameController

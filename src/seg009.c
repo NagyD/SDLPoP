@@ -2023,6 +2023,11 @@ void __pascal far play_sound_from_buffer(sound_buffer_type far *buffer) {
 	}
 }
 
+void turn_music_on_off(byte new_state) {
+	enable_mixer = new_state;
+	Mix_VolumeMusic((is_sound_on && enable_mixer) ? MIX_MAX_VOLUME : 0);
+}
+
 // seg009:7273
 void __pascal far turn_sound_on_off(byte new_state) {
 	// stub
@@ -2032,7 +2037,7 @@ void __pascal far turn_sound_on_off(byte new_state) {
 	init_digi();
 	if (digi_unavailable) return;
 	Mix_Volume(-1, is_sound_on ? MIX_MAX_VOLUME : 0);
-	Mix_VolumeMusic(is_sound_on ? MIX_MAX_VOLUME : 0);
+	Mix_VolumeMusic((is_sound_on && enable_mixer) ? MIX_MAX_VOLUME : 0);
 #endif
 }
 
@@ -2067,6 +2072,32 @@ void window_resized() {
 }
 
 SDL_Surface* onscreen_surface_2x;
+
+void init_scaling() {
+	if (scaling_type == 1) {
+		if (onscreen_surface_2x == NULL) {
+			onscreen_surface_2x = SDL_CreateRGBSurface(0, 320*2, 200*2, 24, 0xFF, 0xFF << 8, 0xFF << 16, 0) ;
+		}
+		if (texture_fuzzy == NULL) {
+			SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
+			texture_fuzzy = SDL_CreateTexture(renderer_, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, 320*2, 200*2);
+			SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
+		}
+		target_texture = texture_fuzzy;
+	} else if (scaling_type == 2) {
+		if (texture_blurry == NULL) {
+			SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
+			texture_blurry = SDL_CreateTexture(renderer_, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, 320, 200);
+			SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
+		}
+		target_texture = texture_blurry;
+	} else {
+		if (texture_sharp == NULL) {
+			texture_sharp = SDL_CreateTexture(renderer_, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, 320, 200);
+		}
+		target_texture = texture_sharp;
+	}
+}
 
 // seg009:38ED
 void __pascal far set_gr_mode(byte grmode) {
@@ -2113,7 +2144,6 @@ void __pascal far set_gr_mode(byte grmode) {
 	}
 
 	apply_aspect_ratio();
-
 	window_resized();
 
 	/* Migration to SDL2: everything is still blitted to onscreen_surface_, however:
@@ -2123,24 +2153,13 @@ void __pascal far set_gr_mode(byte grmode) {
 	 * The function handling the screen updates is update_screen()
 	 * */
 	onscreen_surface_ = SDL_CreateRGBSurface(0, 320, 200, 24, 0xFF, 0xFF << 8, 0xFF << 16, 0) ;
-	overlay_surface = SDL_CreateRGBSurface(0, 320, 200, 32, 0xFF, 0xFF << 8, 0xFF << 16, 0xFF << 24) ;
-	merged_surface = SDL_CreateRGBSurface(0, 320, 200, 24, 0xFF, 0xFF << 8, 0xFF << 16, 0) ;
-	int scale = 1;
-	if (scaling_type == 1) {
-		scale = 2;
-		onscreen_surface_2x = SDL_CreateRGBSurface(0, 320*scale, 200*scale, 24, 0xFF, 0xFF << 8, 0xFF << 16, 0) ;
-	}
-	if (scaling_type == 1 || scaling_type == 2) {
-		// It seems that SDL will use the quality setting that was active at the time of calling SDL_CreateTexture().
-		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
-	}
-	sdl_texture_ = SDL_CreateTexture(renderer_, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, 320*scale, 200*scale);
-	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
-
+	overlay_surface = SDL_CreateRGBSurface(0, 320, 200, 32, 0xFF, 0xFF << 8, 0xFF << 16, 0xFF << 24);
+	merged_surface = SDL_CreateRGBSurface(0, 320, 200, 24, 0xFF, 0xFF << 8, 0xFF << 16, 0);
 	if (onscreen_surface_ == NULL || overlay_surface == NULL || merged_surface == NULL) {
-		sdlperror("SDL_SetVideoMode");
+		sdlperror("SDL_CreateRGBSurface");
 		quit(1);
 	}
+	init_scaling();
 	if (start_fullscreen) {
 		SDL_ShowCursor(SDL_DISABLE);
 	}
@@ -2158,6 +2177,7 @@ void __pascal far set_gr_mode(byte grmode) {
 }
 
 bool drawing_overlays = false;
+rect_type timer_text_rect = {2, 2, 10, 100};
 
 void draw_overlays() {
 	if (drawing_overlays) return; // Prevent recursion when update_screen() is called from within draw_overlays().
@@ -2181,14 +2201,16 @@ void draw_overlays() {
 		int line_width = 5 + (expected_numeric_chars + extra_numeric_chars) * 9;
 
 		rect_type timer_box_rect = {0, 0, 11, 2 + line_width};
-		rect_type timer_text_rect = {2, 2, 10, 100};
 		draw_rect_with_alpha(&timer_box_rect, color_0_black, 128);
 		show_text(&timer_text_rect, -1, -1, timer_text);
 	}
 #endif
 
 #ifdef USE_MENU
-	draw_pause_overlay();
+	draw_menu_overlay();
+	mouse_clicked = 0;
+	clicked_or_pressed_enter = 0;
+	pressed_enter = 0;
 #endif
 
 	current_target_surface = saved_target_surface;
@@ -2200,24 +2222,23 @@ void update_screen() {
 
 	SDL_Surface* surface;
 	if (need_draw_overlay) {
-		SDL_FillRect(merged_surface, NULL, 0);
+		SDL_FillRect(overlay_surface, NULL, 0);
 		draw_overlays();
 		SDL_BlitSurface(onscreen_surface_, NULL, merged_surface, NULL);
 		SDL_BlitSurface(overlay_surface, NULL, merged_surface, NULL);
 		surface = merged_surface;
-		SDL_UpdateTexture(sdl_texture_, NULL, merged_surface->pixels, merged_surface->pitch);
 	} else {
 		surface = onscreen_surface_;
 	}
 
+	init_scaling();
 	if (scaling_type == 1) {
 		SDL_BlitScaled(surface, NULL, onscreen_surface_2x, NULL);
 		surface = onscreen_surface_2x;
 	}
-
-	SDL_UpdateTexture(sdl_texture_, NULL, surface->pixels, surface->pitch);
+	SDL_UpdateTexture(target_texture, NULL, surface->pixels, surface->pitch);
 	SDL_RenderClear(renderer_);
-	SDL_RenderCopy(renderer_, sdl_texture_, NULL, NULL);
+	SDL_RenderCopy(renderer_, target_texture, NULL, NULL);
 	SDL_RenderPresent(renderer_);
 }
 
@@ -2990,8 +3011,7 @@ void process_events() {
 #ifdef USE_MENU
 			case SDL_MOUSEBUTTONDOWN:
 				if (!is_menu_shown) {
-					is_paused = 1;
-					is_menu_shown = 1;
+					last_key_scancode = SDL_SCANCODE_M | WITH_CTRL;
 				} else {
 					mouse_clicked = true;
 					clicked_or_pressed_enter = true;
@@ -3033,11 +3053,6 @@ void idle() {
 
 	process_events();
 	update_screen();
-#ifdef USE_MENU
-	mouse_clicked = 0;
-	clicked_or_pressed_enter = 0;
-	pressed_enter = 0;
-#endif
 }
 
 void __pascal do_simple_wait(int timer_index) {

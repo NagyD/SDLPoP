@@ -553,6 +553,7 @@ int __pascal far intersect_rect(rect_type far *output,const rect_type far *input
 rect_type far * __pascal far union_rect(rect_type far *output,const rect_type far *input1,const rect_type far *input2);
 void __pascal far stop_sounds();
 void __pascal far play_sound_from_buffer(sound_buffer_type far *buffer);
+void turn_music_on_off(byte new_state);
 void __pascal far turn_sound_on_off(byte new_state);
 int __pascal far check_sound_playing();
 void apply_aspect_ratio();
@@ -669,7 +670,7 @@ void save_level_screenshot(bool want_extras);
 #ifdef USE_MENU
 void init_menu();
 void menu_scroll(int y);
-void draw_pause_overlay();
+void draw_menu_overlay();
 int key_test_paused_menu(int key);
 void load_ingame_settings();
 void menu_was_closed();

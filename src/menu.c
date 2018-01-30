@@ -80,7 +80,8 @@ enum pause_menu_item_ids {
 
 pause_menu_item_type pause_menu_items[] = {
 		{.id = PAUSE_MENU_RESUME,        .text = "RESUME"},
-		{.id = PAUSE_MENU_CHEATS,        .text = "CHEATS", .required = &cheats_enabled},
+		// TODO: Add a cheats menu, where you can choose a cheat from a list?
+		/*{.id = PAUSE_MENU_CHEATS,        .text = "CHEATS", .required = &cheats_enabled},*/
 		{.id = PAUSE_MENU_SAVE_GAME,     .text = "SAVE GAME"},
 		{.id = PAUSE_MENU_LOAD_GAME,     .text = "LOAD GAME"},
 		{.id = PAUSE_MENU_RESTART_LEVEL, .text = "RESTART LEVEL"},
@@ -143,6 +144,7 @@ enum setting_ids {
 	SETTING_FULLSCREEN,
 	SETTING_USE_CORRECT_ASPECT_RATIO,
 	SETTING_USE_INTEGER_SCALING,
+	SETTING_SCALING_TYPE,
 	SETTING_ENABLE_FADE,
 	SETTING_ENABLE_FLASH,
 	SETTING_ENABLE_LIGHTING,
@@ -248,6 +250,12 @@ setting_type general_settings[] = {
 				.text = "Restore defaults...", .explanation = "Revert all settings to the default state."},
 };
 
+const char scaling_type_setting_names[][MAX_OPTION_VALUE_NAME_LENGTH] = {
+		"Sharp", "Fuzzy", "Blurry",
+};
+
+names_list_type scaling_type_setting_names_list = {&scaling_type_setting_names, COUNT(scaling_type_setting_names)};
+
 setting_type visuals_settings[] = {
 		{.id = SETTING_FULLSCREEN, .style = SETTING_STYLE_TOGGLE, .linked = &start_fullscreen,
 				.text = "Start fullscreen",
@@ -260,6 +268,12 @@ setting_type visuals_settings[] = {
 				.text = "Use integer scaling",
 				.explanation = "Enable pixel perfect scaling. That is, make all pixels the same size by forcing integer scale factors.\n"
 						"Combining with 4:3 aspect ratio requires at least 1600x1200."},
+		{.id = SETTING_SCALING_TYPE, .style = SETTING_STYLE_NUMBER, .number_type = SETTING_BYTE, .max = 2,
+				.linked = &scaling_type, .names_list = &scaling_type_setting_names_list,
+				.text = "Scaling method",
+				.explanation = "Sharp - Use nearest neighbour resampling.\n"
+						"Fuzzy - First upscale to double size, then use smooth scaling.\n"
+						"Blurry - Use smooth scaling."},
 		{.id = SETTING_ENABLE_FADE, .style = SETTING_STYLE_TOGGLE, .linked = &enable_fade,
 				.text = "Fading enabled",
 				.explanation = "Turn fading on or off."},
@@ -274,7 +288,7 @@ setting_type visuals_settings[] = {
 setting_type gameplay_settings[] = {
 		{.id = SETTING_ENABLE_CHEATS, .style = SETTING_STYLE_TOGGLE, .linked = &cheats_enabled,
 				.text = "Enable cheats",
-				.explanation = "Turn cheats on or off.\nAlso, display the CHEATS option on the pause menu."},
+				.explanation = "Turn cheats on or off."/*"\nAlso, display the CHEATS option on the pause menu."*/},
 		{.id = SETTING_ENABLE_COPYPROT, .style = SETTING_STYLE_TOGGLE, .linked = &enable_copyprot,
 				.text = "Enable copy protection level",
 				.explanation = "Enable or disable the potions (copy protection) level."},
@@ -632,7 +646,10 @@ int previous_setting_id = 0;
 int at_scroll_up_boundary;
 int at_scroll_down_boundary;
 
-
+void play_menu_sound(int sound_id) {
+	play_sound(sound_id);
+	play_next_sound();
+}
 
 void enter_settings_subsection(int settings_menu_id, setting_type* settings) {
 	if (active_settings_subsection != settings_menu_id) {
@@ -647,20 +664,21 @@ void enter_settings_subsection(int settings_menu_id, setting_type* settings) {
 void pause_menu_clicked(pause_menu_item_type* item) {
 	//printf("Clicked option %s\n", item->text);
 	clicked_or_pressed_enter = false; // prevent "click-through" because the screen changes
-	play_sound(sound_22_loose_shake_3);
-	play_next_sound();
+	play_menu_sound(sound_22_loose_shake_3);
 	switch(item->id) {
 		default: break;
 		case PAUSE_MENU_RESUME:
 			is_paused = 0;
 			break;
 		case PAUSE_MENU_SAVE_GAME:
-			// TODO: Manual save games.
+			// TODO: Manual save games?
 			last_key_scancode = SDL_SCANCODE_F6;
+			is_paused = 0;
 			break;
 		case PAUSE_MENU_LOAD_GAME:
-			// TODO: Manual save games.
+			// TODO: Manual save games?
 			last_key_scancode = SDL_SCANCODE_F9;
+			is_paused = 0;
 			break;
 		case PAUSE_MENU_RESTART_LEVEL:
 			last_key_scancode = SDL_SCANCODE_A | WITH_CTRL;
@@ -757,12 +775,10 @@ void draw_pause_menu() {
 
 	if (!mouse_state_changed) {
 		if (menu_control_y == 1) {
-			play_sound(sound_21_loose_shake_2);
-			play_next_sound();
+			play_menu_sound(sound_21_loose_shake_2);
 			highlighted_pause_menu_item = next_pause_menu_item->id;
 		} else if (menu_control_y == -1) {
-			play_sound(sound_21_loose_shake_2);
-			play_next_sound();
+			play_menu_sound(sound_21_loose_shake_2);
 			highlighted_pause_menu_item = previous_pause_menu_item->id;
 		}
 	}
@@ -812,6 +828,9 @@ void turn_setting_on_off(int setting_id, byte new_state, void* linked) {
 		case SETTING_ENABLE_SOUND:
 			turn_sound_on_off((new_state != 0) * 15);
 			break;
+		case SETTING_ENABLE_MUSIC:
+			turn_music_on_off(new_state);
+			break;
 		case SETTING_USE_FIXES_AND_ENHANCEMENTS:
 			turn_fixes_and_enhancements_on_off(new_state);
 			break;
@@ -822,8 +841,7 @@ void turn_setting_on_off(int setting_id, byte new_state, void* linked) {
 }
 
 void turn_setting_on_off_with_sound(setting_type* setting, byte new_state) {
-	play_sound(sound_10_sword_vs_sword);
-	play_next_sound();
+	play_menu_sound(sound_10_sword_vs_sword);
 	turn_setting_on_off(setting->id, new_state, setting->linked);
 
 }
@@ -1153,8 +1171,7 @@ void draw_settings_menu() {
 			}
 		}
 		if (highlighted_item_changed) {
-			play_sound(sound_21_loose_shake_2);
-			play_next_sound();
+			play_menu_sound(sound_21_loose_shake_2);
 		}
 	}
 
@@ -1180,14 +1197,14 @@ enum dialog_button_ids {
 
 void confirmation_dialog_result(int which_dialog, int button) {
 	if (which_dialog == DIALOG_RESTORE_DEFAULT_SETTINGS && button == DIALOG_BUTTON_OK) {
-		play_sound(sound_10_sword_vs_sword);
-		play_next_sound();
+		play_menu_sound(sound_10_sword_vs_sword);
 		were_settings_changed = true;
 		set_options_to_default();
 		turn_setting_on_off(SETTING_USE_CORRECT_ASPECT_RATIO, use_correct_aspect_ratio, NULL);
 		turn_setting_on_off(SETTING_USE_INTEGER_SCALING, use_integer_scaling, NULL);
 		turn_setting_on_off(SETTING_ENABLE_LIGHTING, enable_lighting, NULL);
-		turn_setting_on_off(SETTING_ENABLE_SOUND, is_sound_on, NULL);
+		turn_sound_on_off((is_sound_on != 0) * 15);
+		turn_music_on_off(enable_mixer);
 	} else if (which_dialog == DIALOG_CONFIRM_QUIT && button == DIALOG_BUTTON_OK) {
 		last_key_scancode = SDL_SCANCODE_Q | WITH_CTRL;
 	}
@@ -1266,7 +1283,7 @@ void draw_confirmation_dialog(int which_dialog, const char* text) {
 	mouse_clicked = 0;
 }
 
-void draw_pause_overlay() {
+void draw_menu_overlay() {
 	if (!is_menu_shown) return;
 
 	if (current_dialog_box != DIALOG_NONE) {
@@ -1289,7 +1306,6 @@ void draw_pause_overlay() {
 		draw_settings_menu();
 	}
 	textstate.ptr_font = saved_font;
-
 }
 
 bool are_controller_buttons_released;
@@ -1310,6 +1326,7 @@ int key_test_paused_menu(int key) {
 			are_controller_buttons_released = false;
 			if (joy_AY_buttons_state == 1 /* A pressed */) {
 				key = SDL_SCANCODE_RETURN;
+				joy_AY_buttons_state = 0; // Prevent 'down' input being passed to the controls if the game is unpaused.
 			} else if (joy_B_button_state == 1) {
 				key = SDL_SCANCODE_ESCAPE;
 			}
@@ -1354,8 +1371,7 @@ int key_test_paused_menu(int key) {
 		case SDL_SCANCODE_BACKSPACE:
 			menu_control_back = 1;
 			if (drawn_menu == 1) {
-				play_sound(sound_22_loose_shake_3);
-				play_next_sound();
+				play_menu_sound(sound_22_loose_shake_3);
 				if (controlled_area == 1) {
 					controlled_area = 0;
 					highlighted_pause_menu_item = active_settings_subsection;
@@ -1391,6 +1407,7 @@ void process_ingame_settings(SDL_RWops* rw, rw_process_func_type process_func) {
 	process(start_fullscreen);
 	process(use_correct_aspect_ratio);
 	process(use_integer_scaling);
+	process(scaling_type);
 	process(enable_fade);
 	process(enable_flash);
 	process(enable_lighting);
@@ -1425,6 +1442,7 @@ void load_ingame_settings() {
 		process_ingame_settings(rw, process_rw_read);
 		SDL_RWclose(rw);
 	}
+	turn_sound_on_off((is_sound_on != 0) * 15);
 }
 
 void menu_was_closed() {

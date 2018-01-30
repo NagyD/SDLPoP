@@ -1485,9 +1485,20 @@ int __pascal far do_paused() {
 			is_menu_shown = 1;
 		}
 		if (is_menu_shown) {
+			// The menu is drawn as an overlay.
+			// Unfortunately, CPU usage rises while the menu is displayed, because:
+			// - The menu is redrawn every frame.
+			// - The onscreen surface and the overlay surface are blended together (expensive blitting operations)
+			// - We don't wait for a long time until beginning to draw the next frame.
+			// TODO: Figure out a way to offload the expensive operations to the GPU, to reduce CPU usage?
+			// TODO: And maybe only redraw those parts of the menu that changed?
+			// Capping the time per frame at 1 tick = 16.7 ms (60 fps), in order to reduce CPU at least usage a bit.
+			set_timer_length(timer_1, 1);
 			do {
 				idle();
-				SDL_Delay(5);
+				while (! has_timer_stopped(timer_1)) {
+					SDL_Delay(1);
+				}
 			} while (!process_key() && is_paused); // busy waiting?
 			menu_was_closed();
 		} else
