@@ -459,9 +459,9 @@ DONE: Added new exceptions to .gitignore.
 FIXED: Ignore replay options in SDLPoP.ini if USE_REPLAY is not defined
 DONE: Added -std=gnu99 to the Dev-C++ project files.
 
-(no release date yet)
+2018 February ??
 =================
-(upcoming version)
+(version 1.18)
 
 FIXED: Fixed allow_triggering_any_tile hack to work with stuck-closed chompers.
 DONE: Linux: Added .desktop file and make install/uninstall.
