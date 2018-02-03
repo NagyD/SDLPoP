@@ -52,6 +52,9 @@ void far pop_main() {
 	#endif
 
 	load_global_options();
+#ifdef USE_MENU
+	load_ingame_settings();
+#endif
 
 #ifdef USE_REPLAY
 	if (g_argc > 1) {
@@ -432,9 +435,6 @@ int quick_load() {
 	return ok;
 }
 
-int need_quick_save = 0;
-int need_quick_load = 0;
-
 void check_quick_op() {
 	if (!enable_quicksave) return;
 	if (need_quick_save) {
@@ -534,9 +534,11 @@ int __pascal far process_key() {
 		case SDL_SCANCODE_ESCAPE: // esc
 		case SDL_SCANCODE_ESCAPE | WITH_SHIFT: // allow pause while grabbing
 			is_paused = 1;
+#ifdef USE_MENU
 			if (enable_pause_menu) {
 				is_menu_shown = 1;
 			}
+#endif
 		break;
 		case SDL_SCANCODE_SPACE: // space
 			is_show_time = 1;
@@ -1460,6 +1462,8 @@ void __pascal far load_more_opt_graf(const char *filename) {
 	}
 }
 
+void draw_overlays();
+
 // seg000:148D
 int __pascal far do_paused() {
 #ifdef USE_REPLAY
@@ -1481,25 +1485,8 @@ int __pascal far do_paused() {
 	if (is_paused) {
 		display_text_bottom("GAME PAUSED");
 #ifdef USE_MENU
-		if (enable_pause_menu) {
-			is_menu_shown = 1;
-		}
-		if (is_menu_shown) {
-			// The menu is drawn as an overlay.
-			// Unfortunately, CPU usage rises while the menu is displayed, because:
-			// - The menu is redrawn every frame.
-			// - The onscreen surface and the overlay surface are blended together (expensive blitting operations)
-			// - We don't wait for a long time until beginning to draw the next frame.
-			// TODO: Figure out a way to offload the expensive operations to the GPU, to reduce CPU usage?
-			// TODO: And maybe only redraw those parts of the menu that changed?
-			// Capping the time per frame at 1 tick = 16.7 ms (60 fps), in order to reduce CPU at least usage a bit.
-			set_timer_length(timer_1, 1);
-			do {
-				idle();
-				while (! has_timer_stopped(timer_1)) {
-					SDL_Delay(1);
-				}
-			} while (!process_key() && is_paused); // busy waiting?
+		if (enable_pause_menu || is_menu_shown) {
+			draw_menu();
 			menu_was_closed();
 		} else
 #endif

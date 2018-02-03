@@ -616,6 +616,8 @@ extern word last_loose_sound;
 extern int last_key_scancode;
 extern font_type hc_font INIT(= {0x01,0xFF, 7,2,1,1, NULL});
 extern textstate_type textstate INIT(= {0,0,0,15,&hc_font});
+extern int need_quick_save INIT(= 0);
+extern int need_quick_load INIT(= 0);
 
 #ifdef USE_REPLAY
 extern byte recording INIT(= 0);
@@ -652,7 +654,7 @@ extern int joystick_threshold INIT(= 8000);
 extern byte enable_quicksave INIT(= 1);
 extern byte enable_quicksave_penalty INIT(= 1);
 extern byte enable_replay INIT(= 1);
-extern byte use_correct_aspect_ratio INIT(= 0);
+extern byte use_correct_aspect_ratio INIT(= 1);
 extern byte use_integer_scaling INIT(= 0);
 extern fixes_options_type fixes_saved;
 extern fixes_options_type fixes_disabled_state;
@@ -689,10 +691,11 @@ extern custom_options_type custom_defaults INIT(= {
         .tbl_guard_type = {0, 0, 0, 2, 0, 0, 1, 0, 0, 0, 0, 0, 4, 3, -1, -1},
 		// data:0EDA
 		.tbl_guard_hp = {4, 3, 3, 3, 3, 4, 5, 4, 4, 5, 5, 5, 4, 6, 0, 0},
+		.tbl_cutscenes_by_index = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15},
 });
 extern custom_options_type* custom INIT(= &custom_defaults);
 
-extern byte scaling_type INIT(= 0);
+extern byte scaling_type INIT(= 1);
 #ifdef USE_LIGHTING
 extern byte enable_lighting INIT(= 0);
 #endif
@@ -705,26 +708,6 @@ extern byte is_timer_displayed INIT(= 0);
 #endif
 
 extern bool debug_drawing_mode;
-// customized cutscene set-up: handled as index into a lookup table (can't rely on function pointers being stable!)
-extern byte tbl_cutscenes_by_index[16] INIT(= {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15});
-extern cutscene_ptr_type tbl_cutscenes_lookup[16] INIT(= {
-	NULL,
-	NULL,
-	cutscene_2_6,
-	NULL,
-	cutscene_4,
-	NULL,
-	cutscene_2_6,
-	NULL,
-	cutscene_8,
-	cutscene_9,
-	NULL,
-	NULL,
-	cutscene_12,
-	NULL,
-	NULL,
-	NULL,
-});
 #ifdef USE_MENU
 extern font_type small_font INIT(= {32, 126, 5, 2, 1, 1, NULL});
 extern bool mouse_state_changed;
@@ -732,6 +715,7 @@ extern int mouse_x, mouse_y;
 extern bool mouse_clicked;
 extern bool clicked_or_pressed_enter;
 extern bool pressed_enter;
+extern int menu_control_scroll_y;
 extern sbyte is_menu_shown;
 extern byte enable_pause_menu INIT(= 1);
 #endif

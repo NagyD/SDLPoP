@@ -155,7 +155,9 @@ static int global_ini_callback(const char *section, const char *name, const char
 	if (ini_process_boolean(name, value, option_name, target)) return 1;
 
 	if (check_ini_section("General")) {
+#ifdef USE_MENU
 		process_boolean("enable_pause_menu", &enable_pause_menu);
+#endif
 		process_boolean("enable_copyprot", &enable_copyprot);
 		process_boolean("enable_mixer", &enable_mixer);
 		process_boolean("enable_fade", &enable_fade);
@@ -308,9 +310,8 @@ static int global_ini_callback(const char *section, const char *name, const char
 
 			byte cutscene_index = 0xFF;
 			if (ini_process_byte(name, value, "cutscene", &cutscene_index, NULL) == 1) {
-				if (cutscene_index < COUNT(tbl_cutscenes_lookup)) {
-					tbl_cutscenes_by_index[ini_level] = cutscene_index;
-					tbl_cutscenes[ini_level] = tbl_cutscenes_lookup[cutscene_index];
+				if (cutscene_index < COUNT(custom_saved.tbl_cutscenes_by_index)) {
+					custom_saved.tbl_cutscenes_by_index[ini_level] = cutscene_index;
 				}
 				return 1;
 			}
@@ -335,7 +336,9 @@ static int mod_ini_callback(const char *section, const char *name, const char *v
 }
 
 void set_options_to_default() {
+#ifdef USE_MENU
 	enable_pause_menu = 1;
+#endif
 	enable_copyprot = 0;
 	enable_mixer = 1;
 	enable_fade = 1;
@@ -343,8 +346,9 @@ void set_options_to_default() {
 	enable_text = 1;
 	enable_info_screen = 1;
 	start_fullscreen = 0;
-	use_correct_aspect_ratio = 0;
+	use_correct_aspect_ratio = 1;
 	use_integer_scaling = 0;
+	scaling_type = 1;
 	enable_controller_rumble = 1;
 	joystick_only_horizontal = 1;
 	joystick_threshold = 8000;
@@ -381,14 +385,16 @@ void load_mod_options() {
 	if (use_custom_levelset) {
 		char filename[POP_MAX_PATH];
 		snprintf(filename, sizeof(filename), "mods/%s/%s", levelset_name, "mod.ini");
-		ini_load(filename, mod_ini_callback);
+		const char* located_filename = locate_file(filename);
+		if (file_exists(located_filename)) {
+			// Nearly all mods would want to use custom options, so always allow them.
+			// TODO: Prevent mod settings and user settings from interfering with each other.
+			use_custom_options = 1;
+			ini_load(filename, mod_ini_callback);
+		}
 	}
-
 	turn_fixes_and_enhancements_on_off(use_fixes_and_enhancements);
 	turn_custom_options_on_off(use_custom_options);
-#ifdef USE_MENU
-	load_ingame_settings();
-#endif
 }
 
 

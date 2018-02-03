@@ -520,7 +520,7 @@ void options_process_custom_per_level(SDL_RWops* rw, rw_process_func_type proces
 	process(custom->tbl_level_color);
 	process(custom->tbl_guard_type);
 	process(custom->tbl_guard_hp);
-	process(tbl_cutscenes_by_index);
+	process(custom->tbl_cutscenes_by_index);
 }
 
 #undef process
@@ -552,18 +552,10 @@ size_t save_options_to_buffer(void* options_buffer, size_t max_size, process_opt
 	return (size_t) section_size;
 }
 
-void apply_cutscene_pointers() {
-	int i;
-	for (i = 0; i < 16; ++i) {
-		tbl_cutscenes[i] = tbl_cutscenes_lookup[tbl_cutscenes_by_index[i]];
-	}
-}
-
 // restore the options from a memory buffer (e.g. reapply the original options after a replay is finished)
 void load_options_from_buffer(void* options_buffer, size_t options_size, process_options_section_func_type* process_section_func) {
 	SDL_RWops* rw = SDL_RWFromMem(options_buffer, options_size);
 	process_section_func(rw, process_rw_read);
-	apply_cutscene_pointers();
 	SDL_RWclose(rw);
 }
 

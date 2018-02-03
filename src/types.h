@@ -1112,11 +1112,11 @@ typedef struct custom_options_type {
 	word shift_L_allowed_until_level;
 	word shift_L_reduced_minutes;
 	word shift_L_reduced_ticks;
-	byte tbl_level_type[16]; // TODO: Configuring per-level options from the MODS menu.
+	byte tbl_level_type[16];
 	word tbl_level_color[16];
 	short tbl_guard_type[16];
 	byte tbl_guard_hp[16];
-	byte tbl_cutscene[16]; // TODO: Correctly handle custom cutscene configuration in the MODS menu.
+	byte tbl_cutscenes_by_index[16];
 } custom_options_type;
 #pragma pack(pop)
 

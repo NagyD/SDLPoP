@@ -509,6 +509,7 @@ image_type* get_image(short chtab_id, int id);
 
 // SEG009.C
 void sdlperror(const char* header);
+bool file_exists(const char* filename);
 #define locate_file(filename) locate_file_(filename, alloca(POP_MAX_PATH), POP_MAX_PATH)
 const char* locate_file_(const char* filename, char* path_buffer, int buffer_size);
 int __pascal far read_key();
@@ -670,7 +671,8 @@ void save_level_screenshot(bool want_extras);
 #ifdef USE_MENU
 void init_menu();
 void menu_scroll(int y);
-void draw_menu_overlay();
+void draw_menu();
+void clear_menu_controls();
 int key_test_paused_menu(int key);
 void load_ingame_settings();
 void menu_was_closed();

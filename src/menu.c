@@ -75,6 +75,7 @@ enum pause_menu_item_ids {
 	SETTINGS_MENU_GAMEPLAY,
 	SETTINGS_MENU_VISUALS,
 	SETTINGS_MENU_MODS,
+	SETTINGS_MENU_LEVEL_CUSTOMIZATION,
 	SETTINGS_MENU_BACK,
 };
 
@@ -89,18 +90,21 @@ pause_menu_item_type pause_menu_items[] = {
 		{.id = PAUSE_MENU_QUIT_GAME,     .text = "QUIT GAME"}
 };
 
-int highlighted_pause_menu_item = PAUSE_MENU_RESUME;
+int hovering_pause_menu_item = PAUSE_MENU_RESUME;
 pause_menu_item_type* next_pause_menu_item;
 pause_menu_item_type* previous_pause_menu_item;
 int drawn_menu;
 byte pause_menu_alpha;
 int current_dialog_box;
 const char* current_dialog_text;
+word menu_current_level = 1;
+bool need_close_menu;
 
-enum confirmation_dialog_ids {
+enum menu_dialog_ids {
 	DIALOG_NONE,
 	DIALOG_RESTORE_DEFAULT_SETTINGS,
 	DIALOG_CONFIRM_QUIT,
+	DIALOG_SELECT_LEVEL
 };
 
 pause_menu_item_type settings_menu_items[] = {
@@ -111,8 +115,10 @@ pause_menu_item_type settings_menu_items[] = {
 		{.id = SETTINGS_MENU_BACK, .text = "BACK"},
 };
 int active_settings_subsection = 0;
+int highlighted_settings_subsection = 0;
 int scroll_position = 0;
 int menu_control_y;
+int menu_control_scroll_y;
 int menu_control_x;
 int menu_control_back;
 
@@ -205,6 +211,12 @@ enum setting_ids {
 	SETTING_SHIFT_L_ALLOWED_UNTIL_LEVEL,
 	SETTING_SHIFT_L_REDUCED_MINUTES,
 	SETTING_SHIFT_L_REDUCED_TICKS,
+	SETTING_LEVEL_SETTINGS,
+	SETTING_LEVEL_TYPE,
+	SETTING_LEVEL_COLOR,
+	SETTING_GUARD_TYPE,
+	SETTING_GUARD_HP,
+	SETTING_CUTSCENE,
 };
 
 typedef struct setting_type {
@@ -458,6 +470,9 @@ setting_type mods_settings[] = {
 		{.id = SETTING_USE_CUSTOM_OPTIONS, .style = SETTING_STYLE_TOGGLE, .linked = &use_custom_options,
 				.text = "Use customization options",
 				.explanation = "Turn customization options on or off.\n(default = OFF)"},
+		{.id = SETTING_LEVEL_SETTINGS, .style = SETTING_STYLE_TEXT_ONLY, .required = &use_custom_options,
+				.text = "Customize level...",
+				.explanation = "Change level-specific options (such as level type, guard type, number of guard hitpoints)."},
 		{.id = SETTING_START_MINUTES_LEFT, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
 				.linked = &custom_saved.start_minutes_left, .number_type = SETTING_SHORT, .min = -1, .max = INT16_MAX,
 				.text = "Starting minutes left",
@@ -545,6 +560,48 @@ setting_type mods_settings[] = {
 				.explanation = "Number of seconds left after Shift+L is used in non-cheat mode.\n(default = 59.92)"},
 };
 
+const char level_type_setting_names[][MAX_OPTION_VALUE_NAME_LENGTH] = {
+		"Dungeon", "Palace",
+};
+const char guard_type_setting_names[][MAX_OPTION_VALUE_NAME_LENGTH] = {
+		"Normal", "Fat", "Skeleton", "Vizier", "Shadow",
+};
+
+names_list_type level_type_settings_names_list = {&level_type_setting_names, COUNT(level_type_setting_names)};
+names_list_type guard_type_setting_names_list = {&guard_type_setting_names, COUNT(guard_type_setting_names)};
+
+setting_type level_settings[] = {
+		{.id = SETTING_LEVEL_TYPE, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.names_list = &level_type_settings_names_list,
+				.linked = NULL /* depends on which level */, .number_type = SETTING_BYTE, .max = 1,
+				.text = "Level type",
+				.explanation = "Which environment is used in this level.\n"
+						"(either dungeon or palace)"},
+		{.id = SETTING_LEVEL_COLOR, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = NULL, .number_type = SETTING_WORD, .max = 4,
+				.text = "Level color palette",
+				.explanation = "0: colors from VDUNGEON.DAT/VPALACE.DAT\n>0: colors from PRINCE.DAT.\n"
+						"You need a PRINCE.DAT from PoP 1.3 or 1.4 for this."},
+		{.id = SETTING_GUARD_TYPE, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.names_list = &guard_type_setting_names_list,
+				.linked = NULL, .number_type = SETTING_SHORT, .max = 4,
+				.text = "Guard type",
+				.explanation = "Guard type used in this level (normal, fat, skeleton, vizier, or shadow)."},
+		{.id = SETTING_GUARD_HP, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = NULL, .number_type = SETTING_BYTE, .max = UINT8_MAX,
+				.text = "Guard hitpoints",
+				.explanation = "Number of hitpoints guards have in this level."},
+		{.id = SETTING_CUTSCENE, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = NULL, .number_type = SETTING_BYTE, .max = 15,
+				.text = "Cutscene before level",
+				.explanation = "Cutscene that plays between the previous level and this level.\n"
+						"0: none, 2 or 6: standing, 4: lying down, 8: mouse leaves,\n"
+						"9: mouse returns, 12: standing or turn around"},
+		{.id = SETTING_LEVEL_SETTINGS, .style = SETTING_STYLE_TEXT_ONLY, .required = &use_custom_options,
+				.text = "Customize another level...",
+				.explanation = "Select another level to customize."},
+};
+
 typedef struct settings_area_type {
 	setting_type* settings;
 	int setting_count;
@@ -554,6 +611,7 @@ settings_area_type general_settings_area = { .settings = general_settings, .sett
 settings_area_type gameplay_settings_area = { .settings = gameplay_settings, .setting_count = COUNT(gameplay_settings)};
 settings_area_type visuals_settings_area = { .settings = visuals_settings, .setting_count = COUNT(visuals_settings)};
 settings_area_type mods_settings_area = { .settings = mods_settings, .setting_count = COUNT(mods_settings)};
+settings_area_type level_settings_area = { .settings = level_settings, .setting_count = COUNT(level_settings)};
 
 settings_area_type* get_settings_area(int menu_item_id) {
 	switch(menu_item_id) {
@@ -567,6 +625,8 @@ settings_area_type* get_settings_area(int menu_item_id) {
 			return &visuals_settings_area;
 		case SETTINGS_MENU_MODS:
 			return &mods_settings_area;
+		case SETTINGS_MENU_LEVEL_CUSTOMIZATION:
+			return &level_settings_area;
 	}
 }
 
@@ -608,13 +668,14 @@ void init_menu() {
 	init_settings_list(visuals_settings, COUNT(visuals_settings));
 	init_settings_list(gameplay_settings, COUNT(gameplay_settings));
 	init_settings_list(mods_settings, COUNT(mods_settings));
+	init_settings_list(level_settings, COUNT(level_settings));
 }
 
 bool is_mouse_over_rect(rect_type* rect) {
 	return (mouse_x >= rect->left && mouse_x < rect->right && mouse_y >= rect->top && mouse_y < rect->bottom);
 }
 
-// Returns true if the mouse moved, false otherwise.
+// Returns true if the mouse moved or when the mouse was clicked, false otherwise.
 bool read_mouse_state() {
 	float scale_x, scale_y;
 	SDL_RenderGetScale(renderer_, &scale_x, &scale_y);
@@ -651,14 +712,54 @@ void play_menu_sound(int sound_id) {
 	play_next_sound();
 }
 
-void enter_settings_subsection(int settings_menu_id, setting_type* settings) {
+void enter_settings_subsection(int settings_menu_id) {
+	settings_area_type* settings_area = get_settings_area(settings_menu_id);
 	if (active_settings_subsection != settings_menu_id) {
-		highlighted_setting_id = settings[0].id;
+		highlighted_setting_id = settings_area->settings[0].id;
 	}
 	active_settings_subsection = settings_menu_id;
-	if (!mouse_state_changed) highlighted_pause_menu_item = 0;
+	highlighted_settings_subsection = settings_menu_id;
+	if (!mouse_state_changed) hovering_pause_menu_item = 0;
 	controlled_area = 1;
 	scroll_position = 0;
+
+	// Special case: for the level customization submenu, the linked variables should depend on menu_current_level.
+	// So we need to initialize them now.
+	if (settings_menu_id == SETTINGS_MENU_LEVEL_CUSTOMIZATION) {
+		for (int i = 0; i < settings_area->setting_count; ++i) {
+			setting_type* setting = &settings_area->settings[i];
+			switch(setting->id) {
+				default: break;
+				case SETTING_LEVEL_TYPE:
+					setting->linked = &custom_saved.tbl_level_type[menu_current_level];
+					break;
+				case SETTING_LEVEL_COLOR:
+					setting->linked = &custom_saved.tbl_level_color[menu_current_level];
+					break;
+				case SETTING_GUARD_TYPE:
+					setting->linked = &custom_saved.tbl_guard_type[menu_current_level];
+					break;
+				case SETTING_GUARD_HP:
+					setting->linked = &custom_saved.tbl_guard_hp[menu_current_level];
+					break;
+				case SETTING_CUTSCENE:
+					setting->linked = &custom_saved.tbl_cutscenes_by_index[menu_current_level];
+					break;
+			}
+		}
+	}
+}
+
+void leave_settings_subsection() {
+	if (active_settings_subsection == SETTINGS_MENU_LEVEL_CUSTOMIZATION) {
+		enter_settings_subsection(SETTINGS_MENU_MODS);
+	} else {
+		// Go back to the top level of the settings menu.
+		controlled_area = 0;
+		hovering_pause_menu_item = active_settings_subsection;
+		active_settings_subsection = 0;
+		highlighted_settings_subsection = 0;
+	}
 }
 
 void pause_menu_clicked(pause_menu_item_type* item) {
@@ -668,24 +769,25 @@ void pause_menu_clicked(pause_menu_item_type* item) {
 	switch(item->id) {
 		default: break;
 		case PAUSE_MENU_RESUME:
-			is_paused = 0;
+			need_close_menu = true;
 			break;
 		case PAUSE_MENU_SAVE_GAME:
 			// TODO: Manual save games?
-			last_key_scancode = SDL_SCANCODE_F6;
-			is_paused = 0;
+			need_quick_save = 1;
+			need_close_menu = true;
 			break;
 		case PAUSE_MENU_LOAD_GAME:
 			// TODO: Manual save games?
-			last_key_scancode = SDL_SCANCODE_F9;
-			is_paused = 0;
+			need_quick_load = 1;
+			need_close_menu = true;
+			stop_sounds();
 			break;
 		case PAUSE_MENU_RESTART_LEVEL:
 			last_key_scancode = SDL_SCANCODE_A | WITH_CTRL;
 			break;
 		case PAUSE_MENU_SETTINGS:
 			drawn_menu = 1;
-			highlighted_pause_menu_item = SETTINGS_MENU_GENERAL;
+			hovering_pause_menu_item = SETTINGS_MENU_GENERAL;
 			active_settings_subsection = 0;
 			controlled_area = 0;
 			break;
@@ -694,20 +796,20 @@ void pause_menu_clicked(pause_menu_item_type* item) {
 			current_dialog_text = "Quit SDLPoP?";
 			break;
 		case SETTINGS_MENU_GENERAL:
-			enter_settings_subsection(SETTINGS_MENU_GENERAL, general_settings);
+			enter_settings_subsection(SETTINGS_MENU_GENERAL);
 			break;
 		case SETTINGS_MENU_GAMEPLAY:
-			enter_settings_subsection(SETTINGS_MENU_GAMEPLAY, gameplay_settings);
+			enter_settings_subsection(SETTINGS_MENU_GAMEPLAY);
 			break;
 		case SETTINGS_MENU_VISUALS:
-			enter_settings_subsection(SETTINGS_MENU_VISUALS, visuals_settings);
+			enter_settings_subsection(SETTINGS_MENU_VISUALS);
 			break;
 		case SETTINGS_MENU_MODS:
-			enter_settings_subsection(SETTINGS_MENU_MODS, mods_settings);
+			enter_settings_subsection(SETTINGS_MENU_MODS);
 			break;
 		case SETTINGS_MENU_BACK:
 			drawn_menu = 0;
-			highlighted_pause_menu_item = PAUSE_MENU_RESUME;
+			hovering_pause_menu_item = PAUSE_MENU_RESUME;
 			break;
 	}
 }
@@ -727,9 +829,9 @@ void draw_pause_menu_item(pause_menu_item_type* item, rect_type* parent, int* y_
 	selection_box.bottom = selection_box.top + 8;
 	selection_box.top -= 3;
 
-	bool highlighted = (highlighted_pause_menu_item == item->id);
+	bool highlighted = (hovering_pause_menu_item == item->id);
 	if (mouse_state_changed && is_mouse_over_rect(&selection_box)) {
-		highlighted_pause_menu_item = item->id;
+		hovering_pause_menu_item = item->id;
 		highlighted = true;
 	}
 
@@ -776,10 +878,10 @@ void draw_pause_menu() {
 	if (!mouse_state_changed) {
 		if (menu_control_y == 1) {
 			play_menu_sound(sound_21_loose_shake_2);
-			highlighted_pause_menu_item = next_pause_menu_item->id;
+			hovering_pause_menu_item = next_pause_menu_item->id;
 		} else if (menu_control_y == -1) {
 			play_menu_sound(sound_21_loose_shake_2);
-			highlighted_pause_menu_item = previous_pause_menu_item->id;
+			hovering_pause_menu_item = previous_pause_menu_item->id;
 		}
 	}
 
@@ -871,59 +973,52 @@ int get_value(setting_type* setting) {
 	return value;
 }
 
-void increase_setting(setting_type* setting, int old_value) {
-	int step = 1;
-	if (setting->id == SETTING_JOYSTICK_THRESHOLD) {
-		step = 1000;
-	}
-	if (setting->linked != NULL && old_value + step <= setting->max) {
-		were_settings_changed = true;
+void set_value(setting_type* setting, int value) {
+	if (setting->linked != NULL) {
 		switch(setting->number_type) {
 			default:
 			case SETTING_BYTE:
-				*(byte*) setting->linked += step;
+				*(byte*) setting->linked = (byte) value;
 				break;
 			case SETTING_SBYTE:
-				*(sbyte*) setting->linked += step;
+				*(sbyte*) setting->linked = (sbyte) value;
 				break;
 			case SETTING_WORD:
-				*(word*) setting->linked += step;
+				*(word*) setting->linked = (word) value;
 				break;
 			case SETTING_SHORT:
-				*(short*) setting->linked += step;
+				*(short*) setting->linked = (short) value;
 				break;
 			case SETTING_INT:
-				*(int*) setting->linked += step;
+				*(int*) setting->linked = value;
 				break;
 		}
 	}
 }
 
-void decrease_setting(setting_type* setting, int old_value) {
-	int step = 1;
+void increase_setting(setting_type* setting, int old_value) {
+	int new_value;
 	if (setting->id == SETTING_JOYSTICK_THRESHOLD) {
-		step = 1000;
+		new_value = ((old_value / 1000) + 1) * 1000; // Nearest higher multiple of 1000.
+	} else {
+		new_value = old_value + 1;
 	}
-	if (setting->linked != NULL && old_value - step >= setting->min) {
+	if (setting->linked != NULL && new_value <= setting->max) {
 		were_settings_changed = true;
-		switch(setting->number_type) {
-			default:
-			case SETTING_BYTE:
-				*(byte*) setting->linked -= step;
-				break;
-			case SETTING_SBYTE:
-				*(sbyte*) setting->linked -= step;
-				break;
-			case SETTING_WORD:
-				*(word*) setting->linked -= step;
-				break;
-			case SETTING_SHORT:
-				*(short*) setting->linked -= step;
-				break;
-			case SETTING_INT:
-				*(int*) setting->linked -= step;
-				break;
-		}
+		set_value(setting, new_value);
+	}
+}
+
+void decrease_setting(setting_type* setting, int old_value) {
+	int new_value;
+	if (setting->id == SETTING_JOYSTICK_THRESHOLD) {
+		new_value = (((old_value+999) / 1000) - 1) * 1000; // Nearest lower multiple of 1000.
+	} else {
+		new_value = old_value - 1;
+	}
+	if (setting->linked != NULL && new_value >= setting->min) {
+		were_settings_changed = true;
+		set_value(setting, new_value);
 	}
 }
 
@@ -944,7 +1039,7 @@ void draw_image_with_blending(image_type far* image, int xpos, int ypos) {
 
 #define print_setting_value(setting, value) print_setting_value_(setting, value, alloca(32), 32)
 char* print_setting_value_(setting_type* setting, int value, char* buffer, size_t buffer_size) {
-	if (setting->names_list != NULL && value < setting->names_list->num_names) {
+	if (setting->names_list != NULL && value >= 0 && value < setting->names_list->num_names) {
 		strncpy(buffer, (*(setting->names_list->names))[value], MIN(MAX_OPTION_VALUE_NAME_LENGTH, buffer_size));
 	} else {
 		if (setting->id == SETTING_START_TICKS_LEFT || setting->id == SETTING_SHIFT_L_REDUCED_TICKS) {
@@ -1084,13 +1179,18 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 
 	} else {
 		// show text only
-		if (highlighted_setting_id == setting->id) {
-			if (setting->id == SETTING_RESET_ALL_SETTINGS) {
-				if (pressed_enter || (mouse_clicked && is_mouse_over_rect(&setting_box))) {
+		if (highlighted_setting_id == setting->id && (setting->required == NULL || *(sbyte*)setting->required != 0)) {
+			if (pressed_enter || (mouse_clicked && is_mouse_over_rect(&setting_box))) {
+				if (setting->id == SETTING_RESET_ALL_SETTINGS) {
+					play_menu_sound(sound_22_loose_shake_3);
 					current_dialog_box = DIALOG_RESTORE_DEFAULT_SETTINGS;
 					current_dialog_text = "Restore all settings to their default values?";
+				} else if (setting->id == SETTING_LEVEL_SETTINGS) {
+					play_menu_sound(sound_22_loose_shake_3);
+					current_dialog_box = DIALOG_SELECT_LEVEL;
 				}
 			}
+
 		}
 	}
 
@@ -1118,6 +1218,15 @@ void draw_settings_area(settings_area_type* settings_area) {
 	int y_offset = 0;
 	int num_drawn_settings = 0;
 
+	// The MODS subsection with level specific settings is a special case:
+	// We want to display which level we are editing, and start drawing slightly lower.
+	if (active_settings_subsection == SETTINGS_MENU_LEVEL_CUSTOMIZATION) {
+		y_offset = 15;
+		char level_text[16];
+		snprintf(level_text, sizeof(level_text), "LEVEL %d", menu_current_level);
+		show_text_with_color(&settings_area_rect, 0, -1, level_text, color_15_brightwhite);
+	}
+
 	for (int i = 0; (i < settings_area->setting_count) && (num_drawn_settings < 9); ++i) {
 		if (i >= scroll_position) {
 			++num_drawn_settings;
@@ -1142,16 +1251,16 @@ void draw_settings_menu() {
 	shrink2_rect(&pause_rect_inner, &pause_rect_outer, 5, 5);
 
 	if (!mouse_state_changed) {
-		bool highlighted_item_changed = false;
+		bool hovering_item_changed = false;
 		if (controlled_area == 0) {
-			int old_highlighted_item_id = highlighted_pause_menu_item;
+			int old_hovering_item_id = hovering_pause_menu_item;
 			if (menu_control_y == 1) {
-				highlighted_pause_menu_item = next_pause_menu_item->id;
+				hovering_pause_menu_item = next_pause_menu_item->id;
 			} else if (menu_control_y == -1) {
-				highlighted_pause_menu_item = previous_pause_menu_item->id;
+				hovering_pause_menu_item = previous_pause_menu_item->id;
 			}
-			if (old_highlighted_item_id != highlighted_pause_menu_item) {
-				highlighted_item_changed = true;
+			if (old_hovering_item_id != hovering_pause_menu_item) {
+				hovering_item_changed = true;
 			}
 		} else if (controlled_area == 1) {
 			int old_highlighted_setting_id = highlighted_setting_id;
@@ -1167,10 +1276,10 @@ void draw_settings_menu() {
 				}
 			}
 			if (old_highlighted_setting_id != highlighted_setting_id) {
-				highlighted_item_changed = true;
+				hovering_item_changed = true;
 			}
 		}
-		if (highlighted_item_changed) {
+		if (hovering_item_changed) {
 			play_menu_sound(sound_21_loose_shake_2);
 		}
 	}
@@ -1178,7 +1287,7 @@ void draw_settings_menu() {
 	int y_offset = 50;
 	for (int i = 0; i < COUNT(settings_menu_items); ++i) {
 		pause_menu_item_type* item = &settings_menu_items[i];
-		int text_color = (active_settings_subsection == item->id) ? color_15_brightwhite : color_7_lightgray;
+		int text_color = (highlighted_settings_subsection == item->id) ? color_15_brightwhite : color_7_lightgray;
 		draw_pause_menu_item(&settings_menu_items[i], &pause_rect_inner, &y_offset, text_color);
 	}
 
@@ -1187,7 +1296,7 @@ void draw_settings_menu() {
 
 void reset_paused_menu() {
 	drawn_menu = 0;
-	highlighted_pause_menu_item = PAUSE_MENU_RESUME;
+	hovering_pause_menu_item = PAUSE_MENU_RESUME;
 }
 
 enum dialog_button_ids {
@@ -1196,17 +1305,22 @@ enum dialog_button_ids {
 };
 
 void confirmation_dialog_result(int which_dialog, int button) {
-	if (which_dialog == DIALOG_RESTORE_DEFAULT_SETTINGS && button == DIALOG_BUTTON_OK) {
-		play_menu_sound(sound_10_sword_vs_sword);
-		were_settings_changed = true;
-		set_options_to_default();
-		turn_setting_on_off(SETTING_USE_CORRECT_ASPECT_RATIO, use_correct_aspect_ratio, NULL);
-		turn_setting_on_off(SETTING_USE_INTEGER_SCALING, use_integer_scaling, NULL);
-		turn_setting_on_off(SETTING_ENABLE_LIGHTING, enable_lighting, NULL);
-		turn_sound_on_off((is_sound_on != 0) * 15);
-		turn_music_on_off(enable_mixer);
-	} else if (which_dialog == DIALOG_CONFIRM_QUIT && button == DIALOG_BUTTON_OK) {
-		last_key_scancode = SDL_SCANCODE_Q | WITH_CTRL;
+	if (button == DIALOG_BUTTON_OK) {
+		if (which_dialog == DIALOG_RESTORE_DEFAULT_SETTINGS) {
+			play_menu_sound(sound_10_sword_vs_sword);
+			were_settings_changed = true;
+			set_options_to_default();
+			turn_setting_on_off(SETTING_USE_INTEGER_SCALING, use_integer_scaling, NULL);
+			turn_setting_on_off(SETTING_ENABLE_LIGHTING, enable_lighting, NULL);
+			apply_aspect_ratio();
+			turn_sound_on_off((is_sound_on != 0) * 15);
+			turn_music_on_off(enable_mixer);
+		} else if (which_dialog == DIALOG_CONFIRM_QUIT) {
+			last_key_scancode = SDL_SCANCODE_Q | WITH_CTRL;
+			key_test_quit();
+		}
+	} else {
+		play_menu_sound(sound_22_loose_shake_3);
 	}
 }
 
@@ -1278,34 +1392,153 @@ void draw_confirmation_dialog(int which_dialog, const char* text) {
 
 	}
 	current_dialog_box = 0;
+	clear_menu_controls();
+}
+
+void draw_select_level_dialog() {
+	clicked_or_pressed_enter = 0;
+	int old_edited_level_number = -1;
+	for (;;) {
+		process_events();
+		key_test_paused_menu(key_test_quit());
+
+		if (menu_control_back == 1) {
+			menu_control_back = 0;
+			play_menu_sound(sound_22_loose_shake_3);
+			break;
+		}
+
+		if (menu_control_x < 0) {
+			menu_current_level = MAX(0, menu_current_level - 1);
+		} else if (menu_control_x > 0) {
+			menu_current_level = MIN(15, menu_current_level + 1);
+		} else if (clicked_or_pressed_enter) {
+			enter_settings_subsection(SETTINGS_MENU_LEVEL_CUSTOMIZATION);
+			highlighted_settings_subsection = SETTINGS_MENU_MODS;
+			play_menu_sound(sound_22_loose_shake_3);
+			break;
+		}
+
+		if (menu_current_level != old_edited_level_number) {
+			font_type* saved_font = textstate.ptr_font;
+			textstate.ptr_font = &hc_font;
+
+			old_edited_level_number = menu_current_level;
+			// Need to redraw the dialog box.
+			uint32_t clear_color = SDL_MapRGBA(current_target_surface->format, 0, 0, 0, 255);
+			SDL_FillRect(overlay_surface, NULL, clear_color);
+			draw_rect(&copyprot_dialog->peel_rect, color_0_black);
+			dialog_method_2_frame(copyprot_dialog);
+			rect_type rect;
+			shrink2_rect(&rect, &copyprot_dialog->text_rect, 2, 1);
+			rect.bottom -= 14;
+			show_text_with_color(&rect, 0, 0, "Customize level...", color_15_brightwhite);
+			clear_kbd_buf();
+			rect_type input_rect = {104,   64,  118,  256};
+			char level_text[8];
+			snprintf(level_text, sizeof(level_text), "%d", menu_current_level);
+			show_text_with_color(&input_rect, 0, 0, level_text, color_15_brightwhite);
+			draw_image_with_blending(arrowhead_right_image, 175, input_rect.top + 3);
+			draw_image_with_blending(arrowhead_left_image, 145 - 3, input_rect.top + 3);
+
+			update_screen();
+			textstate.ptr_font = saved_font;
+		}
+
+		SDL_Delay(1); // Prevent 100% cpu usage.
+
+	}
+	clear_menu_controls();
+}
+
+int need_full_menu_redraw_count;
+
+void draw_menu() {
+	surface_type* saved_target_surface = current_target_surface;
+	current_target_surface = overlay_surface;
+
+	need_close_menu = false;
+	while (!need_close_menu) {
+		clear_menu_controls();
+		process_events();
+		if (process_key() != 0) {
+			break; // Menu was forcefully closed, for example by pressing Ctrl+A.
+		}
+
+		if (current_dialog_box != DIALOG_NONE) {
+			if (current_dialog_box == DIALOG_SELECT_LEVEL) {
+				draw_select_level_dialog();
+			} else {
+				draw_confirmation_dialog(current_dialog_box, current_dialog_text);
+			}
+			current_dialog_box = DIALOG_NONE;
+			clear_menu_controls();
+		}
+
+		if (is_menu_shown == 1) {
+			is_menu_shown = -1; // reset the menu if the menu is drawn for the first time
+			need_full_menu_redraw_count = 2;
+			reset_paused_menu();
+		}
+		if (menu_control_back == 1) {
+			play_menu_sound(sound_22_loose_shake_3);
+			if (drawn_menu == 1) {
+				if (controlled_area == 1) {
+					leave_settings_subsection();
+				} else {
+					reset_paused_menu(); // Go back to the top level pause menu.
+				}
+			} else {
+				break; // Close the menu.
+			}
+		}
+
+		if (menu_control_scroll_y != 0) {
+			menu_scroll(menu_control_scroll_y);
+		}
+
+		mouse_state_changed = read_mouse_state();
+		if (!mouse_state_changed && menu_control_x == 0 && menu_control_y == 0 && menu_control_back == 0 &&
+		    menu_control_scroll_y == 0 && !pressed_enter
+				) {
+			if (need_full_menu_redraw_count == 0) {
+				SDL_Delay(1);
+				continue; // Don't redraw if there is no input to process (save CPU cycles).
+			}
+		} else {
+			// The menu is updated+drawn within the same routine, so redrawing may be necessary after the first time.
+			// TODO: Maybe in the future fully separate updating from drawing?
+			need_full_menu_redraw_count = 2;
+		}
+
+//		Uint64 begin = SDL_GetPerformanceCounter();
+		font_type* saved_font = textstate.ptr_font;
+		textstate.ptr_font = &small_font;
+		if (drawn_menu == 0) {
+			draw_pause_menu();
+		} else if (drawn_menu == 1) {
+			draw_settings_menu();
+		}
+		textstate.ptr_font = saved_font;
+		if (!need_close_menu) {
+			update_screen();
+		}
+//		printf("Drawing the menu took %.2f ms.\n", (SDL_GetPerformanceCounter() - begin) * milliseconds_per_counter);
+
+		--need_full_menu_redraw_count;
+	}
+
+	current_target_surface = saved_target_surface;
+}
+
+void clear_menu_controls() {
 	clicked_or_pressed_enter = 0;
 	pressed_enter = 0;
 	mouse_clicked = 0;
-}
-
-void draw_menu_overlay() {
-	if (!is_menu_shown) return;
-
-	if (current_dialog_box != DIALOG_NONE) {
-		draw_confirmation_dialog(current_dialog_box, current_dialog_text);
-		return;
-	}
-
-	mouse_state_changed = read_mouse_state();
-	font_type* saved_font = textstate.ptr_font;
-	textstate.ptr_font = &small_font;
-
-	if (is_menu_shown == 1) {
-		is_menu_shown = -1; // reset the menu if the menu is drawn for the first time
-		reset_paused_menu();
-	}
-
-	if (drawn_menu == 0) {
-		draw_pause_menu();
-	} else if (drawn_menu == 1) {
-		draw_settings_menu();
-	}
-	textstate.ptr_font = saved_font;
+	menu_control_x = 0;
+	menu_control_y = 0;
+	menu_control_back = 0;
+	menu_control_scroll_y = 0;
 }
 
 bool are_controller_buttons_released;
@@ -1345,7 +1578,7 @@ int key_test_paused_menu(int key) {
 	switch(key) {
 		default:
 			if (key & WITH_CTRL) {
-				is_paused = 0;
+				need_close_menu = true;
 				return key; // Allow Ctrl+R, etc.
 			} else {
 				return 0;
@@ -1370,19 +1603,7 @@ int key_test_paused_menu(int key) {
 		case SDL_SCANCODE_ESCAPE:
 		case SDL_SCANCODE_BACKSPACE:
 			menu_control_back = 1;
-			if (drawn_menu == 1) {
-				play_menu_sound(sound_22_loose_shake_3);
-				if (controlled_area == 1) {
-					controlled_area = 0;
-					highlighted_pause_menu_item = active_settings_subsection;
-					active_settings_subsection = 0;
-					return 0;
-				} else {
-					reset_paused_menu();
-					return 0;
-				}
-			}
-			return key;
+			return 0;
 	}
 }
 

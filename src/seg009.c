@@ -49,7 +49,7 @@ void find_exe_dir() {
 	found_exe_dir = true;
 }
 
-static inline bool file_exists(const char* filename) {
+bool file_exists(const char* filename) {
     return (access(filename, F_OK) != -1);
 }
 
@@ -2180,12 +2180,16 @@ bool drawing_overlays = false;
 rect_type timer_text_rect = {2, 2, 10, 100};
 
 void draw_overlays() {
+#ifdef USE_MENU
+	if (is_menu_shown) return; // The overlay would overwrite the menu, because they are drawing to the same surface.
+#endif
+
 	if (drawing_overlays) return; // Prevent recursion when update_screen() is called from within draw_overlays().
 	drawing_overlays = true;
 
 	surface_type* saved_target_surface = current_target_surface;
 	current_target_surface = overlay_surface;
-
+	SDL_FillRect(overlay_surface, NULL, 0);
 #ifdef USE_DEBUG_CHEATS
 	if (is_timer_displayed && start_level > 0) {
 		char timer_text[32];
@@ -2206,23 +2210,18 @@ void draw_overlays() {
 	}
 #endif
 
-#ifdef USE_MENU
-	draw_menu_overlay();
-	mouse_clicked = 0;
-	clicked_or_pressed_enter = 0;
-	pressed_enter = 0;
-#endif
-
 	current_target_surface = saved_target_surface;
 	drawing_overlays = false;
 }
 
 void update_screen() {
-	bool need_draw_overlay = (is_timer_displayed || is_menu_shown);
-
+	bool need_draw_overlay = (is_timer_displayed
+#ifdef USE_MENU
+	                          || is_menu_shown
+#endif
+	);
 	SDL_Surface* surface;
 	if (need_draw_overlay) {
-		SDL_FillRect(overlay_surface, NULL, 0);
 		draw_overlays();
 		SDL_BlitSurface(onscreen_surface_, NULL, merged_surface, NULL);
 		SDL_BlitSurface(overlay_surface, NULL, merged_surface, NULL);
@@ -3019,7 +3018,7 @@ void process_events() {
 				break;
 			case SDL_MOUSEWHEEL:
 				if (is_menu_shown) {
-					menu_scroll(-event.wheel.y);
+					menu_control_scroll_y = -event.wheel.y;
 				}
 				break;
 #endif
