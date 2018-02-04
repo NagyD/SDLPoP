@@ -484,3 +484,4 @@ DONE: Convert waves to mixer sounds when they are loaded, not when they are firs
 FIXED: Updated Readme.txt - fix macOS instructions.
 DONE: Added option to force pixel perfect scaling (integer scale factors).
 FIXED: Show level number when cycling between replays with Tab.
+DONE: Added option to change scaling method (sharp, fuzzy, blurry).

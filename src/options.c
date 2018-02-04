@@ -121,6 +121,9 @@ ini_value_list_type level_type_names_list = {&level_type_names, COUNT(level_type
 ini_value_list_type guard_type_names_list = {&guard_type_names, COUNT(guard_type_names)};
 ini_value_list_type tile_type_names_list = {&tile_type_names, COUNT(tile_type_names)};
 
+const char scaling_type_names[][MAX_NAME_LENGTH] = {"sharp", "fuzzy", "blurry"};
+ini_value_list_type scaling_type_names_list = {&scaling_type_names, COUNT(scaling_type_names)};
+
 #define INI_NO_VALID_NAME -9999
 
 static inline int ini_get_named_value(const char* value, ini_value_list_type* value_names) {
@@ -194,6 +197,7 @@ static int global_ini_callback(const char *section, const char *name, const char
 		process_word("pop_window_height", &pop_window_height, NULL);
 		process_boolean("use_correct_aspect_ratio", &use_correct_aspect_ratio);
 		process_boolean("use_integer_scaling", &use_integer_scaling);
+		process_byte("scaling_type", &scaling_type, &scaling_type_names_list);
 		process_boolean("enable_controller_rumble", &enable_controller_rumble);
 		process_boolean("joystick_only_horizontal", &joystick_only_horizontal);
 		process_int("joystick_threshold", &joystick_threshold, NULL);
