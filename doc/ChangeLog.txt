@@ -485,3 +485,6 @@ FIXED: Updated Readme.txt - fix macOS instructions.
 DONE: Added option to force pixel perfect scaling (integer scale factors).
 FIXED: Show level number when cycling between replays with Tab.
 DONE: Added option to change scaling method (sharp, fuzzy, blurry).
+FIXED: Improved the accuracy of timers.
+DONE: The debug timer (press T while running with debug cheats on) is now drawn transparently.
+DONE: The left-to-right animation in the intro now runs at a fixed speed (instead of being CPU limited).

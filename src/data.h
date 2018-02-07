@@ -561,9 +561,12 @@ extern byte edge_type;
 
 // data:596C
 extern SDL_Surface* onscreen_surface_;
+extern SDL_Surface* overlay_surface;
+extern SDL_Surface* merged_surface;
 extern SDL_Renderer* renderer_;
 extern SDL_Window* window_;
 extern SDL_Texture* sdl_texture_;
+extern bool is_overlay_displayed;
 
 extern SDL_GameController* sdl_controller_ INIT( = 0 );
 extern SDL_Joystick* sdl_joystick_; // in case our joystick is not compatible with SDL_GameController
@@ -577,7 +580,9 @@ extern int joy_X_button_state;
 extern int joy_B_button_state;
 extern SDL_Haptic* sdl_haptic;
 
-extern int screen_updates_suspended;
+extern Uint64 perf_counters_per_tick;
+extern Uint64 perf_frequency;
+extern float milliseconds_per_counter;
 
 #ifdef USE_MIXER
 extern char** sound_names;
@@ -719,7 +724,6 @@ extern word shift_L_reduced_ticks INIT(= 719);
 extern word cheats_enabled INIT(= 0);
 #ifdef USE_DEBUG_CHEATS
 extern byte debug_cheats_enabled INIT(= 0);
-extern const rect_type timer_rect INIT(= {1, 2, 8, 55});
 extern byte is_timer_displayed INIT(= 0);
 #endif
 

@@ -749,7 +749,6 @@ void __pascal far flip_screen(surface_type far *surface) {
 void __pascal far fade_in_2(surface_type near *source_surface,int which_rows) {
 	// stub
 	method_1_blit_rect(onscreen_surface_, source_surface, &screen_rect, &screen_rect, 0);
-	request_screen_update();
 }
 
 // seg009:1CC9
@@ -1006,7 +1005,6 @@ int __pascal far draw_cstring(const char far *string) {
 		width += draw_text_character(*(text_pos++));
 	}
 	//show_cursor();
-	request_screen_update();
 	return width;
 }
 
@@ -1107,11 +1105,7 @@ const rect_type far *__pascal draw_text(const rect_type far *rect_ptr,int x_alig
 void __pascal far show_text(const rect_type far *rect_ptr,int x_align,int y_align,const char far *text) {
 	// stub
 	//printf("show_text: %s\n",text);
-	int temp = screen_updates_suspended;
-	screen_updates_suspended = 1;
 	draw_text(rect_ptr, x_align, y_align, text, strlen(text));
-	screen_updates_suspended = temp;
-	request_screen_update();
 }
 
 // seg009:04FF
@@ -1152,8 +1146,6 @@ int __pascal far showmessage(char far *text,int arg_4,void far *arg_0) {
 	//current_target_surface->ptr_font = ptr_font;
 	shrink2_rect(&rect, &copyprot_dialog->text_rect, 2, 1);
 	show_text_with_color(&rect, 0, 0, text, color_15_brightwhite);
-	screen_updates_suspended = 0;
-	request_screen_update();
 	//textstate.ptr_font = saved_font_ptr;
 	//current_target_surface->ptr_font = saved_font_ptr;
 	clear_kbd_buf();
@@ -1336,9 +1328,7 @@ int __pascal far input_str(const rect_type far *rect,char *buffer,int max_length
 					return length;
 				} else break;
 			}
-			request_screen_update();
-//			while (!timer_stopped[0] && (key = key_test_quit()) == 0) idle();
-			while (!has_timer_stopped(0) && (key = key_test_quit()) == 0) idle();
+			while (!has_timer_stopped(timer_0) && (key = key_test_quit()) == 0) idle();
 		} while (1);
 		// Only use the printable ASCII chars (UTF-8 encoding)
 		char entered_char = last_text_input <= 0x7E ? last_text_input : 0;
@@ -1369,7 +1359,6 @@ int __pascal far input_str(const rect_type far *rect,char *buffer,int max_length
 				current_xpos += draw_text_character(buffer[length++] = entered_char);
 			}
 		}
-		request_screen_update();
 	} while(1);
 }
 
@@ -2068,6 +2057,8 @@ void __pascal far set_gr_mode(byte grmode) {
 	window_ = SDL_CreateWindow(WINDOW_TITLE,
 	                           SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 	                           pop_window_width, pop_window_height, flags);
+	// Make absolutely sure that VSync will be off, to prevent timer issues.
+	SDL_SetHint(SDL_HINT_RENDER_VSYNC, "0");
 	renderer_ = SDL_CreateRenderer(window_, -1 , SDL_RENDERER_ACCELERATED );
 	if (use_integer_scaling) {
 #if SDL_VERSION_ATLEAST(2,0,5) // SDL_RenderSetIntegerScale
@@ -2097,7 +2088,7 @@ void __pascal far set_gr_mode(byte grmode) {
 	 * SDL2 renders textures to the screen instead of surfaces; so for now, every screen
 	 * update causes the onscreen_surface_ to be copied into sdl_texture_, which is
 	 * subsequently displayed; awaits a better refactoring!
-	 * The function handling the screen updates is request_screen_update()
+	 * The function handling the screen updates is update_screen()
 	 * */
 	onscreen_surface_ = SDL_CreateRGBSurface(0, 320, 200, 24, 0xFF, 0xFF << 8, 0xFF << 16, 0) ;
 	int scale = 1;
@@ -2111,7 +2102,6 @@ void __pascal far set_gr_mode(byte grmode) {
 	}
 	sdl_texture_ = SDL_CreateTexture(renderer_, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, 320*scale, 200*scale);
 	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
-	screen_updates_suspended = 0;
 
 	if (onscreen_surface_ == NULL) {
 		sdlperror("SDL_SetVideoMode");
@@ -2133,26 +2123,82 @@ void __pascal far set_gr_mode(byte grmode) {
 #endif
 }
 
-void request_screen_update() {
-#ifdef USE_REPLAY
-	if (replaying && skipping_replay) return;
-#endif
-	if (!screen_updates_suspended) {
-		SDL_Surface* surface;
-		if (scaling_type == 1) {
-			// Make "fuzzy pixels" like DOSBox does:
-			// First scale to double size with nearest-neighbor scaling, then scale to full screen with smooth scaling.
-			// The result is not as blurry as if we did only a smooth scaling, but not as sharp as if we did only nearest-neighbor scaling.
-			SDL_BlitScaled(onscreen_surface_, NULL, onscreen_surface_2x, NULL);
-			surface = onscreen_surface_2x;
-		} else {
-			surface = onscreen_surface_;
-		}
-		SDL_UpdateTexture(sdl_texture_, NULL, surface->pixels, surface->pitch);
-		SDL_RenderClear(renderer_);
-		SDL_RenderCopy(renderer_, sdl_texture_, NULL, NULL);
-		SDL_RenderPresent(renderer_);
+void init_overlays() {
+	static bool initialized = false;
+	if (!initialized) {
+		overlay_surface = SDL_CreateRGBSurface(0, 320, 200, 32, 0xFF, 0xFF << 8, 0xFF << 16, 0xFF << 24) ;
+		merged_surface = SDL_CreateRGBSurface(0, 320, 200, 24, 0xFF, 0xFF << 8, 0xFF << 16, 0) ;
+		initialized = true;
 	}
+}
+
+void draw_debug_timer(rect_type* drawn_rect) {
+#ifdef USE_DEBUG_CHEATS
+	if (is_timer_displayed && start_level > 0) {
+		char timer_text[32];
+		if (rem_min < 0) {
+			snprintf(timer_text, sizeof(timer_text), "%02d:%02d:%02d",
+			         -(rem_min + 1), (719 - rem_tick) / 12, (719 - rem_tick) % 12);
+		} else {
+			snprintf(timer_text, sizeof(timer_text), "%02d:%02d:%02d",
+			         rem_min - 1, rem_tick / 12, rem_tick % 12);
+		}
+		int expected_numeric_chars = 6;
+		int extra_numeric_chars = MAX(0, strnlen(timer_text, sizeof(timer_text)) - 8);
+		int line_width = 5 + (expected_numeric_chars + extra_numeric_chars) * 9;
+
+		rect_type timer_box_rect = {0, 0, 11, 2 + line_width};
+		rect_type timer_text_rect = {2, 2, 10, 100};
+		draw_rect_with_alpha(&timer_box_rect, color_0_black, 128);
+		show_text(&timer_text_rect, -1, -1, timer_text);
+		if (drawn_rect != NULL) *drawn_rect = timer_box_rect;
+	}
+#endif
+}
+
+SDL_Surface* get_displayed_surface() {
+	if (!is_overlay_displayed) {
+		return onscreen_surface_;
+	} else {
+		return merged_surface;
+	}
+}
+
+void draw_overlay() {
+	int overlay = 0;
+	is_overlay_displayed = false;
+#ifdef USE_DEBUG_CHEATS
+	if (is_timer_displayed && start_level > 0) overlay = 1; // timer overlay
+#endif
+	if (overlay == 1) {
+		is_overlay_displayed = true;
+		init_overlays();
+		surface_type* saved_target_surface = current_target_surface;
+		current_target_surface = overlay_surface;
+		rect_type drawn_rect = {0};
+		draw_debug_timer(&drawn_rect);
+		SDL_Rect sdl_rect;
+		rect_to_sdlrect(&drawn_rect, &sdl_rect);
+		SDL_BlitSurface(onscreen_surface_, NULL, merged_surface, NULL);
+		SDL_BlitSurface(overlay_surface, &sdl_rect, merged_surface, &sdl_rect);
+		current_target_surface = saved_target_surface;
+	}
+}
+
+void update_screen() {
+	draw_overlay();
+	SDL_Surface* surface = get_displayed_surface();
+	if (scaling_type == 1) {
+		// Make "fuzzy pixels" like DOSBox does:
+		// First scale to double size with nearest-neighbor scaling, then scale to full screen with smooth scaling.
+		// The result is not as blurry as if we did only a smooth scaling, but not as sharp as if we did only nearest-neighbor scaling.
+		SDL_BlitScaled(surface, NULL, onscreen_surface_2x, NULL);
+		surface = onscreen_surface_2x;
+	}
+	SDL_UpdateTexture(sdl_texture_, NULL, surface->pixels, surface->pitch);
+	SDL_RenderClear(renderer_);
+	SDL_RenderCopy(renderer_, sdl_texture_, NULL, NULL);
+	SDL_RenderPresent(renderer_);
 }
 
 // seg009:9289
@@ -2387,9 +2433,6 @@ void __pascal far method_1_blit_rect(surface_type near *target_surface,surface_t
 		sdlperror("SDL_BlitSurface");
 		quit(1);
 	}
-	if (target_surface == onscreen_surface_) {
-		request_screen_update();
-	}
 }
 
 image_type far * __pascal far method_3_blit_mono(image_type far *image,int xpos,int ypos,int blitter,byte color) {
@@ -2490,10 +2533,18 @@ const rect_type far * __pascal far method_5_rect(const rect_type far *rect,int b
 		sdlperror("SDL_FillRect");
 		quit(1);
 	}
-	if (current_target_surface == onscreen_surface_) {
-		request_screen_update();
-	}
 	return rect;
+}
+
+void draw_rect_with_alpha(const rect_type* rect, byte color, byte alpha) {
+	SDL_Rect dest_rect;
+	rect_to_sdlrect(rect, &dest_rect);
+	rgb_type palette_color = palette[color];
+	uint32_t rgb_color = SDL_MapRGBA(overlay_surface->format, palette_color.r<<2, palette_color.g<<2, palette_color.b<<2, alpha);
+	if (safe_SDL_FillRect(current_target_surface, &dest_rect, rgb_color) != 0) {
+		sdlperror("SDL_FillRect");
+		quit(1);
+	}
 }
 
 void blit_xor(SDL_Surface* target_surface, SDL_Rect* dest_rect, SDL_Surface* image, SDL_Rect* src_rect) {
@@ -2545,9 +2596,6 @@ void blit_xor(SDL_Surface* target_surface, SDL_Rect* dest_rect, SDL_Surface* ima
 	}
 	SDL_FreeSurface(image_24);
 	SDL_FreeSurface(helper_surface);
-	if (target_surface == onscreen_surface_) {
-		request_screen_update();
-	}
 }
 
 image_type far * __pascal far method_6_blit_img_to_scr(image_type far *image,int xpos,int ypos,int blit) {
@@ -2588,59 +2636,37 @@ image_type far * __pascal far method_6_blit_img_to_scr(image_type far *image,int
 		sdlperror("SDL_SetAlpha");
 		quit(1);
 	}
-//	if (current_target_surface == onscreen_surface_)
-//		request_screen_update();
-
 	return image;
 }
 
 #ifndef USE_COMPAT_TIMER
 int fps = 60;
-SDL_TimerID timer_handles[2] = {0,0};
-int timer_stopped[2] = {1,1};
-#else
-int wait_time[2] = {0,0};
+float milliseconds_per_tick = (1000.0f / 60.0f);
+Uint64 timer_last_counter[NUM_TIMERS];
 #endif
+int wait_time[NUM_TIMERS];
 
-void remove_timer(int timer_index) {
-#ifndef USE_COMPAT_TIMER
-	if (timer_handles[timer_index]) {
-		if (!SDL_RemoveTimer(timer_handles[timer_index])) {
-			printf("timer_handles[%d] = %d\n", timer_index, timer_handles[timer_index]);
-			sdlperror("SDL_RemoveTimer in remove_timer");
-			//quit(1);
-		}
-		timer_handles[timer_index] = 0;
-	}
-#endif
-}
 
-int target_time;
-
+#ifdef USE_COMPAT_TIMER
 Uint32 timer_callback(Uint32 interval, void *param) {
-	int now = SDL_GetTicks();
-
-	// let the timer finish 5 ms earlier to allow for overhead before the next frame is displayed
-	// this is somewhat ugly and may cause the game to run slightly too fast on fast systems (not tested)
-	int residual_wait_time = target_time - now - 5;
-	if (residual_wait_time > 0 && residual_wait_time <= 40) SDL_Delay(residual_wait_time);
-
 	SDL_Event event;
 	memset(&event, 0, sizeof(event));
 	event.type = SDL_USEREVENT;
 	event.user.code = userevent_TIMER;
 	event.user.data1 = param;
-	int timer_index = (uintptr_t)param;
-	remove_timer(timer_index);
-	// First remove the timer, then allow the other thread to continue.
 	SDL_PushEvent(&event);
-
-
-#ifndef USE_COMPAT_TIMER
-	return 0;
-#else
 	return interval;
+}
 #endif
+
+void reset_timer(int timer_index) {
+#ifndef USE_COMPAT_TIMER
+	timer_last_counter[timer_index] = SDL_GetPerformanceCounter();
+#endif
+}
+
+void set_timer_length(int timer_index, int length) {
+	wait_time[timer_index] = length;
 }
 
 void __pascal start_timer(int timer_index, int length) {
@@ -2648,37 +2674,9 @@ void __pascal start_timer(int timer_index, int length) {
 	if (replaying && skipping_replay) return;
 #endif
 #ifndef USE_COMPAT_TIMER
-	if (timer_handles[timer_index]) {
-		remove_timer(timer_index);
-		timer_handles[timer_index] = 0;
-	}
-	timer_stopped[timer_index] = 0; // length<=0;
-	if (length <= 0) {
-		// We need the timer to finish *after* keypresses.
-		// So idle() is called at least once in do_wait(), and keypresses while fading are not ignored.
-		timer_callback(0, (void*)(uintptr_t)timer_index);
-		return;
-	}
-
-	int now = SDL_GetTicks();
-	double frametime = 1000.0 / 60.0;
-//	double frametime = (timer_index == 1) ? 16.60 : 1000.0 / 60.0;
-	int target_length = (int) (length * frametime);
-
-	// subtract 40ms to allow for variable lag; correct for this when the timer ends
-	target_time = now + target_length;
-	int modified_length = target_length - 40;
-
-	SDL_TimerID timer = SDL_AddTimer(modified_length, timer_callback, (void*)(uintptr_t)timer_index);
-
-	if (timer == 0) {
-		sdlperror("SDL_AddTimer");
-		quit(1);
-	}
-	timer_handles[timer_index] = timer;
-#else
-	wait_time[timer_index] = length;
+	timer_last_counter[timer_index] = SDL_GetPerformanceCounter();
 #endif
+	wait_time[timer_index] = length;
 }
 
 void toggle_fullscreen() {
@@ -2693,17 +2691,14 @@ void toggle_fullscreen() {
 	}
 }
 
-void idle() {
-	// Wait for *one* event and process it, then return.
+void process_events() {
+	// Process all events in the queue.
+	// Previously, this procedure would wait for *one* event and process it, then return.
 	// Much like the x86 HLT instruction.
+	// (We still want to process all events in the queue. For instance, there might be
+	// simultaneous SDL2 KEYDOWN and TEXTINPUT events.)
 	SDL_Event event;
-	if (SDL_WaitEvent(&event) == 0) {
-		sdlperror("SDL_WaitEvent");
-		quit(1);
-	}
-	// We still want to process all events in the queue
-	// For instance, there may be simultaneous SDL2 KEYDOWN and TEXTINPUT events
-	do { // while there are still events to be processed
+	while (SDL_PollEvent(&event) == 1) { // while there are still events to be processed
 		switch (event.type) {
 			case SDL_KEYDOWN:
 			{
@@ -2721,7 +2716,7 @@ void idle() {
 				} else
 #endif
 				if ((modifier & KMOD_ALT) &&
-					scancode == SDL_SCANCODE_RETURN)
+				    scancode == SDL_SCANCODE_RETURN)
 				{
 					// Only if the Enter key was pressed down right now.
 					if (key_states[scancode] == 0) {
@@ -2865,7 +2860,6 @@ void idle() {
 					if ((dword)(joy_x*joy_x) + (dword)(joy_y*joy_y) < (dword)(joystick_threshold*joystick_threshold)) {
 						break;
 					}
-
 				}
 #ifdef USE_AUTO_INPUT_MODE
 				if (!is_joyst_mode) {
@@ -2898,41 +2892,31 @@ void idle() {
 			// Note: event.active.state can contain multiple flags or'ed.
 			// If the game is in full screen, and I switch away (alt-tab) and back, most of the screen will be black, until it is redrawn.
 			if ((event.active.state & SDL_APPACTIVE) && event.active.gain == 1) {
-				request_screen_update();
+				update_screen();
 			}
 */
 				switch (event.window.event) {
 					case SDL_WINDOWEVENT_SIZE_CHANGED:
-						window_resized();
 					//case SDL_WINDOWEVENT_MOVED:
 					//case SDL_WINDOWEVENT_RESTORED:
 					case SDL_WINDOWEVENT_EXPOSED:
-						request_screen_update();
+						window_resized();
+						update_screen();
 						break;
 				}
 				break;
 			case SDL_USEREVENT:
 				if (event.user.code == userevent_TIMER /*&& event.user.data1 == (void*)timer_index*/) {
-#ifndef USE_COMPAT_TIMER
-					int timer_index = (uintptr_t) event.user.data1;
-					timer_stopped[timer_index] = 1;
-					//printf("timer_index = %d\n", timer_index);
-					// 2014-08-27: According to the output of the next line, handle is always NULL.
-					// 2014-08-28: Except when you interrupt fading of the cutscene.
-					//printf("timer_handles[timer_index] = %p\n", timer_handles[timer_index]);
-					// 2014-08-27: However, this line will change something: it makes the game too fast. Weird...
-					// 2014-08-28: Wait, now it doesn't...
-					//timer_handles[timer_index] = 0;
-#else
-				int index;
-				for (index = 0; index < 2; ++index) {
-					if (wait_time[index] > 0) --wait_time[index];
-				}
+#ifdef USE_COMPAT_TIMER
+					int index;
+					for (index = 0; index < NUM_TIMERS; ++index) {
+						if (wait_time[index] > 0) --wait_time[index];
+					}
 #endif
 				} else if (event.user.code == userevent_SOUND) {
 					//sound_timer = 0;
 #ifndef USE_MIXER
-				//stop_sounds();
+					//stop_sounds();
 #endif
 				}
 				break;
@@ -2940,28 +2924,38 @@ void idle() {
 				quit(0);
 				break;
 		}
-	} while (SDL_PollEvent(&event) == 1);
+	}
 }
 
-word word_1D63A = 1;
-// seg009:0EA9
-int __pascal do_wait(int timer_index) {
-	while (! has_timer_stopped(timer_index)) {
-		idle();
-		int key = do_paused();
-		if (key != 0 && (word_1D63A != 0 || key == 0x1B)) return 1;
-	}
-	return 0;
+void idle() {
+	process_events();
+	update_screen();
 }
 
 void __pascal do_simple_wait(int timer_index) {
 #ifdef USE_REPLAY
 	if ((replaying && skipping_replay) || is_validate_mode) return;
 #endif
-
+	update_screen();
 	while (! has_timer_stopped(timer_index)) {
-		idle();
+		SDL_Delay(1);
+		process_events();
 	}
+}
+
+word word_1D63A = 1;
+int __pascal do_wait(int timer_index) {
+#ifdef USE_REPLAY
+	if ((replaying && skipping_replay) || is_validate_mode) return 0;
+#endif
+	update_screen();
+	while (! has_timer_stopped(timer_index)) {
+		SDL_Delay(1);
+		process_events();
+		int key = do_paused();
+		if (key != 0 && (word_1D63A != 0 || key == 0x1B)) return 1;
+	}
+	return 0;
 }
 
 #ifdef USE_COMPAT_TIMER
@@ -2969,8 +2963,12 @@ SDL_TimerID global_timer = NULL;
 #endif
 // seg009:78E9
 void __pascal far init_timer(int frequency) {
+	perf_frequency = SDL_GetPerformanceFrequency();
 #ifndef USE_COMPAT_TIMER
 	fps = frequency;
+	milliseconds_per_tick = 1000.0f / (float)fps;
+	perf_counters_per_tick = perf_frequency / fps;
+	milliseconds_per_counter = 1000.0f / perf_frequency;
 #else
 	if (global_timer != 0) {
 		if (!SDL_RemoveTimer(global_timer)) {
@@ -3042,7 +3040,7 @@ void __pascal far set_bg_attr(int vga_pal_index,int hc_pal_index) {
 			flip_screen(offscreen_surface);
 		}
 		// And show it!
-		request_screen_update();
+		update_screen();
 		// Give some time to show the flash.
 		//SDL_Flip(onscreen_surface_);
 //		if (hc_pal_index != 0) SDL_Delay(2*(1000/60));
@@ -3087,7 +3085,8 @@ void __pascal far fade_in_2(surface_type near *source_surface,int which_rows) {
 	if (graphics_mode == gmMcgaVga) {
 		palette_buffer = make_pal_buffer_fadein(source_surface, which_rows, 2);
 		while (fade_in_frame(palette_buffer) == 0) {
-			pop_wait(timer_1, 0); // modified
+			process_events(); // modified
+			do_paused();
 		}
 		pal_restore_free_fadein(palette_buffer);
 	} else {
@@ -3194,7 +3193,6 @@ int __pascal far fade_in_frame(palette_fade_type far *palette_buffer) {
 	SDL_UnlockSurface(offscreen_surface);
 
 	//SDL_UpdateRect(onscreen_surface_, 0, 0, 0, 0); // debug
-	request_screen_update();
 
 	/**/do_simple_wait(1); // can interrupt fading of cutscene
 	//do_wait(timer_1); // can interrupt fading of main title
@@ -3208,7 +3206,8 @@ void __pascal far fade_out_2(int rows) {
 	if (graphics_mode == gmMcgaVga) {
 		palette_buffer = make_pal_buffer_fadeout(rows, 2);
 		while (fade_out_frame(palette_buffer) == 0) {
-			pop_wait(timer_1, 0); // modified
+			process_events(); // modified
+			do_paused();
 		}
 		pal_restore_free_fadeout(palette_buffer);
 	} else {
@@ -3314,10 +3313,7 @@ int __pascal far fade_out_frame(palette_fade_type far *palette_buffer) {
 	SDL_UnlockSurface(onscreen_surface_);
 	SDL_UnlockSurface(offscreen_surface);
 
-	request_screen_update();
-
-	/**/do_simple_wait(1); // can interrupt fading of cutscene
-	//do_wait(timer_1); // can interrupt fading of main title
+	do_simple_wait(timer_1); // can interrupt fading of cutscene
 	return var_8;
 }
 
@@ -3378,10 +3374,26 @@ void set_chtab_palette(chtab_type* chtab, byte* colors, int n_colors) {
 	}
 }
 
-int has_timer_stopped(int index) {
+int has_timer_stopped(int timer_index) {
 #ifdef USE_COMPAT_TIMER
-	return wait_time[index] == 0;
+	return wait_time[timer_index] == 0;
 #else
-	return timer_stopped[index];
+#ifdef USE_REPLAY
+	if ((replaying && skipping_replay) || is_validate_mode) return true;
+#endif
+	Uint64 current_counter = SDL_GetPerformanceCounter();
+	int ticks_elapsed = (int)((current_counter / perf_counters_per_tick) - (timer_last_counter[timer_index] / perf_counters_per_tick));
+	int overshoot = ticks_elapsed - wait_time[timer_index];
+	if (overshoot >= 0) {
+//		float milliseconds_elapsed = (current_counter - timer_last_counter[timer_index]) * milliseconds_per_counter;
+//		printf("timer %d:   frametime (ms) = %5.1f    fps = %.1f    timer ticks elapsed = %d\n", timer_index, milliseconds_elapsed, 1000.0f / milliseconds_elapsed, ticks_elapsed);
+		if (overshoot > 0 && overshoot <= 3) {
+			current_counter -= overshoot * perf_counters_per_tick;
+		}
+		timer_last_counter[timer_index] = current_counter;
+		return true;
+	} else {
+		return false;
+	}
 #endif
 }
