@@ -31,7 +31,7 @@ const char screenshot_filename[] = "screenshot.png";
 
 // Save a screenshot.
 void save_screenshot() {
-	IMG_SavePNG(onscreen_surface_, screenshot_filename);
+	IMG_SavePNG(get_final_surface(), screenshot_filename);
 	printf("Saved screenshot to \"%s\".\n", screenshot_filename);
 }
 
@@ -510,7 +510,6 @@ void save_level_screenshot(bool want_extras) {
 	}
 	*/
 
-	screen_updates_suspended = true;
 	int old_room = drawn_room;
 	for (int y=0;y<map_height;y++) {
 		for (int x=0;x<map_width;x++) {
@@ -530,7 +529,6 @@ void save_level_screenshot(bool want_extras) {
 		}
 	}
 	switch_to_room(old_room);
-	screen_updates_suspended = false;
 
 	IMG_SavePNG(map_surface, screenshot_filename);
 	printf("Saved level screenshot to \"%s\".\n", screenshot_filename);

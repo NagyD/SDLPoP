@@ -642,9 +642,11 @@ enum soundids {
 	sound_56_ending_music = 56,
 };
 
+#define NUM_TIMERS 3
 enum timerids {
 	timer_0 = 0,
 	timer_1 = 1,
+	timer_2 = 2,
 };
 
 enum frameids {

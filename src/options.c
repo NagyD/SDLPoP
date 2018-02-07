@@ -425,6 +425,7 @@ void show_use_fixes_and_enhancements_prompt() {
 				printf("Disabling game fixes and enhancements.\n");
 				break;
 		}
+		delay_ticks(1);
 	}
 	if (!use_fixes_and_enhancements) disable_fixes_and_enhancements();
 }
