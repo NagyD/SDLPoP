@@ -1136,7 +1136,7 @@ byte seqtbl[] = {
 
 void apply_seqtbl_patches() {
 #ifdef FIX_WALL_BUMP_TRIGGERS_TILE_BELOW
-	if (fix_wall_bump_triggers_tile_below)
+	if (fixes->fix_wall_bump_triggers_tile_below)
 		SEQTBL_0[bumpfall + 1] = actions_3_in_midair; // instead of actions_5_bumped
 #endif
 }

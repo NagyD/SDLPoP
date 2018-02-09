@@ -119,35 +119,28 @@ extern byte* curr_room_tiles;
 extern byte* curr_room_modif;
 // data:5968
 extern word draw_xh;
-
-// data:02B2
-extern /*const*/ byte tbl_level_type[16] INIT(= {0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 0});
-// 1.3
-extern /*const*/ word tbl_level_color[16] INIT(= {0, 0, 0, 1, 0, 0, 0, 1, 2, 2, 0, 0, 3, 3, 4, 0});
 // data:0F9E
 extern word current_level INIT(= -1);
 // data:3021
 extern byte graphics_mode INIT(= 0);
 // data:2BA6
-extern rgb_type vga_palette[16] INIT(= {
-	{0x00, 0x00, 0x00},
-	{0x00, 0x00, 0x2A},
-	{0x00, 0x2A, 0x00},
-	{0x00, 0x2A, 0x2A},
-	{0x2A, 0x00, 0x00},
-	{0x2A, 0x00, 0x2A},
-	{0x2A, 0x15, 0x00},
-	{0x2A, 0x2A, 0x2A},
-	{0x15, 0x15, 0x15},
-	{0x15, 0x15, 0x3F},
-	{0x15, 0x3F, 0x15},
-	{0x15, 0x3F, 0x3F},
-	{0x3F, 0x15, 0x15},
-	{0x3F, 0x15, 0x3F},
-	{0x3F, 0x3F, 0x15},
-	{0x3F, 0x3F, 0x3F},
-});
-
+#define VGA_PALETTE_DEFAULT { \
+	{0x00, 0x00, 0x00},\
+	{0x00, 0x00, 0x2A},\
+	{0x00, 0x2A, 0x00},\
+	{0x00, 0x2A, 0x2A},\
+	{0x2A, 0x00, 0x00},\
+	{0x2A, 0x00, 0x2A},\
+	{0x2A, 0x15, 0x00},\
+	{0x2A, 0x2A, 0x2A},\
+	{0x15, 0x15, 0x15},\
+	{0x15, 0x15, 0x3F},\
+	{0x15, 0x3F, 0x15},\
+	{0x15, 0x3F, 0x3F},\
+	{0x3F, 0x15, 0x15},\
+	{0x3F, 0x15, 0x3F},\
+	{0x3F, 0x3F, 0x15},\
+	{0x3F, 0x3F, 0x3F},}
 // data:4CC0
 extern word room_L;
 // data:4CCE
@@ -273,10 +266,6 @@ extern word is_joyst_mode;
 extern byte is_sound_on INIT(= 0x0F);
 // data:3D18
 extern word next_level;
-#ifdef USE_COPYPROT
-// data:009E
-extern word copyprot_level INIT(= 2);
-#endif
 // data:4C4A
 extern short guardhp_delta;
 // data:596A
@@ -442,10 +431,6 @@ extern mob_type mobs[14];
 extern short tile_col;
 // data:229C
 extern const short y_land[] INIT(= {-8, 55, 118, 181, 244});
-// data:03D4
-extern /*const*/ short tbl_guard_type[16] INIT(= {0, 0, 0, 2, 0, 0, 1, 0, 0, 0, 0, 0, 4, 3, -1, -1});
-// data:0EDA
-extern /*const*/ byte tbl_guard_hp[16] INIT(= {4, 3, 3, 3, 3, 4, 5, 4, 4, 5, 5, 5, 4, 6, 0, 0});
 // data:5888
 extern word curr_guard_color;
 // data:288C
@@ -565,8 +550,11 @@ extern SDL_Surface* overlay_surface;
 extern SDL_Surface* merged_surface;
 extern SDL_Renderer* renderer_;
 extern SDL_Window* window_;
-extern SDL_Texture* sdl_texture_;
 extern bool is_overlay_displayed;
+extern SDL_Texture* texture_sharp;
+extern SDL_Texture* texture_fuzzy;
+extern SDL_Texture* texture_blurry;
+extern SDL_Texture* target_texture;
 
 extern SDL_GameController* sdl_controller_ INIT( = 0 );
 extern SDL_Joystick* sdl_joystick_; // in case our joystick is not compatible with SDL_GameController
@@ -626,6 +614,12 @@ extern word justblocked; // name from Apple II source
 // data:5F84
 extern word last_loose_sound;
 
+extern int last_key_scancode;
+extern font_type hc_font INIT(= {0x01,0xFF, 7,2,1,1, NULL});
+extern textstate_type textstate INIT(= {0,0,0,15,&hc_font});
+extern int need_quick_save INIT(= 0);
+extern int need_quick_load INIT(= 0);
+
 #ifdef USE_REPLAY
 extern byte recording INIT(= 0);
 extern byte replaying INIT(= 0);
@@ -661,64 +655,50 @@ extern int joystick_threshold INIT(= 8000);
 extern byte enable_quicksave INIT(= 1);
 extern byte enable_quicksave_penalty INIT(= 1);
 extern byte enable_replay INIT(= 1);
-extern byte enable_crouch_after_climbing INIT(= 1);
-extern byte enable_freeze_time_during_end_music INIT(= 1);
-extern byte fix_gate_sounds INIT(= 1);
-extern byte fix_two_coll_bug INIT(= 1);
-extern byte fix_infinite_down_bug INIT(= 1);
-extern byte fix_gate_drawing_bug INIT(= 0);
-extern byte fix_bigpillar_climb INIT(= 0);
-extern byte fix_jump_distance_at_edge INIT(= 1);
-extern byte fix_edge_distance_check_when_climbing INIT(= 1);
-extern byte fix_painless_fall_on_guard INIT(= 1);
-extern byte fix_wall_bump_triggers_tile_below INIT(= 1);
-extern byte fix_stand_on_thin_air INIT(= 1);
-extern byte fix_press_through_closed_gates INIT(= 1);
-extern byte fix_grab_falling_speed INIT(= 1);
-extern byte fix_skeleton_chomper_blood INIT(= 1);
-extern byte fix_move_after_drink INIT(= 1);
-extern byte fix_loose_left_of_potion INIT(= 1);
-extern byte fix_guard_following_through_closed_gates INIT(= 1);
-extern byte fix_safe_landing_on_spikes INIT(= 1);
 extern byte use_correct_aspect_ratio INIT(= 0);
 extern byte use_integer_scaling INIT(= 0);
 extern byte scaling_type INIT(= 0);
-extern byte enable_remember_guard_hp INIT(= 1);
-extern byte fix_glide_through_wall INIT(= 1);
-extern byte fix_drop_through_tapestry INIT(= 1);
-extern byte fix_land_against_gate_or_tapestry INIT(= 1);
-extern byte fix_unintended_sword_strike INIT(= 1);
-extern byte fix_retreat_without_leaving_room INIT(= 1);
-extern byte fix_running_jump_through_tapestry INIT(= 1);
-extern byte fix_push_guard_into_wall INIT(= 1);
-extern byte fix_jump_through_wall_above_gate INIT(= 1);
-extern byte fix_chompers_not_starting INIT(= 1);
-extern byte fix_feather_interrupted_by_leveldoor INIT(= 1);
-extern byte fix_offscreen_guards_disappearing INIT(= 1);
-extern byte fix_move_after_sheathe INIT(= 1);
 #ifdef USE_LIGHTING
 extern byte enable_lighting INIT(= 0);
 #endif
-
-// Custom Gameplay settings
-extern word start_minutes_left INIT(= 60);
-extern word start_ticks_left INIT(= 719);
-extern word start_hitp INIT(= 3);
-extern word max_hitp_allowed INIT(= 10);
-extern word saving_allowed_first_level INIT(= 3);
-extern word saving_allowed_last_level INIT(= 13);
-extern byte start_upside_down INIT(= 0);
-extern byte start_in_blind_mode INIT(= 0);
-extern byte drawn_tile_top_level_edge INIT(= tiles_1_floor);
-extern byte drawn_tile_left_level_edge INIT(= tiles_20_wall);
-extern byte level_edge_hit_tile INIT(= tiles_20_wall);
-extern byte allow_triggering_any_tile INIT(= 0);
-extern byte enable_wda_in_palace INIT(= 0);
-extern word first_level INIT(= 1);
-extern byte skip_title INIT(= 0);
-extern word shift_L_allowed_until_level INIT(= 4);
-extern word shift_L_reduced_minutes INIT(= 15);
-extern word shift_L_reduced_ticks INIT(= 719);
+extern fixes_options_type fixes_saved;
+extern fixes_options_type fixes_disabled_state;
+extern fixes_options_type* fixes INIT(= &fixes_disabled_state);
+extern byte use_custom_options;
+extern custom_options_type custom_saved;
+extern custom_options_type custom_defaults INIT(= {
+		.start_minutes_left = 60,
+		.start_ticks_left = 719,
+		.start_hitp = 3,
+		.max_hitp_allowed = 10,
+		.saving_allowed_first_level = 3,
+		.saving_allowed_last_level = 13,
+		.start_upside_down = 0,
+		.start_in_blind_mode = 0,
+        // data:009E
+        .copyprot_level = 2,
+		.drawn_tile_top_level_edge = tiles_1_floor,
+		.drawn_tile_left_level_edge = tiles_20_wall,
+		.level_edge_hit_tile = tiles_20_wall,
+		.allow_triggering_any_tile = 0,
+		.enable_wda_in_palace = 0,
+        .vga_palette = VGA_PALETTE_DEFAULT,
+		.first_level = 1,
+		.skip_title = 0,
+		.shift_L_allowed_until_level = 4,
+		.shift_L_reduced_minutes = 15,
+		.shift_L_reduced_ticks  = 719,
+		// data:02B2
+		.tbl_level_type = {0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 0},
+		// 1.3
+        .tbl_level_color = {0, 0, 0, 1, 0, 0, 0, 1, 2, 2, 0, 0, 3, 3, 4, 0},
+		// data:03D4
+        .tbl_guard_type = {0, 0, 0, 2, 0, 0, 1, 0, 0, 0, 0, 0, 4, 3, -1, -1},
+		// data:0EDA
+		.tbl_guard_hp = {4, 3, 3, 3, 3, 4, 5, 4, 4, 5, 5, 5, 4, 6, 0, 0},
+		.tbl_cutscenes_by_index = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15},
+});
+extern custom_options_type* custom INIT(= &custom_defaults);
 
 // data:009C
 extern word cheats_enabled INIT(= 0);
@@ -727,26 +707,18 @@ extern byte debug_cheats_enabled INIT(= 0);
 extern byte is_timer_displayed INIT(= 0);
 #endif
 
-// customized cutscene set-up: handled as index into a lookup table (can't rely on function pointers being stable!)
-extern byte tbl_cutscenes_by_index[16] INIT(= {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15});
-extern cutscene_ptr_type tbl_cutscenes_lookup[16] INIT(= {
-	NULL,
-	NULL,
-	cutscene_2_6,
-	NULL,
-	cutscene_4,
-	NULL,
-	cutscene_2_6,
-	NULL,
-	cutscene_8,
-	cutscene_9,
-	NULL,
-	NULL,
-	cutscene_12,
-	NULL,
-	NULL,
-	NULL,
-});
+#ifdef USE_MENU
+extern font_type hc_small_font INIT(= {32, 126, 5, 2, 1, 1, NULL});
+extern bool mouse_state_changed;
+extern int mouse_x, mouse_y;
+extern bool mouse_clicked;
+extern bool clicked_or_pressed_enter;
+extern bool pressed_enter;
+extern bool escape_key_suppressed;
+extern int menu_control_scroll_y;
+extern sbyte is_menu_shown;
+extern byte enable_pause_menu INIT(= 1);
+#endif
 
 #undef INIT
 #undef extern

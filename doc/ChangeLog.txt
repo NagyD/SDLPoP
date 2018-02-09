@@ -488,3 +488,7 @@ DONE: Added option to change scaling method (sharp, fuzzy, blurry).
 FIXED: Improved the accuracy of timers.
 DONE: The debug timer (press T while running with debug cheats on) is now drawn transparently.
 DONE: The left-to-right animation in the intro now runs at a fixed speed (instead of being CPU limited).
+DONE: Added in-game menu (press Escape or Backspace) with ability to change settings while in-game.
+CHANGE: Removed the startup prompt to enable or disable fixes/enhancements (no longer needed).
+FIXED: Fixed turning off music not working.
+DONE: Added option for disabling and enabling all customization options at once.
