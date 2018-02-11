@@ -1,7 +1,7 @@
 [Project]
 FileName=port_release.dev
 Name=SDLPoP
-UnitCount=22
+UnitCount=23
 Type=0
 Ver=2
 ObjFiles=
@@ -262,6 +262,16 @@ BuildCmd=
 
 [Unit22]
 FileName=screenshot.c
+CompileCpp=0
+Folder=
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit23]
+FileName=menu.c
 CompileCpp=0
 Folder=
 Compile=1
