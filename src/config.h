@@ -196,6 +196,10 @@ The authors of this program may be contacted at http://forum.princed.org
 // When the program starts, check whether the deobfuscated sequence table (seqtbl.c) is correct.
 //#define CHECK_SEQTABLE_MATCHES_ORIGINAL
 
+// Print out every second how closely the in-game elapsed time corresponds to the actual elapsed time.
+//#define CHECK_TIMING
+
+
 // Enable debug cheats (with command-line argument "debug")
 // "[" and "]" : nudge x position by one pixel
 // "T" : display remaining time in minutes, seconds and ticks
@@ -212,6 +216,9 @@ The authors of this program may be contacted at http://forum.princed.org
 // Automatically switch to keyboard or joystick/gamepad mode if there is input from that device.
 // Useful if SDL detected a gamepad but there is none.
 #define USE_AUTO_INPUT_MODE
+
+// Display the in-game menu.
+#define USE_MENU
 
 // Default SDL_Joystick button values
 #define SDL_JOYSTICK_BUTTON_Y 2

@@ -125,8 +125,7 @@ Gamepad equivalents:
 * A: down
 * Y: up
 * X or triggers: shift
-* Start: quit
-* Back: restart level (Ctrl+A)
+* Start or Back: display in-game menu
 
 Controlling the game:
 * Esc: pause game
@@ -146,6 +145,7 @@ Controlling the game:
 * F6: quicksave
 * F9: quickload
 * F12: Save a screenshot to screenshot.png.
+* Backspace: display in-game menu
 
 Viewing or recording replays:
 * Ctrl+Tab (in game, or on title screen): start or stop recording
@@ -218,11 +218,12 @@ In addition, since version 1.17, mods in the "mods/" folder can use a custom con
 Options in this file can override (most of) the gameplay-related options in SDLPoP.ini.
 
 Beware, some mods (especially the harder ones) might rely on bugs that are fixed in SDLPoP.
-Since version 1.16, SDLPoP can ask you whether gameplay quirks should be fixed or not.
-You can set your choice permanently in the file 'SDLPoP.ini':
+You can choose whether gameplay quirks should be fixed or not in the file 'SDLPoP.ini':
 - Set the option 'use_fixes_and_enhancements' to 'false' to get the exact behavior of the original game.
 - Alternatively, set the option 'use_fixes_and_enhancements' to 'true'. You can then also enable or disable
   individual fixes and enhancements, depending on your preference.
+You can also enable or disable gameplay fixes through the in-game menu.
+- In the settings menu, look for the option "Enhanced mode (allow bug fixes)" in the GAMEPLAY section.
 
 Furthermore, SDLPoP opens up new possibilities for mod making.
 For example:

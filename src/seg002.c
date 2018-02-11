@@ -48,7 +48,7 @@ void __pascal far do_init_shad(const byte *source,int seq_index) {
 
 // seg002:0044
 void __pascal far get_guard_hp() {
-	guardhp_delta = guardhp_curr = guardhp_max = extrastrength[guard_skill] + tbl_guard_hp[current_level];
+	guardhp_delta = guardhp_curr = guardhp_max = extrastrength[guard_skill] + custom->tbl_guard_hp[current_level];
 }
 
 // data:0EEA
@@ -112,7 +112,7 @@ void __pascal far enter_guard() {
 	if (guard_tile >= 30) return;
 #else
 	if (guard_tile >= 30) {
-		if (!fix_offscreen_guards_disappearing) return;
+		if (!fixes->fix_offscreen_guards_disappearing) return;
 
 		// try to see if there are offscreen guards in the left and right rooms that might be visible from this room
 		word left_guard_tile = 31;
@@ -170,7 +170,7 @@ void __pascal far enter_guard() {
 	Char.curr_col = get_tile_div_mod_m7(Char.x);
 	Char.direction = level.guards_dir[room_minus_1];
 	// only regular guards have different colors (and only on VGA)
-	if (graphics_mode == gmMcgaVga && tbl_guard_type[current_level] == 0) {
+	if (graphics_mode == gmMcgaVga && custom->tbl_guard_type[current_level] == 0) {
 		curr_guard_color = level.guards_color[room_minus_1];
 	} else {
 		curr_guard_color = 0;
@@ -216,7 +216,7 @@ void __pascal far enter_guard() {
 		is_guard_notice = 0;
 		get_guard_hp();
 		#ifdef REMEMBER_GUARD_HP
-		if (enable_remember_guard_hp && remembered_hp > 0)
+		if (fixes->enable_remember_guard_hp && remembered_hp > 0)
 			guardhp_delta = guardhp_curr = (word) remembered_hp;
 		#endif
 	}
@@ -267,7 +267,7 @@ void __pascal far leave_guard() {
 
 	level.guards_color[room_minus_1] = curr_guard_color & 0x0F; // restriction to 4 bits added
 #ifdef REMEMBER_GUARD_HP
-	if (enable_remember_guard_hp && guardhp_curr < 16) // can remember 1..15 hp
+	if (fixes->enable_remember_guard_hp && guardhp_curr < 16) // can remember 1..15 hp
 		level.guards_color[room_minus_1] |= (guardhp_curr << 4);
 #endif
 
@@ -322,7 +322,7 @@ void __pascal far exit_room() {
 				// left
 				if (Guard.x >= 91) leave = 1;
 				#ifdef FIX_GUARD_FOLLOWING_THROUGH_CLOSED_GATES
-				else if (fix_guard_following_through_closed_gates && can_guard_see_kid != 2 &&
+				else if (fixes->fix_guard_following_through_closed_gates && can_guard_see_kid != 2 &&
 						Kid.sword != sword_2_drawn) {
 					leave = 1;
 				}
@@ -331,7 +331,7 @@ void __pascal far exit_room() {
 				// right
 				if (Guard.x < 165) leave = 1;
 				#ifdef FIX_GUARD_FOLLOWING_THROUGH_CLOSED_GATES
-				else if (fix_guard_following_through_closed_gates && can_guard_see_kid != 2 &&
+				else if (fixes->fix_guard_following_through_closed_gates && can_guard_see_kid != 2 &&
 						 Kid.sword != sword_2_drawn) {
 					leave = 1;
 				}
@@ -416,7 +416,7 @@ short __pascal far leave_room() {
 			// Solution: also allow the room to be changed on frame_157_walk_with_sword
 			// Note that this means that the delay for leaving rooms in a swordfight becomes noticably shorter.
 
-			&& (frame != frame_157_walk_with_sword || !fix_retreat_without_leaving_room)
+			&& (frame != frame_157_walk_with_sword || !fixes->fix_retreat_without_leaving_room)
 #endif
 
 		) ||

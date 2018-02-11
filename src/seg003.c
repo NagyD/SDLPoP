@@ -38,9 +38,9 @@ void __pascal far init_game(int level) {
 	upside_down = 0; // N.B. upside_down is also reset in set_start_pos()
 	resurrect_time = 0;
 	if (!dont_reset_time) {
-		rem_min = start_minutes_left;   // 60
-		rem_tick = start_ticks_left;    // 719
-		hitp_beg_lev = start_hitp;      // 3
+		rem_min = custom->start_minutes_left;   // 60
+		rem_tick = custom->start_ticks_left;    // 719
+		hitp_beg_lev = custom->start_hitp;      // 3
 	}
 	need_level1_music = (level == 1);
 	play_level(level);
@@ -50,7 +50,7 @@ void __pascal far init_game(int level) {
 void __pascal far play_level(int level_number) {
 	cutscene_ptr_type cutscene_func;
 #ifdef USE_COPYPROT
-	if (enable_copyprot && level_number == copyprot_level) {
+	if (enable_copyprot && level_number == custom->copyprot_level) {
 		level_number = 15;
 	}
 #endif
@@ -65,7 +65,7 @@ void __pascal far play_level(int level_number) {
 				printf("Tried to load cutscene for level %d, not in 0..15\n", level_number);
 				quit(1);
 			}
-			cutscene_func = tbl_cutscenes[level_number];
+			cutscene_func = tbl_cutscenes[custom->tbl_cutscenes_by_index[level_number]];
 			if (cutscene_func != NULL
 
 				#ifdef USE_REPLAY
@@ -121,12 +121,12 @@ void __pascal far play_level(int level_number) {
 		level_number = play_level_2();
 		// hacked...
 #ifdef USE_COPYPROT
-		if (enable_copyprot && level_number == copyprot_level && !demo_mode) {
+		if (enable_copyprot && level_number == custom->copyprot_level && !demo_mode) {
 			level_number = 15;
 		} else {
 			if (level_number == 16) {
-				level_number = copyprot_level;
-				copyprot_level = -1;
+				level_number = custom->copyprot_level;
+				custom->copyprot_level = -1;
 			}
 		}
 #endif
@@ -183,7 +183,7 @@ void __pascal far set_start_pos() {
 	Char.charid = charid_0_kid;
 	is_screaming = 0;
 	knock = 0;
-	upside_down = start_upside_down; // 0
+	upside_down = custom->start_upside_down; // 0
 	is_feather_fall = 0;
 	Char.fall_y = 0;
 	Char.fall_x = 0;
@@ -212,11 +212,9 @@ void __pascal far find_start_level_door() {
 
 // seg003:0326
 void __pascal far draw_level_first() {
-	screen_updates_suspended = 1;
-
 	next_room = Kid.room;
 	check_the_end();
-	if (tbl_level_type[current_level]) {
+	if (custom->tbl_level_type[current_level]) {
 		gen_palace_wall_colors();
 	}
 	draw_rect(&screen_rect, 0);
@@ -224,8 +222,9 @@ void __pascal far draw_level_first() {
 	redraw_screen(0);
 	draw_kid_hp(hitp_curr, hitp_max);
 
-	screen_updates_suspended = 0;
-	request_screen_update();
+#ifdef USE_QUICKSAVE
+	check_quick_op();
+#endif
 
 #ifdef USE_SCREENSHOT
 	auto_screenshot();
@@ -304,26 +303,63 @@ void __pascal far redraw_screen(int drawing_different_room) {
 
 }
 
+#ifdef CHECK_TIMING
+typedef struct test_timing_state_type {
+	bool already_had_first_frame;
+	Uint64 level_start_counter;
+	int ticks_left_at_level_start;
+	float seconds_left_at_level_start;
+} test_timing_state_type;
+
+void test_timings(test_timing_state_type* state) {
+
+	if (!state->already_had_first_frame) {
+		state->level_start_counter = SDL_GetPerformanceCounter();
+		state->ticks_left_at_level_start = (rem_min-1)*720 + rem_tick;
+		state->seconds_left_at_level_start = (1.0f / 60.0f) * (5 * state->ticks_left_at_level_start);
+		printf("Seconds left = %f\n", state->seconds_left_at_level_start);
+		state->already_had_first_frame = true;
+	} else if (rem_tick % 12 == 11) {
+		Uint64 current_counter = SDL_GetPerformanceCounter();
+		float actual_seconds_elapsed = (float)(current_counter - state->level_start_counter) / (float)SDL_GetPerformanceFrequency();
+
+		int ticks_left = (rem_min-1)*720 + rem_tick;
+		float game_seconds_left = (1.0f / 60.0f) * (5 * ticks_left);
+		float game_seconds_elapsed = state->seconds_left_at_level_start - game_seconds_left;
+
+		printf("rem_min: %d   game elapsed (s): %.2f    actual elapsed (s): %.2f     delta: %.2f\n",
+		       rem_min, game_seconds_elapsed, actual_seconds_elapsed, actual_seconds_elapsed - game_seconds_elapsed);
+	}
+
+}
+#endif
+
 // seg003:04F8
 // Returns a level number:
 // - The current level if it was restarted.
 // - The next level if the level was completed.
 int __pascal far play_level_2() {
+	reset_timer(timer_1);
+#ifdef CHECK_TIMING
+	test_timing_state_type test_timing_state = {0};
+#endif
 	while (1) { // main loop
 #ifdef USE_QUICKSAVE
 		check_quick_op();
+#endif
+#ifdef CHECK_TIMING
+		test_timings(&test_timing_state);
 #endif
 
 #ifdef USE_REPLAY
 		if (need_replay_cycle) replay_cycle();
 #endif
-
 		if (Kid.sword == sword_2_drawn) {
 			// speed when fighting (smaller is faster)
-			start_timer(timer_1, 6);
+			set_timer_length(timer_1, 6);
 		} else {
 			// speed when not fighting (smaller is faster)
-			start_timer(timer_1, 5);
+			set_timer_length(timer_1, 5);
 		}
 		guardhp_delta = 0;
 		hitp_delta = 0;
@@ -344,33 +380,10 @@ int __pascal far play_level_2() {
 			return current_level;
 		} else {
 			if (next_level == current_level || check_sound_playing()) {
-				screen_updates_suspended = 1;
 				draw_game_frame();
-				if (flash_if_hurt()) {
-					screen_updates_suspended = 0;
-					request_screen_update(); // display the flash
-					delay_ticks(2);          // and add a short delay
-				}
-				screen_updates_suspended = 0;
+				flash_if_hurt();
 				remove_flash_if_hurt();
-
-				#ifdef USE_DEBUG_CHEATS
-				if (debug_cheats_enabled && is_timer_displayed) {
-					char timer_text[16];
-					if (rem_min < 0) {
-						snprintf(timer_text, 16, "%02d:%02d:%02d", -(rem_min + 1), (719 - rem_tick) / 12, (719 - rem_tick) % 12);
-					} else {
-						snprintf(timer_text, 16, "%02d:%02d:%02d", rem_min - 1, rem_tick / 12, rem_tick % 12);
-					}
-					screen_updates_suspended = 1;
-					draw_rect(&timer_rect, color_0_black);
-					show_text(&timer_rect, -1, -1, timer_text);
-					screen_updates_suspended = 0;
-				}
-				#endif
-
-				request_screen_update(); // request screen update manually
-				do_simple_wait(1);
+				do_simple_wait(timer_1);
 			} else {
 				stop_sounds();
 				hitp_beg_lev = hitp_max;
@@ -565,7 +578,7 @@ void __pascal far bump_into_opponent() {
 		if (ABS(distance) <= 15) {
 
 			#ifdef FIX_PAINLESS_FALL_ON_GUARD
-			if (fix_painless_fall_on_guard) {
+			if (fixes->fix_painless_fall_on_guard) {
 				if (Char.fall_y >= 33) return; // don't bump; dead
 				else if (Char.fall_y >= 22) { // medium land
 					take_hp(1);
@@ -680,13 +693,13 @@ void __pascal far do_mouse() {
 // seg003:0AFC
 int __pascal far flash_if_hurt() {
 	if (flash_time != 0) {
-		do_flash_no_delay(flash_color); // don't add delay to the flash
+		do_flash(flash_color);
 		return 1;
 	} else if (hitp_delta < 0) {
 		if (is_joyst_mode && enable_controller_rumble && sdl_haptic != NULL) {
 			SDL_HapticRumblePlay(sdl_haptic, 1.0, 100); // rumble at full strength for 100 milliseconds
 		}
-		do_flash_no_delay(color_12_brightred); // red
+		do_flash(color_12_brightred); // red
 		return 1;
 	}
 	return 0; // not flashed

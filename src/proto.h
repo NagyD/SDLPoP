@@ -114,7 +114,6 @@ void __pascal far draw_hourglass();
 void __pascal far reset_cutscene();
 void __pascal far do_flash(short color);
 void delay_ticks(Uint32 ticks);
-void do_flash_no_delay(short color);
 void __pascal far remove_flash();
 void __pascal far end_sequence();
 void __pascal far expired();
@@ -510,6 +509,7 @@ image_type* get_image(short chtab_id, int id);
 
 // SEG009.C
 void sdlperror(const char* header);
+bool file_exists(const char* filename);
 #define locate_file(filename) locate_file_(filename, alloca(POP_MAX_PATH), POP_MAX_PATH)
 const char* locate_file_(const char* filename, char* path_buffer, int buffer_size);
 int __pascal far read_key();
@@ -526,6 +526,7 @@ dat_type *__pascal open_dat(const char *file,int drive);
 void __pascal far set_loaded_palette(dat_pal_type far *palette_ptr);
 chtab_type* __pascal load_sprites_from_file(int resource,int palette_bits, int quit_on_error);
 void __pascal far free_chtab(chtab_type *chtab_ptr);
+image_type* decode_image(image_data_type* image_data, dat_pal_type* palette);
 image_type*far __pascal far load_image(int index, dat_pal_type* palette);
 void __pascal far draw_image_transp(image_type far *image,image_type far *mask,int xpos,int ypos);
 int __pascal far set_joy_mode();
@@ -538,8 +539,11 @@ void __pascal far flip_screen(surface_type far *surface);
 void __pascal far fade_in_2(surface_type near *source_surface,int which_rows);
 void __pascal far fade_out_2(int rows);
 void __pascal far draw_image_transp_vga(image_type far *image,int xpos,int ypos);
+int __pascal far get_line_width(const char far *text,int length);
 int __pascal far draw_text_character(byte character);
 void __pascal far draw_rect(const rect_type far *rect,int color);
+void draw_rect_with_alpha(const rect_type* rect, byte color, byte alpha);
+void draw_rect_contours(const rect_type* rect, byte color);
 surface_type far *__pascal rect_sthg(surface_type *surface,const rect_type far *rect);
 rect_type far *__pascal shrink2_rect(rect_type far *target_rect,const rect_type far *source_rect,int delta_x,int delta_y);
 void __pascal far set_curr_pos(int xpos,int ypos);
@@ -550,10 +554,14 @@ int __pascal far intersect_rect(rect_type far *output,const rect_type far *input
 rect_type far * __pascal far union_rect(rect_type far *output,const rect_type far *input1,const rect_type far *input2);
 void __pascal far stop_sounds();
 void __pascal far play_sound_from_buffer(sound_buffer_type far *buffer);
+void turn_music_on_off(byte new_state);
 void __pascal far turn_sound_on_off(byte new_state);
 int __pascal far check_sound_playing();
+void apply_aspect_ratio();
+void window_resized();
 void __pascal far set_gr_mode(byte grmode);
-void request_screen_update();
+SDL_Surface* get_final_surface();
+void update_screen();
 void __pascal far set_pal_arr(int start,int count,const rgb_type far *array,int vsync);
 void __pascal far set_pal(int index,int red,int green,int blue,int vsync);
 int __pascal far add_palette_bits(byte n_colors);
@@ -567,7 +575,10 @@ void rect_to_sdlrect(const rect_type* rect, SDL_Rect* sdlrect);
 void __pascal far method_1_blit_rect(surface_type near *target_surface,surface_type near *source_surface,const rect_type far *target_rect, const rect_type far *source_rect,int blit);
 image_type far * __pascal far method_3_blit_mono(image_type far *image,int xpos,int ypos,int blitter,byte color);
 const rect_type far * __pascal far method_5_rect(const rect_type far *rect,int blit,byte color);
+void draw_rect_with_alpha(const rect_type* rect, byte color, byte alpha);
 image_type far * __pascal far method_6_blit_img_to_scr(image_type far *image,int xpos,int ypos,int blit);
+void reset_timer(int timer_index);
+void set_timer_length(int timer_index, int length);
 void __pascal start_timer(int timer_index, int length);
 int __pascal do_wait(int timer_index);
 void __pascal far init_timer(int frequency);
@@ -579,6 +590,7 @@ int __pascal far input_str(const rect_type far *rect,char *buffer,int max_length
 rect_type far *__pascal offset2_rect(rect_type far *dest, const rect_type far *source,int delta_x,int delta_y);
 void __pascal far show_text_with_color(const rect_type far *rect_ptr,int x_align,int y_align, const char far *text,int color);
 void __pascal do_simple_wait(int timer_index);
+void process_events();
 void idle();
 void __pascal far init_copyprot_dialog();
 dialog_type * __pascal far make_dialog_info(dialog_settings_type *settings, rect_type *dialog_rect,
@@ -612,11 +624,14 @@ void check_seqtable_matches_original();
 #endif
 
 // OPTIONS.C
-void disable_fixes_and_enhancements();
+void turn_fixes_and_enhancements_on_off(byte new_state);
+void turn_custom_options_on_off(byte new_state);
+void set_options_to_default();
 void load_global_options();
 void check_mod_param();
 void load_mod_options();
-void show_use_fixes_and_enhancements_prompt();
+int process_rw_write(SDL_RWops* rw, void* data, size_t data_size);
+int process_rw_read(SDL_RWops* rw, void* data, size_t data_size);
 
 // REPLAY.C
 #ifdef USE_REPLAY
@@ -653,3 +668,13 @@ void init_screenshot();
 void save_level_screenshot(bool want_extras);
 #endif
 
+// menu.c
+#ifdef USE_MENU
+void init_menu();
+void menu_scroll(int y);
+void draw_menu();
+void clear_menu_controls();
+int key_test_paused_menu(int key);
+void load_ingame_settings();
+void menu_was_closed();
+#endif
