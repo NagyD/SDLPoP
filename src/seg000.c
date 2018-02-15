@@ -1898,6 +1898,7 @@ void __pascal far clear_screen_and_sounds() {
 void __pascal far parse_cmdline_sound() {
 	// stub
 	sound_flags |= sfDigi;
+	sound_flags |= sfMidi;
 }
 
 // seg000:226D
@@ -1912,22 +1913,10 @@ void __pascal far free_optional_sounds() {
 	// stub
 }
 
-const byte tbl_snd_is_music[] = {
-		0,0,0,0,0,0,0,0,0,0, //9
-		0,0,0,0,0,0,0,0,0,0, //19
-		0,0,0,0,1,1,1,1,1,1, //29
-		1,0,1,1,1,1,1,1,0,1, //39
-		1,1,0,1,0,0,0,0,0,0, //49
-		1,0,1,1,1,1,1
-};
-
-void reload_non_music_sounds() {
-	int i;
-	for (i = 0; i < COUNT(tbl_snd_is_music); ++i) {
-		if (!tbl_snd_is_music[i]) {
-			free_sound(sound_pointers[i]);
-			sound_pointers[i] = NULL;
-		}
+void reload_all_sounds() {
+	for (int i = 0; i < 58; ++i) {
+		free_sound(sound_pointers[i]);
+		sound_pointers[i] = NULL;
 	}
 	load_sounds(0, 43);
 	load_opt_sounds(44, 56);

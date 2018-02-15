@@ -54,7 +54,8 @@ The authors of this program may be contacted at http://forum.princed.org
 //#define USE_COMPAT_TIMER
 
 // Use mixer and enable music.
-#define USE_MIXER
+// NB. MIDI support is incompatible with SDL_Mixer.
+//#define USE_MIXER
 
 // Enable quicksave/load feature.
 #define USE_QUICKSAVE

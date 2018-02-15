@@ -523,7 +523,18 @@ typedef struct digi_new_type { // wave in 1.3 and 1.4 (and PoP2)
 SDL_COMPILE_TIME_ASSERT(digi_new_type, sizeof(digi_new_type) == 9);
 
 typedef struct midi_type {
-	byte data[0];
+	char chunk_type[4];
+	dword chunk_length;
+	union {
+		struct {
+			word format;
+			word num_tracks;
+			word delta;
+			byte tracks[0];
+		} header;
+		byte data[0];
+	};
+
 } midi_type;
 
 typedef struct sound_buffer_type {
@@ -558,6 +569,76 @@ typedef struct WAV_header_type {
 	byte Data[0];
 } WAV_header_type;
 #endif
+
+typedef struct midi_raw_chunk_type {
+	char chunk_type[4];
+	dword chunk_length;
+	union {
+		struct {
+			word format;
+			word num_tracks;
+			word time_division;
+			byte tracks[0];
+		} header;
+		byte data[0];
+	};
+
+} midi_raw_chunk_type;
+
+typedef struct midi_event_type {
+	dword delta_time;
+	byte event_type;
+	union {
+		struct {
+			byte channel;
+			byte param1;
+			byte param2;
+		} channel;
+		struct {
+			dword length;
+			byte* data;
+		} sysex;
+		struct {
+			byte type;
+			dword length;
+			byte* data;
+		} meta;
+	};
+
+} midi_event_type;
+
+typedef struct midi_track_type {
+	dword size;
+	int num_events;
+	midi_event_type* events;
+	int event_index;
+	int64_t next_pause_tick;
+} midi_track_type;
+
+typedef struct parsed_midi_type {
+	int num_tracks;
+	midi_track_type* tracks;
+	dword ticks_per_beat;
+} parsed_midi_type;
+
+#pragma pack(push, 1)
+typedef struct operator_type {
+	byte mul;
+	byte ksl_tl;
+	byte a_d;
+	byte s_r;
+	byte waveform;
+} operator_type;
+
+typedef struct instrument_type {
+	byte blocknum_low;
+	byte blocknum_high;
+	byte FB_conn;
+	operator_type operators[2];
+	byte percussion;
+	byte unknown[2];
+} instrument_type;
+#pragma pack(pop)
 
 struct dialog_type; // (declaration only)
 typedef struct dialog_settings_type {

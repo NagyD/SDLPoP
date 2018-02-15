@@ -610,8 +610,7 @@ int savestate_to_buffer() {
 
 void reload_resources() {
 	// the replay's levelset might use different sounds, so we need to free and reload sounds
-	// (except the music (OGG) files, which take too long to reload and cannot (yet) be easily replaced by a mod)
-	reload_non_music_sounds();
+	reload_all_sounds();
 	free_all_chtabs_from(id_chtab_0_sword);
 	// chtabs 3 and higher will be freed/reloaded in load_lev_spr() (called by restore_room_after_quick_load())
 	// However, chtabs 0-2 are usually not freed at all (they are loaded only once, in init_game_main())

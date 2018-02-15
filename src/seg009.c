@@ -1548,7 +1548,7 @@ const int digi_samplerate = 44100;
 
 void stop_digi() {
 #ifndef USE_MIXER
-	SDL_PauseAudio(1);
+//	SDL_PauseAudio(1);
 	if (!digi_playing) return;
 	SDL_LockAudio();
 	digi_playing = 0;
@@ -1580,7 +1580,7 @@ void stop_digi() {
 void __pascal far stop_sounds() {
 	// stub
 	stop_digi();
-	// stop_midi();
+	stop_midi();
 	speaker_sound_stop();
 }
 
@@ -1650,6 +1650,17 @@ void digi_callback(void *userdata, Uint8 *stream, int len) {
 	digi_remaining_length -= copy_len;
 	digi_remaining_pos += copy_len;
 }
+
+void audio_callback(void* userdata, Uint8* stream, int len) {
+	memset(stream, digi_audiospec->silence, len);
+	if (digi_playing) {
+		digi_callback(userdata, stream, len);
+	}
+	if (midi_playing) {
+		midi_callback(userdata, stream, len);
+	}
+}
+
 #endif
 
 #ifdef USE_MIXER
@@ -1696,7 +1707,7 @@ void init_digi() {
 	desired->channels = 2;
 	desired->samples = 1024;
 #ifndef USE_MIXER
-	desired->callback = digi_callback;
+	desired->callback = audio_callback;
 	desired->userdata = NULL;
 	if (SDL_OpenAudio(desired, NULL) != 0) {
 		sdlperror("SDL_OpenAudio");
@@ -1889,8 +1900,8 @@ void __pascal far play_digi_sound(sound_buffer_type far *buffer) {
 	//if (!is_sound_on) return;
 	init_digi();
 	if (digi_unavailable) return;
-	//stop_digi();
-	stop_sounds();
+	stop_digi();
+//	stop_sounds();
 	//printf("play_digi_sound(): called\n");
 
 	waveinfo_type waveinfo;
@@ -2004,6 +2015,9 @@ void __pascal far play_sound_from_buffer(sound_buffer_type far *buffer) {
 		break;
 		case sound_digi:
 			play_digi_sound(buffer);
+		break;
+		case sound_midi:
+			play_midi_sound(buffer);
 		break;
 #ifdef USE_MIXER
 		case sound_chunk:

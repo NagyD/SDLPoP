@@ -66,7 +66,7 @@ short __pascal far load_game();
 void __pascal far clear_screen_and_sounds();
 void __pascal far parse_cmdline_sound();
 void __pascal far free_optional_sounds();
-void reload_non_music_sounds();
+void reload_all_sounds();
 void __pascal far free_optsnd_chtab();
 void __pascal far load_title_images(int bgcolor);
 void __pascal far show_copyprot(int where);
@@ -553,6 +553,7 @@ void __pascal far show_text(const rect_type far *rect_ptr,int x_align,int y_alig
 int __pascal far intersect_rect(rect_type far *output,const rect_type far *input1,const rect_type far *input2);
 rect_type far * __pascal far union_rect(rect_type far *output,const rect_type far *input1,const rect_type far *input2);
 void __pascal far stop_sounds();
+void init_digi();
 void __pascal far play_sound_from_buffer(sound_buffer_type far *buffer);
 void turn_music_on_off(byte new_state);
 void __pascal far turn_sound_on_off(byte new_state);
@@ -679,3 +680,9 @@ int key_test_paused_menu(int key);
 void load_ingame_settings();
 void menu_was_closed();
 #endif
+
+// midi.c
+void stop_midi();
+void init_midi();
+void midi_callback(void *userdata, Uint8 *stream, int len);
+void __pascal far play_midi_sound(sound_buffer_type far *buffer);
