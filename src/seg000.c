@@ -52,6 +52,7 @@ void far pop_main() {
 	#endif
 
 	load_global_options();
+	check_mod_param();
 #ifdef USE_MENU
 	load_ingame_settings();
 #endif
@@ -73,7 +74,6 @@ void far pop_main() {
 	}
 #endif
 
-	check_mod_param();
 	load_mod_options();
 
 	// CusPop option

@@ -2774,9 +2774,11 @@ void toggle_fullscreen() {
 	uint32_t flags = SDL_GetWindowFlags(window_);
 	if (flags & SDL_WINDOW_FULLSCREEN_DESKTOP) {
 		SDL_SetWindowFullscreen(window_, 0);
+		SDL_ShowCursor(SDL_ENABLE);
 	}
 	else {
 		SDL_SetWindowFullscreen(window_, SDL_WINDOW_FULLSCREEN_DESKTOP);
+		SDL_ShowCursor(SDL_DISABLE);
 	}
 }
 
@@ -3029,12 +3031,21 @@ void process_events() {
 				break;
 #ifdef USE_MENU
 			case SDL_MOUSEBUTTONDOWN:
-				if (!is_menu_shown) {
-					last_key_scancode = SDL_SCANCODE_BACKSPACE;
-				} else {
-					mouse_clicked = true;
-					clicked_or_pressed_enter = true;
+				switch(event.button.button) {
+					case SDL_BUTTON_LEFT:
+						if (!is_menu_shown) {
+							last_key_scancode = SDL_SCANCODE_BACKSPACE;
+						} else {
+							mouse_clicked = true;
+						}
+						break;
+					case SDL_BUTTON_RIGHT:
+					case SDL_BUTTON_X1: // 'Back' button (on mice that have these extra buttons).
+						mouse_button_clicked_right = true;
+						break;
+					default: break;
 				}
+
 				break;
 			case SDL_MOUSEWHEEL:
 				if (is_menu_shown) {

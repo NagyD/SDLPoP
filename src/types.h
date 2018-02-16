@@ -1058,7 +1058,7 @@ typedef struct names_list_type {
 } names_list_type;
 
 // Macro for declaring and initializing a names_list_type.
-#define NAME_LIST(listname, ...) const char listname[][MAX_OPTION_VALUE_NAME_LENGTH] = __VA_ARGS__; \
+#define NAMES_LIST(listname, ...) const char listname[][MAX_OPTION_VALUE_NAME_LENGTH] = __VA_ARGS__; \
 names_list_type listname##_list = {&listname, COUNT(listname)}
 
 #pragma pack(push,1)
