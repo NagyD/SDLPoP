@@ -151,6 +151,12 @@ static int global_ini_callback(const char *section, const char *name, const char
 	if (check_ini_section("General")) {
 #ifdef USE_MENU
 		process_boolean("enable_pause_menu", &enable_pause_menu);
+		if (strcasecmp(name, "mods_folder") == 0) {
+			if (value[0] != '\0' && strcasecmp(value, "default") != 0) {
+				strcpy(mods_folder, locate_file(value));
+			}
+			return 1;
+		}
 #endif
 		process_boolean("enable_copyprot", &enable_copyprot);
 		process_boolean("enable_mixer", &enable_mixer);
@@ -188,7 +194,7 @@ static int global_ini_callback(const char *section, const char *name, const char
 
 		if (strcasecmp(name, "replays_folder") == 0) {
 			if (value[0] != '\0' && strcasecmp(value, "default") != 0) {
-				strcpy(replays_folder, value);
+				strcpy(replays_folder, locate_file(value));
 			}
 			return 1;
 		}
@@ -366,6 +372,7 @@ void load_global_options() {
 void check_mod_param() {
 	// The 'mod' command line argument can override the levelset choice in SDLPoP.ini
 	// usage: prince mod "Mod Name"
+	// TODO: maybe allow absolute paths, instead of only paths relative to the mods folder?
 	const char* mod_param = check_param("mod");
 	if (mod_param != NULL) {
 		use_custom_levelset = true;
@@ -378,13 +385,13 @@ void load_mod_options() {
 	// load mod-specific INI configuration
 	if (use_custom_levelset) {
 		char filename[POP_MAX_PATH];
-		snprintf(filename, sizeof(filename), "mods/%s/%s", levelset_name, "mod.ini");
+		snprintf(filename, sizeof(filename), "%s/%s/%s", mods_folder, levelset_name, "mod.ini");
 		const char* located_filename = locate_file(filename);
 		if (file_exists(located_filename)) {
 			// Nearly all mods would want to use custom options, so always allow them.
 			// TODO: Prevent mod settings and user settings from interfering with each other.
 			use_custom_options = 1;
-			ini_load(filename, mod_ini_callback);
+			ini_load(located_filename, mod_ini_callback);
 		}
 		delay_ticks(1);
 	}
