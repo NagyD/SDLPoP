@@ -660,6 +660,7 @@ extern byte use_integer_scaling INIT(= 0);
 extern byte scaling_type INIT(= 0);
 #ifdef USE_LIGHTING
 extern byte enable_lighting INIT(= 0);
+extern image_type* lighting_mask;
 #endif
 extern fixes_options_type fixes_saved;
 extern fixes_options_type fixes_disabled_state;
@@ -709,10 +710,12 @@ extern byte is_timer_displayed INIT(= 0);
 
 #ifdef USE_MENU
 extern font_type hc_small_font INIT(= {32, 126, 5, 2, 1, 1, NULL});
-extern bool mouse_state_changed;
+extern bool have_mouse_input;
+extern bool have_keyboard_or_controller_input;
 extern int mouse_x, mouse_y;
+extern bool mouse_moved;
 extern bool mouse_clicked;
-extern bool clicked_or_pressed_enter;
+extern bool mouse_button_clicked_right;
 extern bool pressed_enter;
 extern bool escape_key_suppressed;
 extern int menu_control_scroll_y;

@@ -225,7 +225,7 @@ typedef struct setting_type {
 	byte number_type;
 	void* linked;
 	void* required;
-	int min, max; // for sliders and number types
+	int min, max; // for 'number'-style settings
 	char text[64];
 	char explanation[256];
 	names_list_type* names_list;
@@ -260,7 +260,7 @@ setting_type general_settings[] = {
 				.text = "Restore defaults...", .explanation = "Revert all settings to the default state."},
 };
 
-NAME_LIST(scaling_type_setting_names, {"Sharp", "Fuzzy", "Blurry",});
+NAMES_LIST(scaling_type_setting_names, {"Sharp", "Fuzzy", "Blurry",});
 
 setting_type visuals_settings[] = {
 		{.id = SETTING_FULLSCREEN, .style = SETTING_STYLE_TOGGLE, .linked = &start_fullscreen,
@@ -448,7 +448,7 @@ setting_type gameplay_settings[] = {
 				.explanation = "Guards will often not reappear in another room if they have been pushed (partly or entirely) offscreen."},
 };
 
-NAME_LIST(tile_type_setting_names, {
+NAMES_LIST(tile_type_setting_names, {
 		"Empty", "Floor", "Spikes", "Pillar", "Gate",                                                    // 0..4
 		"Stuck button", "Closer button", "Tapestry/floor", "Big pillar: bottom", "Big pillar: top",      // 5..9
 		"Potion", "Loose floor", "Tapestry", "Mirror", "Floor/debris",                                   // 10..14
@@ -552,8 +552,8 @@ setting_type mods_settings[] = {
 				.explanation = "Number of seconds left after Shift+L is used in non-cheat mode.\n(default = 59.92)"},
 };
 
-NAME_LIST(level_type_setting_names, { "Dungeon", "Palace", });
-NAME_LIST(guard_type_setting_names, { "Normal", "Fat", "Skeleton", "Vizier", "Shadow", });
+NAMES_LIST(level_type_setting_names, { "Dungeon", "Palace", });
+NAMES_LIST(guard_type_setting_names, { "Normal", "Fat", "Skeleton", "Vizier", "Shadow", });
 
 setting_type level_settings[] = {
 		{.id = SETTING_LEVEL_TYPE, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
@@ -660,8 +660,8 @@ bool is_mouse_over_rect(rect_type* rect) {
 	return (mouse_x >= rect->left && mouse_x < rect->right && mouse_y >= rect->top && mouse_y < rect->bottom);
 }
 
-// Returns true if the mouse moved or when the mouse was clicked, false otherwise.
-bool read_mouse_state() {
+// Maps the cursor position into a coordinate between (0,0) and (320,200) and sets mouse_x, mouse_y and mouse_moved.
+void read_mouse_state() {
 	float scale_x, scale_y;
 	SDL_RenderGetScale(renderer_, &scale_x, &scale_y);
 	int logical_width, logical_height;
@@ -670,7 +670,7 @@ bool read_mouse_state() {
 	int logical_scale_y = logical_height / 200;
 	scale_x *= logical_scale_x;
 	scale_y *= logical_scale_y;
-	if (!(scale_x > 0 && scale_y > 0 && logical_scale_x > 0 && logical_scale_y > 0)) return false;
+	if (!(scale_x > 0 && scale_y > 0 && logical_scale_x > 0 && logical_scale_y > 0)) return;
 	SDL_Rect viewport;
 	SDL_RenderGetViewport(renderer_, &viewport); // Get the width/height of the 'black bars' around the rendering area.
 	viewport.x /= logical_scale_x;
@@ -680,17 +680,16 @@ bool read_mouse_state() {
 	SDL_GetMouseState(&mouse_x, &mouse_y);
 	mouse_x = (int) ((float)mouse_x/scale_x - viewport.x + 0.5f);
 	mouse_y = (int) ((float)mouse_y/scale_y - viewport.y + 0.5f);
-	bool mouse_moved = (last_mouse_x != mouse_x || last_mouse_y != mouse_y);
-	return (mouse_moved || mouse_clicked);
+	mouse_moved = (last_mouse_x != mouse_x || last_mouse_y != mouse_y);
 }
 
 rect_type explanation_rect = {170, 20, 200, 300};
 int highlighted_setting_id = SETTING_ENABLE_INFO_SCREEN;
-int controlled_area = 0;
-int next_setting_id = 0;
+int controlled_area = 0; // Whether the focus is on the left (0) or right (1) part of the screen in the Settings menu.
+int next_setting_id = 0; // For navigating up/down.
 int previous_setting_id = 0;
-int at_scroll_up_boundary;
-int at_scroll_down_boundary;
+bool at_scroll_up_boundary; // When navigating up using keyboard/controller, whether we also need to scroll up
+bool at_scroll_down_boundary; // When navigating down using keyboard/controller, whether we also need to scroll down
 
 void play_menu_sound(int sound_id) {
 	play_sound(sound_id);
@@ -704,7 +703,7 @@ void enter_settings_subsection(int settings_menu_id) {
 	}
 	active_settings_subsection = settings_menu_id;
 	highlighted_settings_subsection = settings_menu_id;
-	if (!mouse_state_changed) hovering_pause_menu_item = 0;
+	if (!mouse_clicked) hovering_pause_menu_item = 0;
 	controlled_area = 1;
 	scroll_position = 0;
 
@@ -747,9 +746,14 @@ void leave_settings_subsection() {
 	}
 }
 
+void reset_paused_menu() {
+	drawn_menu = 0;
+	controlled_area = 0;
+	hovering_pause_menu_item = PAUSE_MENU_RESUME;
+}
+
 void pause_menu_clicked(pause_menu_item_type* item) {
 	//printf("Clicked option %s\n", item->text);
-	clicked_or_pressed_enter = false; // prevent "click-through" because the screen changes
 	play_menu_sound(sound_22_loose_shake_3);
 	switch(item->id) {
 		default: break;
@@ -773,6 +777,7 @@ void pause_menu_clicked(pause_menu_item_type* item) {
 		case PAUSE_MENU_SETTINGS:
 			drawn_menu = 1;
 			hovering_pause_menu_item = SETTINGS_MENU_GENERAL;
+			highlighted_settings_subsection = SETTINGS_MENU_GENERAL;
 			active_settings_subsection = 0;
 			controlled_area = 0;
 			break;
@@ -781,22 +786,16 @@ void pause_menu_clicked(pause_menu_item_type* item) {
 			current_dialog_text = "Quit SDLPoP?";
 			break;
 		case SETTINGS_MENU_GENERAL:
-			enter_settings_subsection(SETTINGS_MENU_GENERAL);
-			break;
 		case SETTINGS_MENU_GAMEPLAY:
-			enter_settings_subsection(SETTINGS_MENU_GAMEPLAY);
-			break;
 		case SETTINGS_MENU_VISUALS:
-			enter_settings_subsection(SETTINGS_MENU_VISUALS);
-			break;
 		case SETTINGS_MENU_MODS:
-			enter_settings_subsection(SETTINGS_MENU_MODS);
+			enter_settings_subsection(item->id);
 			break;
 		case SETTINGS_MENU_BACK:
-			drawn_menu = 0;
-			hovering_pause_menu_item = PAUSE_MENU_RESUME;
+			reset_paused_menu();
 			break;
 	}
+	clear_menu_controls(); // prevent "click-through" because the screen changes
 }
 
 void draw_pause_menu_item(pause_menu_item_type* item, rect_type* parent, int* y_offset, int inactive_text_color) {
@@ -815,7 +814,7 @@ void draw_pause_menu_item(pause_menu_item_type* item, rect_type* parent, int* y_
 	selection_box.top -= 3;
 
 	bool highlighted = (hovering_pause_menu_item == item->id);
-	if (mouse_state_changed && is_mouse_over_rect(&selection_box)) {
+	if (have_mouse_input && is_mouse_over_rect(&selection_box)) {
 		hovering_pause_menu_item = item->id;
 		highlighted = true;
 	}
@@ -843,7 +842,7 @@ void draw_pause_menu_item(pause_menu_item_type* item, rect_type* parent, int* y_
 			if (is_mouse_over_rect(&selection_box)) {
 				pause_menu_clicked(item);
 			}
-		} else if (clicked_or_pressed_enter == 1 && controlled_area == 0) {
+		} else if (pressed_enter && (drawn_menu == 0 || (drawn_menu == 1 && controlled_area == 0))) {
 			pause_menu_clicked(item);
 		}
 
@@ -855,12 +854,13 @@ void draw_pause_menu_item(pause_menu_item_type* item, rect_type* parent, int* y_
 
 void draw_pause_menu() {
 	pause_menu_alpha = 120;
-	draw_rect_with_alpha(&rect_top, color_0_black, pause_menu_alpha);
+	draw_rect_with_alpha(&screen_rect, color_0_black, pause_menu_alpha);
+	draw_rect_with_alpha(&rect_bottom_text, color_0_black, 0); // Transparent so that the text "GAME PAUSED" is visible.
 	rect_type pause_rect_outer = {0, 110, 192, 210};
 	rect_type pause_rect_inner;
 	shrink2_rect(&pause_rect_inner, &pause_rect_outer, 5, 5);
 
-	if (!mouse_state_changed) {
+	if (!have_mouse_input) {
 		if (menu_control_y == 1) {
 			play_menu_sound(sound_21_loose_shake_2);
 			hovering_pause_menu_item = next_pause_menu_item->id;
@@ -906,7 +906,6 @@ void turn_setting_on_off(int setting_id, byte new_state, void* linked) {
 			break;
 		case SETTING_ENABLE_LIGHTING:
 			enable_lighting = new_state;
-			extern image_type* lighting_mask; // TODO: cleanup
 			if (new_state && lighting_mask == NULL) {
 				init_lighting();
 			}
@@ -933,7 +932,7 @@ void turn_setting_on_off_with_sound(setting_type* setting, byte new_state) {
 
 }
 
-int get_value(setting_type* setting) {
+int get_setting_value(setting_type* setting) {
 	int value = 0;
 	if (setting->linked != NULL) {
 		switch(setting->number_type) {
@@ -958,7 +957,7 @@ int get_value(setting_type* setting) {
 	return value;
 }
 
-void set_value(setting_type* setting, int value) {
+void set_setting_value(setting_type* setting, int value) {
 	if (setting->linked != NULL) {
 		switch(setting->number_type) {
 			default:
@@ -990,7 +989,7 @@ void increase_setting(setting_type* setting, int old_value) {
 	}
 	if (setting->linked != NULL && new_value <= setting->max) {
 		were_settings_changed = true;
-		set_value(setting, new_value);
+		set_setting_value(setting, new_value);
 	}
 }
 
@@ -1003,7 +1002,7 @@ void decrease_setting(setting_type* setting, int old_value) {
 	}
 	if (setting->linked != NULL && new_value >= setting->min) {
 		were_settings_changed = true;
-		set_value(setting, new_value);
+		set_setting_value(setting, new_value);
 	}
 }
 
@@ -1046,7 +1045,6 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 
 	rect_type setting_box = text_rect;
 	setting_box.top -= 5;
-	setting_box.bottom = setting_box.top + 15;
 	setting_box.bottom = setting_box.top + 15;
 	setting_box.left -= 10;
 	setting_box.right += 10;
@@ -1127,7 +1125,7 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 		show_text_with_color(&text_rect, 1, -1, "ON", ON_color);
 
 	} else if (setting->style == SETTING_STYLE_NUMBER && !disabled) {
-		int value = get_value(setting);
+		int value = get_setting_value(setting);
 		if (highlighted_setting_id == setting->id) {
 			if (mouse_clicked) {
 
@@ -1152,7 +1150,7 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 			}
 		}
 
-		value = get_value(setting); // May have been updated.
+		value = get_setting_value(setting); // May have been updated.
 		char* value_text = print_setting_value(setting, value);
 		show_text_with_color(&text_rect, 1, -1, value_text, selected_color);
 
@@ -1235,7 +1233,7 @@ void draw_settings_menu() {
 	rect_type pause_rect_inner;
 	shrink2_rect(&pause_rect_inner, &pause_rect_outer, 5, 5);
 
-	if (!mouse_state_changed) {
+	if (!have_mouse_input) {
 		bool hovering_item_changed = false;
 		if (controlled_area == 0) {
 			int old_hovering_item_id = hovering_pause_menu_item;
@@ -1279,11 +1277,6 @@ void draw_settings_menu() {
 	draw_settings_area(settings_area);
 }
 
-void reset_paused_menu() {
-	drawn_menu = 0;
-	hovering_pause_menu_item = PAUSE_MENU_RESUME;
-}
-
 enum dialog_button_ids {
 	DIALOG_BUTTON_CANCEL,
 	DIALOG_BUTTON_OK,
@@ -1320,13 +1313,14 @@ void draw_confirmation_dialog(int which_dialog, const char* text) {
 	for (;;) {
 		process_events();
 		key_test_paused_menu(key_test_quit());
+		process_additional_menu_input();
 
 		if (menu_control_back == 1) {
 			confirmation_dialog_result(which_dialog, DIALOG_BUTTON_CANCEL);
 			break;
 		}
 
-		if (read_mouse_state()) {
+		if (have_mouse_input) {
 			if (is_mouse_over_rect(&ok_highlight_rect)) {
 				highlighted_button = DIALOG_BUTTON_OK;
 			} else if (is_mouse_over_rect(&cancel_highlight_rect)) {
@@ -1338,7 +1332,7 @@ void draw_confirmation_dialog(int which_dialog, const char* text) {
 			highlighted_button = DIALOG_BUTTON_OK;
 		} else if (menu_control_x > 0) {
 			highlighted_button = DIALOG_BUTTON_CANCEL;
-		} else if (clicked_or_pressed_enter) {
+		} else if (mouse_clicked || pressed_enter) {
 			confirmation_dialog_result(which_dialog, highlighted_button);
 			break;
 		}
@@ -1381,11 +1375,12 @@ void draw_confirmation_dialog(int which_dialog, const char* text) {
 }
 
 void draw_select_level_dialog() {
-	clicked_or_pressed_enter = 0;
+	clear_menu_controls();
 	int old_edited_level_number = -1;
 	for (;;) {
 		process_events();
 		key_test_paused_menu(key_test_quit());
+		process_additional_menu_input();
 
 		if (menu_control_back == 1) {
 			menu_control_back = 0;
@@ -1397,7 +1392,7 @@ void draw_select_level_dialog() {
 			menu_current_level = MAX(0, menu_current_level - 1);
 		} else if (menu_control_x > 0) {
 			menu_current_level = MIN(15, menu_current_level + 1);
-		} else if (clicked_or_pressed_enter) {
+		} else if (mouse_clicked || pressed_enter) {
 			enter_settings_subsection(SETTINGS_MENU_LEVEL_CUSTOMIZATION);
 			highlighted_settings_subsection = SETTINGS_MENU_MODS;
 			play_menu_sound(sound_22_loose_shake_3);
@@ -1450,6 +1445,7 @@ void draw_menu() {
 		if (process_key() != 0) {
 			break; // Menu was forcefully closed, for example by pressing Ctrl+A.
 		}
+		process_additional_menu_input();
 
 		if (current_dialog_box != DIALOG_NONE) {
 			if (current_dialog_box == DIALOG_SELECT_LEVEL) {
@@ -1483,18 +1479,15 @@ void draw_menu() {
 			menu_scroll(menu_control_scroll_y);
 		}
 
-		mouse_state_changed = read_mouse_state();
-		if (!mouse_state_changed && menu_control_x == 0 && menu_control_y == 0 && menu_control_back == 0 &&
-		    menu_control_scroll_y == 0 && !pressed_enter
-				) {
+		if (have_mouse_input || have_keyboard_or_controller_input) {
+			// The menu is updated+drawn within the same routine, so redrawing may be necessary after the first time.
+			// TODO: Maybe in the future fully separate updating from drawing?
+			need_full_menu_redraw_count = 2;
+		} else {
 			if (need_full_menu_redraw_count == 0) {
 				SDL_Delay(1);
 				continue; // Don't redraw if there is no input to process (save CPU cycles).
 			}
-		} else {
-			// The menu is updated+drawn within the same routine, so redrawing may be necessary after the first time.
-			// TODO: Maybe in the future fully separate updating from drawing?
-			need_full_menu_redraw_count = 2;
 		}
 
 //		Uint64 begin = SDL_GetPerformanceCounter();
@@ -1518,25 +1511,49 @@ void draw_menu() {
 }
 
 void clear_menu_controls() {
-	clicked_or_pressed_enter = 0;
 	pressed_enter = 0;
+	mouse_moved = 0;
 	mouse_clicked = 0;
+	mouse_button_clicked_right = 0;
+	have_mouse_input = 0;
+	have_keyboard_or_controller_input = 0;
 	menu_control_x = 0;
 	menu_control_y = 0;
 	menu_control_back = 0;
 	menu_control_scroll_y = 0;
 }
 
-bool are_controller_buttons_released;
-Uint64 controller_timeout_counter;
+void process_additional_menu_input() {
+	read_mouse_state();
+	have_keyboard_or_controller_input = (menu_control_x || menu_control_y || menu_control_back || pressed_enter);
+	have_mouse_input = (mouse_moved || mouse_clicked || mouse_button_clicked_right || menu_control_scroll_y);
+
+	dword flags = SDL_GetWindowFlags(window_);
+	if (flags & SDL_WINDOW_FULLSCREEN_DESKTOP) {
+		if (have_mouse_input) {
+			SDL_ShowCursor(SDL_ENABLE);
+		} else if (have_keyboard_or_controller_input) {
+			SDL_ShowCursor(SDL_DISABLE);
+		}
+	} else {
+		SDL_ShowCursor(SDL_ENABLE);
+	}
+}
+
+bool joy_ABXY_buttons_released;
+bool joy_xy_released;
+Uint64 joy_xy_timeout_counter;
 
 int key_test_paused_menu(int key) {
 	menu_control_x = 0;
 	menu_control_y = 0;
 	menu_control_back = 0;
 
+	if (mouse_button_clicked_right) {
+		menu_control_back = 1; // Can use RMB to close menus.
+	}
+
 	if (is_joyst_mode) {
-		float needed_timeout_s = 0.1f;
 		int joy_x = joy_hat_states[0];
 		int joy_y = joy_hat_states[1];
 		int y_threshold = 14000;
@@ -1550,12 +1567,29 @@ int key_test_paused_menu(int key) {
 		} else if (joy_axis[SDL_CONTROLLER_AXIS_LEFTX] > x_threshold) {
 			joy_x = 1;
 		}
-		if (joy_x == 0 && joy_y == 0 && joy_AY_buttons_state == 0 && joy_B_button_state == 0) {
-			are_controller_buttons_released = true;
-			controller_timeout_counter = 0;
-		} else if (are_controller_buttons_released) {
-			needed_timeout_s = 0.3f;
-			are_controller_buttons_released = false;
+
+		float needed_timeout_s = 0.1f; // Delay for hold-down repeated input.
+		if (joy_x == 0 && joy_y == 0) {
+			joy_xy_released = true;
+			joy_xy_timeout_counter = 0;
+		} else {
+			if (joy_xy_released) {
+				needed_timeout_s = 0.3f; // The delay is longer for the first repetition.
+				joy_xy_released = false;
+			}
+			Uint64 current_counter = SDL_GetPerformanceCounter();
+			if (current_counter > joy_xy_timeout_counter) {
+				menu_control_x = joy_x;
+				menu_control_y = joy_y;
+				joy_xy_timeout_counter = current_counter + (Uint64)((float)SDL_GetPerformanceFrequency() * needed_timeout_s);
+				return 0; // cancel other input.
+			}
+		}
+
+		if (joy_AY_buttons_state == 0 && joy_B_button_state == 0) {
+			joy_ABXY_buttons_released = true;
+		} else if (joy_ABXY_buttons_released) {
+			joy_ABXY_buttons_released = false;
 			if (joy_AY_buttons_state == 1 /* A pressed */) {
 				key = SDL_SCANCODE_RETURN;
 				joy_AY_buttons_state = 0; // Prevent 'down' input being passed to the controls if the game is unpaused.
@@ -1563,15 +1597,6 @@ int key_test_paused_menu(int key) {
 				key = SDL_SCANCODE_ESCAPE;
 			}
 		}
-
-		Uint64 current_counter = SDL_GetPerformanceCounter();
-		if (current_counter > controller_timeout_counter && !(joy_x == 0 && joy_y == 0)) {
-			menu_control_x = joy_x;
-			menu_control_y = joy_y;
-			controller_timeout_counter = current_counter + (Uint64)((float)SDL_GetPerformanceFrequency() * needed_timeout_s);
-			return 0;
-		}
-
 	}
 
 	switch(key) {
@@ -1596,7 +1621,6 @@ int key_test_paused_menu(int key) {
 			break;
 		case SDL_SCANCODE_RETURN:
 		case SDL_SCANCODE_SPACE:
-			clicked_or_pressed_enter = 1;
 			pressed_enter = 1;
 			break;
 		case SDL_SCANCODE_ESCAPE:
@@ -1621,7 +1645,7 @@ typedef int rw_process_func_type(SDL_RWops* rw, void* data, size_t data_size);
 
 // For serializing/unserializing options in the in-game settings menu
 #define process(x) if (!process_func(rw, &(x), sizeof(x))) return
-void process_ingame_settings(SDL_RWops* rw, rw_process_func_type process_func) {
+void process_ingame_settings_user_managed(SDL_RWops* rw, rw_process_func_type process_func) {
 	process(enable_pause_menu);
 	process(enable_info_screen);
 	process(is_sound_on);
@@ -1629,12 +1653,7 @@ void process_ingame_settings(SDL_RWops* rw, rw_process_func_type process_func) {
 	process(enable_controller_rumble);
 	process(joystick_threshold);
 	process(joystick_only_horizontal);
-	process(enable_copyprot);
-	process(enable_quicksave);
-	process(enable_quicksave_penalty);
 	process(enable_replay);
-	process(use_fixes_and_enhancements);
-	process(fixes_saved);
 	process(start_fullscreen);
 	process(use_correct_aspect_ratio);
 	process(use_integer_scaling);
@@ -1642,6 +1661,14 @@ void process_ingame_settings(SDL_RWops* rw, rw_process_func_type process_func) {
 	process(enable_fade);
 	process(enable_flash);
 	process(enable_lighting);
+}
+
+void process_ingame_settings_mod_managed(SDL_RWops* rw, rw_process_func_type process_func) {
+	process(enable_copyprot);
+	process(enable_quicksave);
+	process(enable_quicksave_penalty);
+	process(use_fixes_and_enhancements);
+	process(fixes_saved);
 	process(use_custom_options);
 	process(custom_saved);
 }
@@ -1702,7 +1729,11 @@ void save_ingame_settings() {
 	if (rw != NULL) {
 		calculate_exe_crc();
 		SDL_RWwrite(rw, &exe_crc, sizeof(exe_crc), 1);
-		process_ingame_settings(rw, process_rw_write);
+		byte levelset_name_length = (byte)strnlen(levelset_name, UINT8_MAX);
+		SDL_RWwrite(rw, &levelset_name_length, sizeof(levelset_name_length), 1);
+		SDL_RWwrite(rw, levelset_name, levelset_name_length, 1);
+		process_ingame_settings_user_managed(rw, process_rw_write);
+		process_ingame_settings_mod_managed(rw, process_rw_write);
 		SDL_RWclose(rw);
 	}
 }
@@ -1729,7 +1760,16 @@ void load_ingame_settings() {
 		SDL_RWread(rw, &expected_crc, sizeof(expected_crc), 1);
 //		printf("CRC-32: exe = %x, expected = %x\n", exe_crc, expected_crc);
 		if (exe_crc == expected_crc) {
-			process_ingame_settings(rw, process_rw_read); // Load the settings.
+			byte cfg_levelset_name_length;
+			char cfg_levelset_name[256] = {0};
+			SDL_RWread(rw, &cfg_levelset_name_length, sizeof(cfg_levelset_name_length), 1);
+			SDL_RWread(rw, cfg_levelset_name, cfg_levelset_name_length, 1);
+//			printf("%s, %s\n", cfg_levelset_name, levelset_name);
+			process_ingame_settings_user_managed(rw, process_rw_read); // Load the settings.
+			// For mod-managed settings: discard the CFG settings when switching to different mod.
+			if (strncmp(levelset_name, cfg_levelset_name, 256) == 0) {
+				process_ingame_settings_mod_managed(rw, process_rw_read);
+			}
 		}
 		SDL_RWclose(rw);
 	}
@@ -1742,6 +1782,13 @@ void menu_was_closed() {
 	if (were_settings_changed) {
 		save_ingame_settings();
 		were_settings_changed = false;
+	}
+	// In fullscreen mode, hide the mouse cursor (because it is only needed in the menu).
+	dword flags = SDL_GetWindowFlags(window_);
+	if (flags & SDL_WINDOW_FULLSCREEN_DESKTOP) {
+		SDL_ShowCursor(SDL_DISABLE);
+	} else {
+		SDL_ShowCursor(SDL_ENABLE);
 	}
 }
 

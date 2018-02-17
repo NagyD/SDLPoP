@@ -74,9 +74,9 @@ int ini_load(const char *filename,
 	return 0;
 }
 
-NAME_LIST(level_type_names, {"dungeon", "palace"});
-NAME_LIST(guard_type_names, {"guard", "fat", "skel", "vizier", "shadow"});
-NAME_LIST(tile_type_names, {
+NAMES_LIST(level_type_names, {"dungeon", "palace"});
+NAMES_LIST(guard_type_names, {"guard", "fat", "skel", "vizier", "shadow"});
+NAMES_LIST(tile_type_names, {
 				"empty", "floor", "spike", "pillar", "gate",                                        // 0..4
 				"stuck", "closer", "doortop_with_floor", "bigpillar_bottom", "bigpillar_top",       // 5..9
 				"potion", "loose", "doortop", "mirror", "debris",                                   // 10..14
@@ -85,7 +85,7 @@ NAME_LIST(tile_type_names, {
 				"lattice_pillar", "lattice_down", "lattice_small", "lattice_left", "lattice_right", // 25..29
 				"torch_with_debris", // 30
 });
-NAME_LIST(scaling_type_names, {"sharp", "fuzzy", "blurry"});
+NAMES_LIST(scaling_type_names, {"sharp", "fuzzy", "blurry"});
 
 #define INI_NO_VALID_NAME (-9999)
 

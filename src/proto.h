@@ -674,6 +674,7 @@ void init_menu();
 void menu_scroll(int y);
 void draw_menu();
 void clear_menu_controls();
+void process_additional_menu_input();
 int key_test_paused_menu(int key);
 void load_ingame_settings();
 void menu_was_closed();
