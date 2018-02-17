@@ -3014,11 +3014,7 @@ void process_events() {
 				if (event.user.code == userevent_TIMER /*&& event.user.data1 == (void*)timer_index*/) {
 #ifdef USE_COMPAT_TIMER
 					int index;
-<<<<<<< HEAD
 					for (index = 0; index < NUM_TIMERS; ++index) {
-=======
-					for (index = 0; index < 2; ++index) {
->>>>>>> menu2
 						if (wait_time[index] > 0) --wait_time[index];
 					}
 #endif
