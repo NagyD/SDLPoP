@@ -767,7 +767,7 @@ const char* get_hof_path(char* custom_path_buffer, size_t max_len) {
 		return hof_file;
 	}
 	// if playing a custom levelset, try to use the mod folder
-	snprintf(custom_path_buffer, max_len, "mods/%s/%s", levelset_name, hof_file /*PRINCE.HOF*/ );
+	snprintf(custom_path_buffer, max_len, "%s/%s/%s", mods_folder, levelset_name, hof_file /*PRINCE.HOF*/ );
 	return custom_path_buffer;
 }
 

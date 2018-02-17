@@ -52,6 +52,7 @@ void far pop_main() {
 	#endif
 
 	load_global_options();
+	check_mod_param();
 #ifdef USE_MENU
 	load_ingame_settings();
 #endif
@@ -73,7 +74,6 @@ void far pop_main() {
 	}
 #endif
 
-	check_mod_param();
 	load_mod_options();
 
 	// CusPop option
@@ -337,7 +337,7 @@ const char* get_quick_path(char* custom_path_buffer, size_t max_len) {
 		return quick_file;
 	}
 	// if playing a custom levelset, try to use the mod folder
-	snprintf(custom_path_buffer, max_len, "mods/%s/%s", levelset_name, quick_file /*QUICKSAVE.SAV*/ );
+	snprintf(custom_path_buffer, max_len, "%s/%s/%s", mods_folder, levelset_name, quick_file /*QUICKSAVE.SAV*/ );
 	return custom_path_buffer;
 }
 
@@ -1803,7 +1803,7 @@ const char* get_save_path(char* custom_path_buffer, size_t max_len) {
 		return save_file;
 	}
 	// if playing a custom levelset, try to use the mod folder
-	snprintf(custom_path_buffer, max_len, "mods/%s/%s", levelset_name, save_file /*PRINCE.SAV*/ );
+	snprintf(custom_path_buffer, max_len, "%s/%s/%s", mods_folder, levelset_name, save_file /*PRINCE.SAV*/ );
 	return custom_path_buffer;
 }
 

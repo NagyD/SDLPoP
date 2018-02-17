@@ -22,7 +22,6 @@ The authors of this program may be contacted at http://forum.princed.org
 
 #ifdef USE_LIGHTING
 
-image_type* lighting_mask = NULL;
 image_type* screen_overlay = NULL;
 Uint32 bgcolor;
 

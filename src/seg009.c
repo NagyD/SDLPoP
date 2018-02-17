@@ -219,7 +219,7 @@ dat_type *__pascal open_dat(const char *filename,int drive) {
 	else {
 		char filename_mod[POP_MAX_PATH];
 		// before checking the root directory, first try mods/MODNAME/
-		snprintf(filename_mod, sizeof(filename_mod), "mods/%s/%s", levelset_name, filename);
+		snprintf(filename_mod, sizeof(filename_mod), "%s/%s/%s", mods_folder, levelset_name, filename);
 		fp = fopen(filename_mod, "rb");
 		if (fp == NULL) {
 			fp = open_dat_from_root_or_data_dir(filename);
@@ -2357,7 +2357,7 @@ void load_from_opendats_metadata(int resource_id, const char* extension, FILE** 
 			else {
 				char image_filename_mod[POP_MAX_PATH];
 				// before checking data/, first try mods/MODNAME/data/
-				snprintf(image_filename_mod, sizeof(image_filename_mod), "mods/%s/%s", levelset_name, image_filename);
+				snprintf(image_filename_mod, sizeof(image_filename_mod), "%s/%s/%s", mods_folder, levelset_name, image_filename);
 				//printf("loading (binary) %s",image_filename_mod);
 				fp = fopen(locate_file(image_filename_mod), "rb");
 				if (fp == NULL) {
@@ -2774,9 +2774,11 @@ void toggle_fullscreen() {
 	uint32_t flags = SDL_GetWindowFlags(window_);
 	if (flags & SDL_WINDOW_FULLSCREEN_DESKTOP) {
 		SDL_SetWindowFullscreen(window_, 0);
+		SDL_ShowCursor(SDL_ENABLE);
 	}
 	else {
 		SDL_SetWindowFullscreen(window_, SDL_WINDOW_FULLSCREEN_DESKTOP);
+		SDL_ShowCursor(SDL_DISABLE);
 	}
 }
 
@@ -3029,12 +3031,21 @@ void process_events() {
 				break;
 #ifdef USE_MENU
 			case SDL_MOUSEBUTTONDOWN:
-				if (!is_menu_shown) {
-					last_key_scancode = SDL_SCANCODE_BACKSPACE;
-				} else {
-					mouse_clicked = true;
-					clicked_or_pressed_enter = true;
+				switch(event.button.button) {
+					case SDL_BUTTON_LEFT:
+						if (!is_menu_shown) {
+							last_key_scancode = SDL_SCANCODE_BACKSPACE;
+						} else {
+							mouse_clicked = true;
+						}
+						break;
+					case SDL_BUTTON_RIGHT:
+					case SDL_BUTTON_X1: // 'Back' button (on mice that have these extra buttons).
+						mouse_button_clicked_right = true;
+						break;
+					default: break;
 				}
+
 				break;
 			case SDL_MOUSEWHEEL:
 				if (is_menu_shown) {

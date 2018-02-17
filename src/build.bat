@@ -40,14 +40,15 @@ if [%1]==[debug] goto build_type_debug
 if [%1]==[release] goto build_type_release
 echo Build type not specified, compiling in release mode...
 echo To specify the build type, run as "build.bat debug" or "build.bat release".
+goto build_type_release
 
 :build_type_debug
-set BuildTypeCompilerFlags= /MDd /Od
+set BuildTypeCompilerFlags= /MTd /Od /Z7
 set PreprocessorDefinitions= -DDEBUG=1
 goto compile
 
 :build_type_release
-set BuildTypeCompilerFlags= /MD /O2
+set BuildTypeCompilerFlags= /MT /O2
 set PreprocessorDefinitions=
 
 :compile
@@ -66,6 +67,9 @@ goto cleanup
 echo Output: ..\prince.exe
 
 :cleanup
-del icon.res
-del *.obj
-
+if [%1]==[debug] exit /b
+del icon.res 2> NUL
+del *.obj 2> NUL
+del ..\prince.exp 2> NUL
+del ..\prince.lib 2> NUL
+del ..\prince.pdb 2> NUL
