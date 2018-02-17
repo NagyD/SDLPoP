@@ -490,6 +490,7 @@ void options_process_fixes(SDL_RWops* rw, rw_process_func_type process_func) {
 	process(fixes_options_replay.fix_feather_interrupted_by_leveldoor);
 	process(fixes_options_replay.fix_offscreen_guards_disappearing);
 	process(fixes_options_replay.fix_move_after_sheathe);
+	process(fixes_options_replay.fix_hidden_floors_during_flashing);
 }
 
 void options_process_custom_general(SDL_RWops* rw, rw_process_func_type process_func) {

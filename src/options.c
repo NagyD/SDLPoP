@@ -237,6 +237,7 @@ static int global_ini_callback(const char *section, const char *name, const char
 		process_boolean("fix_feather_interrupted_by_leveldoor", &fixes_saved.fix_feather_interrupted_by_leveldoor);
 		process_boolean("fix_offscreen_guards_disappearing", &fixes_saved.fix_offscreen_guards_disappearing);
 		process_boolean("fix_move_after_sheathe", &fixes_saved.fix_move_after_sheathe);
+		process_boolean("fix_hidden_floors_during_flashing", &fixes_saved.fix_hidden_floors_during_flashing);
 	}
 
 	if (check_ini_section("CustomGameplay")) {

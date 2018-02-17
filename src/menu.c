@@ -189,6 +189,8 @@ enum setting_ids {
 	SETTING_FIX_CHOMPERS_NOT_STARTING,
 	SETTING_FIX_FEATHER_INTERRUPTED_BY_LEVELDOOR,
 	SETTING_FIX_OFFSCREEN_GUARDS_DISAPPEARING,
+	SETTING_FIX_MOVE_AFTER_SHEATHE,
+	SETTING_FIX_HIDDEN_FLOORS_DURING_FLASHING,
 	SETTING_USE_CUSTOM_OPTIONS,
 	SETTING_START_MINUTES_LEFT,
 	SETTING_START_TICKS_LEFT,
@@ -446,6 +448,14 @@ setting_type gameplay_settings[] = {
 				.linked = &fixes_saved.fix_offscreen_guards_disappearing, .required = &use_fixes_and_enhancements,
 				.text = "Fix offscreen guards disappearing",
 				.explanation = "Guards will often not reappear in another room if they have been pushed (partly or entirely) offscreen."},
+		{.id = SETTING_FIX_MOVE_AFTER_SHEATHE, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fixes_saved.fix_move_after_sheathe, .required = &use_fixes_and_enhancements,
+				.text = "Fix movement after sheathing",
+				.explanation = "While putting the sword away, if you press forward and down, and then release down, the kid will still duck."},
+		{.id = SETTING_FIX_HIDDEN_FLOORS_DURING_FLASHING, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fixes_saved.fix_hidden_floors_during_flashing, .required = &use_fixes_and_enhancements,
+				.text = "Fix hidden floors during flashing",
+				.explanation = "After uniting with the shadow in level 12, the hidden floors will not appear until after the flashing stops."},
 };
 
 NAME_LIST(tile_type_setting_names, {

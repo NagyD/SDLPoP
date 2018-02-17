@@ -492,3 +492,4 @@ DONE: Added in-game menu (press Escape or Backspace) with ability to change sett
 CHANGE: Removed the startup prompt to enable or disable fixes/enhancements (no longer needed).
 FIXED: Fixed turning off music not working.
 DONE: Added option for disabling and enabling all customization options at once.
+DONE: Added fix for hidden floors in level 12 not appearing until after the flashing stops.

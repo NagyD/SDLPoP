@@ -187,8 +187,11 @@ The authors of this program may be contacted at http://forum.princed.org
 // Guards will often not reappear in another room if they have been pushed (partly or entirely) offscreen.
 #define FIX_OFFSCREEN_GUARDS_DISAPPEARING
 
-// Controls do not get released properly when putting the sword away, leading to unintended movement.
+// While putting the sword away, if you press forward and down, and then release down, the kid will still duck.
 #define FIX_MOVE_AFTER_SHEATHE
+
+// After uniting with the shadow in level 12, the hidden floors will not appear until after the flashing stops.
+#define FIX_HIDDEN_FLOORS_DURING_FLASHING
 
 
 // Debug features:
