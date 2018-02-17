@@ -957,7 +957,11 @@ void __pascal far check_on_floor() {
 		if (! tile_is_floor(curr_tile2)) {
 			// Special event: floors appear
 			if (current_level == 12 &&
+#ifndef FIX_HIDDEN_FLOORS_DURING_FLASHING
 				united_with_shadow < 0 &&
+#else
+				(united_with_shadow < 0 || (fixes->fix_hidden_floors_during_flashing && united_with_shadow > 0)) &&
+#endif
 				Char.curr_row == 0 &&
 				(Char.room == 2 || (Char.room == 13 && tile_col >= 6))
 			) {

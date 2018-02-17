@@ -493,3 +493,4 @@ CHANGE: Removed the startup prompt to enable or disable fixes/enhancements (no l
 FIXED: Fixed turning off music not working.
 DONE: Added option for disabling and enabling all customization options at once.
 DONE: Added option for changing the mods directory (where the game looks for custom levelsets).
+DONE: Added fix for hidden floors in level 12 not appearing until after the flashing stops.
