@@ -936,9 +936,7 @@ void __pascal far load_sounds(int first,int last) {
 		midi_dat = open_dat("MIDISND1.DAT", 0);
 	}
 
-	#ifdef USE_MIXER
 	load_sound_names();
-	#endif
 
 	for (current = first; current <= last; ++current) {
 		if (sound_pointers[current] != NULL) continue;
