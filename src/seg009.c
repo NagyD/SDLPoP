@@ -1911,31 +1911,39 @@ sound_buffer_type* convert_digi_sound(sound_buffer_type* digi_buffer) {
 	waveinfo_type waveinfo;
 	if (false == determine_wave_version(digi_buffer, &waveinfo)) return NULL;
 
-	SDL_AudioCVT cvt;
-	memset(&cvt, 0, sizeof(cvt));
-	int result = SDL_BuildAudioCVT(&cvt,
-	                               AUDIO_U8, 1, waveinfo.sample_rate,
-	                               digi_audiospec->format, digi_audiospec->channels, digi_audiospec->freq
-	);
-	// The case of result == 0 is undocumented, but it may occur.
-	if (result != 1 && result != 0) {
-		sdlperror("SDL_BuildAudioCVT");
-		printf("(returned %d)\n", result);
-		quit(1);
-	}
-	int dlen = waveinfo.sample_count; // if format is AUDIO_U8
-	sound_buffer_type* converted_buffer = malloc(sizeof(sound_buffer_type) + dlen * cvt.len_mult * 2);
-	converted_buffer->type = sound_digi_converted;
-	cvt.buf = converted_buffer->converted.samples;
-	memcpy(cvt.buf, waveinfo.samples, dlen);
-	cvt.len = dlen;
-	if (SDL_ConvertAudio(&cvt) != 0) {
-		sdlperror("SDL_ConvertAudio");
-		quit(1);
-	}
-	converted_buffer->converted.length = cvt.len_cvt;
-	return converted_buffer;
+	float freq_ratio = (float)waveinfo.sample_rate /  (float)digi_audiospec->freq;
 
+	int source_length = waveinfo.sample_count;
+	int expanded_frames = source_length * digi_audiospec->freq / waveinfo.sample_rate;
+	int expanded_length = expanded_frames * 2 * sizeof(short);
+	sound_buffer_type* converted_buffer = malloc(sizeof(sound_buffer_type) + expanded_length);
+
+	converted_buffer->type = sound_digi_converted;
+	converted_buffer->converted.length = expanded_length;
+
+	byte* source = waveinfo.samples;
+	short* dest = converted_buffer->converted.samples;
+
+	for (int i = 0; i < expanded_frames; ++i) {
+		float src_frame_float = i * freq_ratio;
+		int src_frame_0 = (int) src_frame_float; // truncation
+
+		int sample_0 = (source[src_frame_0] | (source[src_frame_0] << 8)) - 32768;
+		short interpolated_sample;
+		if (src_frame_0 >= waveinfo.sample_count-1) {
+			interpolated_sample = (short)sample_0;
+		} else {
+			int src_frame_1 = src_frame_0 + 1;
+			float alpha = src_frame_float - src_frame_0;
+			int sample_1 = (source[src_frame_1] | (source[src_frame_1] << 8)) - 32768;
+			interpolated_sample = (short)((1.0f - alpha) * sample_0 + alpha * sample_1);
+		}
+		for (int channel = 0; channel < digi_audiospec->channels; ++channel) {
+			*dest++ = interpolated_sample;
+		}
+	}
+
+	return converted_buffer;
 }
 
 // seg009:74F0
@@ -1951,7 +1959,7 @@ void __pascal far play_digi_sound(sound_buffer_type far *buffer) {
 		return;
 	}
 	SDL_LockAudio();
-	digi_buffer = buffer->converted.samples;
+	digi_buffer = (byte*) buffer->converted.samples;
 	digi_playing = 1;
 	digi_remaining_length = buffer->converted.length;
 	digi_remaining_pos = digi_buffer;
