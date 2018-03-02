@@ -211,12 +211,63 @@ enum setting_ids {
 	SETTING_SHIFT_L_ALLOWED_UNTIL_LEVEL,
 	SETTING_SHIFT_L_REDUCED_MINUTES,
 	SETTING_SHIFT_L_REDUCED_TICKS,
+	SETTING_DEMO_HITP,
+	SETTING_DEMO_END_ROOM,
+	SETTING_INTRO_MUSIC_LEVEL,
+	SETTING_CHECKPOINT_LEVEL,
+	SETTING_CHECKPOINT_RESPAWN_DIR,
+	SETTING_CHECKPOINT_RESPAWN_ROOM,
+	SETTING_CHECKPOINT_RESPAWN_TILEPOS,
+	SETTING_CHECKPOINT_CLEAR_TILE_ROOM,
+	SETTING_CHECKPOINT_CLEAR_TILE_COL,
+	SETTING_CHECKPOINT_CLEAR_TILE_ROW,
+	SETTING_SKELETON_LEVEL,
+	SETTING_SKELETON_ROOM,
+	SETTING_SKELETON_TRIGGER_COLUMN_1,
+	SETTING_SKELETON_TRIGGER_COLUMN_2,
+	SETTING_SKELETON_COLUMN,
+	SETTING_SKELETON_ROW,
+	SETTING_SKELETON_REQUIRE_OPEN_LEVEL_DOOR,
+	SETTING_SKELETON_SKILL,
+	SETTING_SKELETON_REAPPEAR_ROOM,
+	SETTING_SKELETON_REAPPEAR_X,
+	SETTING_SKELETON_REAPPEAR_ROW,
+	SETTING_SKELETON_REAPPEAR_DIR,
+	SETTING_MIRROR_LEVEL,
+	SETTING_MIRROR_ROOM,
+	SETTING_MIRROR_COLUMN,
+	SETTING_MIRROR_ROW,
+	SETTING_MIRROR_TILE,
+	SETTING_SHOW_MIRROR_IMAGE,
+	SETTING_FALLING_EXIT_LEVEL,
+	SETTING_FALLING_EXIT_ROOM,
+	SETTING_FALLING_ENTRY_LEVEL,
+	SETTING_FALLING_ENTRY_ROOM,
+	SETTING_MOUSE_LEVEL,
+	SETTING_MOUSE_ROOM,
+	SETTING_MOUSE_DELAY,
+	SETTING_MOUSE_OBJECT,
+	SETTING_MOUSE_START_X,
+	SETTING_LOOSE_TILES_LEVEL,
+	SETTING_LOOSE_TILES_ROOM_1,
+	SETTING_LOOSE_TILES_ROOM_2,
+	SETTING_LOOSE_TILES_FIRST_TILE,
+	SETTING_LOOSE_TILES_LAST_TILE,
+	SETTING_JAFFAR_VICTORY_LEVEL,
+	SETTING_JAFFAR_VICTORY_FLASH_TIME,
+	SETTING_HIDE_LEVEL_NUMBER_FIRST_LEVEL,
+	SETTING_LEVEL_13_LEVEL_NUMBER,
+	SETTING_VICTORY_STOPS_TIME_LEVEL,
+	SETTING_WIN_LEVEL,
+	SETTING_WIN_ROOM,
 	SETTING_LEVEL_SETTINGS,
 	SETTING_LEVEL_TYPE,
 	SETTING_LEVEL_COLOR,
 	SETTING_GUARD_TYPE,
 	SETTING_GUARD_HP,
 	SETTING_CUTSCENE,
+	SETTING_ENTRY_POSE,
+	SETTING_SEAMLESS_EXIT,
 };
 
 typedef struct setting_type {
@@ -467,6 +518,8 @@ NAMES_LIST(tile_type_setting_names, {
 		"Lattice: pillar", "Lattice: down", "Lattice: small", "Lattice: left", "Lattice: right",         // 25..29
 		"Torch/debris", "Tile 31 (unused)" // 30
 });
+NAMES_LIST(row_setting_names, {"Top", "Middle", "Bottom"});
+KEY_VALUE_LIST(direction_setting_names, {{"Left", dir_FF_left}, {"Right", dir_0_right}});
 
 setting_type mods_settings[] = {
 		{.id = SETTING_USE_CUSTOM_OPTIONS, .style = SETTING_STYLE_TOGGLE, .linked = &use_custom_options,
@@ -547,8 +600,8 @@ setting_type mods_settings[] = {
 				.explanation = "Always skip the title sequence: the first level will be loaded immediately."
 						"\n(default = OFF)"},
 		{.id = SETTING_SHIFT_L_ALLOWED_UNTIL_LEVEL, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
-				.linked = &custom_saved.first_level, .number_type = SETTING_WORD, .max = 15,
-				.text = "First level",
+				.linked = &custom_saved.shift_L_allowed_until_level, .number_type = SETTING_WORD, .max = 15,
+				.text = "Shift+L allowed until level",
 				.explanation = "First level where level skipping with Shift+L is denied in non-cheat mode.\n"
 						"(default = 4)"},
 		{.id = SETTING_SHIFT_L_REDUCED_MINUTES, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
@@ -560,12 +613,219 @@ setting_type mods_settings[] = {
 				.linked = &custom_saved.shift_L_reduced_ticks, .number_type = SETTING_WORD, .max = UINT16_MAX,
 				.text = "Seconds left after Shift+L used",
 				.explanation = "Number of seconds left after Shift+L is used in non-cheat mode.\n(default = 59.92)"},
+		{.id = SETTING_DEMO_HITP, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.demo_hitp, .number_type = SETTING_WORD, .max = UINT16_MAX,
+				.text = "Demo level hitpoints",
+				.explanation = "Hitpoints the kid has on the demo level.\n(default = 4)"},
+		{.id = SETTING_DEMO_END_ROOM, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.demo_end_room, .number_type = SETTING_WORD, .min = 1, .max = 24,
+				.text = "Demo level ending room",
+				.explanation = "Demo level ending room.\n(default = 24)"},
+		{.id = SETTING_INTRO_MUSIC_LEVEL, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.intro_music_level, .number_type = SETTING_WORD, .max = 15,
+				.text = "Level with intro music",
+				.explanation = "Level where the presentation music is played when the kid crouches down. (default = 1)\n"
+						"Note: only works if this level is the starting level."},
+		{.id = SETTING_CHECKPOINT_LEVEL, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.checkpoint_level, .number_type = SETTING_WORD, .max = 15,
+				.text = "Checkpoint level",
+				.explanation = "Level where there is a checkpoint. (default = 3)\n"
+						"The checkpoint is triggered when leaving room 7 to the left."},
+		{.id = SETTING_CHECKPOINT_RESPAWN_DIR, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.checkpoint_respawn_dir, .number_type = SETTING_SBYTE, .min = -1, .max = 0, .names_list = &direction_setting_names_list,
+				.text = "Checkpoint respawn direction",
+				.explanation = "Respawn direction after triggering the checkpoint.\n(default = left)"},
+		{.id = SETTING_CHECKPOINT_RESPAWN_ROOM, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.checkpoint_respawn_room, .number_type = SETTING_BYTE, .min = 1, .max = 24,
+				.text = "Checkpoint respawn room",
+				.explanation = "Room where you respawn after triggering the checkpoint.\n(default = 2)"},
+		{.id = SETTING_CHECKPOINT_RESPAWN_TILEPOS, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.checkpoint_respawn_tilepos, .number_type = SETTING_BYTE, .max = 29,
+				.text = "Checkpoint respawn tile position",
+				.explanation = "Tile position (0 to 29) where you respawn after triggering the checkpoint.\n(default = 6)"},
+		{.id = SETTING_CHECKPOINT_CLEAR_TILE_ROOM, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.checkpoint_clear_tile_room, .number_type = SETTING_BYTE, .min = 1, .max = 24,
+				.text = "Checkpoint clear tile room",
+				.explanation = "Room where a tile is cleared after respawning at the checkpoint location.\n(default = 7)"},
+		{.id = SETTING_CHECKPOINT_CLEAR_TILE_COL, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.checkpoint_clear_tile_col, .number_type = SETTING_BYTE, .max = 9,
+				.text = "Checkpoint clear tile column",
+				.explanation = "Location (column/row) of the cleared tile after respawning at the checkpoint location.\n(default: column = 4, row = top)"},
+		{.id = SETTING_CHECKPOINT_CLEAR_TILE_ROW, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.checkpoint_clear_tile_row, .number_type = SETTING_BYTE, .max = 2, .names_list = &row_setting_names_list,
+				.text = "Checkpoint clear tile row",
+				.explanation = "Location (column/row) of the cleared tile after respawning at the checkpoint location.\n(default: column = 4, row = top)"},
+		{.id = SETTING_SKELETON_LEVEL, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.skeleton_level, .number_type = SETTING_WORD, .max = 15,
+				.text = "Skeleton awakes level",
+				.explanation = "Level and room where a skeleton can come alive.\n(default: level = 3, room = 1)"},
+		{.id = SETTING_SKELETON_ROOM, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.skeleton_room, .number_type = SETTING_BYTE, .min = 1, .max = 24,
+				.text = "Skeleton awakes room",
+				.explanation = "Level and room where a skeleton can come alive.\n(default: level = 3, room = 1)"},
+		{.id = SETTING_SKELETON_TRIGGER_COLUMN_1, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.skeleton_trigger_column_1, .number_type = SETTING_BYTE, .max = 9,
+				.text = "Skeleton trigger column (1)",
+				.explanation = "The skeleton will wake up if the kid is on one of these two columns.\n(defaults = 2,3)"},
+		{.id = SETTING_SKELETON_TRIGGER_COLUMN_2, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.skeleton_trigger_column_2, .number_type = SETTING_BYTE, .max = 9,
+				.text = "Skeleton trigger column (2)",
+				.explanation = "The skeleton will wake up if the kid is on one of these two columns.\n(defaults = 2,3)"},
+		{.id = SETTING_SKELETON_COLUMN, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.skeleton_column, .number_type = SETTING_BYTE, .max = 9,
+				.text = "Skeleton tile column",
+				.explanation = "Location (column/row) of the skeleton tile that will awaken.\n(default: column = 5, row = middle)"},
+		{.id = SETTING_SKELETON_ROW, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.skeleton_row, .number_type = SETTING_BYTE, .max = 2, .names_list = &row_setting_names_list,
+				.text = "Skeleton tile row",
+				.explanation = "Location (column/row) of the skeleton tile that will awaken.\n(default: column = 5, row = middle)"},
+		{.id = SETTING_SKELETON_REQUIRE_OPEN_LEVEL_DOOR, .style = SETTING_STYLE_TOGGLE, .required = &use_custom_options,
+				.linked = &custom_saved.skeleton_require_open_level_door,
+				.text = "Skeleton requires level door",
+				.explanation = "Whether the level door must first be opened before the skeleton awakes.\n(default = true)"},
+		{.id = SETTING_SKELETON_SKILL, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.skeleton_skill, .number_type = SETTING_BYTE, .max = 15,
+				.text = "Skeleton skill",
+				.explanation = "Skill of the awoken skeleton.\n(default = 2)"},
+		{.id = SETTING_SKELETON_REAPPEAR_ROOM, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.skeleton_reappear_room, .number_type = SETTING_BYTE, .min = 1, .max = 24,
+				.text = "Skeleton reappear room",
+				.explanation = "If the skeleton falls into this room, it will reappear there.\n(default = 3)"},
+		{.id = SETTING_SKELETON_REAPPEAR_X, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.skeleton_reappear_x, .number_type = SETTING_BYTE, .max = 255,
+				.text = "Skeleton reappear X coordinate",
+				.explanation = "Horizontal coordinate where the skeleton reappers.\n(default = 133)\n"
+						"(58 = left edge of the room, 198 = right edge)"},
+		{.id = SETTING_SKELETON_REAPPEAR_ROW, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.skeleton_reappear_row, .number_type = SETTING_BYTE, .max = 2, .names_list = &row_setting_names_list,
+				.text = "Skeleton reappear row",
+				.explanation = "Row on which the skeleton reappears.\n(default = middle)"},
+		{.id = SETTING_SKELETON_REAPPEAR_DIR, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.skeleton_reappear_dir, .number_type = SETTING_SBYTE, .min = -1, .max = 0, .names_list = &direction_setting_names_list,
+				.text = "Skeleton reappear direction",
+				.explanation = "Direction the skeleton is facing when it reappears.\n(default = right)"},
+		{.id = SETTING_MIRROR_LEVEL, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.mirror_level, .number_type = SETTING_WORD, .max = 15,
+				.text = "Mirror level",
+				.explanation = "Level and room where the mirror appears.\n(default: level = 4, room = 4)"},
+		{.id = SETTING_MIRROR_ROOM, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.mirror_room, .number_type = SETTING_BYTE, .min = 1, .max = 24,
+				.text = "Mirror room",
+				.explanation = "Level and room where the mirror appears.\n(default: level = 4, room = 4)"},
+		{.id = SETTING_MIRROR_COLUMN, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.mirror_column, .number_type = SETTING_BYTE, .max = 9,
+				.text = "Mirror column",
+				.explanation = "Location (column/row) of the tile where the mirror appears.\n(default: column = 4, row = top)"},
+		{.id = SETTING_MIRROR_ROW, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.mirror_row, .number_type = SETTING_BYTE, .max = 2, .names_list = &row_setting_names_list,
+				.text = "Mirror row",
+				.explanation = "Location (column/row) of the tile where the mirror appears.\n(default: column = 4, row = top)"},
+		{.id = SETTING_MIRROR_TILE, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.mirror_tile, .number_type = SETTING_BYTE, .max = 31, .names_list = &tile_type_setting_names_list,
+				.text = "Mirror tile",
+				.explanation = "Tile type that appears when the mirror should appear.\n(default = mirror)"},
+		{.id = SETTING_SHOW_MIRROR_IMAGE, .style = SETTING_STYLE_TOGGLE, .required = &use_custom_options,
+				.linked = &custom_saved.show_mirror_image, .number_type = SETTING_BYTE,
+				.text = "Show mirror image",
+				.explanation = "Show the kid's mirror image in the mirror.\n(default = true)"},
+		{.id = SETTING_FALLING_EXIT_LEVEL, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.falling_exit_level, .number_type = SETTING_WORD, .max = 15,
+				.text = "Falling exit level",
+				.explanation = "Level where the kid can progress to the next level by falling off a specific room.\n(default = 6)"},
+		{.id = SETTING_FALLING_EXIT_ROOM, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.falling_exit_room, .number_type = SETTING_BYTE, .min = 1, .max = 24,
+				.text = "Falling exit room",
+				.explanation = "Room where the kid can progress to the next level by falling down.\n(default = 1)"},
+		{.id = SETTING_FALLING_ENTRY_LEVEL, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.falling_entry_level, .number_type = SETTING_WORD, .max = 15,
+				.text = "Falling entry level",
+				.explanation = "If the kid starts in this level in this room, the starting room will not be shown,\n"
+						"but the room below instead, to allow for a falling entry. (default: level = 7, room = 17)"},
+		{.id = SETTING_FALLING_ENTRY_ROOM, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.falling_entry_room, .number_type = SETTING_BYTE, .min = 1, .max = 24,
+				.text = "Falling entry room",
+				.explanation = "If the kid starts in this level in this room, the starting room will not be shown,\n"
+						"but the room below instead, to allow for a falling entry. (default: level = 7, room = 17)"},
+		{.id = SETTING_MOUSE_LEVEL, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.mouse_level, .number_type = SETTING_WORD, .max = 15,
+				.text = "Mouse level",
+				.explanation = "Level where the mouse appears.\n(default = 8)"},
+		{.id = SETTING_MOUSE_ROOM, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.mouse_room, .number_type = SETTING_BYTE, .min = 1, .max = 24,
+				.text = "Mouse room",
+				.explanation = "Room where the mouse appears.\n(default = 16)"},
+		{.id = SETTING_MOUSE_DELAY, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.mouse_delay, .number_type = SETTING_WORD, .max = UINT16_MAX,
+				.text = "Mouse delay",
+				.explanation = "Number of seconds to wait before the mouse appears.\n(default = 12.5)"},
+		{.id = SETTING_MOUSE_OBJECT, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.mouse_object, .number_type = SETTING_BYTE, .max = 255,
+				.text = "Mouse object",
+				.explanation = "Mouse object type. (default = 24)\n"
+						"Be careful: a value not 24 will change the mouse for the kid."},
+		{.id = SETTING_MOUSE_START_X, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.mouse_start_x, .number_type = SETTING_BYTE, .max = 255,
+				.text = "Mouse start X coordinate",
+				.explanation = "Horizontal starting coordinate of the mouse.\n(default = 200)"},
+		{.id = SETTING_LOOSE_TILES_LEVEL, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.loose_tiles_level, .number_type = SETTING_WORD, .max = 15,
+				.text = "Loose tiles level",
+				.explanation = "Level where loose floor tiles will fall down.\n(default = 13)"},
+		{.id = SETTING_LOOSE_TILES_ROOM_1, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.loose_tiles_room_1, .number_type = SETTING_BYTE, .min = 1, .max = 24,
+				.text = "Loose tiles room (1)",
+				.explanation = "Rooms where visible loose floor tiles will fall down.\n(default = 23, 16)"},
+		{.id = SETTING_LOOSE_TILES_ROOM_2, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.loose_tiles_room_2, .number_type = SETTING_BYTE, .min = 1, .max = 24,
+				.text = "Loose tiles room (2)",
+				.explanation = "Rooms where visible loose floor tiles will fall down.\n(default = 23, 16)"},
+		{.id = SETTING_LOOSE_TILES_FIRST_TILE, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.loose_tiles_first_tile, .number_type = SETTING_BYTE, .max = 29,
+				.text = "Loose tiles first tile",
+				.explanation = "Range of loose floor tile positions that will be pressed.\n(default = 22 to 27)"},
+		{.id = SETTING_LOOSE_TILES_LAST_TILE, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.loose_tiles_last_tile, .number_type = SETTING_BYTE, .max = 29,
+				.text = "Loose tiles last tile",
+				.explanation = "Range of loose floor tile positions that will be pressed.\n(default = 22 to 27)"},
+		{.id = SETTING_JAFFAR_VICTORY_LEVEL, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.jaffar_victory_level, .number_type = SETTING_WORD, .max = 15,
+				.text = "Jaffar victory level",
+				.explanation = "Killing the guard in this level causes the screen to flash, and event 0 to be triggered upon leaving the room.\n(default = 13)"},
+		{.id = SETTING_JAFFAR_VICTORY_FLASH_TIME, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.jaffar_victory_flash_time, .number_type = SETTING_BYTE, .max = UINT16_MAX,
+				.text = "Jaffar victory flash time",
+				.explanation = "How long the screen will flash after killing Jaffar.\n(default = 18)"},
+		{.id = SETTING_HIDE_LEVEL_NUMBER_FIRST_LEVEL, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.hide_level_number_first_level, .number_type = SETTING_WORD, .max = 15,
+				.text = "Hide level number from level",
+				.explanation = "First level where the level number will not be displayed.\n(default = 14)"},
+		{.id = SETTING_LEVEL_13_LEVEL_NUMBER, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.level_13_level_number, .number_type = SETTING_BYTE, .max = UINT16_MAX,
+				.text = "Level 13 displayed level number",
+				.explanation = "Level number displayed on level 13.\n(default = 12)"},
+		{.id = SETTING_VICTORY_STOPS_TIME_LEVEL, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.victory_stops_time_level, .number_type = SETTING_WORD, .max = 15,
+				.text = "Victory stops time level",
+				.explanation = "Level where Jaffar's death stops time.\n(default = 13)"},
+		{.id = SETTING_WIN_LEVEL, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.win_level, .number_type = SETTING_WORD, .max = 15,
+				.text = "Level where you can win",
+				.explanation = "Level and room where you can win the game.\n(default: level = 14, room = 5)"},
+		{.id = SETTING_WIN_ROOM, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.win_room, .number_type = SETTING_BYTE, .min = 1, .max = 24,
+				.text = "Room where you can win",
+				.explanation = "Level and room where you can win the game.\n(default: level = 14, room = 5)"},
 };
 
 NAMES_LIST(level_type_setting_names, { "Dungeon", "Palace", });
-NAMES_LIST(guard_type_setting_names, { "Normal", "Fat", "Skeleton", "Vizier", "Shadow", });
+KEY_VALUE_LIST(guard_type_setting_names, {{"None", -1}, {"Normal", 0}, {"Fat", 1}, {"Skeleton", 2}, {"Vizier", 3}, {"Shadow", 4}});
+NAMES_LIST(entry_pose_setting_names, {"Turning", "Falling", "Running"});
+KEY_VALUE_LIST(off_setting_name, {{"Off", -1}}); // used for the seamless exit setting
 
 setting_type level_settings[] = {
+		{.id = SETTING_LEVEL_SETTINGS, .style = SETTING_STYLE_TEXT_ONLY, .required = &use_custom_options,
+				.text = "Customize another level...",
+				.explanation = "Select another level to customize."},
 		{.id = SETTING_LEVEL_TYPE, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
 				.names_list = &level_type_setting_names_list,
 				.linked = NULL /* depends on which level */, .number_type = SETTING_BYTE, .max = 1,
@@ -579,7 +839,7 @@ setting_type level_settings[] = {
 						"You need a PRINCE.DAT from PoP 1.3 or 1.4 for this."},
 		{.id = SETTING_GUARD_TYPE, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
 				.names_list = &guard_type_setting_names_list,
-				.linked = NULL, .number_type = SETTING_SHORT, .max = 4,
+				.linked = NULL, .number_type = SETTING_SHORT, .min = -1, .max = 4,
 				.text = "Guard type",
 				.explanation = "Guard type used in this level (normal, fat, skeleton, vizier, or shadow)."},
 		{.id = SETTING_GUARD_HP, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
@@ -592,9 +852,15 @@ setting_type level_settings[] = {
 				.explanation = "Cutscene that plays between the previous level and this level.\n"
 						"0: none, 2 or 6: standing, 4: lying down, 8: mouse leaves,\n"
 						"9: mouse returns, 12: standing or turn around"},
-		{.id = SETTING_LEVEL_SETTINGS, .style = SETTING_STYLE_TEXT_ONLY, .required = &use_custom_options,
-				.text = "Customize another level...",
-				.explanation = "Select another level to customize."},
+		{.id = SETTING_ENTRY_POSE, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = NULL, .number_type = SETTING_BYTE, .max = 2, .names_list = &entry_pose_setting_names_list,
+				.text = "Entry pose",
+				.explanation = "The pose the kid has when the level starts.\n"},
+		{.id = SETTING_SEAMLESS_EXIT, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = NULL, .number_type = SETTING_SBYTE, .min = -1, .max = 24, .names_list = &off_setting_name_list,
+				.text = "Seamless exit",
+				.explanation = "Entering this room moves the kid to the next level.\n"
+						"Set to -1 to disable."},
 };
 
 typedef struct settings_area_type {
@@ -738,6 +1004,12 @@ void enter_settings_subsection(int settings_menu_id) {
 					break;
 				case SETTING_CUTSCENE:
 					setting->linked = &custom_saved.tbl_cutscenes_by_index[menu_current_level];
+					break;
+				case SETTING_ENTRY_POSE:
+					setting->linked = &custom_saved.tbl_entry_pose[menu_current_level];
+					break;
+				case SETTING_SEAMLESS_EXIT:
+					setting->linked = &custom_saved.tbl_seamless_exit[menu_current_level];
 					break;
 			}
 		}
@@ -1033,10 +1305,29 @@ void draw_image_with_blending(image_type far* image, int xpos, int ypos) {
 
 #define print_setting_value(setting, value) print_setting_value_(setting, value, alloca(32), 32)
 char* print_setting_value_(setting_type* setting, int value, char* buffer, size_t buffer_size) {
-	if (setting->names_list != NULL && value >= 0 && value < setting->names_list->num_names) {
-		strncpy(buffer, (*(setting->names_list->names))[value], MIN(MAX_OPTION_VALUE_NAME_LENGTH, buffer_size));
-	} else {
-		if (setting->id == SETTING_START_TICKS_LEFT || setting->id == SETTING_SHIFT_L_REDUCED_TICKS) {
+	bool has_name = false;
+	names_list_type* list = setting->names_list;
+	size_t max_len = MIN(MAX_OPTION_VALUE_NAME_LENGTH, buffer_size);
+	if (list != NULL) {
+		if (list->type == 0 && value >= 0 && value < list->names.count) {
+			strncpy(buffer, (*(list->names.data))[value], max_len);
+			has_name = true;
+		} else if (list->type == 1) {
+			for (int i = 0; i < list->kv_pairs.count; ++i) {
+				key_value_type* kv_pair = list->kv_pairs.data + i;
+				if (value == kv_pair->value) {
+					strncpy(buffer, kv_pair->key, max_len);
+					has_name = true;
+					break;
+				}
+			}
+		}
+	}
+	if (!has_name) {
+		if (setting->id == SETTING_START_TICKS_LEFT ||
+				setting->id == SETTING_SHIFT_L_REDUCED_TICKS ||
+				setting->id == SETTING_MOUSE_DELAY
+		) {
 			float seconds = (float)value * (1.0f/12.0f);
 			snprintf(buffer, buffer_size, "%.2f", seconds);
 		} else {
