@@ -582,6 +582,7 @@ void __pascal far end_sequence() {
 	bgcolor = 15;
 	load_intro(1, &end_sequence_anim, 1);
 	clear_screen_and_sounds();
+	is_ending_sequence = true; // added (fix being able to pause the game during the end sequence)
 	load_opt_sounds(sound_56_ending_music, sound_56_ending_music); // winning theme
 	play_sound_from_buffer(sound_pointers[sound_56_ending_music]); // winning theme
 	if(offscreen_surface) free_surface(offscreen_surface); // missing in original
@@ -639,6 +640,7 @@ void __pascal far end_sequence() {
 	}
 	fade_out_2(0x1000);
 	start_level = -1;
+	is_ending_sequence = false;
 	start_game();
 }
 

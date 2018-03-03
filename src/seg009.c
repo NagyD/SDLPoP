@@ -2199,7 +2199,8 @@ void draw_overlay() {
 	if (is_timer_displayed && start_level > 0) overlay = 1; // Timer overlay
 #endif
 #ifdef USE_MENU
-	if (is_menu_shown) overlay = 2; // Menu overlay - not drawn here directly, only copied from the overlay surface.
+	// Menu overlay - not drawn here directly, only copied from the overlay surface.
+	if (is_paused && is_menu_shown) overlay = 2;
 #endif
 	if (overlay != 0) {
 		is_overlay_displayed = true;
@@ -2839,6 +2840,8 @@ void process_events() {
 						case SDL_SCANCODE_NUMLOCKCLEAR:
 						case SDL_SCANCODE_APPLICATION:
 						case SDL_SCANCODE_PRINTSCREEN:
+						case SDL_SCANCODE_VOLUMEUP:
+						case SDL_SCANCODE_VOLUMEDOWN:
 						case SDL_SCANCODE_PAUSE:
 							break;
 						default:
