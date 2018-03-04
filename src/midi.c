@@ -465,10 +465,13 @@ static void process_midi_event(midi_event_type* event) {
 				{
 					byte* data = event->meta.data;
 					int new_tempo = (data[0]<<16) | (data[1]<<8) | (data[2]);
-					// Special case: Story 3 Jaffar enters.
+					// Special case: PV scene, with 'Story 2 princess waiting', and 'Story 3 Jaffar enters'.
 					// Speed must be exactly right, otherwise it will not line up with the flashing animation in the cutscene.
-					// Maybe this tempo was carefully fine-tuned?
-					if (new_tempo == 705882) new_tempo = 655000;
+					// 'Jaffar enters' song has tempo 705882 (maybe this tempo was carefully fine-tuned)?
+					if (is_cutscene) {
+						double speed_up_ratio = 655679.0 / 705882.0; // fine-tuned
+						new_tempo *= speed_up_ratio;
+					}
 					us_per_beat = new_tempo;
 				}
 					break;
