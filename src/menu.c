@@ -191,6 +191,7 @@ enum setting_ids {
 	SETTING_FIX_OFFSCREEN_GUARDS_DISAPPEARING,
 	SETTING_FIX_MOVE_AFTER_SHEATHE,
 	SETTING_FIX_HIDDEN_FLOORS_DURING_FLASHING,
+	SETTING_FIX_HANG_ON_TELEPORT,
 	SETTING_USE_CUSTOM_OPTIONS,
 	SETTING_START_MINUTES_LEFT,
 	SETTING_START_TICKS_LEFT,
@@ -456,6 +457,10 @@ setting_type gameplay_settings[] = {
 				.linked = &fixes_saved.fix_hidden_floors_during_flashing, .required = &use_fixes_and_enhancements,
 				.text = "Fix hidden floors during flashing",
 				.explanation = "After uniting with the shadow in level 12, the hidden floors will not appear until after the flashing stops."},
+		{.id = SETTING_FIX_HANG_ON_TELEPORT, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fixes_saved.fix_hang_on_teleport, .required = &use_fixes_and_enhancements,
+				.text = "Fix hang on teleport bug",
+				.explanation = "By jumping towards one of the bottom corners of the room and grabbing a ledge, you can teleport to the room above."},
 };
 
 NAMES_LIST(tile_type_setting_names, {

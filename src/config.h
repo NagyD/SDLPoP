@@ -193,6 +193,9 @@ The authors of this program may be contacted at http://forum.princed.org
 // After uniting with the shadow in level 12, the hidden floors will not appear until after the flashing stops.
 #define FIX_HIDDEN_FLOORS_DURING_FLASHING
 
+// By jumping towards one of the bottom corners of the room and grabbing a ledge, you can teleport to the room above.
+#define FIX_HANG_ON_TELEPORT
+
 
 // Debug features:
 
