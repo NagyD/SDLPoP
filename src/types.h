@@ -1139,6 +1139,7 @@ typedef struct custom_options_type {
 	word demo_hitp;
 	word demo_end_room;
 	word intro_music_level;
+	word have_sword_from_level;
 	word checkpoint_level;
 	sbyte checkpoint_respawn_dir;
 	byte checkpoint_respawn_room;

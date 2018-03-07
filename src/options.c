@@ -89,6 +89,8 @@ NAMES_LIST(scaling_type_names, {"sharp", "fuzzy", "blurry"});
 NAMES_LIST(row_names, {"top", "middle", "bottom"});
 KEY_VALUE_LIST(direction_names, {{"left", dir_FF_left}, {"right", dir_0_right}});
 NAMES_LIST(entry_pose_names, {"turning", "falling", "running"});
+// 16 is higher than any level, so some options can be disabled by setting it to this value
+KEY_VALUE_LIST(never_is_16, {{"Never", 16}});
 
 #define INI_NO_VALID_NAME (-9999)
 
@@ -265,11 +267,11 @@ static int global_ini_callback(const char *section, const char *name, const char
 		process_word("start_ticks_left", &custom_saved.start_ticks_left, NULL);
 		process_word("start_hitp", &custom_saved.start_hitp, NULL);
 		process_word("max_hitp_allowed", &custom_saved.max_hitp_allowed, NULL);
-		process_word("saving_allowed_first_level", &custom_saved.saving_allowed_first_level, NULL);
-		process_word("saving_allowed_last_level", &custom_saved.saving_allowed_last_level, NULL);
+		process_word("saving_allowed_first_level", &custom_saved.saving_allowed_first_level, &never_is_16_list);
+		process_word("saving_allowed_last_level", &custom_saved.saving_allowed_last_level, &never_is_16_list);
 		process_boolean("start_upside_down", &custom_saved.start_upside_down);
 		process_boolean("start_in_blind_mode", &custom_saved.start_in_blind_mode);
-		process_word("copyprot_level", &custom_saved.copyprot_level, NULL);
+		process_word("copyprot_level", &custom_saved.copyprot_level, &never_is_16_list);
 		process_byte("drawn_tile_top_level_edge", &custom_saved.drawn_tile_top_level_edge, &tile_type_names_list);
 		process_byte("drawn_tile_left_level_edge", &custom_saved.drawn_tile_left_level_edge, &tile_type_names_list);
 		process_byte("level_edge_hit_tile", &custom_saved.level_edge_hit_tile, &tile_type_names_list);
@@ -307,20 +309,21 @@ static int global_ini_callback(const char *section, const char *name, const char
 		}
 		process_word("first_level", &custom_saved.first_level, NULL);
 		process_boolean("skip_title", &custom_saved.skip_title);
-		process_word("shift_L_allowed_until_level", &custom_saved.shift_L_allowed_until_level, NULL);
+		process_word("shift_L_allowed_until_level", &custom_saved.shift_L_allowed_until_level, &never_is_16_list);
 		process_word("shift_L_reduced_minutes", &custom_saved.shift_L_reduced_minutes, NULL);
 		process_word("shift_L_reduced_ticks", &custom_saved.shift_L_reduced_ticks, NULL);
 		process_word("demo_hitp", &custom_saved.demo_hitp, NULL);
 		process_word("demo_end_room", &custom_saved.demo_end_room, NULL);
-		process_word("intro_music_level", &custom_saved.intro_music_level, NULL);
-		process_word("checkpoint_level", &custom_saved.checkpoint_level, NULL);
+		process_word("intro_music_level", &custom_saved.intro_music_level, &never_is_16_list);
+		process_word("have_sword_from_level", &custom_saved.have_sword_from_level, &never_is_16_list);
+		process_word("checkpoint_level", &custom_saved.checkpoint_level, &never_is_16_list);
 		process_sbyte("checkpoint_respawn_dir", &custom_saved.checkpoint_respawn_dir, &direction_names_list);
 		process_byte("checkpoint_respawn_room", &custom_saved.checkpoint_respawn_room, NULL);
 		process_byte("checkpoint_respawn_tilepos", &custom_saved.checkpoint_respawn_tilepos, NULL);
 		process_byte("checkpoint_clear_tile_room", &custom_saved.checkpoint_clear_tile_room, NULL);
 		process_byte("checkpoint_clear_tile_col", &custom_saved.checkpoint_clear_tile_col, NULL);
 		process_byte("checkpoint_clear_tile_row", &custom_saved.checkpoint_clear_tile_row, &row_names_list);
-		process_word("skeleton_level", &custom_saved.skeleton_level, NULL);
+		process_word("skeleton_level", &custom_saved.skeleton_level, &never_is_16_list);
 		process_byte("skeleton_room", &custom_saved.skeleton_room, NULL);
 		process_byte("skeleton_trigger_column_1", &custom_saved.skeleton_trigger_column_1, NULL);
 		process_byte("skeleton_trigger_column_2", &custom_saved.skeleton_trigger_column_2, NULL);
@@ -332,32 +335,32 @@ static int global_ini_callback(const char *section, const char *name, const char
 		process_byte("skeleton_reappear_x", &custom_saved.skeleton_reappear_x, NULL);
 		process_byte("skeleton_reappear_row", &custom_saved.skeleton_reappear_row, &row_names_list);
 		process_byte("skeleton_reappear_dir", &custom_saved.skeleton_reappear_dir, &direction_names_list);
-		process_word("mirror_level", &custom_saved.mirror_level, NULL);
+		process_word("mirror_level", &custom_saved.mirror_level, &never_is_16_list);
 		process_byte("mirror_room", &custom_saved.mirror_room, NULL);
 		process_byte("mirror_column", &custom_saved.mirror_column, NULL);
 		process_byte("mirror_row", &custom_saved.mirror_row, &row_names_list);
 		process_byte("mirror_tile", &custom_saved.mirror_tile, &tile_type_names_list);
 		process_boolean("show_mirror_image", &custom_saved.show_mirror_image);
-		process_word("falling_exit_level", &custom_saved.falling_exit_level, NULL);
+		process_word("falling_exit_level", &custom_saved.falling_exit_level, &never_is_16_list);
 		process_byte("falling_exit_room", &custom_saved.falling_exit_room, NULL);
-		process_word("falling_entry_level", &custom_saved.falling_entry_level, NULL);
+		process_word("falling_entry_level", &custom_saved.falling_entry_level, &never_is_16_list);
 		process_byte("falling_entry_room", &custom_saved.falling_entry_room, NULL);
-		process_word("mouse_level", &custom_saved.mouse_level, NULL);
+		process_word("mouse_level", &custom_saved.mouse_level, &never_is_16_list);
 		process_byte("mouse_room", &custom_saved.mouse_room, NULL);
 		process_word("mouse_delay", &custom_saved.mouse_delay, NULL);
 		process_byte("mouse_object", &custom_saved.mouse_object, NULL);
 		process_byte("mouse_start_x", &custom_saved.mouse_start_x, NULL);
-		process_word("loose_tiles_level", &custom_saved.loose_tiles_level, NULL);
+		process_word("loose_tiles_level", &custom_saved.loose_tiles_level, &never_is_16_list);
 		process_byte("loose_tiles_room_1", &custom_saved.loose_tiles_room_1, NULL);
 		process_byte("loose_tiles_room_2", &custom_saved.loose_tiles_room_2, NULL);
 		process_byte("loose_tiles_first_tile", &custom_saved.loose_tiles_first_tile, NULL);
 		process_byte("loose_tiles_last_tile", &custom_saved.loose_tiles_last_tile, NULL);
-		process_word("jaffar_victory_level", &custom_saved.jaffar_victory_level, NULL);
+		process_word("jaffar_victory_level", &custom_saved.jaffar_victory_level, &never_is_16_list);
 		process_byte("jaffar_victory_flash_time", &custom_saved.jaffar_victory_flash_time, NULL);
-		process_word("hide_level_number_first_level", &custom_saved.hide_level_number_first_level, NULL);
+		process_word("hide_level_number_first_level", &custom_saved.hide_level_number_first_level, &never_is_16_list);
 		process_byte("level_13_level_number", &custom_saved.level_13_level_number, NULL);
-		process_word("victory_stops_time_level", &custom_saved.victory_stops_time_level, NULL);
-		process_word("win_level", &custom_saved.win_level, NULL);
+		process_word("victory_stops_time_level", &custom_saved.victory_stops_time_level, &never_is_16_list);
+		process_word("win_level", &custom_saved.win_level, &never_is_16_list);
 		process_byte("win_room", &custom_saved.win_room, NULL);
 	} // end of section [CustomGameplay]
 

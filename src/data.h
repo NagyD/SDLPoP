@@ -692,6 +692,7 @@ extern custom_options_type custom_defaults INIT(= {
 		.demo_hitp = 4,
 		.demo_end_room = 24,
 		.intro_music_level = 1,
+		.have_sword_from_level = 2,
 		.checkpoint_level = 3,
 		.checkpoint_respawn_dir = 5,
 		.checkpoint_respawn_room = 2,
