@@ -57,11 +57,23 @@ static int num_midi_tracks;
 static parsed_midi_type parsed_midi;
 static midi_track_type* midi_tracks;
 static uint64_t midi_current_pos; // in MIDI ticks
+static float midi_current_pos_fract_part; // partial ticks after the decimal point
 static int ticks_to_next_pause; // in MIDI ticks
 static dword us_per_beat;
 static dword ticks_per_beat;
 static int mixing_freq;
 static sbyte midi_semitones_higher;
+static float current_midi_tempo_modifier;
+
+// Tempo adjustments for specific songs:
+// * PV scene, with 'Story 3 Jaffar enters':
+//   Speed must be exactly right, otherwise it will not line up with the flashing animation in the cutscene.
+//   The 'Jaffar enters' song has tempo 705882 (maybe this tempo was carefully fine-tuned)?
+// * Intro music: playback speed must match the title appearances/transitions.
+const float midi_tempo_modifiers[58] = {
+		[sound_53_story_3_Jaffar_comes] = -0.03f, // 3% speedup
+		[sound_54_intro_music] = 0.03f, // 3% slowdown
+};
 
 // The hardcoded instrument is used as a fallback, if instrument data is not available for some reason.
 static instrument_type hardcoded_instrument = {
@@ -465,13 +477,7 @@ static void process_midi_event(midi_event_type* event) {
 				{
 					byte* data = event->meta.data;
 					int new_tempo = (data[0]<<16) | (data[1]<<8) | (data[2]);
-					// Special case: PV scene, with 'Story 2 princess waiting', and 'Story 3 Jaffar enters'.
-					// Speed must be exactly right, otherwise it will not line up with the flashing animation in the cutscene.
-					// 'Jaffar enters' song has tempo 705882 (maybe this tempo was carefully fine-tuned)?
-					if (is_cutscene) {
-						double speed_up_ratio = 655679.0 / 705882.0; // fine-tuned
-						new_tempo *= speed_up_ratio;
-					}
+					new_tempo *= (1.0f + current_midi_tempo_modifier); // tempo adjustment for specific songs
 					us_per_beat = new_tempo;
 				}
 					break;
@@ -497,11 +503,12 @@ void midi_callback(void *userdata, Uint8 *stream, int len) {
 	while (frames_needed > 0) {
 		if (ticks_to_next_pause > 0) {
 			// Fill the audio buffer (we have already processed the MIDI events up till this point)
-			int64_t us_to_next_pause = (us_per_beat / ticks_per_beat) * ticks_to_next_pause;
+			int64_t us_to_next_pause = ticks_to_next_pause * us_per_beat / ticks_per_beat;
 			int64_t us_needed = frames_needed * ONE_SECOND_IN_US / mixing_freq;
 			int64_t advance_us = MIN(us_to_next_pause, us_needed);
 			int available_frames = ((advance_us * mixing_freq) + ONE_SECOND_IN_US - 1) / ONE_SECOND_IN_US; // round up.
 			int advance_frames = MIN(available_frames, frames_needed);
+			advance_us = advance_frames * ONE_SECOND_IN_US / mixing_freq; // recalculate, in case the rounding up increased this.
 			short* temp_buffer = malloc(advance_frames * 4);
 			OPL3_GenerateStream(&opl_chip, temp_buffer, advance_frames);
 			for (int sample = 0; sample < advance_frames * 2; ++sample) {
@@ -511,7 +518,15 @@ void midi_callback(void *userdata, Uint8 *stream, int len) {
 
 			frames_needed -= advance_frames;
 			stream += advance_frames * 4;
-			int64_t ticks_elapsed = advance_us / (us_per_beat / ticks_per_beat);
+			// Advance the current MIDI tick position.
+			// Keep track of the partial ticks that have elapsed so that we do not fall behind.
+			float ticks_elapsed_float = (float)advance_us * ticks_per_beat / us_per_beat;
+			int64_t ticks_elapsed = (int64_t) ticks_elapsed_float;
+			midi_current_pos_fract_part += (ticks_elapsed_float - ticks_elapsed);
+			if (midi_current_pos_fract_part > 1.0f) {
+				midi_current_pos_fract_part -= 1.0f;
+				ticks_elapsed += 1;
+			}
 			midi_current_pos += ticks_elapsed;
 			ticks_to_next_pause -= ticks_elapsed;
 		} else {
@@ -635,11 +650,13 @@ void play_midi_sound(sound_buffer_type far *buffer) {
 	}
 
 	midi_current_pos = 0;
+	midi_current_pos_fract_part = 0;
 	ticks_to_next_pause = 0;
 	midi_tracks = parsed_midi.tracks;
 	num_midi_tracks = parsed_midi.num_tracks;
 	midi_semitones_higher = 0;
-	us_per_beat = 60000;
+	us_per_beat = 500000; // default tempo (500000 us/beat == 120 bpm)
+	current_midi_tempo_modifier = midi_tempo_modifiers[current_sound];
 	ticks_per_beat = parsed_midi.ticks_per_beat;
 	mixing_freq = digi_audiospec->freq;
 	midi_playing = 1;
