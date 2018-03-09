@@ -511,8 +511,10 @@ void midi_callback(void *userdata, Uint8 *stream, int len) {
 			advance_us = advance_frames * ONE_SECOND_IN_US / mixing_freq; // recalculate, in case the rounding up increased this.
 			short* temp_buffer = malloc(advance_frames * 4);
 			OPL3_GenerateStream(&opl_chip, temp_buffer, advance_frames);
-			for (int sample = 0; sample < advance_frames * 2; ++sample) {
-				((short*)stream)[sample] += temp_buffer[sample];
+			if (enable_music) {
+				for (int sample = 0; sample < advance_frames * 2; ++sample) {
+					((short*)stream)[sample] += temp_buffer[sample];
+				}
 			}
 			free(temp_buffer);
 
