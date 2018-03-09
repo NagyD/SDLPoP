@@ -2085,13 +2085,17 @@ void init_overlay() {
 SDL_Surface* onscreen_surface_2x;
 
 void init_scaling() {
+	if (texture_sharp == NULL) {
+		texture_sharp = SDL_CreateTexture(renderer_, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, 320, 200);
+	}
 	if (scaling_type == 1) {
-		if (onscreen_surface_2x == NULL) {
+		if (!is_renderer_targettexture_supported && onscreen_surface_2x == NULL) {
 			onscreen_surface_2x = SDL_CreateRGBSurface(0, 320*2, 200*2, 24, 0xFF, 0xFF << 8, 0xFF << 16, 0) ;
 		}
 		if (texture_fuzzy == NULL) {
 			SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
-			texture_fuzzy = SDL_CreateTexture(renderer_, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, 320*2, 200*2);
+			int access = is_renderer_targettexture_supported ? SDL_TEXTUREACCESS_TARGET : SDL_TEXTUREACCESS_STREAMING;
+			texture_fuzzy = SDL_CreateTexture(renderer_, SDL_PIXELFORMAT_RGB24, access, 320*2, 200*2);
 			SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
 		}
 		target_texture = texture_fuzzy;
@@ -2103,9 +2107,6 @@ void init_scaling() {
 		}
 		target_texture = texture_blurry;
 	} else {
-		if (texture_sharp == NULL) {
-			texture_sharp = SDL_CreateTexture(renderer_, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, 320, 200);
-		}
 		target_texture = texture_sharp;
 	}
 	if (target_texture == NULL) {
@@ -2141,7 +2142,13 @@ void __pascal far set_gr_mode(byte grmode) {
 	                           pop_window_width, pop_window_height, flags);
 	// Make absolutely sure that VSync will be off, to prevent timer issues.
 	SDL_SetHint(SDL_HINT_RENDER_VSYNC, "0");
-	renderer_ = SDL_CreateRenderer(window_, -1 , SDL_RENDERER_ACCELERATED );
+	renderer_ = SDL_CreateRenderer(window_, -1 , SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE);
+	SDL_RendererInfo renderer_info;
+	if (SDL_GetRendererInfo(renderer_, &renderer_info) == 0) {
+		if (renderer_info.flags & SDL_RENDERER_TARGETTEXTURE) {
+			is_renderer_targettexture_supported = true;
+		}
+	}
 	if (use_integer_scaling) {
 #if SDL_VERSION_ATLEAST(2,0,5) // SDL_RenderSetIntegerScale
 		SDL_RenderSetIntegerScale(renderer_, SDL_TRUE);
@@ -2250,10 +2257,22 @@ void update_screen() {
 		// Make "fuzzy pixels" like DOSBox does:
 		// First scale to double size with nearest-neighbor scaling, then scale to full screen with smooth scaling.
 		// The result is not as blurry as if we did only a smooth scaling, but not as sharp as if we did only nearest-neighbor scaling.
-		SDL_BlitScaled(surface, NULL, onscreen_surface_2x, NULL);
-		surface = onscreen_surface_2x;
+		if (is_renderer_targettexture_supported) {
+			SDL_UpdateTexture(texture_sharp, NULL, surface->pixels, surface->pitch);
+			SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
+			SDL_SetRenderTarget(renderer_, target_texture);
+			SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
+			SDL_RenderClear(renderer_);
+			SDL_RenderCopy(renderer_, texture_sharp, NULL, NULL);
+			SDL_SetRenderTarget(renderer_, NULL);
+		} else {
+			SDL_BlitScaled(surface, NULL, onscreen_surface_2x, NULL);
+			surface = onscreen_surface_2x;
+			SDL_UpdateTexture(target_texture, NULL, surface->pixels, surface->pitch);
+		}
+	} else {
+		SDL_UpdateTexture(target_texture, NULL, surface->pixels, surface->pitch);
 	}
-	SDL_UpdateTexture(target_texture, NULL, surface->pixels, surface->pitch);
 	SDL_RenderClear(renderer_);
 	SDL_RenderCopy(renderer_, target_texture, NULL, NULL);
 	SDL_RenderPresent(renderer_);
@@ -3179,7 +3198,7 @@ void __pascal far set_bg_attr(int vga_pal_index,int hc_pal_index) {
 			flip_screen(offscreen_surface);
 		}
 		// And show it!
-		update_screen();
+//		update_screen();
 		// Give some time to show the flash.
 		//SDL_Flip(onscreen_surface_);
 //		if (hc_pal_index != 0) SDL_Delay(2*(1000/60));
