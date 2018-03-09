@@ -385,16 +385,34 @@ void check_mod_param() {
 void load_mod_options() {
 	// load mod-specific INI configuration
 	if (use_custom_levelset) {
-		char filename[POP_MAX_PATH];
-		snprintf(filename, sizeof(filename), "%s/%s/%s", mods_folder, levelset_name, "mod.ini");
-		const char* located_filename = locate_file(filename);
-		if (file_exists(located_filename)) {
-			// Nearly all mods would want to use custom options, so always allow them.
-			// TODO: Prevent mod settings and user settings from interfering with each other.
-			use_custom_options = 1;
-			ini_load(located_filename, mod_ini_callback);
+		// find the folder containing the mod's files
+		char folder_name[POP_MAX_PATH];
+		snprintf(folder_name, sizeof(folder_name), "%s/%s", mods_folder, levelset_name);
+		const char* located_folder_name = locate_file(folder_name);
+		bool ok = false;
+		struct stat info;
+		if (stat(located_folder_name, &info) == 0) {
+			if (S_ISDIR(info.st_mode)) {
+				// It's a directory
+				ok = true;
+				strncpy(mod_data_path, located_folder_name, sizeof(mod_data_path));
+				char mod_ini_filename[POP_MAX_PATH];
+				snprintf(mod_ini_filename, sizeof(mod_ini_filename), "%s/%s", located_folder_name, "mod.ini");
+				if (file_exists(mod_ini_filename)) {
+					// Nearly all mods would want to use custom options, so always allow them.
+					use_custom_options = 1;
+					ini_load(mod_ini_filename, mod_ini_callback);
+				}
+			} else {
+				printf("Could not load mod '%s' - not a directory\n", levelset_name);
+			}
+		} else {
+			printf("Mod '%s' not found\n", levelset_name);
 		}
-		delay_ticks(1);
+		if (!ok) {
+			use_custom_levelset = 0;
+			levelset_name[0] = '\0';
+		}
 	}
 	turn_fixes_and_enhancements_on_off(use_fixes_and_enhancements);
 	turn_custom_options_on_off(use_custom_options);

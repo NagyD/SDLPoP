@@ -221,11 +221,13 @@ dat_type *__pascal open_dat(const char *filename,int drive) {
 		fp = open_dat_from_root_or_data_dir(filename);
 	}
 	else {
-		char filename_mod[POP_MAX_PATH];
-		// before checking the root directory, first try mods/MODNAME/
-		snprintf(filename_mod, sizeof(filename_mod), "%s/%s/%s", mods_folder, levelset_name, filename);
-		fp = fopen(filename_mod, "rb");
-		if (fp == NULL) {
+		if (!skip_mod_data_files) {
+			char filename_mod[POP_MAX_PATH];
+			// before checking the root directory, first try mods/MODNAME/
+			snprintf(filename_mod, sizeof(filename_mod), "%s/%s", mod_data_path, filename);
+			fp = fopen(filename_mod, "rb");
+		}
+		if (fp == NULL && !skip_normal_data_files) {
 			fp = open_dat_from_root_or_data_dir(filename);
 		}
 	}
@@ -1795,23 +1797,28 @@ sound_buffer_type* load_sound(int index) {
 		if (sound_names != NULL && sound_name(index) != NULL) {
 			//printf("Loading from music folder\n");
 			do {
+				FILE* fp = NULL;
 				char filename[POP_MAX_PATH];
-				snprintf(filename, sizeof(filename), "data/music/%s.ogg", sound_name(index));
-
-				// Skip nonexistent files:
-				struct stat info;
-				if (stat(filename, &info))
-					break;
-
-				//printf("Trying to load %s\n", filename);
-				FILE* fp = fopen(locate_file(filename), "rb");
+				if (!skip_mod_data_files) {
+					// before checking the root directory, first try mods/MODNAME/
+					snprintf(filename, sizeof(filename), "%s/music/%s.ogg", mod_data_path, sound_name(index));
+					fp = fopen(filename, "rb");
+				}
+				if (fp == NULL && !skip_normal_data_files) {
+					snprintf(filename, sizeof(filename), "data/music/%s.ogg", sound_name(index));
+					fp = fopen(locate_file(filename), "rb");
+				}
 				if (fp == NULL) {
 					break;
 				}
 				// Read the entire file (undecoded) into memory.
+				struct stat info;
+				if (fstat(fileno(fp), &info))
+					break;
 				size_t file_size = (size_t) MAX(0, info.st_size);
 				byte* file_contents = malloc(file_size);
 				if (fread(file_contents, 1, file_size, fp) != file_size) {
+					free(file_contents);
 					fclose(fp);
 					break;
 				}
@@ -1822,6 +1829,7 @@ sound_buffer_type* load_sound(int index) {
 				// (In the audio callback, we'll decode chunks of samples to the output stream, as needed).
 				stb_vorbis* decoder = stb_vorbis_open_memory(file_contents, file_size, NULL, NULL);
 				if (decoder == NULL) {
+					free(file_contents);
 					break;
 				}
 				result = malloc(sizeof(sound_buffer_type));
@@ -1844,7 +1852,7 @@ sound_buffer_type* load_sound(int index) {
 		free(result);
 		result = converted;
 	}
-	if (result == NULL) {
+	if (result == NULL && !skip_normal_data_files) {
 		fprintf(stderr, "Failed to load sound %d '%s'\n", index, sound_name(index));
 	}
 	return result;
@@ -2340,12 +2348,14 @@ void load_from_opendats_metadata(int resource_id, const char* extension, FILE** 
 				fp = fopen(locate_file(image_filename), "rb");
 			}
 			else {
-				char image_filename_mod[POP_MAX_PATH];
-				// before checking data/, first try mods/MODNAME/data/
-				snprintf(image_filename_mod, sizeof(image_filename_mod), "%s/%s/%s", mods_folder, levelset_name, image_filename);
-				//printf("loading (binary) %s",image_filename_mod);
-				fp = fopen(locate_file(image_filename_mod), "rb");
-				if (fp == NULL) {
+				if (!skip_mod_data_files) {
+					char image_filename_mod[POP_MAX_PATH];
+					// before checking data/, first try mods/MODNAME/data/
+					snprintf(image_filename_mod, sizeof(image_filename_mod), "%s/%s", mod_data_path, image_filename);
+					//printf("loading (binary) %s",image_filename_mod);
+					fp = fopen(locate_file(image_filename_mod), "rb");
+				}
+				if (fp == NULL && !skip_normal_data_files) {
 					fp = fopen(locate_file(image_filename), "rb");
 				}
 			}
