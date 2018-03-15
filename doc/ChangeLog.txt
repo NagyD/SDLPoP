@@ -494,4 +494,5 @@ FIXED: Fixed turning off music not working.
 DONE: Added option for disabling and enabling all customization options at once.
 DONE: Added option for changing the mods directory (where the game looks for custom levelsets).
 DONE: Added fix for hidden floors in level 12 not appearing until after the flashing stops.
+FIXED: Removed colored rectangles around hitpoints and the shadow, when using Brain's SNES graphics.
 DONE: Added most of the missing CusPop customization options.
