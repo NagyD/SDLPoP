@@ -497,3 +497,4 @@ DONE: Added fix for hidden floors in level 12 not appearing until after the flas
 FIXED: Removed colored rectangles around hitpoints and the shadow, when using Brain's SNES graphics.
 DONE: Added most of the missing CusPop customization options.
 DONE: Added support for MIDI music.
+FIXED: Fixed teleporting to the room above by grabbing a ledge (integer overflow bug).

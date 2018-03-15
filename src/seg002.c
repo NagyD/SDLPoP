@@ -301,6 +301,9 @@ void __pascal far exit_room() {
 	leave = 0;
 	if (exit_room_timer != 0) {
 		--exit_room_timer;
+#ifdef FIX_HANG_ON_TELEPORT
+		if (!(fixes->fix_hang_on_teleport && Char.y >= 211))
+#endif
 		return;
 	}
 	loadkid();

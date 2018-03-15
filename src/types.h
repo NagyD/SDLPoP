@@ -1201,6 +1201,7 @@ typedef struct fixes_options_type {
 	byte fix_offscreen_guards_disappearing;
 	byte fix_move_after_sheathe;
 	byte fix_hidden_floors_during_flashing;
+	byte fix_hang_on_teleport;
 } fixes_options_type;
 
 typedef struct custom_options_type {
