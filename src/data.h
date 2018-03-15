@@ -310,6 +310,7 @@ extern word demo_mode INIT(= 0);
 
 // data:42CA
 extern word is_cutscene;
+extern bool is_ending_sequence; // added
 
 // data:0FA0
 extern cutscene_ptr_type tbl_cutscenes[16] INIT(= {

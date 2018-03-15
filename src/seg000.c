@@ -536,7 +536,13 @@ int __pascal far process_key() {
 		case SDL_SCANCODE_ESCAPE | WITH_SHIFT: // allow pause while grabbing
 			is_paused = 1;
 #ifdef USE_MENU
-			if (enable_pause_menu) {
+			if (enable_pause_menu && !is_cutscene && !is_ending_sequence) {
+				is_menu_shown = 1;
+			}
+		break;
+		case SDL_SCANCODE_BACKSPACE:
+			if (!is_cutscene && !is_ending_sequence) {
+				is_paused = 1;
 				is_menu_shown = 1;
 			}
 #endif
@@ -651,12 +657,6 @@ int __pascal far process_key() {
 		break;
 #endif // USE_REPLAY
 #endif // USE_QUICKSAVE
-#ifdef USE_MENU
-		case SDL_SCANCODE_BACKSPACE:
-			is_paused = 1;
-			is_menu_shown = 1;
-		break;
-#endif
 	}
 	if (cheats_enabled) {
 		switch (key) {
@@ -1482,6 +1482,9 @@ int __pascal far do_paused() {
 		read_keyb_control();
 	}
 	key = process_key();
+	if (is_ending_sequence && is_paused) {
+		is_paused = 0; // fix being able to pause the game during the ending sequence
+	}
 	if (is_paused) {
 		display_text_bottom("GAME PAUSED");
 #ifdef USE_MENU
@@ -1877,6 +1880,7 @@ void __pascal far clear_screen_and_sounds() {
 	current_target_surface = rect_sthg(onscreen_surface_, &screen_rect);
 
 	is_cutscene = 0;
+	is_ending_sequence = false; // added
 	peels_count = 0;
 	// should these be freed?
 	for (index = 2; index < 10; ++index) {
