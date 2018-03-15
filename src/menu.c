@@ -1400,26 +1400,26 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 		// Toggling the setting: either by clicking on "ON" or "OFF", or by pressing left/right.
 		if (highlighted_setting_id == setting->id) {
 			if (mouse_clicked) {
-				if (setting_enabled) {
-					rect_type OFF_hitbox = setting_box;
-					OFF_hitbox.left = setting_box.right - 27;
-					if (is_mouse_over_rect(&OFF_hitbox)) {
-						turn_setting_on_off_with_sound(setting, 0);
+				if (!setting_enabled) {
+					rect_type ON_hitbox = setting_box;
+					ON_hitbox.left = setting_box.right - 22;
+					if (is_mouse_over_rect(&ON_hitbox)) {
+						turn_setting_on_off_with_sound(setting, 1);
 						setting_enabled = false;
 					}
 				} else {
-					rect_type ON_hitbox = setting_box;
-					ON_hitbox.left = setting_box.right - 54;
-					ON_hitbox.right = setting_box.right - 27;
-					if (is_mouse_over_rect(&ON_hitbox)) {
-						turn_setting_on_off_with_sound(setting, 1);
+					rect_type OFF_hitbox = setting_box;
+					OFF_hitbox.left = setting_box.right - 49;
+					OFF_hitbox.right = setting_box.right - 22;
+					if (is_mouse_over_rect(&OFF_hitbox)) {
+						turn_setting_on_off_with_sound(setting, 0);
 						setting_enabled = true;
 					}
 				}
-			} else if (setting_enabled && menu_control_x > 0) {
+			} else if (setting_enabled && menu_control_x < 0) {
 				turn_setting_on_off_with_sound(setting, 0);
 				setting_enabled = false;
-			} else if (!setting_enabled && menu_control_x < 0) {
+			} else if (!setting_enabled && menu_control_x > 0) {
 				turn_setting_on_off_with_sound(setting, 1);
 				setting_enabled = true;
 			}
@@ -1427,9 +1427,9 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 
 		int OFF_color = (setting_enabled) ? unselected_color : selected_color;
 		int ON_color = (setting_enabled) ? selected_color : unselected_color;
-		show_text_with_color(&text_rect, 1, -1, "OFF", OFF_color);
-		text_rect.right -= 20;
 		show_text_with_color(&text_rect, 1, -1, "ON", ON_color);
+		text_rect.right -= 15;
+		show_text_with_color(&text_rect, 1, -1, "OFF", OFF_color);
 
 	} else if (setting->style == SETTING_STYLE_NUMBER && !disabled) {
 		int value = get_setting_value(setting);
