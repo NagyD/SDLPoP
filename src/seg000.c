@@ -790,22 +790,22 @@ void __pascal far play_frame() {
 	check_guard_fallout();
 	if (current_level == 0) {
 		// Special event: level 0 running exit
-		if (Kid.room == 24) {
+		if (Kid.room == /*24*/ custom->demo_end_room) {
 			draw_rect(&screen_rect, 0);
 			start_level = -1;
 			need_quotes = 1;
 			start_game();
 		}
-	} else if(current_level == 6) {
+	} else if(current_level == /*6*/ custom->falling_exit_level) {
 		// Special event: level 6 falling exit
 		if (roomleave_result == -2) {
 			Kid.y = -1;
 			stop_sounds();
 			++next_level;
 		}
-	} else if(current_level == 12) {
+	} else if(/*current_level == 12*/ custom->tbl_seamless_exit[current_level] >= 0) {
 		// Special event: level 12 running exit
-		if (Kid.room == 23) {
+		if (Kid.room == /*23*/ custom->tbl_seamless_exit[current_level]) {
 			++next_level;
 // Sounds must be stopped, because play_level_2() checks next_level only if there are no sounds playing.
 			stop_sounds();
@@ -1155,7 +1155,7 @@ void __pascal far check_the_end() {
 	if (next_room != 0 && next_room != drawn_room) {
 		drawn_room = next_room;
 		load_room_links();
-		if (current_level == 14 && drawn_room == 5) {
+		if (current_level == /*14*/ custom->win_level && drawn_room == /*5*/ custom->win_room) {
 #ifdef USE_REPLAY
 			if (recording) stop_recording();
 			if (replaying) end_replay();
@@ -1175,9 +1175,12 @@ void __pascal far check_the_end() {
 // seg000:1009
 void __pascal far check_fall_flo() {
 	// Special event: falling floors
-	if (current_level == 13 && (drawn_room == 23 || drawn_room == 16)) {
+	if (current_level == /*13*/ custom->loose_tiles_level &&
+			(drawn_room == /*23*/ custom->loose_tiles_room_1 || drawn_room == /*16*/ custom->loose_tiles_room_2)
+	) {
 		get_room_address(curr_room = room_A);
-		for (curr_tilepos = 22; curr_tilepos <= 27; ++curr_tilepos) {
+		for (curr_tilepos = /*22*/ custom->loose_tiles_first_tile;
+		     curr_tilepos <= /*27*/ custom->loose_tiles_last_tile; ++curr_tilepos) {
 			make_loose_fall(-(prandom(0xFF) & 0x0F));
 		}
 	}

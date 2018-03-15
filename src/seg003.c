@@ -42,7 +42,7 @@ void __pascal far init_game(int level) {
 		rem_tick = custom->start_ticks_left;    // 719
 		hitp_beg_lev = custom->start_hitp;      // 3
 	}
-	need_level1_music = (level == 1);
+	need_level1_music = (level == /*1*/ custom->intro_music_level);
 	play_level(level);
 }
 
@@ -102,7 +102,7 @@ void __pascal far play_level(int level_number) {
 		Guard.charid = charid_2_guard;
 		Guard.direction = dir_56_none;
 		do_startpos();
-		have_sword = (level_number != 1);
+		have_sword = /*(level_number != 1)*/ (level_number == 0 || level_number >= custom->have_sword_from_level);
 		find_start_level_door();
 		// busy waiting?
 		while (check_sound_playing() && !do_paused()) idle();
@@ -138,12 +138,14 @@ void __pascal far play_level(int level_number) {
 void __pascal far do_startpos() {
 	word x;
 	// Special event: start at checkpoint
-	if (current_level == 3 && checkpoint) {
-		level.start_dir = dir_FF_left;
-		level.start_room = 2;
-		level.start_pos = 6;
+	if (current_level == /*3*/ custom->checkpoint_level && checkpoint) {
+		level.start_dir = /*dir_FF_left*/ custom->checkpoint_respawn_dir;
+		level.start_room = /*2*/ custom->checkpoint_respawn_room;
+		level.start_pos = /*6*/ custom->checkpoint_respawn_tilepos;
 		// Special event: remove loose floor
-		get_tile(7, 4, 0);
+		get_tile(/*7*/ custom->checkpoint_clear_tile_room,
+				/*4*/ custom->checkpoint_clear_tile_col,
+				/*0*/ custom->checkpoint_clear_tile_row);
 		curr_room_tiles[curr_tilepos] = tiles_0_empty;
 	}
 	next_room = Char.room = level.start_room;
@@ -158,16 +160,16 @@ void __pascal far do_startpos() {
 			x = hitp_beg_lev;
 		} else {
 			// HP on demo level
-			x = 4;
+			x = /*4*/ custom->demo_hitp;
 		}
 		hitp_max = hitp_curr = x;
 	}
-	if (current_level == 1) {
+	if (/*current_level == 1*/ custom->tbl_entry_pose[current_level] == 1) {
 		// Special event: press button + falling entry
 		get_tile(5, 2, 0);
 		trigger_button(0, 0, -1);
 		seqtbl_offset_char(seq_7_fall); // fall
-	} else if (current_level == 13) {
+	} else if (/*current_level == 13*/ custom->tbl_entry_pose[current_level] == 2) {
 		// Special event: running entry
 		seqtbl_offset_char(seq_84_run); // run
 	} else {
@@ -191,7 +193,7 @@ void __pascal far set_start_pos() {
 	Char.sword = sword_0_sheathed;
 	droppedout = 0;
 	play_seq();
-	if (current_level == 7 && Char.room == 17) {
+	if (current_level == /*7*/ custom->falling_entry_level && Char.room == /*17*/ custom->falling_entry_room) {
 		// Special event: level 7 falling entry
 		// level 7, room 17: show room below
 		goto_other_room(3);
@@ -502,10 +504,10 @@ void __pascal far timers() {
 		is_feather_fall = 0;
 	}
 	// Special event: mouse
-	if (current_level == 8 && Char.room == 16 && leveldoor_open) {
+	if (current_level == /*8*/ custom->mouse_level && Char.room == /*16*/ custom->mouse_room && leveldoor_open) {
 		++leveldoor_open;
 		// time before mouse comes: 150/12=12.5 seconds
-		if (leveldoor_open == 150) {
+		if (leveldoor_open == /*150*/ custom->mouse_delay) {
 			do_mouse();
 		}
 	}
@@ -521,7 +523,7 @@ void __pascal far check_mirror() {
 			loadkid();
 			load_frame();
 			check_mirror_image();
-			if (distance_mirror >= 0) {
+			if (distance_mirror >= 0 && custom->show_mirror_image) {
 				load_frame_to_obj();
 				reset_obj_clip();
 				clip_top = y_clip[Char.curr_row + 1];
@@ -678,8 +680,8 @@ byte __pascal far get_tile_at_kid(int xpos) {
 // seg003:0ABA
 void __pascal far do_mouse() {
 	loadkid();
-	Char.charid = charid_24_mouse;
-	Char.x = 200;
+	Char.charid = /*charid_24_mouse*/ custom->mouse_object;
+	Char.x = /*200*/ custom->mouse_start_x;
 	Char.curr_row = 0;
 	Char.y = y_land[Char.curr_row + 1];
 	Char.alive = -1;

@@ -586,6 +586,11 @@ image_type* decode_image(image_data_type* image_data, dat_pal_type* palette) {
 		colors[i].b = palette->vga[i].b << 2;
 		colors[i].a = SDL_ALPHA_OPAQUE;   // SDL2's SDL_Color has a fourth alpha component
 	}
+	// Force 0th color to be black for non-transparent blitters. (hitpoints, shadow)
+	// This is needed to remove the colored rectangles around hitpoints and the shadow, when using Brain's SNES graphics for example.
+	colors[0].r = 0;
+	colors[0].g = 0;
+	colors[0].b = 0;
 	colors[0].a = SDL_ALPHA_TRANSPARENT;
 	SDL_SetPaletteColors(image->format->palette, colors, 0, 16); // SDL_SetColors = deprecated
 	return image;
