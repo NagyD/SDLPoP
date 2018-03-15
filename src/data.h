@@ -310,6 +310,7 @@ extern word demo_mode INIT(= 0);
 
 // data:42CA
 extern word is_cutscene;
+extern bool is_ending_sequence; // added
 
 // data:0FA0
 extern cutscene_ptr_type tbl_cutscenes[16] INIT(= {
@@ -572,9 +573,7 @@ extern Uint64 perf_counters_per_tick;
 extern Uint64 perf_frequency;
 extern float milliseconds_per_counter;
 
-#ifdef USE_MIXER
 extern char** sound_names;
-#endif
 
 extern int g_argc;
 extern char** g_argv;
@@ -641,10 +640,13 @@ extern word pop_window_width INIT(= 640);
 extern word pop_window_height INIT(= 400);
 extern byte use_custom_levelset INIT(= 0);
 extern char levelset_name[POP_MAX_PATH];
+extern char mod_data_path[POP_MAX_PATH];
+extern bool skip_mod_data_files;
+extern bool skip_normal_data_files;
 
 extern byte use_fixes_and_enhancements INIT(= 0);
 extern byte enable_copyprot INIT(= 0);
-extern byte enable_mixer INIT(= 1);
+extern byte enable_music INIT(= 1);
 extern byte enable_fade INIT(= 1);
 extern byte enable_flash INIT(= 1);
 extern byte enable_text INIT(= 1);
@@ -689,6 +691,56 @@ extern custom_options_type custom_defaults INIT(= {
 		.shift_L_allowed_until_level = 4,
 		.shift_L_reduced_minutes = 15,
 		.shift_L_reduced_ticks  = 719,
+		.demo_hitp = 4,
+		.demo_end_room = 24,
+		.intro_music_level = 1,
+		.have_sword_from_level = 2,
+		.checkpoint_level = 3,
+		.checkpoint_respawn_dir = 5,
+		.checkpoint_respawn_room = 2,
+		.checkpoint_respawn_tilepos = 6,
+		.checkpoint_clear_tile_room = 7,
+		.checkpoint_clear_tile_col = 4,
+		.checkpoint_clear_tile_row = 4,
+		.skeleton_level = 3,
+		.skeleton_room = 1,
+		.skeleton_trigger_column_1 = 2,
+		.skeleton_trigger_column_2 = 3,
+		.skeleton_column = 5,
+		.skeleton_row = 1,
+		.skeleton_require_open_level_door = 1,
+		.skeleton_skill = 2,
+		.skeleton_reappear_room = 3,
+		.skeleton_reappear_x = 133,
+		.skeleton_reappear_row = 1,
+		.skeleton_reappear_dir = dir_0_right,
+		.mirror_level = 4,
+		.mirror_room = 4,
+		.mirror_column = 4,
+		.mirror_row = 0,
+		.mirror_tile = tiles_13_mirror,
+		.show_mirror_image = 1,
+		.falling_exit_level = 6,
+		.falling_exit_room = 1,
+		.falling_entry_level = 7,
+		.falling_entry_room = 17,
+		.mouse_level = 8,
+		.mouse_room = 16,
+		.mouse_delay = 150,
+		.mouse_object = 24,
+		.mouse_start_x = 200,
+		.loose_tiles_level = 13,
+		.loose_tiles_room_1 = 23,
+		.loose_tiles_room_2 = 16,
+		.loose_tiles_first_tile = 22,
+		.loose_tiles_last_tile = 27,
+		.jaffar_victory_level = 13,
+		.jaffar_victory_flash_time = 18,
+		.hide_level_number_first_level = 14,
+		.level_13_level_number = 12,
+		.victory_stops_time_level = 13,
+		.win_level = 14,
+		.win_room = 5,
 		// data:02B2
 		.tbl_level_type = {0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 0},
 		// 1.3
@@ -698,6 +750,8 @@ extern custom_options_type custom_defaults INIT(= {
 		// data:0EDA
 		.tbl_guard_hp = {4, 3, 3, 3, 3, 4, 5, 4, 4, 5, 5, 5, 4, 6, 0, 0},
 		.tbl_cutscenes_by_index = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15},
+		.tbl_entry_pose = {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0},
+		.tbl_seamless_exit = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 23, -1, -1, -1},
 });
 extern custom_options_type* custom INIT(= &custom_defaults);
 

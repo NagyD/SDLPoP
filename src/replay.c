@@ -44,7 +44,7 @@ const char replay_magic_number[3] = "P1R";
 const word replay_format_class = 0;          // unique number associated with this SDLPoP implementation / fork
 const char* implementation_name = "SDLPoP v" SDLPOP_VERSION;
 
-#define REPLAY_FORMAT_CURR_VERSION       101 // current version number of the replay format
+#define REPLAY_FORMAT_CURR_VERSION       102 // current version number of the replay format
 #define REPLAY_FORMAT_MIN_VERSION        101 // SDLPoP will open replays with this version number and higher
 #define REPLAY_FORMAT_DEPRECATION_NUMBER 1   // SDLPoP won't open replays with a higher deprecation number
 
@@ -515,6 +515,55 @@ void options_process_custom_general(SDL_RWops* rw, rw_process_func_type process_
 	process(custom->shift_L_allowed_until_level);
 	process(custom->shift_L_reduced_minutes);
 	process(custom->shift_L_reduced_ticks);
+	process(custom->demo_hitp);
+	process(custom->demo_end_room);
+	process(custom->intro_music_level);
+	process(custom->checkpoint_level);
+	process(custom->checkpoint_respawn_dir);
+	process(custom->checkpoint_respawn_room);
+	process(custom->checkpoint_respawn_tilepos);
+	process(custom->checkpoint_clear_tile_room);
+	process(custom->checkpoint_clear_tile_col);
+	process(custom->checkpoint_clear_tile_row);
+	process(custom->skeleton_level);
+	process(custom->skeleton_room);
+	process(custom->skeleton_trigger_column_1);
+	process(custom->skeleton_trigger_column_2);
+	process(custom->skeleton_column);
+	process(custom->skeleton_row);
+	process(custom->skeleton_require_open_level_door);
+	process(custom->skeleton_skill);
+	process(custom->skeleton_reappear_room);
+	process(custom->skeleton_reappear_x);
+	process(custom->skeleton_reappear_row);
+	process(custom->skeleton_reappear_dir);
+	process(custom->mirror_level);
+	process(custom->mirror_room);
+	process(custom->mirror_column);
+	process(custom->mirror_row);
+	process(custom->mirror_tile);
+	process(custom->show_mirror_image);
+	process(custom->falling_exit_level);
+	process(custom->falling_exit_room);
+	process(custom->falling_entry_level);
+	process(custom->falling_entry_room);
+	process(custom->mouse_level);
+	process(custom->mouse_room);
+	process(custom->mouse_delay);
+	process(custom->mouse_object);
+	process(custom->mouse_start_x);
+	process(custom->loose_tiles_level);
+	process(custom->loose_tiles_room_1);
+	process(custom->loose_tiles_room_2);
+	process(custom->loose_tiles_first_tile);
+	process(custom->loose_tiles_last_tile);
+	process(custom->jaffar_victory_level);
+	process(custom->jaffar_victory_flash_time);
+	process(custom->hide_level_number_first_level);
+	process(custom->level_13_level_number);
+	process(custom->victory_stops_time_level);
+	process(custom->win_level);
+	process(custom->win_room);
 }
 
 void options_process_custom_per_level(SDL_RWops* rw, rw_process_func_type process_func) {
@@ -523,6 +572,8 @@ void options_process_custom_per_level(SDL_RWops* rw, rw_process_func_type proces
 	process(custom->tbl_guard_type);
 	process(custom->tbl_guard_hp);
 	process(custom->tbl_cutscenes_by_index);
+	process(custom->tbl_entry_pose);
+	process(custom->tbl_seamless_exit);
 }
 
 #undef process
@@ -611,8 +662,8 @@ int savestate_to_buffer() {
 
 void reload_resources() {
 	// the replay's levelset might use different sounds, so we need to free and reload sounds
-	// (except the music (OGG) files, which take too long to reload and cannot (yet) be easily replaced by a mod)
-	reload_non_music_sounds();
+	free_all_sounds();
+	load_all_sounds();
 	free_all_chtabs_from(id_chtab_0_sword);
 	// chtabs 3 and higher will be freed/reloaded in load_lev_spr() (called by restore_room_after_quick_load())
 	// However, chtabs 0-2 are usually not freed at all (they are loaded only once, in init_game_main())
@@ -809,7 +860,7 @@ void do_replay_move() {
 			is_restart_level = 1;
 		} else if (curr_move.special == MOVE_EFFECT_END) {
 			stop_sounds();
-			need_level1_music = 0;
+			if (need_level1_music == 2) need_level1_music = 0;
 			is_feather_fall = 0;
 		}
 

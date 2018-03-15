@@ -447,10 +447,10 @@ Possible values of trob_type:
 				stop_sounds();
 				if (leveldoor_open == 0 || leveldoor_open == 2) {
 					leveldoor_open = 1;
-					if (current_level == 4) {
+					if (current_level == /*4*/ custom->mirror_level) {
 						// Special event: place mirror
-						get_tile(4, 4, 0);
-						curr_room_tiles[curr_tilepos] = tiles_13_mirror;
+						get_tile(/*4*/ custom->mirror_room, /*4*/ custom->mirror_column, /*0*/ custom->mirror_row);
+						curr_room_tiles[curr_tilepos] = /*tiles_13_mirror*/ custom->mirror_tile;
 					}
 				}
 			} else {

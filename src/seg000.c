@@ -160,8 +160,8 @@ void __pascal far init_game_main() {
 #ifdef USE_LIGHTING
 	init_lighting();
 #endif
-	load_sounds(0, 43);
-	load_opt_sounds(43, 56); //added
+	load_all_sounds();
+
 	hof_read();
 	show_splash(); // added
 	start_game();
@@ -337,7 +337,7 @@ const char* get_quick_path(char* custom_path_buffer, size_t max_len) {
 		return quick_file;
 	}
 	// if playing a custom levelset, try to use the mod folder
-	snprintf(custom_path_buffer, max_len, "%s/%s/%s", mods_folder, levelset_name, quick_file /*QUICKSAVE.SAV*/ );
+	snprintf(custom_path_buffer, max_len, "%s/%s", mod_data_path, quick_file /*QUICKSAVE.SAV*/ );
 	return custom_path_buffer;
 }
 
@@ -536,7 +536,13 @@ int __pascal far process_key() {
 		case SDL_SCANCODE_ESCAPE | WITH_SHIFT: // allow pause while grabbing
 			is_paused = 1;
 #ifdef USE_MENU
-			if (enable_pause_menu) {
+			if (enable_pause_menu && !is_cutscene && !is_ending_sequence) {
+				is_menu_shown = 1;
+			}
+		break;
+		case SDL_SCANCODE_BACKSPACE:
+			if (!is_cutscene && !is_ending_sequence) {
+				is_paused = 1;
 				is_menu_shown = 1;
 			}
 #endif
@@ -651,12 +657,6 @@ int __pascal far process_key() {
 		break;
 #endif // USE_REPLAY
 #endif // USE_QUICKSAVE
-#ifdef USE_MENU
-		case SDL_SCANCODE_BACKSPACE:
-			is_paused = 1;
-			is_menu_shown = 1;
-		break;
-#endif
 	}
 	if (cheats_enabled) {
 		switch (key) {
@@ -790,22 +790,22 @@ void __pascal far play_frame() {
 	check_guard_fallout();
 	if (current_level == 0) {
 		// Special event: level 0 running exit
-		if (Kid.room == 24) {
+		if (Kid.room == /*24*/ custom->demo_end_room) {
 			draw_rect(&screen_rect, 0);
 			start_level = -1;
 			need_quotes = 1;
 			start_game();
 		}
-	} else if(current_level == 6) {
+	} else if(current_level == /*6*/ custom->falling_exit_level) {
 		// Special event: level 6 falling exit
 		if (roomleave_result == -2) {
 			Kid.y = -1;
 			stop_sounds();
 			++next_level;
 		}
-	} else if(current_level == 12) {
+	} else if(/*current_level == 12*/ custom->tbl_seamless_exit[current_level] >= 0) {
 		// Special event: level 12 running exit
-		if (Kid.room == 23) {
+		if (Kid.room == /*23*/ custom->tbl_seamless_exit[current_level]) {
 			++next_level;
 // Sounds must be stopped, because play_level_2() checks next_level only if there are no sounds playing.
 			stop_sounds();
@@ -936,9 +936,7 @@ void __pascal far load_sounds(int first,int last) {
 		midi_dat = open_dat("MIDISND1.DAT", 0);
 	}
 
-	#ifdef USE_MIXER
 	load_sound_names();
-	#endif
 
 	for (current = first; current <= last; ++current) {
 		if (sound_pointers[current] != NULL) continue;
@@ -1157,7 +1155,7 @@ void __pascal far check_the_end() {
 	if (next_room != 0 && next_room != drawn_room) {
 		drawn_room = next_room;
 		load_room_links();
-		if (current_level == 14 && drawn_room == 5) {
+		if (current_level == /*14*/ custom->win_level && drawn_room == /*5*/ custom->win_room) {
 #ifdef USE_REPLAY
 			if (recording) stop_recording();
 			if (replaying) end_replay();
@@ -1177,9 +1175,12 @@ void __pascal far check_the_end() {
 // seg000:1009
 void __pascal far check_fall_flo() {
 	// Special event: falling floors
-	if (current_level == 13 && (drawn_room == 23 || drawn_room == 16)) {
+	if (current_level == /*13*/ custom->loose_tiles_level &&
+			(drawn_room == /*23*/ custom->loose_tiles_room_1 || drawn_room == /*16*/ custom->loose_tiles_room_2)
+	) {
 		get_room_address(curr_room = room_A);
-		for (curr_tilepos = 22; curr_tilepos <= 27; ++curr_tilepos) {
+		for (curr_tilepos = /*22*/ custom->loose_tiles_first_tile;
+		     curr_tilepos <= /*27*/ custom->loose_tiles_last_tile; ++curr_tilepos) {
 			make_loose_fall(-(prandom(0xFF) & 0x0F));
 		}
 	}
@@ -1481,6 +1482,9 @@ int __pascal far do_paused() {
 		read_keyb_control();
 	}
 	key = process_key();
+	if (is_ending_sequence && is_paused) {
+		is_paused = 0; // fix being able to pause the game during the ending sequence
+	}
 	if (is_paused) {
 		display_text_bottom("GAME PAUSED");
 #ifdef USE_MENU
@@ -1626,6 +1630,7 @@ void __pascal far show_title() {
 	draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, blitters_0_no_transp);
 	fade_in_2(offscreen_surface, 0x1000); //STUB
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, &screen_rect, &screen_rect, blitters_0_no_transp);
+	current_sound = sound_54_intro_music; // added
 	play_sound_from_buffer(sound_pointers[sound_54_intro_music]); // main theme
 	start_timer(timer_0, 0x82);
 	draw_image_2(1 /*Broderbund Software presents*/, chtab_title50, 96, 106, blitters_0_no_transp);
@@ -1803,7 +1808,7 @@ const char* get_save_path(char* custom_path_buffer, size_t max_len) {
 		return save_file;
 	}
 	// if playing a custom levelset, try to use the mod folder
-	snprintf(custom_path_buffer, max_len, "%s/%s/%s", mods_folder, levelset_name, save_file /*PRINCE.SAV*/ );
+	snprintf(custom_path_buffer, max_len, "%s/%s", mod_data_path, save_file /*PRINCE.SAV*/ );
 	return custom_path_buffer;
 }
 
@@ -1875,6 +1880,7 @@ void __pascal far clear_screen_and_sounds() {
 	current_target_surface = rect_sthg(onscreen_surface_, &screen_rect);
 
 	is_cutscene = 0;
+	is_ending_sequence = false; // added
 	peels_count = 0;
 	// should these be freed?
 	for (index = 2; index < 10; ++index) {
@@ -1898,6 +1904,7 @@ void __pascal far clear_screen_and_sounds() {
 void __pascal far parse_cmdline_sound() {
 	// stub
 	sound_flags |= sfDigi;
+	sound_flags |= sfMidi;
 }
 
 // seg000:226D
@@ -1912,25 +1919,29 @@ void __pascal far free_optional_sounds() {
 	// stub
 }
 
-const byte tbl_snd_is_music[] = {
-		0,0,0,0,0,0,0,0,0,0, //9
-		0,0,0,0,0,0,0,0,0,0, //19
-		0,0,0,0,1,1,1,1,1,1, //29
-		1,0,1,1,1,1,1,1,0,1, //39
-		1,1,0,1,0,0,0,0,0,0, //49
-		1,0,1,1,1,1,1
-};
-
-void reload_non_music_sounds() {
-	int i;
-	for (i = 0; i < COUNT(tbl_snd_is_music); ++i) {
-		if (!tbl_snd_is_music[i]) {
-			free_sound(sound_pointers[i]);
-			sound_pointers[i] = NULL;
-		}
+void free_all_sounds() {
+	for (int i = 0; i < 58; ++i) {
+		free_sound(sound_pointers[i]);
+		sound_pointers[i] = NULL;
 	}
-	load_sounds(0, 43);
-	load_opt_sounds(44, 56);
+}
+
+void load_all_sounds() {
+	if (!use_custom_levelset) {
+		load_sounds(0, 43);
+		load_opt_sounds(43, 56); //added
+	} else {
+		// First load any sounds included in the mod folder...
+		skip_normal_data_files = true;
+		load_sounds(0, 43);
+		load_opt_sounds(43, 56);
+		skip_normal_data_files = false;
+		// ... then load any missing sounds from SDLPoP's own resources.
+		skip_mod_data_files = true;
+		load_sounds(0, 43);
+		load_opt_sounds(43, 56);
+		skip_mod_data_files = false;
+	}
 }
 
 // seg000:22BB

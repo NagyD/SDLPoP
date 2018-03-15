@@ -1,8 +1,8 @@
 
-OBJ = main.obj data.obj seg000.obj seg001.obj seg002.obj seg003.obj seg004.obj seg005.obj seg006.obj seg007.obj seg008.obj seg009.obj seqtbl.obj replay.obj options.obj lighting.obj screenshot.obj menu.obj
+OBJ = main.obj data.obj seg000.obj seg001.obj seg002.obj seg003.obj seg004.obj seg005.obj seg006.obj seg007.obj seg008.obj seg009.obj seqtbl.obj replay.obj options.obj lighting.obj screenshot.obj menu.obj midi.obj opl3.obj
 
 sdl = "..\SDL2-2.0.4"
-LIBS = $(sdl)\lib\x86\SDL2main.lib $(sdl)\lib\x86\SDL2.lib $(sdl)\lib\x86\SDL2_image.lib $(sdl)\lib\x86\SDL2_mixer.lib
+LIBS = $(sdl)\lib\x86\SDL2main.lib $(sdl)\lib\x86\SDL2.lib $(sdl)\lib\x86\SDL2_image.lib
 cc = cl /c
 link = link /subsystem:windows
 

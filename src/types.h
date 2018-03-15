@@ -21,18 +21,33 @@ The authors of this program may be contacted at http://forum.princed.org
 #ifndef TYPES_H
 #define TYPES_H
 
+
+#ifdef STB_VORBIS_IMPLEMENTATION
+// Silence warnings (stb_vorbis.c)
+#ifndef _MSC_VER
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
+#pragma GCC diagnostic ignored "-Wunused-value"
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
+
+#undef alloca // Silence warning about alloca being redefined (stb_vorbis.c)
+#include "stb_vorbis.c"
+
+#ifndef _MSC_VER
+#pragma GCC diagnostic pop
+#endif
+#else // STB_VORBIS_IMPLEMENTATION
+#define STB_VORBIS_HEADER_ONLY
+#include "stb_vorbis.c"
+#endif // STB_VORBIS_IMPLEMENTATION
+
 #if !defined(_MSC_VER)
 # include <SDL2/SDL.h>
 # include <SDL2/SDL_image.h>
-# ifdef USE_MIXER
-# include <SDL2/SDL_mixer.h>
-# endif
 #else
 # include <SDL.h>
 # include <SDL_image.h>
-# ifdef USE_MIXER
-# include <SDL_mixer.h>
-# endif
 #endif
 
 #if SDL_BYTEORDER != SDL_LIL_ENDIAN
@@ -483,13 +498,13 @@ typedef enum data_location {
 } data_location;
 
 enum sound_type {
-#ifdef USE_MIXER
-	sound_chunk = 3,
-	sound_music = 4,
-#endif
-	sound_speaker = 0,
-	sound_digi = 1,
-	sound_midi = 2
+    sound_speaker = 0,
+    sound_digi = 1,
+    sound_midi = 2,
+    sound_chunk = 3,
+    sound_music = 4,
+    sound_ogg = 5,
+	sound_digi_converted = 6,
 };
 #pragma pack(push,1)
 typedef struct note_type {
@@ -523,8 +538,31 @@ typedef struct digi_new_type { // wave in 1.3 and 1.4 (and PoP2)
 SDL_COMPILE_TIME_ASSERT(digi_new_type, sizeof(digi_new_type) == 9);
 
 typedef struct midi_type {
-	byte data[0];
+	char chunk_type[4];
+	dword chunk_length;
+	union {
+		struct {
+			word format;
+			word num_tracks;
+			word delta;
+			byte tracks[0];
+		} header;
+		byte data[0];
+	};
+
 } midi_type;
+
+typedef struct ogg_type {
+    //byte sample_size; // =16
+    int total_length;
+    byte* file_contents;
+    stb_vorbis* decoder;
+} ogg_type;
+
+typedef struct converted_audio_type {
+	int length;
+	short samples[0];
+} converted_audio_type;
 
 typedef struct sound_buffer_type {
 	byte type;
@@ -533,31 +571,81 @@ typedef struct sound_buffer_type {
 		digi_type digi;
 		digi_new_type digi_new;
 		midi_type midi;
-#ifdef USE_MIXER
-		Mix_Chunk *chunk;
-		Mix_Music *music;
-#endif
+        ogg_type ogg;
+		converted_audio_type converted;
 	};
 } sound_buffer_type;
 
-#ifdef USE_MIXER
-typedef struct WAV_header_type {
-	Uint32 ChunkID; // fourcc
-	Uint32 ChunkSize;
-	Uint32 Format; // fourcc
-	Uint32 Subchunk1ID; // fourcc
-	Uint32 Subchunk1Size;
-	Uint16 AudioFormat;
-	Uint16 NumChannels;
-	Uint32 SampleRate;
-	Uint32 ByteRate;
-	Uint16 BlockAlign;
-	Uint16 BitsPerSample;
-	Uint32 Subchunk2ID; // fourcc
-	Uint32 Subchunk2Size;
-	byte Data[0];
-} WAV_header_type;
-#endif
+
+typedef struct midi_raw_chunk_type {
+	char chunk_type[4];
+	dword chunk_length;
+	union {
+		struct {
+			word format;
+			word num_tracks;
+			word time_division;
+			byte tracks[0];
+		} header;
+		byte data[0];
+	};
+
+} midi_raw_chunk_type;
+
+typedef struct midi_event_type {
+	dword delta_time;
+	byte event_type;
+	union {
+		struct {
+			byte channel;
+			byte param1;
+			byte param2;
+		} channel;
+		struct {
+			dword length;
+			byte* data;
+		} sysex;
+		struct {
+			byte type;
+			dword length;
+			byte* data;
+		} meta;
+	};
+
+} midi_event_type;
+
+typedef struct midi_track_type {
+	dword size;
+	int num_events;
+	midi_event_type* events;
+	int event_index;
+	int64_t next_pause_tick;
+} midi_track_type;
+
+typedef struct parsed_midi_type {
+	int num_tracks;
+	midi_track_type* tracks;
+	dword ticks_per_beat;
+} parsed_midi_type;
+
+#pragma pack(push, 1)
+typedef struct operator_type {
+	byte mul;
+	byte ksl_tl;
+	byte a_d;
+	byte s_r;
+	byte waveform;
+} operator_type;
+
+typedef struct instrument_type {
+	byte blocknum_low;
+	byte blocknum_high;
+	byte FB_conn;
+	operator_type operators[2];
+	byte percussion;
+	byte unknown[2];
+} instrument_type;
+#pragma pack(pop)
 
 struct dialog_type; // (declaration only)
 typedef struct dialog_settings_type {
@@ -1052,14 +1140,31 @@ enum key_modifiers {
 };
 
 #define MAX_OPTION_VALUE_NAME_LENGTH 20
+typedef struct key_value_type {
+	char key[MAX_OPTION_VALUE_NAME_LENGTH];
+	int value;
+} key_value_type;
+
 typedef struct names_list_type {
-	const char (* names)[][MAX_OPTION_VALUE_NAME_LENGTH];
-	word num_names;
+	byte type; // 0 = names list, 1 = key/value pair list
+	union {
+		struct {
+			const char (* data)[][MAX_OPTION_VALUE_NAME_LENGTH];
+			word count;
+		} names;
+		struct {
+			key_value_type* data;
+			word count;
+		} kv_pairs;
+	};
 } names_list_type;
 
-// Macro for declaring and initializing a names_list_type.
+// Macros for declaring and initializing a names_list_type (for names lists and key/value pair lists).
 #define NAMES_LIST(listname, ...) const char listname[][MAX_OPTION_VALUE_NAME_LENGTH] = __VA_ARGS__; \
-names_list_type listname##_list = {&listname, COUNT(listname)}
+names_list_type listname##_list = {.type=0, .names = {&listname, COUNT(listname)}}
+
+#define KEY_VALUE_LIST(listname, ...) const key_value_type listname[] = __VA_ARGS__; \
+names_list_type listname##_list = {.type=1, .kv_pairs= {(key_value_type*)&listname, COUNT(listname)}}
 
 #pragma pack(push,1)
 typedef struct fixes_options_type {
@@ -1120,11 +1225,63 @@ typedef struct custom_options_type {
 	word shift_L_allowed_until_level;
 	word shift_L_reduced_minutes;
 	word shift_L_reduced_ticks;
+	word demo_hitp;
+	word demo_end_room;
+	word intro_music_level;
+	word have_sword_from_level;
+	word checkpoint_level;
+	sbyte checkpoint_respawn_dir;
+	byte checkpoint_respawn_room;
+	byte checkpoint_respawn_tilepos;
+	byte checkpoint_clear_tile_room;
+	byte checkpoint_clear_tile_col;
+	byte checkpoint_clear_tile_row;
+	word skeleton_level;
+	byte skeleton_room;
+	byte skeleton_trigger_column_1;
+	byte skeleton_trigger_column_2;
+	byte skeleton_column;
+	byte skeleton_row;
+	byte skeleton_require_open_level_door;
+	byte skeleton_skill;
+	byte skeleton_reappear_room;
+	byte skeleton_reappear_x;
+	byte skeleton_reappear_row;
+	byte skeleton_reappear_dir;
+	word mirror_level;
+	byte mirror_room;
+	byte mirror_column;
+	byte mirror_row;
+	byte mirror_tile;
+	byte show_mirror_image;
+	word falling_exit_level;
+	byte falling_exit_room;
+	word falling_entry_level;
+	byte falling_entry_room;
+	word mouse_level;
+	byte mouse_room;
+	word mouse_delay;
+	byte mouse_object;
+	byte mouse_start_x;
+	word loose_tiles_level;
+	byte loose_tiles_room_1;
+	byte loose_tiles_room_2;
+	byte loose_tiles_first_tile;
+	byte loose_tiles_last_tile;
+	word jaffar_victory_level;
+	byte jaffar_victory_flash_time;
+	word hide_level_number_first_level;
+	byte level_13_level_number;
+	word victory_stops_time_level;
+	word win_level;
+	byte win_room;
 	byte tbl_level_type[16];
 	word tbl_level_color[16];
 	short tbl_guard_type[16];
 	byte tbl_guard_hp[16];
 	byte tbl_cutscenes_by_index[16];
+	byte tbl_entry_pose[16];
+	sbyte tbl_seamless_exit[16];
 } custom_options_type;
 #pragma pack(pop)
 

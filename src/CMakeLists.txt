@@ -81,6 +81,7 @@ set(SOURCE_FILES
         seg009.c
         seqtbl.c
         options.c
+        midi.c opl3.c opl3.h
         replay.c
         lighting.c
         screenshot.c
@@ -119,7 +120,7 @@ else()
 endif()
 
 if(WIN32)
-    target_link_libraries(prince mingw32 SDL2main SDL2 SDL2.dll SDL2_image SDL2_mixer)
+    target_link_libraries(prince mingw32 SDL2main SDL2 SDL2.dll SDL2_image)
 else()
-    target_link_libraries(prince SDL2main SDL2 SDL2_image SDL2_mixer m)
+    target_link_libraries(prince SDL2main SDL2 SDL2_image m)
 endif()

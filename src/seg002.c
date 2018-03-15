@@ -239,11 +239,11 @@ void __pascal far check_guard_fallout() {
 		clear_char();
 		saveshad();
 	} else if (Guard.charid == charid_4_skeleton &&
-		(Guard.room = level.roomlinks[Guard.room - 1].down) == 3) {
+		(Guard.room = level.roomlinks[Guard.room - 1].down) == /*3*/ custom->skeleton_reappear_room) {
 		// if skeleton falls down into room 3
-		Guard.x = 133;
-		Guard.curr_row = 1;
-		Guard.direction = dir_0_right;
+		Guard.x = /*133*/ custom->skeleton_reappear_x;
+		Guard.curr_row = /*1*/ custom->skeleton_reappear_row;
+		Guard.direction = /*dir_0_right*/ custom->skeleton_reappear_dir;
 		Guard.alive = -1;
 		leave_guard();
 	} else {
@@ -464,7 +464,7 @@ short __pascal far leave_room() {
 		//case 2: // up
 		case 3: // down
 			// Special event: falling exit
-			if (current_level == 6 && Char.room == 1) {
+			if (current_level == custom->falling_exit_level /*6*/ && Char.room == custom->falling_exit_room /*1*/) {
 				return -2;
 			}
 		break;
@@ -487,7 +487,7 @@ void __pascal far Jaffar_exit() {
 // seg002:0665
 void __pascal far level3_set_chkp() {
 	// Special event: set checkpoint
-	if (current_level == 3 && Char.room == 7) {
+	if (current_level == /*3*/ custom->checkpoint_level && Char.room == 7) {
 		checkpoint = 1;
 		hitp_beg_lev = hitp_max;
 	}
@@ -998,13 +998,14 @@ void __pascal far check_hurting() {
 // seg002:0E1F
 void __pascal far check_skel() {
 	// Special event: skeleton wakes
-	if (current_level == 3 &&
+	if (current_level == /*3*/ custom->skeleton_level &&
 		Guard.direction == dir_56_none &&
-		drawn_room == 1 &&
-		leveldoor_open != 0 &&
-		(Kid.curr_col == 2 || Kid.curr_col == 3)
+		drawn_room == /*1*/ custom->skeleton_room &&
+		(leveldoor_open != 0 || !custom->skeleton_require_open_level_door) &&
+		(Kid.curr_col == /*2*/ custom->skeleton_trigger_column_1 ||
+				Kid.curr_col == /*3*/ custom->skeleton_trigger_column_2)
 	) {
-		get_tile(drawn_room, 5, 1);
+		get_tile(drawn_room, /*5*/ custom->skeleton_column, /*1*/ custom->skeleton_row);
 		if (curr_tile2 == tiles_21_skeleton) {
 			// erase skeleton
 			curr_room_tiles[curr_tilepos] = tiles_1_floor;
@@ -1023,7 +1024,7 @@ void __pascal far check_skel() {
 			seqtbl_offset_char(seq_88_skel_wake_up); // skel wake up
 			play_seq();
 			play_sound(sound_44_skel_alive); // skel alive
-			guard_skill = 2;
+			guard_skill = /*2*/ custom->skeleton_skill;
 			Char.alive = -1;
 			guardhp_max = guardhp_curr = 3;
 			Char.fall_x = Char.fall_y = 0;
