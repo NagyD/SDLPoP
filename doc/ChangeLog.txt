@@ -459,7 +459,7 @@ DONE: Added new exceptions to .gitignore.
 FIXED: Ignore replay options in SDLPoP.ini if USE_REPLAY is not defined
 DONE: Added -std=gnu99 to the Dev-C++ project files.
 
-2018 February ??
+2018 March ??
 =================
 (version 1.18)
 

@@ -5,7 +5,7 @@ Author: David from forum.princed.org (NagyD on GitHub)
 Contributors:
 	(Usernames refer to forum.princed.org or GitHub.)
 * Andrew (bug reports)
-* htamas (dungeon wall drawing algorithm, bug reports)
+* htamas (inspiration, dungeon wall drawing algorithm, bug reports)
 * Norbert (EndeavourAccuracy on GitHub) (bug reports, suggestions, improved gamepad support)
 * musa (bug reports)
 * Eugene (bug reports)
@@ -21,6 +21,8 @@ Contributors:
 	* fake tiles
 	* readable sequence table
 	* CMake support
+	* pause menu
+	* MIDI support
 	* and various other bugfixes, improvements, additions
 * segra (segrax on GitHub) (Joystick support, resizable window)
 * DarkPrince (bug reports)
@@ -189,6 +191,8 @@ It's the last link here: https://www.popot.org/get_the_games.php?game=1
 Copy the OGG files to the data/music folder.
 
 Since version 1.15, music is included.
+
+Since version 1.18, SDLPoP can play music from the MIDISND*.DAT files and OGG files are not included.
 
 MODS
 ====
