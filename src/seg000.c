@@ -160,8 +160,8 @@ void __pascal far init_game_main() {
 #ifdef USE_LIGHTING
 	init_lighting();
 #endif
-	load_sounds(0, 43);
-	load_opt_sounds(43, 56); //added
+	load_all_sounds();
+
 	hof_read();
 	show_splash(); // added
 	start_game();
@@ -337,7 +337,7 @@ const char* get_quick_path(char* custom_path_buffer, size_t max_len) {
 		return quick_file;
 	}
 	// if playing a custom levelset, try to use the mod folder
-	snprintf(custom_path_buffer, max_len, "%s/%s/%s", mods_folder, levelset_name, quick_file /*QUICKSAVE.SAV*/ );
+	snprintf(custom_path_buffer, max_len, "%s/%s", mod_data_path, quick_file /*QUICKSAVE.SAV*/ );
 	return custom_path_buffer;
 }
 
@@ -936,9 +936,7 @@ void __pascal far load_sounds(int first,int last) {
 		midi_dat = open_dat("MIDISND1.DAT", 0);
 	}
 
-	#ifdef USE_MIXER
 	load_sound_names();
-	#endif
 
 	for (current = first; current <= last; ++current) {
 		if (sound_pointers[current] != NULL) continue;
@@ -1629,6 +1627,7 @@ void __pascal far show_title() {
 	draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, blitters_0_no_transp);
 	fade_in_2(offscreen_surface, 0x1000); //STUB
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, &screen_rect, &screen_rect, blitters_0_no_transp);
+	current_sound = sound_54_intro_music; // added
 	play_sound_from_buffer(sound_pointers[sound_54_intro_music]); // main theme
 	start_timer(timer_0, 0x82);
 	draw_image_2(1 /*Broderbund Software presents*/, chtab_title50, 96, 106, blitters_0_no_transp);
@@ -1806,7 +1805,7 @@ const char* get_save_path(char* custom_path_buffer, size_t max_len) {
 		return save_file;
 	}
 	// if playing a custom levelset, try to use the mod folder
-	snprintf(custom_path_buffer, max_len, "%s/%s/%s", mods_folder, levelset_name, save_file /*PRINCE.SAV*/ );
+	snprintf(custom_path_buffer, max_len, "%s/%s", mod_data_path, save_file /*PRINCE.SAV*/ );
 	return custom_path_buffer;
 }
 
@@ -1901,6 +1900,7 @@ void __pascal far clear_screen_and_sounds() {
 void __pascal far parse_cmdline_sound() {
 	// stub
 	sound_flags |= sfDigi;
+	sound_flags |= sfMidi;
 }
 
 // seg000:226D
@@ -1915,25 +1915,29 @@ void __pascal far free_optional_sounds() {
 	// stub
 }
 
-const byte tbl_snd_is_music[] = {
-		0,0,0,0,0,0,0,0,0,0, //9
-		0,0,0,0,0,0,0,0,0,0, //19
-		0,0,0,0,1,1,1,1,1,1, //29
-		1,0,1,1,1,1,1,1,0,1, //39
-		1,1,0,1,0,0,0,0,0,0, //49
-		1,0,1,1,1,1,1
-};
-
-void reload_non_music_sounds() {
-	int i;
-	for (i = 0; i < COUNT(tbl_snd_is_music); ++i) {
-		if (!tbl_snd_is_music[i]) {
-			free_sound(sound_pointers[i]);
-			sound_pointers[i] = NULL;
-		}
+void free_all_sounds() {
+	for (int i = 0; i < 58; ++i) {
+		free_sound(sound_pointers[i]);
+		sound_pointers[i] = NULL;
 	}
-	load_sounds(0, 43);
-	load_opt_sounds(44, 56);
+}
+
+void load_all_sounds() {
+	if (!use_custom_levelset) {
+		load_sounds(0, 43);
+		load_opt_sounds(43, 56); //added
+	} else {
+		// First load any sounds included in the mod folder...
+		skip_normal_data_files = true;
+		load_sounds(0, 43);
+		load_opt_sounds(43, 56);
+		skip_normal_data_files = false;
+		// ... then load any missing sounds from SDLPoP's own resources.
+		skip_mod_data_files = true;
+		load_sounds(0, 43);
+		load_opt_sounds(43, 56);
+		skip_mod_data_files = false;
+	}
 }
 
 // seg000:22BB

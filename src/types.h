@@ -21,18 +21,33 @@ The authors of this program may be contacted at http://forum.princed.org
 #ifndef TYPES_H
 #define TYPES_H
 
+
+#ifdef STB_VORBIS_IMPLEMENTATION
+// Silence warnings (stb_vorbis.c)
+#ifndef _MSC_VER
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
+#pragma GCC diagnostic ignored "-Wunused-value"
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
+
+#undef alloca // Silence warning about alloca being redefined (stb_vorbis.c)
+#include "stb_vorbis.c"
+
+#ifndef _MSC_VER
+#pragma GCC diagnostic pop
+#endif
+#else // STB_VORBIS_IMPLEMENTATION
+#define STB_VORBIS_HEADER_ONLY
+#include "stb_vorbis.c"
+#endif // STB_VORBIS_IMPLEMENTATION
+
 #if !defined(_MSC_VER)
 # include <SDL2/SDL.h>
 # include <SDL2/SDL_image.h>
-# ifdef USE_MIXER
-# include <SDL2/SDL_mixer.h>
-# endif
 #else
 # include <SDL.h>
 # include <SDL_image.h>
-# ifdef USE_MIXER
-# include <SDL_mixer.h>
-# endif
 #endif
 
 #if SDL_BYTEORDER != SDL_LIL_ENDIAN
@@ -483,13 +498,13 @@ typedef enum data_location {
 } data_location;
 
 enum sound_type {
-#ifdef USE_MIXER
-	sound_chunk = 3,
-	sound_music = 4,
-#endif
-	sound_speaker = 0,
-	sound_digi = 1,
-	sound_midi = 2
+    sound_speaker = 0,
+    sound_digi = 1,
+    sound_midi = 2,
+    sound_chunk = 3,
+    sound_music = 4,
+    sound_ogg = 5,
+	sound_digi_converted = 6,
 };
 #pragma pack(push,1)
 typedef struct note_type {
@@ -523,8 +538,31 @@ typedef struct digi_new_type { // wave in 1.3 and 1.4 (and PoP2)
 SDL_COMPILE_TIME_ASSERT(digi_new_type, sizeof(digi_new_type) == 9);
 
 typedef struct midi_type {
-	byte data[0];
+	char chunk_type[4];
+	dword chunk_length;
+	union {
+		struct {
+			word format;
+			word num_tracks;
+			word delta;
+			byte tracks[0];
+		} header;
+		byte data[0];
+	};
+
 } midi_type;
+
+typedef struct ogg_type {
+    //byte sample_size; // =16
+    int total_length;
+    byte* file_contents;
+    stb_vorbis* decoder;
+} ogg_type;
+
+typedef struct converted_audio_type {
+	int length;
+	short samples[0];
+} converted_audio_type;
 
 typedef struct sound_buffer_type {
 	byte type;
@@ -533,31 +571,81 @@ typedef struct sound_buffer_type {
 		digi_type digi;
 		digi_new_type digi_new;
 		midi_type midi;
-#ifdef USE_MIXER
-		Mix_Chunk *chunk;
-		Mix_Music *music;
-#endif
+        ogg_type ogg;
+		converted_audio_type converted;
 	};
 } sound_buffer_type;
 
-#ifdef USE_MIXER
-typedef struct WAV_header_type {
-	Uint32 ChunkID; // fourcc
-	Uint32 ChunkSize;
-	Uint32 Format; // fourcc
-	Uint32 Subchunk1ID; // fourcc
-	Uint32 Subchunk1Size;
-	Uint16 AudioFormat;
-	Uint16 NumChannels;
-	Uint32 SampleRate;
-	Uint32 ByteRate;
-	Uint16 BlockAlign;
-	Uint16 BitsPerSample;
-	Uint32 Subchunk2ID; // fourcc
-	Uint32 Subchunk2Size;
-	byte Data[0];
-} WAV_header_type;
-#endif
+
+typedef struct midi_raw_chunk_type {
+	char chunk_type[4];
+	dword chunk_length;
+	union {
+		struct {
+			word format;
+			word num_tracks;
+			word time_division;
+			byte tracks[0];
+		} header;
+		byte data[0];
+	};
+
+} midi_raw_chunk_type;
+
+typedef struct midi_event_type {
+	dword delta_time;
+	byte event_type;
+	union {
+		struct {
+			byte channel;
+			byte param1;
+			byte param2;
+		} channel;
+		struct {
+			dword length;
+			byte* data;
+		} sysex;
+		struct {
+			byte type;
+			dword length;
+			byte* data;
+		} meta;
+	};
+
+} midi_event_type;
+
+typedef struct midi_track_type {
+	dword size;
+	int num_events;
+	midi_event_type* events;
+	int event_index;
+	int64_t next_pause_tick;
+} midi_track_type;
+
+typedef struct parsed_midi_type {
+	int num_tracks;
+	midi_track_type* tracks;
+	dword ticks_per_beat;
+} parsed_midi_type;
+
+#pragma pack(push, 1)
+typedef struct operator_type {
+	byte mul;
+	byte ksl_tl;
+	byte a_d;
+	byte s_r;
+	byte waveform;
+} operator_type;
+
+typedef struct instrument_type {
+	byte blocknum_low;
+	byte blocknum_high;
+	byte FB_conn;
+	operator_type operators[2];
+	byte percussion;
+	byte unknown[2];
+} instrument_type;
+#pragma pack(pop)
 
 struct dialog_type; // (declaration only)
 typedef struct dialog_settings_type {

@@ -296,7 +296,7 @@ setting_type general_settings[] = {
 		{.id = SETTING_ENABLE_SOUND, .style = SETTING_STYLE_TOGGLE, .linked = &is_sound_on,
 				.text = "Enable sound",
 				.explanation = "Turn sound on or off."},
-		{.id = SETTING_ENABLE_MUSIC, .style = SETTING_STYLE_TOGGLE, .linked = &enable_mixer,
+		{.id = SETTING_ENABLE_MUSIC, .style = SETTING_STYLE_TOGGLE, .linked = &enable_music,
 				.text = "Enable music",
 				.explanation = "Turn music on or off."},
 		{.id = SETTING_ENABLE_CONTROLLER_RUMBLE, .style = SETTING_STYLE_TOGGLE, .linked = &enable_controller_rumble,
@@ -1599,7 +1599,7 @@ void confirmation_dialog_result(int which_dialog, int button) {
 			turn_setting_on_off(SETTING_ENABLE_LIGHTING, enable_lighting, NULL);
 			apply_aspect_ratio();
 			turn_sound_on_off((is_sound_on != 0) * 15);
-			turn_music_on_off(enable_mixer);
+			turn_music_on_off(enable_music);
 		} else if (which_dialog == DIALOG_CONFIRM_QUIT) {
 			last_key_scancode = SDL_SCANCODE_Q | WITH_CTRL;
 			key_test_quit();
@@ -1956,7 +1956,7 @@ void process_ingame_settings_user_managed(SDL_RWops* rw, rw_process_func_type pr
 	process(enable_pause_menu);
 	process(enable_info_screen);
 	process(is_sound_on);
-	process(enable_mixer);
+	process(enable_music);
 	process(enable_controller_rumble);
 	process(joystick_threshold);
 	process(joystick_only_horizontal);

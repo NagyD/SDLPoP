@@ -572,9 +572,7 @@ extern Uint64 perf_counters_per_tick;
 extern Uint64 perf_frequency;
 extern float milliseconds_per_counter;
 
-#ifdef USE_MIXER
 extern char** sound_names;
-#endif
 
 extern int g_argc;
 extern char** g_argv;
@@ -641,10 +639,13 @@ extern word pop_window_width INIT(= 640);
 extern word pop_window_height INIT(= 400);
 extern byte use_custom_levelset INIT(= 0);
 extern char levelset_name[POP_MAX_PATH];
+extern char mod_data_path[POP_MAX_PATH];
+extern bool skip_mod_data_files;
+extern bool skip_normal_data_files;
 
 extern byte use_fixes_and_enhancements INIT(= 0);
 extern byte enable_copyprot INIT(= 0);
-extern byte enable_mixer INIT(= 1);
+extern byte enable_music INIT(= 1);
 extern byte enable_fade INIT(= 1);
 extern byte enable_flash INIT(= 1);
 extern byte enable_text INIT(= 1);
