@@ -1052,14 +1052,31 @@ enum key_modifiers {
 };
 
 #define MAX_OPTION_VALUE_NAME_LENGTH 20
+typedef struct key_value_type {
+	char key[MAX_OPTION_VALUE_NAME_LENGTH];
+	int value;
+} key_value_type;
+
 typedef struct names_list_type {
-	const char (* names)[][MAX_OPTION_VALUE_NAME_LENGTH];
-	word num_names;
+	byte type; // 0 = names list, 1 = key/value pair list
+	union {
+		struct {
+			const char (* data)[][MAX_OPTION_VALUE_NAME_LENGTH];
+			word count;
+		} names;
+		struct {
+			key_value_type* data;
+			word count;
+		} kv_pairs;
+	};
 } names_list_type;
 
-// Macro for declaring and initializing a names_list_type.
+// Macros for declaring and initializing a names_list_type (for names lists and key/value pair lists).
 #define NAMES_LIST(listname, ...) const char listname[][MAX_OPTION_VALUE_NAME_LENGTH] = __VA_ARGS__; \
-names_list_type listname##_list = {&listname, COUNT(listname)}
+names_list_type listname##_list = {.type=0, .names = {&listname, COUNT(listname)}}
+
+#define KEY_VALUE_LIST(listname, ...) const key_value_type listname[] = __VA_ARGS__; \
+names_list_type listname##_list = {.type=1, .kv_pairs= {(key_value_type*)&listname, COUNT(listname)}}
 
 #pragma pack(push,1)
 typedef struct fixes_options_type {
@@ -1119,11 +1136,63 @@ typedef struct custom_options_type {
 	word shift_L_allowed_until_level;
 	word shift_L_reduced_minutes;
 	word shift_L_reduced_ticks;
+	word demo_hitp;
+	word demo_end_room;
+	word intro_music_level;
+	word have_sword_from_level;
+	word checkpoint_level;
+	sbyte checkpoint_respawn_dir;
+	byte checkpoint_respawn_room;
+	byte checkpoint_respawn_tilepos;
+	byte checkpoint_clear_tile_room;
+	byte checkpoint_clear_tile_col;
+	byte checkpoint_clear_tile_row;
+	word skeleton_level;
+	byte skeleton_room;
+	byte skeleton_trigger_column_1;
+	byte skeleton_trigger_column_2;
+	byte skeleton_column;
+	byte skeleton_row;
+	byte skeleton_require_open_level_door;
+	byte skeleton_skill;
+	byte skeleton_reappear_room;
+	byte skeleton_reappear_x;
+	byte skeleton_reappear_row;
+	byte skeleton_reappear_dir;
+	word mirror_level;
+	byte mirror_room;
+	byte mirror_column;
+	byte mirror_row;
+	byte mirror_tile;
+	byte show_mirror_image;
+	word falling_exit_level;
+	byte falling_exit_room;
+	word falling_entry_level;
+	byte falling_entry_room;
+	word mouse_level;
+	byte mouse_room;
+	word mouse_delay;
+	byte mouse_object;
+	byte mouse_start_x;
+	word loose_tiles_level;
+	byte loose_tiles_room_1;
+	byte loose_tiles_room_2;
+	byte loose_tiles_first_tile;
+	byte loose_tiles_last_tile;
+	word jaffar_victory_level;
+	byte jaffar_victory_flash_time;
+	word hide_level_number_first_level;
+	byte level_13_level_number;
+	word victory_stops_time_level;
+	word win_level;
+	byte win_room;
 	byte tbl_level_type[16];
 	word tbl_level_color[16];
 	short tbl_guard_type[16];
 	byte tbl_guard_hp[16];
 	byte tbl_cutscenes_by_index[16];
+	byte tbl_entry_pose[16];
+	sbyte tbl_seamless_exit[16];
 } custom_options_type;
 #pragma pack(pop)
 

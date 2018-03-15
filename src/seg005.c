@@ -288,7 +288,7 @@ void __pascal far control() {
 
 // seg005:02EB
 void __pascal far control_crouched() {
-	if (need_level1_music != 0 && current_level == 1) {
+	if (need_level1_music != 0 && current_level == /*1*/ custom->intro_music_level) {
 		// Special event: music when crouching
 		if (! check_sound_playing()) {
 			if (need_level1_music == 1) {

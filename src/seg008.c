@@ -1631,8 +1631,9 @@ void __pascal far add_guard_to_objtable() {
 	clip_char();
 	if (Char.charid == charid_1_shadow) {
 		// Special event: shadow is clipped: may appear only right from the mirror
-		if (current_level == 4 && Char.room == 4) {
+		if (current_level == /*4*/ custom->mirror_level && Char.room == /*4*/ custom->mirror_room) {
 			obj_clip_left = 137;
+			obj_clip_left += (custom->mirror_column - 4) * 32; // added
 		}
 		obj_type = 1; // shadow
 	} else {
@@ -1778,9 +1779,9 @@ void __pascal far show_level() {
 	byte disp_level;
 	char sprintf_temp[32];
 	disp_level = current_level;
-	if (disp_level != 0 && disp_level < 14 && seamless == 0) {
+	if (disp_level != 0 && disp_level < /*14*/ custom->hide_level_number_first_level && seamless == 0) {
 		if (disp_level == 13) {
-			disp_level = 12;
+			disp_level = /*12*/ custom->level_13_level_number;
 		}
 		text_time_remaining = text_time_total = 24;
 		snprintf(sprintf_temp, sizeof(sprintf_temp), "LEVEL %d", disp_level);
