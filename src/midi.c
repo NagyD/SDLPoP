@@ -132,7 +132,7 @@ bool parse_midi(midi_raw_chunk_type* midi, parsed_midi_type* parsed_midi) {
 	parsed_midi->num_tracks = num_tracks;
 	midi_raw_chunk_type* next_track_chunk = (midi_raw_chunk_type*) midi->header.tracks; // The first track chunk starts after the header chunk.
 	byte last_event_type = 0;
-	for (int i = 0; i < num_tracks; ++i) {
+	for (int track_index = 0; track_index < num_tracks; ++track_index) {
 		midi_raw_chunk_type* track_chunk = next_track_chunk;
 		if (memcmp(track_chunk->chunk_type, "MTrk", 4) != 0) {
 			printf("Warning: midi track without 'MTrk' chunk header.\n");
@@ -141,7 +141,7 @@ bool parse_midi(midi_raw_chunk_type* midi, parsed_midi_type* parsed_midi) {
 			return 0;
 		}
 		next_track_chunk = (midi_raw_chunk_type*) (track_chunk->data + (dword) SDL_SwapBE32(track_chunk->chunk_length));
-		midi_track_type* track = &parsed_midi->tracks[i];
+		midi_track_type* track = &parsed_midi->tracks[track_index];
 		byte* buffer_position = track_chunk->data;
 		for (;;) {
 			track->events = realloc(track->events, (++track->num_events) * sizeof(midi_event_type));
@@ -149,7 +149,7 @@ bool parse_midi(midi_raw_chunk_type* midi, parsed_midi_type* parsed_midi) {
 			event->delta_time = midi_read_variable_length(&buffer_position);
 			event->event_type = *buffer_position;
 			if (event->event_type & 0x80) {
-				last_event_type = event->event_type;
+				if (event->event_type < 0xF8) last_event_type = event->event_type;
 				++buffer_position;
 			} else {
 				event->event_type = last_event_type; // Implicit use of the previous event type.
@@ -192,14 +192,18 @@ bool parse_midi(midi_raw_chunk_type* midi, parsed_midi_type* parsed_midi) {
 							break;
 						default:
 							printf("Warning: unknown midi event type 0x%02x (track %d, event %d)\n",
-							       event->event_type, i, track->num_events - 1);
-							free(parsed_midi->tracks);
-							memset(&parsed_midi, 0, sizeof(parsed_midi));
+							       event->event_type, track_index, track->num_events - 1);
+							free_parsed_midi(parsed_midi);
 							return 0;
 					}
 			}
 			if (event->event_type == 0xFF /* meta event */ && event->meta.type == 0x2F /* end of track */) {
 				break;
+			}
+			if (buffer_position >= (byte*) next_track_chunk) {
+				printf("Error parsing MIDI events (track %d)\n", track_index);
+				free_parsed_midi(parsed_midi);
+				return 0;
 			}
 
 		}
