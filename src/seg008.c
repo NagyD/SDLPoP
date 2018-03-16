@@ -1779,7 +1779,7 @@ void __pascal far show_level() {
 	byte disp_level;
 	char sprintf_temp[32];
 	disp_level = current_level;
-	if (disp_level != 0 && disp_level < /*14*/ custom->hide_level_number_first_level && seamless == 0) {
+	if (disp_level != 0 && disp_level < /*14*/ custom->hide_level_number_from_level && seamless == 0) {
 		if (disp_level == 13) {
 			disp_level = /*12*/ custom->level_13_level_number;
 		}
