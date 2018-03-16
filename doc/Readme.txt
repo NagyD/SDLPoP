@@ -271,7 +271,7 @@ DEVELOPING
 Q: How do I (re)compile it?
 A:
 Prerequisites for all platforms:
-	Make sure that you have the development versions of the "SDL2", "SDL2_image" and "SDL2_mixer" (since SDLPoP 1.13) libraries installed.
+	Make sure that you have the development versions of the "SDL2" and "SDL2_image" libraries installed.
 
 Windows:
 	If you are using Dev-C++:
@@ -280,7 +280,6 @@ Windows:
 		For Dev-C++ you need the MinGW Development Libraries of SDL2:
 			https://libsdl.org/download-2.0.php
 			https://libsdl.org/projects/SDL_image/
-			https://libsdl.org/projects/SDL_mixer/
 		To install these, just extract the contents of the i686-w64-mingw32 folder from each archive to the Dev-Cpp folder.
 		To compile, open one of the .dev files and click the compile icon.
 
@@ -294,7 +293,7 @@ Windows:
                This step sets up various environment variables, to enable running the compiler from the command line.
             b) Set up the environment variable 'SDL2' to point to the SDL2 development library files.
                To do this, you can use a command like so:
-               set "SDL2=C:\libraries\SDL2-2.0.5"
+               set "SDL2=C:\libraries\SDL2-2.0.8"
                You can get the SDL2 library files from here: (download the Visual C++ 32/64-bit development package)
                https://www.libsdl.org/download-2.0.php
             (You could create a small batch file to automate the above steps on your system.)
@@ -307,12 +306,11 @@ Windows:
 
 GNU/Linux:
 	You can install the libraries with apt-get or a package manager.
-		sudo apt-get install libsdl2-image-dev libsdl2-mixer-dev
+		sudo apt-get install libsdl2-image-dev
 
 	Alternatively, you can compile SDL2 and the other libraries from source.
 		https://libsdl.org/download-2.0.php
 		https://libsdl.org/projects/SDL_image/
-		https://libsdl.org/projects/SDL_mixer/
 	I recommend this if your distro does not have the newest SDL version, because older SDL versions have some known bugs.
 		Namely, sound becomes garbled in SDL versions older than 2.0.4 if the sound output is not 8-bit.
 
@@ -328,11 +326,10 @@ GNU/Linux:
 macOS:
 	Get SDL2 and dependencies
 		a) Install "port" from https://www.macports.org/
-		b) sudo port install libsdl2 libsdl2_image libsdl2_mixer
+		b) sudo port install libsdl2 libsdl2_image
 	or
 		a) Install "homebrew"
 		b) brew install sdl2 sdl2_image
-		c) brew install sdl2_mixer --with-libvorbis
 
 	Get development tools:
 		a) Install Xcode.

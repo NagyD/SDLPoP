@@ -44,6 +44,14 @@ extern "C" {
 #endif
 #endif
 
+// S_ISREG and S_ISDIR may not be defined under MSVC
+#ifndef S_ISREG
+#define S_ISREG(mode)  (((mode) & S_IFMT) == S_IFREG)
+#endif
+#ifndef S_ISDIR
+#define S_ISDIR(mode)  (((mode) & S_IFMT) == S_IFDIR)
+#endif
+
 #include "config.h"
 #include "types.h"
 #include "proto.h"
