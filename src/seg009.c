@@ -2104,7 +2104,9 @@ void init_scaling() {
 
 // seg009:38ED
 void __pascal far set_gr_mode(byte grmode) {
+#ifdef SDL_HINT_WINDOWS_DISABLE_THREAD_NAMING
 	SDL_SetHint(SDL_HINT_WINDOWS_DISABLE_THREAD_NAMING, "1");
+#endif
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_NOPARACHUTE |
 	             SDL_INIT_GAMECONTROLLER | SDL_INIT_HAPTIC ) != 0) {
 		sdlperror("SDL_Init");
