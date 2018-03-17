@@ -498,3 +498,4 @@ FIXED: Removed colored rectangles around hitpoints and the shadow, when using Br
 DONE: Added most of the missing CusPop customization options.
 DONE: Added support for MIDI music.
 FIXED: Fixed teleporting to the room above by grabbing a ledge (integer overflow bug).
+FIXED: When playing back a recording, Alt+Tabbing back to SDLPoP stops the replay if Alt is released before Tab.
