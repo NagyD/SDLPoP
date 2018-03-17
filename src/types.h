@@ -1270,7 +1270,7 @@ typedef struct custom_options_type {
 	byte loose_tiles_last_tile;
 	word jaffar_victory_level;
 	byte jaffar_victory_flash_time;
-	word hide_level_number_first_level;
+	word hide_level_number_from_level;
 	byte level_13_level_number;
 	word victory_stops_time_level;
 	word win_level;

@@ -6,28 +6,19 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -std=gnu99")
 # have CMake output binaries to the directory that contains the source files
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${SDLPoP_SOURCE_DIR}/..")
 
-# SDLPoP requires the SDL_2, SDL2_image and SDL2_mixer development libraries.
-# You can pass the SDL2 location to CMake like so: -DSDL2="C:/work/libraries/SDL2-2.0.7"
+# SDLPoP requires the SDL2 and SDL2_image development libraries.
+# You can pass the SDL2 location to CMake like so: -DSDL2="C:/work/libraries/SDL2-2.0.8"
 # Or alternatively, specify the SDL2 location below:
 
-#set(SDL2 "C:/work/libraries/SDL2-2.0.7")
+#set(SDL2 "C:/work/libraries/SDL2-2.0.8")
 
 # On macOS, if you used Homebrew to install SDL2, the location may be something like this:
 
 #set(SDL2 "/usr/local/Cellar/sdl2/2.0.5")
 
-if (NOT(WIN32))
-    if (DEFINED SDL2)
-        include_directories(${SDL2}/include)
-        link_directories(${SDL2}/lib)
-    else()
-        set(EXTRA_CFLAGS "")
-        execute_process(COMMAND sdl2-config --cflags OUTPUT_VARIABLE EXTRA_C_FLAGS)
-        execute_process(COMMAND sdl2-config --libs OUTPUT_VARIABLE EXTRA_LINKER_FLAGS)
-#        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_C_FLAGS}")
-#        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${EXTRA_LINKER_FLAGS}")
-#        message(flags:${CMAKE_SHARED_LINKER_FLAGS})
-    endif()
+if (NOT(WIN32) AND (DEFINED SDL2))
+    include_directories(${SDL2}/include)
+    link_directories(${SDL2}/lib)
 endif()
 
 if (WIN32)
@@ -40,14 +31,13 @@ if (WIN32)
     # Use the -mwindows compiler flag when compiling with MinGW to hide the console window
     # Only do this when not in debug mode
     if (NOT (CMAKE_BUILD_TYPE STREQUAL "Debug"))
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mwindows")
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mwindows")
     endif (NOT (CMAKE_BUILD_TYPE STREQUAL "Debug"))
 
     # If the location of SDL2 is not specified, we will try to guess it.
     if (NOT(DEFINED SDL2))
         cmake_policy(SET CMP0015 NEW) # suppress warning about relative paths
-        set(SDL2 "../../SDL2-2.0.6")
+        set(SDL2 "../../SDL2-2.0.8")
     endif()
 
     # Automatically detect whether we need the x86 or x64 version of the SDL2 library.
@@ -97,7 +87,10 @@ else()
     # By default, a normal binary executable will be created.
     # If you want an Application Bundle instead, pass CREATE_BUNDLE to CMake like so: -DCREATE_BUNDLE=1
 
-    set (SDLPoP_VERSION "1.17")
+    # NOTE: Currently, the SDL2 and SDL2_image frameworks are not being correctly included/linked in the bundle!
+    #       As long as this isn't fixed, these bundles will only work if SDL2 and SDL2_image are installed.
+
+    set (SDLPoP_VERSION "1.18")
     set (MACOSX_BUNDLE_INFO_STRING          ${PROJECT_NAME})
     set (MACOSX_BUNDLE_ICON_FILE            "icon.icns")
     set_source_files_properties(${MACOSX_BUNDLE_ICON_FILE} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)

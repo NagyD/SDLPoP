@@ -185,11 +185,6 @@ int __pascal far pop_wait(int timer_index,int time) {
 	return do_wait(timer_index);
 }
 
-// S_ISREG may not be defined under MSVC
-#if defined(_MSC_VER) && !defined(S_ISREG)
-#define S_ISREG(mode)  (((mode) & S_IFMT) == S_IFREG)
-#endif
-
 static FILE* open_dat_from_root_or_data_dir(const char* filename) {
 	FILE* fp = NULL;
 	fp = fopen(filename, "rb");

@@ -559,7 +559,7 @@ void options_process_custom_general(SDL_RWops* rw, rw_process_func_type process_
 	process(custom->loose_tiles_last_tile);
 	process(custom->jaffar_victory_level);
 	process(custom->jaffar_victory_flash_time);
-	process(custom->hide_level_number_first_level);
+	process(custom->hide_level_number_from_level);
 	process(custom->level_13_level_number);
 	process(custom->victory_stops_time_level);
 	process(custom->win_level);

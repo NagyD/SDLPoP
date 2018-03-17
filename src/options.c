@@ -358,7 +358,7 @@ static int global_ini_callback(const char *section, const char *name, const char
 		process_byte("loose_tiles_last_tile", &custom_saved.loose_tiles_last_tile, NULL);
 		process_word("jaffar_victory_level", &custom_saved.jaffar_victory_level, &never_is_16_list);
 		process_byte("jaffar_victory_flash_time", &custom_saved.jaffar_victory_flash_time, NULL);
-		process_word("hide_level_number_first_level", &custom_saved.hide_level_number_first_level, &never_is_16_list);
+		process_word("hide_level_number_from_level", &custom_saved.hide_level_number_from_level, &never_is_16_list);
 		process_byte("level_13_level_number", &custom_saved.level_13_level_number, NULL);
 		process_word("victory_stops_time_level", &custom_saved.victory_stops_time_level, &never_is_16_list);
 		process_word("win_level", &custom_saved.win_level, &never_is_16_list);

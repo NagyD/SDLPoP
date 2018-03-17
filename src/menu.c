@@ -705,7 +705,7 @@ setting_type mods_settings[] = {
 		{.id = SETTING_SKELETON_REAPPEAR_X, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
 				.linked = &custom_saved.skeleton_reappear_x, .number_type = SETTING_BYTE, .max = 255,
 				.text = "Skeleton reappear X coordinate",
-				.explanation = "Horizontal coordinate where the skeleton reappers.\n(default = 133)\n"
+				.explanation = "Horizontal coordinate where the skeleton reappears.\n(default = 133)\n"
 						"(58 = left edge of the room, 198 = right edge)"},
 		{.id = SETTING_SKELETON_REAPPEAR_ROW, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
 				.linked = &custom_saved.skeleton_reappear_row, .number_type = SETTING_BYTE, .max = 2, .names_list = &row_setting_names_list,
@@ -807,7 +807,7 @@ setting_type mods_settings[] = {
 				.text = "Jaffar victory flash time",
 				.explanation = "How long the screen will flash after killing Jaffar.\n(default = 18)"},
 		{.id = SETTING_HIDE_LEVEL_NUMBER_FIRST_LEVEL, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
-				.linked = &custom_saved.hide_level_number_first_level, .number_type = SETTING_WORD, .max = 16, .names_list = &never_is_16_list,
+				.linked = &custom_saved.hide_level_number_from_level, .number_type = SETTING_WORD, .max = 16, .names_list = &never_is_16_list,
 				.text = "Hide level number from level",
 				.explanation = "First level where the level number will not be displayed.\n(default = 14)"},
 		{.id = SETTING_LEVEL_13_LEVEL_NUMBER, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
