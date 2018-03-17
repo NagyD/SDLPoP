@@ -1756,6 +1756,7 @@ void __pascal far show_time() {
 					// don't display time elapsed in the first minute
 					text_time_remaining = 0;
 					text_time_total = 0;
+					sprintf_temp[0] = '\0';
 				}
 				else if (~rem_min == 1) {
 					snprintf(sprintf_temp, sizeof(sprintf_temp), "1 MINUTE PASSED");
