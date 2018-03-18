@@ -1013,7 +1013,7 @@ void __pascal far draw_mid(int index) {
 	}
 	if (need_free_image) {
 		//free_far(image);
-		SDL_FreeSurface(image);
+		free_surface(image);
 	}
 	if (need_free_mask) {
 		free_far(mask);

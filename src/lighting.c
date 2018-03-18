@@ -19,6 +19,7 @@ The authors of this program may be contacted at http://forum.princed.org
 */
 
 #include "common.h"
+#include "stb_image.h"
 
 #ifdef USE_LIGHTING
 
@@ -32,12 +33,16 @@ const Uint8 ambient_level = 128;
 void init_lighting() {
 	if (!enable_lighting) return;
 
-	lighting_mask = IMG_Load(locate_file(mask_filename));
+	int mask_width, mask_height;
+	void* mask_pixel_data = stbi_load(locate_file(mask_filename), &mask_width, &mask_height, NULL, 4);
+	lighting_mask = SDL_CreateRGBSurfaceFrom(mask_pixel_data, mask_width, mask_height, 32, 4*mask_width,
+													   0xFF, 0xFF<<8, 0xFF<<16, 0xFF<<24);
 	if (lighting_mask == NULL) {
 		sdlperror("IMG_Load (lighting_mask)");
 		enable_lighting = 0;
 		return;
 	}
+    lighting_mask->userdata = mask_pixel_data;
 
 	screen_overlay = SDL_CreateRGBSurface(0, 320, 192, 32, 0xFF << 0, 0xFF << 8, 0xFF << 16, 0xFF << 24);
 	if (screen_overlay == NULL) {
