@@ -91,26 +91,38 @@ else()
     # NOTE: Currently, the SDL2 and SDL2_image frameworks are not being correctly included/linked in the bundle!
     #       As long as this isn't fixed, these bundles will only work if SDL2 and SDL2_image are installed.
 
-    set (SDLPoP_VERSION "1.19")
-    set (MACOSX_BUNDLE_INFO_STRING          ${PROJECT_NAME})
-    set (MACOSX_BUNDLE_ICON_FILE            "icon.icns")
+    set(SDLPoP_VERSION "1.19")
+    set(CMAKE_C_LINK_FLAGS "${CMAKE_C_LINK_FLAGS} -headerpad_max_install_names")
+    set(MACOSX_BUNDLE_INFO_STRING          ${PROJECT_NAME})
+    set(MACOSX_BUNDLE_ICON_FILE            "icon.icns")
     set_source_files_properties(${MACOSX_BUNDLE_ICON_FILE} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
-    set (MACOSX_BUNDLE_GUI_IDENTIFIER       "org.princed.SDLPoP")
-    set (MACOSX_BUNDLE_LONG_VERSION_STRING  ${SDLPoP_VERSION})
-    set (MACOSX_BUNDLE_BUNDLE_NAME          "SDLPoP")
-    set (MACOSX_BUNDLE_SHORT_VERSION_STRING ${SDLPoP_VERSION})
-    set (MACOSX_BUNDLE_BUNDLE_VERSION       ${SDLPoP_VERSION})
-    set (MACOSX_BUNDLE_COPYRIGHT            "GNU General Public Licence, v3")
+    set(MACOSX_BUNDLE_GUI_IDENTIFIER       "org.princed.SDLPoP")
+    set(MACOSX_BUNDLE_LONG_VERSION_STRING  ${SDLPoP_VERSION})
+    set(MACOSX_BUNDLE_BUNDLE_NAME          "SDLPoP")
+    set(MACOSX_BUNDLE_SHORT_VERSION_STRING ${SDLPoP_VERSION})
+    set(MACOSX_BUNDLE_BUNDLE_VERSION       ${SDLPoP_VERSION})
+    set(MACOSX_BUNDLE_COPYRIGHT            "GNU General Public Licence, v3")
     add_executable(prince MACOSX_BUNDLE ${SOURCE_FILES} ${MACOSX_BUNDLE_ICON_FILE})
-    add_custom_command(TARGET prince POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_directory
-            ${CMAKE_SOURCE_DIR}/../data ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/prince.app/Contents/MacOS/data)
-    add_custom_command(TARGET prince POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_directory
-            ${CMAKE_SOURCE_DIR}/../doc ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/prince.app/Contents/MacOS/doc)
-    add_custom_command(TARGET prince POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy
-            ${CMAKE_SOURCE_DIR}/../SDLPoP.ini ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/prince.app/Contents/MacOS/SDLPoP.ini)
+    set(BUNDLE_BINARY_DIR "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/prince.app/Contents/MacOS")
+    set(SDL2_DYLIB "`otool -L ${BUNDLE_BINARY_DIR}/prince | grep SDL2- | cut -d' ' -f1`")
+    set(SDL2_IMAGE_DYLIB "`otool -L ${BUNDLE_BINARY_DIR}/prince | grep SDL2_image- | cut -d' ' -f1`")
+    add_custom_command(TARGET prince POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory
+            ${CMAKE_SOURCE_DIR}/../data ${BUNDLE_BINARY_DIR}/data)
+    add_custom_command(TARGET prince POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory
+            ${CMAKE_SOURCE_DIR}/../doc ${BUNDLE_BINARY_DIR}/doc)
+    add_custom_command(TARGET prince POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy
+            ${CMAKE_SOURCE_DIR}/../SDLPoP.ini ${BUNDLE_BINARY_DIR}/SDLPoP.ini)
+    # Copy the .dylib files for SDL2, SDL2_image and SDL2_mixer into the prince.app/Contents/MacOS folder.
+    add_custom_command(TARGET prince POST_BUILD COMMAND cp -f `otool -L ${BUNDLE_BINARY_DIR}/prince | grep SDL2- | cut -d' ' -f1` "${BUNDLE_BINARY_DIR}/libSDL2-2.0.0.dylib")
+    add_custom_command(TARGET prince POST_BUILD COMMAND cp -f `otool -L ${BUNDLE_BINARY_DIR}/prince | grep SDL2_image- | cut -d' ' -f1` "${BUNDLE_BINARY_DIR}/libSDL2_image-2.0.0.dylib")
+    add_custom_command(TARGET prince POST_BUILD COMMAND cp -f /usr/local/opt/libpng/lib/libpng.dylib "${BUNDLE_BINARY_DIR}/libpng.dylib")
+
+    # Modify the executable, so that the program loads the packaged .dylib files, instead of looking in e.g. /usr/local/opt
+    add_custom_command(TARGET prince POST_BUILD COMMAND install_name_tool -change `otool -L "${BUNDLE_BINARY_DIR}/prince" | grep SDL2- | cut -d' ' -f1` @executable_path/libSDL2-2.0.0.dylib "${BUNDLE_BINARY_DIR}/prince")
+    add_custom_command(TARGET prince POST_BUILD COMMAND install_name_tool -change `otool -L "${BUNDLE_BINARY_DIR}/prince" | grep SDL2_image- | cut -d' ' -f1` @executable_path/libSDL2_image-2.0.0.dylib "${BUNDLE_BINARY_DIR}/prince")
+    add_custom_command(TARGET prince POST_BUILD COMMAND chmod +w "${BUNDLE_BINARY_DIR}/libSDL2_image-2.0.0.dylib")
+    add_custom_command(TARGET prince POST_BUILD COMMAND install_name_tool -change `otool -L "${BUNDLE_BINARY_DIR}/libSDL2_image-2.0.0.dylib" | grep SDL2- | cut -d' ' -f1` @executable_path/libSDL2-2.0.0.dylib "${BUNDLE_BINARY_DIR}/libSDL2_image-2.0.0.dylib")
+
 endif()
 
 if(WIN32)
