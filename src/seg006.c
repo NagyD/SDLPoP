@@ -1745,10 +1745,10 @@ void __pascal far on_guard_killed() {
 		// demo level: after killing Guard, run out of room
 		checkpoint = 1;
 		demo_index = demo_time = 0;
-	} else if (current_level == 13) {
+	} else if (current_level == /*13*/ custom->jaffar_victory_level) {
 		// Jaffar's level: flash
 		flash_color = color_15_brightwhite; // white
-		flash_time = 18;
+		flash_time = /*18*/ custom->jaffar_victory_flash_time;
 		is_show_time = 1;
 		leveldoor_open = 2;
 		play_sound(sound_43_victory_Jaffar); // Jaffar's death

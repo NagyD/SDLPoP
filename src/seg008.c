@@ -1707,7 +1707,7 @@ void __pascal far show_time() {
 		(!(rem_min == INT16_MIN && rem_tick == 1)) &&
 		#endif
 		rem_min != 0 &&
-		(current_level < 13 || (current_level == 13 && leveldoor_open == 0)) &&
+		(current_level < /*13*/ custom->victory_stops_time_level || (current_level == /*13*/ custom->victory_stops_time_level && leveldoor_open == 0)) &&
 		current_level < 15
 	) {
 		// Time passes

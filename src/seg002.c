@@ -519,9 +519,9 @@ void __pascal far play_mirr_mus() {
 	if (
 		leveldoor_open != 0 &&
 		leveldoor_open != 0x4D && // was the music played already?
-		current_level == 4 &&
-		Char.curr_row == 0 &&
-		Char.room == 11
+		current_level == /*4*/ custom->mirror_level &&
+		Char.curr_row == /*0*/ custom->mirror_row &&
+		Char.room == /*11*/ custom->mirror_room
 	) {
 		play_sound(sound_25_presentation); // presentation (level 4 mirror)
 		leveldoor_open = 0x4D;
@@ -1016,9 +1016,9 @@ void __pascal far check_skel() {
 			set_redraw_full(curr_tilepos, 1);
 			set_wipe(curr_tilepos, 1);
 			Char.room = drawn_room;
-			Char.curr_row = 1;
+			Char.curr_row = /*1*/ custom->skeleton_row;
 			Char.y = y_land[Char.curr_row + 1];
-			Char.curr_col = 5;
+			Char.curr_col = /*5*/ custom->skeleton_column;
 			Char.x = x_bump[Char.curr_col + 5] + 14;
 			Char.direction = dir_FF_left;
 			seqtbl_offset_char(seq_88_skel_wake_up); // skel wake up
