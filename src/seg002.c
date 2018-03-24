@@ -302,7 +302,7 @@ void __pascal far exit_room() {
 	if (exit_room_timer != 0) {
 		--exit_room_timer;
 #ifdef FIX_HANG_ON_TELEPORT
-		if (!(fixes->fix_hang_on_teleport && Char.y >= 211))
+		if (!(fixes->fix_hang_on_teleport && Char.y >= 211 && Char.curr_row >= 2))
 #endif
 		return;
 	}

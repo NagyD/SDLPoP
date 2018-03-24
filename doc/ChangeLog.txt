@@ -505,3 +505,4 @@ FIXED: When playing back a recording, Alt+Tabbing back to SDLPoP stops the repla
 (version 1.18.1)
 
 FIXED: Fixed the bug with the level 3 checkpoint.
+FIXED: Fixed the bug in "Fix hang on teleport bug".
