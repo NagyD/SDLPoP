@@ -487,7 +487,7 @@ void __pascal far Jaffar_exit() {
 // seg002:0665
 void __pascal far level3_set_chkp() {
 	// Special event: set checkpoint
-	if (current_level == /*3*/ custom->checkpoint_level && Char.room == 7) {
+	if (current_level == /*3*/ custom->checkpoint_level && Char.room == 7 /* TODO: add a custom option */) {
 		checkpoint = 1;
 		hitp_beg_lev = hitp_max;
 	}
@@ -521,7 +521,7 @@ void __pascal far play_mirr_mus() {
 		leveldoor_open != 0x4D && // was the music played already?
 		current_level == /*4*/ custom->mirror_level &&
 		Char.curr_row == /*0*/ custom->mirror_row &&
-		Char.room == /*11*/ custom->mirror_room
+		Char.room == 11 /* TODO: add a custom option */
 	) {
 		play_sound(sound_25_presentation); // presentation (level 4 mirror)
 		leveldoor_open = 0x4D;
