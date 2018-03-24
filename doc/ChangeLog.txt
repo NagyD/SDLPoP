@@ -500,9 +500,10 @@ DONE: Added support for MIDI music.
 FIXED: Fixed teleporting to the room above by grabbing a ledge (integer overflow bug).
 FIXED: When playing back a recording, Alt+Tabbing back to SDLPoP stops the replay if Alt is released before Tab.
 
-2018 March ??
+2018 March 24
 =================
 (version 1.18.1)
 
 FIXED: Fixed the bug with the level 3 checkpoint.
 FIXED: Fixed the bug in "Fix hang on teleport bug".
+FIXED: Fixed the removed loose floor on level 3.
