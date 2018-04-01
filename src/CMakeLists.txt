@@ -88,18 +88,12 @@ else()
     # By default, a normal binary executable will be created.
     # If you want an Application Bundle instead, pass CREATE_BUNDLE to CMake like so: -DCREATE_BUNDLE=1
 
-    set(SDLPoP_VERSION "1.19")
-    set(MACOSX_BUNDLE_INFO_STRING          ${PROJECT_NAME})
     set(MACOSX_BUNDLE_ICON_FILE            "icon.icns")
     set_source_files_properties(${MACOSX_BUNDLE_ICON_FILE} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
-    set(MACOSX_BUNDLE_GUI_IDENTIFIER       "org.princed.SDLPoP")
-    set(MACOSX_BUNDLE_LONG_VERSION_STRING  ${SDLPoP_VERSION})
-    set(MACOSX_BUNDLE_BUNDLE_NAME          "SDLPoP")
-    set(MACOSX_BUNDLE_SHORT_VERSION_STRING ${SDLPoP_VERSION})
-    set(MACOSX_BUNDLE_BUNDLE_VERSION       ${SDLPoP_VERSION})
-    set(MACOSX_BUNDLE_COPYRIGHT            "GNU General Public Licence, v3")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mmacosx-version-min=10.6")
     set(CMAKE_C_LINK_FLAGS "${CMAKE_C_LINK_FLAGS} -headerpad_max_install_names")
     add_executable(prince MACOSX_BUNDLE ${SOURCE_FILES} ${MACOSX_BUNDLE_ICON_FILE})
+    set_target_properties(prince PROPERTIES MACOSX_BUNDLE_INFO_PLIST ${CMAKE_SOURCE_DIR}/Info.plist)
 
     # If you want to copy the data files from another folder, pass this to CMake: -DDATA_DIRECTORY=<path>.
     if (NOT (DEFINED DATA_DIRECTORY))

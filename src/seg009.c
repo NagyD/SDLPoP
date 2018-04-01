@@ -27,6 +27,7 @@ The authors of this program may be contacted at http://forum.princed.org
 #include <wchar.h>
 #else
 #include "dirent.h"
+#endif
 
 // Silence warnings (stb_image.h)
 #ifdef __GNUC__
