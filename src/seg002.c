@@ -988,6 +988,7 @@ void __pascal far check_hurting() {
 		seqtbl_offset_char(seq_69_attack_was_parried); // attack was parried
 		play_seq();
 	}
+	if (Char.direction == dir_56_none) return; // Fix looping "sword moving" sound.
 	// frame 154: poking
 	// frame 161: parrying
 	if (Char.frame == frame_154_poking && Opp.frame != frame_161_parry && Opp.action != actions_99_hurt) {
