@@ -517,7 +517,7 @@ void __pascal far decompr_img(byte far *dest,const image_data_type far *source,i
 int calc_stride(image_data_type* image_data) {
 	int width = image_data->width;
 	int flags = image_data->flags;
-	int depth = ((flags >> 12) & 3) + 1;
+	int depth = ((flags >> 12) & 7) + 1;
 	return (depth * width + 7) / 8;
 }
 
@@ -548,7 +548,7 @@ image_type* decode_image(image_data_type* image_data, dat_pal_type* palette) {
 	if (height == 0) return NULL;
 	int width = image_data->width;
 	int flags = image_data->flags;
-	int depth = ((flags >> 12) & 3) + 1;
+	int depth = ((flags >> 12) & 7) + 1;
 	int cmeth = (flags >> 8) & 0x0F;
 	int stride = calc_stride(image_data);
 	int dest_size = stride * height;
