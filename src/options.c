@@ -434,9 +434,12 @@ void set_options_to_default() {
 	turn_custom_options_on_off(0);
 }
 
+void load_dos_exe_modifications(const char* folder_name);
+
 void load_global_options() {
 	set_options_to_default();
 	ini_load(locate_file("SDLPoP.ini"), global_ini_callback); // global configuration
+	load_dos_exe_modifications("."); // read PRINCE.EXE in the current working directory
 }
 
 void check_mod_param() {
@@ -468,7 +471,11 @@ bool read_exe_bytes(void* dest, size_t nbytes, byte* exe_memory, int exe_offset,
 	return true;
 }
 
-void load_dos_exe_modifications(const char* filename) {
+void load_dos_exe_modifications(const char* folder_name) {
+	// TODO: Unicode paths
+	// TODO: Handle mods where PRINCE.EXE has been renamed?
+	char filename[POP_MAX_PATH];
+	snprintf(filename, sizeof(filename), "%s/%s", folder_name, "PRINCE.EXE");
 	FILE* fp = fopen(filename, "rb");
 	if (fp != NULL) {
 		struct stat info;
@@ -643,14 +650,7 @@ void load_mod_options() {
 				ok = true;
 				strncpy(mod_data_path, located_folder_name, sizeof(mod_data_path));
 				// Try to load PRINCE.EXE (DOS)
-				// TODO: Unicode paths
-				// TODO: Handle mods where PRINCE.EXE has been renamed?
-				char dos_exe_filename[POP_MAX_PATH];
-				snprintf(dos_exe_filename, sizeof(dos_exe_filename), "%s/%s", located_folder_name, "PRINCE.EXE");
-				if (file_exists(dos_exe_filename)) {
-					load_dos_exe_modifications(dos_exe_filename);
-				}
-
+				load_dos_exe_modifications(located_folder_name);
 				// Try to load mod.ini
 				char mod_ini_filename[POP_MAX_PATH];
 				snprintf(mod_ini_filename, sizeof(mod_ini_filename), "%s/%s", located_folder_name, "mod.ini");
