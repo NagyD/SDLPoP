@@ -471,167 +471,191 @@ bool read_exe_bytes(void* dest, size_t nbytes, byte* exe_memory, int exe_offset,
 	return true;
 }
 
+int identify_dos_exe_version(int filesize) {
+	int dos_version = -1;
+	switch (filesize) {
+		case 123335: dos_version = dos_10_packed; break;
+		case 125115: dos_version = dos_13_packed; break;
+		case 110855: dos_version = dos_14_packed; break;
+		case 129504: dos_version = dos_10_unpacked; break;
+		case 129472: dos_version = dos_13_unpacked; break;
+		case 115008: dos_version = dos_14_unpacked; break;
+		default: break;
+	}
+	return dos_version;
+}
+
 void load_dos_exe_modifications(const char* folder_name) {
-	// TODO: Unicode paths
-	// TODO: Handle mods where PRINCE.EXE has been renamed?
 	char filename[POP_MAX_PATH];
 	snprintf(filename, sizeof(filename), "%s/%s", folder_name, "PRINCE.EXE");
 	FILE* fp = fopen(filename, "rb");
-	if (fp != NULL) {
-		struct stat info;
-		if (fstat(fileno(fp), &info) == 0 && info.st_size > 0) {
-			int dos_version = -1;
-			switch (info.st_size) {
-				case 123335: dos_version = dos_10_packed; break;
-				case 125115: dos_version = dos_13_packed; break;
-				case 110855: dos_version = dos_14_packed; break;
-				case 129504: dos_version = dos_10_unpacked; break;
-				case 129472: dos_version = dos_13_unpacked; break;
-				case 115008: dos_version = dos_14_unpacked; break;
-				default: break;
-			}
-//			printf("dos version = %d\n", dos_version);
-			if (dos_version >= 0) {
-				turn_custom_options_on_off(1);
-				byte* exe_memory = malloc((size_t) info.st_size);
-				fread(exe_memory, (size_t) info.st_size, 1, fp);
 
-				byte temp_bytes[64] = {};
-				word temp_word = 0;
-				bool read_ok;
+	int dos_version = -1;
+	struct stat info;
+	if (fp != NULL && fstat(fileno(fp), &info) == 0 && info.st_size > 0) {
+		dos_version = identify_dos_exe_version(info.st_size);
+	} else {
+		// PRINCE.EXE not found, try to search for other .EXE files in the same folder.
+		directory_listing_type* directory_listing = create_directory_listing_and_find_first_file(folder_name, "exe");
+		if (directory_listing != NULL) {
+			do {
+				char* current_filename = get_current_filename_from_directory_listing(directory_listing);
+				snprintf(filename, sizeof(filename), "%s/%s", folder_name, current_filename);
+				fp = fopen(filename, "rb");
+				if (fp != NULL && fstat(fileno(fp), &info) == 0 && info.st_size > 0) {
+					dos_version = identify_dos_exe_version(info.st_size);
+					if (dos_version >= 0) {
+						break; // We found a DOS executable with the right size!
+					}
+					fclose(fp);
+					fp = NULL;
+				}
+				// Keep looking until we find an .EXE with the right size, or until there are no .EXE files left.
+			} while (find_next_file(directory_listing));
+			close_directory_listing(directory_listing);
+		}
+	}
+
+	if (dos_version >= 0) {
+		turn_custom_options_on_off(1);
+		byte* exe_memory = malloc((size_t) info.st_size);
+		fread(exe_memory, (size_t) info.st_size, 1, fp);
+
+		byte temp_bytes[64] = {0};
+		word temp_word = 0;
+		bool read_ok;
 
 #define process(x, nbytes, ...) \
-				do { \
-					static const int offsets[6] = __VA_ARGS__; \
-					int offset = offsets[dos_version]; \
-					read_ok = read_exe_bytes(x, nbytes, exe_memory, offset, info.st_size); \
-				} while(0)
+		do { \
+			static const int offsets[6] = __VA_ARGS__; \
+			int offset = offsets[dos_version]; \
+			read_ok = read_exe_bytes(x, nbytes, exe_memory, offset, info.st_size); \
+		} while(0)
 
-				// Offsets and comparisons are derived from princehack.xml
-				process(&custom_saved.start_minutes_left, 2, {0x04a23, 0x060d3, 0x04ea3, 0x055e3, 0x0495f, 0x05a8f});
-				process(&custom_saved.start_ticks_left, 2, {0x04a29, 0x060d9, 0x04ea9, 0x055e9, 0x04965, 0x05a95});
-				process(&custom_saved.start_hitp, 2, {0x04a2f, 0x060df, 0x04eaf, 0x055ef, 0x0496b, 0x05a9b});
-				process(&custom_saved.first_level, 2, {0x00707, 0x01db7, 0x007db, 0x00f1b, 0x0079f, 0x018cf});
-				process(&custom_saved.max_hitp_allowed, 2, {0x013f1, 0x02aa1, 0x015ac, 0x01cec, 0x014a3, 0x025d3});
-				process(&custom_saved.saving_allowed_first_level, 1, {0x007c8, 0x01e78, 0x008b4, 0x00ff4, 0x00878, 0x019a8});
-				if (read_ok) custom_saved.saving_allowed_first_level += 1;
-				process(&custom_saved.saving_allowed_last_level, 1, {0x007cf, 0x01e7f, 0x008bb, 0x00ffb, 0x0087f, 0x019af});
-				if (read_ok) custom_saved.saving_allowed_last_level -= 1;
-				{
-					static const byte comparison[] = {0xa3, 0x92, 0x4e, 0xa3, 0x5c, 0x40, 0xa3, 0x8e, 0x4e, 0xa2, 0x2a,
-					                                  0x3d, 0xa2, 0x29, 0x3d, 0xa3, 0xee, 0x42, 0xa2, 0x2e, 0x3d, 0x98};
-					process(temp_bytes, COUNT(comparison), {0x04c9b, 0x0634b, 0x008be, 0x00ffe, 0x00882, 0x019b2});
-					custom_saved.start_upside_down = (memcmp(temp_bytes, comparison, COUNT(comparison)) != 0);
-				}
-				process(&custom_saved.start_in_blind_mode, 1, {0x04e46, 0x064f6, 0x052ce, 0x05a0e, 0x04d8a, 0x05eba});
-				process(&custom_saved.copyprot_level, 2, {0x1aaeb, 0x1c62e, 0x1b89b, 0x1c49e, 0x17c3d, 0x18e18});
-				process(&custom_saved.drawn_tile_top_level_edge, 1, {0x0a1f0, 0x0b8a0, 0x0a69c, 0x0addc, 0x0a158, 0x0b288});
-				process(&custom_saved.drawn_tile_left_level_edge, 1, {0x0a26b, 0x0b91b, 0x0a6a3, 0x0ade3, 0x0a15f, 0x0b28f});
-				process(&custom_saved.level_edge_hit_tile, 1, {0x06f02, 0x085b2, 0x0a6b0, 0x0adf0, 0x0a16c, 0x0b29c});
-				process(temp_bytes, 2, {0x04e46, 0x064f6, 0x052ce, 0x05a0e, 0x04d8a, 0x05eba}); // allow triggering any tile
-				if (read_ok) custom_saved.allow_triggering_any_tile = (temp_bytes[0] == 0x75 && temp_bytes[1] == 0x13);
-				process(temp_bytes, 1, {0x0a7bb, 0x0be6b, 0x0ac67, 0x0b3a7, 0x0a723, 0x0b853}); // enable WDA in palace
-				if (read_ok) custom_saved.enable_wda_in_palace = (temp_bytes[0] != 116);
-				process(&custom_saved.tbl_level_type, 16, {0x1acea, 0x1c842, 0x1b9ae, 0x1c5c6, 0x17d4c, 0x18f3c});
-				process(&custom_saved.tbl_guard_hp, 16, {0x1b8a8, 0x1d46a, 0x1c6c5, 0x1d35c, 0x18a97, 0x19d06});
-				process(&custom_saved.tbl_guard_type, sizeof(short)*16, {-1, 0x1c964, -1, 0x1c702, -1, 0x1905e});
-				process(&custom_saved.vga_palette, sizeof(rgb_type)*16,  {0x1d141, 0x1f136, 0x1df5e, 0x1f02a, 0x1a335, 0x1b9de});
-				process(&temp_word, 2, {0x003e2, 0x01a92, 0x0046b, 0x00bab, 0x00455, 0x01585}); // titles skipping
-				if (read_ok) custom_saved.skip_title = (temp_word != 63558);
-				process(&custom_saved.shift_L_allowed_until_level, 1, {0x0085c, 0x01f0c, 0x00955, 0x01095, 0x00919, 0x01a49});
-				if (read_ok) custom_saved.shift_L_allowed_until_level += 1;
-				process(&custom_saved.shift_L_reduced_minutes, 2, {0x008ad, 0x01f5d, 0x00991, 0x010d1, 0x00955, 0x01a85});
-				process(&custom_saved.shift_L_reduced_ticks, 2, {0x008b3, 0x01f63, 0x00997, 0x010d7, 0x0095b, 0x01a8b});
-				// TODO: cutscenes
-				// TODO: color variations
-				process(&custom_saved.demo_hitp, 1, {0x04c28, 0x062d8, 0x050b0, 0x057f0, 0x04b6c, 0x05c9c});
-				process(&custom_saved.demo_end_room, 1, {0x00b40, 0x021f0, 0x00c25, 0x01365, 0x00be9, 0x01d19});
-				process(&custom_saved.intro_music_level, 1, {0x04c37, 0x062e7, 0x050bf, 0x057ff, 0x04b7b, 0x05cab});
-				process(temp_bytes, 1, {0x04b29, 0x061d9, 0x04fa9, 0x056e9, 0x04a65, 0x05b95}); // where the kid will have the sword
-				if (read_ok) custom_saved.have_sword_from_level = (temp_bytes[0] == 0xEB) ? 16 /*never*/ : 2;
-				process(&custom_saved.checkpoint_level, 1, {0x04b9e, 0x0624e, 0x05026, 0x05766, 0x04ae2, 0x05c12});
-				process(&custom_saved.checkpoint_respawn_dir, 1, {0x04bac, 0x0625c, 0x05034, 0x05774, 0x04af0, 0x05c20});
-				process(&custom_saved.checkpoint_respawn_room, 1, {0x04bb1, 0x06261, 0x05039, 0x05779, 0x04af5, 0x05c25});
-				process(&custom_saved.checkpoint_respawn_tilepos, 1, {0x04bb6, 0x06266, 0x0503e, 0x0577e, 0x04afa, 0x05c2a});
-				process(&custom_saved.checkpoint_clear_tile_room, 1, {0x04bb8, 0x06268, 0x05040, 0x05780, 0x04afc, 0x05c2c});
-				process(&custom_saved.checkpoint_clear_tile_col, 1, {0x04bbc, 0x0626c, 0x05044, 0x05784, 0x04b00, 0x05c30});
-				process(&temp_word, 2, {0x04bbf, 0x0626f, 0x05047, 0x05787, 0x04b03, 0x05c33}); // row of the tile to clear
-				if (read_ok) {
-					if (temp_word == 49195) {
-						custom_saved.checkpoint_clear_tile_row = 0;
-					} else if (temp_word == 432) {
-						custom_saved.checkpoint_clear_tile_row = 1;
-					} else if (temp_word == 688) {
-						custom_saved.checkpoint_clear_tile_row = 2;
-					}
-				}
-				process(&custom_saved.skeleton_level, 1, {0x046a4, 0x05d54, -1, -1, -1, -1});
-				process(&custom_saved.skeleton_room, 1, {0x046b8, 0x05d68, -1, -1, -1, -1});
-				process(&custom_saved.skeleton_trigger_column_1, 1, {0x046cc, 0x05d7c, -1, -1, -1, -1});
-				process(&custom_saved.skeleton_trigger_column_2, 1, {0x046d3, 0x05d83, -1, -1, -1, -1});
-				process(&custom_saved.skeleton_column, 1, {0x046de, 0x05d8e, 0x04b5e, 0x0529e, 0x0461a, 0x0574a});
-				process(&custom_saved.skeleton_row, 1, {0x046e2, 0x05d92, 0x04b62, 0x052a2, 0x0461e, 0x0574e});
-				process(temp_bytes, 1, {0x046c3, 0x05d73, -1, -1, -1, -1});
-				if (read_ok) custom_saved.skeleton_require_open_level_door = (temp_bytes[0] != 0xEB);
-				process(&custom_saved.skeleton_skill, 1, {0x0478f, 0x05e3f, -1, -1, -1, -1});
-				process(&custom_saved.skeleton_reappear_room, 1, {0x03b32, 0x051e2, 0x03fb2, 0x046f2, 0x03a6e, 0x04b9e});
-				process(&custom_saved.skeleton_reappear_x, 1, {0x03b39, 0x051e9, -1, -1, -1, -1});
-				process(&custom_saved.skeleton_reappear_row, 1, {0x03b3e, 0x051ee, -1, -1, -1, -1});
-				process(&custom_saved.skeleton_reappear_dir, 1, {0x03b43, 0x051f3, -1, -1, -1, -1});
-				process(&custom_saved.mirror_level, 1, {0x08dc7, 0x0a477, 0x09274, 0x099b4, 0x08d30, 0x09e60});
-				process(&custom_saved.mirror_room, 1, {0x08dcb, 0x0a47b, 0x09278, 0x099b8, 0x08d34, 0x09e64});
-				if (read_ok) custom_saved.mirror_column = custom_saved.mirror_room;
-				process(&temp_word, 2, {0x08dcf, 0x0a47f, 0x0927c, 0x099bc, 0x08d38, 0x09e68}); // mirror row
-				if (read_ok) {
-					if (temp_word == 49195) {
-						custom_saved.mirror_row = 0;
-					} else if (temp_word == 432) {
-						custom_saved.mirror_row = 1;
-					} else if (temp_word == 688) {
-						custom_saved.mirror_row = 2;
-					}
-				}
-				process(&custom_saved.mirror_tile, 1, {0x08de3, 0x0a493, 0x09290, 0x099d0, 0x08d4c, 0x09e7c});
-				process(temp_bytes, 1, {0x051a2, 0x06852, 0x05636, 0x05d76, 0x050f2, 0x06222});
-				if (read_ok) custom_saved.show_mirror_image = (temp_bytes[0] != 0xEB);
-				process(&custom_saved.falling_exit_level, 1, {0x03eb2, 0x05562, -1, -1, -1, -1});
-				process(&custom_saved.falling_exit_room, 1, {0x03eb9, 0x05569, -1, -1, -1, -1});
-				process(&custom_saved.falling_entry_level, 1, {0x04cbd, 0x0636d, -1, -1, -1, -1});
-				process(&custom_saved.falling_entry_room, 1, {0x04cc4, 0x06374, -1, -1, -1, -1});
-				process(&custom_saved.mouse_level, 1, {0x05166, 0x06816, 0x055fa, 0x05d3a, 0x050b6, 0x061e6});
-				process(&custom_saved.mouse_room, 1, {0x0516d, 0x0681d, 0x05601, 0x05d41, 0x050bd, 0x061ed});
-				process(&custom_saved.mouse_delay, 2, {0x0517f, 0x0682f, 0x05613, 0x05d53, 0x050cf, 0x061ff});
-				process(&custom_saved.mouse_object, 1, {0x054b3, 0x06b63, 0x05947, 0x06087, 0x05403, 0x06533});
-				process(&custom_saved.mouse_start_x, 1, {0x054b8, 0x06b68, 0x0594c, 0x0608c, 0x05408, 0x06538});
-				{
-					byte level = 0;
-					byte room = 0;
-					process(&level, 1, {0x00b84, 0x02234, 0x00c6d, 0x013ad, 0x00c31, 0x01d61}); // seamless exit
-					if (read_ok) process(&room, 1, {0x00b8b, 0x0223b, 0x00c74, 0x013b4, 0x00c38, 0x01d68});
-					if (read_ok && level < 16) {
-						memset(custom_saved.tbl_seamless_exit, -1, sizeof(custom_saved.tbl_seamless_exit));
-						custom_saved.tbl_seamless_exit[level] = room;
-					}
-				}
-				process(&custom_saved.loose_tiles_level, 1, {0x0120d, 0x028bd, -1, -1, 0x01358, 0x02488});
-				process(&custom_saved.loose_tiles_room_1, 1, {0x01214, 0x028c4, -1, -1, 0x0135f, 0x0248f});
-				process(&custom_saved.loose_tiles_room_2, 1, {0x0121b, 0x028cb, -1, -1, 0x01366, 0x02496});
-				process(&custom_saved.loose_tiles_first_tile, 1, {0x0122e, 0x028de, -1, -1, 0x01379, 0x024a9});
-				process(&custom_saved.loose_tiles_last_tile, 1, {0x0124d, 0x028fd, -1, -1, 0x01398, 0x024c8});
-				process(&custom_saved.jaffar_victory_level, 1, {0x084b3, 0x09b63, 0x08963, 0x090a3, 0x0841f, 0x0954f});
-				process(&custom_saved.jaffar_victory_flash_time, 2, {0x084c0, 0x09b70, 0x08970, 0x090b0, 0x0842c, 0x0955c});
-				process(&custom_saved.hide_level_number_from_level, 2, {0x0c3d9, 0x0da89, 0x0c8cd, 0x0d00d, 0x0c389, 0x0d4b9});
-				process(&temp_bytes, 1, {0x0c3d9, 0x0da89, 0x0c8cd, 0x0d00d, 0x0c389, 0x0d4b9});
-				if (read_ok) custom_saved.level_13_level_number = (temp_bytes[0] == 0xEB) ? 13 : 12;
-				process(&custom_saved.victory_stops_time_level, 1, {0x0c2e0, 0x0d990, -1, -1, -1, -1});
-				process(&custom_saved.win_level, 1, {0x011dc, 0x0288c, 0x01397, 0x01ad7, 0x01327, 0x02457});
-				process(&custom_saved.win_room, 1, {0x011e3, 0x02893, 0x0139e, 0x01ade, 0x0132e, 0x0245e});
-#undef process
-				free(exe_memory);
+		// Offsets and comparisons are derived from princehack.xml
+		process(&custom_saved.start_minutes_left, 2, {0x04a23, 0x060d3, 0x04ea3, 0x055e3, 0x0495f, 0x05a8f});
+		process(&custom_saved.start_ticks_left, 2, {0x04a29, 0x060d9, 0x04ea9, 0x055e9, 0x04965, 0x05a95});
+		process(&custom_saved.start_hitp, 2, {0x04a2f, 0x060df, 0x04eaf, 0x055ef, 0x0496b, 0x05a9b});
+		process(&custom_saved.first_level, 2, {0x00707, 0x01db7, 0x007db, 0x00f1b, 0x0079f, 0x018cf});
+		process(&custom_saved.max_hitp_allowed, 2, {0x013f1, 0x02aa1, 0x015ac, 0x01cec, 0x014a3, 0x025d3});
+		process(&custom_saved.saving_allowed_first_level, 1, {0x007c8, 0x01e78, 0x008b4, 0x00ff4, 0x00878, 0x019a8});
+		if (read_ok) custom_saved.saving_allowed_first_level += 1;
+		process(&custom_saved.saving_allowed_last_level, 1, {0x007cf, 0x01e7f, 0x008bb, 0x00ffb, 0x0087f, 0x019af});
+		if (read_ok) custom_saved.saving_allowed_last_level -= 1;
+		{
+			static const byte comparison[] = {0xa3, 0x92, 0x4e, 0xa3, 0x5c, 0x40, 0xa3, 0x8e, 0x4e, 0xa2, 0x2a,
+			                                  0x3d, 0xa2, 0x29, 0x3d, 0xa3, 0xee, 0x42, 0xa2, 0x2e, 0x3d, 0x98};
+			process(temp_bytes, COUNT(comparison), {0x04c9b, 0x0634b, 0x008be, 0x00ffe, 0x00882, 0x019b2});
+			custom_saved.start_upside_down = (memcmp(temp_bytes, comparison, COUNT(comparison)) != 0);
+		}
+		process(&custom_saved.start_in_blind_mode, 1, {0x04e46, 0x064f6, 0x052ce, 0x05a0e, 0x04d8a, 0x05eba});
+		process(&custom_saved.copyprot_level, 2, {0x1aaeb, 0x1c62e, 0x1b89b, 0x1c49e, 0x17c3d, 0x18e18});
+		process(&custom_saved.drawn_tile_top_level_edge, 1, {0x0a1f0, 0x0b8a0, 0x0a69c, 0x0addc, 0x0a158, 0x0b288});
+		process(&custom_saved.drawn_tile_left_level_edge, 1, {0x0a26b, 0x0b91b, 0x0a6a3, 0x0ade3, 0x0a15f, 0x0b28f});
+		process(&custom_saved.level_edge_hit_tile, 1, {0x06f02, 0x085b2, 0x0a6b0, 0x0adf0, 0x0a16c, 0x0b29c});
+		process(temp_bytes, 2, {0x04e46, 0x064f6, 0x052ce, 0x05a0e, 0x04d8a, 0x05eba}); // allow triggering any tile
+		if (read_ok) custom_saved.allow_triggering_any_tile = (temp_bytes[0] == 0x75 && temp_bytes[1] == 0x13);
+		process(temp_bytes, 1, {0x0a7bb, 0x0be6b, 0x0ac67, 0x0b3a7, 0x0a723, 0x0b853}); // enable WDA in palace
+		if (read_ok) custom_saved.enable_wda_in_palace = (temp_bytes[0] != 116);
+		process(&custom_saved.tbl_level_type, 16, {0x1acea, 0x1c842, 0x1b9ae, 0x1c5c6, 0x17d4c, 0x18f3c});
+		process(&custom_saved.tbl_guard_hp, 16, {0x1b8a8, 0x1d46a, 0x1c6c5, 0x1d35c, 0x18a97, 0x19d06});
+		process(&custom_saved.tbl_guard_type, sizeof(short)*16, {-1, 0x1c964, -1, 0x1c702, -1, 0x1905e});
+		process(&custom_saved.vga_palette, sizeof(rgb_type)*16,  {0x1d141, 0x1f136, 0x1df5e, 0x1f02a, 0x1a335, 0x1b9de});
+		process(&temp_word, 2, {0x003e2, 0x01a92, 0x0046b, 0x00bab, 0x00455, 0x01585}); // titles skipping
+		if (read_ok) custom_saved.skip_title = (temp_word != 63558);
+		process(&custom_saved.shift_L_allowed_until_level, 1, {0x0085c, 0x01f0c, 0x00955, 0x01095, 0x00919, 0x01a49});
+		if (read_ok) custom_saved.shift_L_allowed_until_level += 1;
+		process(&custom_saved.shift_L_reduced_minutes, 2, {0x008ad, 0x01f5d, 0x00991, 0x010d1, 0x00955, 0x01a85});
+		process(&custom_saved.shift_L_reduced_ticks, 2, {0x008b3, 0x01f63, 0x00997, 0x010d7, 0x0095b, 0x01a8b});
+		// TODO: cutscenes
+		// TODO: color variations
+		process(&custom_saved.demo_hitp, 1, {0x04c28, 0x062d8, 0x050b0, 0x057f0, 0x04b6c, 0x05c9c});
+		process(&custom_saved.demo_end_room, 1, {0x00b40, 0x021f0, 0x00c25, 0x01365, 0x00be9, 0x01d19});
+		process(&custom_saved.intro_music_level, 1, {0x04c37, 0x062e7, 0x050bf, 0x057ff, 0x04b7b, 0x05cab});
+		process(temp_bytes, 1, {0x04b29, 0x061d9, 0x04fa9, 0x056e9, 0x04a65, 0x05b95}); // where the kid will have the sword
+		if (read_ok) custom_saved.have_sword_from_level = (temp_bytes[0] == 0xEB) ? 16 /*never*/ : 2;
+		process(&custom_saved.checkpoint_level, 1, {0x04b9e, 0x0624e, 0x05026, 0x05766, 0x04ae2, 0x05c12});
+		process(&custom_saved.checkpoint_respawn_dir, 1, {0x04bac, 0x0625c, 0x05034, 0x05774, 0x04af0, 0x05c20});
+		process(&custom_saved.checkpoint_respawn_room, 1, {0x04bb1, 0x06261, 0x05039, 0x05779, 0x04af5, 0x05c25});
+		process(&custom_saved.checkpoint_respawn_tilepos, 1, {0x04bb6, 0x06266, 0x0503e, 0x0577e, 0x04afa, 0x05c2a});
+		process(&custom_saved.checkpoint_clear_tile_room, 1, {0x04bb8, 0x06268, 0x05040, 0x05780, 0x04afc, 0x05c2c});
+		process(&custom_saved.checkpoint_clear_tile_col, 1, {0x04bbc, 0x0626c, 0x05044, 0x05784, 0x04b00, 0x05c30});
+		process(&temp_word, 2, {0x04bbf, 0x0626f, 0x05047, 0x05787, 0x04b03, 0x05c33}); // row of the tile to clear
+		if (read_ok) {
+			if (temp_word == 49195) {
+				custom_saved.checkpoint_clear_tile_row = 0;
+			} else if (temp_word == 432) {
+				custom_saved.checkpoint_clear_tile_row = 1;
+			} else if (temp_word == 688) {
+				custom_saved.checkpoint_clear_tile_row = 2;
 			}
 		}
-		fclose(fp);
+		process(&custom_saved.skeleton_level, 1, {0x046a4, 0x05d54, -1, -1, -1, -1});
+		process(&custom_saved.skeleton_room, 1, {0x046b8, 0x05d68, -1, -1, -1, -1});
+		process(&custom_saved.skeleton_trigger_column_1, 1, {0x046cc, 0x05d7c, -1, -1, -1, -1});
+		process(&custom_saved.skeleton_trigger_column_2, 1, {0x046d3, 0x05d83, -1, -1, -1, -1});
+		process(&custom_saved.skeleton_column, 1, {0x046de, 0x05d8e, 0x04b5e, 0x0529e, 0x0461a, 0x0574a});
+		process(&custom_saved.skeleton_row, 1, {0x046e2, 0x05d92, 0x04b62, 0x052a2, 0x0461e, 0x0574e});
+		process(temp_bytes, 1, {0x046c3, 0x05d73, -1, -1, -1, -1});
+		if (read_ok) custom_saved.skeleton_require_open_level_door = (temp_bytes[0] != 0xEB);
+		process(&custom_saved.skeleton_skill, 1, {0x0478f, 0x05e3f, -1, -1, -1, -1});
+		process(&custom_saved.skeleton_reappear_room, 1, {0x03b32, 0x051e2, 0x03fb2, 0x046f2, 0x03a6e, 0x04b9e});
+		process(&custom_saved.skeleton_reappear_x, 1, {0x03b39, 0x051e9, -1, -1, -1, -1});
+		process(&custom_saved.skeleton_reappear_row, 1, {0x03b3e, 0x051ee, -1, -1, -1, -1});
+		process(&custom_saved.skeleton_reappear_dir, 1, {0x03b43, 0x051f3, -1, -1, -1, -1});
+		process(&custom_saved.mirror_level, 1, {0x08dc7, 0x0a477, 0x09274, 0x099b4, 0x08d30, 0x09e60});
+		process(&custom_saved.mirror_room, 1, {0x08dcb, 0x0a47b, 0x09278, 0x099b8, 0x08d34, 0x09e64});
+		if (read_ok) custom_saved.mirror_column = custom_saved.mirror_room;
+		process(&temp_word, 2, {0x08dcf, 0x0a47f, 0x0927c, 0x099bc, 0x08d38, 0x09e68}); // mirror row
+		if (read_ok) {
+			if (temp_word == 49195) {
+				custom_saved.mirror_row = 0;
+			} else if (temp_word == 432) {
+				custom_saved.mirror_row = 1;
+			} else if (temp_word == 688) {
+				custom_saved.mirror_row = 2;
+			}
+		}
+		process(&custom_saved.mirror_tile, 1, {0x08de3, 0x0a493, 0x09290, 0x099d0, 0x08d4c, 0x09e7c});
+		process(temp_bytes, 1, {0x051a2, 0x06852, 0x05636, 0x05d76, 0x050f2, 0x06222});
+		if (read_ok) custom_saved.show_mirror_image = (temp_bytes[0] != 0xEB);
+		process(&custom_saved.falling_exit_level, 1, {0x03eb2, 0x05562, -1, -1, -1, -1});
+		process(&custom_saved.falling_exit_room, 1, {0x03eb9, 0x05569, -1, -1, -1, -1});
+		process(&custom_saved.falling_entry_level, 1, {0x04cbd, 0x0636d, -1, -1, -1, -1});
+		process(&custom_saved.falling_entry_room, 1, {0x04cc4, 0x06374, -1, -1, -1, -1});
+		process(&custom_saved.mouse_level, 1, {0x05166, 0x06816, 0x055fa, 0x05d3a, 0x050b6, 0x061e6});
+		process(&custom_saved.mouse_room, 1, {0x0516d, 0x0681d, 0x05601, 0x05d41, 0x050bd, 0x061ed});
+		process(&custom_saved.mouse_delay, 2, {0x0517f, 0x0682f, 0x05613, 0x05d53, 0x050cf, 0x061ff});
+		process(&custom_saved.mouse_object, 1, {0x054b3, 0x06b63, 0x05947, 0x06087, 0x05403, 0x06533});
+		process(&custom_saved.mouse_start_x, 1, {0x054b8, 0x06b68, 0x0594c, 0x0608c, 0x05408, 0x06538});
+		{
+			byte level = 0;
+			byte room = 0;
+			process(&level, 1, {0x00b84, 0x02234, 0x00c6d, 0x013ad, 0x00c31, 0x01d61}); // seamless exit
+			if (read_ok) process(&room, 1, {0x00b8b, 0x0223b, 0x00c74, 0x013b4, 0x00c38, 0x01d68});
+			if (read_ok && level < 16) {
+				memset(custom_saved.tbl_seamless_exit, -1, sizeof(custom_saved.tbl_seamless_exit));
+				custom_saved.tbl_seamless_exit[level] = room;
+			}
+		}
+		process(&custom_saved.loose_tiles_level, 1, {0x0120d, 0x028bd, -1, -1, 0x01358, 0x02488});
+		process(&custom_saved.loose_tiles_room_1, 1, {0x01214, 0x028c4, -1, -1, 0x0135f, 0x0248f});
+		process(&custom_saved.loose_tiles_room_2, 1, {0x0121b, 0x028cb, -1, -1, 0x01366, 0x02496});
+		process(&custom_saved.loose_tiles_first_tile, 1, {0x0122e, 0x028de, -1, -1, 0x01379, 0x024a9});
+		process(&custom_saved.loose_tiles_last_tile, 1, {0x0124d, 0x028fd, -1, -1, 0x01398, 0x024c8});
+		process(&custom_saved.jaffar_victory_level, 1, {0x084b3, 0x09b63, 0x08963, 0x090a3, 0x0841f, 0x0954f});
+		process(&custom_saved.jaffar_victory_flash_time, 2, {0x084c0, 0x09b70, 0x08970, 0x090b0, 0x0842c, 0x0955c});
+		process(&custom_saved.hide_level_number_from_level, 2, {0x0c3d9, 0x0da89, 0x0c8cd, 0x0d00d, 0x0c389, 0x0d4b9});
+		process(&temp_bytes, 1, {0x0c3d9, 0x0da89, 0x0c8cd, 0x0d00d, 0x0c389, 0x0d4b9});
+		if (read_ok) custom_saved.level_13_level_number = (temp_bytes[0] == 0xEB) ? 13 : 12;
+		process(&custom_saved.victory_stops_time_level, 1, {0x0c2e0, 0x0d990, -1, -1, -1, -1});
+		process(&custom_saved.win_level, 1, {0x011dc, 0x0288c, 0x01397, 0x01ad7, 0x01327, 0x02457});
+		process(&custom_saved.win_room, 1, {0x011e3, 0x02893, 0x0139e, 0x01ade, 0x0132e, 0x0245e});
+#undef process
+		free(exe_memory);
 	}
+
+	if (fp != NULL) fclose(fp);
 }
 
 

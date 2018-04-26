@@ -76,6 +76,7 @@ set(SOURCE_FILES
         lighting.c
         screenshot.c
         menu.c
+        stb_vorbis.c
         icon.rc
         )
 
