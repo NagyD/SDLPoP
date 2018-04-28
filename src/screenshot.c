@@ -359,8 +359,8 @@ void save_level_screenshot(bool want_extras) {
 
 	bool processed[NUMBER_OF_ROOMS+1] = {false};
 	for (int room=1;room<=NUMBER_OF_ROOMS;room++) {
-		xpos[drawn_room] = -999;
-		ypos[drawn_room] = -999;
+		xpos[room] = -999;
+		ypos[room] = -999;
 	}
 	xpos[drawn_room] = 0;
 	ypos[drawn_room] = 0;
@@ -368,6 +368,7 @@ void save_level_screenshot(bool want_extras) {
 	int queue_start = 0;
 	int queue_end = 1;
 
+	// Assemble a map based on room links.
 	while (queue_start < queue_end) {
 		int room = queue[queue_start++];
 		byte* roomlinks = (byte*)(&level.roomlinks[room-1]);
@@ -384,6 +385,8 @@ void save_level_screenshot(bool want_extras) {
 		}
 	}
 
+	// Find the bounds of the level.
+	// The starting room is mapped to x=0,y=0, so 0 is a good initial value for max and min.
 	int min_x=0, max_x=0, min_y=0, max_y=0;
 	for (int room=1;room<=NUMBER_OF_ROOMS;room++) {
 		if (xpos[room] < min_x) min_x = xpos[room];
@@ -392,28 +395,39 @@ void save_level_screenshot(bool want_extras) {
 		if (ypos[room] > max_y) max_y = ypos[room];
 	}
 
-	int map_width = max_x-min_x+1;
-	int map_height = max_y-min_y+1;
+	// Position for rooms that would clash with other rooms: Below the normally mapped rooms.
+	int clash_y = max_y + 1;
+	int clash_x = min_x;
 
 	#define MAX_MAP_SIZE NUMBER_OF_ROOMS
 	int map[MAX_MAP_SIZE][MAX_MAP_SIZE] = {{0}};
 	for (int room=1;room<=NUMBER_OF_ROOMS;room++) {
 		if (processed[room]) {
+			again:;
 			int y = ypos[room] - min_y;
 			int x = xpos[room] - min_x;
 			if (x>=0 && y>=0 && x<MAX_MAP_SIZE && y<MAX_MAP_SIZE) {
 				if (map[y][x]) {
 					printf("Warning: room %d was mapped to the same place as room %d!\n", room, map[y][x]);
-					// Force broken link display for room links pointing into this room:
-					// TODO: Try to find some other place for this room?
-					xpos[room] = -999;
-					ypos[room] = -999;
-				} else {
-					map[y][x] = room;
+					// Try to find some other place for this room:
+					// Put this room to the bottom of the map.
+					xpos[room] = clash_x;
+					ypos[room] = clash_y;
+					clash_x++;
+					if (xpos[room] > max_x) max_x = xpos[room];
+					if (ypos[room] > max_y) max_y = ypos[room];
+					goto again; // Force bounds check, just to be sure.
 				}
+				map[y][x] = room;
+			} else {
+				// Probably impossible...
+				printf("Warning: room %d was mapped outside the map: x = %d, y = %d.\n", room, x, y);
 			}
 		}
 	}
+
+	int map_width = max_x-min_x+1;
+	int map_height = max_y-min_y+1;
 
 	// Debug printout of arrangement.
 	/*
