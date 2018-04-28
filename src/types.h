@@ -21,26 +21,8 @@ The authors of this program may be contacted at http://forum.princed.org
 #ifndef TYPES_H
 #define TYPES_H
 
-
-#ifdef STB_VORBIS_IMPLEMENTATION
-// Silence warnings (stb_vorbis.c)
-#ifndef _MSC_VER
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-function"
-#pragma GCC diagnostic ignored "-Wunused-value"
-#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-#endif
-
-#undef alloca // Silence warning about alloca being redefined (stb_vorbis.c)
-#include "stb_vorbis.c"
-
-#ifndef _MSC_VER
-#pragma GCC diagnostic pop
-#endif
-#else // STB_VORBIS_IMPLEMENTATION
 #define STB_VORBIS_HEADER_ONLY
 #include "stb_vorbis.c"
-#endif // STB_VORBIS_IMPLEMENTATION
 
 #if !defined(_MSC_VER)
 # include <SDL2/SDL.h>
@@ -1284,5 +1266,7 @@ typedef struct custom_options_type {
 	sbyte tbl_seamless_exit[16];
 } custom_options_type;
 #pragma pack(pop)
+
+typedef struct directory_listing_type directory_listing_type;
 
 #endif

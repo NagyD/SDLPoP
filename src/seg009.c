@@ -18,13 +18,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 The authors of this program may be contacted at http://forum.princed.org
 */
 
-#define STB_VORBIS_IMPLEMENTATION
-#define STB_VORBIS_NO_STDIO // Don't compile functionality that we do not need.
-#define STB_VORBIS_NO_PUSHDATA_API
-
 #include "common.h"
 #include <time.h>
 #include <errno.h>
+
+#ifdef _WIN32
+#include <windows.h>
+#include <wchar.h>
+#else
+#include "dirent.h"
+#endif
 
 // Most functions in this file are different from those in the original game.
 
@@ -69,7 +72,139 @@ const char* locate_file_(const char* filename, char* path_buffer, int buffer_siz
 	}
 }
 
+#ifdef _WIN32
+// These macros are from the SDL2 source. (src/core/windows/SDL_windows.h)
+// The pointers returned by these macros must be freed with SDL_free().
+#define WIN_StringToUTF8(S) SDL_iconv_string("UTF-8", "UTF-16LE", (char *)(S), (SDL_wcslen(S)+1)*sizeof(WCHAR))
+#define WIN_UTF8ToString(S) (WCHAR *)SDL_iconv_string("UTF-16LE", "UTF-8", (char *)(S), SDL_strlen(S)+1)
 
+// This hack is needed because SDL uses UTF-8 everywhere (even in argv!), but fopen on Windows uses whatever code page is currently set.
+FILE* fopen_UTF8(const char* filename_UTF8, const char* mode_UTF8) {
+	WCHAR* filename_UTF16 = WIN_UTF8ToString(filename_UTF8);
+	WCHAR* mode_UTF16 = WIN_UTF8ToString(mode_UTF8);
+	FILE* result = _wfopen(filename_UTF16, mode_UTF16);
+	SDL_free(mode_UTF16);
+	SDL_free(filename_UTF16);
+	return result;
+}
+
+int chdir_UTF8(const char* path_UTF8) {
+	WCHAR* path_UTF16 = WIN_UTF8ToString(path_UTF8);
+	int result = _wchdir(path_UTF16);
+	SDL_free(path_UTF16);
+	return result;
+}
+
+int access_UTF8(const char* filename_UTF8, int mode) {
+	WCHAR* filename_UTF16 = WIN_UTF8ToString(filename_UTF8);
+	int result = _waccess(filename_UTF16, mode);
+	SDL_free(filename_UTF16);
+	return result;
+}
+#endif //_WIN32
+
+// OS abstraction for listing directory contents
+// Directory listing using dirent.h is available using MinGW on Windows, but not using MSVC (need to use Win32 API).
+// - Under GNU/Linux, etc (or if compiling with MinGW on Windows), we can use dirent.h
+// - Under Windows, we'd like to directly call the Win32 API. (Note: MSVC does not include dirent.h)
+// NOTE: If we are using MinGW, we'll opt to use the Win32 API as well: dirent.h would just wrap Win32 anyway!
+
+#ifdef _WIN32
+struct directory_listing_type {
+	WIN32_FIND_DATAW find_data;
+	HANDLE search_handle;
+	char* current_filename_UTF8;
+};
+
+directory_listing_type* create_directory_listing_and_find_first_file(const char* directory, const char* extension) {
+	directory_listing_type* directory_listing = calloc(1, sizeof(directory_listing_type));
+	char search_pattern[POP_MAX_PATH];
+	snprintf(search_pattern, POP_MAX_PATH, "%s/*.%s", directory, extension);
+	WCHAR* search_pattern_UTF16 = WIN_UTF8ToString(search_pattern);
+	directory_listing->search_handle = FindFirstFileW( search_pattern_UTF16, &directory_listing->find_data );
+	SDL_free(search_pattern_UTF16);
+	if (directory_listing->search_handle != INVALID_HANDLE_VALUE) {
+		return directory_listing;
+	} else {
+		free(directory_listing);
+		return NULL;
+	}
+}
+
+char* get_current_filename_from_directory_listing(directory_listing_type* data) {
+	SDL_free(data->current_filename_UTF8);
+	data->current_filename_UTF8 = NULL;
+	data->current_filename_UTF8 = WIN_StringToUTF8(data->find_data.cFileName);
+	return data->current_filename_UTF8;
+}
+
+bool find_next_file(directory_listing_type* data) {
+	return (bool) FindNextFileW( data->search_handle, &data->find_data );
+}
+
+void close_directory_listing(directory_listing_type* data) {
+	FindClose(data->search_handle);
+	SDL_free(data->current_filename_UTF8);
+	data->current_filename_UTF8 = NULL;
+	free(data);
+}
+
+#else // use dirent.h API for listing files
+
+struct directory_listing_type {
+	DIR* dp;
+	char* found_filename;
+	const char* extension;
+};
+
+directory_listing_type* create_directory_listing_and_find_first_file(const char* directory, const char* extension) {
+	directory_listing_type* data = calloc(1, sizeof(directory_listing_type));
+	bool ok = false;
+	data->dp = opendir(directory);
+	if (data->dp != NULL) {
+		struct dirent* ep;
+		while ((ep = readdir(data->dp))) {
+			char *ext = strrchr(ep->d_name, '.');
+			if (ext != NULL && strcasecmp(ext+1, extension) == 0) {
+				data->found_filename = ep->d_name;
+				data->extension = extension;
+				ok = true;
+				break;
+			}
+		}
+	}
+	if (ok) {
+		return data;
+	} else {
+		free(data);
+		return NULL;
+	}
+}
+
+char* get_current_filename_from_directory_listing(directory_listing_type* data) {
+	return data->found_filename;
+}
+
+bool find_next_file(directory_listing_type* data) {
+	bool ok = false;
+	struct dirent* ep;
+	while ((ep = readdir(data->dp))) {
+		char *ext = strrchr(ep->d_name, '.');
+		if (ext != NULL && strcasecmp(ext+1, data->extension) == 0) {
+			data->found_filename = ep->d_name;
+			ok = true;
+			break;
+		}
+	}
+	return ok;
+}
+
+void close_directory_listing(directory_listing_type *data) {
+	closedir(data->dp);
+	free(data);
+}
+
+#endif //_WIN32
 
 dat_type* dat_chain_ptr = NULL;
 

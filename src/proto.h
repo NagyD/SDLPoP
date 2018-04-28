@@ -513,6 +513,21 @@ void sdlperror(const char* header);
 bool file_exists(const char* filename);
 #define locate_file(filename) locate_file_(filename, alloca(POP_MAX_PATH), POP_MAX_PATH)
 const char* locate_file_(const char* filename, char* path_buffer, int buffer_size);
+#ifdef _WIN32
+FILE* fopen_UTF8(const char* filename, const char* mode);
+#define fopen fopen_UTF8
+int chdir_UTF8(const char* path);
+#define chdir chdir_UTF8
+int access_UTF8(const char* filename_UTF8, int mode);
+#ifdef access
+#undef access
+#endif
+#define access access_UTF8
+#endif //_WIN32
+directory_listing_type* create_directory_listing_and_find_first_file(const char* directory, const char* extension);
+char* get_current_filename_from_directory_listing(directory_listing_type* data);
+bool find_next_file(directory_listing_type* data);
+void close_directory_listing(directory_listing_type* data);
 int __pascal far read_key();
 void __pascal far clear_kbd_buf();
 word __pascal far prandom(word max);
