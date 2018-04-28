@@ -515,3 +515,4 @@ FIXED: Fixed the removed loose floor on level 3.
 FIXED: Fix looping "sword moving" sound if the player leaves a room exactly when a guard attacks.
 FIXED: Support 8-bpp images in DAT files. For example the Pyramid mod contains some of these.
 FIXED: Improved map-making on levels with broken room links: If a room is mapped to an already used place, then put it to the bottom of the map.
+DONE: Load custom options from DOS PRINCE.EXE files.
