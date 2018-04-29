@@ -603,6 +603,19 @@ int __pascal far process_key() {
 			answer_text = sprintf_temp;
 			need_show_text = 1;
 		break;
+		case SDL_SCANCODE_C | WITH_CTRL: // ctrl-c
+		{
+			SDL_version verc, verl;
+			SDL_VERSION (&verc);
+			SDL_GetVersion (&verl);
+			snprintf (sprintf_temp, sizeof (sprintf_temp),
+				"SDL COMP v%u.%u.%u LINK v%u.%u.%u",
+				verc.major, verc.minor, verc.patch,
+				verl.major, verl.minor, verl.patch);
+			answer_text = sprintf_temp;
+			need_show_text = 1;
+		}
+		break;
 		case SDL_SCANCODE_L | WITH_SHIFT: // shift-l
 			if (current_level < custom->shift_L_allowed_until_level /* 4 */ || cheats_enabled) {
 				// if shift is not released within the delay, the cutscene is skipped

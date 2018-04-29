@@ -140,7 +140,10 @@ Controlling the game:
 	The game will automatically change input mode when there is input from either device.
 * Ctrl-R: return to intro
 * Ctrl-S: sound on/off
-* Ctrl-V: show version
+* Ctrl-V: show version of SDLPoP
+* Ctrl-C: show versions of SDL:
+	COMP: the SDL version SDLPoP was compiled against, i.e. the version of the SDL headers.
+	LINK: the SDL version SDLPoP was linked against, i.e. the version of SDL2.dll (or its equivalent on other platforms).
 * Ctrl-Q: quit game
 * Ctrl-L: load game (when in the intro)
 * Alt-Enter: toggle fullscreen
