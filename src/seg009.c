@@ -746,7 +746,10 @@ image_type* far __pascal far load_image(int resource_id, dat_pal_type* palette) 
 				sdlperror("SDL_RWFromConstMem");
 				return NULL;
 			}
-			image = IMG_LoadPNG_RW(rw);
+			image = IMG_Load_RW(rw, 0);
+			if (image == NULL) {
+				printf("IMG_Load_RW: %s\n", IMG_GetError());
+			}
 			if (SDL_RWclose(rw) != 0) {
 				sdlperror("SDL_RWclose");
 			}
