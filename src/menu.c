@@ -317,6 +317,14 @@ setting_type general_settings[] = {
 
 NAMES_LIST(scaling_type_setting_names, {"Sharp", "Fuzzy", "Blurry",});
 
+int integer_scaling_possible =
+#if SDL_VERSION_ATLEAST(2,0,5) // SDL_RenderSetIntegerScale
+	1
+#else
+	0
+#endif
+;
+
 setting_type visuals_settings[] = {
 		{.id = SETTING_FULLSCREEN, .style = SETTING_STYLE_TOGGLE, .linked = &start_fullscreen,
 				.text = "Start fullscreen",
@@ -326,9 +334,11 @@ setting_type visuals_settings[] = {
 				.explanation = "Render the game in the originally intended 4:3 aspect ratio."
 				               "\nNB. Works best using a high resolution."},
 		{.id = SETTING_USE_INTEGER_SCALING, .style = SETTING_STYLE_TOGGLE, .linked = &use_integer_scaling,
+				.required = &integer_scaling_possible,
 				.text = "Use integer scaling",
 				.explanation = "Enable pixel perfect scaling. That is, make all pixels the same size by forcing integer scale factors.\n"
-						"Combining with 4:3 aspect ratio requires at least 1600x1200."},
+						"Combining with 4:3 aspect ratio requires at least 1600x1200."
+						"\nYou need to compile with SDL 2.0.5 or newer to enable this."},
 		{.id = SETTING_SCALING_TYPE, .style = SETTING_STYLE_NUMBER, .number_type = SETTING_BYTE, .max = 2,
 				.linked = &scaling_type, .names_list = &scaling_type_setting_names_list,
 				.text = "Scaling method",
