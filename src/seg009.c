@@ -2187,7 +2187,9 @@ void window_resized() {
 #if SDL_VERSION_ATLEAST(2,0,5) // SDL_RenderSetIntegerScale
 	if (use_integer_scaling) {
 		int window_width, window_height;
-		SDL_GetWindowSize(window_, &window_width, &window_height);
+		// On high-DPI screens, this is what we need instead of SDL_GetWindowSize().
+		//SDL_GL_GetDrawableSize(window_, &window_width, &window_height);
+		SDL_GetRendererOutputSize(renderer_, &window_width, &window_height);
 		int render_width, render_height;
 		SDL_RenderGetLogicalSize(renderer_, &render_width, &render_height);
 		// Disable integer scaling if it would result in downscaling.
@@ -2256,6 +2258,7 @@ void __pascal far set_gr_mode(byte grmode) {
 	if (!start_fullscreen) start_fullscreen = check_param("full") != NULL;
 	if (start_fullscreen) flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
 	flags |= SDL_WINDOW_RESIZABLE;
+	flags |= SDL_WINDOW_ALLOW_HIGHDPI; // for Retina displays
 
 	// Should use different default window dimensions when using 4:3 aspect ratio
 	if (use_correct_aspect_ratio && pop_window_width == 640 && pop_window_height == 400) {
@@ -3168,10 +3171,10 @@ void process_events() {
 */
 				switch (event.window.event) {
 					case SDL_WINDOWEVENT_SIZE_CHANGED:
+						window_resized();
 					//case SDL_WINDOWEVENT_MOVED:
 					//case SDL_WINDOWEVENT_RESTORED:
 					case SDL_WINDOWEVENT_EXPOSED:
-						window_resized();
 						update_screen();
 						break;
 
