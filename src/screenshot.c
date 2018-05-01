@@ -22,17 +22,51 @@ The authors of this program may be contacted at http://forum.princed.org
 
 #ifdef USE_SCREENSHOT
 
-// TODO: Use incrementing numbers and a separate folder, like DOSBox? Or allow custom filenames.
-const char screenshot_filename[] = "screenshot.png";
+const char screenshots_folder[] = "screenshots";
+char screenshot_filename[POP_MAX_PATH] = "screenshot.png";
+int screenshot_index = 0;
+
+// Use incrementing numbers and a separate folder, like DOSBox.
+void make_screenshot_filename() {
+	// Create the folder if it doesn't exist yet:
+#if defined WIN32 || _WIN32 || WIN64 || _WIN64
+	mkdir (screenshots_folder);
+#else
+	mkdir (screenshots_folder, 0700);
+#endif
+	// Find the first unused filename:
+	for (;;) {
+		snprintf(screenshot_filename, sizeof(screenshot_filename), "%s/screenshot_%03d.png", screenshots_folder, screenshot_index);
+		if (! file_exists(screenshot_filename)) {
+			return;
+		}
+		screenshot_index++;
+	}
+}
 
 #define EVENT_OFFSET 0 // Add this number to displayed event numbers. Use 1 for Apoplexy compatibility.
 
 #define NUMBER_OF_ROOMS 24
 
+void show_result(int result, const char* what) {
+	char sprintf_temp[100];
+	if (result == 0) {
+		printf("Saved %s to \"%s\".\n", what, screenshot_filename);
+		snprintf(sprintf_temp, sizeof(sprintf_temp), "Saved %s", what);
+	} else {
+		printf("Could not save %s to \"%s\". Error: %s\n", what, screenshot_filename, IMG_GetError());
+		snprintf(sprintf_temp, sizeof(sprintf_temp), "Could not save %s", what);
+	}
+	display_text_bottom(sprintf_temp);
+	text_time_total = 24;
+	text_time_remaining = 24;
+}
+
 // Save a screenshot.
 void save_screenshot() {
-	IMG_SavePNG(get_final_surface(), screenshot_filename);
-	printf("Saved screenshot to \"%s\".\n", screenshot_filename);
+	make_screenshot_filename();
+	int result = IMG_SavePNG(get_final_surface(), screenshot_filename);
+	show_result(result, "screenshot");
 }
 
 // Switch to the given room and draw it.
@@ -544,8 +578,9 @@ void save_level_screenshot(bool want_extras) {
 	}
 	switch_to_room(old_room);
 
-	IMG_SavePNG(map_surface, screenshot_filename);
-	printf("Saved level screenshot to \"%s\".\n", screenshot_filename);
+	make_screenshot_filename();
+	int result = IMG_SavePNG(map_surface, screenshot_filename);
+	show_result(result, "level map");
 
 	SDL_FreeSurface(map_surface);
 
