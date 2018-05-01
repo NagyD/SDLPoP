@@ -359,8 +359,8 @@ void save_level_screenshot(bool want_extras) {
 
 	bool processed[NUMBER_OF_ROOMS+1] = {false};
 	for (int room=1;room<=NUMBER_OF_ROOMS;room++) {
-		xpos[room] = -999;
-		ypos[room] = -999;
+		xpos[room] = 0;
+		ypos[room] = 0;
 	}
 	xpos[drawn_room] = 0;
 	ypos[drawn_room] = 0;
