@@ -103,7 +103,7 @@ A:
 * --version, -v -- Display SDLPoP version and quit.
 * --help, -h, -? -- Display help and quit. (Currently it only points to this Readme...)
 * seed=number -- Set initial random seed, for testing.
-* --screenshot -- Must be used with megahit and a level number. When the level starts, a screenshot is saved to screenshot.png and the game quits.
+* --screenshot -- Must be used with megahit and a level number. When the level starts, a screenshot is saved to the screenshots folder and the game quits.
 * --screenshot-level -- Similar to the above, except the whole level is screenshotted, thus creating a level map.
 * --screenshot-level-extras -- Similar to the above, except lots of additional info is displayed on the picture.
 	You can find the meaning of each symbol in Map_Symbols.txt.
@@ -149,7 +149,7 @@ Controlling the game:
 * Alt-Enter: toggle fullscreen
 * F6: quicksave
 * F9: quickload
-* F12: Save a screenshot to screenshot.png.
+* F12: Save a screenshot to the screenshots folder.
 * Backspace: display in-game menu
 
 Viewing or recording replays:
@@ -175,8 +175,8 @@ Cheats:
 * Shift-B: toggle hiding of non-animated objects
 * Shift-S: Restore lost hit-point. (Like a small red potion.)
 * Shift-T: Give more hit-points. (Like a big red potion.)
-* Shift+F12: Save a screenshot of the whole level to screenshot.png, thus creating a level map.
-* Ctrl+Shift+F12: Save a screenshot of the whole level with extras to screenshot.png.
+* Shift+F12: Save a screenshot of the whole level to the screenshots folder, thus creating a level map.
+* Ctrl+Shift+F12: Save a screenshot of the whole level with extras to the screenshots folder.
 	You can find the meaning of each symbol in Map_Symbols.txt.
 
 Debug cheats:
