@@ -610,6 +610,7 @@ void __pascal do_simple_wait(int timer_index);
 void process_events();
 void idle();
 void __pascal far init_copyprot_dialog();
+int __pascal far showmessage(char far *text,int arg_4,void far *arg_0);
 dialog_type * __pascal far make_dialog_info(dialog_settings_type *settings, rect_type *dialog_rect,
                                             rect_type *text_rect, peel_type *dialog_peel);
 void __pascal far calc_dialog_peel_rect(dialog_type*dialog);

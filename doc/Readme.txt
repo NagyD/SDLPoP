@@ -138,6 +138,7 @@ Controlling the game:
 * Ctrl-K: keyboard mode
 	The initial mode is joystick/gamepad if such a device is detected, otherwise keyboard mode.
 	The game will automatically change input mode when there is input from either device.
+* Ctrl-Shift-K: Redefine keyboard controls.
 * Ctrl-R: return to intro
 * Ctrl-S: sound on/off
 * Ctrl-V: show version of SDLPoP

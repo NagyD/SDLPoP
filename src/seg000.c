@@ -475,6 +475,8 @@ Uint32 temp_shift_release_callback(Uint32 interval, void *param) {
 	return 0; // causes the timer to be removed
 }
 
+void redefine_keys();
+
 // seg000:04CD
 int __pascal far process_key() {
 	char sprintf_temp[80];
@@ -580,6 +582,9 @@ int __pascal far process_key() {
 			is_joyst_mode = 0;
 			is_keyboard_mode = 1;
 			need_show_text = 1;
+		break;
+		case SDL_SCANCODE_K | WITH_CTRL | WITH_SHIFT: // ctrl-shift-k
+			redefine_keys();
 		break;
 		case SDL_SCANCODE_R | WITH_CTRL: // ctrl-r
 			start_level = -1;
@@ -1519,28 +1524,40 @@ int __pascal far do_paused() {
 	return key || control_shift;
 }
 
+int key_left = 0;
+int key_right = 0;
+int key_up = 0;
+int key_down = 0;
+int key_jump_left = 0;
+int key_jump_right = 0;
+int key_action = 0;
+
 // seg000:1500
 void __pascal far read_keyb_control() {
 
 	if (key_states[SDL_SCANCODE_UP] || key_states[SDL_SCANCODE_HOME] || key_states[SDL_SCANCODE_PAGEUP]
 	    || key_states[SDL_SCANCODE_KP_8] || key_states[SDL_SCANCODE_KP_7] || key_states[SDL_SCANCODE_KP_9]
+	    || key_states[key_up] || key_states[key_jump_left] || key_states[key_jump_right]
 	) {
 		control_y = -1;
 	} else if (key_states[SDL_SCANCODE_CLEAR] || key_states[SDL_SCANCODE_DOWN]
 	           || key_states[SDL_SCANCODE_KP_5] || key_states[SDL_SCANCODE_KP_2]
+	           || key_states[key_down]
 	) {
 		control_y = 1;
 	}
 	if (key_states[SDL_SCANCODE_LEFT] || key_states[SDL_SCANCODE_HOME]
 	    || key_states[SDL_SCANCODE_KP_4] || key_states[SDL_SCANCODE_KP_7]
+	    || key_states[key_left] || key_states[key_jump_left]
 	) {
 		control_x = -1;
 	} else if (key_states[SDL_SCANCODE_RIGHT] || key_states[SDL_SCANCODE_PAGEUP]
 	           || key_states[SDL_SCANCODE_KP_6] || key_states[SDL_SCANCODE_KP_9]
+	           || key_states[key_right] || key_states[key_jump_right]
 	) {
 		control_x = 1;
 	}
-	control_shift = -(key_states[SDL_SCANCODE_LSHIFT] || key_states[SDL_SCANCODE_RSHIFT]);
+	control_shift = -(key_states[SDL_SCANCODE_LSHIFT] || key_states[SDL_SCANCODE_RSHIFT] || key_states[key_action]);
 
 	#ifdef USE_DEBUG_CHEATS
 	if (cheats_enabled && debug_cheats_enabled) {
@@ -1548,6 +1565,22 @@ void __pascal far read_keyb_control() {
 		else if (key_states[SDL_SCANCODE_LEFTBRACKET]) --Char.x;
 	}
 	#endif
+}
+
+void redefine_key(const char* name, int* key) {
+	char message[256];
+	snprintf(message, sizeof(message), "Redefining keys:\nPress key for %s.", name);
+	*key = showmessage(message, 1, &key_test_quit);
+}
+
+void redefine_keys() {
+	redefine_key("left", &key_left);
+	redefine_key("right", &key_right);
+	redefine_key("up", &key_up);
+	redefine_key("down", &key_down);
+	redefine_key("jump left", &key_jump_left);
+	redefine_key("jump right", &key_jump_right);
+	redefine_key("action", &key_action);
 }
 
 // seg000:156D
