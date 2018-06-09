@@ -527,7 +527,7 @@ setting_type gameplay_settings[] = {
 		{.id = SETTING_FIX_EXIT_DOOR, .style = SETTING_STYLE_TOGGLE,
 				.linked = &fixes_saved.fix_exit_door, .required = &use_fixes_and_enhancements,
 				.text = "Fix exit doors",
-				.explanation = "You can enter closed exit doors after you met Jaffar or the shadow, or after you opened one of multiple exits."},
+				.explanation = "You can enter closed exit doors after you met the shadow or Jaffar died, or after you opened one of multiple exits."},
 };
 
 NAMES_LIST(tile_type_setting_names, {
