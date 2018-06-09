@@ -389,7 +389,11 @@ void __pascal far up_pressed() {
 	else if (get_tile_infrontof_char() == tiles_16_level_door_left) leveldoor_tilepos = curr_tilepos;
 	if ((leveldoor_tilepos != -1) &&
 		level.start_room != drawn_room &&
-		curr_room_modif[leveldoor_tilepos] >= 42 // this door must be fully open
+		(
+			fixes->fix_exit_door
+			? curr_room_modif[leveldoor_tilepos] >= 42 // this door must be fully open
+			: leveldoor_open
+		)
 	){
 		go_up_leveldoor();
 	} else {

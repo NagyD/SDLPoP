@@ -192,6 +192,7 @@ enum setting_ids {
 	SETTING_FIX_MOVE_AFTER_SHEATHE,
 	SETTING_FIX_HIDDEN_FLOORS_DURING_FLASHING,
 	SETTING_FIX_HANG_ON_TELEPORT,
+	SETTING_FIX_EXIT_DOOR,
 	SETTING_USE_CUSTOM_OPTIONS,
 	SETTING_START_MINUTES_LEFT,
 	SETTING_START_TICKS_LEFT,
@@ -523,6 +524,10 @@ setting_type gameplay_settings[] = {
 				.linked = &fixes_saved.fix_hang_on_teleport, .required = &use_fixes_and_enhancements,
 				.text = "Fix hang on teleport bug",
 				.explanation = "By jumping towards one of the bottom corners of the room and grabbing a ledge, you can teleport to the room above."},
+		{.id = SETTING_FIX_EXIT_DOOR, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fixes_saved.fix_exit_door, .required = &use_fixes_and_enhancements,
+				.text = "Fix exit doors",
+				.explanation = "You can enter closed exit doors after you met Jaffar or the shadow, or after you opened one of multiple exits."},
 };
 
 NAMES_LIST(tile_type_setting_names, {

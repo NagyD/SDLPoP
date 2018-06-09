@@ -1184,6 +1184,7 @@ typedef struct fixes_options_type {
 	byte fix_move_after_sheathe;
 	byte fix_hidden_floors_during_flashing;
 	byte fix_hang_on_teleport;
+	byte fix_exit_door;
 } fixes_options_type;
 
 typedef struct custom_options_type {
