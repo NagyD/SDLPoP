@@ -698,8 +698,16 @@ int __pascal far flash_if_hurt() {
 		do_flash(flash_color);
 		return 1;
 	} else if (hitp_delta < 0) {
-		if (is_joyst_mode && enable_controller_rumble && sdl_haptic != NULL) {
-			SDL_HapticRumblePlay(sdl_haptic, 1.0, 100); // rumble at full strength for 100 milliseconds
+		if (is_joyst_mode && enable_controller_rumble) {
+			if (sdl_haptic != NULL) {
+				SDL_HapticRumblePlay(sdl_haptic, 1.0, 100); // rumble at full strength for 100 milliseconds
+#if SDL_VERSION_ATLEAST(2,0,9)
+			} else if (sdl_controller_ != NULL) {
+				SDL_GameControllerRumble(sdl_controller_, 0xFFFF, 0xFFFF, 100);
+			} else {
+				SDL_JoystickRumble(sdl_joystick_, 0xFFFF, 0xFFFF, 100);
+#endif
+			}
 		}
 		do_flash(color_12_brightred); // red
 		return 1;
