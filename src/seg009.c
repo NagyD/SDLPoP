@@ -1661,22 +1661,26 @@ enum userevents {
 	userevent_TIMER,
 };
 
-SDL_TimerID sound_timer = 0;
 short speaker_playing = 0;
 short digi_playing = 0;
 short midi_playing = 0;
 short ogg_playing = 0;
 
+// The currently playing sound buffer for the PC speaker.
+speaker_type* current_speaker_sound;
+// Index for which note is currently playing.
+int speaker_note_index;
+// Tracks how long the last (partially played) speaker note has been playing (for the audio callback).
+int current_speaker_note_samples_already_emitted;
+
 void __pascal far speaker_sound_stop() {
-	// stub
+	if (!speaker_playing) return;
+	SDL_LockAudio();
 	speaker_playing = 0;
-	if (sound_timer != 0) {
-		if (!SDL_RemoveTimer(sound_timer)) {
-			sdlperror("SDL_RemoveTimer in speaker_sound_stop");
-			//quit(1);
-		}
-		sound_timer = 0;
-	}
+	current_speaker_sound = NULL;
+	speaker_note_index = 0;
+	current_speaker_note_samples_already_emitted = 0;
+	SDL_UnlockAudio();
 }
 
 // The current buffer, holds the resampled sound data.
@@ -1733,41 +1737,89 @@ void __pascal far stop_sounds() {
     stop_ogg();
 }
 
-Uint32 speaker_callback(Uint32 interval, void *param) {
-	SDL_Event event;
-	memset(&event, 0, sizeof(event));
-	event.type = SDL_USEREVENT;
-	event.user.code = userevent_SOUND;
-	event.user.data1 = param;
-	if (!SDL_RemoveTimer(sound_timer)) {
-		sdlperror("SDL_RemoveTimer in speaker_callback");
-		//quit(1);
+short square_wave_state = 1000; // If the amplitude is too high, the speaker sounds will be really loud!
+float square_wave_samples_since_last_flip;
+
+void generate_square_wave(byte* stream, float note_freq, int samples) {
+	int channels = digi_audiospec->channels;
+	float period_in_samples = digi_audiospec->freq / note_freq;
+	period_in_samples /= 2.0f; // Apparently, the frequencies in the sound files are an octave too low.
+
+	int samples_left = samples;
+	while (samples_left > 0) {
+		if (square_wave_samples_since_last_flip > period_in_samples) {
+			// Produce a square wave by flipping the signal.
+			square_wave_state = ~square_wave_state;
+			// Note(Falcury): not completely sure that this is the right way to prevent glitches in the sound...
+			// Because I can still hear some hiccups, e.g. in the music. Especially when switching between notes.
+			square_wave_samples_since_last_flip -= period_in_samples;
+		} else {
+			int samples_until_next_flip = (int)(period_in_samples - square_wave_samples_since_last_flip);
+			++samples_until_next_flip; // round up.
+
+			int samples_to_emit = MIN(samples_until_next_flip, samples_left);
+			for (int i = 0; i < samples_to_emit * channels; ++i) {
+				memset(stream, square_wave_state, sizeof(short));
+				stream += sizeof(short);
+			}
+			samples_left -= samples_to_emit;
+			square_wave_samples_since_last_flip += samples_to_emit;
+		}
 	}
-	sound_timer = 0;
-	speaker_playing = 0;
-	// First remove the timer, then allow the other thread to continue.
-	SDL_PushEvent(&event);
-	return 0;
+}
+
+void speaker_callback(void *userdata, Uint8 *stream, int len) {
+	int output_channels = digi_audiospec->channels;
+	int bytes_per_sample = sizeof(short) * output_channels;
+	int samples_requested = len / bytes_per_sample;
+
+	if (current_speaker_sound == NULL) return;
+	word tempo = current_speaker_sound->tempo;
+
+	int total_samples_left = samples_requested;
+	while (total_samples_left > 0) {
+		note_type* note = current_speaker_sound->notes + speaker_note_index;
+		if (note->frequency == 0x12 /*end*/) {
+			speaker_playing = 0;
+			current_speaker_sound = NULL;
+			speaker_note_index = 0;
+			SDL_Event event;
+			memset(&event, 0, sizeof(event));
+			event.type = SDL_USEREVENT;
+			event.user.code = userevent_SOUND;
+			SDL_PushEvent(&event);
+			return;
+		}
+
+		int note_length_in_samples = (note->length * digi_audiospec->freq) / tempo;
+		int note_samples_to_emit = MIN(note_length_in_samples - current_speaker_note_samples_already_emitted, total_samples_left);
+		total_samples_left -= note_samples_to_emit;
+		if (note->frequency <= 0x01 /*rest*/) {
+			size_t copy_len = (size_t)note_samples_to_emit * bytes_per_sample;
+			memset(stream, digi_audiospec->silence, copy_len);
+			stream += copy_len;
+		} else {
+			generate_square_wave(stream, (float)note->frequency, note_samples_to_emit);
+		}
+
+		int note_samples_emitted = current_speaker_note_samples_already_emitted + note_samples_to_emit;
+		if (note_samples_emitted < note_length_in_samples) {
+			current_speaker_note_samples_already_emitted += note_samples_to_emit;
+		} else {
+			++speaker_note_index;
+			current_speaker_note_samples_already_emitted = 0;
+		}
+	}
 }
 
 // seg009:7640
 void __pascal far play_speaker_sound(sound_buffer_type far *buffer) {
-	// stub
-	//speaker_sound_stop();
+	speaker_sound_stop();
 	stop_sounds();
-	int length = 0;
-	int index;
-	for (index = 0; buffer->speaker.notes[index].frequency != 0x12; ++index) {
-		length += buffer->speaker.notes[index].length;
-	}
-	int time_ms = length*1000 / buffer->speaker.tempo;
-	//printf("length = %d ms\n", time_ms);
-	sound_timer = SDL_AddTimer(time_ms, speaker_callback, NULL);
-	if (sound_timer == 0) {
-		sdlperror("SDL_AddTimer");
-		quit(1);
-	}
+	current_speaker_sound = &buffer->speaker;
+	speaker_note_index = 0;
 	speaker_playing = 1;
+	SDL_PauseAudio(0);
 }
 
 void digi_callback(void *userdata, Uint8 *stream, int len) {
@@ -1838,6 +1890,8 @@ void audio_callback(void* userdata, Uint8* stream, int len) {
 	memset(stream, digi_audiospec->silence, len);
 	if (digi_playing) {
 		digi_callback(userdata, stream, len);
+	} else if (speaker_playing) {
+		speaker_callback(userdata, stream, len);
 	}
 	// Note: music sounds and digi sounds are allowed to play simultaneously (will be blended together)
 	// I.e., digi sounds and music will not cut each other short.
