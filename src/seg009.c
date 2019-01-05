@@ -1742,24 +1742,23 @@ float square_wave_samples_since_last_flip;
 
 void generate_square_wave(byte* stream, float note_freq, int samples) {
 	int channels = digi_audiospec->channels;
-	float period_in_samples = digi_audiospec->freq / note_freq;
-	period_in_samples /= 2.0f; // Apparently, the frequencies in the sound files are an octave too low.
+	float half_period_in_samples = (digi_audiospec->freq / note_freq) * 0.5f;
 
 	int samples_left = samples;
 	while (samples_left > 0) {
-		if (square_wave_samples_since_last_flip > period_in_samples) {
+		if (square_wave_samples_since_last_flip > half_period_in_samples) {
 			// Produce a square wave by flipping the signal.
 			square_wave_state = ~square_wave_state;
 			// Note(Falcury): not completely sure that this is the right way to prevent glitches in the sound...
 			// Because I can still hear some hiccups, e.g. in the music. Especially when switching between notes.
-			square_wave_samples_since_last_flip -= period_in_samples;
+			square_wave_samples_since_last_flip -= half_period_in_samples;
 		} else {
-			int samples_until_next_flip = (int)(period_in_samples - square_wave_samples_since_last_flip);
+			int samples_until_next_flip = (int)(half_period_in_samples - square_wave_samples_since_last_flip);
 			++samples_until_next_flip; // round up.
 
 			int samples_to_emit = MIN(samples_until_next_flip, samples_left);
 			for (int i = 0; i < samples_to_emit * channels; ++i) {
-				memset(stream, square_wave_state, sizeof(short));
+				*(short*)stream = square_wave_state;
 				stream += sizeof(short);
 			}
 			samples_left -= samples_to_emit;
@@ -1794,13 +1793,13 @@ void speaker_callback(void *userdata, Uint8 *stream, int len) {
 		int note_length_in_samples = (note->length * digi_audiospec->freq) / tempo;
 		int note_samples_to_emit = MIN(note_length_in_samples - current_speaker_note_samples_already_emitted, total_samples_left);
 		total_samples_left -= note_samples_to_emit;
+		size_t copy_len = (size_t)note_samples_to_emit * bytes_per_sample;
 		if (note->frequency <= 0x01 /*rest*/) {
-			size_t copy_len = (size_t)note_samples_to_emit * bytes_per_sample;
 			memset(stream, digi_audiospec->silence, copy_len);
-			stream += copy_len;
 		} else {
 			generate_square_wave(stream, (float)note->frequency, note_samples_to_emit);
 		}
+		stream += copy_len;
 
 		int note_samples_emitted = current_speaker_note_samples_already_emitted + note_samples_to_emit;
 		if (note_samples_emitted < note_length_in_samples) {
