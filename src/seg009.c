@@ -1737,7 +1737,7 @@ void __pascal far stop_sounds() {
     stop_ogg();
 }
 
-short square_wave_state = 1000; // If the amplitude is too high, the speaker sounds will be really loud!
+short square_wave_state = 4000; // If the amplitude is too high, the speaker sounds will be really loud!
 float square_wave_samples_since_last_flip;
 
 void generate_square_wave(byte* stream, float note_freq, int samples) {
