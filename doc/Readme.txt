@@ -107,6 +107,7 @@ A:
 * --screenshot-level -- Similar to the above, except the whole level is screenshotted, thus creating a level map.
 * --screenshot-level-extras -- Similar to the above, except lots of additional info is displayed on the picture.
 	You can find the meaning of each symbol in Map_Symbols.txt.
+* stdsnd -- Use PC speaker sounds.
 
 Q: What keys can I use?
 A:

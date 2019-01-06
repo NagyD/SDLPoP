@@ -1916,8 +1916,14 @@ void __pascal far clear_screen_and_sounds() {
 // seg000:1F7B
 void __pascal far parse_cmdline_sound() {
 	// stub
-	sound_flags |= sfDigi;
-	sound_flags |= sfMidi;
+	if (check_param("stdsnd")) {
+		// Use PC Speaker sounds and music.
+	} else {
+		// Use digi (wave) sounds and MIDI music.
+		sound_flags |= sfDigi;
+		sound_flags |= sfMidi;
+		sound_mode = smSblast;
+	}
 }
 
 // seg000:226D
