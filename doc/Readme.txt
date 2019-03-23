@@ -240,7 +240,7 @@ Description and download: http://forum.princed.org/viewtopic.php?f=73&t=3664
 	Alternate link: https://www.popot.org/custom_levels.php?mod=0000153
 
 Since version 1.16, there is support for fake tiles, for example walls that the prince can go through.
-The Apoplexy level editor supports these additional tiles since v3.0: https://www.popot.org/level_editors.php?editor=apoplexy
+The Apoplexy level editor supports these additional tiles since v3.0: https://www.apoplexy.org/
 (Just don't overuse them, please!)
 
 REPLAYS
