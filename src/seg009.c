@@ -2901,6 +2901,47 @@ void blit_xor(SDL_Surface* target_surface, SDL_Rect* dest_rect, SDL_Surface* ima
 	SDL_FreeSurface(helper_surface);
 }
 
+#ifdef USE_COLORED_TORCHES
+void draw_colored_torch(int color, SDL_Surface* image, int xpos, int ypos) {
+	if (SDL_SetColorKey(image, SDL_TRUE, 0) != 0) {
+		sdlperror("SDL_SetColorKey");
+		quit(1);
+	}
+
+	SDL_Surface* colored_image = SDL_ConvertSurfaceFormat(image, SDL_PIXELFORMAT_ARGB8888, 0);
+	SDL_SetSurfaceBlendMode(colored_image, SDL_BLENDMODE_NONE);
+
+	if (SDL_LockSurface(colored_image) != 0) {
+		sdlperror("SDL_LockSurface");
+		quit(1);
+	}
+
+	int w = colored_image->w;
+	int h = colored_image->h;
+	int y,x;
+	int iRed = ((color >> 4) & 3) * 85;
+	int iGreen = ((color >> 2) & 3) * 85;
+	int iBlue = ((color >> 0) & 3) * 85;
+	uint32_t old_color = SDL_MapRGB(colored_image->format, 0xFC, 0x84, 0x00) & 0xFFFFFF; // the orange in the flame
+	uint32_t new_color = SDL_MapRGB(colored_image->format, iRed, iGreen, iBlue) & 0xFFFFFF;
+	int stride = colored_image->pitch;
+	for (y = 0; y < h; ++y) {
+		uint32_t* pixel_ptr = (uint32_t*) ((byte*)colored_image->pixels + stride * y);
+		for (x = 0; x < w; ++x) {
+			if ((*pixel_ptr & 0xFFFFFF) == old_color) {
+				// set RGB but leave alpha
+				*pixel_ptr = (*pixel_ptr & 0xFF000000) | new_color;
+			}
+			++pixel_ptr;
+		}
+	}
+	SDL_UnlockSurface(colored_image);
+
+	method_6_blit_img_to_scr(colored_image, xpos, ypos, blitters_0_no_transp);
+	SDL_FreeSurface(colored_image);
+}
+#endif
+
 image_type far * __pascal far method_6_blit_img_to_scr(image_type far *image,int xpos,int ypos,int blit) {
 	if (image == NULL) {
 		printf("method_6_blit_img_to_scr: image == NULL\n");
@@ -2920,6 +2961,14 @@ image_type far * __pascal far method_6_blit_img_to_scr(image_type far *image,int
 		blit_xor(current_target_surface, &dest_rect, image, &src_rect);
 		return image;
 	}
+
+#ifdef USE_COLORED_TORCHES
+	if (blit >= blitters_colored_flame && blit <= blitters_colored_flame_last) {
+		draw_colored_torch(blit - blitters_colored_flame, image, xpos, ypos);
+		return image;
+	}
+#endif
+
 	SDL_SetSurfaceBlendMode(image, SDL_BLENDMODE_NONE);
 	SDL_SetSurfaceAlphaMod(image, 255);
 
