@@ -72,6 +72,10 @@ byte tile_left;
 // data:4CCC
 byte modifier_left;
 
+#ifdef USE_COLORED_TORCHES
+byte torch_colors[24][30];
+#endif
+
 // seg008:0006
 void __pascal far redraw_room() {
 	free_peels();
@@ -501,6 +505,58 @@ int __pascal far get_spike_frame(byte modifier) {
 	}
 }
 
+#ifdef USE_COLORED_TORCHES
+void draw_colored_torch(int color, int frame, int xh, int xl, int ybottom) {
+	SDL_Surface* image = get_image(id_chtab_1_flameswordpotion, frame - 1);
+	if (image == NULL) return;
+
+	if (SDL_SetColorKey(image, SDL_TRUE, 0) != 0) {
+		sdlperror("SDL_SetColorKey");
+		quit(1);
+	}
+
+	SDL_Surface* colored_image = SDL_ConvertSurfaceFormat(image, SDL_PIXELFORMAT_ARGB8888, 0);
+	SDL_SetSurfaceBlendMode(colored_image, SDL_BLENDMODE_NONE);
+
+	if (SDL_LockSurface(colored_image) != 0) {
+		sdlperror("SDL_LockSurface");
+		quit(1);
+	}
+
+	int w = colored_image->w;
+	int h = colored_image->h;
+	int y,x;
+	int iRed = ((color >> 4) & 3) * 85;
+	int iGreen = ((color >> 2) & 3) * 85;
+	int iBlue = ((color >> 0) & 3) * 85;
+	uint32_t old_color = SDL_MapRGB(colored_image->format, 0xFC, 0x84, 0x00) & 0xFFFFFF; // the orange in the flame
+	uint32_t new_color = SDL_MapRGB(colored_image->format, iRed, iGreen, iBlue) & 0xFFFFFF;
+	int stride = colored_image->pitch;
+	for (y = 0; y < h; ++y) {
+		uint32_t* pixel_ptr = (uint32_t*) ((byte*)colored_image->pixels + stride * y);
+		for (x = 0; x < w; ++x) {
+			if ((*pixel_ptr & 0xFFFFFF) == old_color) {
+				// set RGB but leave alpha
+				*pixel_ptr = (*pixel_ptr & 0xFF000000) | new_color;
+			}
+			++pixel_ptr;
+		}
+	}
+	SDL_UnlockSurface(colored_image);
+	/*
+	SDL_SetSurfaceBlendMode(colored_image, SDL_BLENDMODE_BLEND);
+	SDL_SetSurfaceBlendMode(current_target_surface, SDL_BLENDMODE_BLEND);
+	SDL_SetSurfaceAlphaMod(colored_image, 255);
+	if (SDL_BlitSurface(colored_image, &src_rect, current_target_surface, &dest_rect) != 0) {
+		sdlperror("SDL_BlitSurface");
+		quit(1);
+	}
+	*/
+	method_6_blit_img_to_scr(colored_image, xh * 8 + xl, ybottom - h, blitters_0_no_transp);
+	SDL_FreeSurface(colored_image);
+}
+#endif
+
 // seg008:08B5
 void __pascal far draw_tile_anim_right() {
 	switch (tile_left) {
@@ -519,6 +575,13 @@ void __pascal far draw_tile_anim_right() {
 		case tiles_19_torch:
 		case tiles_30_torch_with_debris:
 			if (modifier_left < 9) {
+#ifdef USE_COLORED_TORCHES
+				int color = torch_colors[drawn_room][drawn_row * 10 + drawn_col - 1];
+				if (color != 0) {
+					draw_colored_torch(color, modifier_left + 1, draw_xh + 1, 0, draw_main_y - 40);
+					return;
+				}
+#endif
 				// images 1..9 are the flames
 				add_backtable(id_chtab_1_flameswordpotion, modifier_left + 1, draw_xh + 1, 0, draw_main_y - 40, blitters_0_no_transp, 0);
 			}
@@ -1263,6 +1326,14 @@ void __pascal far load_alter_mod(int tilepos) {
 			}
 		}
 			break;
+
+#ifdef USE_COLORED_TORCHES
+		case tiles_19_torch:
+		case tiles_30_torch_with_debris:
+			torch_colors[loaded_room][tilepos] = *curr_tile_modif;
+			*curr_tile_modif = 0;
+		break;
+#endif
 	}
 }
 
