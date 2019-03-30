@@ -73,7 +73,7 @@ byte tile_left;
 byte modifier_left;
 
 #ifdef USE_COLORED_TORCHES
-byte torch_colors[24][30];
+byte torch_colors[24+1][30]; // indexed 1..24
 #endif
 
 // seg008:0006
