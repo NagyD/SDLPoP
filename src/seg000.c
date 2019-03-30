@@ -929,6 +929,16 @@ void __pascal far anim_tile_modif() {
 			break;
 		}
 	}
+
+	// Animate torches in the rightmost column of the left-side room as well, because they are visible in the current room.
+	for (int row = 0; row <= 2; row++) {
+		switch (get_tile(room_L, 9, row)) {
+			case tiles_19_torch:
+			case tiles_30_torch_with_debris:
+				start_anim_torch(room_L, row * 10 + 9);
+			break;
+		}
+	}
 }
 
 // seg000:0B72

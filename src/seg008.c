@@ -525,7 +525,13 @@ void __pascal far draw_tile_anim_right() {
 			if (modifier_left < 9) {
 				int blit = blitters_0_no_transp;
 #ifdef USE_COLORED_TORCHES
-				int color = torch_colors[drawn_room][drawn_row * 10 + drawn_col - 1];
+				int color;
+				if (drawn_col == 0) {
+					// Torch is in the rightmost column of the left-side room.
+					color = torch_colors[room_L][drawn_row * 10 + 9];
+				} else {
+					color = torch_colors[drawn_room][drawn_row * 10 + drawn_col - 1];
+				}
 				if (color != 0) {
 					blit = blitters_colored_flame + (color & 0x3F);
 				}
