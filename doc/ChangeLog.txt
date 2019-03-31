@@ -508,9 +508,9 @@ FIXED: Fixed the bug with the level 3 checkpoint.
 FIXED: Fixed the bug in "Fix hang on teleport bug".
 FIXED: Fixed the removed loose floor on level 3.
 
-(no release date yet)
+2019 March 31
 =================
-(upcoming version)
+(version 1.19)
 
 FIXED: Fix looping "sword moving" sound if the player leaves a room exactly when a guard attacks.
 FIXED: Support 8-bpp images in DAT files. For example the Pyramid mod contains some of these.
