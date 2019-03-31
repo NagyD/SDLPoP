@@ -65,6 +65,6 @@ Items marked with [!] can't be found on the original levels.
 * Broken room links: White number on red background on the corresponding edge of the room. [!]
 	Note that such levels usually appear incorrectly. Consider yourself lucky if they don't fall apart on the map. :)
 	In the worst cases you get errors on the console: "Warning: room XX was mapped to the same place as room YY!"
-		SDLPoP puts such rooms to the bottom of the map since version [upcoming].
+		SDLPoP puts such rooms to the bottom of the map since version 1.19.
 	Sometimes you can get a better map if you make the map manually from some room other than the starting room.
 * Room numbers: White number on grey background in the top-left corner.

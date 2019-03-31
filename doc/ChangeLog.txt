@@ -517,6 +517,8 @@ FIXED: Support 8-bpp images in DAT files. For example the Pyramid mod contains s
 FIXED: Improved map-making on levels with broken room links: If a room is mapped to an already used place, then put it to the bottom of the map.
 DONE: Load custom options from DOS PRINCE.EXE files.
 DONE: Added a hotkey to display SDL versions. (Ctrl-C)
+FIXED: Better support for high-DPI (Retina) displays.
+FIXED: Disable integer scaling menu item if SDL version is too old.
 DONE: Save screenshots and maps into a separate folder and add numbers to the filenames.
 FIXED: Made the exit door fix configurable.
 DONE: Added support for PC speaker sounds. Use command-line parameter "stdsnd".
