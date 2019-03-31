@@ -72,6 +72,10 @@ byte tile_left;
 // data:4CCC
 byte modifier_left;
 
+#ifdef USE_COLORED_TORCHES
+byte torch_colors[24+1][30]; // indexed 1..24
+#endif
+
 // seg008:0006
 void __pascal far redraw_room() {
 	free_peels();
@@ -519,8 +523,21 @@ void __pascal far draw_tile_anim_right() {
 		case tiles_19_torch:
 		case tiles_30_torch_with_debris:
 			if (modifier_left < 9) {
+				int blit = blitters_0_no_transp;
+#ifdef USE_COLORED_TORCHES
+				int color;
+				if (drawn_col == 0) {
+					// Torch is in the rightmost column of the left-side room.
+					color = torch_colors[room_L][drawn_row * 10 + 9];
+				} else {
+					color = torch_colors[drawn_room][drawn_row * 10 + drawn_col - 1];
+				}
+				if (color != 0) {
+					blit = blitters_colored_flame + (color & 0x3F);
+				}
+#endif
 				// images 1..9 are the flames
-				add_backtable(id_chtab_1_flameswordpotion, modifier_left + 1, draw_xh + 1, 0, draw_main_y - 40, blitters_0_no_transp, 0);
+				add_backtable(id_chtab_1_flameswordpotion, modifier_left + 1, draw_xh + 1, 0, draw_main_y - 40, blit, 0);
 			}
 		break;
 	}
@@ -729,7 +746,7 @@ image_type* get_image(short chtab_id, int id) {
 }
 
 // seg008:10A8
-int __pascal far add_backtable(short chtab_id, int id, sbyte xh, sbyte xl, int ybottom, byte blit, byte peel) {
+int __pascal far add_backtable(short chtab_id, int id, sbyte xh, sbyte xl, int ybottom, int blit, byte peel) {
 	word index;
 	if (id == 0) {
 		return 0;
@@ -758,7 +775,7 @@ int __pascal far add_backtable(short chtab_id, int id, sbyte xh, sbyte xl, int y
 }
 
 // seg008:1017
-int __pascal far add_foretable(short chtab_id, int id, sbyte xh, sbyte xl, int ybottom, byte blit, byte peel) {
+int __pascal far add_foretable(short chtab_id, int id, sbyte xh, sbyte xl, int ybottom, int blit, byte peel) {
 	word index;
 	if (id == 0) return 0;
 	index = foretable_count;
@@ -785,7 +802,7 @@ int __pascal far add_foretable(short chtab_id, int id, sbyte xh, sbyte xl, int y
 }
 
 // seg008:113A
-int __pascal far add_midtable(short chtab_id, int id, sbyte xh, sbyte xl, int ybottom, byte blit, byte peel) {
+int __pascal far add_midtable(short chtab_id, int id, sbyte xh, sbyte xl, int ybottom, int blit, byte peel) {
 	word index;
 	if (id == 0) {
 		return 0;
@@ -1019,7 +1036,11 @@ void __pascal far draw_image(image_type far *image,image_type far *mask,int xpos
 			method_6_blit_img_to_scr(image, xpos, ypos, blit);
 		break;
 		default:
-			method_3_blit_mono(image, xpos, ypos, 0, blit & 0xBF);
+			if (blit >= 0x100) {
+				method_6_blit_img_to_scr(mask, xpos, ypos, blit);
+			} else {
+				method_3_blit_mono(image, xpos, ypos, 0, blit & 0xBF);
+			}
 		break;
 	}
 	if (need_drects) {
@@ -1263,6 +1284,14 @@ void __pascal far load_alter_mod(int tilepos) {
 			}
 		}
 			break;
+
+#ifdef USE_COLORED_TORCHES
+		case tiles_19_torch:
+		case tiles_30_torch_with_debris:
+			torch_colors[loaded_room][tilepos] = *curr_tile_modif;
+			*curr_tile_modif = 0;
+		break;
+#endif
 	}
 }
 

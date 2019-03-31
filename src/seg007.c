@@ -246,9 +246,13 @@ short __pascal far get_trob_right_above_pos_in_drawn_room() {
 
 // seg007:03CF
 void __pascal far animate_torch() {
-	if (is_trob_in_drawn_room()) {
+	//if (is_trob_in_drawn_room()) {
+	// Keep animating torches in the rightmost column of the left-side room as well, because they are visible in the current room.
+	if (trob.room == drawn_room || (trob.room == room_L && (trob.tilepos % 10) == 9) ) {
 		curr_modifier = get_torch_frame(curr_modifier);
 		set_redraw_anim_right();
+	} else {
+		trob.type = -1;
 	}
 }
 
