@@ -318,8 +318,10 @@ void __pascal far exit_room() {
 	if (Guard.direction == dir_56_none) return;
 	if (Guard.alive < 0 && Guard.sword == sword_2_drawn) {
 		kid_room_m1 = Kid.room - 1;
-		if (level.guards_tile[kid_room_m1] >= 30 ||
-			level.guards_seq_hi[kid_room_m1] != 0
+		// kid_room_m1 might be 65535 (-1) when the prince fell out of the level (to room 0) while a guard was active.
+		// In this case, the indexing in the following condition crashes on Linux.
+		if ((kid_room_m1 >= 0 && kid_room_m1 <= 23) &&
+			(level.guards_tile[kid_room_m1] >= 30 || level.guards_seq_hi[kid_room_m1] != 0)
 		) {
 			if (roomleave_result == 0) {
 				// left
