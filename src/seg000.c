@@ -78,7 +78,8 @@ void far pop_main() {
 
 	// CusPop option
 	is_blind_mode = custom->start_in_blind_mode;
-	// Bug: with start_in_blind_mode enabled, moving objects are not displayed until blind mode is toggled off+on??
+	// Fix bug: with start_in_blind_mode enabled, moving objects are not displayed until blind mode is toggled off+on??
+	need_drects = 1;
 
 	apply_seqtbl_patches();
 

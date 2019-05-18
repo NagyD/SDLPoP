@@ -524,3 +524,9 @@ FIXED: Made the exit door fix configurable.
 DONE: Added support for PC speaker sounds. Use command-line parameter "stdsnd".
 DONE: Added support for colored torch flames.
 FIXED: Torches appearing in the leftmost column are now animated. (They are actually in the rightmost column of the left-side room.)
+
+(no release date yet)
+=================
+(upcoming version)
+
+FIXED: With start_in_blind_mode enabled, moving objects were not displayed until blind mode was toggled off+on.
