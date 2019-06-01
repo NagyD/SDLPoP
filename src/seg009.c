@@ -1773,12 +1773,12 @@ void speaker_callback(void *userdata, Uint8 *stream, int len) {
 	int samples_requested = len / bytes_per_sample;
 
 	if (current_speaker_sound == NULL) return;
-	word tempo = current_speaker_sound->tempo;
+	word tempo = SDL_SwapLE16(current_speaker_sound->tempo);
 
 	int total_samples_left = samples_requested;
 	while (total_samples_left > 0) {
 		note_type* note = current_speaker_sound->notes + speaker_note_index;
-		if (note->frequency == 0x12 /*end*/) {
+		if (SDL_SwapLE16(note->frequency) == 0x12 /*end*/) {
 			speaker_playing = 0;
 			current_speaker_sound = NULL;
 			speaker_note_index = 0;
@@ -1794,10 +1794,10 @@ void speaker_callback(void *userdata, Uint8 *stream, int len) {
 		int note_samples_to_emit = MIN(note_length_in_samples - current_speaker_note_samples_already_emitted, total_samples_left);
 		total_samples_left -= note_samples_to_emit;
 		size_t copy_len = (size_t)note_samples_to_emit * bytes_per_sample;
-		if (note->frequency <= 0x01 /*rest*/) {
+		if (SDL_SwapLE16(note->frequency) <= 0x01 /*rest*/) {
 			memset(stream, digi_audiospec->silence, copy_len);
 		} else {
-			generate_square_wave(stream, (float)note->frequency, note_samples_to_emit);
+			generate_square_wave(stream, (float)SDL_SwapLE16(note->frequency), note_samples_to_emit);
 		}
 		stream += copy_len;
 
@@ -2084,15 +2084,15 @@ bool determine_wave_version(sound_buffer_type *buffer, waveinfo_type* waveinfo) 
 
 	switch (version) {
 		case 1: // 1.0 and 1.1
-			waveinfo->sample_rate = buffer->digi.sample_rate;
+			waveinfo->sample_rate = SDL_SwapLE16(buffer->digi.sample_rate);
 			waveinfo->sample_size = buffer->digi.sample_size;
-			waveinfo->sample_count = buffer->digi.sample_count;
+			waveinfo->sample_count = SDL_SwapLE16(buffer->digi.sample_count);
 			waveinfo->samples = buffer->digi.samples;
 			return true;
 		case 2: // 1.3 and 1.4 (and PoP2)
-			waveinfo->sample_rate = buffer->digi_new.sample_rate;
+			waveinfo->sample_rate = SDL_SwapLE16(buffer->digi_new.sample_rate);
 			waveinfo->sample_size = buffer->digi_new.sample_size;
-			waveinfo->sample_count = buffer->digi_new.sample_count;
+			waveinfo->sample_count = SDL_SwapLE16(buffer->digi_new.sample_count);
 			waveinfo->samples = buffer->digi_new.samples;
 			return true;
 		case 3: // ambiguous
