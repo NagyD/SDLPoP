@@ -33,7 +33,7 @@ The authors of this program may be contacted at http://forum.princed.org
 #endif
 
 #if SDL_BYTEORDER != SDL_LIL_ENDIAN
-#error This program is not (yet) prepared for big endian CPUs, please contact the author.
+//#error This program is not (yet) prepared for big endian CPUs, please contact the author.
 #endif
 
 // This macro is from SDL_types.h / SDL_stdinc.h .
@@ -464,13 +464,13 @@ typedef struct textstate_type {
 
 #pragma pack(push,1)
 typedef struct rawfont_type {
-	byte first_char;
-	byte last_char;
-	short height_above_baseline;
-	short height_below_baseline;
-	short space_between_lines;
-	short space_between_chars;
-	word offsets[0];
+	Uint8 first_char;
+	Uint8 last_char;
+	Sint16 height_above_baseline;
+	Sint16 height_below_baseline;
+	Sint16 space_between_lines;
+	Sint16 space_between_chars;
+	Uint16 offsets[0];
 } rawfont_type;
 SDL_COMPILE_TIME_ASSERT(rawfont_type, sizeof(rawfont_type) == 10);
 #pragma pack(pop)

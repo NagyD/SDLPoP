@@ -370,12 +370,12 @@ dat_type *__pascal open_dat(const char *filename,int drive) {
 	dat_chain_ptr = pointer;
 
 	if (fp != NULL) {
-		if (fread(&dat_header, 6, 1, fp) != 1)
+		if (fread(&dat_header, sizeof(dat_header_type), 1, fp) != 1)
 			goto failed;
-		dat_table = (dat_table_type*) malloc(dat_header.table_size);
+		dat_table = (dat_table_type*) malloc(SDL_SwapLE16(dat_header.table_size));
 		if (dat_table == NULL ||
-		    fseek(fp, dat_header.table_offset, SEEK_SET) ||
-		    fread(dat_table, dat_header.table_size, 1, fp) != 1)
+		    fseek(fp, SDL_SwapLE32(dat_header.table_offset), SEEK_SET) ||
+		    fread(dat_table, SDL_SwapLE16(dat_header.table_size), 1, fp) != 1)
 			goto failed;
 		pointer->handle = fp;
 		pointer->dat_table = dat_table;
@@ -638,20 +638,20 @@ void __pascal far decompr_img(byte far *dest,const image_data_type far *source,i
 			decompress_rle_lr(dest, source->data, decomp_size);
 		break;
 		case 2: // RLE up-to-down
-			decompress_rle_ud(dest, source->data, decomp_size, stride, source->height);
+			decompress_rle_ud(dest, source->data, decomp_size, stride, SDL_SwapLE16(source->height));
 		break;
 		case 3: // LZG left-to-right
 			decompress_lzg_lr(dest, source->data, decomp_size);
 		break;
 		case 4: // LZG up-to-down
-			decompress_lzg_ud(dest, source->data, decomp_size, stride, source->height);
+			decompress_lzg_ud(dest, source->data, decomp_size, stride, SDL_SwapLE16(source->height));
 		break;
 	}
 }
 
 int calc_stride(image_data_type* image_data) {
-	int width = image_data->width;
-	int flags = image_data->flags;
+	int width = SDL_SwapLE16(image_data->width);
+	int flags = SDL_SwapLE16(image_data->flags);
 	int depth = ((flags >> 12) & 7) + 1;
 	return (depth * width + 7) / 8;
 }
@@ -679,10 +679,10 @@ byte* conv_to_8bpp(byte* in_data, int width, int height, int stride, int depth) 
 }
 
 image_type* decode_image(image_data_type* image_data, dat_pal_type* palette) {
-	int height = image_data->height;
+	int height = SDL_SwapLE16(image_data->height);
 	if (height == 0) return NULL;
-	int width = image_data->width;
-	int flags = image_data->flags;
+	int width = SDL_SwapLE16(image_data->width);
+	int flags = SDL_SwapLE16(image_data->flags);
 	int depth = ((flags >> 12) & 7) + 1;
 	int cmeth = (flags >> 8) & 0x0F;
 	int stride = calc_stride(image_data);
@@ -1015,9 +1015,9 @@ static void load_font_character_offsets(rawfont_type* data) {
 	int n_chars = data->last_char - data->first_char + 1;
 	byte* pos = (byte*) &data->offsets[n_chars];
 	for (int index = 0; index < n_chars; ++index) {
-		data->offsets[index] = (word) (pos - (byte*) data);
+		data->offsets[index] = SDL_SwapLE16(pos - (byte*) data);
 		image_data_type* image_data = (image_data_type*) pos;
-		int image_bytes = image_data->height * calc_stride(image_data);
+		int image_bytes = SDL_SwapLE16(image_data->height) * calc_stride(image_data);
 		pos = (byte*) &image_data->data + image_bytes;
 	}
 }
@@ -1026,13 +1026,13 @@ font_type load_font_from_data(/*const*/ rawfont_type* data) {
 	font_type font;
 	font.first_char = data->first_char;
 	font.last_char = data->last_char;
-	font.height_above_baseline = data->height_above_baseline;
-	font.height_below_baseline = data->height_below_baseline;
-	font.space_between_lines = data->space_between_lines;
-	font.space_between_chars = data->space_between_chars;
+	font.height_above_baseline = SDL_SwapLE16(data->height_above_baseline);
+	font.height_below_baseline = SDL_SwapLE16(data->height_below_baseline);
+	font.space_between_lines = SDL_SwapLE16(data->space_between_lines);
+	font.space_between_chars = SDL_SwapLE16(data->space_between_chars);
 	int n_chars = font.last_char - font.first_char + 1;
 	// Allow loading a font even if the offsets for each character image were not supplied in the raw data.
-	if (data->offsets[0] == 0) {
+	if (SDL_SwapLE16(data->offsets[0]) == 0) {
 		load_font_character_offsets(data);
 	}
 	chtab_type* chtab = malloc(sizeof(chtab_type) + sizeof(image_type* far) * n_chars);
@@ -1042,7 +1042,7 @@ font_type load_font_from_data(/*const*/ rawfont_type* data) {
 	memset(&dat_pal, 0, sizeof(dat_pal));
 	dat_pal.vga[1].r = dat_pal.vga[1].g = dat_pal.vga[1].b = 0x3F; // white
 	for (index = 0, chr = data->first_char; chr <= data->last_char; ++index, ++chr) {
-		/*const*/ image_data_type* image_data = (/*const*/ image_data_type*)((/*const*/ byte*)data + data->offsets[index]);
+		/*const*/ image_data_type* image_data = (/*const*/ image_data_type*)((/*const*/ byte*)data + SDL_SwapLE16(data->offsets[index]));
 		//image_data->flags=0;
 		if (image_data->height == 0) image_data->height = 1; // HACK: decode_image() returns NULL if height==0.
 		image_type* image;
@@ -2531,16 +2531,16 @@ void load_from_opendats_metadata(int resource_id, const char* extension, FILE** 
 			fp = pointer->handle;
 			dat_table_type* dat_table = pointer->dat_table;
 			int i;
-			for (i = 0; i < dat_table->res_count; ++i) {
-				if (dat_table->entries[i].id == resource_id) {
+			for (i = 0; i < SDL_SwapLE16(dat_table->res_count); ++i) {
+				if (SDL_SwapLE16(dat_table->entries[i].id) == resource_id) {
 					break;
 				}
 			}
-			if (i < dat_table->res_count) {
+			if (i < SDL_SwapLE16(dat_table->res_count)) {
 				// found
 				*result = data_DAT;
-				*size = dat_table->entries[i].size;
-				if (fseek(fp, dat_table->entries[i].offset, SEEK_SET) ||
+				*size = SDL_SwapLE16(dat_table->entries[i].size);
+				if (fseek(fp, SDL_SwapLE32(dat_table->entries[i].offset), SEEK_SET) ||
 				    fread(checksum, 1, 1, fp) != 1) {
 					perror(pointer->filename);
 					fp = NULL;
