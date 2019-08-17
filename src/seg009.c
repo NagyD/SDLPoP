@@ -806,7 +806,7 @@ void __pascal far draw_image_transp(image_type far *image,image_type far *mask,i
 // seg009:157E
 int __pascal far set_joy_mode() {
 	// stub
-	if (SDL_NumJoysticks() < 1) {
+	if (!is_joyst_supported || SDL_NumJoysticks() < 1) {
 		is_joyst_mode = 0;
 	} else {
 		if (SDL_IsGameController(0)) {
@@ -831,7 +831,6 @@ int __pascal far set_joy_mode() {
 	} else {
 		sdl_haptic = NULL;
 	}
-
 	is_keyboard_mode = !is_joyst_mode;
 	return is_joyst_mode;
 }
@@ -1926,25 +1925,11 @@ void init_digi() {
 	// Open the audio device. Called once.
 	//printf("init_digi(): called\n");
 
-	SDL_AudioFormat desired_audioformat;
-	SDL_version version;
-	SDL_GetVersion(&version);
-	//printf("SDL Version = %d.%d.%d\n", version.major, version.minor, version.patch);
-	if (version.major <= 2 && version.minor <= 0 && version.patch <= 3) {
-		// In versions before 2.0.4, 16-bit audio samples don't work properly (the sound becomes garbled).
-		// See: https://bugzilla.libsdl.org/show_bug.cgi?id=2389
-		// Workaround: set the audio format to 8-bit, if we are linking against an older SDL2 version.
-		desired_audioformat = AUDIO_U8;
-		printf("Your SDL.dll is older than 2.0.4. Using 8-bit audio format to work around resampling bug.");
-	} else {
-		desired_audioformat = AUDIO_S16SYS;
-	}
-
 	SDL_AudioSpec *desired;
 	desired = (SDL_AudioSpec *)malloc(sizeof(SDL_AudioSpec));
 	memset(desired, 0, sizeof(SDL_AudioSpec));
 	desired->freq = digi_samplerate; //buffer->digi.sample_rate;
-	desired->format = desired_audioformat;
+	desired->format = AUDIO_S16SYS;
 	desired->channels = 2;
 	desired->samples = 1024;
 	desired->callback = audio_callback;
@@ -2318,10 +2303,15 @@ void __pascal far set_gr_mode(byte grmode) {
 #ifdef SDL_HINT_WINDOWS_DISABLE_THREAD_NAMING
 	SDL_SetHint(SDL_HINT_WINDOWS_DISABLE_THREAD_NAMING, "1");
 #endif
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_NOPARACHUTE |
-	             SDL_INIT_GAMECONTROLLER | SDL_INIT_HAPTIC ) != 0) {
+	Uint32 init_flags = SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_NOPARACHUTE;
+	if (SDL_Init(init_flags) != 0) {
 		sdlperror("SDL_Init");
 		quit(1);
+	}
+	
+	is_joyst_supported = (SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER | SDL_INIT_HAPTIC) == 0);
+	if (!is_joyst_supported) {
+		sdlperror("SDL_InitSubSystem");
 	}
 
 	//SDL_EnableUNICODE(1); //deprecated
@@ -3179,6 +3169,7 @@ void process_events() {
 #endif
 				break;
 			case SDL_CONTROLLERAXISMOTION:
+				if (!is_joyst_supported) break;
 				if (event.caxis.axis < 6) {
 					joy_axis[event.caxis.axis] = event.caxis.value;
 
@@ -3191,6 +3182,7 @@ void process_events() {
 				}
 				break;
 			case SDL_CONTROLLERBUTTONDOWN:
+				if (!is_joyst_supported) break;
 #ifdef USE_AUTO_INPUT_MODE
 				if (!is_joyst_mode) {
 					is_joyst_mode = 1;
@@ -3222,6 +3214,7 @@ void process_events() {
 				}
 				break;
 			case SDL_CONTROLLERBUTTONUP:
+				if (!is_joyst_supported) break;
 				switch (event.cbutton.button)
 				{
 					case SDL_CONTROLLER_BUTTON_DPAD_LEFT:  joy_hat_states[0] = 0; break; // left
@@ -3240,6 +3233,7 @@ void process_events() {
 			case SDL_JOYBUTTONDOWN:
 			case SDL_JOYBUTTONUP:
 			case SDL_JOYAXISMOTION:
+				if (!is_joyst_supported) break;
 				// Only handle the event if the joystick is incompatible with the SDL_GameController interface.
 				// (Otherwise it will interfere with the normal action of the SDL_GameController API.)
 				if (!using_sdl_joystick_interface) {
@@ -3274,7 +3268,6 @@ void process_events() {
 					else if (event.jbutton.button == SDL_JOYSTICK_BUTTON_X)   joy_X_button_state = 0;    // X (shift)
 				}
 				break;
-
 			case SDL_TEXTINPUT:
 				last_text_input = event.text.text[0]; // UTF-8 formatted char text input
 				break;

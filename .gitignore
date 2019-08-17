@@ -67,6 +67,9 @@ build/
 # Windows thumbnail cache
 Thumbs.db
 
+# macOS folder metadata
+.DS_Store
+
 # The desktop file has to be recreated from the template.
 src/SDLPoP.desktop
 

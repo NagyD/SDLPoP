@@ -16,10 +16,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${SDLPoP_SOURCE_DIR}/..")
 
 #set(SDL2 "/usr/local/Cellar/sdl2/2.0.5")
 
-if (NOT(WIN32) AND (DEFINED SDL2))
-    include_directories(${SDL2}/include)
-    link_directories(${SDL2}/lib)
-endif()
+# If you don't specify the location of SDL2, this script will try to guess the location,
+# or retrieve it using the sdl2-config utility.
 
 if (WIN32)
     if (MSVC)
@@ -49,6 +47,16 @@ if (WIN32)
 
     include_directories(${SDL2}/${SDL2_ARCH}/include)
     link_directories(${SDL2}/${SDL2_ARCH}/lib)
+else()
+    if (DEFINED SDL2)
+        include_directories(${SDL2}/include)
+        link_directories(${SDL2}/lib)
+    else()
+        execute_process(COMMAND sdl2-config --prefix OUTPUT_VARIABLE SDL2_PREFIX)
+        string(STRIP ${SDL2_PREFIX} SDL2_PREFIX)
+        include_directories(${SDL2_PREFIX}/include)
+        link_directories(${SDL2_PREFIX}/lib)
+    endif()
 endif()
 
 set(SOURCE_FILES
@@ -90,7 +98,7 @@ else()
 
     set(MACOSX_BUNDLE_ICON_FILE            "icon.icns")
     set_source_files_properties(${MACOSX_BUNDLE_ICON_FILE} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mmacosx-version-min=10.6")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mmacosx-version-min=10.4")
     set(CMAKE_C_LINK_FLAGS "${CMAKE_C_LINK_FLAGS} -headerpad_max_install_names")
     add_executable(prince MACOSX_BUNDLE ${SOURCE_FILES} ${MACOSX_BUNDLE_ICON_FILE})
     set_target_properties(prince PROPERTIES MACOSX_BUNDLE_INFO_PLIST ${CMAKE_SOURCE_DIR}/Info.plist)

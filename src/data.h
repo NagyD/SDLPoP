@@ -558,6 +558,7 @@ extern SDL_Texture* texture_fuzzy;
 extern SDL_Texture* texture_blurry;
 extern SDL_Texture* target_texture;
 
+extern bool is_joyst_supported;
 extern SDL_GameController* sdl_controller_ INIT( = 0 );
 extern SDL_Joystick* sdl_joystick_; // in case our joystick is not compatible with SDL_GameController
 extern byte using_sdl_joystick_interface;
