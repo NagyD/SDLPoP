@@ -543,17 +543,17 @@ void load_dos_exe_modifications(const char* folder_name) {
 		if (read_ok) custom_saved.saving_allowed_first_level += 1;
 		process(&custom_saved.saving_allowed_last_level, 1, {0x007cf, 0x01e7f, 0x008bb, 0x00ffb, 0x0087f, 0x019af});
 		if (read_ok) custom_saved.saving_allowed_last_level -= 1;
-		{
+		if (dos_version == dos_10_packed || dos_version == dos_10_unpacked) {
 			static const byte comparison[] = {0xa3, 0x92, 0x4e, 0xa3, 0x5c, 0x40, 0xa3, 0x8e, 0x4e, 0xa2, 0x2a,
 			                                  0x3d, 0xa2, 0x29, 0x3d, 0xa3, 0xee, 0x42, 0xa2, 0x2e, 0x3d, 0x98};
-			process(temp_bytes, COUNT(comparison), {0x04c9b, 0x0634b, 0x008be, 0x00ffe, 0x00882, 0x019b2});
+			process(temp_bytes, COUNT(comparison), {0x04c9b, 0x0634b, -1, -1, -1, -1});
 			custom_saved.start_upside_down = (memcmp(temp_bytes, comparison, COUNT(comparison)) != 0);
 		}
 		process(&custom_saved.start_in_blind_mode, 1, {0x04e46, 0x064f6, 0x052ce, 0x05a0e, 0x04d8a, 0x05eba});
 		process(&custom_saved.copyprot_level, 2, {0x1aaeb, 0x1c62e, 0x1b89b, 0x1c49e, 0x17c3d, 0x18e18});
 		process(&custom_saved.drawn_tile_top_level_edge, 1, {0x0a1f0, 0x0b8a0, 0x0a69c, 0x0addc, 0x0a158, 0x0b288});
-		process(&custom_saved.drawn_tile_left_level_edge, 1, {0x0a26b, 0x0b91b, 0x0a6a3, 0x0ade3, 0x0a15f, 0x0b28f});
-		process(&custom_saved.level_edge_hit_tile, 1, {0x06f02, 0x085b2, 0x0a6b0, 0x0adf0, 0x0a16c, 0x0b29c});
+		process(&custom_saved.drawn_tile_left_level_edge, 1, {0x0a26b, 0x0b91b, -1, -1, -1, -1});
+		process(&custom_saved.level_edge_hit_tile, 1, {0x06f02, 0x085b2, -1, -1, -1, -1});
 		process(temp_bytes, 2, {0x04e46, 0x064f6, 0x052ce, 0x05a0e, 0x04d8a, 0x05eba}); // allow triggering any tile
 		if (read_ok) custom_saved.allow_triggering_any_tile = (temp_bytes[0] == 0x75 && temp_bytes[1] == 0x13);
 		process(temp_bytes, 1, {0x0a7bb, 0x0be6b, 0x0ac67, 0x0b3a7, 0x0a723, 0x0b853}); // enable WDA in palace
