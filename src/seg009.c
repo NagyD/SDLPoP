@@ -2318,6 +2318,20 @@ void __pascal far set_gr_mode(byte grmode) {
 		pop_window_height = 480;
 	}
 
+#if _WIN32
+	// Tell Windows that the application is DPI aware, to prevent unwanted bitmap stretching.
+	// SetProcessDPIAware() is only available on Windows Vista and later, so we need to load it dynamically.
+	BOOL WINAPI (*SetProcessDPIAware)();
+	HMODULE user32dll = LoadLibraryA("User32.dll");
+	if (user32dll) {
+		SetProcessDPIAware = GetProcAddress(user32dll, "SetProcessDPIAware");
+		if (SetProcessDPIAware) {
+			SetProcessDPIAware();
+		}
+		FreeLibrary(user32dll);
+	}
+#endif
+
 #ifdef USE_REPLAY
 	if (!is_validate_mode) // run without a window if validating a replay
 #endif
