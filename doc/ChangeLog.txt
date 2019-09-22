@@ -529,4 +529,7 @@ FIXED: Torches appearing in the leftmost column are now animated. (They are actu
 =================
 (upcoming version)
 
+FIXED: Fixed crash on Linux when the prince fell out of the level while a guard was active.
 FIXED: With start_in_blind_mode enabled, moving objects were not displayed until blind mode was toggled off+on.
+FIXED: Fix upside-down screen when using PRINCE.EXE from v1.3 or v1.4.
+FIXED: Tell Windows that SDLPoP is DPI aware to prevent unwanted stretching.
