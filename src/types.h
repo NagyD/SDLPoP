@@ -1262,6 +1262,7 @@ typedef struct custom_options_type {
 	word victory_stops_time_level;
 	word win_level;
 	byte win_room;
+	byte loose_floor_delay;
 	byte tbl_level_type[16];
 	word tbl_level_color[16];
 	short tbl_guard_type[16];

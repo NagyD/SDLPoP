@@ -742,6 +742,7 @@ extern custom_options_type custom_defaults INIT(= {
 		.victory_stops_time_level = 13,
 		.win_level = 14,
 		.win_room = 5,
+		.loose_floor_delay = 11,
 		// data:02B2
 		.tbl_level_type = {0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 0},
 		// 1.3

@@ -718,7 +718,8 @@ void __pascal far draw_tile_fore() {
 
 // seg008:0FF6
 int __pascal far get_loose_frame(byte modifier) {
-	if (modifier & 0x80) {
+	// Don't display garbled tiles if the delay is greater than the default.
+	if ((modifier & 0x80) || custom->loose_floor_delay > 11) {
 		modifier &= 0x7F;
 		if (modifier > 10) {
 			return 1;

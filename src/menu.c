@@ -263,6 +263,7 @@ enum setting_ids {
 	SETTING_VICTORY_STOPS_TIME_LEVEL,
 	SETTING_WIN_LEVEL,
 	SETTING_WIN_ROOM,
+	SETTING_LOOSE_FLOOR_DELAY,
 	SETTING_LEVEL_SETTINGS,
 	SETTING_LEVEL_TYPE,
 	SETTING_LEVEL_COLOR,
@@ -841,6 +842,10 @@ setting_type mods_settings[] = {
 				.linked = &custom_saved.win_room, .number_type = SETTING_BYTE, .min = 1, .max = 24,
 				.text = "Room where you can win",
 				.explanation = "Level and room where you can win the game.\n(default: level = 14, room = 5)"},
+		{.id = SETTING_LOOSE_FLOOR_DELAY, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.loose_floor_delay, .number_type = SETTING_BYTE, .min = 0, .max = 127,
+				.text = "Loose floor delay",
+				.explanation = "Number of seconds to wait before a loose floor falls.\n(default = 0.92)"},
 };
 
 NAMES_LIST(level_type_setting_names, { "Dungeon", "Palace", });
@@ -1352,7 +1357,8 @@ char* print_setting_value_(setting_type* setting, int value, char* buffer, size_
 	if (!has_name) {
 		if (setting->id == SETTING_START_TICKS_LEFT ||
 				setting->id == SETTING_SHIFT_L_REDUCED_TICKS ||
-				setting->id == SETTING_MOUSE_DELAY
+				setting->id == SETTING_MOUSE_DELAY ||
+				setting->id == SETTING_LOOSE_FLOOR_DELAY
 		) {
 			float seconds = (float)value * (1.0f/12.0f);
 			snprintf(buffer, buffer_size, "%.2f", seconds);

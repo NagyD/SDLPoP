@@ -364,6 +364,7 @@ static int global_ini_callback(const char *section, const char *name, const char
 		process_word("victory_stops_time_level", &custom_saved.victory_stops_time_level, &never_is_16_list);
 		process_word("win_level", &custom_saved.win_level, &never_is_16_list);
 		process_byte("win_room", &custom_saved.win_room, NULL);
+		process_byte("loose_floor_delay", &custom_saved.loose_floor_delay, NULL);
 	} // end of section [CustomGameplay]
 
 	// [Level 1], etc.
@@ -652,6 +653,7 @@ void load_dos_exe_modifications(const char* folder_name) {
 		process(&custom_saved.victory_stops_time_level, 1, {0x0c2e0, 0x0d990, -1, -1, -1, -1});
 		process(&custom_saved.win_level, 1, {0x011dc, 0x0288c, 0x01397, 0x01ad7, 0x01327, 0x02457});
 		process(&custom_saved.win_room, 1, {0x011e3, 0x02893, 0x0139e, 0x01ade, 0x0132e, 0x0245e});
+		process(&custom_saved.loose_floor_delay, 1, {0x9536, 0xABE6, -1, -1, -1, -1});
 #undef process
 		free(exe_memory);
 	}

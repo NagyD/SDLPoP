@@ -839,7 +839,7 @@ void __pascal far animate_loose() {
 		} else {
 			// something is on the floor
 			// should it fall already?
-			if (curr_modifier >= 11) {
+			if (curr_modifier >= /*11*/ custom->loose_floor_delay) {
 				curr_modifier = remove_loose(room = trob.room, tilepos = trob.tilepos);
 				trob.type = -1;
 				curmob.xh = (tilepos % 10) << 2;
