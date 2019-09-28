@@ -555,7 +555,7 @@ void load_dos_exe_modifications(const char* folder_name) {
 		process(&custom_saved.drawn_tile_top_level_edge, 1, {0x0a1f0, 0x0b8a0, 0x0a69c, 0x0addc, 0x0a158, 0x0b288});
 		process(&custom_saved.drawn_tile_left_level_edge, 1, {0x0a26b, 0x0b91b, -1, -1, -1, -1});
 		process(&custom_saved.level_edge_hit_tile, 1, {0x06f02, 0x085b2, -1, -1, -1, -1});
-		process(temp_bytes, 2, {0x04e46, 0x064f6, 0x052ce, 0x05a0e, 0x04d8a, 0x05eba}); // allow triggering any tile
+		process(temp_bytes, 2, {0x9111, 0xA7C1, 0x95BE, 0x9CFE, 0x907A, 0xA1AA}); // allow triggering any tile
 		if (read_ok) custom_saved.allow_triggering_any_tile = (temp_bytes[0] == 0x75 && temp_bytes[1] == 0x13);
 		process(temp_bytes, 1, {0x0a7bb, 0x0be6b, 0x0ac67, 0x0b3a7, 0x0a723, 0x0b853}); // enable WDA in palace
 		if (read_ok) custom_saved.enable_wda_in_palace = (temp_bytes[0] != 116);
