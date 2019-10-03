@@ -13,7 +13,7 @@ script:
   - make -j$(nproc)
   - mkdir -p appdir/usr/share/applications ; cp ../sdlpop.desktop appdir/usr/share/applications
   - mkdir -p appdir/usr/share/icons/hicolor/256x256/apps ; cp ../sdlpop.png appdir/usr/share/icons/hicolor/256x256/apps/
-  - mkdir -p appdir/usr/bin ; cp sdlpop appdir/usr/bin/
+  - mkdir -p appdir/usr/bin ; cp prince appdir/usr/bin/sdlpop
   - make DESTDIR=appdir -j$(nproc) install ; find appdir/
   - wget -c -nv "https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage"
   - chmod a+x linuxdeployqt-continuous-x86_64.AppImage
