@@ -1,11 +1,11 @@
 language: cpp
 compiler: gcc
 sudo: require
-dist: trusty
+dist: xenial
 
 install:
   - sudo apt-get update
-  - sudo apt-get -y install libsdl2-dev # libsdl2-image-dev
+  - sudo apt-get -y install libsdl2-image-dev
 
 script:
   - cd src/
