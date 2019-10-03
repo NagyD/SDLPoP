@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=SDLPoP
+Comment=An open-source port of Prince of Persia
+Exec=sdlpop
+Icon=sdlpop
+Categories=Application;Game;ArcadeGame;
