@@ -14,6 +14,15 @@ script:
   - mkdir -p appdir/usr/share/applications ; cp ../sdlpop.desktop appdir/usr/share/applications
   - mkdir -p appdir/usr/share/icons/hicolor/256x256/apps ; cp ../sdlpop.png appdir/usr/share/icons/hicolor/256x256/apps/
   - mkdir -p appdir/usr/bin ; cp ../prince appdir/usr/bin/sdlpop
+  - |
+    cat > appdir/AppRun <<\EOF
+    #!/bin/bash
+    HERE="$(dirname "$(readlink -f "${0}")")"
+    cd "${HERE}/usr/bin/"
+    exec "${HERE}/usr/bin/sdlpop" "$@"
+    EOF
+  - chmod +x appdir/AppRun
+  - cp -r ../data ../mods ./usr/bin/
   - make DESTDIR=appdir -j$(nproc) install ; find appdir/
   - wget -c -nv "https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage"
   - chmod a+x linuxdeployqt-continuous-x86_64.AppImage
