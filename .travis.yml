@@ -22,7 +22,7 @@ script:
     exec "${HERE}/usr/bin/sdlpop" "$@"
     EOF
   - chmod +x appdir/AppRun
-  - cp -r ../data ../mods ./usr/bin/
+  - cp -r ../data ../mods ./appdir/usr/bin/
   - make DESTDIR=appdir -j$(nproc) install ; find appdir/
   - wget -c -nv "https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage"
   - chmod a+x linuxdeployqt-continuous-x86_64.AppImage
