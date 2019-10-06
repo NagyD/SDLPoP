@@ -13,9 +13,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-The authors of this program may be contacted at http://forum.princed.org
+The authors of this program may be contacted at https://forum.princed.org
 */
 
 #ifndef CONFIG_H
@@ -92,7 +92,7 @@ The authors of this program may be contacted at http://forum.princed.org
 
 // Bugfixes:
 
-// The mentioned tricks can be found here: http://www.popot.org/documentation.php?doc=Tricks
+// The mentioned tricks can be found here: https://www.popot.org/documentation.php?doc=Tricks
 
 // If a room is linked to itself on the left, the closing sounds of the gates in that room can't be heard.
 #define FIX_GATE_SOUNDS

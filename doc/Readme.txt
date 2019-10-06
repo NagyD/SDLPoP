@@ -33,7 +33,7 @@ Contributors:
 * usineur (faster music loading)
 * yaqxsw (icon)
 
-Forum board: http://forum.princed.org/viewforum.php?f=126
+Forum board: https://forum.princed.org/viewforum.php?f=126
 GitHub: https://github.com/NagyD/SDLPoP
 
 GENERAL
@@ -44,14 +44,14 @@ A: This is an open-source port/conversion of the DOS game Prince of Persia.
 It is based on the disassembly of the original PoP1 for DOS.
 
 Q: Where can I download that disassembly?
-A: Here: http://forum.princed.org/viewtopic.php?f=68&t=3423
+A: Here: https://forum.princed.org/viewtopic.php?f=68&t=3423
 Scroll down to the newest zip files.
 The exact version is PoP 1.0, i.e. pop1_ida.zip .
 (But I also added some features from later versions.)
 
 Sources that helped in making the disassembly:
 * Modifications to prince.exe (hex editing) topic in the PoPUW forum.
-	- That forum is down, you can find some saved posts here: http://forum.princed.org/viewtopic.php?f=73&t=661
+	- That forum is down, you can find some saved posts here: https://forum.princed.org/viewtopic.php?f=73&t=661
 	- HTamas posted the dungeon wall drawing algorithm in C-style pseudocode here, along with many hex-edit hacks.
 	- It was his work that prompted me to start the disassembly and later SDLPoP. Thank you!
 * PoP1 Technical Information by Mechner: https://www.popot.org/documentation.php?doc=OldDocuments
@@ -83,7 +83,7 @@ Mac OS X:
 	Thanks to StaticReturn and Poirot for this!
 
 eComStation (OS/2):
-	Unofficial binaries were posted here: http://forum.princed.org/viewtopic.php?p=18431#p18431
+	Unofficial binaries were posted here: https://forum.princed.org/viewtopic.php?p=18431#p18431
 		Alternate link: http://hobbes.nmsu.edu/h-search.php?key=sdlpop
 	Or you can compile for yourself using gcc, according to that post.
 	Thanks to digi@os2.snc.ru for the bugfixes!
@@ -236,7 +236,7 @@ You can also enable or disable gameplay fixes through the in-game menu.
 Furthermore, SDLPoP opens up new possibilities for mod making.
 For example:
 Falcury released a mod, called "Secrets of the Citadel" that "has been designed to be played using a modified version of SDLPoP".
-Description and download: http://forum.princed.org/viewtopic.php?f=73&t=3664
+Description and download: https://forum.princed.org/viewtopic.php?f=73&t=3664
 	Alternate link: https://www.popot.org/custom_levels.php?mod=0000153
 
 Since version 1.16, there is support for fake tiles, for example walls that the prince can go through.

@@ -13,9 +13,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-The authors of this program may be contacted at http://forum.princed.org
+The authors of this program may be contacted at https://forum.princed.org
 
 DESCRIPTION:
     MIDI playback routines for SDLPoP.
@@ -338,7 +338,7 @@ static void opl_write_reg_masked(word reg, byte value, byte mask) {
 }
 
 
-// Reference: http://www.fit.vutbr.cz/~arnost/opl/opl3.html#appendixA
+// Reference: https://www.fit.vutbr.cz/~arnost/opl/opl3.html#appendixA
 //static u8 adlib_op[] = {0, 1, 2, 8, 9, 10, 16, 17, 18};
 static byte sbpro_op[] = { 0,  1,  2,   6,  7,  8,  12, 13, 14, 18, 19, 20,  24, 25, 26,  30, 31, 32};
 

@@ -13,9 +13,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-The authors of this program may be contacted at http://forum.princed.org
+The authors of this program may be contacted at https://forum.princed.org
 */
 
 #include "common.h"
@@ -2111,7 +2111,7 @@ const char* splash_text_2 =
 		"Mods also work with SDLPoP.\n"
 		"\n"
 		"For more information, read doc/Readme.txt.\n"
-		"Questions? Visit http://forum.princed.org\n"
+		"Questions? Visit https://forum.princed.org\n"
 		"\n"
 		"Press any key to continue...";
 

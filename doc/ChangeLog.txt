@@ -3,12 +3,12 @@ For recent changes, look at GitHub: https://github.com/NagyD/SDLPoP/commits/mast
 
 2012 July 28
 ============
-Released disassembly of PoP1 DOS: http://forum.princed.org/viewtopic.php?p=11347#p11347
+Released disassembly of PoP1 DOS: https://forum.princed.org/viewtopic.php?p=11347#p11347
 
 2013 September 01
 =================
 I posted the room-drawing code (rewritten to C+SDL) in the forum.
-http://forum.princed.org/viewtopic.php?f=68&t=3368
+https://forum.princed.org/viewtopic.php?f=68&t=3368
 
 2013 December
 =============
@@ -16,7 +16,7 @@ Started rewriting the further parts of the disassembly to C.
 
 2014 January 03
 ===============
-Released disassembly: http://forum.princed.org/viewtopic.php?p=14291#p14291
+Released disassembly: https://forum.princed.org/viewtopic.php?p=14291#p14291
 
 2014 January
 ============
@@ -31,13 +31,13 @@ Made the code compatible with GNU/Linux.
 2014 July 11
 ============
 First public mention of the port.
-http://forum.princed.org/viewtopic.php?p=14975#p14975
+https://forum.princed.org/viewtopic.php?p=14975#p14975
 
 2014 July 21
 ============
 (version 1.00)
 The first public release.
-http://forum.princed.org/viewtopic.php?f=69&t=3512
+https://forum.princed.org/viewtopic.php?f=69&t=3512
 
 2014 July 22
 ============
