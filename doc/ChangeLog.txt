@@ -535,3 +535,4 @@ FIXED: Fix upside-down screen when using PRINCE.EXE from v1.3 or v1.4.
 FIXED: Tell Windows that SDLPoP is DPI aware to prevent unwanted stretching.
 DONE: Added customization option for loose floor delay. (Used in Neon Persia.)
 FIXED: Fix detection of "allow triggering any tile" hack.
+DONE: Enable use_custom_options by default in the INI.
