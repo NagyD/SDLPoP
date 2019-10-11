@@ -275,7 +275,7 @@ DEVELOPING
 Q: How do I (re)compile it?
 A:
 Prerequisites for all platforms:
-	Make sure that you have the development versions of the "SDL2" and "SDL2_image" libraries installed.
+	Make sure that you have the development versions of the "SDL2" library installed.
 
 Windows:
 	If you are using Dev-C++:
@@ -283,7 +283,6 @@ Windows:
 			More recently, I'm using this version: https://sourceforge.net/projects/orwelldevcpp/
 		For Dev-C++ you need the MinGW Development Libraries of SDL2:
 			https://libsdl.org/download-2.0.php
-			https://libsdl.org/projects/SDL_image/
 		To install these, just extract the contents of the i686-w64-mingw32 folder from each archive to the Dev-Cpp folder.
 		To compile, open one of the .dev files and click the compile icon.
 
@@ -310,11 +309,10 @@ Windows:
 
 GNU/Linux:
 	You can install the libraries with apt-get or a package manager.
-		sudo apt-get install libsdl2-image-dev
+		sudo apt-get install libsdl2-dev
 
 	Alternatively, you can compile SDL2 and the other libraries from source.
 		https://libsdl.org/download-2.0.php
-		https://libsdl.org/projects/SDL_image/
 	I recommend this if your distro does not have the newest SDL version, because older SDL versions have some known bugs.
 		Namely, sound becomes garbled in SDL versions older than 2.0.4 if the sound output is not 8-bit.
 
@@ -330,10 +328,10 @@ GNU/Linux:
 macOS:
 	Get SDL2 and dependencies
 		a) Install "port" from https://www.macports.org/
-		b) sudo port install libsdl2 libsdl2_image
+		b) sudo port install libsdl2
 	or
 		a) Install "homebrew"
-		b) brew install sdl2 sdl2_image
+		b) brew install sdl2
 
 	Get development tools:
 		a) Install Xcode.

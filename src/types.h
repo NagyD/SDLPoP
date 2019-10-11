@@ -26,10 +26,8 @@ The authors of this program may be contacted at https://forum.princed.org
 
 #if !defined(_MSC_VER)
 # include <SDL2/SDL.h>
-# include <SDL2/SDL_image.h>
 #else
 # include <SDL.h>
-# include <SDL_image.h>
 #endif
 
 #if SDL_BYTEORDER != SDL_LIL_ENDIAN

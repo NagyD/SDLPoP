@@ -29,6 +29,23 @@ The authors of this program may be contacted at https://forum.princed.org
 #include "dirent.h"
 #endif
 
+// Silence warnings (stb_image.h)
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunknown-pragmas"
+#pragma GCC diagnostic ignored "-Wunused-function"
+#pragma GCC diagnostic ignored "-Wunused-value"
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
+
+#define STB_IMAGE_IMPLEMENTATION
+#define STBI_ONLY_PNG
+#include "stb_image.h"
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
+
 // Most functions in this file are different from those in the original game.
 
 void sdlperror(const char* header) {
@@ -476,7 +493,7 @@ void __pascal far free_chtab(chtab_type *chtab_ptr) {
 	for (id = 0; id < n_images; ++id) {
 		curr_image = chtab_ptr->images[id];
 		if (curr_image) {
-			SDL_FreeSurface(curr_image);
+			free_surface(curr_image);
 		}
 	}
 	free_near(chtab_ptr);
@@ -741,18 +758,14 @@ image_type* far __pascal far load_image(int resource_id, dat_pal_type* palette) 
 			image = decode_image((image_data_type*) image_data, palette);
 		} break;
 		case data_directory: { // directory
-			SDL_RWops* rw = SDL_RWFromConstMem(image_data, size);
-			if (rw == NULL) {
-				sdlperror("SDL_RWFromConstMem");
-				return NULL;
-			}
-			image = IMG_Load_RW(rw, 0);
+			int width, height;
+			void* pixel_data = stbi_load_from_memory(image_data, size, &width, &height, NULL, 4);
+			image = SDL_CreateRGBSurfaceFrom(pixel_data, width, height, 32, 4*width, 0xFF, 0xFF<<8, 0xFF<<16, 0xFF<<24);
 			if (image == NULL) {
-				printf("IMG_Load_RW: %s\n", IMG_GetError());
+				sdlperror("SDL_CreateRGBSurfaceFrom");
+				quit(1);
 			}
-			if (SDL_RWclose(rw) != 0) {
-				sdlperror("SDL_RWclose");
-			}
+            image->userdata = pixel_data;
 		} break;
 	}
 	if (image_data != NULL) free(image_data);
@@ -793,7 +806,7 @@ void __pascal far draw_image_transp(image_type far *image,image_type far *mask,i
 // seg009:157E
 int __pascal far set_joy_mode() {
 	// stub
-	if (SDL_NumJoysticks() < 1) {
+	if (!is_joyst_supported || SDL_NumJoysticks() < 1) {
 		is_joyst_mode = 0;
 	} else {
 		if (SDL_IsGameController(0)) {
@@ -818,7 +831,6 @@ int __pascal far set_joy_mode() {
 	} else {
 		sdl_haptic = NULL;
 	}
-
 	is_keyboard_mode = !is_joyst_mode;
 	return is_joyst_mode;
 }
@@ -837,12 +849,17 @@ surface_type far *__pascal make_offscreen_buffer(const rect_type far *rect) {
 
 // seg009:17BD
 void __pascal far free_surface(surface_type *surface) {
-	SDL_FreeSurface(surface);
+	if (surface != NULL) {
+		if (surface->userdata != NULL) {
+			free(surface->userdata); // Free pixel data manually, if surface was created with SDL_CreateRGBSurfaceFrom()
+		}
+		SDL_FreeSurface(surface);
+	}
 }
 
 // seg009:17EA
 void __pascal far free_peel(peel_type *peel_ptr) {
-	SDL_FreeSurface(peel_ptr->peel);
+	free_surface(peel_ptr->peel);
 	free(peel_ptr);
 }
 
@@ -1908,25 +1925,11 @@ void init_digi() {
 	// Open the audio device. Called once.
 	//printf("init_digi(): called\n");
 
-	SDL_AudioFormat desired_audioformat;
-	SDL_version version;
-	SDL_GetVersion(&version);
-	//printf("SDL Version = %d.%d.%d\n", version.major, version.minor, version.patch);
-	if (version.major <= 2 && version.minor <= 0 && version.patch <= 3) {
-		// In versions before 2.0.4, 16-bit audio samples don't work properly (the sound becomes garbled).
-		// See: https://bugzilla.libsdl.org/show_bug.cgi?id=2389
-		// Workaround: set the audio format to 8-bit, if we are linking against an older SDL2 version.
-		desired_audioformat = AUDIO_U8;
-		printf("Your SDL.dll is older than 2.0.4. Using 8-bit audio format to work around resampling bug.");
-	} else {
-		desired_audioformat = AUDIO_S16SYS;
-	}
-
 	SDL_AudioSpec *desired;
 	desired = (SDL_AudioSpec *)malloc(sizeof(SDL_AudioSpec));
 	memset(desired, 0, sizeof(SDL_AudioSpec));
 	desired->freq = digi_samplerate; //buffer->digi.sample_rate;
-	desired->format = desired_audioformat;
+	desired->format = AUDIO_S16SYS;
 	desired->channels = 2;
 	desired->samples = 1024;
 	desired->callback = audio_callback;
@@ -2300,10 +2303,15 @@ void __pascal far set_gr_mode(byte grmode) {
 #ifdef SDL_HINT_WINDOWS_DISABLE_THREAD_NAMING
 	SDL_SetHint(SDL_HINT_WINDOWS_DISABLE_THREAD_NAMING, "1");
 #endif
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_NOPARACHUTE |
-	             SDL_INIT_GAMECONTROLLER | SDL_INIT_HAPTIC ) != 0) {
+	Uint32 init_flags = SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_NOPARACHUTE;
+	if (SDL_Init(init_flags) != 0) {
 		sdlperror("SDL_Init");
 		quit(1);
+	}
+	
+	is_joyst_supported = (SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER | SDL_INIT_HAPTIC) == 0);
+	if (!is_joyst_supported) {
+		sdlperror("SDL_InitSubSystem");
 	}
 
 	//SDL_EnableUNICODE(1); //deprecated
@@ -2355,11 +2363,15 @@ void __pascal far set_gr_mode(byte grmode) {
 #endif
 	}
 
-	SDL_Surface* icon = IMG_Load(locate_file("data/icon.png"));
+	int width, height;
+	void* icon_pixel_data = stbi_load(locate_file("data/icon.png"), &width, &height, NULL, 4);
+	SDL_Surface* icon = SDL_CreateRGBSurfaceFrom(icon_pixel_data, width, height, 32, 4*width,
+														   0xFF, 0xFF<<8, 0xFF<<16, 0xFF<<24);
 	if (icon == NULL) {
 		sdlperror("Could not load icon");
 	} else {
-		SDL_SetWindowIcon(window_, icon);
+        icon->userdata = icon_pixel_data;
+        SDL_SetWindowIcon(window_, icon);
 	}
 
 	apply_aspect_ratio();
@@ -2760,7 +2772,7 @@ image_type far * __pascal far method_3_blit_mono(image_type far *image,int xpos,
 		sdlperror("SDL_BlitSurface");
 		quit(1);
 	}
-	SDL_FreeSurface(colored_image);
+	free_surface(colored_image);
 
 	return image;
 }
@@ -2783,7 +2795,7 @@ bool RGB24_bug_check() {
 		// Read red component of pixel.
 		RGB24_bug_affected = (*(Uint32*)test_surface->pixels & test_surface->format->Rmask) == 0;
 		SDL_UnlockSurface(test_surface);
-		SDL_FreeSurface(test_surface);
+		free_surface(test_surface);
 		RGB24_bug_checked = true;
 	}
 	return RGB24_bug_affected;
@@ -2911,8 +2923,8 @@ void blit_xor(SDL_Surface* target_surface, SDL_Rect* dest_rect, SDL_Surface* ima
 		sdlperror("SDL_BlitSurface 2065");
 		quit(1);
 	}
-	SDL_FreeSurface(image_24);
-	SDL_FreeSurface(helper_surface);
+	free_surface(image_24);
+	free_surface(helper_surface);
 }
 
 #ifdef USE_COLORED_TORCHES
@@ -3171,6 +3183,7 @@ void process_events() {
 #endif
 				break;
 			case SDL_CONTROLLERAXISMOTION:
+				if (!is_joyst_supported) break;
 				if (event.caxis.axis < 6) {
 					joy_axis[event.caxis.axis] = event.caxis.value;
 
@@ -3183,6 +3196,7 @@ void process_events() {
 				}
 				break;
 			case SDL_CONTROLLERBUTTONDOWN:
+				if (!is_joyst_supported) break;
 #ifdef USE_AUTO_INPUT_MODE
 				if (!is_joyst_mode) {
 					is_joyst_mode = 1;
@@ -3214,6 +3228,7 @@ void process_events() {
 				}
 				break;
 			case SDL_CONTROLLERBUTTONUP:
+				if (!is_joyst_supported) break;
 				switch (event.cbutton.button)
 				{
 					case SDL_CONTROLLER_BUTTON_DPAD_LEFT:  joy_hat_states[0] = 0; break; // left
@@ -3232,6 +3247,7 @@ void process_events() {
 			case SDL_JOYBUTTONDOWN:
 			case SDL_JOYBUTTONUP:
 			case SDL_JOYAXISMOTION:
+				if (!is_joyst_supported) break;
 				// Only handle the event if the joystick is incompatible with the SDL_GameController interface.
 				// (Otherwise it will interfere with the normal action of the SDL_GameController API.)
 				if (!using_sdl_joystick_interface) {
@@ -3266,7 +3282,6 @@ void process_events() {
 					else if (event.jbutton.button == SDL_JOYSTICK_BUTTON_X)   joy_X_button_state = 0;    // X (shift)
 				}
 				break;
-
 			case SDL_TEXTINPUT:
 				last_text_input = event.text.text[0]; // UTF-8 formatted char text input
 				break;

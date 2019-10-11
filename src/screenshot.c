@@ -20,6 +20,9 @@ The authors of this program may be contacted at https://forum.princed.org
 
 #include "common.h"
 
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+
 #ifdef USE_SCREENSHOT
 
 const char screenshots_folder[] = "screenshots";
@@ -54,7 +57,7 @@ void show_result(int result, const char* what) {
 		printf("Saved %s to \"%s\".\n", what, screenshot_filename);
 		snprintf(sprintf_temp, sizeof(sprintf_temp), "Saved %s", what);
 	} else {
-		printf("Could not save %s to \"%s\". Error: %s\n", what, screenshot_filename, IMG_GetError());
+		printf("Could not save %s to \"%s\".", what, screenshot_filename);
 		snprintf(sprintf_temp, sizeof(sprintf_temp), "Could not save %s", what);
 	}
 	display_text_bottom(sprintf_temp);
@@ -62,10 +65,19 @@ void show_result(int result, const char* what) {
 	text_time_remaining = 24;
 }
 
+// Output SDL surface as PNG.
+int save_surface_as_png(SDL_Surface* surface, const char* filename) {
+	SDL_LockSurface(surface);
+	int result = stbi_write_png(filename, surface->w, surface->h,
+				   surface->format->BytesPerPixel, surface->pixels, surface->pitch);
+	SDL_UnlockSurface(surface);
+	return result;
+}
+
 // Save a screenshot.
 void save_screenshot() {
 	make_screenshot_filename();
-	int result = IMG_SavePNG(get_final_surface(), screenshot_filename);
+	int result = save_surface_as_png(onscreen_surface_, screenshot_filename);
 	show_result(result, "screenshot");
 }
 
@@ -579,10 +591,10 @@ void save_level_screenshot(bool want_extras) {
 	switch_to_room(old_room);
 
 	make_screenshot_filename();
-	int result = IMG_SavePNG(map_surface, screenshot_filename);
+	int result = save_surface_as_png(map_surface, screenshot_filename);
 	show_result(result, "level map");
 
-	SDL_FreeSurface(map_surface);
+	free_surface(map_surface);
 
 	//printf("random_seed = 0x%08X\n", random_seed);
 }
