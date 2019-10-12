@@ -1389,17 +1389,124 @@ void __pascal far do_delta_hp() {
 }
 
 byte sound_prio_table[] = {
-	0x14, 0x1E, 0x23, 0x66, 0x32, 0x37, 0x30, 0x30, 0x4B, 0x50, 0x0A,
-	0x12, 0x0C, 0x0B, 0x69, 0x6E, 0x73, 0x78, 0x7D, 0x82, 0x91, 0x96,
-	0x9B, 0xA0, 1, 1, 1, 1, 1, 0x13, 1, 1, 1, 1, 1, 1, 1,
-	1, 1, 0, 1, 1, 1, 1, 0x87, 0x8C, 0x0F, 0x10, 0x19, 0x16, 1,
-	0, 1, 1, 1, 1, 1, 0
+	0x14, // sound_0_fell_to_death
+	0x1E, // sound_1_falling
+	0x23, // sound_2_tile_crashing
+	0x66, // sound_3_button_pressed
+	0x32, // sound_4_gate_closing
+	0x37, // sound_5_gate_opening
+	0x30, // sound_6_gate_closing_fast
+	0x30, // sound_7_gate_stop
+	0x4B, // sound_8_bumped
+	0x50, // sound_9_grab
+	0x0A, // sound_10_sword_vs_sword
+	0x12, // sound_11_sword_moving
+	0x0C, // sound_12_guard_hurt
+	0x0B, // sound_13_kid_hurt
+	0x69, // sound_14_leveldoor_closing
+	0x6E, // sound_15_leveldoor_sliding
+	0x73, // sound_16_medium_land
+	0x78, // sound_17_soft_land
+	0x7D, // sound_18_drink
+	0x82, // sound_19_draw_sword
+	0x91, // sound_20_loose_shake_1
+	0x96, // sound_21_loose_shake_2
+	0x9B, // sound_22_loose_shake_3
+	0xA0, // sound_23_footstep
+	0x01, // sound_24_death_regular
+	0x01, // sound_25_presentation
+	0x01, // sound_26_embrace
+	0x01, // sound_27_cutscene_2_4_6_12
+	0x01, // sound_28_death_in_fight
+	0x13, // sound_29_meet_Jaffar
+	0x01, // sound_30_big_potion
+	0x01, // sound_31
+	0x01, // sound_32_shadow_music
+	0x01, // sound_33_small_potion
+	0x01, // sound_34
+	0x01, // sound_35_cutscene_8_9
+	0x01, // sound_36_out_of_time
+	0x01, // sound_37_victory
+	0x01, // sound_38_blink
+	0x00, // sound_39_low_weight
+	0x01, // sound_40_cutscene_12_short_time
+	0x01, // sound_41_end_level_music
+	0x01, // sound_42
+	0x01, // sound_43_victory_Jaffar
+	0x87, // sound_44_skel_alive
+	0x8C, // sound_45_jump_through_mirror
+	0x0F, // sound_46_chomped
+	0x10, // sound_47_chomper
+	0x19, // sound_48_spiked
+	0x16, // sound_49_spikes
+	0x01, // sound_50_story_2_princess
+	0x00, // sound_51_princess_door_opening
+	0x01, // sound_52_story_4_Jaffar_leaves
+	0x01, // sound_53_story_3_Jaffar_comes
+	0x01, // sound_54_intro_music
+	0x01, // sound_55_story_1_absence
+	0x01, // sound_56_ending_music
+	0x00
 };
 byte sound_pcspeaker_exists[] = {
-	1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1,
-	1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-	1, 1, 1, 0
+	1, // sound_0_fell_to_death
+	0, // sound_1_falling
+	1, // sound_2_tile_crashing
+	1, // sound_3_button_pressed
+	1, // sound_4_gate_closing
+	1, // sound_5_gate_opening
+	1, // sound_6_gate_closing_fast
+	1, // sound_7_gate_stop
+	1, // sound_8_bumped
+	1, // sound_9_grab
+	1, // sound_10_sword_vs_sword
+	0, // sound_11_sword_moving
+	1, // sound_12_guard_hurt
+	1, // sound_13_kid_hurt
+	1, // sound_14_leveldoor_closing
+	1, // sound_15_leveldoor_sliding
+	1, // sound_16_medium_land
+	1, // sound_17_soft_land
+	1, // sound_18_drink
+	0, // sound_19_draw_sword
+	0, // sound_20_loose_shake_1
+	0, // sound_21_loose_shake_2
+	0, // sound_22_loose_shake_3
+	1, // sound_23_footstep
+	1, // sound_24_death_regular
+	1, // sound_25_presentation
+	1, // sound_26_embrace
+	1, // sound_27_cutscene_2_4_6_12
+	1, // sound_28_death_in_fight
+	1, // sound_29_meet_Jaffar
+	1, // sound_30_big_potion
+	1, // sound_31
+	1, // sound_32_shadow_music
+	1, // sound_33_small_potion
+	1, // sound_34
+	1, // sound_35_cutscene_8_9
+	1, // sound_36_out_of_time
+	1, // sound_37_victory
+	1, // sound_38_blink
+	1, // sound_39_low_weight
+	1, // sound_40_cutscene_12_short_time
+	1, // sound_41_end_level_music
+	1, // sound_42
+	1, // sound_43_victory_Jaffar
+	1, // sound_44_skel_alive
+	1, // sound_45_jump_through_mirror
+	1, // sound_46_chomped
+	1, // sound_47_chomper
+	1, // sound_48_spiked
+	1, // sound_49_spikes
+	1, // sound_50_story_2_princess
+	1, // sound_51_princess_door_opening
+	1, // sound_52_story_4_Jaffar_leaves
+	1, // sound_53_story_3_Jaffar_comes
+	1, // sound_54_intro_music
+	1, // sound_55_story_1_absence
+	1, // sound_56_ending_music
+	0
 };
 
 // seg000:12C5

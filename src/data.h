@@ -419,7 +419,66 @@ extern trob_type trobs[30];
 // data:431A
 extern short redraw_height;
 // data:24DA
-extern /*const*/ byte sound_interruptible[] INIT(= {0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+extern /*const*/ byte sound_interruptible[] INIT(= {
+	0, // sound_0_fell_to_death
+	1, // sound_1_falling
+	1, // sound_2_tile_crashing
+	1, // sound_3_button_pressed
+	1, // sound_4_gate_closing
+	1, // sound_5_gate_opening
+	0, // sound_6_gate_closing_fast
+	1, // sound_7_gate_stop
+	1, // sound_8_bumped
+	1, // sound_9_grab
+	1, // sound_10_sword_vs_sword
+	1, // sound_11_sword_moving
+	1, // sound_12_guard_hurt
+	1, // sound_13_kid_hurt
+	0, // sound_14_leveldoor_closing
+	0, // sound_15_leveldoor_sliding
+	1, // sound_16_medium_land
+	1, // sound_17_soft_land
+	0, // sound_18_drink
+	1, // sound_19_draw_sword
+	1, // sound_20_loose_shake_1
+	1, // sound_21_loose_shake_2
+	1, // sound_22_loose_shake_3
+	1, // sound_23_footstep
+	0, // sound_24_death_regular
+	0, // sound_25_presentation
+	0, // sound_26_embrace
+	0, // sound_27_cutscene_2_4_6_12
+	0, // sound_28_death_in_fight
+	1, // sound_29_meet_Jaffar
+	0, // sound_30_big_potion
+	0, // sound_31
+	0, // sound_32_shadow_music
+	0, // sound_33_small_potion
+	0, // sound_34
+	0, // sound_35_cutscene_8_9
+	0, // sound_36_out_of_time
+	0, // sound_37_victory
+	0, // sound_38_blink
+	0, // sound_39_low_weight
+	0, // sound_40_cutscene_12_short_time
+	0, // sound_41_end_level_music
+	0, // sound_42
+	0, // sound_43_victory_Jaffar
+	0, // sound_44_skel_alive
+	0, // sound_45_jump_through_mirror
+	0, // sound_46_chomped
+	1, // sound_47_chomper
+	0, // sound_48_spiked
+	0, // sound_49_spikes
+	0, // sound_50_story_2_princess
+	0, // sound_51_princess_door_opening
+	0, // sound_52_story_4_Jaffar_leaves
+	0, // sound_53_story_3_Jaffar_comes
+	0, // sound_54_intro_music
+	0, // sound_55_story_1_absence
+	0, // sound_56_ending_music
+	0
+});
 // data:42ED
 extern byte curr_tilepos;
 // data:432A

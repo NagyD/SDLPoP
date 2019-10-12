@@ -458,7 +458,7 @@ Possible values of trob_type:
 					}
 				}
 			} else {
-				sound_interruptible[15] = 0;
+				sound_interruptible[sound_15_leveldoor_sliding] = 0;
 				play_sound(sound_15_leveldoor_sliding); // level door sliding (opening)
 			}
 		}
