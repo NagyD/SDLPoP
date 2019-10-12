@@ -193,6 +193,9 @@ The authors of this program may be contacted at https://forum.princed.org
 // By jumping towards one of the bottom corners of the room and grabbing a ledge, you can teleport to the room above.
 #define FIX_HANG_ON_TELEPORT
 
+// Fix priorities of sword and spike sounds. (As in PoP 1.3.)
+#define FIX_SOUND_PRIORITIES
+
 
 // Debug features:
 

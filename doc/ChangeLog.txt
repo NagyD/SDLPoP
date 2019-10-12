@@ -536,3 +536,6 @@ FIXED: Tell Windows that SDLPoP is DPI aware to prevent unwanted stretching.
 DONE: Added customization option for loose floor delay. (Used in Neon Persia.)
 FIXED: Fix detection of "allow triggering any tile" hack.
 DONE: Enable use_custom_options by default in the INI.
+FIXED: Fix priorities of sword and spike sounds. (As in PoP 1.3.)
+	The "spiked" sound didn't interrupt the normal spikes sound when the prince ran into spikes.
+	With PoP 1.3 sounds, the "guard hurt" sound didn't play when you hit a guard directly after parrying.

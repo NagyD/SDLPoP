@@ -28,6 +28,8 @@ dat_type * dathandle;
 // data:4C08
 word need_redraw_because_flipped;
 
+void fix_sound_priorities();
+
 // seg000:0000
 void far pop_main() {
 	if (check_param("--version") || check_param("-v")) {
@@ -50,6 +52,10 @@ void far pop_main() {
 	#ifdef CHECK_SEQTABLE_MATCHES_ORIGINAL
 	check_seqtable_matches_original();
 	#endif
+
+#ifdef FIX_SOUND_PRIORITIES
+	fix_sound_priorities();
+#endif
 
 	load_global_options();
 	check_mod_param();
@@ -1508,6 +1514,17 @@ byte sound_pcspeaker_exists[] = {
 	1, // sound_56_ending_music
 	0
 };
+
+void fix_sound_priorities() {
+	// Change values to match those in PoP 1.3.
+
+	// The "spiked" sound didn't interrupt the normal spikes sound when the prince ran into spikes.
+	sound_interruptible[sound_49_spikes] = 1;
+	sound_prio_table[sound_48_spiked] = 0x15; // moved above spikes
+
+	// With PoP 1.3 sounds, the "guard hurt" sound didn't play when you hit a guard directly after parrying.
+	sound_prio_table[sound_10_sword_vs_sword] = 0x0D; // moved below hit_user/hit_guard
+}
 
 // seg000:12C5
 void __pascal far play_sound(int sound_id) {
