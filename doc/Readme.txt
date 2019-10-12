@@ -120,6 +120,7 @@ Controlling the kid:
 * shift+left/right: careful step
 * home or up+left: jump left
 * page up or up+right: jump right
+* shift while falling: grab onto ledge
 You can also use the numeric keypad.
 
 Gamepad equivalents:
