@@ -342,7 +342,7 @@ macOS:
 		c) Using terminal, in the '/src' directory of SDLPoP, type: make
 
 	PLAY!
-		a) Type './prince' or './prince full'.
+		a) In the project root directory. Type './prince' or './prince full'.
 		b) Hit Control-Q to quit.
 
-	Tested on OSX 10.9.5, OSX 10.11.2 and macOS 10.13.
+	Tested on OSX 10.9.5, OSX 10.11.2, macOS 10.13 and 10.14.
