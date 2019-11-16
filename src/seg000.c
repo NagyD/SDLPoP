@@ -231,6 +231,43 @@ void __pascal far start_game() {
 	}
 }
 
+void check_saveload_op(){
+	// Normal save/load through the menu (unless QuickSave enabled).
+#ifdef USE_QUICKSAVE
+	if (enable_quicksave) return;
+#endif
+	if (need_save) {
+		need_save=0;
+		if (current_level >= custom->saving_allowed_first_level && current_level <= custom->saving_allowed_last_level) {
+			save_game();
+			display_text_bottom("SAVE");
+		}
+		else {
+			display_text_bottom("NO SAVING ON THIS LEVEL");
+		}
+
+	}
+	if (need_load) {
+		need_load=0;
+		// First reset to main menu before loading.
+		start_level = -1;
+		#ifdef USE_MENU
+		if (is_menu_shown) menu_was_closed();
+		#endif
+		if (load_game()) {
+			display_text_bottom("LOAD");
+		}
+		else {
+			display_text_bottom("LOAD FAILED");
+		}
+		start_game();
+
+
+
+	}
+	return;
+}
+
 #ifdef USE_QUICKSAVE
 // All these functions return true on success, false otherwise.
 
@@ -445,17 +482,17 @@ int quick_load() {
 
 void check_quick_op() {
 	if (!enable_quicksave) return;
-	if (need_quick_save) {
+	if (need_save) {
 		if (!is_feather_fall && quick_save()) {
 			display_text_bottom("QUICKSAVE");
 		} else {
 			display_text_bottom("NO QUICKSAVE");
 		}
-		need_quick_save = 0;
+		need_save = 0;
 		text_time_total = 24;
 		text_time_remaining = 24;
 	}
-	if (need_quick_load) {
+	if (need_load) {
 #ifdef USE_REPLAY
 		if (recording) {
 			stop_recording(); // quickloading would mess up the replay!
@@ -466,7 +503,7 @@ void check_quick_op() {
 		} else {
 			display_text_bottom("NO QUICKLOAD");
 		}
-		need_quick_load = 0;
+		need_load = 0;
 		text_time_total = 24;
 		text_time_remaining = 24;
 	}
@@ -501,7 +538,7 @@ int __pascal far process_key() {
 	if (start_level < 0) {
 		if (key || control_shift) {
 			#ifdef USE_QUICKSAVE
-			if (key == SDL_SCANCODE_F9) need_quick_load = 1;
+			if (key == SDL_SCANCODE_F9) need_load = 1;
 			#endif
 			#ifdef USE_REPLAY
 			if (key == SDL_SCANCODE_TAB || need_start_replay) {
@@ -659,11 +696,11 @@ int __pascal far process_key() {
 #ifdef USE_QUICKSAVE
 		case SDL_SCANCODE_F6:
 		case SDL_SCANCODE_F6 | WITH_SHIFT:
-			if (Kid.alive < 0) need_quick_save = 1;
+			if (Kid.alive < 0) need_save = 1;
 		break;
 		case SDL_SCANCODE_F9:
 		case SDL_SCANCODE_F9 | WITH_SHIFT:
-			need_quick_load = 1;
+			need_load = 1;
 		break;
 #ifdef USE_REPLAY
 		case SDL_SCANCODE_TAB | WITH_CTRL:
