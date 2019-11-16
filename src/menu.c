@@ -1075,12 +1075,12 @@ void pause_menu_clicked(pause_menu_item_type* item) {
 			break;
 		case PAUSE_MENU_SAVE_GAME:
 			// TODO: Manual save games?
-			if (Kid.alive < 0) need_quick_save = 1;
+			if (Kid.alive < 0) need_save = 1;
 			need_close_menu = true;
 			break;
 		case PAUSE_MENU_LOAD_GAME:
 			// TODO: Manual save games?
-			need_quick_load = 1;
+			need_load = 1;
 			need_close_menu = true;
 			stop_sounds();
 			break;
@@ -1962,12 +1962,12 @@ int key_test_paused_menu(int key) {
 			break;
 		case SDL_SCANCODE_F6:
 		case SDL_SCANCODE_F6 | WITH_SHIFT:
-			if (Kid.alive < 0) need_quick_save = 1;
+			if (Kid.alive < 0) need_save = 1;
 			need_close_menu = true;
 			break;
 		case SDL_SCANCODE_F9:
 		case SDL_SCANCODE_F9 | WITH_SHIFT:
-			need_quick_load = 1;
+			need_load = 1;
 			need_close_menu = true;
 			break;
 	}
