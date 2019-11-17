@@ -424,7 +424,7 @@ void set_options_to_default() {
 	enable_controller_rumble = 1;
 	joystick_only_horizontal = 1;
 	joystick_threshold = 8000;
-	enable_quicksave = 0;
+	enable_quicksave = 1;
 	enable_quicksave_penalty = 1;
 	enable_replay = 1;
 	enable_lighting = 0;
