@@ -74,6 +74,7 @@ void __pascal far show_copyprot(int where);
 void __pascal far show_loading();
 void __pascal far show_quotes();
 void show_splash();
+void show_help();
 #ifdef USE_QUICKSAVE
 void check_quick_op();
 void restore_room_after_quick_load();
