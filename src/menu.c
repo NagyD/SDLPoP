@@ -367,7 +367,7 @@ setting_type gameplay_settings[] = {
 				.explanation = "Enable or disable the potions (copy protection) level."},
 		{.id = SETTING_ENABLE_QUICKSAVE, .style = SETTING_STYLE_TOGGLE, .linked = &enable_quicksave,
 				.text = "Enable quicksave",
-				.explanation = "Enable quicksave/load feature.\nPress F6 to quicksave, F9 to quickload."},
+				.explanation = "Enable quicksave/load feature.\nPress F6 to quicksave, F9 to quickload.\nNote: Quicksave did not exist in the original Prince of Persia."},
 		{.id = SETTING_ENABLE_QUICKSAVE_PENALTY, .style = SETTING_STYLE_TOGGLE, .linked = &enable_quicksave_penalty,
 				.text = "Quicksave time penalty",
 				.explanation = "Try to let time run out when quickloading (similar to dying).\n"
@@ -1193,6 +1193,12 @@ void draw_pause_menu() {
 				strncpy(pause_menu_items[i].text, enable_quicksave ? "QUICK LOAD - F9" : "LOAD GAME", MAX_MENU_ITEM_LENGTH);
 			break;
 		}
+	}
+#endif
+
+#ifdef USE_QUICKSAVE
+	if (enable_quicksave && (hovering_pause_menu_item == PAUSE_MENU_SAVE_GAME || hovering_pause_menu_item == PAUSE_MENU_LOAD_GAME)) {
+		show_text_with_color(&explanation_rect, 0, -1, "Note: Quicksave did not exist in the original Prince of Persia.\nFor regular save use Ctrl+G, for regular load use Ctrl+R, Ctrl+L.", color_7_lightgray);
 	}
 #endif
 

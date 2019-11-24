@@ -149,6 +149,7 @@ Controlling the game:
 * Ctrl-Q: quit game
 * Ctrl-L: load game (when in the intro)
 * Alt-Enter: toggle fullscreen
+The following features did not exist in the original Prince of Persia:
 * F6: quicksave
 * F9: quickload
 * F12: Save a screenshot to the screenshots folder.
