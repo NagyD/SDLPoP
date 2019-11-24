@@ -1183,6 +1183,19 @@ void draw_pause_menu() {
 		}
 	}
 
+#ifdef USE_QUICKSAVE
+	for (int i = 0; i < COUNT(pause_menu_items); ++i) {
+		switch (pause_menu_items[i].id) {
+			case PAUSE_MENU_SAVE_GAME:
+				strncpy(pause_menu_items[i].text, enable_quicksave ? "QUICK SAVE - F6" : "SAVE GAME", MAX_MENU_ITEM_LENGTH);
+			break;
+			case PAUSE_MENU_LOAD_GAME:
+				strncpy(pause_menu_items[i].text, enable_quicksave ? "QUICK LOAD - F9" : "LOAD GAME", MAX_MENU_ITEM_LENGTH);
+			break;
+		}
+	}
+#endif
+
 	int y_offset = 50;
 	for (int i = 0; i < COUNT(pause_menu_items); ++i) {
 		draw_pause_menu_item(&pause_menu_items[i], &pause_rect_inner, &y_offset, color_15_brightwhite);
