@@ -676,8 +676,8 @@ extern word last_loose_sound;
 extern int last_key_scancode;
 extern font_type hc_font INIT(= {0x01,0xFF, 7,2,1,1, NULL});
 extern textstate_type textstate INIT(= {0,0,0,15,&hc_font});
-extern int need_quick_save INIT(= 0);
-extern int need_quick_load INIT(= 0);
+extern int need_save INIT(= 0);
+extern int need_load INIT(= 0);
 
 #ifdef USE_REPLAY
 extern byte recording INIT(= 0);

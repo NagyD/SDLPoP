@@ -224,6 +224,8 @@ void __pascal far draw_level_first() {
 	redraw_screen(0);
 	draw_kid_hp(hitp_curr, hitp_max);
 
+	check_saveload_op();	/* Menu equivalent of Ctrl+G and Ctrl+L */
+
 #ifdef USE_QUICKSAVE
 	check_quick_op();
 #endif
@@ -346,6 +348,7 @@ int __pascal far play_level_2() {
 	test_timing_state_type test_timing_state = {0};
 #endif
 	while (1) { // main loop
+		check_saveload_op();
 #ifdef USE_QUICKSAVE
 		check_quick_op();
 #endif
