@@ -22,6 +22,8 @@ The authors of this program may be contacted at https://forum.princed.org
 #include <setjmp.h>
 #include <math.h>
 
+word need_show_help = 0;
+
 // data:461E
 dat_type * dathandle;
 
@@ -488,9 +490,7 @@ int __pascal far process_key() {
 	int key;
 	const char* answer_text = NULL;
 	word need_show_text;
-	word need_show_help;
 	need_show_text = 0;
-	need_show_help = 0;
 	key = key_test_quit();
 
 #ifdef USE_MENU
@@ -557,6 +557,7 @@ int __pascal far process_key() {
 #endif
 		break;
 		case SDL_SCANCODE_SLASH | WITH_SHIFT: // ?
+			is_paused = 1;
 			need_show_help = 1;
 		break;
 		case SDL_SCANCODE_SPACE: // space
@@ -791,10 +792,6 @@ int __pascal far process_key() {
 		display_text_bottom(answer_text);
 		text_time_total = 24;
 		text_time_remaining = 24;
-	}
-	if (need_show_help) {
-		need_show_help=0;
-		show_help();
 	}
 	return 1;
 }
@@ -1660,11 +1657,16 @@ int __pascal far do_paused() {
 		}
 		erase_bottom_text(1);
 	}
+
+	// Also check if we should be showing the help screen.
+	do_help_screen();
+
 	return key || control_shift;
 }
 
 int do_help_screen() {
-	if (is_paused) {
+	if (need_show_help) {
+		show_help();
 	}
 	return 0;
 }
@@ -1905,7 +1907,6 @@ void __pascal far transition_ltr() {
 		}
 		idle(); // modified
 		do_paused();
-		do_help_screen();
 		// Add an appropriate delay until the next frame, so that the animation isn't instantaneous on fast CPUs.
 		for (;;) {
 			Uint64 current_counter = SDL_GetPerformanceCounter();
@@ -2287,7 +2288,10 @@ void show_splash() {
 const rect_type help_text_cont_rect = {180, 0, 200, 320};
 const rect_type help_text_rect = {0, 0, 180, 320};
 
-const char* help_text_1 =
+const char* help_text_cont =
+  "Press any key for more or ESC to cancel.\n";
+
+const char* help_text[] = {
   "Controlling the kid:\n"
   "\n"
   "  LEFT:  turn or run left\n"
@@ -2301,12 +2305,9 @@ const char* help_text_1 =
   "  SHIFT while falling:  grab onto ledge\n"
   "\n"
   "You can also use a gamepad or the numeric keypad.\n"
-  "\n";
+  "\n"
+, 
 
-const char* help_text_cont =
-  "Press SHIFT for more or ESC to cancel.\n";
-
-const char* help_text_2 =
   "Controlling the game:\n"
   "\n"
   "  Alt-Enter: toggle fullscreen\n"
@@ -2325,9 +2326,9 @@ const char* help_text_2 =
   "  F6: quicksave\n"
   "  F9: quickload\n"
   "  F12: Save a screenshot to the screenshots folder.\n"
-  "  Backspace: display in-game menu\n";
+  "  Backspace: display in-game menu\n"
+,
 
-const char* help_text_3 =
   "Gamepad equivalents:\n"
   "  D-Pad: arrows\n"
   "  Joystick: left/right (for all-directional joystick movement, set joystick_only_horizontal to false in SDLPoP.ini)\n"
@@ -2340,9 +2341,9 @@ const char* help_text_3 =
   "  Ctrl+Tab (in game, or on title screen): start or stop recording\n"
   "  Tab (on title screen): view/cycle through the saved replays in the SDLPoP directory\n"
   "  F (while viewing a replay): skip forward to the next room\n"
-  "  Shift-F (while viewing a replay): skip forward to the next level\n";
+  "  Shift-F (while viewing a replay): skip forward to the next level\n"
+,
 
-const char* help_text_4 =
 	"To quick save/load, press F6/F9 in-game.\n"
 	"Press ESC to pause the game.\n"
 #ifdef USE_MENU
@@ -2359,19 +2360,23 @@ const char* help_text_4 =
 	"For more information, read doc/Readme.txt.\n"
 	"Questions? Visit https://forum.princed.org\n"
 	"\n"
-	"Press any key to continue...";
+	"Press any key to continue..."
+	,
+	NULL
+};
+
 
 
 void show_help() {
 	current_target_surface = onscreen_surface_;
 	draw_rect(&screen_rect, 0);
 	show_text_with_color(&help_text_cont_rect, 0, 0, help_text_cont, color_15_brightwhite);
-	show_text_with_color(&help_text_rect, -1, 0, help_text_1, color_7_lightgray);
+	show_text_with_color(&help_text_rect, -1, 0, help_text[0], color_7_lightgray);
 
 	int key = 0;
 	do {
 		idle();
-		key = key_test_quit();
+		key = process_key();
 
 		if (joy_X_button_state != 0) {
 			joy_hat_states[0] = 0;
@@ -2395,6 +2400,8 @@ void show_help() {
 		extern int last_key_scancode; // defined in seg009.c
 		last_key_scancode = key; // can immediately do Ctrl+L, etc from the help screen
 	}
-	key_states[SDL_SCANCODE_LSHIFT] = 0; // don't immediately start the game if shift was pressed!
-	key_states[SDL_SCANCODE_RSHIFT] = 0;
+	//	key_states[SDL_SCANCODE_LSHIFT] = 0; // don't immediately start the game if shift was pressed!
+	//	key_states[SDL_SCANCODE_RSHIFT] = 0;
+
+	need_show_help = 0;
 }
