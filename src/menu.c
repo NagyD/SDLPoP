@@ -1187,17 +1187,17 @@ void draw_pause_menu() {
 	for (int i = 0; i < COUNT(pause_menu_items); ++i) {
 		switch (pause_menu_items[i].id) {
 			case PAUSE_MENU_SAVE_GAME:
-				strncpy(pause_menu_items[i].text, enable_quicksave ? "QUICK SAVE - F6" : "SAVE GAME", MAX_MENU_ITEM_LENGTH);
+				strncpy(pause_menu_items[i].text, enable_quicksave ? "QUICK SAVE - F6" : "SAVE GAME - CTRL+G", MAX_MENU_ITEM_LENGTH);
 			break;
 			case PAUSE_MENU_LOAD_GAME:
-				strncpy(pause_menu_items[i].text, enable_quicksave ? "QUICK LOAD - F9" : "LOAD GAME", MAX_MENU_ITEM_LENGTH);
+				strncpy(pause_menu_items[i].text, enable_quicksave ? "QUICK LOAD - F9" : "LOAD GAME - CTRL+L", MAX_MENU_ITEM_LENGTH);
 			break;
 		}
 	}
 #endif
 
 #ifdef USE_QUICKSAVE
-	if (enable_quicksave && (hovering_pause_menu_item == PAUSE_MENU_SAVE_GAME || hovering_pause_menu_item == PAUSE_MENU_LOAD_GAME)) {
+	if (enable_quicksave /*&& (hovering_pause_menu_item == PAUSE_MENU_SAVE_GAME || hovering_pause_menu_item == PAUSE_MENU_LOAD_GAME)*/) {
 		show_text_with_color(&explanation_rect, 0, -1, "Note: Quicksave did not exist in the original Prince of Persia.\nFor regular save use Ctrl+G, for regular load use Ctrl+R, Ctrl+L.", color_7_lightgray);
 	}
 #endif

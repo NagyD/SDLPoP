@@ -1231,7 +1231,7 @@ void __pascal far control_kid() {
 	if (current_level == 0) {
 		do_demo();
 		control();
-		// we can start the game or load a game while the demo
+		// we can start the game or load a game during the demo
 		key = key_test_quit();
 		if (key == 0x0C) { // ctrl-L
 			if (load_game()) {
