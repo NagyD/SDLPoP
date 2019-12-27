@@ -22,6 +22,8 @@ The authors of this program may be contacted at https://forum.princed.org
 #include <setjmp.h>
 #include <math.h>
 
+word need_show_help = 0;
+
 // data:461E
 dat_type * dathandle;
 
@@ -553,6 +555,10 @@ int __pascal far process_key() {
 				is_menu_shown = 1;
 			}
 #endif
+		break;
+		case SDL_SCANCODE_SLASH | WITH_SHIFT: // ?
+			is_paused = 1;
+			need_show_help = 1;
 		break;
 		case SDL_SCANCODE_SPACE: // space
 			is_show_time = 1;
@@ -1651,7 +1657,18 @@ int __pascal far do_paused() {
 		}
 		erase_bottom_text(1);
 	}
+
+	// Also check if we should be showing the help screen.
+	do_help_screen();
+
 	return key || control_shift;
+}
+
+int do_help_screen() {
+	if (need_show_help) {
+		show_help();
+	}
+	return 0;
 }
 
 // seg000:1500
@@ -2224,14 +2241,9 @@ const rect_type splash_text_2_rect = {50, 0, 200, 320};
 
 const char* splash_text_1 = "SDLPoP " SDLPOP_VERSION;
 const char* splash_text_2 =
-		"To quick save/load, press F6/F9 in-game.\n"
+		"Press ? for a list of keys.\n"
+		"Press ESC for a menu and to customize SDLPoP.\n"
 		"\n"
-#ifdef USE_REPLAY
-		"To record replays, press Ctrl+Tab in-game.\n"
-		"To view replays, press Tab on the title screen.\n"
-		"\n"
-#endif
-		"Edit SDLPoP.ini to customize SDLPoP.\n"
 		"Mods also work with SDLPoP.\n"
 		"\n"
 		"For more information, read doc/Readme.txt.\n"
@@ -2268,4 +2280,128 @@ void show_splash() {
 	}
 	key_states[SDL_SCANCODE_LSHIFT] = 0; // don't immediately start the game if shift was pressed!
 	key_states[SDL_SCANCODE_RSHIFT] = 0;
+}
+
+
+
+
+const rect_type help_text_cont_rect = {180, 0, 200, 320};
+const rect_type help_text_rect = {0, 0, 180, 320};
+
+const char* help_text_cont =
+  "Press any key for more or ESC to cancel.\n";
+
+const char* help_text[] = {
+  "Controlling the kid:\n"
+  "\n"
+  "  LEFT:  turn or run left\n"
+  "  RIGHT:  turn or run right\n"
+  "  UP:  jump or climb up / parry\n"
+  "  DOWN:  crouch or climb down / sheathe\n"
+  "  SHIFT:  pick up things / slash\n"
+  "  SHIFT+LEFT/RIGHT:  careful step\n"
+  "  UP+LEFT  (home):  jump left\n"
+  "  UP+RIGHT (pgup):  jump right\n"
+  "  SHIFT while falling:  grab onto ledge\n"
+  "\n"
+  "You can also use a gamepad or the numeric keypad.\n"
+  "\n"
+, 
+
+  "Controlling the game:\n"
+  "\n"
+  "  Alt-Enter: toggle fullscreen\n"
+  "  Esc: pause game\n"
+  "  Space: show time left\n"
+  "  Ctrl-A: restart level\n"
+  "  Ctrl-G: save game (on levels 3..13)\n"
+  "  Ctrl-L: load game (when in the intro)\n"
+  "  Ctrl-J: joystick/gamepad mode\n"
+  "  Ctrl-K: keyboard mode\n"
+  "  Ctrl-R: return to intro\n"
+  "  Ctrl-S: sound on/off\n"
+  "  Ctrl-V: show version of SDLPoP\n"
+  "  Ctrl-C: show versions of SDL:\n"
+  "  Ctrl-Q: quit game\n"
+  "  F6: quicksave\n"
+  "  F9: quickload\n"
+  "  F12: Save a screenshot to the screenshots folder.\n"
+  "  Backspace: display in-game menu\n"
+,
+
+  "Gamepad equivalents:\n"
+  "  D-Pad: arrows\n"
+  "  Joystick: left/right (for all-directional joystick movement, set joystick_only_horizontal to false in SDLPoP.ini)\n"
+  "  A: down\n"
+  "  Y: up\n"
+  "  X or triggers: shift\n"
+  "  Start or Back: display in-game menu\n"
+  "\n"
+  "Viewing or recording replays:\n"
+  "  Ctrl+Tab (in game, or on title screen): start or stop recording\n"
+  "  Tab (on title screen): view/cycle through the saved replays in the SDLPoP directory\n"
+  "  F (while viewing a replay): skip forward to the next room\n"
+  "  Shift-F (while viewing a replay): skip forward to the next level\n"
+,
+
+	"To quick save/load, press F6/F9 in-game.\n"
+	"Press ESC to pause the game.\n"
+#ifdef USE_MENU
+	"ESC also shows a menu and allows customization.\n"
+#endif
+	"\n"
+#ifdef USE_REPLAY
+	"To record replays, press Ctrl+Tab in-game.\n"
+	"To view replays, press Tab on the title screen.\n"
+	"\n"
+#endif
+	"Mods also work with SDLPoP.\n"
+	"\n"
+	"For more information, read doc/Readme.txt.\n"
+	"Questions? Visit https://forum.princed.org\n"
+	"\n"
+	"Press any key to continue..."
+	,
+	NULL
+};
+
+
+
+void show_help() {
+	current_target_surface = onscreen_surface_;
+	draw_rect(&screen_rect, 0);
+	show_text_with_color(&help_text_cont_rect, 0, 0, help_text_cont, color_15_brightwhite);
+	show_text_with_color(&help_text_rect, -1, 0, help_text[0], color_7_lightgray);
+
+	int key = 0;
+	do {
+		idle();
+		key = process_key();
+
+		if (joy_X_button_state != 0) {
+			joy_hat_states[0] = 0;
+			joy_AY_buttons_state = 0;
+			joy_X_button_state = 0;
+			joy_B_button_state = 0;
+			key_states[SDL_SCANCODE_LSHIFT] = 1; // next help screen using the gamepad
+		}
+		if (joy_B_button_state != 0) {
+			joy_hat_states[0] = 0;
+			joy_AY_buttons_state = 0;
+			joy_X_button_state = 0;
+			joy_B_button_state = 0;
+			key = SDL_SCANCODE_ESCAPE;					// exit help screen using the gamepad
+		}
+		delay_ticks(1);
+
+	} while(key == 0 && !(key_states[SDL_SCANCODE_LSHIFT] || key_states[SDL_SCANCODE_RSHIFT]));
+
+	if ((key & WITH_CTRL) || (enable_quicksave && key == SDL_SCANCODE_F9) || (enable_replay && key == SDL_SCANCODE_TAB)) {
+		extern int last_key_scancode; // defined in seg009.c
+		last_key_scancode = key; // can immediately do Ctrl+L, etc from the help screen
+	}
+	//	key_states[SDL_SCANCODE_LSHIFT] = 0; // don't immediately start the game if shift was pressed!
+	//	key_states[SDL_SCANCODE_RSHIFT] = 0;
+
+	need_show_help = 0;
 }

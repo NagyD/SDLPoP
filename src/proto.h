@@ -50,6 +50,7 @@ void __pascal far load_chtab_from_file(int chtab_id,int resource,const char near
 void __pascal far free_all_chtabs_from(int first);
 void __pascal far load_more_opt_graf(const char *filename);
 int __pascal far do_paused();
+int __pascal far do_help_screen();
 void __pascal far read_keyb_control();
 void __pascal far copy_screen_rect(const rect_type far *source_rect_ptr);
 void __pascal far toggle_upside();
@@ -74,6 +75,7 @@ void __pascal far show_copyprot(int where);
 void __pascal far show_loading();
 void __pascal far show_quotes();
 void show_splash();
+void show_help();
 #ifdef USE_QUICKSAVE
 void check_quick_op();
 void restore_room_after_quick_load();
