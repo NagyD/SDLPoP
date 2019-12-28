@@ -182,7 +182,8 @@ void __pascal far enter_guard() {
 	curr_guard_color &= 0x0F; // added; only least significant 4 bits are used for guard color
 
 	// level 3 has skeletons with infinite lives
-	if (current_level == 3) {
+	//if (current_level == 3) {
+	if (custom->tbl_guard_type[current_level] == 2) {
 		Char.charid = charid_4_skeleton;
 	} else {
 		Char.charid = charid_2_guard;

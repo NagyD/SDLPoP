@@ -556,9 +556,10 @@ int __pascal far process_key() {
 			}
 #endif
 		break;
-		case SDL_SCANCODE_SLASH | WITH_SHIFT: // ?
-			is_paused = 1;
-			need_show_help = 1;
+		case SDL_SCANCODE_F1: // F1
+			//is_paused = 1;
+			//need_show_help = 1;
+			show_help();
 		break;
 		case SDL_SCANCODE_SPACE: // space
 			is_show_time = 1;
@@ -1659,7 +1660,7 @@ int __pascal far do_paused() {
 	}
 
 	// Also check if we should be showing the help screen.
-	do_help_screen();
+	//do_help_screen();
 
 	return key || control_shift;
 }
@@ -2241,7 +2242,7 @@ const rect_type splash_text_2_rect = {50, 0, 200, 320};
 
 const char* splash_text_1 = "SDLPoP " SDLPOP_VERSION;
 const char* splash_text_2 =
-		"Press ? for a list of keys.\n"
+		"Press F1 for a list of keys.\n"
 		"Press ESC for a menu and to customize SDLPoP.\n"
 		"\n"
 		"Mods also work with SDLPoP.\n"
@@ -2368,7 +2369,13 @@ const char* help_text[] = {
 
 
 void show_help() {
-	current_target_surface = onscreen_surface_;
+	//current_target_surface = onscreen_surface_;
+	surface_type* saved_target_surface = current_target_surface;
+	current_target_surface = overlay_surface;
+	is_overlay_displayed = true;
+	is_paused = true;
+	is_menu_shown = true;
+
 	draw_rect(&screen_rect, 0);
 	show_text_with_color(&help_text_cont_rect, 0, 0, help_text_cont, color_15_brightwhite);
 	show_text_with_color(&help_text_rect, -1, 0, help_text[0], color_7_lightgray);
@@ -2376,7 +2383,9 @@ void show_help() {
 	int key = 0;
 	do {
 		idle();
+		is_menu_shown = false;
 		key = process_key();
+		is_menu_shown = true;
 
 		if (joy_X_button_state != 0) {
 			joy_hat_states[0] = 0;
@@ -2404,4 +2413,10 @@ void show_help() {
 	//	key_states[SDL_SCANCODE_RSHIFT] = 0;
 
 	need_show_help = 0;
+
+	is_overlay_displayed = false;
+	is_paused = false;
+	is_menu_shown = false;
+	current_target_surface = saved_target_surface;
 }
+
