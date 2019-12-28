@@ -577,6 +577,9 @@ int __pascal far process_key() {
 				save_game();
 			}
 		break;
+		case SDL_SCANCODE_H | WITH_CTRL: // ctrl-h
+			show_help();
+		break;
 		case SDL_SCANCODE_J | WITH_CTRL: // ctrl-j
 			if ((sound_flags & sfDigi) && sound_mode == smTandy) {
 				answer_text = "JOYSTICK UNAVAILABLE";
