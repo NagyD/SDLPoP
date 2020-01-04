@@ -1659,19 +1659,23 @@ void __pascal far read_keyb_control() {
 
 	if (key_states[SDL_SCANCODE_UP] || key_states[SDL_SCANCODE_HOME] || key_states[SDL_SCANCODE_PAGEUP]
 	    || key_states[SDL_SCANCODE_KP_8] || key_states[SDL_SCANCODE_KP_7] || key_states[SDL_SCANCODE_KP_9]
+	    || key_states[SDL_SCANCODE_U] || key_states[SDL_SCANCODE_I] || key_states[SDL_SCANCODE_O]
 	) {
 		control_y = -1;
 	} else if (key_states[SDL_SCANCODE_CLEAR] || key_states[SDL_SCANCODE_DOWN]
 	           || key_states[SDL_SCANCODE_KP_5] || key_states[SDL_SCANCODE_KP_2]
+	           || key_states[SDL_SCANCODE_K]
 	) {
 		control_y = 1;
 	}
 	if (key_states[SDL_SCANCODE_LEFT] || key_states[SDL_SCANCODE_HOME]
 	    || key_states[SDL_SCANCODE_KP_4] || key_states[SDL_SCANCODE_KP_7]
+	    || key_states[SDL_SCANCODE_J] || key_states[SDL_SCANCODE_U]
 	) {
 		control_x = -1;
 	} else if (key_states[SDL_SCANCODE_RIGHT] || key_states[SDL_SCANCODE_PAGEUP]
 	           || key_states[SDL_SCANCODE_KP_6] || key_states[SDL_SCANCODE_KP_9]
+	           || key_states[SDL_SCANCODE_L] || key_states[SDL_SCANCODE_O]
 	) {
 		control_x = 1;
 	}
