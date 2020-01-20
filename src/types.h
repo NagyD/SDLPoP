@@ -656,6 +656,13 @@ typedef struct dialog_type {
 
 #pragma pack(pop)
 
+typedef struct room_offset_type {
+	sbyte dx;
+	sbyte dy;
+	byte distance;
+	bool visited; // For Dijkstra's algorithm
+} room_offset_type;
+
 enum soundids {
 	sound_0_fell_to_death = 0,
 	sound_1_falling = 1,

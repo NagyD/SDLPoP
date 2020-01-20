@@ -359,6 +359,10 @@ Possible values of anim_type:
 			//if ((curr_modifier -= gate_close_speeds[anim_type]) < 0) {
 				curr_modifier = 0;
 				trob.type = -1;
+				if (enable_directional_sound) {
+					byte sound_room = trob.tilepos % 10 == 9 ? level.roomlinks[trob.room-1].right : trob.room;
+					set_sound_room(sound_room);
+				}
 				play_sound(sound_6_gate_closing_fast); // gate closing fast
 			}
 		} else {
@@ -370,6 +374,10 @@ Possible values of anim_type:
 					if (curr_modifier != 0) {
 						if (curr_modifier < 188) {
 							if ((curr_modifier & 3) == 3) {
+								if (enable_directional_sound) {
+									byte sound_room = trob.tilepos % 10 == 9 ? level.roomlinks[trob.room-1].right : trob.room;
+									set_sound_room(sound_room);
+								}
 								play_door_sound_if_visible(sound_4_gate_closing); // gate closing
 							}
 						}
@@ -380,6 +388,10 @@ Possible values of anim_type:
 					// opening
 					if (curr_modifier < 188) {
 						if ((curr_modifier & 7) == 0) {
+							if (enable_directional_sound) {
+								byte sound_room = trob.tilepos % 10 == 9 ? level.roomlinks[trob.room-1].right : trob.room;
+								set_sound_room(sound_room);
+							}
 							play_sound(sound_5_gate_opening); // gate opening
 						}
 					} else {
@@ -388,6 +400,10 @@ Possible values of anim_type:
 							// after regular open
 							curr_modifier = 238;
 							trob.type = 0; // closing
+							if (enable_directional_sound) {
+								byte sound_room = trob.tilepos % 10 == 9 ? level.roomlinks[trob.room-1].right : trob.room;
+								set_sound_room(sound_room);
+							}
 							play_sound(sound_7_gate_stop); // gate stop (after opening)
 						} else {
 							// after permanent open
@@ -407,6 +423,10 @@ Possible values of anim_type:
 // seg007:05E3
 void __pascal far gate_stop() {
 	trob.type = -1;
+	if (enable_directional_sound) {
+		byte sound_room = trob.tilepos % 10 == 9 ? level.roomlinks[trob.room-1].right : trob.room;
+		set_sound_room(sound_room);
+	}
 	play_door_sound_if_visible(sound_7_gate_stop); // gate stop (after closing)
 }
 
@@ -459,6 +479,9 @@ Possible values of trob_type:
 				}
 			} else {
 				sound_interruptible[sound_15_leveldoor_sliding] = 0;
+				if (enable_directional_sound) {
+					set_sound_room(trob.room);
+				}
 				play_sound(sound_15_leveldoor_sliding); // level door sliding (opening)
 			}
 		}
@@ -873,6 +896,9 @@ void __pascal far loose_shake(int arg_0) {
 			// random sample rate (10500..11500)
 			//sound_pointers[sound_id]->samplerate = prandom(1000) + 10500;
 		}
+		if (enable_directional_sound) {
+			set_sound_room(trob.room);
+		}
 		play_sound(sound_id);
 	}
 }
@@ -1024,6 +1050,9 @@ void __pascal far move_loose() {
 		) {
 			mob_down_a_row();
 			return;
+		}
+		if (enable_directional_sound) {
+			set_sound_room(curmob.room);
 		}
 		play_sound(sound_2_tile_crashing); // tile crashing
 		do_knock(curmob.room, curmob.row);
@@ -1257,4 +1286,5 @@ void __pascal far play_door_sound_if_visible(int sound_id) {
 	if (has_sound) {
 		play_sound(sound_id);
 	}
+	want_directional_sound = false;
 }

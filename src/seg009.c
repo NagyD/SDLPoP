@@ -1685,6 +1685,8 @@ void __pascal far speaker_sound_stop() {
 
 // The current buffer, holds the resampled sound data.
 byte* digi_buffer = NULL;
+// The current size of the buffer (may grow if needed).
+size_t digi_buffer_size;
 // The current position in digi_buffer.
 byte* digi_remaining_pos = NULL;
 // The remaining length.
@@ -1710,7 +1712,7 @@ void stop_digi() {
 		digi_audiospec = NULL;
 	}
 	*/
-	digi_buffer = NULL;
+//	digi_buffer = NULL;
 	digi_remaining_length = 0;
 	digi_remaining_pos = NULL;
 	SDL_UnlockAudio();
@@ -1821,6 +1823,46 @@ void __pascal far play_speaker_sound(sound_buffer_type far *buffer) {
 	SDL_PauseAudio(0);
 }
 
+// Background: https://auditoryneuroscience.com/spatial-hearing/binaural-cues
+int digi_channel_offset[2]; // for interaural time difference
+float digi_channel_gain[2]; // for interaural level difference, and for sounds becoming softer in the distance
+float max_interaural_time_difference_ms = 0.4f;
+
+void reset_sound_direction() {
+	memset(digi_channel_offset, 0, sizeof(digi_channel_offset));
+	digi_channel_gain[0] = 1.0f;
+	digi_channel_gain[1] = 1.0f;
+}
+
+size_t set_sound_direction(float sound_dir_x) {
+	digi_channel_gain[0] = sound_distance_loss;
+	digi_channel_gain[1] = sound_distance_loss;
+	if (sound_dir_x == 0.0f) return 0;
+	float samples_per_ms = (float) digi_audiospec->freq * 0.001f;
+	float max_delay_samples = max_interaural_time_difference_ms * samples_per_ms;
+	int which_channel_to_offset;
+	int which_channel_to_make_softer;
+
+	float abs_sound_dir_x;
+	if (sound_dir_x >= 0.0f) {
+		// Sound comes from the right. -> give the right channel a head start, make the left channel softer
+		abs_sound_dir_x = sound_dir_x;
+		which_channel_to_offset = 1;
+		which_channel_to_make_softer = 0;
+	} else {
+		// Sound comes from the left. -> give the left channel a head start, make the right channel softer
+		abs_sound_dir_x = -sound_dir_x;
+		which_channel_to_offset = 0;
+		which_channel_to_make_softer = 1;
+	}
+	int delay_samples = (int) (abs_sound_dir_x * max_delay_samples);
+	size_t delay_length = (delay_samples * digi_audiospec->channels * sizeof(short));
+	digi_channel_offset[which_channel_to_offset] = delay_length;
+	digi_channel_gain[which_channel_to_make_softer] *= (1.0f - (abs_sound_dir_x * 0.2f)); // could tweak this
+	return delay_length;
+}
+
+
 void digi_callback(void *userdata, Uint8 *stream, int len) {
 	// Don't go over the end of either the input or the output buffer.
 	size_t copy_len = MIN(len, digi_remaining_length);
@@ -1828,7 +1870,24 @@ void digi_callback(void *userdata, Uint8 *stream, int len) {
 	//printf("digi_callback(): len = %d\n", len);
 	if (is_sound_on) {
 		// Copy the next part of the input of the output.
-		memcpy(stream, digi_remaining_pos, copy_len);
+		if (enable_directional_sound) {
+			size_t sample_len = 2 * sizeof(short);
+			int offset_left = digi_channel_offset[0];
+			int offset_right = digi_channel_offset[1];
+			byte* buffer_pos = digi_remaining_pos;
+			short* stream_pos = (short*) stream;
+			for (size_t bytes_left_to_copy = copy_len; bytes_left_to_copy > 0; bytes_left_to_copy -= sample_len) {
+				short left = *(short*)(buffer_pos + offset_left);
+				short right = *(short*)(buffer_pos + offset_right + sizeof(short));
+				left = MIN(MAX((int) (left * digi_channel_gain[0]), INT16_MIN), INT16_MAX);
+				right = MIN(MAX((int) (right * digi_channel_gain[1]), INT16_MIN), INT16_MAX);
+				*stream_pos++ = left;
+				*stream_pos++ = right;
+				buffer_pos += sample_len;
+			}
+		} else {
+			memcpy(stream, digi_remaining_pos, copy_len);
+		}
 		// In case the sound does not fill the buffer: fill the rest of the buffer with silence.
 		memset(stream + copy_len, digi_audiospec->silence, len - copy_len);
 	} else {
@@ -1939,6 +1998,8 @@ void init_digi() {
 	}
 	//SDL_PauseAudio(0);
 	digi_audiospec = desired;
+	digi_buffer_size = 1024 * 1024;
+	digi_buffer = malloc(digi_buffer_size); // persistent
 }
 
 const int sound_channel = 0;
@@ -2158,9 +2219,26 @@ void __pascal far play_digi_sound(sound_buffer_type far *buffer) {
 		return;
 	}
 	SDL_LockAudio();
-	digi_buffer = (byte*) buffer->converted.samples;
+	size_t delay_length = 0; // for interaural time difference
+	size_t total_length = buffer->converted.length;
+	reset_sound_direction();
+	if (current_sound_is_directional) {
+		delay_length = set_sound_direction(current_sound_dir_x);
+		total_length += 2 * delay_length; // pad with silence at start + end.
+	}
+	// Grow the buffer if needed.
+	if (total_length > digi_buffer_size) {
+		digi_buffer = realloc(digi_buffer, total_length);
+		digi_buffer_size = total_length;
+	}
+	if (delay_length > 0) {
+		// pad with silence at start + end.
+		memset(digi_buffer, 0, delay_length);
+		memset(digi_buffer + delay_length + buffer->converted.length, 0, delay_length);
+	}
+	memcpy(digi_buffer + delay_length, buffer->converted.samples, buffer->converted.length);
 	digi_playing = 1;
-	digi_remaining_length = buffer->converted.length;
+	digi_remaining_length = buffer->converted.length + delay_length;
 	digi_remaining_pos = digi_buffer;
 	SDL_UnlockAudio();
 	SDL_PauseAudio(0);
