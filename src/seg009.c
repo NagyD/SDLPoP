@@ -1835,8 +1835,8 @@ void reset_sound_direction() {
 }
 
 size_t set_sound_direction(float sound_dir_x) {
-	digi_channel_gain[0] = sound_distance_loss;
-	digi_channel_gain[1] = sound_distance_loss;
+	digi_channel_gain[0] = current_sound_distance_loss;
+	digi_channel_gain[1] = current_sound_distance_loss;
 	if (sound_dir_x == 0.0f) return 0;
 	float samples_per_ms = (float) digi_audiospec->freq * 0.001f;
 	float max_delay_samples = max_interaural_time_difference_ms * samples_per_ms;
@@ -1870,7 +1870,7 @@ void digi_callback(void *userdata, Uint8 *stream, int len) {
 	//printf("digi_callback(): len = %d\n", len);
 	if (is_sound_on) {
 		// Copy the next part of the input of the output.
-		if (enable_directional_sound) {
+		if (enable_positional_audio) {
 			size_t sample_len = 2 * sizeof(short);
 			int offset_left = digi_channel_offset[0];
 			int offset_right = digi_channel_offset[1];
@@ -2222,7 +2222,7 @@ void __pascal far play_digi_sound(sound_buffer_type far *buffer) {
 	size_t delay_length = 0; // for interaural time difference
 	size_t total_length = buffer->converted.length;
 	reset_sound_direction();
-	if (current_sound_is_directional) {
+	if (current_sound_is_positional) {
 		delay_length = set_sound_direction(current_sound_dir_x);
 		total_length += 2 * delay_length; // pad with silence at start + end.
 	}

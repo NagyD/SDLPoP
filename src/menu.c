@@ -142,7 +142,7 @@ enum setting_ids {
 	SETTING_ENABLE_INFO_SCREEN,
 	SETTING_ENABLE_SOUND,
 	SETTING_ENABLE_MUSIC,
-	SETTING_ENABLE_DIRECTIONAL_SOUND,
+	SETTING_ENABLE_POSITIONAL_AUDIO,
 	SETTING_ENABLE_CONTROLLER_RUMBLE,
 	SETTING_JOYSTICK_THRESHOLD,
 	SETTING_JOYSTICK_ONLY_HORIZONTAL,
@@ -303,9 +303,9 @@ setting_type general_settings[] = {
 		{.id = SETTING_ENABLE_MUSIC, .style = SETTING_STYLE_TOGGLE, .linked = &enable_music,
 				.text = "Enable music",
 				.explanation = "Turn music on or off."},
-		{.id = SETTING_ENABLE_DIRECTIONAL_SOUND, .style = SETTING_STYLE_TOGGLE, .linked = &enable_directional_sound,
-				.text = "Enable directional sound",
-				.explanation = "Turn directional sound on or off.\n"
+		{.id = SETTING_ENABLE_POSITIONAL_AUDIO, .style = SETTING_STYLE_TOGGLE, .linked = &enable_positional_audio,
+				.text = "Enable positional audio",
+				.explanation = "Turn positional audio on or off.\n"
 				        "Works best with headphones.\n"
 	                    "Distant sounds will also be softer.\n"},
 		{.id = SETTING_ENABLE_CONTROLLER_RUMBLE, .style = SETTING_STYLE_TOGGLE, .linked = &enable_controller_rumble,
@@ -2000,7 +2000,7 @@ void process_ingame_settings_user_managed(SDL_RWops* rw, rw_process_func_type pr
 	process(enable_fade);
 	process(enable_flash);
 	process(enable_lighting);
-	process(enable_directional_sound);
+	process(enable_positional_audio);
 }
 
 void process_ingame_settings_mod_managed(SDL_RWops* rw, rw_process_func_type process_func) {

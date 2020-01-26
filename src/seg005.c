@@ -36,6 +36,7 @@ void __pascal far seqtbl_offset_opp(int seq_index) {
 // seg005:0030
 void __pascal far do_fall() {
 	if (is_screaming == 0 && Char.fall_y >= 31) {
+		set_sound_pos(Char.room, Char.curr_col, Char.curr_row);
 		play_sound(sound_1_falling); // falling
 		is_screaming = 1;
 	}
@@ -174,6 +175,7 @@ void __pascal far land() {
 					seq_id = seq_17_soft_land; // crouch (soft land)
 				}
 				if (Char.charid == charid_0_kid) {
+					set_sound_pos(Char.room, Char.curr_col, Char.curr_row);
 					play_sound(sound_17_soft_land); // soft land (crouch)
 					is_guard_notice = 1;
 				}
@@ -184,6 +186,7 @@ void __pascal far land() {
 				// kid (or skeleton (bug!))
 				if (! take_hp(1)) {
 					// still alive
+					set_sound_pos(Char.room, Char.curr_col, Char.curr_row);
 					play_sound(sound_16_medium_land); // medium land
 					is_guard_notice = 1;
 					seq_id = seq_20_medium_land; // medium land (lose 1 HP, crouch)
@@ -201,6 +204,7 @@ void __pascal far land() {
 		loc_5F6C:
 		take_hp(100);
 		loc_5F75:
+		set_sound_pos(Char.room, Char.curr_col, Char.curr_row);
 		play_sound(sound_0_fell_to_death); // prince crashing into the floor
 		seq_id = seq_22_crushed; // dead (after falling)
 	}
@@ -217,6 +221,7 @@ void __pascal far spiked() {
 	Char.x = x_bump[tile_col + 5] + 10;
 	Char.x = char_dx_forward(8);
 	Char.fall_y = 0;
+	set_sound_pos(Char.room, Char.curr_col, Char.curr_row);
 	play_sound(sound_48_spiked); // something spiked
 	take_hp(100);
 	seqtbl_offset_char(seq_51_spiked); // spiked
@@ -703,6 +708,7 @@ void __pascal far control_hanging() {
 				)))
 			) {
 				if (grab_timer == 0) {
+					set_sound_pos(Char.room, Char.curr_col, Char.curr_row);
 					play_sound(sound_8_bumped); // touching a wall (hang against wall)
 				}
 				seqtbl_offset_char(seq_25_hang_against_wall); // hang against wall (straight)
@@ -846,6 +852,7 @@ void __pascal far draw_sword() {
 	}
 #endif
 	if (Char.charid == charid_0_kid) {
+		set_sound_pos(Char.room, Char.curr_col, Char.curr_row);
 		play_sound(sound_19_draw_sword); // taking out the sword
 		offguard = 0;
 	} else if (Char.charid != charid_1_shadow) {

@@ -337,6 +337,7 @@ void __pascal far bumped_floor(sbyte push_direction) {
 // seg004:05F1
 void __pascal far bumped_sound() {
 	is_guard_notice = 1;
+	set_sound_pos(Char.room, Char.curr_col, Char.curr_row);
 	play_sound(sound_8_bumped); // touching a wall
 }
 
@@ -453,6 +454,7 @@ void __pascal far chomped() {
 		Char.x = char_dx_forward(7 - !Char.direction);
 		Char.y = y_land[Char.curr_row + 1];
 		take_hp(100);
+		set_sound_pos(Char.room, Char.curr_col, Char.curr_row);
 		play_sound(sound_46_chomped); // something chomped
 		seqtbl_offset_char(seq_54_chomped); // chomped
 		play_seq();

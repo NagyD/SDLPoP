@@ -544,6 +544,7 @@ void __pascal far jump_through_mirror() {
 	check_mirror_image();
 	jumped_through_mirror = 0;
 	Char.charid = charid_1_shadow;
+	set_sound_pos(Char.room, Char.curr_col, Char.curr_row);
 	play_sound(sound_45_jump_through_mirror); // jump through mirror
 	saveshad();
 	guardhp_max = guardhp_curr = hitp_max;
@@ -584,6 +585,7 @@ void __pascal far bump_into_opponent() {
 				if (Char.fall_y >= 33) return; // don't bump; dead
 				else if (Char.fall_y >= 22) { // medium land
 					take_hp(1);
+					set_sound_pos(Char.room, Char.curr_col, Char.curr_row);
 					play_sound(sound_16_medium_land);
 				}
 			}

@@ -1596,30 +1596,48 @@ void __pascal far play_sound(int sound_id) {
 	if (next_sound < 0 || sound_prio_table[sound_id] <= sound_prio_table[next_sound]) {
 		if (NULL == sound_pointers[sound_id]) return;
 		if (sound_pcspeaker_exists[sound_id] != 0 || sound_pointers[sound_id]->type != sound_speaker) {
+			if (enable_positional_audio && want_positional_sound) {
+				// Don't interrupt the previous sound if this one is further away
+				if (!(sound_id == next_sound && want_sound_distance_loss < next_sound_distance_loss)) {
+					next_sound_is_positional = want_positional_sound;
+					next_sound_dir_x = want_sound_dir_x;
+					next_sound_distance_loss = want_sound_distance_loss;
+				}
+			}
 			next_sound = sound_id;
-			next_sound_is_directional = want_directional_sound;
 		}
 	}
-	want_directional_sound = false;
+	want_positional_sound = false;
 }
 
-void set_sound_room(int room) {
+void set_sound_pos(int room, int col, int row) {
+	if (!enable_positional_audio) return;
+	want_positional_sound = false;
+	want_sound_distance_loss = 1.0f;
+	want_sound_dir_x = 0.0f;
+	if (!(room > 0 && room <= 24)) return;
 	room_offset_type room_offset = room_offsets[room-1];
 	if (room_offset.visited) {
-		float distance_x = (float) ABS(room_offset.dx);
-		float distance_y = (float) ABS(room_offset.dy);
+		want_positional_sound = true;
+		// Calculate the position of the sound within the room
+		int tile_x = col * 32 + 16;
+		int tile_y = 3 + row * 63;
+		int sound_x = tile_x - (320 / 2); // offset in pixels from the center of the room
+		int sound_y = tile_y - (192 / 2);
+		// Place the sound in the other room
+		sound_x += room_offset.dx * 320;
+		sound_y += room_offset.dy * 189;
+		// The listener is placed at some distance along the z-axis (away from the screen)
+		float distance_z = 3.0f * 320.0f; // could be tweaked
+		float distance_x = (float) ABS(sound_x);
+		float distance_y = (float) ABS(sound_y);
+		float sound_distance = sqrtf(distance_x * distance_x + distance_y * distance_y + distance_z * distance_z); // Assumes rooms are square...
+		want_sound_distance_loss = 1.0f / MAX(1.0f, log2f(sound_distance / distance_z) * 4.0f); // could be tweaked
+		float angle_in_xy_plane = atan2f((float) sound_y, (float) sound_x);
+		float angle_with_z_axis = asinf(distance_z / sound_distance);
 
-		if (room_offset.dx != 0 || room_offset.dy != 0) {
-			want_directional_sound = true;
-			current_sound_distance = sqrtf(distance_x*distance_x + distance_y*distance_y); // Assumes rooms are square...
-			sound_distance_loss = 1.0f / MAX(1.0f, log2f(current_sound_distance + 1.0f) * 4.0f); // could be tweaked
-			float angle = atan2f((float) room_offset.dy, (float) room_offset.dx);
-			current_sound_dir_x = cosf(angle);
-		} else {
-			want_directional_sound = false;
-			current_sound_distance = 0.0f;
-			sound_distance_loss = 1.0f;
-		}
+		want_sound_dir_x = cosf(angle_in_xy_plane);
+		want_sound_dir_x *= cosf(angle_with_z_axis);
 	}
 }
 
@@ -1629,8 +1647,12 @@ void __pascal far play_next_sound() {
 		if (!check_sound_playing() ||
 			(sound_interruptible[current_sound] != 0 && sound_prio_table[next_sound] <= sound_prio_table[current_sound])
 		) {
+			if (enable_positional_audio) {
+				current_sound_is_positional = next_sound_is_positional;
+				current_sound_dir_x = next_sound_dir_x;
+				current_sound_distance_loss = next_sound_distance_loss;
+			}
 			current_sound = next_sound;
-			current_sound_is_directional = next_sound_is_directional;
 			play_sound_from_buffer(sound_pointers[current_sound]);
 		}
 	}

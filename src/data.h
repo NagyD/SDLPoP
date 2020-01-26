@@ -673,12 +673,15 @@ extern word justblocked; // name from Apple II source
 // data:5F84
 extern word last_loose_sound;
 
-extern short want_directional_sound;
-extern short next_sound_is_directional;
-extern short current_sound_is_directional;
+extern bool want_positional_sound;
+extern float want_sound_dir_x;
+extern float want_sound_distance_loss;
+extern bool next_sound_is_positional;
+extern float next_sound_dir_x;
+extern float next_sound_distance_loss;
+extern bool current_sound_is_positional;
 extern float current_sound_dir_x;
-extern float current_sound_distance;
-extern float sound_distance_loss;
+extern float current_sound_distance_loss;
 room_offset_type room_offsets[24];
 
 extern int last_key_scancode;
@@ -715,7 +718,7 @@ extern bool skip_normal_data_files;
 extern byte use_fixes_and_enhancements INIT(= 0);
 extern byte enable_copyprot INIT(= 0);
 extern byte enable_music INIT(= 1);
-extern byte enable_directional_sound INIT(= 0);
+extern byte enable_positional_audio INIT(= 0);
 extern byte enable_fade INIT(= 1);
 extern byte enable_flash INIT(= 1);
 extern byte enable_text INIT(= 1);

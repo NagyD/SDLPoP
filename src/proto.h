@@ -45,7 +45,7 @@ void __pascal far set_health_life();
 void __pascal far draw_hp();
 void __pascal far do_delta_hp();
 void __pascal far play_sound(int sound_id);
-void set_sound_room(int room);
+void set_sound_pos(int room, int col, int row);
 void __pascal far play_next_sound();
 void __pascal far check_sword_vs_sword();
 void __pascal far load_chtab_from_file(int chtab_id,int resource,const char near *filename,int palette_bits);
