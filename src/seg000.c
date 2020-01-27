@@ -1631,8 +1631,8 @@ void set_sound_pos(int room, int col, int row) {
 		float distance_z = 3.0f * 320.0f; // could be tweaked
 		float distance_x = (float) ABS(sound_x);
 		float distance_y = (float) ABS(sound_y);
-		float sound_distance = sqrtf(distance_x * distance_x + distance_y * distance_y + distance_z * distance_z); // Assumes rooms are square...
-		want_sound_distance_loss = 1.0f / MAX(1.0f, log2f(sound_distance / distance_z) * 4.0f); // could be tweaked
+		float sound_distance = sqrtf(distance_x * distance_x + distance_y * distance_y + distance_z * distance_z);
+		want_sound_distance_loss = 1.0f / MAX(1.0f, log2f(sound_distance / distance_z) * 8.0f); // could be tweaked
 		float angle_in_xy_plane = atan2f((float) sound_y, (float) sound_x);
 		float angle_with_z_axis = asinf(distance_z / sound_distance);
 
