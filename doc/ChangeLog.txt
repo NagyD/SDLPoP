@@ -545,3 +545,4 @@ FIXED: Fix priorities of sword and spike sounds. (As in PoP 1.3.)
 (upcoming version)
 
 FIXED: Skeletons not on level 3 did not behave like skeletons.
+FIXED: Don't crash if the intro music is interrupted by Tab in PC Speaker mode.

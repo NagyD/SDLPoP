@@ -648,6 +648,7 @@ static void print_remaining_time() {
 }
 
 void start_replay() {
+	stop_sounds(); // Don't crash if the intro music is interrupted by Tab in PC Speaker mode.
 	if (!enable_replay) return;
 	need_start_replay = 0;
 	if (!is_validate_mode) {
