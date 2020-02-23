@@ -621,6 +621,7 @@ void apply_replay_options() {
 	memcpy(levelset_name, replay_levelset_name, sizeof(levelset_name));
 	use_custom_levelset = (levelset_name[0] == '\0') ? 0 : 1;
 
+	load_mod_options(); // Load resources from the correct places if there is a mod name in the replay file. This also prevents unwanted switching to PC Speaker mode.
 	reload_resources();
 }
 
