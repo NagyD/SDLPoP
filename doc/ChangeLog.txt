@@ -547,3 +547,5 @@ FIXED: Fix priorities of sword and spike sounds. (As in PoP 1.3.)
 FIXED: Skeletons not on level 3 did not behave like skeletons.
 FIXED: Don't crash if the intro music is interrupted by Tab in PC Speaker mode.
 FIXED: Don't switch to PC Speaker mode if there is a mod name in the replay file.
+DONE: Detect guard skill customizations in PRINCE.EXE. (Used in Illusions of Persia, for example.)
+	TODO: Should we add the guard skill options to the INI, the CFG, the replays, or the settings menu?

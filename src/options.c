@@ -654,6 +654,16 @@ void load_dos_exe_modifications(const char* folder_name) {
 		process(&custom_saved.win_level, 1, {0x011dc, 0x0288c, 0x01397, 0x01ad7, 0x01327, 0x02457});
 		process(&custom_saved.win_room, 1, {0x011e3, 0x02893, 0x0139e, 0x01ade, 0x0132e, 0x0245e});
 		process(&custom_saved.loose_floor_delay, 1, {0x9536, 0xABE6, -1, -1, -1, -1});
+
+		// guard skills
+		process(&custom_saved.strikeprob   , 2*NUM_GUARD_SKILLS, {-1, 0x1D3C2, -1, 0x1D2B4, -1, 0x19C5E});
+		process(&custom_saved.restrikeprob , 2*NUM_GUARD_SKILLS, {-1, 0x1D3DA, -1, 0x1D2CC, -1, 0x19C76});
+		process(&custom_saved.blockprob    , 2*NUM_GUARD_SKILLS, {-1, 0x1D3F2, -1, 0x1D2E4, -1, 0x19C8E});
+		process(&custom_saved.impblockprob , 2*NUM_GUARD_SKILLS, {-1, 0x1D40A, -1, 0x1D2FC, -1, 0x19CA6});
+		process(&custom_saved.advprob      , 2*NUM_GUARD_SKILLS, {-1, 0x1D422, -1, 0x1D314, -1, 0x19CBE});
+		process(&custom_saved.refractimer  , 2*NUM_GUARD_SKILLS, {-1, 0x1D43A, -1, 0x1D32C, -1, 0x19CD6});
+		process(&custom_saved.extrastrength, 2*NUM_GUARD_SKILLS, {-1, 0x1D452, -1, 0x1D344, -1, 0x19CEE});
+
 #undef process
 		free(exe_memory);
 	}

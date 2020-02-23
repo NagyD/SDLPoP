@@ -1191,6 +1191,8 @@ typedef struct fixes_options_type {
 	byte fix_exit_door;
 } fixes_options_type;
 
+#define NUM_GUARD_SKILLS 12
+
 typedef struct custom_options_type {
 	word start_minutes_left;
 	word start_ticks_left;
@@ -1270,6 +1272,16 @@ typedef struct custom_options_type {
 	byte tbl_cutscenes_by_index[16];
 	byte tbl_entry_pose[16];
 	sbyte tbl_seamless_exit[16];
+
+	// guard skills
+	word strikeprob   [NUM_GUARD_SKILLS];
+	word restrikeprob [NUM_GUARD_SKILLS];
+	word blockprob    [NUM_GUARD_SKILLS];
+	word impblockprob [NUM_GUARD_SKILLS];
+	word advprob      [NUM_GUARD_SKILLS];
+	word refractimer  [NUM_GUARD_SKILLS];
+	word extrastrength[NUM_GUARD_SKILLS];
+
 } custom_options_type;
 #pragma pack(pop)
 
