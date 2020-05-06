@@ -198,6 +198,13 @@ static int global_ini_callback(const char *section, const char *name, const char
 			}
 			return 1;
 		}
+
+		if (strcasecmp(name, "gamecontrollerdb_file") == 0) {
+			if (value[0] != '\0') {
+				strcpy(gamecontrollerdb_file, locate_file(value));
+			}
+			return 1;
+		}
 	}
 
 	if (check_ini_section("AdditionalFeatures")) {

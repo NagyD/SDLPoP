@@ -714,6 +714,7 @@ extern byte enable_info_screen INIT(= 1);
 extern byte enable_controller_rumble INIT(= 0);
 extern byte joystick_only_horizontal INIT(= 0);
 extern int joystick_threshold INIT(= 8000);
+extern char gamecontrollerdb_file[POP_MAX_PATH] INIT(= "");
 extern byte enable_quicksave INIT(= 1);
 extern byte enable_quicksave_penalty INIT(= 1);
 extern byte enable_replay INIT(= 1);
