@@ -1943,7 +1943,6 @@ void init_digi() {
 
 const int sound_channel = 0;
 const int max_sound_id = 58;
-char** sound_names = NULL;
 
 void load_sound_names() {
 	const char* names_path = locate_file("data/music/names.txt");

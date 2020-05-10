@@ -117,7 +117,6 @@ int active_settings_subsection = 0;
 int highlighted_settings_subsection = 0;
 int scroll_position = 0;
 int menu_control_y;
-int menu_control_scroll_y;
 int menu_control_x;
 int menu_control_back;
 
