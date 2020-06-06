@@ -3245,7 +3245,7 @@ void process_events() {
 					}
 					// Disregard SDL_JOYAXISMOTION events within joystick 'dead zone'
 					int joy_x = joy_axis[SDL_CONTROLLER_AXIS_LEFTX];
-					int joy_y = joy_axis[SDL_CONTROLLER_AXIS_LEFTX];
+					int joy_y = joy_axis[SDL_CONTROLLER_AXIS_LEFTY];
 					if ((dword)(joy_x*joy_x) + (dword)(joy_y*joy_y) < (dword)(joystick_threshold*joystick_threshold)) {
 						break;
 					}
