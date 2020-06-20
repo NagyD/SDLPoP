@@ -452,7 +452,7 @@ void check_mod_param() {
 	if (mod_param != NULL) {
 		use_custom_levelset = true;
 		memset(levelset_name, 0, sizeof(levelset_name));
-		strncpy(levelset_name, mod_param, sizeof(levelset_name));
+		snprintf_check(levelset_name, sizeof(levelset_name), "%s", mod_param);
 	}
 }
 
@@ -677,7 +677,7 @@ void load_mod_options() {
 	if (use_custom_levelset) {
 		// find the folder containing the mod's files
 		char folder_name[POP_MAX_PATH];
-		snprintf(folder_name, sizeof(folder_name), "%s/%s", mods_folder, levelset_name);
+		snprintf_check(folder_name, sizeof(folder_name), "%s/%s", mods_folder, levelset_name);
 		const char* located_folder_name = locate_file(folder_name);
 		bool ok = false;
 		struct stat info;
@@ -685,12 +685,12 @@ void load_mod_options() {
 			if (S_ISDIR(info.st_mode)) {
 				// It's a directory
 				ok = true;
-				strncpy(mod_data_path, located_folder_name, sizeof(mod_data_path));
+				snprintf_check(mod_data_path, sizeof(mod_data_path), "%s", located_folder_name);
 				// Try to load PRINCE.EXE (DOS)
 				load_dos_exe_modifications(located_folder_name);
 				// Try to load mod.ini
 				char mod_ini_filename[POP_MAX_PATH];
-				snprintf(mod_ini_filename, sizeof(mod_ini_filename), "%s/%s", located_folder_name, "mod.ini");
+				snprintf_check(mod_ini_filename, sizeof(mod_ini_filename), "%s/%s", located_folder_name, "mod.ini");
 				if (file_exists(mod_ini_filename)) {
 					// Nearly all mods would want to use custom options, so always allow them.
 					use_custom_options = 1;

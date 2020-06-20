@@ -89,7 +89,7 @@ int read_replay_header(replay_header_type* header, FILE* fp, char* error_message
 	fread(magic, 3, 1, fp);
 	if (strncmp(magic, replay_magic_number, 3) != 0) {
 		if (error_message != NULL) {
-			snprintf(error_message, REPLAY_HEADER_ERROR_MESSAGE_MAX, "not a valid replay file!");
+			snprintf_check(error_message, REPLAY_HEADER_ERROR_MESSAGE_MAX, "not a valid replay file!");
 		}
 		return 0; // incompatible, magic number not correct!
 	}
@@ -118,7 +118,7 @@ int read_replay_header(replay_header_type* header, FILE* fp, char* error_message
 	if (class != replay_format_class) {
 		// incompatible, replay format is associated with a different implementation of SDLPoP
 		if (error_message != NULL) {
-			snprintf(error_message, REPLAY_HEADER_ERROR_MESSAGE_MAX,
+			snprintf_check(error_message, REPLAY_HEADER_ERROR_MESSAGE_MAX,
 			         "replay created with \"%s\"...\nIncompatible replay class identifier! (expected %d, found %d)",
 			         header->implementation_name, replay_format_class, class);
 		}
@@ -128,7 +128,7 @@ int read_replay_header(replay_header_type* header, FILE* fp, char* error_message
 	if (version_number < REPLAY_FORMAT_MIN_VERSION) {
 		// incompatible, replay format is too old
 		if (error_message != NULL) {
-			snprintf(error_message, REPLAY_HEADER_ERROR_MESSAGE_MAX,
+			snprintf_check(error_message, REPLAY_HEADER_ERROR_MESSAGE_MAX,
 			         "replay created with \"%s\"...\nReplay format version too old! (minimum %d, found %d)",
 			         header->implementation_name, REPLAY_FORMAT_MIN_VERSION, version_number);
 		}
@@ -138,7 +138,7 @@ int read_replay_header(replay_header_type* header, FILE* fp, char* error_message
 	if (deprecation_number > REPLAY_FORMAT_DEPRECATION_NUMBER) {
 		// incompatible, replay format is too new
 		if (error_message != NULL) {
-			snprintf(error_message, REPLAY_HEADER_ERROR_MESSAGE_MAX,
+			snprintf_check(error_message, REPLAY_HEADER_ERROR_MESSAGE_MAX,
 			         "replay created with \"%s\"...\nReplay deprecation number too new! (max %d, found %d)",
 			         header->implementation_name, REPLAY_FORMAT_DEPRECATION_NUMBER, deprecation_number);
 		}
@@ -198,7 +198,7 @@ void list_replay_files() {
 		replay_info_type* replay_info = &replay_list[num_replay_files - 1]; // current replay file
 		memset( replay_info, 0, sizeof( replay_info_type ) );
 		// store the filename of the replay
-		snprintf( replay_info->filename, POP_MAX_PATH, "%s/%s", replays_folder,
+		snprintf_check(replay_info->filename, POP_MAX_PATH, "%s/%s", replays_folder,
 					get_current_filename_from_directory_listing(directory_listing) );
 
 		// get the creation time
@@ -272,7 +272,7 @@ void start_with_replay_file(const char *filename) {
 		int ok = read_replay_header(&header, replay_fp, header_error_message);
 		if (!ok) {
 			char error_message[REPLAY_HEADER_ERROR_MESSAGE_MAX];
-			snprintf(error_message, REPLAY_HEADER_ERROR_MESSAGE_MAX,
+			snprintf_check(error_message, REPLAY_HEADER_ERROR_MESSAGE_MAX,
 			         "Error opening replay file: %s\n",
 			         header_error_message);
 			fprintf(stderr, "%s", error_message);
@@ -771,7 +771,7 @@ int save_recorded_replay() {
 	}
 
 	char full_filename[POP_MAX_PATH] = "";
-	snprintf(full_filename, sizeof(full_filename), "%s/%s.p1r", replays_folder, input_filename);
+	snprintf_check(full_filename, sizeof(full_filename), "%s/%s.p1r", replays_folder, input_filename);
 
 	// create the "replays" folder if it does not exist already
 #if defined WIN32 || _WIN32 || WIN64 || _WIN64
