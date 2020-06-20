@@ -2043,12 +2043,16 @@ void calculate_exe_crc() {
 		FILE* exe_file = fopen(g_argv[0], "rb");
 		if (exe_file != NULL) {
 			fseek(exe_file, 0, SEEK_END);
-			int size = ftell(exe_file);
+			size_t size = ftell(exe_file);
 			fseek(exe_file, 0, SEEK_SET);
 			if (size > 0) {
-				byte* buffer = malloc((size_t)size);
-				fread(buffer, 1, (size_t)size, exe_file);
-				exe_crc = crc32c(buffer, (dword)size);
+				byte* buffer = malloc(size);
+				size_t bytes = fread(buffer, 1, size, exe_file);
+				if (bytes != size) {
+					fprintf(stderr, "exec changed size during CRC32!?\n");
+					size = bytes;
+				}
+				exe_crc = crc32c(buffer, size);
 				free(buffer);
 			}
 			fclose(exe_file);
