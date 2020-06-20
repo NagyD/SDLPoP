@@ -81,12 +81,24 @@ typedef struct replay_info_type {
 
 #define REPLAY_HEADER_ERROR_MESSAGE_MAX 512
 
+#define fread_check(dst, size, elements, fp)	do {		\
+		size_t __count;					\
+		__count = fread(dst, size, elements, fp);	\
+		if (__count != (elements)) {			\
+			if (error_message != NULL) {		\
+				snprintf_check(error_message, REPLAY_HEADER_ERROR_MESSAGE_MAX,\
+					       #dst " missing -- not a valid replay file!");\
+			}					\
+                }						\
+                return 0; /* incompatible file */		\
+	} while (0)
+
 int read_replay_header(replay_header_type* header, FILE* fp, char* error_message) {
 	// Explicitly go to the beginning, because the current filepos might be nonzero.
 	fseek(fp, 0, SEEK_SET);
 	// read the magic number
 	char magic[3] = "";
-	fread(magic, 3, 1, fp);
+	fread_check(magic, 3, 1, fp);
 	if (strncmp(magic, replay_magic_number, 3) != 0) {
 		if (error_message != NULL) {
 			snprintf_check(error_message, REPLAY_HEADER_ERROR_MESSAGE_MAX, "not a valid replay file!");
@@ -95,7 +107,7 @@ int read_replay_header(replay_header_type* header, FILE* fp, char* error_message
 	}
 	// read the unique number associated with this SDLPoP implementation / fork (for normal SDLPoP: 0)
 	word class;
-	fread(&class, sizeof(class), 1, fp);
+	fread_check(&class, sizeof(class), 1, fp);
 	// read the format version number
 	byte version_number = (byte) fgetc(fp);
 	// read the format deprecation number
@@ -107,12 +119,12 @@ int read_replay_header(replay_header_type* header, FILE* fp, char* error_message
 	// read the levelset_name
 	byte len_read = (byte) fgetc(fp);
 	header->uses_custom_levelset = (len_read != 0);
-	fread(header->levelset_name, sizeof(char), len_read, fp);
+	fread_check(header->levelset_name, sizeof(char), len_read, fp);
 	header->levelset_name[len_read] = '\0';
 
 	// read the implementation_name
 	len_read = (byte) fgetc(fp);
-	fread(header->implementation_name, sizeof(char), len_read, fp);
+	fread_check(header->implementation_name, sizeof(char), len_read, fp);
 	header->implementation_name[len_read] = '\0';
 
 	if (class != replay_format_class) {
@@ -877,22 +889,22 @@ int load_replay() {
 		memcpy(replay_levelset_name, header.levelset_name, sizeof(header.levelset_name));
 
 		// load the savestate
-		fread(&savestate_size, sizeof(savestate_size), 1, replay_fp);
-		fread(savestate_buffer, savestate_size, 1, replay_fp);
+		fread_check(&savestate_size, sizeof(savestate_size), 1, replay_fp);
+		fread_check(savestate_buffer, savestate_size, 1, replay_fp);
 
 		// load the replay options, organized per section
 		for (int i = 0; i < COUNT(replay_options_sections); ++i) {
 			dword section_size = 0;
-			fread(&section_size, sizeof(section_size), 1, replay_fp);
-			fread(replay_options_sections[i].replay_data, section_size, 1, replay_fp);
+			fread_check(&section_size, sizeof(section_size), 1, replay_fp);
+			fread_check(replay_options_sections[i].replay_data, section_size, 1, replay_fp);
 			replay_options_sections[i].data_size = section_size;
 		}
 
 		// load the rest of the replay data
-		fread(&start_level, sizeof(start_level), 1, replay_fp);
-		fread(&saved_random_seed, sizeof(saved_random_seed), 1, replay_fp);
-		fread(&num_replay_ticks, sizeof(num_replay_ticks), 1, replay_fp);
-		fread(moves, num_replay_ticks, 1, replay_fp);
+		fread_check(&start_level, sizeof(start_level), 1, replay_fp);
+		fread_check(&saved_random_seed, sizeof(saved_random_seed), 1, replay_fp);
+		fread_check(&num_replay_ticks, sizeof(num_replay_ticks), 1, replay_fp);
+		fread_check(moves, num_replay_ticks, 1, replay_fp);
 		fclose(replay_fp);
 		replay_fp = NULL;
 		replay_file_open = 0;
