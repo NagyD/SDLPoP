@@ -66,8 +66,12 @@ int ini_load(const char *filename,
 				*s = 0;
 			report(section, name, value);
 		}
-		fscanf(f, " ;%*[^\n]");
-		fscanf(f, " \n");
+		if (fscanf(f, " ;%*[^\n]") != 0 ||
+		    fscanf(f, " \n") != 0) {
+			fprintf(stderr, "short read from %s!?\n", filename);
+			fclose(f);
+			return -1;
+		}
 	}
 
 	fclose(f);
@@ -521,7 +525,11 @@ void load_dos_exe_modifications(const char* folder_name) {
 	if (dos_version >= 0) {
 		turn_custom_options_on_off(1);
 		byte* exe_memory = malloc((size_t) info.st_size);
-		fread(exe_memory, (size_t) info.st_size, 1, fp);
+		if (fread(exe_memory, (size_t) info.st_size, 1, fp) != 1) {
+			fprintf(stderr, "Could not read %s!?\n", filename);
+			fclose(fp);
+			return;
+		}
 
 		byte temp_bytes[64] = {0};
 		word temp_word = 0;
