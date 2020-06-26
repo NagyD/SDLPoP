@@ -172,6 +172,7 @@ enum blitters {
 	// It seems to me that the "or" blitter can be safely replaced with the "transparent" blitter.
 	blitters_2_or = 2,
 	blitters_3_xor = 3, // used for the shadow
+	blitters_white = 8,
 	blitters_9_black = 9,
 	blitters_10h_transp = 0x10,
 	/* 0x40..0x4F will draw a monochrome image with color 0..15 */
@@ -182,6 +183,21 @@ enum blitters {
 	blitters_colored_flame = 0x100,
 	blitters_colored_flame_last = 0x13F,
 #endif
+};
+
+enum full_image_id {
+	TITLE_MAIN = 0,
+	TITLE_PRESENTS,
+	TITLE_GAME,
+	TITLE_POP,
+	TITLE_MECHNER,
+	HOF_POP,
+	STORY_FRAME,
+	STORY_ABSENCE,
+	STORY_MARRY,
+	STORY_HAIL,
+	STORY_CREDITS,
+	MAX_FULL_IMAGES
 };
 
 enum grmodes {
@@ -247,6 +263,13 @@ typedef struct chtab_type {
 	// This is a variable-size array, with n_images elements.
 	image_type* far images[0];
 } chtab_type;
+
+typedef struct full_image_type {
+	int id;
+	chtab_type** chtab;
+	enum blitters blitter;
+	int xpos, ypos;
+} full_image_type;
 
 #pragma pack(push,1)
 typedef struct rgb_type {

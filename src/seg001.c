@@ -587,12 +587,12 @@ void __pascal far end_sequence() {
 	offscreen_surface = make_offscreen_buffer(&screen_rect);
 	load_title_images(0);
 	current_target_surface = offscreen_surface;
-	draw_image_2(0 /*story frame*/, chtab_title40, 0, 0, 0);
-	draw_image_2(3 /*The tyrant Jaffar*/, chtab_title40, 24, 25, get_text_color(15, color_15_brightwhite, 0x800));
+	draw_full_image(STORY_FRAME);
+	draw_full_image(STORY_HAIL);
 	fade_in_2(offscreen_surface, 0x800);
 	pop_wait(timer_0, 900);
 	start_timer(timer_0, 240);
-	draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, 0);
+	draw_full_image(TITLE_MAIN);
 	transition_ltr();
 	do_wait(timer_0);
 	for (hof_index = 0; hof_index < hof_count; ++hof_index) {
@@ -611,8 +611,8 @@ void __pascal far end_sequence() {
 		if (hof_count < MAX_HOF_COUNT) {
 			++hof_count;
 		}
-		draw_image_2(0 /*story frame*/, chtab_title40, 0, 0, 0);
-		draw_image_2(3 /*Prince Of Persia*/, chtab_title50, 24, 24, blitters_10h_transp);
+		draw_full_image(STORY_FRAME);
+		draw_full_image(HOF_POP);
 		show_hof();
 		offset4_rect_add(&rect, &hof_rects[hof_index], -4, -1, -40, -1);
 		peel = read_peel_from_screen(&rect);
@@ -629,7 +629,7 @@ void __pascal far end_sequence() {
 		hof_write();
 		pop_wait(timer_0, 120);
 		current_target_surface = offscreen_surface;
-		draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, blitters_0_no_transp);
+		draw_full_image(TITLE_MAIN);
 		transition_ltr();
 	}
 	while (check_sound_playing() && !key_test_quit()) {
