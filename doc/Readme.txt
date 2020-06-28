@@ -308,14 +308,14 @@ Windows
 * Building with Visual Studio:
 	* Run build.bat in the src/ directory.
 	* For this to work, you first need to do two other things:
-		a) Run vsvarsall.bat from the command line, with either 'x86' or 'x64' as a parameter.
+		1. Run vsvarsall.bat from the command line, with either 'x86' or 'x64' as a parameter.
 		   This batch file is included with all installations of MS Visual Studio, but its exact location may vary.
 		   For VS2017, the command you should run might look like this:
 		   ```
 		   call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" x86
 		   ```
 		   This step sets up various environment variables, to enable running the compiler from the command line.
-		b) Set up the environment variable 'SDL2' to point to the SDL2 development library files.
+		2. Set up the environment variable 'SDL2' to point to the SDL2 development library files.
 		   To do this, you can use a command like so:
 		   ```
 		   set "SDL2=C:\libraries\SDL2-2.0.8"
@@ -362,19 +362,19 @@ GNU/Linux
 macOS
 -----
 * Get SDL2 and dependencies
-	a) Install "port" from https://www.macports.org/
-	b) sudo port install libsdl2 libsdl2_image
+	1. Install "port" from https://www.macports.org/
+	2. sudo port install libsdl2 libsdl2_image
 	* or
-	a) Install "homebrew"
-	b) brew install sdl2 sdl2_image
+	1. Install "homebrew"
+	2. brew install sdl2 sdl2_image
 
 * Get development tools:
-	a) Install Xcode.
-	b) Install the "command line developer tools" by typing `xcode-select --install` at the prompt.
-	c) Using terminal, in the '/src' directory of SDLPoP, type: `make`
+	1. Install Xcode.
+	2. Install the "command line developer tools" by typing `xcode-select --install` at the prompt.
+	3. Using terminal, in the '/src' directory of SDLPoP, type: `make`
 
 * PLAY!
-	a) In the project root directory. Type `./prince` or `./prince full`.
-	b) Hit Control-Q to quit.
+	1. In the project root directory. Type `./prince` or `./prince full`.
+	2. Hit Control-Q to quit.
 
 * Tested on OSX 10.9.5, OSX 10.11.2, macOS 10.13 and 10.14.
