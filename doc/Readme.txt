@@ -225,7 +225,8 @@ Since version 1.17, the game can also load from mod folders that have been place
 If you use this method, only the files different from the original V1.0 data are required in the mod's folder.
 To choose which mod from the "mods/" folder to play, do one of the following:
 * Open SDLPoP.ini and change the 'levelset' option to the name of the mod's folder.
-* Use the command line option "mod", like so: prince.exe mod "Mod Name"
+* Use the command line option "mod", like so: `prince mod "Mod Name"`
+
 Hall-of-Fame and saved game files will also be placed in the mod's folder.
 
 Another way to play a mod is to start the game while the current directory is the mod's directory.
@@ -269,7 +270,7 @@ To start recording, press Ctrl+Tab on the title screen or while in game. To stop
 Your replays get saved in the "replays/" directory as files with a .P1R extension.
 You can change the location where replays are kept using the setting 'replays_folder' in SDLPoP.ini.
 
-If you want to start recording on a specific level, you can use the command "prince.exe record <lvl_number>",
+If you want to start recording on a specific level, you can use the command `prince record <lvl_number>`,
 where <lvl_number> is the level on which you want to start.
 
 To view a replay, you can press Tab while on the title screen.
@@ -284,7 +285,7 @@ It shouldn't matter how SDLPoP.ini is set up when you are viewing the replay lat
 Note that any cheats you use do not get saved as part of the replay.
 
 To print out information about the replay from the command-line, you can use the 'validate' command-line parameter.
-Example usage: prince validate "replays/replay.p1r"
+Example usage: `prince validate "replays/replay.p1r"`
 
 COMPILING
 =========
