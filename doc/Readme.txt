@@ -1,3 +1,10 @@
+SDLPoP
+======
+
+An open-source port of Prince of Persia, based on the disassembly of the DOS version.
+
+---
+
 Name of program: SDLPoP
 (Earlier name: David's open-source port of PoP)
 
