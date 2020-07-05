@@ -837,7 +837,7 @@ void __pascal far animate_loose() {
 		++curr_modifier;
 		if (curr_modifier & 0x80) {
 			// just shaking
-			// don't shake on level 13
+			// don't stop on level 13, needed for the auto-falling floors
 			if (current_level == 13) return;
 			if (curr_modifier >= 0x84) {
 				curr_modifier = 0;
@@ -939,6 +939,7 @@ int __pascal far next_chomper_timing(byte timing) {
 
 // seg007:0FB4
 void __pascal far loose_make_shake() {
+	// don't shake on level 13
 	if (curr_room_modif[curr_tilepos] == 0 && current_level != 13) {
 		curr_room_modif[curr_tilepos] = 0x80;
 		add_trob(curr_room, curr_tilepos, 1);
