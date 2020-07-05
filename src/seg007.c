@@ -262,7 +262,11 @@ void __pascal far animate_potion() {
 	if (trob.type >= 0 && is_trob_in_drawn_room()) {
 		type = curr_modifier & 0xF8;
 		curr_modifier = bubble_next_frame(curr_modifier & 0x07) | type;
+#ifdef FIX_LOOSE_NEXT_TO_POTION
+		redraw_at_trob();
+#else
 		set_redraw_anim_curr();
+#endif
 	}
 }
 
@@ -273,7 +277,11 @@ void __pascal far animate_sword() {
 		if (curr_modifier == 0) {
 			curr_modifier = (prandom(255) & 0x3F) + 0x28;
 		}
+#ifdef FIX_LOOSE_NEXT_TO_POTION
+		redraw_at_trob();
+#else
 		set_redraw_anim_curr();
+#endif
 	}
 }
 

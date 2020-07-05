@@ -196,6 +196,9 @@ The authors of this program may be contacted at https://forum.princed.org
 // Fix priorities of sword and spike sounds. (As in PoP 1.3.)
 #define FIX_SOUND_PRIORITIES
 
+// Don't draw the right edge of loose floors on the left side of a potion or sword.
+#define FIX_LOOSE_NEXT_TO_POTION
+
 
 // Debug features:
 
