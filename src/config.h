@@ -199,6 +199,9 @@ The authors of this program may be contacted at https://forum.princed.org
 // Don't draw the right edge of loose floors on the left side of a potion or sword.
 #define FIX_LOOSE_NEXT_TO_POTION
 
+// A guard standing on a door top (with floor) should not become inactive.
+#define FIX_DOORTOP_DISABLING_GUARD
+
 
 // Debug features:
 

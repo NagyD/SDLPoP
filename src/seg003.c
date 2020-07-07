@@ -647,6 +647,11 @@ Possible results in can_guard_see_kid:
 		if (get_tile_at_kid(right_pos) == tiles_4_gate) {
 			right_pos -= 14;
 		}
+#ifdef FIX_DOORTOP_DISABLING_GUARD
+		if (get_tile_at_kid(right_pos) == tiles_7_doortop_with_floor || get_tile_at_kid(right_pos) == tiles_12_doortop) {
+			right_pos -= 14;
+		}
+#endif
 		if (right_pos >= left_pos) {
 			while (left_pos <= right_pos) {
 				// Can't see through these tiles.

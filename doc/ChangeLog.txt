@@ -550,3 +550,4 @@ FIXED: Don't switch to PC Speaker mode if there is a mod name in the replay file
 DONE: Detect guard skill customizations in PRINCE.EXE. (Used in Illusions of Persia, for example.)
 	TODO: Should we add the guard skill options to the INI, the CFG, the replays, or the settings menu?
 FIXED: Don't draw the right edge of loose floors on the left side of a potion or sword.
+FIXED: A guard standing on a door top (with floor) should not become inactive.
