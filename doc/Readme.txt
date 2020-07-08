@@ -287,6 +287,9 @@ Note that any cheats you use do not get saved as part of the replay.
 To print out information about the replay from the command-line, you can use the 'validate' command-line parameter.
 Example usage: `prince validate "replays/replay.p1r"`
 
+Since version (upcoming) you can re-record if you make a mistake:
+While recording, make a quicksave to mark your place, and press quickload to return to that place.
+
 COMPILING
 =========
 

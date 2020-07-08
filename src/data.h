@@ -693,6 +693,7 @@ extern sbyte keep_last_seed;
 extern byte skipping_replay;
 extern byte replay_seek_target;
 extern byte is_validate_mode;
+extern dword curr_tick INIT(= 0);
 #endif // USE_REPLAY
 
 extern byte start_fullscreen INIT(= 0);
