@@ -1222,7 +1222,13 @@ void get_joystick_state(int raw_x, int raw_y, int axis_state[2]) {
 
 	// check if the X/Y position is within the 'dead zone' of the joystick
 	int dist_squared = raw_x*raw_x + raw_y*raw_y;
-	if (dist_squared < joystick_threshold*joystick_threshold) {
+	// FIXED: Left jump (top-left) didn't work on some gamepads.
+	// On some gamepads, raw_x = raw_y = -32768 in the top-left corner.
+	// In this case, dist_squared is calculated as -32768 * -32768 + -32768 * -32768 = 2147483648.
+	// But dist_squared is a 32-bit signed integer, which cannot store that number, so it overflows to -2147483648.
+	// Therefore, dist_squared < joystick_threshold*joystick_threshold becomes true, and the game thinks the stick is centered.
+	// To fix this, we cast both sides of the comparison to an unsigned 32-bit type.
+	if ((dword)dist_squared < (dword)(joystick_threshold*joystick_threshold)) {
 		axis_state[0] = 0;
 		axis_state[1] = 0;
 	} else {
