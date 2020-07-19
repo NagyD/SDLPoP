@@ -59,7 +59,7 @@ void __pascal far gen_palace_wall_colors();
 void __pascal far show_title();
 void __pascal far transition_ltr();
 void __pascal far release_title_images();
-void __pascal far draw_image_2(int id,chtab_type* chtab_ptr,int xpos,int ypos,int blit);
+void __pascal far draw_full_image(enum full_image_id id);
 void __pascal far load_kid_sprite();
 void __pascal far save_game();
 short __pascal far load_game();

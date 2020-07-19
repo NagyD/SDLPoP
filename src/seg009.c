@@ -42,7 +42,7 @@ bool found_exe_dir = false;
 
 void find_exe_dir() {
 	if (found_exe_dir) return;
-	strncpy(exe_dir, g_argv[0], sizeof(exe_dir));
+	snprintf_check(exe_dir, sizeof(exe_dir), "%s", g_argv[0]);
 	char* last_slash = NULL;
 	char* pos = exe_dir;
 	for (char c = *pos; c != '\0'; c = *(++pos)) {
@@ -67,7 +67,7 @@ const char* locate_file_(const char* filename, char* path_buffer, int buffer_siz
 		// If failed, it may be that SDLPoP is being run from the wrong different working directory.
 		// We can try to rescue the situation by loading from the directory of the executable.
 		find_exe_dir();
-        snprintf(path_buffer, buffer_size, "%s/%s", exe_dir, filename);
+        snprintf_check(path_buffer, buffer_size, "%s/%s", exe_dir, filename);
         return (const char*) path_buffer;
 	}
 }
@@ -119,7 +119,7 @@ struct directory_listing_type {
 directory_listing_type* create_directory_listing_and_find_first_file(const char* directory, const char* extension) {
 	directory_listing_type* directory_listing = calloc(1, sizeof(directory_listing_type));
 	char search_pattern[POP_MAX_PATH];
-	snprintf(search_pattern, POP_MAX_PATH, "%s/*.%s", directory, extension);
+	snprintf_check(search_pattern, POP_MAX_PATH, "%s/*.%s", directory, extension);
 	WCHAR* search_pattern_UTF16 = WIN_UTF8ToString(search_pattern);
 	directory_listing->search_handle = FindFirstFileW( search_pattern_UTF16, &directory_listing->find_data );
 	SDL_free(search_pattern_UTF16);
@@ -327,11 +327,11 @@ static FILE* open_dat_from_root_or_data_dir(const char* filename) {
 	// if failed, try if the DAT file can be opened in the data/ directory, instead of the main folder
 	if (fp == NULL) {
 		char data_path[POP_MAX_PATH];
-		snprintf(data_path, sizeof(data_path), "data/%s", filename);
+		snprintf_check(data_path, sizeof(data_path), "data/%s", filename);
 
         if (!file_exists(data_path)) {
             find_exe_dir();
-            snprintf(data_path, sizeof(data_path), "%s/data/%s", exe_dir, filename);
+            snprintf_check(data_path, sizeof(data_path), "%s/data/%s", exe_dir, filename);
         }
 
 		// verify that this is a regular file and not a directory (otherwise, don't open)
@@ -354,7 +354,7 @@ dat_type *__pascal open_dat(const char *filename,int drive) {
 		if (!skip_mod_data_files) {
 			char filename_mod[POP_MAX_PATH];
 			// before checking the root directory, first try mods/MODNAME/
-			snprintf(filename_mod, sizeof(filename_mod), "%s/%s", mod_data_path, filename);
+			snprintf_check(filename_mod, sizeof(filename_mod), "%s/%s", mod_data_path, filename);
 			fp = fopen(filename_mod, "rb");
 		}
 		if (fp == NULL && !skip_normal_data_files) {
@@ -365,7 +365,7 @@ dat_type *__pascal open_dat(const char *filename,int drive) {
 	dat_table_type* dat_table = NULL;
 
 	dat_type* pointer = (dat_type*) calloc(1, sizeof(dat_type));
-	strncpy(pointer->filename, filename, sizeof(pointer->filename));
+	snprintf_check(pointer->filename, sizeof(pointer->filename), "%s", filename);
 	pointer->next_dat = dat_chain_ptr;
 	dat_chain_ptr = pointer;
 
@@ -1991,11 +1991,11 @@ sound_buffer_type* load_sound(int index) {
 				char filename[POP_MAX_PATH];
 				if (!skip_mod_data_files) {
 					// before checking the root directory, first try mods/MODNAME/
-					snprintf(filename, sizeof(filename), "%s/music/%s.ogg", mod_data_path, sound_name(index));
+					snprintf_check(filename, sizeof(filename), "%s/music/%s.ogg", mod_data_path, sound_name(index));
 					fp = fopen(filename, "rb");
 				}
 				if (fp == NULL && !skip_normal_data_files) {
-					snprintf(filename, sizeof(filename), "data/music/%s.ogg", sound_name(index));
+					snprintf_check(filename, sizeof(filename), "data/music/%s.ogg", sound_name(index));
 					fp = fopen(locate_file(filename), "rb");
 				}
 				if (fp == NULL) {
@@ -2571,7 +2571,7 @@ void load_from_opendats_metadata(int resource_id, const char* extension, FILE** 
 			if (len >= 5 && filename_no_ext[len-4] == '.') {
 				filename_no_ext[len-4] = '\0'; // terminate, so ".DAT" is deleted from the filename
 			}
-			snprintf(image_filename,sizeof(image_filename),"data/%s/res%d.%s",filename_no_ext, resource_id, extension);
+			snprintf_check(image_filename,sizeof(image_filename),"data/%s/res%d.%s",filename_no_ext, resource_id, extension);
 			if (!use_custom_levelset) {
 				//printf("loading (binary) %s",image_filename);
 				fp = fopen(locate_file(image_filename), "rb");
@@ -2580,7 +2580,7 @@ void load_from_opendats_metadata(int resource_id, const char* extension, FILE** 
 				if (!skip_mod_data_files) {
 					char image_filename_mod[POP_MAX_PATH];
 					// before checking data/, first try mods/MODNAME/data/
-					snprintf(image_filename_mod, sizeof(image_filename_mod), "%s/%s", mod_data_path, image_filename);
+					snprintf_check(image_filename_mod, sizeof(image_filename_mod), "%s/%s", mod_data_path, image_filename);
 					//printf("loading (binary) %s",image_filename_mod);
 					fp = fopen(locate_file(image_filename_mod), "rb");
 				}

@@ -364,7 +364,7 @@ void draw_extras() {
 	}
 
 	// room number
-	char room_num[4];
+	char room_num[6];
 	snprintf(room_num, sizeof(room_num), "%d", drawn_room);
 	rect_type text_rect = {10, 10, 21, 30};
 	method_5_rect(&text_rect, 0, color_8_darkgray);

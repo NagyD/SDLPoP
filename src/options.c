@@ -66,8 +66,12 @@ int ini_load(const char *filename,
 				*s = 0;
 			report(section, name, value);
 		}
-		fscanf(f, " ;%*[^\n]");
-		fscanf(f, " \n");
+		if (fscanf(f, " ;%*[^\n]") != 0 ||
+		    fscanf(f, " \n") != 0) {
+			fprintf(stderr, "short read from %s!?\n", filename);
+			fclose(f);
+			return -1;
+		}
 	}
 
 	fclose(f);
@@ -452,7 +456,7 @@ void check_mod_param() {
 	if (mod_param != NULL) {
 		use_custom_levelset = true;
 		memset(levelset_name, 0, sizeof(levelset_name));
-		strncpy(levelset_name, mod_param, sizeof(levelset_name));
+		snprintf_check(levelset_name, sizeof(levelset_name), "%s", mod_param);
 	}
 }
 
@@ -521,7 +525,11 @@ void load_dos_exe_modifications(const char* folder_name) {
 	if (dos_version >= 0) {
 		turn_custom_options_on_off(1);
 		byte* exe_memory = malloc((size_t) info.st_size);
-		fread(exe_memory, (size_t) info.st_size, 1, fp);
+		if (fread(exe_memory, (size_t) info.st_size, 1, fp) != 1) {
+			fprintf(stderr, "Could not read %s!?\n", filename);
+			fclose(fp);
+			return;
+		}
 
 		byte temp_bytes[64] = {0};
 		word temp_word = 0;
@@ -677,7 +685,7 @@ void load_mod_options() {
 	if (use_custom_levelset) {
 		// find the folder containing the mod's files
 		char folder_name[POP_MAX_PATH];
-		snprintf(folder_name, sizeof(folder_name), "%s/%s", mods_folder, levelset_name);
+		snprintf_check(folder_name, sizeof(folder_name), "%s/%s", mods_folder, levelset_name);
 		const char* located_folder_name = locate_file(folder_name);
 		bool ok = false;
 		struct stat info;
@@ -685,12 +693,12 @@ void load_mod_options() {
 			if (S_ISDIR(info.st_mode)) {
 				// It's a directory
 				ok = true;
-				strncpy(mod_data_path, located_folder_name, sizeof(mod_data_path));
+				snprintf_check(mod_data_path, sizeof(mod_data_path), "%s", located_folder_name);
 				// Try to load PRINCE.EXE (DOS)
 				load_dos_exe_modifications(located_folder_name);
 				// Try to load mod.ini
 				char mod_ini_filename[POP_MAX_PATH];
-				snprintf(mod_ini_filename, sizeof(mod_ini_filename), "%s/%s", located_folder_name, "mod.ini");
+				snprintf_check(mod_ini_filename, sizeof(mod_ini_filename), "%s/%s", located_folder_name, "mod.ini");
 				if (file_exists(mod_ini_filename)) {
 					// Nearly all mods would want to use custom options, so always allow them.
 					use_custom_options = 1;

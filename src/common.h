@@ -25,7 +25,6 @@ The authors of this program may be contacted at https://forum.princed.org
 extern "C" {
 #endif
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -66,6 +65,15 @@ extern "C" {
 #ifndef ABS
 #define ABS(x) ((x)<0?-(x):(x))
 #endif
+
+#define snprintf_check(dst, size, ...)	do {			\
+		int __len;					\
+		__len = snprintf(dst, size, __VA_ARGS__);	\
+		if (__len < 0 || __len >= size) {		\
+			fprintf(stderr, "%s: buffer truncation detected!\n", __func__);\
+			quit(2);				\
+		}						\
+	} while (0)
 
 #ifdef __cplusplus
 }

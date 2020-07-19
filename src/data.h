@@ -825,6 +825,42 @@ extern custom_options_type custom_defaults INIT(= {
 });
 extern custom_options_type* custom INIT(= &custom_defaults);
 
+extern full_image_type full_image[MAX_FULL_IMAGES] INIT(= {
+        [TITLE_MAIN] =     { .id = 0, .chtab = &chtab_title50,
+                             .blitter = blitters_0_no_transp,
+                             .xpos = 0, .ypos = 0 },
+        [TITLE_PRESENTS] = { .id = 1, .chtab = &chtab_title50,
+                             .blitter = blitters_0_no_transp,
+                             .xpos = 96, .ypos = 106 },
+        [TITLE_GAME] =     { .id = 2, .chtab = &chtab_title50,
+                             .blitter = blitters_0_no_transp,
+                             .xpos = 96, .ypos = 122 },
+        [TITLE_POP] =      { .id = 3, .chtab = &chtab_title50,
+                             .blitter = blitters_10h_transp,
+                             .xpos = 24, .ypos = 107 },
+        [TITLE_MECHNER] =  { .id = 4, .chtab = &chtab_title50,
+                             .blitter = blitters_0_no_transp,
+                             .xpos = 48, .ypos = 184 },
+        [HOF_POP] =        { .id = 3, .chtab = &chtab_title50,
+                             .blitter = blitters_10h_transp,
+                             .xpos = 24, .ypos = 24 },
+        [STORY_FRAME] =    { .id = 0, .chtab = &chtab_title40,
+                             .blitter = blitters_0_no_transp,
+                             .xpos = 0, .ypos = 0 },
+        [STORY_ABSENCE] =  { .id = 1, .chtab = &chtab_title40,
+                             .blitter = blitters_white,
+                             .xpos = 24, .ypos = 25 },
+        [STORY_MARRY] =    { .id = 2, .chtab = &chtab_title40,
+                             .blitter = blitters_white,
+                             .xpos = 24, .ypos = 25 },
+        [STORY_HAIL] =     { .id = 3, .chtab = &chtab_title40,
+                             .blitter = blitters_white,
+                             .xpos = 24, .ypos = 25 },
+        [STORY_CREDITS] =  { .id = 4, .chtab = &chtab_title40,
+                             .blitter = blitters_white,
+                             .xpos = 24, .ypos = 26 },
+});
+
 // data:009C
 extern word cheats_enabled INIT(= 0);
 #ifdef USE_DEBUG_CHEATS
