@@ -89,8 +89,8 @@ typedef struct replay_info_type {
 				snprintf_check(error_message, REPLAY_HEADER_ERROR_MESSAGE_MAX,\
 					       #dst " missing -- not a valid replay file!");\
 			}					\
-                }						\
                 return 0; /* incompatible file */		\
+                }						\
 	} while (0)
 
 int read_replay_header(replay_header_type* header, FILE* fp, char* error_message) {
