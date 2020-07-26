@@ -666,7 +666,8 @@ void start_replay() {
 	need_start_replay = 0;
 	if (!is_validate_mode) {
 		list_replay_files();
-		if (num_replay_files == 0) return;
+		// If the replay was started from a file given in the command line, we don't care if there are no replay files in the replay folder.
+		//if (num_replay_files == 0) return;
 	}
 	if (!load_replay()) return;
 	apply_replay_options();
