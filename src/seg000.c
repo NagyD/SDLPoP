@@ -1796,7 +1796,7 @@ void __pascal far show_title() {
 	start_timer(timer_0, 0x41);
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, &rect_titles, &rect_titles, blitters_0_no_transp);
 	draw_full_image(TITLE_MAIN);
-	draw_full_image(TITLE_MECHNER);
+	draw_full_image(TITLE_GAME);
 	do_wait(timer_0);
 
 	start_timer(timer_0, 0x10E);
