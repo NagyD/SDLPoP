@@ -796,6 +796,10 @@ int __pascal far set_joy_mode() {
 	if (SDL_NumJoysticks() < 1) {
 		is_joyst_mode = 0;
 	} else {
+		if (gamecontrollerdb_file[0] != '\0') {
+			SDL_GameControllerAddMappingsFromFile(gamecontrollerdb_file);
+		}
+
 		if (SDL_IsGameController(0)) {
 			sdl_controller_ = SDL_GameControllerOpen(0);
 			if (sdl_controller_ == NULL) {
