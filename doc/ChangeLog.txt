@@ -552,3 +552,5 @@ DONE: Detect guard skill customizations in PRINCE.EXE. (Used in Illusions of Per
 FIXED: Don't draw the right edge of loose floors on the left side of a potion or sword.
 FIXED: A guard standing on a door top (with floor) should not become inactive.
 FIXED: Left jump (top-left) didn't work on some gamepads.
+FIXED: Replays were not working if there were no replay files in the replay folder.
+DONE: Added support for gamecontrollerdb.txt file.

@@ -145,6 +145,9 @@ Gamepad equivalents:
 * X or triggers: shift
 * Start or Back: display in-game menu
 
+If SDLPoP does not work correctly with your gamepad, it might help if you download gamecontrollerdb.txt and configure SDLPoP to use it.
+See SDLPoP.ini for details.
+
 Controlling the game:
 * Esc: pause game
 * Space: show time left
