@@ -554,3 +554,4 @@ FIXED: A guard standing on a door top (with floor) should not become inactive.
 FIXED: Left jump (top-left) didn't work on some gamepads.
 FIXED: Replays were not working if there were no replay files in the replay folder.
 DONE: Added support for gamecontrollerdb.txt file.
+DONE: Detect changes of the shadow's starting positions and automatic moves in PRINCE.EXE.

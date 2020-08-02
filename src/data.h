@@ -823,6 +823,15 @@ extern custom_options_type custom_defaults INIT(= {
 		.advprob       = {255,200,200,200,255,255,200,  0,  0,255,100,100},
 		.refractimer   = { 16, 16, 16, 16,  8,  8,  8,  8,  0,  8,  0,  0},
 		.extrastrength = {  0,  0,  0,  0,  1,  0,  0,  0,  0,  0,  0,  0},
+
+		// shadow's starting positions
+		.init_shad_6 = {0x0F, 0x51, 0x76, 0, 0, 1, 0, 0},
+		.init_shad_5  = {0x0F, 0x37, 0x37, 0, 0xFF, 0, 0, 0},
+		.init_shad_12 = {0x0F, 0x51, 0xE8, 0, 0, 0, 0, 0},
+		// automatic moves
+		.demo_moves = {{0x00, 0}, {0x01, 1}, {0x0D, 0}, {0x1E, 1}, {0x25, 5}, {0x2F, 0}, {0x30, 1}, {0x41, 0}, {0x49, 2}, {0x4B, 0}, {0x63, 2}, {0x64, 0}, {0x73, 5}, {0x80, 6}, {0x88, 3}, {0x9D, 7}, {0x9E, 0}, {0x9F, 1}, {0xAB, 4}, {0xB1, 0}, {0xB2, 1}, {0xBC, 0}, {0xC1, 1}, {0xCD, 0}, {0xE9,-1}},
+		.shad_drink_move = {{0x00, 0}, {0x01, 1}, {0x0E, 0}, {0x12, 6}, {0x1D, 7}, {0x2D, 2}, {0x31, 1}, {0xFF,-2}},
+
 });
 extern custom_options_type* custom INIT(= &custom_defaults);
 

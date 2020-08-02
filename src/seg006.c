@@ -1256,6 +1256,8 @@ void __pascal far control_kid() {
 	}
 }
 
+// This was moved to custom_options_type.
+/*
 const auto_move_type demo_moves[] = {
 {0x00, 0},
 {0x01, 1},
@@ -1283,6 +1285,7 @@ const auto_move_type demo_moves[] = {
 {0xCD, 0},
 {0xE9,-1},
 };
+*/
 
 // seg006:0D49
 void __pascal far do_demo() {
@@ -1294,7 +1297,7 @@ void __pascal far do_demo() {
 		autocontrol_opponent();
 		guard_skill = 11;
 	} else {
-		do_auto_moves(demo_moves);
+		do_auto_moves(custom->demo_moves);
 	}
 }
 

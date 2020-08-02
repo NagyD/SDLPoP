@@ -1305,6 +1305,14 @@ typedef struct custom_options_type {
 	word refractimer  [NUM_GUARD_SKILLS];
 	word extrastrength[NUM_GUARD_SKILLS];
 
+	// shadow's starting positions
+	byte init_shad_6[8];
+	byte init_shad_5[8];
+	byte init_shad_12[8];
+	// automatic moves
+	auto_move_type demo_moves[25]; // prince on demo level
+	auto_move_type shad_drink_move[8]; // shadow on level 5
+
 } custom_options_type;
 #pragma pack(pop)
 
