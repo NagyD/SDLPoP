@@ -620,6 +620,7 @@ void apply_replay_options() {
 	memcpy(levelset_name, replay_levelset_name, sizeof(levelset_name));
 	use_custom_levelset = (levelset_name[0] == '\0') ? 0 : 1;
 
+	load_mod_options(); // Load resources from the correct places if there is a mod name in the replay file. This also prevents unwanted switching to PC Speaker mode.
 	reload_resources();
 }
 
@@ -647,6 +648,7 @@ static void print_remaining_time() {
 }
 
 void start_replay() {
+	stop_sounds(); // Don't crash if the intro music is interrupted by Tab in PC Speaker mode.
 	if (!enable_replay) return;
 	need_start_replay = 0;
 	if (!is_validate_mode) {

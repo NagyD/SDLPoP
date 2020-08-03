@@ -47,8 +47,6 @@ SDL_COMPILE_TIME_ASSERT(hof_size, sizeof(hof_type) == 29);
 #pragma pack(pop)
 
 #define MAX_HOF_COUNT 6
-// data:405E
-short hof_count;
 // data:589A
 hof_type hof[MAX_HOF_COUNT];
 

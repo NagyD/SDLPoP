@@ -19,7 +19,7 @@ The authors of this program may be contacted at http://forum.princed.org
 */
 
 #include "common.h"
-
+/*
 // data:0E32
 const word strikeprob  [] = { 61,100, 61, 61, 61, 40,100,220,  0, 48, 32, 48};
 // data:0E4A
@@ -34,7 +34,7 @@ const word advprob     [] = {255,200,200,200,255,255,200,  0,  0,255,100,100};
 const word refractimer [] = { 16, 16, 16, 16,  8,  8,  8,  8,  0,  8,  0,  0};
 // data:0EC2
 const word extrastrength[] = {0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0};
-
+*/
 // seg002:0000
 void __pascal far do_init_shad(const byte *source,int seq_index) {
 	memcpy_near(&Char, source, 7);
@@ -48,7 +48,7 @@ void __pascal far do_init_shad(const byte *source,int seq_index) {
 
 // seg002:0044
 void __pascal far get_guard_hp() {
-	guardhp_delta = guardhp_curr = guardhp_max = extrastrength[guard_skill] + custom->tbl_guard_hp[current_level];
+	guardhp_delta = guardhp_curr = guardhp_max = custom->extrastrength[guard_skill] + custom->tbl_guard_hp[current_level];
 }
 
 // data:0EEA
@@ -182,7 +182,8 @@ void __pascal far enter_guard() {
 	curr_guard_color &= 0x0F; // added; only least significant 4 bits are used for guard color
 
 	// level 3 has skeletons with infinite lives
-	if (current_level == 3) {
+	//if (current_level == 3) {
+	if (custom->tbl_guard_type[current_level] == 2) {
 		Char.charid = charid_4_skeleton;
 	} else {
 		Char.charid = charid_2_guard;
@@ -201,7 +202,7 @@ void __pascal far enter_guard() {
 	}
 	play_seq();
 	guard_skill = level.guards_skill[room_minus_1];
-	if (guard_skill >= 12) {
+	if (guard_skill >= NUM_GUARD_SKILLS) {
 		guard_skill = 3;
 	}
 	frame = Char.frame;
@@ -837,7 +838,7 @@ void __pascal far autocontrol_guard_kid_armed(short distance) {
 // seg002:0AF5
 void __pascal far guard_advance() {
 	if (guard_skill == 0 || kid_sword_strike == 0) {
-		if (advprob[guard_skill] > prandom(255)) {
+		if (custom->advprob[guard_skill] > prandom(255)) {
 			move_1_forward();
 		}
 	}
@@ -849,11 +850,11 @@ void __pascal far guard_block() {
 	opp_frame = Opp.frame;
 	if (opp_frame == frame_152_strike_2 || opp_frame == frame_153_strike_3 || opp_frame == frame_162_block_to_strike) {
 		if (justblocked != 0) {
-			if (impblockprob[guard_skill] > prandom(255)) {
+			if (custom->impblockprob[guard_skill] > prandom(255)) {
 				move_3_up();
 			}
 		} else {
-			if (blockprob[guard_skill] > prandom(255)) {
+			if (custom->blockprob[guard_skill] > prandom(255)) {
 				move_3_up();
 			}
 		}
@@ -868,11 +869,11 @@ void __pascal far guard_strike() {
 	if (opp_frame == frame_169_begin_block || opp_frame == frame_151_strike_1) return;
 	char_frame = Char.frame;
 	if (char_frame == frame_161_parry || char_frame == frame_150_parry) {
-		if (restrikeprob[guard_skill] > prandom(255)) {
+		if (custom->restrikeprob[guard_skill] > prandom(255)) {
 			move_6_shift();
 		}
 	} else {
-		if (strikeprob[guard_skill] > prandom(255)) {
+		if (custom->strikeprob[guard_skill] > prandom(255)) {
 			move_6_shift();
 		}
 	}
@@ -929,7 +930,7 @@ void __pascal far check_sword_hurt() {
 		loadshad();
 		hurt_by_sword();
 		saveshad();
-		guard_refrac = refractimer[guard_skill];
+		guard_refrac = custom->refractimer[guard_skill];
 	} else {
 		if (Kid.action == actions_99_hurt) {
 			loadkid();
