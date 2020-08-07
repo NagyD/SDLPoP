@@ -736,5 +736,13 @@ void load_mod_options() {
 	turn_custom_options_on_off(use_custom_options);
 }
 
+int process_rw_write(SDL_RWops* rw, void* data, size_t data_size) {
+	return SDL_RWwrite(rw, data, data_size, 1);
+}
+
+int process_rw_read(SDL_RWops* rw, void* data, size_t data_size) {
+	return SDL_RWread(rw, data, data_size, 1);
+	// if this returns 0, most likely the end of the stream has been reached
+}
 
 
