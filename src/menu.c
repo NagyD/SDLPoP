@@ -117,7 +117,7 @@ int active_settings_subsection = 0;
 int highlighted_settings_subsection = 0;
 int scroll_position = 0;
 int menu_control_y;
-int menu_control_scroll_y;
+//int menu_control_scroll_y;
 int menu_control_x;
 int menu_control_back;
 
@@ -2053,6 +2053,7 @@ void calculate_exe_crc() {
 
 void save_ingame_settings() {
 	SDL_RWops* rw = SDL_RWFromFile(locate_file("SDLPoP.cfg"), "wb");
+
 	if (rw != NULL) {
 		calculate_exe_crc();
 		SDL_RWwrite(rw, &exe_crc, sizeof(exe_crc), 1);
@@ -2071,6 +2072,7 @@ void load_ingame_settings() {
 	struct stat st_ini, st_cfg;
 	const char* cfg_filename = locate_file("SDLPoP.cfg");
 	const char* ini_filename = locate_file("SDLPoP.ini");
+
 	if (stat( cfg_filename, &st_cfg ) == 0 && stat( ini_filename, &st_ini ) == 0) {
 		if (st_ini.st_mtime > st_cfg.st_mtime ) {
 			// SDLPoP.ini is newer than SDLPoP.cfg, so just go with the .ini configuration

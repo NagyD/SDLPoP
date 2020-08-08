@@ -13,9 +13,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-The authors of this program may be contacted at http://forum.princed.org
+The authors of this program may be contacted at https://forum.princed.org
 */
 
 #ifndef DATA_H
@@ -419,7 +419,66 @@ extern trob_type trobs[30];
 // data:431A
 extern short redraw_height;
 // data:24DA
-extern /*const*/ byte sound_interruptible[] INIT(= {0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+extern /*const*/ byte sound_interruptible[] INIT(= {
+	0, // sound_0_fell_to_death
+	1, // sound_1_falling
+	1, // sound_2_tile_crashing
+	1, // sound_3_button_pressed
+	1, // sound_4_gate_closing
+	1, // sound_5_gate_opening
+	0, // sound_6_gate_closing_fast
+	1, // sound_7_gate_stop
+	1, // sound_8_bumped
+	1, // sound_9_grab
+	1, // sound_10_sword_vs_sword
+	1, // sound_11_sword_moving
+	1, // sound_12_guard_hurt
+	1, // sound_13_kid_hurt
+	0, // sound_14_leveldoor_closing
+	0, // sound_15_leveldoor_sliding
+	1, // sound_16_medium_land
+	1, // sound_17_soft_land
+	0, // sound_18_drink
+	1, // sound_19_draw_sword
+	1, // sound_20_loose_shake_1
+	1, // sound_21_loose_shake_2
+	1, // sound_22_loose_shake_3
+	1, // sound_23_footstep
+	0, // sound_24_death_regular
+	0, // sound_25_presentation
+	0, // sound_26_embrace
+	0, // sound_27_cutscene_2_4_6_12
+	0, // sound_28_death_in_fight
+	1, // sound_29_meet_Jaffar
+	0, // sound_30_big_potion
+	0, // sound_31
+	0, // sound_32_shadow_music
+	0, // sound_33_small_potion
+	0, // sound_34
+	0, // sound_35_cutscene_8_9
+	0, // sound_36_out_of_time
+	0, // sound_37_victory
+	0, // sound_38_blink
+	0, // sound_39_low_weight
+	0, // sound_40_cutscene_12_short_time
+	0, // sound_41_end_level_music
+	0, // sound_42
+	0, // sound_43_victory_Jaffar
+	0, // sound_44_skel_alive
+	0, // sound_45_jump_through_mirror
+	0, // sound_46_chomped
+	1, // sound_47_chomper
+	0, // sound_48_spiked
+	0, // sound_49_spikes
+	0, // sound_50_story_2_princess
+	0, // sound_51_princess_door_opening
+	0, // sound_52_story_4_Jaffar_leaves
+	0, // sound_53_story_3_Jaffar_comes
+	0, // sound_54_intro_music
+	0, // sound_55_story_1_absence
+	0, // sound_56_ending_music
+	0
+});
 // data:42ED
 extern byte curr_tilepos;
 // data:432A
@@ -742,6 +801,7 @@ extern custom_options_type custom_defaults INIT(= {
 		.victory_stops_time_level = 13,
 		.win_level = 14,
 		.win_room = 5,
+		.loose_floor_delay = 11,
 		// data:02B2
 		.tbl_level_type = {0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 0},
 		// 1.3
@@ -753,6 +813,15 @@ extern custom_options_type custom_defaults INIT(= {
 		.tbl_cutscenes_by_index = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15},
 		.tbl_entry_pose = {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0},
 		.tbl_seamless_exit = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 23, -1, -1, -1},
+
+		// guard skills
+		.strikeprob    = { 61,100, 61, 61, 61, 40,100,220,  0, 48, 32, 48},
+		.restrikeprob  = {  0,  0,  0,  5,  5,175, 16,  8,  0,255,255,150},
+		.blockprob     = {  0,150,150,200,200,255,200,250,  0,255,255,255},
+		.impblockprob  = {  0, 61, 61,100,100,145,100,250,  0,145,255,175},
+		.advprob       = {255,200,200,200,255,255,200,  0,  0,255,100,100},
+		.refractimer   = { 16, 16, 16, 16,  8,  8,  8,  8,  0,  8,  0,  0},
+		.extrastrength = {  0,  0,  0,  0,  1,  0,  0,  0,  0,  0,  0,  0},
 });
 extern custom_options_type* custom INIT(= &custom_defaults);
 

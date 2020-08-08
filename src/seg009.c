@@ -29,6 +29,7 @@ The authors of this program may be contacted at http://forum.princed.org
 #include "dirent.h"
 #endif
 
+
 // Most functions in this file are different from those in the original game.
 
 void sdlperror(const char* header) {
@@ -37,11 +38,24 @@ void sdlperror(const char* header) {
 	//quit(1);
 }
 
+#ifdef __amigaos4__
+#include <workbench/startup.h>
+#include <proto/dos.h>
+#endif
 char exe_dir[POP_MAX_PATH] = ".";
 bool found_exe_dir = false;
 
 void find_exe_dir() {
 	if (found_exe_dir) return;
+#ifdef __amigaos4__
+	if(g_argc == 0) {
+		struct WBStartup *WBenchMsg = (struct WBStartup *)g_argv;
+		NameFromLock( WBenchMsg->sm_ArgList->wa_Lock, exe_dir, sizeof(exe_dir) );
+	}
+	else {
+		NameFromLock( GetProgramDir(), exe_dir, sizeof(exe_dir) );
+	}
+#else
 	strncpy(exe_dir, g_argv[0], sizeof(exe_dir));
 	char* last_slash = NULL;
 	char* pos = exe_dir;
@@ -53,6 +67,8 @@ void find_exe_dir() {
 	if (last_slash != NULL) {
 		*last_slash = '\0';
 	}
+#endif
+//printf("'%s'\n",exe_dir);
 	found_exe_dir = true;
 }
 
@@ -333,7 +349,7 @@ static FILE* open_dat_from_root_or_data_dir(const char* filename) {
             find_exe_dir();
             snprintf(data_path, sizeof(data_path), "%s/data/%s", exe_dir, filename);
         }
-
+printf("[open_dat_from_root_or_data_dir]'%s'\n",data_path);
 		// verify that this is a regular file and not a directory (otherwise, don't open)
 		struct stat path_stat;
 		stat(data_path, &path_stat);
@@ -347,6 +363,7 @@ static FILE* open_dat_from_root_or_data_dir(const char* filename) {
 // seg009:0F58
 dat_type *__pascal open_dat(const char *filename,int drive) {
 	FILE* fp = NULL;
+printf("[open_dat]'%s'\n",filename);
 	if (!use_custom_levelset) {
 		fp = open_dat_from_root_or_data_dir(filename);
 	}
@@ -355,6 +372,7 @@ dat_type *__pascal open_dat(const char *filename,int drive) {
 			char filename_mod[POP_MAX_PATH];
 			// before checking the root directory, first try mods/MODNAME/
 			snprintf(filename_mod, sizeof(filename_mod), "%s/%s", mod_data_path, filename);
+//printf("[open_dat]'%s'\n",filename_mod);
 			fp = fopen(filename_mod, "rb");
 		}
 		if (fp == NULL && !skip_normal_data_files) {
@@ -828,9 +846,11 @@ surface_type far *__pascal make_offscreen_buffer(const rect_type far *rect) {
 	// stub
 #ifndef USE_ALPHA
 	// Bit order matches onscreen buffer, good for fading.
-	return SDL_CreateRGBSurface(0, rect->right, rect->bottom, 24, 0xFF, 0xFF<<8, 0xFF<<16, 0); //RGB888 (little endian)
+	return SDL_CreateRGBSurface(0, rect->right, rect->bottom, 24, Rmsk, Gmsk, Bmsk, 0); //RGB888 (little endian)
+	//return SDL_CreateRGBSurface(0, rect->right, rect->bottom, 24, 0xFF, 0xFF<<8, 0xFF<<16, 0); //RGB888 (little endian)
 #else
-	return SDL_CreateRGBSurface(0, rect->right, rect->bottom, 32, 0xFF, 0xFF<<8, 0xFF<<16, 0xFF<<24);
+	return SDL_CreateRGBSurface(0, rect->right, rect->bottom, 32, Rmsk, Gmsk, Bmsk, Amsk);
+	//return SDL_CreateRGBSurface(0, rect->right, rect->bottom, 32, 0xFF, 0xFF<<8, 0xFF<<16, 0xFF<<24);
 #endif
 	//return surface;
 }
@@ -1610,9 +1630,12 @@ peel_type* __pascal far read_peel_from_screen(const rect_type far *rect) {
 	result->rect = *rect;
 #ifndef USE_ALPHA
 	SDL_Surface* peel_surface = SDL_CreateRGBSurface(0, rect->right - rect->left, rect->bottom - rect->top,
-	                                                 24, 0xFF, 0xFF<<8, 0xFF<<16, 0);
+	                                                 24, Rmsk, Gmsk, Bmsk, 0);
+	//SDL_Surface* peel_surface = SDL_CreateRGBSurface(0, rect->right - rect->left, rect->bottom - rect->top,
+	//                                                 24, 0xFF, 0xFF<<8, 0xFF<<16, 0);
 #else
-	SDL_Surface* peel_surface = SDL_CreateRGBSurface(0, rect->right - rect->left, rect->bottom - rect->top, 32, 0xFF, 0xFF<<8, 0xFF<<16, 0xFF<<24);
+	SDL_Surface* peel_surface = SDL_CreateRGBSurface(0, rect->right - rect->left, rect->bottom - rect->top, 32, Rmsk, Gmsk, Bmsk, Amsk);
+	//SDL_Surface* peel_surface = SDL_CreateRGBSurface(0, rect->right - rect->left, rect->bottom - rect->top, 32, 0xFF, 0xFF<<8, 0xFF<<16, 0xFF<<24);
 #endif
 	if (peel_surface == NULL) {
 		sdlperror("SDL_CreateRGBSurface");
@@ -1943,7 +1966,6 @@ void init_digi() {
 
 const int sound_channel = 0;
 const int max_sound_id = 58;
-char** sound_names = NULL;
 
 void load_sound_names() {
 	const char* names_path = locate_file("data/music/names.txt");
@@ -2256,8 +2278,10 @@ void window_resized() {
 void init_overlay() {
 	static bool initialized = false;
 	if (!initialized) {
-		overlay_surface = SDL_CreateRGBSurface(0, 320, 200, 32, 0xFF, 0xFF << 8, 0xFF << 16, 0xFF << 24) ;
-		merged_surface = SDL_CreateRGBSurface(0, 320, 200, 24, 0xFF, 0xFF << 8, 0xFF << 16, 0) ;
+		overlay_surface = SDL_CreateRGBSurface(0, 320, 200, 32, Rmsk, Gmsk, Bmsk, Amsk) ;
+		merged_surface = SDL_CreateRGBSurface(0, 320, 200, 24, Rmsk, Gmsk, Bmsk, 0) ;
+		//overlay_surface = SDL_CreateRGBSurface(0, 320, 200, 32, 0xFF, 0xFF << 8, 0xFF << 16, 0xFF << 24) ;
+		//merged_surface = SDL_CreateRGBSurface(0, 320, 200, 24, 0xFF, 0xFF << 8, 0xFF << 16, 0) ;
 		initialized = true;
 	}
 }
@@ -2270,7 +2294,8 @@ void init_scaling() {
 	}
 	if (scaling_type == 1) {
 		if (!is_renderer_targettexture_supported && onscreen_surface_2x == NULL) {
-			onscreen_surface_2x = SDL_CreateRGBSurface(0, 320*2, 200*2, 24, 0xFF, 0xFF << 8, 0xFF << 16, 0) ;
+			onscreen_surface_2x = SDL_CreateRGBSurface(0, 320*2, 200*2, 24, Rmsk, Gmsk, Bmsk, 0) ;
+			//onscreen_surface_2x = SDL_CreateRGBSurface(0, 320*2, 200*2, 24, 0xFF, 0xFF << 8, 0xFF << 16, 0) ;
 		}
 		if (texture_fuzzy == NULL) {
 			SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
@@ -2305,6 +2330,11 @@ void __pascal far set_gr_mode(byte grmode) {
 		sdlperror("SDL_Init");
 		quit(1);
 	}
+
+#ifdef __amigaos4__
+	//SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengles2"); //"software", "opengl", "opengles2" or "compositing"
+	SDL_GameControllerAddMappingsFromFile("gamecontrollerdb.txt");
+#endif
 
 	//SDL_EnableUNICODE(1); //deprecated
 	Uint32 flags = 0;
@@ -2357,7 +2387,8 @@ void __pascal far set_gr_mode(byte grmode) {
 	 * subsequently displayed.
 	 * The function handling the screen updates is update_screen()
 	 * */
-	onscreen_surface_ = SDL_CreateRGBSurface(0, 320, 200, 24, 0xFF, 0xFF << 8, 0xFF << 16, 0);
+	onscreen_surface_ = SDL_CreateRGBSurface(0, 320, 200, 24, Rmsk, Gmsk, Bmsk, 0);
+	//onscreen_surface_ = SDL_CreateRGBSurface(0, 320, 200, 24, 0xFF, 0xFF << 8, 0xFF << 16, 0);
 	if (onscreen_surface_ == NULL) {
 		sdlperror("SDL_CreateRGBSurface");
 		quit(1);
@@ -2855,7 +2886,8 @@ void blit_xor(SDL_Surface* target_surface, SDL_Rect* dest_rect, SDL_Surface* ima
 		printf("blit_xor: dest_rect and src_rect have different sizes\n");
 		quit(1);
 	}
-	SDL_Surface* helper_surface = SDL_CreateRGBSurface(0, dest_rect->w, dest_rect->h, 24, 0xFF, 0xFF<<8, 0xFF<<16, 0);
+	SDL_Surface* helper_surface = SDL_CreateRGBSurface(0, dest_rect->w, dest_rect->h, 24, Rmsk, Gmsk, Bmsk, 0);
+	//SDL_Surface* helper_surface = SDL_CreateRGBSurface(0, dest_rect->w, dest_rect->h, 24, 0xFF, 0xFF<<8, 0xFF<<16, 0);
 	if (helper_surface == NULL) {
 		sdlperror("SDL_CreateRGBSurface");
 		quit(1);
@@ -3057,7 +3089,7 @@ void process_events() {
 			{
 				int modifier = event.key.keysym.mod;
 				int scancode = event.key.keysym.scancode;
-
+//printf("event.key.keysym.scancode=0x%08x\n",scancode);
 				// Handle these separately, so they won't interrupt things that are usually interrupted by a keypress. (pause, cutscene)
 #ifdef USE_SCREENSHOT
 				if (scancode == SDL_SCANCODE_F12) {
@@ -3157,6 +3189,7 @@ void process_events() {
 #endif
 				break;
 			case SDL_CONTROLLERAXISMOTION:
+//printf("SDL_CONTROLLERAXISMOTION %d (val=%d)\n",event.caxis.axis,event.caxis.value);
 				if (event.caxis.axis < 6) {
 					joy_axis[event.caxis.axis] = event.caxis.value;
 
@@ -3168,6 +3201,7 @@ void process_events() {
 #endif
 				}
 				break;
+
 			case SDL_CONTROLLERBUTTONDOWN:
 #ifdef USE_AUTO_INPUT_MODE
 				if (!is_joyst_mode) {
@@ -3175,17 +3209,18 @@ void process_events() {
 					is_keyboard_mode = 0;
 				}
 #endif
+//printf("[SDL_CONTROLLERBUTTONDOWN]event.cbutton.button=0x%08x\n",event.cbutton.button);
 				switch (event.cbutton.button)
 				{
 					case SDL_CONTROLLER_BUTTON_DPAD_LEFT:  joy_hat_states[0] = -1; break; // left
-					case SDL_CONTROLLER_BUTTON_DPAD_RIGHT: joy_hat_states[0] = 1;  break; // right
+					case SDL_CONTROLLER_BUTTON_DPAD_RIGHT: joy_hat_states[0] =  1; break; // right
 					case SDL_CONTROLLER_BUTTON_DPAD_UP:    joy_hat_states[1] = -1; break; // up
-					case SDL_CONTROLLER_BUTTON_DPAD_DOWN:  joy_hat_states[1] = 1;  break; // down
+					case SDL_CONTROLLER_BUTTON_DPAD_DOWN:  joy_hat_states[1] =  1; break; // down
 
-					case SDL_CONTROLLER_BUTTON_A:          joy_AY_buttons_state = 1;  break; /*** A (down) ***/
+					case SDL_CONTROLLER_BUTTON_A:          joy_AY_buttons_state =  1; break; /*** A (down) ***/
 					case SDL_CONTROLLER_BUTTON_Y:          joy_AY_buttons_state = -1; break; /*** Y (up) ***/
-					case SDL_CONTROLLER_BUTTON_X:          joy_X_button_state = 1;    break; /*** X (shift) ***/
-					case SDL_CONTROLLER_BUTTON_B:          joy_B_button_state = 1;    break; /*** B (unused) ***/
+					case SDL_CONTROLLER_BUTTON_X:          joy_X_button_state   =  1; break; /*** X (shift) ***/
+					case SDL_CONTROLLER_BUTTON_B:          joy_B_button_state   =  1; break; /*** B (unused) ***/
 
 					case SDL_CONTROLLER_BUTTON_START:
 					case SDL_CONTROLLER_BUTTON_BACK:
@@ -3200,6 +3235,7 @@ void process_events() {
 				}
 				break;
 			case SDL_CONTROLLERBUTTONUP:
+//printf("[SDL_CONTROLLERBUTTONUP]event.cbutton.button=0x%08x\n",event.cbutton.button);
 				switch (event.cbutton.button)
 				{
 					case SDL_CONTROLLER_BUTTON_DPAD_LEFT:  joy_hat_states[0] = 0; break; // left
@@ -3209,8 +3245,8 @@ void process_events() {
 
 					case SDL_CONTROLLER_BUTTON_A:          joy_AY_buttons_state = 0; break; /*** A (down) ***/
 					case SDL_CONTROLLER_BUTTON_Y:          joy_AY_buttons_state = 0; break; /*** Y (up) ***/
-					case SDL_CONTROLLER_BUTTON_X:          joy_X_button_state = 0;   break; /*** X (shift) ***/
-					case SDL_CONTROLLER_BUTTON_B:          joy_B_button_state = 0;   break; /*** B (unused) ***/
+					case SDL_CONTROLLER_BUTTON_X:          joy_X_button_state   = 0; break; /*** X (shift) ***/
+					case SDL_CONTROLLER_BUTTON_B:          joy_B_button_state   = 0; break; /*** B (unused) ***/
 
 					default: break;
 				}
@@ -3223,7 +3259,10 @@ void process_events() {
 				if (!using_sdl_joystick_interface) {
 					break;
 				}
+//printf("[SDL_JOY..]event.type=0x%08x\n",event.type);
+
 				if (event.type == SDL_JOYAXISMOTION) {
+//printf("[SDL_JOYAXISMOTION]event.jaxis.axis=0x%08x\n",event.jaxis.axis);
 					if (event.jaxis.axis == SDL_JOYSTICK_X_AXIS) {
 						joy_axis[SDL_CONTROLLER_AXIS_LEFTX] = event.jaxis.value;
 					}
@@ -3232,7 +3271,8 @@ void process_events() {
 					}
 					// Disregard SDL_JOYAXISMOTION events within joystick 'dead zone'
 					int joy_x = joy_axis[SDL_CONTROLLER_AXIS_LEFTX];
-					int joy_y = joy_axis[SDL_CONTROLLER_AXIS_LEFTX];
+					//int joy_y = joy_axis[SDL_CONTROLLER_AXIS_LEFTX];
+					int joy_y = joy_axis[SDL_CONTROLLER_AXIS_LEFTY];
 					if ((dword)(joy_x*joy_x) + (dword)(joy_y*joy_y) < (dword)(joystick_threshold*joystick_threshold)) {
 						break;
 					}
@@ -3243,13 +3283,15 @@ void process_events() {
 					is_keyboard_mode = 0;
 				}
 #endif
+//printf("event.jbutton.button=0x%08x\n",event.jbutton.button);
+
 				if (event.type == SDL_JOYBUTTONDOWN) {
 					if      (event.jbutton.button == SDL_JOYSTICK_BUTTON_Y)   joy_AY_buttons_state = -1; // Y (up)
-					else if (event.jbutton.button == SDL_JOYSTICK_BUTTON_X)   joy_X_button_state = -1;   // X (shift)
+					else if (event.jbutton.button == SDL_JOYSTICK_BUTTON_X)   joy_X_button_state   = -1; // X (shift)
 				}
 				else if (event.type == SDL_JOYBUTTONUP) {
 					if      (event.jbutton.button == SDL_JOYSTICK_BUTTON_Y)   joy_AY_buttons_state = 0;  // Y (up)
-					else if (event.jbutton.button == SDL_JOYSTICK_BUTTON_X)   joy_X_button_state = 0;    // X (shift)
+					else if (event.jbutton.button == SDL_JOYSTICK_BUTTON_X)   joy_X_button_state   = 0;  // X (shift)
 				}
 				break;
 
@@ -3272,6 +3314,16 @@ void process_events() {
 			}
 */
 				switch (event.window.event) {
+#ifdef __amigaos4__
+					case SDL_WINDOWEVENT_MINIMIZED: /* pause game */
+						if (!is_menu_shown) {
+							last_key_scancode = SDL_SCANCODE_BACKSPACE;
+						}
+						break;
+					case SDL_WINDOWEVENT_RESTORED: /* show "game paused/menu" */
+						update_screen();
+						break;
+#endif
 					case SDL_WINDOWEVENT_SIZE_CHANGED:
 						window_resized();
 					//case SDL_WINDOWEVENT_MOVED:

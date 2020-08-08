@@ -13,9 +13,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-The authors of this program may be contacted at http://forum.princed.org
+The authors of this program may be contacted at https://forum.princed.org
 */
 
 #ifndef TYPES_H
@@ -464,13 +464,13 @@ typedef struct textstate_type {
 
 #pragma pack(push,1)
 typedef struct rawfont_type {
-	Uint8 first_char;
-	Uint8 last_char;
-	Sint16 height_above_baseline;
-	Sint16 height_below_baseline;
-	Sint16 space_between_lines;
-	Sint16 space_between_chars;
-	Uint16 offsets[0];
+	byte first_char;
+	byte last_char;
+	short height_above_baseline;
+	short height_below_baseline;
+	short space_between_lines;
+	short space_between_chars;
+	word offsets[0];
 } rawfont_type;
 SDL_COMPILE_TIME_ASSERT(rawfont_type, sizeof(rawfont_type) == 10);
 #pragma pack(pop)
@@ -1191,6 +1191,8 @@ typedef struct fixes_options_type {
 	byte fix_exit_door;
 } fixes_options_type;
 
+#define NUM_GUARD_SKILLS 12
+
 typedef struct custom_options_type {
 	word start_minutes_left;
 	word start_ticks_left;
@@ -1262,6 +1264,7 @@ typedef struct custom_options_type {
 	word victory_stops_time_level;
 	word win_level;
 	byte win_room;
+	byte loose_floor_delay;
 	byte tbl_level_type[16];
 	word tbl_level_color[16];
 	short tbl_guard_type[16];
@@ -1269,6 +1272,16 @@ typedef struct custom_options_type {
 	byte tbl_cutscenes_by_index[16];
 	byte tbl_entry_pose[16];
 	sbyte tbl_seamless_exit[16];
+
+	// guard skills
+	word strikeprob   [NUM_GUARD_SKILLS];
+	word restrikeprob [NUM_GUARD_SKILLS];
+	word blockprob    [NUM_GUARD_SKILLS];
+	word impblockprob [NUM_GUARD_SKILLS];
+	word advprob      [NUM_GUARD_SKILLS];
+	word refractimer  [NUM_GUARD_SKILLS];
+	word extrastrength[NUM_GUARD_SKILLS];
+
 } custom_options_type;
 #pragma pack(pop)
 

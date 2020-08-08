@@ -28,9 +28,10 @@ The authors of this program may be contacted at http://forum.princed.org
 #endif
 
 #define POP_MAX_PATH 256
+//#define POP_MAX_FULLPATH 512
 #define POP_MAX_OPTIONS_SIZE 256
 
-#define SDLPOP_VERSION "1.19"
+#define SDLPOP_VERSION "1.20"
 #define WINDOW_TITLE "Prince of Persia (SDLPoP) v" SDLPOP_VERSION
 
 // Enable or disable fading.
@@ -230,5 +231,19 @@ The authors of this program may be contacted at http://forum.princed.org
 #define SDL_JOYSTICK_BUTTON_X 3
 #define SDL_JOYSTICK_X_AXIS 0
 #define SDL_JOYSTICK_Y_AXIS 1
+
+
+#ifdef __amigaos4__
+	#define Rmsk  0x00ff0000
+	#define Gmsk  0x0000ff00
+	#define Bmsk  0x000000ff
+	#define Amsk  0xff000000
+#else
+	#define Rmsk  0x000000ff
+	#define Gmsk  0x0000ff00
+	#define Bmsk  0x00ff0000
+	#define Amsk  0xff000000
+#endif
+
 
 #endif
