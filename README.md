@@ -1,6 +1,6 @@
 # SDLPoP
 An open-source port of Prince of Persia, based on the disassembly of the DOS version.
 
-More info: doc/Readme.txt adn in ReadMe.amigaos4
+More info: doc/Readme.txt and ReadMe.amigaos4
 
 
