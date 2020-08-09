@@ -3120,6 +3120,7 @@ void process_events() {
 						case SDL_SCANCODE_PRINTSCREEN:
 						case SDL_SCANCODE_VOLUMEUP:
 						case SDL_SCANCODE_VOLUMEDOWN:
+						case SDL_SCANCODE_MUTE:
 						case SDL_SCANCODE_PAUSE:
 							break;
 
