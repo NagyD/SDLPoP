@@ -69,6 +69,7 @@ enum pause_menu_item_ids {
 	PAUSE_MENU_LOAD_GAME,
 	PAUSE_MENU_RESTART_LEVEL,
 	PAUSE_MENU_SETTINGS,
+	PAUSE_MENU_RESTART_GAME,
 	PAUSE_MENU_QUIT_GAME,
 	SETTINGS_MENU_GENERAL,
 	SETTINGS_MENU_GAMEPLAY,
@@ -86,6 +87,7 @@ pause_menu_item_type pause_menu_items[] = {
 		{.id = PAUSE_MENU_LOAD_GAME,     .text = "LOAD GAME"},
 		{.id = PAUSE_MENU_RESTART_LEVEL, .text = "RESTART LEVEL"},
 		{.id = PAUSE_MENU_SETTINGS,      .text = "SETTINGS"},
+		{.id = PAUSE_MENU_RESTART_GAME,  .text = "RESTART GAME"},
 		{.id = PAUSE_MENU_QUIT_GAME,     .text = "QUIT GAME"},
 };
 
@@ -1092,6 +1094,9 @@ void pause_menu_clicked(pause_menu_item_type* item) {
 			highlighted_settings_subsection = SETTINGS_MENU_GENERAL;
 			active_settings_subsection = 0;
 			controlled_area = 0;
+			break;
+		case PAUSE_MENU_RESTART_GAME:
+			last_key_scancode = SDL_SCANCODE_R | WITH_CTRL;
 			break;
 		case PAUSE_MENU_QUIT_GAME:
 			current_dialog_box = DIALOG_CONFIRM_QUIT;
