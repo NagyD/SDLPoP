@@ -23,7 +23,6 @@ The authors of this program may be contacted at https://forum.princed.org
 #ifndef _MSC_VER // unistd.h does not exist in the Windows SDK.
 #include <unistd.h>
 #endif
-#include <fcntl.h>
 
 // data:4CB4
 short cutscene_wait_frames;
