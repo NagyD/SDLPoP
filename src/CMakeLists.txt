@@ -115,7 +115,7 @@ endif()
 
 if(WIN32)
     target_link_libraries(prince mingw32 SDL2main SDL2 SDL2_image)
-elif(APPLE)
+elseif(APPLE)
     target_link_libraries(prince SDL2main SDL2 SDL2_image m)
 else() # Linux, *BSD, etc.
     target_link_libraries(prince SDL2 SDL2_image m)
