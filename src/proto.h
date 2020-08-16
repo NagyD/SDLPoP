@@ -649,6 +649,7 @@ void check_mod_param();
 void load_mod_options();
 int process_rw_write(SDL_RWops* rw, void* data, size_t data_size);
 int process_rw_read(SDL_RWops* rw, void* data, size_t data_size);
+void load_dos_exe_modifications(const char* folder_name);
 
 // REPLAY.C
 #ifdef USE_REPLAY
