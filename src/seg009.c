@@ -2343,7 +2343,12 @@ void __pascal far set_gr_mode(byte grmode) {
 	                           pop_window_width, pop_window_height, flags);
 	// Make absolutely sure that VSync will be off, to prevent timer issues.
 	SDL_SetHint(SDL_HINT_RENDER_VSYNC, "0");
-	renderer_ = SDL_CreateRenderer(window_, -1 , SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE);
+#ifdef USE_HW_ACCELERATION
+	const Uint32 RENDER_BACKEND = SDL_RENDERER_ACCELERATED;
+#else
+	const Uint32 RENDER_BACKEND = SDL_RENDERER_SOFTWARE;
+#endif
+	renderer_ = SDL_CreateRenderer(window_, -1 , RENDER_BACKEND | SDL_RENDERER_TARGETTEXTURE);
 	SDL_RendererInfo renderer_info;
 	if (SDL_GetRendererInfo(renderer_, &renderer_info) == 0) {
 		if (renderer_info.flags & SDL_RENDERER_TARGETTEXTURE) {
