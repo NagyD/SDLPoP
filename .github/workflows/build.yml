@@ -1,0 +1,96 @@
+name: Build
+
+on:
+  pull_request:
+    branches: [ master ]
+  push:
+    branches: [ master ]
+
+jobs:
+  #BUILD LINUX
+  Linux:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Install and Setup Dependencies
+      run: |
+        sudo apt update
+        sudo apt install libsdl2-dev libsdl2-image-dev
+
+    - name: Compile
+      run: |
+        cd src/
+        cmake .
+        make
+
+    # Only create artifact on a push to master
+    - if: github.event_name == 'push' 
+      name: Upload Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: SDLPoP_Linux
+        path: |
+          data
+          doc
+          mods
+          prince
+          SDLPoP.ini
+
+  #BUILD WIN32
+  Windows:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Install and Setup Dependencies
+      run: |
+        sudo apt install mingw-w64
+
+        # Symlink windres
+        sudo ln -s /usr/bin/i686-w64-mingw32-windres /usr/bin/windres
+
+        # Setup SDL2 and SDL2_Image
+        cd ~
+        wget https://libsdl.org/release/SDL2-devel-2.0.12-mingw.tar.gz
+        wget https://libsdl.org/projects/SDL_image/release/SDL2_image-devel-2.0.5-mingw.tar.gz
+        tar xzf SDL2-devel-2.0.12-mingw.tar.gz
+        tar xzf SDL2_image-devel-2.0.5-mingw.tar.gz
+        sudo cp -r SDL2-2.0.12/i686-w64-mingw32/* /usr/i686-w64-mingw32/
+        sudo cp -r SDL2_image-2.0.5/i686-w64-mingw32/* /usr/i686-w64-mingw32/
+
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name : Compile
+      run: |
+        cd src/
+        cmake -DWIN32=1 -DCMAKE_SYSTEM_NAME=Windows \
+                        -DCMAKE_C_COMPILER=i686-w64-mingw32-gcc \
+                        -DCMAKE_CXX_COMPILER=i686-w64-mingw32-g++ .
+        make
+
+    - name : Collate Output Files
+      run: |
+        cp ~/SDL2-2.0.12/i686-w64-mingw32/bin/SDL2.dll SDL2.dll
+        cp ~/SDL2_image-2.0.5/i686-w64-mingw32/bin/SDL2_image.dll SDL2_image.dll
+        cp ~/SDL2_image-2.0.5/i686-w64-mingw32/bin/zlib1.dll zlib1.dll
+        cp ~/SDL2_image-2.0.5/i686-w64-mingw32/bin/libpng16-16.dll libpng16-16.dll
+
+    # Only create artifact on a push to master
+    - if: github.event_name == 'push'
+      name: Upload Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: SDLPoP_Win32
+        path: |
+          data
+          doc
+          mods
+          prince.exe
+          SDLPoP.ini
+          SDL2.dll
+          SDL2_image.dll
+          zlib1.dll
+          libpng16-16.dll
