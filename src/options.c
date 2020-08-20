@@ -447,8 +447,6 @@ void set_options_to_default() {
 	turn_custom_options_on_off(0);
 }
 
-void load_dos_exe_modifications(const char* folder_name);
-
 void load_global_options() {
 	set_options_to_default();
 	ini_load(locate_file("SDLPoP.ini"), global_ini_callback); // global configuration
