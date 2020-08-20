@@ -3081,6 +3081,10 @@ void process_events() {
 				int scancode = event.key.keysym.scancode;
 
 				// Handle these separately, so they won't interrupt things that are usually interrupted by a keypress. (pause, cutscene)
+				if (scancode == SDL_SCANCODE_GRAVE) {
+					init_timer(60 * 10); // fast-forward on
+					break;
+				}
 #ifdef USE_SCREENSHOT
 				if (scancode == SDL_SCANCODE_F12) {
 					if (modifier & KMOD_SHIFT) {
@@ -3172,6 +3176,11 @@ void process_events() {
 			case SDL_KEYUP:
 				// If Alt was held down from Alt+Tab but now it's released: stop ignoring Tab.
 				if (event.key.keysym.scancode == SDL_SCANCODE_TAB && ignore_tab) ignore_tab = false;
+
+				if (event.key.keysym.scancode == SDL_SCANCODE_GRAVE) {
+					init_timer(60); // fast-forward off
+					break;
+				}
 
 				key_states[event.key.keysym.scancode] = 0;
 #ifdef USE_MENU

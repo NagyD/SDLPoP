@@ -170,6 +170,7 @@ Controlling the game:
 * F9: quickload
 * F12: Save a screenshot to the screenshots folder.
 * Backspace: display in-game menu
+* `: Fast forward. (It's the key above Tab. It might have a different label depending on your keyboard layout.)
 
 Viewing or recording replays:
 * Ctrl+Tab (in game, or on title screen): start or stop recording

@@ -556,3 +556,5 @@ FIXED: Replays were not working if there were no replay files in the replay fold
 DONE: Added support for gamecontrollerdb.txt file.
 DONE: Detect changes of the shadow's starting positions and automatic moves in PRINCE.EXE.
 DONE: Added "Restart Game" to the pause menu, so now it's possible to restart the game using a controller.
+DONE: Added fast forward.
+	TODO: Speed up music and sound effects during fast forwarding.
