@@ -2306,6 +2306,8 @@ void __pascal far set_gr_mode(byte grmode) {
 		quit(1);
 	}
 
+	SDL_StartTextInput();	/* Be keyboard layout agnostic */
+
 	//SDL_EnableUNICODE(1); //deprecated
 	Uint32 flags = 0;
 	if (!start_fullscreen) start_fullscreen = check_param("full") != NULL;
@@ -3269,6 +3271,9 @@ void process_events() {
 
 			case SDL_TEXTINPUT:
 				last_text_input = event.text.text[0]; // UTF-8 formatted char text input
+				if (last_text_input == '?') {
+					show_help();
+				}
 				break;
 			case SDL_WINDOWEVENT:
 				// In case the user switches away while holding a key: do as if all keys were released.

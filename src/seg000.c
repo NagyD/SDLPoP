@@ -22,6 +22,8 @@ The authors of this program may be contacted at https://forum.princed.org
 #include <setjmp.h>
 #include <math.h>
 
+word need_show_help = 0;
+
 // data:461E
 dat_type * dathandle;
 
@@ -538,6 +540,61 @@ int __pascal far process_key() {
 	if (key == 0) return 0;
 	if (is_keyboard_mode) clear_kbd_buf();
 
+	static int skip_state=0;			/* state machine of typing S,K,I,P. */
+	switch(key) {
+		// To allow for Apple ][ movement keys as well as IBM,
+		// we'll use the Apple way of "Practicing" a level
+		// by typing S-K-I-P instead of simply Shift+L.
+		case SDL_SCANCODE_S:
+		  skip_state=1;
+			break;
+		case SDL_SCANCODE_K:
+			if (skip_state==1) skip_state=2; else skip_state=0;
+			break;
+		case SDL_SCANCODE_I:
+			if (skip_state==2) skip_state=3; else skip_state=0;
+			break;
+		case SDL_SCANCODE_P:
+			if (skip_state==3) {
+				skip_state=0;
+				if (current_level < custom->shift_L_allowed_until_level /* 4 */ || cheats_enabled) {
+					// if shift is not released within the delay, the cutscene is skipped
+					Uint32 delay = 250;
+					key_states[SDL_SCANCODE_LSHIFT] = 0;
+					key_states[SDL_SCANCODE_RSHIFT] = 0;
+					SDL_TimerID timer;
+					timer = SDL_AddTimer(delay, temp_shift_release_callback, NULL);
+					if (timer == 0) {
+						sdlperror("SDL_AddTimer");
+						quit(1);
+					}
+					if (current_level == 14) {
+						next_level = 1;
+					} else {
+						if (current_level == 15 && cheats_enabled) {
+#ifdef USE_COPYPROT
+							if (enable_copyprot) {
+								next_level = custom->copyprot_level;
+								custom->copyprot_level = -1;
+							}
+#endif
+						} else {
+							next_level = current_level + 1;
+							if (!cheats_enabled && rem_min > custom->shift_L_reduced_minutes /* 15 */) {
+								rem_min = custom->shift_L_reduced_minutes; // 15
+								rem_tick = custom->shift_L_reduced_ticks; // 719
+							}
+						}
+					}
+					stop_sounds();
+				}
+			} else { skip_state=0; }	/* 'P' out of context */
+		break;
+	default:
+		skip_state=0;
+	}
+
+
 	switch(key) {
 		case SDL_SCANCODE_ESCAPE: // esc
 		case SDL_SCANCODE_ESCAPE | WITH_SHIFT: // allow pause while grabbing
@@ -554,6 +611,11 @@ int __pascal far process_key() {
 			}
 #endif
 		break;
+		case SDL_SCANCODE_F1: // F1
+			//is_paused = 1;
+			//need_show_help = 1;
+			show_help();
+		break;
 		case SDL_SCANCODE_SPACE: // space
 			is_show_time = 1;
 		break;
@@ -569,6 +631,9 @@ int __pascal far process_key() {
 			if (current_level >= custom->saving_allowed_first_level && current_level <= custom->saving_allowed_last_level) {
 				save_game();
 			}
+		break;
+		case SDL_SCANCODE_H | WITH_CTRL: // ctrl-h
+			show_help();
 		break;
 		case SDL_SCANCODE_J | WITH_CTRL: // ctrl-j
 			if ((sound_flags & sfDigi) && sound_mode == smTandy) {
@@ -622,39 +687,6 @@ int __pascal far process_key() {
 			answer_text = sprintf_temp;
 			need_show_text = 1;
 		}
-		break;
-		case SDL_SCANCODE_L | WITH_SHIFT: // shift-l
-			if (current_level < custom->shift_L_allowed_until_level /* 4 */ || cheats_enabled) {
-				// if shift is not released within the delay, the cutscene is skipped
-				Uint32 delay = 250;
-				key_states[SDL_SCANCODE_LSHIFT] = 0;
-				key_states[SDL_SCANCODE_RSHIFT] = 0;
-				SDL_TimerID timer;
-				timer = SDL_AddTimer(delay, temp_shift_release_callback, NULL);
-				if (timer == 0) {
-					sdlperror("SDL_AddTimer");
-					quit(1);
-				}
-				if (current_level == 14) {
-					next_level = 1;
-				} else {
-					if (current_level == 15 && cheats_enabled) {
-#ifdef USE_COPYPROT
-						if (enable_copyprot) {
-							next_level = custom->copyprot_level;
-							custom->copyprot_level = -1;
-						}
-#endif
-					} else {
-						next_level = current_level + 1;
-						if (!cheats_enabled && rem_min > custom->shift_L_reduced_minutes /* 15 */) {
-							rem_min = custom->shift_L_reduced_minutes; // 15
-							rem_tick = custom->shift_L_reduced_ticks; // 719
-						}
-					}
-				}
-				stop_sounds();
-			}
 		break;
 #ifdef USE_QUICKSAVE
 		case SDL_SCANCODE_F6:
@@ -1651,7 +1683,18 @@ int __pascal far do_paused() {
 		}
 		erase_bottom_text(1);
 	}
+
+	// Also check if we should be showing the help screen.
+	//do_help_screen();
+
 	return key || control_shift;
+}
+
+int do_help_screen() {
+	if (need_show_help) {
+		show_help();
+	}
+	return 0;
 }
 
 // seg000:1500
@@ -2228,14 +2271,9 @@ const rect_type splash_text_2_rect = {50, 0, 200, 320};
 
 const char* splash_text_1 = "SDLPoP " SDLPOP_VERSION;
 const char* splash_text_2 =
-		"To quick save/load, press F6/F9 in-game.\n"
+		"Press F1 for a list of keys.\n"
+		"Press ESC for a menu and to customize SDLPoP.\n"
 		"\n"
-#ifdef USE_REPLAY
-		"To record replays, press Ctrl+Tab in-game.\n"
-		"To view replays, press Tab on the title screen.\n"
-		"\n"
-#endif
-		"Edit SDLPoP.ini to customize SDLPoP.\n"
 		"Mods also work with SDLPoP.\n"
 		"\n"
 		"For more information, read doc/Readme.txt.\n"
@@ -2273,3 +2311,141 @@ void show_splash() {
 	key_states[SDL_SCANCODE_LSHIFT] = 0; // don't immediately start the game if shift was pressed!
 	key_states[SDL_SCANCODE_RSHIFT] = 0;
 }
+
+
+
+
+const rect_type help_text_cont_rect = {180, 0, 200, 320};
+const rect_type help_text_rect = {0, 0, 180, 320};
+
+const char* help_text_cont =
+  "Press any key for more or ESC to cancel.\n";
+
+const char* help_text[] = {
+  "Controlling the kid:\n"
+  "\n"
+  "  LEFT:  turn or run left\n"
+  "  RIGHT:  turn or run right\n"
+  "  UP:  jump or climb up / parry\n"
+  "  DOWN:  crouch or climb down / sheathe\n"
+  "  SHIFT:  pick up things / slash\n"
+  "  SHIFT+LEFT/RIGHT:  careful step\n"
+  "  UP+LEFT  (home):  jump left\n"
+  "  UP+RIGHT (pgup):  jump right\n"
+  "  SHIFT while falling:  grab onto ledge\n"
+  "\n"
+  "You can also use a gamepad or the numeric keypad.\n"
+  "\n"
+, 
+
+  "Controlling the game:\n"
+  "\n"
+  "  Alt-Enter: toggle fullscreen\n"
+  "  Esc: pause game\n"
+  "  Space: show time left\n"
+  "  Ctrl-A: restart level\n"
+  "  Ctrl-G: save game (on levels 3..13)\n"
+  "  Ctrl-L: load game (when in the intro)\n"
+  "  Ctrl-J: joystick/gamepad mode\n"
+  "  Ctrl-K: keyboard mode\n"
+  "  Ctrl-R: return to intro\n"
+  "  Ctrl-S: sound on/off\n"
+  "  Ctrl-V: show version of SDLPoP\n"
+  "  Ctrl-C: show versions of SDL:\n"
+  "  Ctrl-Q: quit game\n"
+  "  F6: quicksave\n"
+  "  F9: quickload\n"
+  "  F12: Save a screenshot to the screenshots folder.\n"
+  "  Backspace: display in-game menu\n"
+,
+
+  "Gamepad equivalents:\n"
+  "  D-Pad: arrows\n"
+  "  Joystick: left/right (for all-directional joystick movement, set joystick_only_horizontal to false in SDLPoP.ini)\n"
+  "  A: down\n"
+  "  Y: up\n"
+  "  X or triggers: shift\n"
+  "  Start or Back: display in-game menu\n"
+  "\n"
+  "Viewing or recording replays:\n"
+  "  Ctrl+Tab (in game, or on title screen): start or stop recording\n"
+  "  Tab (on title screen): view/cycle through the saved replays in the SDLPoP directory\n"
+  "  F (while viewing a replay): skip forward to the next room\n"
+  "  Shift-F (while viewing a replay): skip forward to the next level\n"
+,
+
+	"To quick save/load, press F6/F9 in-game.\n"
+	"Press ESC to pause the game.\n"
+#ifdef USE_MENU
+	"ESC also shows a menu and allows customization.\n"
+#endif
+	"\n"
+#ifdef USE_REPLAY
+	"To record replays, press Ctrl+Tab in-game.\n"
+	"To view replays, press Tab on the title screen.\n"
+	"\n"
+#endif
+	"Mods also work with SDLPoP.\n"
+	"\n"
+	"For more information, read doc/Readme.txt.\n"
+	"Questions? Visit https://forum.princed.org\n"
+	"\n"
+	"Press any key to continue..."
+	,
+	NULL
+};
+
+
+
+void show_help() {
+	//current_target_surface = onscreen_surface_;
+	surface_type* saved_target_surface = current_target_surface;
+	current_target_surface = overlay_surface;
+	is_overlay_displayed = true;
+	is_paused = true;
+	is_menu_shown = true;
+
+	draw_rect(&screen_rect, 0);
+	show_text_with_color(&help_text_cont_rect, 0, 0, help_text_cont, color_15_brightwhite);
+	show_text_with_color(&help_text_rect, -1, 0, help_text[0], color_7_lightgray);
+
+	int key = 0;
+	do {
+		idle();
+		is_menu_shown = false;
+		key = process_key();
+		is_menu_shown = true;
+
+		if (joy_X_button_state != 0) {
+			joy_hat_states[0] = 0;
+			joy_AY_buttons_state = 0;
+			joy_X_button_state = 0;
+			joy_B_button_state = 0;
+			key_states[SDL_SCANCODE_LSHIFT] = 1; // next help screen using the gamepad
+		}
+		if (joy_B_button_state != 0) {
+			joy_hat_states[0] = 0;
+			joy_AY_buttons_state = 0;
+			joy_X_button_state = 0;
+			joy_B_button_state = 0;
+			key = SDL_SCANCODE_ESCAPE;					// exit help screen using the gamepad
+		}
+		delay_ticks(1);
+
+	} while(key == 0 && !(key_states[SDL_SCANCODE_LSHIFT] || key_states[SDL_SCANCODE_RSHIFT]));
+
+	if ((key & WITH_CTRL) || (enable_quicksave && key == SDL_SCANCODE_F9) || (enable_replay && key == SDL_SCANCODE_TAB)) {
+		extern int last_key_scancode; // defined in seg009.c
+		last_key_scancode = key; // can immediately do Ctrl+L, etc from the help screen
+	}
+	//	key_states[SDL_SCANCODE_LSHIFT] = 0; // don't immediately start the game if shift was pressed!
+	//	key_states[SDL_SCANCODE_RSHIFT] = 0;
+
+	need_show_help = 0;
+
+	is_overlay_displayed = false;
+	is_paused = false;
+	is_menu_shown = false;
+	current_target_surface = saved_target_surface;
+}
+
