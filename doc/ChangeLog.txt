@@ -540,9 +540,9 @@ FIXED: Fix priorities of sword and spike sounds. (As in PoP 1.3.)
 	The "spiked" sound didn't interrupt the normal spikes sound when the prince ran into spikes.
 	With PoP 1.3 sounds, the "guard hurt" sound didn't play when you hit a guard directly after parrying.
 
-(no release date yet)
+2020 August 20
 =================
-(upcoming version)
+(version 1.21)
 
 FIXED: Skeletons not on level 3 did not behave like skeletons.
 FIXED: Don't crash if the intro music is interrupted by Tab in PC Speaker mode.
