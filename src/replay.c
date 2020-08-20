@@ -48,7 +48,7 @@ typedef union replay_move_type {
 	byte bits;
 } replay_move_type;
 
-dword curr_tick = 0;
+//dword curr_tick = 0;
 
 FILE* replay_fp = NULL;
 byte replay_file_open = 0;

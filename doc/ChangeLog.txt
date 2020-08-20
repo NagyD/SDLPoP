@@ -558,3 +558,5 @@ DONE: Detect changes of the shadow's starting positions and automatic moves in P
 DONE: Added "Restart Game" to the pause menu, so now it's possible to restart the game using a controller.
 DONE: Added fast forward.
 	TODO: Speed up music and sound effects during fast forwarding.
+ADDED: You can now use quicksave and quickload while recording a replay.
+	TODO: Verify that the quickloaded state is from the currently running recording.

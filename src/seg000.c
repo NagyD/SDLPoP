@@ -331,6 +331,10 @@ int quick_process(process_func_type process_func) {
 	process(ctrl1_up);
 	process(ctrl1_down);
 	process(ctrl1_shift2);
+	// replay recording state
+#ifdef USE_REPLAY
+	process(curr_tick);
+#endif
 #undef process
 	return ok;
 }
@@ -456,11 +460,13 @@ void check_quick_op() {
 		text_time_remaining = 24;
 	}
 	if (need_quick_load) {
+/*
 #ifdef USE_REPLAY
 		if (recording) {
 			stop_recording(); // quickloading would mess up the replay!
 		}
 #endif
+*/
 		if (quick_load()) {
 			display_text_bottom("QUICKLOAD");
 		} else {
