@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2019  Dávid Nagy
+Copyright (C) 2013-2020  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -13,9 +13,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-The authors of this program may be contacted at http://forum.princed.org
+The authors of this program may be contacted at https://forum.princed.org
 */
 
 #include "common.h"
@@ -718,7 +718,8 @@ void __pascal far draw_tile_fore() {
 
 // seg008:0FF6
 int __pascal far get_loose_frame(byte modifier) {
-	if (modifier & 0x80) {
+	// Don't display garbled tiles if the delay is greater than the default.
+	if ((modifier & 0x80) || custom->loose_floor_delay > 11) {
 		modifier &= 0x7F;
 		if (modifier > 10) {
 			return 1;

@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2019  Dávid Nagy
+Copyright (C) 2013-2020  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -13,9 +13,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-The authors of this program may be contacted at http://forum.princed.org
+The authors of this program may be contacted at https://forum.princed.org
 */
 
 #include "common.h"
@@ -48,7 +48,7 @@ typedef union replay_move_type {
 	byte bits;
 } replay_move_type;
 
-dword curr_tick = 0;
+//dword curr_tick = 0;
 
 FILE* replay_fp = NULL;
 byte replay_file_open = 0;
@@ -81,21 +81,33 @@ typedef struct replay_info_type {
 
 #define REPLAY_HEADER_ERROR_MESSAGE_MAX 512
 
+#define fread_check(dst, size, elements, fp)	do {		\
+		size_t __count;					\
+		__count = fread(dst, size, elements, fp);	\
+		if (__count != (elements)) {			\
+			if (error_message != NULL) {		\
+				snprintf_check(error_message, REPLAY_HEADER_ERROR_MESSAGE_MAX,\
+					       #dst " missing -- not a valid replay file!");\
+			}					\
+                return 0; /* incompatible file */		\
+                }						\
+	} while (0)
+
 int read_replay_header(replay_header_type* header, FILE* fp, char* error_message) {
 	// Explicitly go to the beginning, because the current filepos might be nonzero.
 	fseek(fp, 0, SEEK_SET);
 	// read the magic number
 	char magic[3] = "";
-	fread(magic, 3, 1, fp);
+	fread_check(magic, 3, 1, fp);
 	if (strncmp(magic, replay_magic_number, 3) != 0) {
 		if (error_message != NULL) {
-			snprintf(error_message, REPLAY_HEADER_ERROR_MESSAGE_MAX, "not a valid replay file!");
+			snprintf_check(error_message, REPLAY_HEADER_ERROR_MESSAGE_MAX, "not a valid replay file!");
 		}
 		return 0; // incompatible, magic number not correct!
 	}
 	// read the unique number associated with this SDLPoP implementation / fork (for normal SDLPoP: 0)
 	word class;
-	fread(&class, sizeof(class), 1, fp);
+	fread_check(&class, sizeof(class), 1, fp);
 	// read the format version number
 	byte version_number = (byte) fgetc(fp);
 	// read the format deprecation number
@@ -107,18 +119,18 @@ int read_replay_header(replay_header_type* header, FILE* fp, char* error_message
 	// read the levelset_name
 	byte len_read = (byte) fgetc(fp);
 	header->uses_custom_levelset = (len_read != 0);
-	fread(header->levelset_name, sizeof(char), len_read, fp);
+	fread_check(header->levelset_name, sizeof(char), len_read, fp);
 	header->levelset_name[len_read] = '\0';
 
 	// read the implementation_name
 	len_read = (byte) fgetc(fp);
-	fread(header->implementation_name, sizeof(char), len_read, fp);
+	fread_check(header->implementation_name, sizeof(char), len_read, fp);
 	header->implementation_name[len_read] = '\0';
 
 	if (class != replay_format_class) {
 		// incompatible, replay format is associated with a different implementation of SDLPoP
 		if (error_message != NULL) {
-			snprintf(error_message, REPLAY_HEADER_ERROR_MESSAGE_MAX,
+			snprintf_check(error_message, REPLAY_HEADER_ERROR_MESSAGE_MAX,
 			         "replay created with \"%s\"...\nIncompatible replay class identifier! (expected %d, found %d)",
 			         header->implementation_name, replay_format_class, class);
 		}
@@ -128,7 +140,7 @@ int read_replay_header(replay_header_type* header, FILE* fp, char* error_message
 	if (version_number < REPLAY_FORMAT_MIN_VERSION) {
 		// incompatible, replay format is too old
 		if (error_message != NULL) {
-			snprintf(error_message, REPLAY_HEADER_ERROR_MESSAGE_MAX,
+			snprintf_check(error_message, REPLAY_HEADER_ERROR_MESSAGE_MAX,
 			         "replay created with \"%s\"...\nReplay format version too old! (minimum %d, found %d)",
 			         header->implementation_name, REPLAY_FORMAT_MIN_VERSION, version_number);
 		}
@@ -138,7 +150,7 @@ int read_replay_header(replay_header_type* header, FILE* fp, char* error_message
 	if (deprecation_number > REPLAY_FORMAT_DEPRECATION_NUMBER) {
 		// incompatible, replay format is too new
 		if (error_message != NULL) {
-			snprintf(error_message, REPLAY_HEADER_ERROR_MESSAGE_MAX,
+			snprintf_check(error_message, REPLAY_HEADER_ERROR_MESSAGE_MAX,
 			         "replay created with \"%s\"...\nReplay deprecation number too new! (max %d, found %d)",
 			         header->implementation_name, REPLAY_FORMAT_DEPRECATION_NUMBER, deprecation_number);
 		}
@@ -198,7 +210,7 @@ void list_replay_files() {
 		replay_info_type* replay_info = &replay_list[num_replay_files - 1]; // current replay file
 		memset( replay_info, 0, sizeof( replay_info_type ) );
 		// store the filename of the replay
-		snprintf( replay_info->filename, POP_MAX_PATH, "%s/%s", replays_folder,
+		snprintf_check(replay_info->filename, POP_MAX_PATH, "%s/%s", replays_folder,
 					get_current_filename_from_directory_listing(directory_listing) );
 
 		// get the creation time
@@ -272,7 +284,7 @@ void start_with_replay_file(const char *filename) {
 		int ok = read_replay_header(&header, replay_fp, header_error_message);
 		if (!ok) {
 			char error_message[REPLAY_HEADER_ERROR_MESSAGE_MAX];
-			snprintf(error_message, REPLAY_HEADER_ERROR_MESSAGE_MAX,
+			snprintf_check(error_message, REPLAY_HEADER_ERROR_MESSAGE_MAX,
 			         "Error opening replay file: %s\n",
 			         header_error_message);
 			fprintf(stderr, "%s", error_message);
@@ -292,15 +304,6 @@ void start_with_replay_file(const char *filename) {
 		rewind(replay_fp); // replay file is still open and will be read in load_replay() later
 		need_start_replay = 1; // will later call start_replay(), from init_record_replay()
 	}
-}
-
-int process_rw_write(SDL_RWops* rw, void* data, size_t data_size) {
-	return SDL_RWwrite(rw, data, data_size, 1);
-}
-
-int process_rw_read(SDL_RWops* rw, void* data, size_t data_size) {
-	return SDL_RWread(rw, data, data_size, 1);
-	// if this returns 0, most likely the end of the stream has been reached
 }
 
 // The functions options_process_* below each process (read/write) a section of options variables (using SDL_RWops)
@@ -431,6 +434,7 @@ void options_process_custom_general(SDL_RWops* rw, rw_process_func_type process_
 	process(custom->victory_stops_time_level);
 	process(custom->win_level);
 	process(custom->win_room);
+	process(custom->loose_floor_delay);
 }
 
 void options_process_custom_per_level(SDL_RWops* rw, rw_process_func_type process_func) {
@@ -653,7 +657,8 @@ void start_replay() {
 	need_start_replay = 0;
 	if (!is_validate_mode) {
 		list_replay_files();
-		if (num_replay_files == 0) return;
+		// If the replay was started from a file given in the command line, we don't care if there are no replay files in the replay folder.
+		//if (num_replay_files == 0) return;
 	}
 	if (!load_replay()) return;
 	apply_replay_options();
@@ -770,7 +775,7 @@ int save_recorded_replay() {
 	}
 
 	char full_filename[POP_MAX_PATH] = "";
-	snprintf(full_filename, sizeof(full_filename), "%s/%s.p1r", replays_folder, input_filename);
+	snprintf_check(full_filename, sizeof(full_filename), "%s/%s.p1r", replays_folder, input_filename);
 
 	// create the "replays" folder if it does not exist already
 #if defined WIN32 || _WIN32 || WIN64 || _WIN64
@@ -876,22 +881,22 @@ int load_replay() {
 		memcpy(replay_levelset_name, header.levelset_name, sizeof(header.levelset_name));
 
 		// load the savestate
-		fread(&savestate_size, sizeof(savestate_size), 1, replay_fp);
-		fread(savestate_buffer, savestate_size, 1, replay_fp);
+		fread_check(&savestate_size, sizeof(savestate_size), 1, replay_fp);
+		fread_check(savestate_buffer, savestate_size, 1, replay_fp);
 
 		// load the replay options, organized per section
 		for (int i = 0; i < COUNT(replay_options_sections); ++i) {
 			dword section_size = 0;
-			fread(&section_size, sizeof(section_size), 1, replay_fp);
-			fread(replay_options_sections[i].replay_data, section_size, 1, replay_fp);
+			fread_check(&section_size, sizeof(section_size), 1, replay_fp);
+			fread_check(replay_options_sections[i].replay_data, section_size, 1, replay_fp);
 			replay_options_sections[i].data_size = section_size;
 		}
 
 		// load the rest of the replay data
-		fread(&start_level, sizeof(start_level), 1, replay_fp);
-		fread(&saved_random_seed, sizeof(saved_random_seed), 1, replay_fp);
-		fread(&num_replay_ticks, sizeof(num_replay_ticks), 1, replay_fp);
-		fread(moves, num_replay_ticks, 1, replay_fp);
+		fread_check(&start_level, sizeof(start_level), 1, replay_fp);
+		fread_check(&saved_random_seed, sizeof(saved_random_seed), 1, replay_fp);
+		fread_check(&num_replay_ticks, sizeof(num_replay_ticks), 1, replay_fp);
+		fread_check(moves, num_replay_ticks, 1, replay_fp);
 		fclose(replay_fp);
 		replay_fp = NULL;
 		replay_file_open = 0;

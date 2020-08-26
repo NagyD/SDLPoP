@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2019  Dávid Nagy
+Copyright (C) 2013-2020  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -13,9 +13,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-The authors of this program may be contacted at http://forum.princed.org
+The authors of this program may be contacted at https://forum.princed.org
 */
 
 // SEG000.C
@@ -60,6 +60,7 @@ void __pascal far show_title();
 void __pascal far transition_ltr();
 void __pascal far release_title_images();
 void __pascal far draw_image_2(int id,chtab_type* chtab_ptr,int xpos,int ypos,int blit);
+void __pascal far draw_full_image(enum full_image_id id);
 void __pascal far load_kid_sprite();
 void __pascal far save_game();
 short __pascal far load_game();
@@ -649,6 +650,7 @@ void check_mod_param();
 void load_mod_options();
 int process_rw_write(SDL_RWops* rw, void* data, size_t data_size);
 int process_rw_read(SDL_RWops* rw, void* data, size_t data_size);
+void load_dos_exe_modifications(const char* folder_name);
 
 // REPLAY.C
 #ifdef USE_REPLAY

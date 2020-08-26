@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2019  Dávid Nagy
+Copyright (C) 2013-2020  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -13,9 +13,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-The authors of this program may be contacted at http://forum.princed.org
+The authors of this program may be contacted at https://forum.princed.org
 */
 
 #include "common.h"
@@ -23,7 +23,6 @@ The authors of this program may be contacted at http://forum.princed.org
 #ifndef _MSC_VER // unistd.h does not exist in the Windows SDK.
 #include <unistd.h>
 #endif
-#include <fcntl.h>
 
 // data:4CB4
 short cutscene_wait_frames;
@@ -587,12 +586,12 @@ void __pascal far end_sequence() {
 	offscreen_surface = make_offscreen_buffer(&screen_rect);
 	load_title_images(0);
 	current_target_surface = offscreen_surface;
-	draw_image_2(0 /*story frame*/, chtab_title40, 0, 0, 0);
-	draw_image_2(3 /*The tyrant Jaffar*/, chtab_title40, 24, 25, get_text_color(15, color_15_brightwhite, 0x800));
+	draw_full_image(STORY_FRAME);
+	draw_full_image(STORY_HAIL);
 	fade_in_2(offscreen_surface, 0x800);
 	pop_wait(timer_0, 900);
 	start_timer(timer_0, 240);
-	draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, 0);
+	draw_full_image(TITLE_MAIN);
 	transition_ltr();
 	do_wait(timer_0);
 	for (hof_index = 0; hof_index < hof_count; ++hof_index) {
@@ -611,8 +610,8 @@ void __pascal far end_sequence() {
 		if (hof_count < MAX_HOF_COUNT) {
 			++hof_count;
 		}
-		draw_image_2(0 /*story frame*/, chtab_title40, 0, 0, 0);
-		draw_image_2(3 /*Prince Of Persia*/, chtab_title50, 24, 24, blitters_10h_transp);
+		draw_full_image(STORY_FRAME);
+		draw_full_image(HOF_POP);
 		show_hof();
 		offset4_rect_add(&rect, &hof_rects[hof_index], -4, -1, -40, -1);
 		peel = read_peel_from_screen(&rect);
@@ -629,7 +628,7 @@ void __pascal far end_sequence() {
 		hof_write();
 		pop_wait(timer_0, 120);
 		current_target_surface = offscreen_surface;
-		draw_image_2(0 /*main title image*/, chtab_title50, 0, 0, blitters_0_no_transp);
+		draw_full_image(TITLE_MAIN);
 		transition_ltr();
 	}
 	while (check_sound_playing() && !key_test_quit()) {
@@ -767,41 +766,39 @@ const char* get_hof_path(char* custom_path_buffer, size_t max_len) {
 		return hof_file;
 	}
 	// if playing a custom levelset, try to use the mod folder
-	snprintf(custom_path_buffer, max_len, "%s/%s", mod_data_path, hof_file /*PRINCE.HOF*/ );
+	snprintf_check(custom_path_buffer, max_len, "%s/%s", mod_data_path, hof_file /*PRINCE.HOF*/ );
 	return custom_path_buffer;
 }
 
 // seg001:0F17
 void __pascal far hof_write() {
-	int handle;
+	FILE* handle;
 	char custom_hof_path[POP_MAX_PATH];
 	const char* hof_path = get_hof_path(custom_hof_path, sizeof(custom_hof_path));
-	// no O_TRUNC
-	handle = open(hof_path, O_WRONLY | O_CREAT | O_BINARY, 0600);
-	if (handle < 0 ||
-	    write(handle, &hof_count, 2) != 2 ||
-	    write(handle, &hof, sizeof(hof)) != sizeof(hof) ||
-	    close(handle))
+	handle = fopen(hof_path, "wb");
+	if (handle == NULL ||
+		fwrite(&hof_count, 1, 2, handle) != 2 ||
+		fwrite(&hof, 1, sizeof(hof), handle) != sizeof(hof))
 		perror(hof_path);
-	if (handle >= 0)
-		close(handle);
+	if (handle != NULL)
+		fclose(handle);
 }
 
 // seg001:0F6C
 void __pascal far hof_read() {
-	int handle;
+	FILE* handle;
 	hof_count = 0;
 	char custom_hof_path[POP_MAX_PATH];
 	const char* hof_path = get_hof_path(custom_hof_path, sizeof(custom_hof_path));
-	handle = open(hof_path, O_RDONLY | O_BINARY);
-	if (handle < 0)
+	handle = fopen(hof_path, "rb");
+	if (handle == NULL)
 		return;
-	if (read(handle, &hof_count, 2) != 2 ||
-	    read(handle, &hof, sizeof(hof)) != sizeof(hof)) {
+	if (fread(&hof_count, 1, 2, handle) != 2 ||
+		fread(&hof, 1, sizeof(hof), handle) != sizeof(hof)) {
 		perror(hof_path);
 		hof_count = 0;
 	}
-	close(handle);
+	fclose(handle);
 }
 
 // seg001:0FC3

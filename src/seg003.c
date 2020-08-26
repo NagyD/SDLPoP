@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2019  Dávid Nagy
+Copyright (C) 2013-2020  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -13,9 +13,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-The authors of this program may be contacted at http://forum.princed.org
+The authors of this program may be contacted at https://forum.princed.org
 */
 
 #include "common.h"
@@ -644,7 +644,11 @@ Possible results in can_guard_see_kid:
 			left_pos += 14;
 		}
 		// A gate is on the right side of a tile, so it doesn't count.
-		if (get_tile_at_kid(right_pos) == tiles_4_gate) {
+		if (get_tile_at_kid(right_pos) == tiles_4_gate
+#ifdef FIX_DOORTOP_DISABLING_GUARD
+			|| get_tile_at_kid(right_pos) == tiles_7_doortop_with_floor || get_tile_at_kid(right_pos) == tiles_12_doortop
+#endif
+		) {
 			right_pos -= 14;
 		}
 		if (right_pos >= left_pos) {
@@ -698,8 +702,16 @@ int __pascal far flash_if_hurt() {
 		do_flash(flash_color);
 		return 1;
 	} else if (hitp_delta < 0) {
-		if (is_joyst_mode && enable_controller_rumble && sdl_haptic != NULL) {
-			SDL_HapticRumblePlay(sdl_haptic, 1.0, 100); // rumble at full strength for 100 milliseconds
+		if (is_joyst_mode && enable_controller_rumble) {
+			if (sdl_haptic != NULL) {
+				SDL_HapticRumblePlay(sdl_haptic, 1.0, 100); // rumble at full strength for 100 milliseconds
+#if SDL_VERSION_ATLEAST(2,0,9)
+			} else if (sdl_controller_ != NULL) {
+				SDL_GameControllerRumble(sdl_controller_, 0xFFFF, 0xFFFF, 100);
+			} else {
+				SDL_JoystickRumble(sdl_joystick_, 0xFFFF, 0xFFFF, 100);
+#endif
+			}
 		}
 		do_flash(color_12_brightred); // red
 		return 1;

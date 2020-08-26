@@ -1,5 +1,5 @@
 // Ogg Vorbis audio decoder - v1.14 - public domain
-// http://nothings.org/stb_vorbis/
+// https://nothings.org/stb_vorbis/
 //
 // Original version written by Sean Barrett in 2007.
 //
@@ -582,9 +582,9 @@ enum STBVorbisError
 #ifdef __MINGW32__
    // eff you mingw:
    //     "fixed":
-   //         http://sourceforge.net/p/mingw-w64/mailman/message/32882927/
+   //         https://sourceforge.net/p/mingw-w64/mailman/message/32882927/
    //     "no that broke the build, reverted, who cares about C":
-   //         http://sourceforge.net/p/mingw-w64/mailman/message/32890381/
+   //         https://sourceforge.net/p/mingw-w64/mailman/message/32890381/
    #ifdef __forceinline
    #undef __forceinline
    #endif
