@@ -306,6 +306,15 @@ void start_with_replay_file(const char *filename) {
 	}
 }
 
+int process_rw_write(SDL_RWops* rw, void* data, size_t data_size) {
+	return SDL_RWwrite(rw, data, data_size, 1);
+}
+
+int process_rw_read(SDL_RWops* rw, void* data, size_t data_size) {
+	return SDL_RWread(rw, data, data_size, 1);
+	// if this returns 0, most likely the end of the stream has been reached
+}
+
 // The functions options_process_* below each process (read/write) a section of options variables (using SDL_RWops)
 // This is I/O for the *binary* representation of the relevant options - this gets saved as part of a replay.
 
