@@ -27,9 +27,6 @@ extern "C" {
 
 #include <stdio.h>
 #include <stdlib.h>
-#ifdef __amigaos4__
-#include <fcntl.h>
-#endif
 #include <string.h>
 #include <sys/stat.h>
 #include <stdint.h>
