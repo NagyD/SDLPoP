@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2019  Dávid Nagy
+Copyright (C) 2013-2020  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -13,9 +13,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-The authors of this program may be contacted at http://forum.princed.org
+The authors of this program may be contacted at https://forum.princed.org
 */
 
 #include "common.h"
@@ -70,8 +70,12 @@ int ini_load(const char *filename,
 				*s = 0;
 			report(section, name, value);
 		}
-		fscanf(f, " ;%*[^\n]");
-		fscanf(f, " \n");
+		if (fscanf(f, " ;%*[^\n]") != 0 ||
+		    fscanf(f, " \n") != 0) {
+			fprintf(stderr, "short read from %s!?\n", filename);
+			fclose(f);
+			return -1;
+		}
 	}
 
 	fclose(f);
@@ -199,6 +203,13 @@ static int global_ini_callback(const char *section, const char *name, const char
 			} else {
 				use_custom_levelset = 1;
 				strcpy(levelset_name, value);
+			}
+			return 1;
+		}
+
+		if (strcasecmp(name, "gamecontrollerdb_file") == 0) {
+			if (value[0] != '\0') {
+				strcpy(gamecontrollerdb_file, locate_file(value));
 			}
 			return 1;
 		}
@@ -368,6 +379,7 @@ static int global_ini_callback(const char *section, const char *name, const char
 		process_word("victory_stops_time_level", &custom_saved.victory_stops_time_level, &never_is_16_list);
 		process_word("win_level", &custom_saved.win_level, &never_is_16_list);
 		process_byte("win_room", &custom_saved.win_room, NULL);
+		process_byte("loose_floor_delay", &custom_saved.loose_floor_delay, NULL);
 	} // end of section [CustomGameplay]
 
 	// [Level 1], etc.
@@ -439,8 +451,6 @@ void set_options_to_default() {
 	turn_custom_options_on_off(0);
 }
 
-void load_dos_exe_modifications(const char* folder_name);
-
 void load_global_options() {
 	set_options_to_default();
 	ini_load(locate_file("SDLPoP.ini"), global_ini_callback); // global configuration
@@ -455,7 +465,7 @@ void check_mod_param() {
 	if (mod_param != NULL) {
 		use_custom_levelset = true;
 		memset(levelset_name, 0, sizeof(levelset_name));
-		strncpy(levelset_name, mod_param, sizeof(levelset_name));
+		snprintf_check(levelset_name, sizeof(levelset_name), "%s", mod_param);
 	}
 }
 
@@ -524,7 +534,11 @@ void load_dos_exe_modifications(const char* folder_name) {
 	if (dos_version >= 0) {
 		turn_custom_options_on_off(1);
 		byte* exe_memory = malloc((size_t) info.st_size);
-		fread(exe_memory, (size_t) info.st_size, 1, fp);
+		if (fread(exe_memory, (size_t) info.st_size, 1, fp) != 1) {
+			fprintf(stderr, "Could not read %s!?\n", filename);
+			fclose(fp);
+			return;
+		}
 
 		byte temp_bytes[64] = {0};
 		word temp_word = 0;
@@ -547,18 +561,18 @@ void load_dos_exe_modifications(const char* folder_name) {
 		if (read_ok) custom_saved.saving_allowed_first_level += 1;
 		process(&custom_saved.saving_allowed_last_level, 1, {0x007cf, 0x01e7f, 0x008bb, 0x00ffb, 0x0087f, 0x019af});
 		if (read_ok) custom_saved.saving_allowed_last_level -= 1;
-		{
+		if (dos_version == dos_10_packed || dos_version == dos_10_unpacked) {
 			static const byte comparison[] = {0xa3, 0x92, 0x4e, 0xa3, 0x5c, 0x40, 0xa3, 0x8e, 0x4e, 0xa2, 0x2a,
 			                                  0x3d, 0xa2, 0x29, 0x3d, 0xa3, 0xee, 0x42, 0xa2, 0x2e, 0x3d, 0x98};
-			process(temp_bytes, COUNT(comparison), {0x04c9b, 0x0634b, 0x008be, 0x00ffe, 0x00882, 0x019b2});
+			process(temp_bytes, COUNT(comparison), {0x04c9b, 0x0634b, -1, -1, -1, -1});
 			custom_saved.start_upside_down = (memcmp(temp_bytes, comparison, COUNT(comparison)) != 0);
 		}
 		process(&custom_saved.start_in_blind_mode, 1, {0x04e46, 0x064f6, 0x052ce, 0x05a0e, 0x04d8a, 0x05eba});
 		process(&custom_saved.copyprot_level, 2, {0x1aaeb, 0x1c62e, 0x1b89b, 0x1c49e, 0x17c3d, 0x18e18});
 		process(&custom_saved.drawn_tile_top_level_edge, 1, {0x0a1f0, 0x0b8a0, 0x0a69c, 0x0addc, 0x0a158, 0x0b288});
-		process(&custom_saved.drawn_tile_left_level_edge, 1, {0x0a26b, 0x0b91b, 0x0a6a3, 0x0ade3, 0x0a15f, 0x0b28f});
-		process(&custom_saved.level_edge_hit_tile, 1, {0x06f02, 0x085b2, 0x0a6b0, 0x0adf0, 0x0a16c, 0x0b29c});
-		process(temp_bytes, 2, {0x04e46, 0x064f6, 0x052ce, 0x05a0e, 0x04d8a, 0x05eba}); // allow triggering any tile
+		process(&custom_saved.drawn_tile_left_level_edge, 1, {0x0a26b, 0x0b91b, -1, -1, -1, -1});
+		process(&custom_saved.level_edge_hit_tile, 1, {0x06f02, 0x085b2, -1, -1, -1, -1});
+		process(temp_bytes, 2, {0x9111, 0xA7C1, 0x95BE, 0x9CFE, 0x907A, 0xA1AA}); // allow triggering any tile
 		if (read_ok) custom_saved.allow_triggering_any_tile = (temp_bytes[0] == 0x75 && temp_bytes[1] == 0x13);
 		process(temp_bytes, 1, {0x0a7bb, 0x0be6b, 0x0ac67, 0x0b3a7, 0x0a723, 0x0b853}); // enable WDA in palace
 		if (read_ok) custom_saved.enable_wda_in_palace = (temp_bytes[0] != 116);
@@ -656,7 +670,7 @@ void load_dos_exe_modifications(const char* folder_name) {
 		process(&custom_saved.victory_stops_time_level, 1, {0x0c2e0, 0x0d990, -1, -1, -1, -1});
 		process(&custom_saved.win_level, 1, {0x011dc, 0x0288c, 0x01397, 0x01ad7, 0x01327, 0x02457});
 		process(&custom_saved.win_room, 1, {0x011e3, 0x02893, 0x0139e, 0x01ade, 0x0132e, 0x0245e});
-		//process(&custom_saved.loose_floor_delay, 1, {0x9536, 0xABE6, -1, -1, -1, -1});
+		process(&custom_saved.loose_floor_delay, 1, {0x9536, 0xABE6, -1, -1, -1, -1});
 
 		// guard skills
 		process(&custom_saved.strikeprob   , 2*NUM_GUARD_SKILLS, {-1, 0x1D3C2, -1, 0x1D2B4, -1, 0x19C5E});
@@ -666,6 +680,16 @@ void load_dos_exe_modifications(const char* folder_name) {
 		process(&custom_saved.advprob      , 2*NUM_GUARD_SKILLS, {-1, 0x1D422, -1, 0x1D314, -1, 0x19CBE});
 		process(&custom_saved.refractimer  , 2*NUM_GUARD_SKILLS, {-1, 0x1D43A, -1, 0x1D32C, -1, 0x19CD6});
 		process(&custom_saved.extrastrength, 2*NUM_GUARD_SKILLS, {-1, 0x1D452, -1, 0x1D344, -1, 0x19CEE});
+
+		// shadow's starting positions
+		process(&custom_saved.init_shad_6    , 8, {0x1B8B8, 0x1D47A, 0x1C6D5, 0x1D36C, 0x18AA7, 0x19D16});
+		process(&custom_saved.init_shad_5    , 8, {0x1B8C0, 0x1D482, 0x1C6DD, 0x1D374, 0x18AAF, 0x19D1E});
+		process(&custom_saved.init_shad_12   , 8, {     -1, 0x1D48A,      -1, 0x1D37C,      -1, 0x19D26}); // in the packed versions, the five zero bytes at the end are compressed
+		// automatic moves
+		process(&custom_saved.shad_drink_move,  8*4, {     -1, 0x1D492,      -1, 0x1D384,      -1, 0x19D2E}); // in the packed versions, the four zero bytes at the start are compressed
+		process(&custom_saved.demo_moves     , 25*4, {0x1B8EE, 0x1D4B2, 0x1C70B, 0x1D3A4, 0x18ADD, 0x19D4E});
+
+		// The order of offsets is: dos_10_packed, dos_10_unpacked, dos_13_packed, dos_13_unpacked, dos_14_packed, dos_14_unpacked
 
 #undef process
 		free(exe_memory);
@@ -680,7 +704,7 @@ void load_mod_options() {
 	if (use_custom_levelset) {
 		// find the folder containing the mod's files
 		char folder_name[POP_MAX_PATH];
-		snprintf(folder_name, sizeof(folder_name), "%s/%s", mods_folder, levelset_name);
+		snprintf_check(folder_name, sizeof(folder_name), "%s/%s", mods_folder, levelset_name);
 		const char* located_folder_name = locate_file(folder_name);
 		bool ok = false;
 		struct stat info;
@@ -688,12 +712,12 @@ void load_mod_options() {
 			if (S_ISDIR(info.st_mode)) {
 				// It's a directory
 				ok = true;
-				strncpy(mod_data_path, located_folder_name, sizeof(mod_data_path));
+				snprintf_check(mod_data_path, sizeof(mod_data_path), "%s", located_folder_name);
 				// Try to load PRINCE.EXE (DOS)
 				load_dos_exe_modifications(located_folder_name);
 				// Try to load mod.ini
 				char mod_ini_filename[POP_MAX_PATH];
-				snprintf(mod_ini_filename, sizeof(mod_ini_filename), "%s/%s", located_folder_name, "mod.ini");
+				snprintf_check(mod_ini_filename, sizeof(mod_ini_filename), "%s/%s", located_folder_name, "mod.ini");
 				if (file_exists(mod_ini_filename)) {
 					// Nearly all mods would want to use custom options, so always allow them.
 					use_custom_options = 1;
@@ -713,6 +737,3 @@ void load_mod_options() {
 	turn_fixes_and_enhancements_on_off(use_fixes_and_enhancements);
 	turn_custom_options_on_off(use_custom_options);
 }
-
-
-
