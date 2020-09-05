@@ -560,3 +560,10 @@ DONE: Added fast forward.
 	TODO: Speed up music and sound effects during fast forwarding.
 ADDED: You can now use quicksave and quickload while recording a replay.
 	TODO: Verify that the quickloaded state is from the currently running recording.
+
+(no release date yet)
+=================
+(upcoming version)
+
+FIXED: The prince can now grab a ledge at the bottom right corner of a room with no room below.
+	Details: https://forum.princed.org/viewtopic.php?p=30410#p30410

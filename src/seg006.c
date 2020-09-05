@@ -45,6 +45,16 @@ int __pascal far get_tile(int room,int col,int row) {
 // seg006:005D
 int __pascal far find_room_of_tile() {
 	again:
+	// Check tile_row < 0 first, this way the prince can grab a ledge at the bottom right corner of a room with no room below.
+	// Details: https://forum.princed.org/viewtopic.php?p=30410#p30410
+	if (tile_row < 0) {
+		tile_row += 3;
+		if (curr_room) {
+			curr_room = level.roomlinks[curr_room - 1].up;
+		}
+		//find_room_of_tile();
+		goto again;
+	}
 	if (tile_col < 0) {
 		tile_col += 10;
 		if (curr_room) {
@@ -52,21 +62,17 @@ int __pascal far find_room_of_tile() {
 		}
 		//find_room_of_tile();
 		goto again;
-	} else if (tile_col >= 10) {
+	}
+	if (tile_col >= 10) {
 		tile_col -= 10;
 		if (curr_room) {
 			curr_room = level.roomlinks[curr_room - 1].right;
 		}
 		//find_room_of_tile();
 		goto again;
-	} else if (tile_row < 0) {
-		tile_row += 3;
-		if (curr_room) {
-			curr_room = level.roomlinks[curr_room - 1].up;
-		}
-		//find_room_of_tile();
-		goto again;
-	} else if (tile_row >= 3) {
+	}
+	// if (tile_row < 0) was here originally
+	if (tile_row >= 3) {
 		tile_row -= 3;
 		if (curr_room) {
 			curr_room = level.roomlinks[curr_room - 1].down;
