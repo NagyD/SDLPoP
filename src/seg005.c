@@ -322,6 +322,14 @@ void __pascal far control_standing() {
 	if (control_shift2 < 0 && control_shift < 0 && check_get_item()) {
 		return;
 	}
+
+	// Draw the sword anytime with Ctrl.
+	if (have_sword && Char.charid == charid_0_kid && (key_states[SDL_SCANCODE_LCTRL] || key_states[SDL_SCANCODE_RCTRL]))
+	{
+		draw_sword();
+		return;
+	}
+
 	if (Char.charid != charid_0_kid && control_down < 0 && control_forward < 0) {
 		draw_sword();
 		return;
@@ -877,7 +885,8 @@ void __pascal far control_with_sword() {
 			if (Char.charid == charid_0_kid && Char.alive < 0) {
 				holding_sword = 0;
 			}
-			if (Char.charid < charid_2_guard) {
+			// Don't put away the sword automatically.
+			if (/*Char.charid < charid_2_guard*/0) {
 				// frame 171: stand with sword
 				if (Char.frame == frame_171_stand_with_sword) {
 					Char.sword = sword_0_sheathed;
