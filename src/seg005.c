@@ -324,7 +324,7 @@ void __pascal far control_standing() {
 	}
 
 	// Draw the sword anytime with Ctrl.
-	if (have_sword && Char.charid == charid_0_kid && (key_states[SDL_SCANCODE_LCTRL] || key_states[SDL_SCANCODE_RCTRL]))
+	if (have_sword && Char.charid == charid_0_kid && (key_states[SDL_SCANCODE_LALT] || key_states[SDL_SCANCODE_RALT]))
 	{
 		draw_sword();
 		return;
