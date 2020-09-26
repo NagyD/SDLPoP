@@ -567,3 +567,4 @@ ADDED: You can now use quicksave and quickload while recording a replay.
 
 FIXED: The prince can now grab a ledge at the bottom right corner of a room with no room below.
 	Details: https://forum.princed.org/viewtopic.php?p=30410#p30410
+FIXED: Don't allow killing a skeleton in cheat mode.
