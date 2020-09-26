@@ -733,7 +733,7 @@ int __pascal far process_key() {
 				}
 			break;
 			case SDL_SCANCODE_K: // K --> kill guard cheat
-				if (Opp.charid != charid_4_skeleton) {
+				if (Guard.charid != charid_4_skeleton) {
 					guardhp_delta = -guardhp_curr;
 					Guard.alive = 0;
 				}
