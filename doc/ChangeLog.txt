@@ -570,3 +570,4 @@ FIXED: The prince can now grab a ledge at the bottom right corner of a room with
 FIXED: Don't allow killing a skeleton in cheat mode.
 FIXED: Ctrl+S didn't mute music (except death music).
 FIXED: A falling tile on the left side of a pillar could cause the blue stripe to be drawn over the pillar.
+FIXED: The top of moving gates became glitched on levels using non-default palettes.
