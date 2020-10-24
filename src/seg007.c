@@ -1132,7 +1132,7 @@ void __pascal far draw_mob() {
 	if (curmob.room == drawn_room) {
 		if (curmob.y >= 210) return;
 	} else if (curmob.room == room_B) {
-		if (ABS(ypos) >= 18) return;
+		if (ABS((sbyte)ypos) >= 18) return;
 		curmob.y += 192;
 		ypos = curmob.y;
 	} else if (curmob.room == room_A) {
