@@ -572,3 +572,4 @@ FIXED: Ctrl+S didn't mute music (except death music).
 FIXED: A falling tile on the left side of a pillar could cause the blue stripe to be drawn over the pillar.
 FIXED: The top of moving gates became glitched on levels using non-default palettes.
 FIXED: The right edge of pressed drop buttons was black if a big pillar was next to them.
+FIXED: Guards appeared in the current room when they fell into spikes in an adjacent room. (Example: original level 11, room 22.)

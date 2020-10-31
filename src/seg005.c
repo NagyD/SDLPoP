@@ -217,6 +217,10 @@ void __pascal far spiked() {
 	Char.x = x_bump[tile_col + 5] + 10;
 	Char.x = char_dx_forward(8);
 	Char.fall_y = 0;
+	if (Char.room != curr_room) {
+		level.guards_tile[Char.room - 1] = -1; // remove guard from the original room
+		Char.room = curr_room; // draw guard in the correct room
+	}
 	play_sound(sound_48_spiked); // something spiked
 	take_hp(100);
 	seqtbl_offset_char(seq_51_spiked); // spiked
