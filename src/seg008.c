@@ -453,7 +453,7 @@ void __pascal far draw_tile_right() {
 			if (id) {
 				if (tile_left == tiles_5_stuck) {
 					blit = blitters_10h_transp;
-					if (curr_tile == tiles_0_empty || curr_tile == tiles_5_stuck) {
+					if (curr_tile == tiles_0_empty || curr_tile == tiles_5_stuck || !tile_is_floor(curr_tile)) {
 						id = 42; /*floor B*/
 					}
 				} else {
