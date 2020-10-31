@@ -1401,7 +1401,7 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 		rect_to_sdlrect(&setting_box, &dest_rect);
 		uint32_t rgb_color = SDL_MapRGBA(overlay_surface->format, 55, 55, 55, 255);
 		if (SDL_FillRect(overlay_surface, &dest_rect, rgb_color) != 0) {
-			sdlperror("SDL_FillRect");
+			sdlperror("draw_setting: SDL_FillRect");
 			quit(1);
 		}
 		rect_type left_side_of_setting_box = setting_box;

@@ -638,7 +638,7 @@ int __pascal far process_key() {
 				SDL_TimerID timer;
 				timer = SDL_AddTimer(delay, temp_shift_release_callback, NULL);
 				if (timer == 0) {
-					sdlperror("SDL_AddTimer");
+					sdlperror("process_key: SDL_AddTimer");
 					quit(1);
 				}
 				if (current_level == 14) {

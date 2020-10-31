@@ -932,7 +932,7 @@ SDL_Surface* hflip(SDL_Surface* input) {
 	SDL_SetSurfacePalette(output, input->format->palette);
 	// The copied image will be overwritten anyway.
 	if (output == NULL) {
-		sdlperror("SDL_ConvertSurface");
+		sdlperror("hflip: SDL_ConvertSurface");
 		quit(1);
 	}
 
@@ -946,7 +946,7 @@ SDL_Surface* hflip(SDL_Surface* input) {
 		SDL_Rect srcrect = {source_x, 0, 1, height};
 		SDL_Rect dstrect = {target_x, 0, 1, height};
 		if (SDL_BlitSurface(input/*32*/, &srcrect, output, &dstrect) != 0) {
-			sdlperror("SDL_BlitSurface");
+			sdlperror("hflip: SDL_BlitSurface");
 			quit(1);
 		}
 	}
