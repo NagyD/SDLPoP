@@ -574,3 +574,4 @@ FIXED: The top of moving gates became glitched on levels using non-default palet
 FIXED: The right edge of pressed drop buttons was black if a big pillar was next to them.
 FIXED: Guards appeared in the current room when they fell into spikes in an adjacent room. (Example: original level 11, room 22.)
 FIXED: Show an error message if a data file is missing.
+FIXED: "Remember guard hp" for non-standard guards.
