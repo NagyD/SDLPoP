@@ -183,7 +183,7 @@ void __pascal far enter_guard() {
 	}
 
 	#ifdef REMEMBER_GUARD_HP
-	int remembered_hp = (curr_guard_color & 0xF0) >> 4;
+	int remembered_hp = (level.guards_color[room_minus_1] & 0xF0) >> 4;
 	#endif
 	curr_guard_color &= 0x0F; // added; only least significant 4 bits are used for guard color
 
