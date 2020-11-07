@@ -335,6 +335,9 @@ int quick_process(process_func_type process_func) {
 #ifdef USE_REPLAY
 	process(curr_tick);
 #endif
+#ifdef USE_COLORED_TORCHES
+	process(torch_colors);
+#endif
 #undef process
 	return ok;
 }

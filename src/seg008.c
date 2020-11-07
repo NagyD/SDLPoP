@@ -72,10 +72,6 @@ byte tile_left;
 // data:4CCC
 byte modifier_left;
 
-#ifdef USE_COLORED_TORCHES
-byte torch_colors[24+1][30]; // indexed 1..24
-#endif
-
 // seg008:0006
 void __pascal far redraw_room() {
 	free_peels();
@@ -1138,6 +1134,11 @@ void __pascal far draw_gate_fore() {
 void __pascal far alter_mods_allrm() {
 	word tilepos;
 	word room;
+
+#ifdef USE_COLORED_TORCHES
+	memset(torch_colors, 0, sizeof(torch_colors));
+#endif
+
 	for (room = 1; room <= level.used_rooms; room++) {
 		get_room_address(room);
 		room_L = level.roomlinks[room-1].left;

@@ -161,6 +161,10 @@ extern word room_AL;
 // data:4F84
 extern level_type level;
 
+#ifdef USE_COLORED_TORCHES
+extern byte torch_colors[24+1][30]; // indexed 1..24
+#endif
+
 
 // data:42AA
 extern short table_counts[5];
