@@ -211,16 +211,17 @@ void __pascal far land() {
 
 // seg005:01B7
 void __pascal far spiked() {
+	int forward_bump = 8;
 	// If someone falls into spikes, those spikes become harmless (to others).
 	curr_room_modif[curr_tilepos] = 0xFF;
 #ifdef FIX_SPIKED_GUARD
 	// If someone falls into spikes in a different room
-	if (Char.room != curr_room) {
+	if (Char.room != curr_room /* && fixes->??? */) {
 		if (Char.charid == charid_0_kid) {
-			// fixes an issue where kid falling into spikes
-			// causes guard to disappear
-			if (Char.curr_col == -1 && Char.direction == dir_0_right) {
-				drawn_room = room_R;
+			// fixes an issue where kid falling into spikes disappears
+			if (Char.curr_col == -1) {
+				draw_kid();
+				forward_bump = Char.direction == dir_0_right ? -6 : 16;
 			}
 		} else {
 			// remove guard from the original room
@@ -232,9 +233,8 @@ void __pascal far spiked() {
 #endif
 	Char.y = y_land[Char.curr_row + 1];
 	Char.x = x_bump[tile_col + 5] + 10;
-	Char.x = char_dx_forward(8);
+	Char.x = char_dx_forward(forward_bump);
 	Char.fall_y = 0;
-	//set_sound_pos(Char.room, Char.curr_col, Char.curr_row);
 	play_sound(sound_48_spiked); // something spiked
 	take_hp(100);
 	seqtbl_offset_char(seq_51_spiked); // spiked
