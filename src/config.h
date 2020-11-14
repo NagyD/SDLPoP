@@ -206,6 +206,8 @@ The authors of this program may be contacted at https://forum.princed.org
 // A guard standing on a door top (with floor) should not become inactive.
 #define FIX_DOORTOP_DISABLING_GUARD
 
+#define FIX_SPIKED_GUARD
+
 
 // Debug features:
 
