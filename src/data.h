@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2019  Dávid Nagy
+Copyright (C) 2013-2020  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -693,6 +693,7 @@ extern sbyte keep_last_seed;
 extern byte skipping_replay;
 extern byte replay_seek_target;
 extern byte is_validate_mode;
+extern dword curr_tick INIT(= 0);
 #endif // USE_REPLAY
 
 extern byte start_fullscreen INIT(= 0);
@@ -714,6 +715,7 @@ extern byte enable_info_screen INIT(= 1);
 extern byte enable_controller_rumble INIT(= 0);
 extern byte joystick_only_horizontal INIT(= 0);
 extern int joystick_threshold INIT(= 8000);
+extern char gamecontrollerdb_file[POP_MAX_PATH] INIT(= "gamecontrollerdb.txt");
 extern byte enable_quicksave INIT(= 1);
 extern byte enable_quicksave_penalty INIT(= 1);
 extern byte enable_replay INIT(= 1);
@@ -822,8 +824,52 @@ extern custom_options_type custom_defaults INIT(= {
 		.advprob       = {255,200,200,200,255,255,200,  0,  0,255,100,100},
 		.refractimer   = { 16, 16, 16, 16,  8,  8,  8,  8,  0,  8,  0,  0},
 		.extrastrength = {  0,  0,  0,  0,  1,  0,  0,  0,  0,  0,  0,  0},
+
+		// shadow's starting positions
+		.init_shad_6 = {0x0F, 0x51, 0x76, 0, 0, 1, 0, 0},
+		.init_shad_5  = {0x0F, 0x37, 0x37, 0, 0xFF, 0, 0, 0},
+		.init_shad_12 = {0x0F, 0x51, 0xE8, 0, 0, 0, 0, 0},
+		// automatic moves
+		.demo_moves = {{0x00, 0}, {0x01, 1}, {0x0D, 0}, {0x1E, 1}, {0x25, 5}, {0x2F, 0}, {0x30, 1}, {0x41, 0}, {0x49, 2}, {0x4B, 0}, {0x63, 2}, {0x64, 0}, {0x73, 5}, {0x80, 6}, {0x88, 3}, {0x9D, 7}, {0x9E, 0}, {0x9F, 1}, {0xAB, 4}, {0xB1, 0}, {0xB2, 1}, {0xBC, 0}, {0xC1, 1}, {0xCD, 0}, {0xE9,-1}},
+		.shad_drink_move = {{0x00, 0}, {0x01, 1}, {0x0E, 0}, {0x12, 6}, {0x1D, 7}, {0x2D, 2}, {0x31, 1}, {0xFF,-2}},
 });
 extern custom_options_type* custom INIT(= &custom_defaults);
+
+extern full_image_type full_image[MAX_FULL_IMAGES] INIT(= {
+        [TITLE_MAIN] =     { .id = 0, .chtab = &chtab_title50,
+                             .blitter = blitters_0_no_transp,
+                             .xpos = 0, .ypos = 0 },
+        [TITLE_PRESENTS] = { .id = 1, .chtab = &chtab_title50,
+                             .blitter = blitters_0_no_transp,
+                             .xpos = 96, .ypos = 106 },
+        [TITLE_GAME] =     { .id = 2, .chtab = &chtab_title50,
+                             .blitter = blitters_0_no_transp,
+                             .xpos = 96, .ypos = 122 },
+        [TITLE_POP] =      { .id = 3, .chtab = &chtab_title50,
+                             .blitter = blitters_10h_transp,
+                             .xpos = 24, .ypos = 107 },
+        [TITLE_MECHNER] =  { .id = 4, .chtab = &chtab_title50,
+                             .blitter = blitters_0_no_transp,
+                             .xpos = 48, .ypos = 184 },
+        [HOF_POP] =        { .id = 3, .chtab = &chtab_title50,
+                             .blitter = blitters_10h_transp,
+                             .xpos = 24, .ypos = 24 },
+        [STORY_FRAME] =    { .id = 0, .chtab = &chtab_title40,
+                             .blitter = blitters_0_no_transp,
+                             .xpos = 0, .ypos = 0 },
+        [STORY_ABSENCE] =  { .id = 1, .chtab = &chtab_title40,
+                             .blitter = blitters_white,
+                             .xpos = 24, .ypos = 25 },
+        [STORY_MARRY] =    { .id = 2, .chtab = &chtab_title40,
+                             .blitter = blitters_white,
+                             .xpos = 24, .ypos = 25 },
+        [STORY_HAIL] =     { .id = 3, .chtab = &chtab_title40,
+                             .blitter = blitters_white,
+                             .xpos = 24, .ypos = 25 },
+        [STORY_CREDITS] =  { .id = 4, .chtab = &chtab_title40,
+                             .blitter = blitters_white,
+                             .xpos = 24, .ypos = 26 },
+});
 
 // data:009C
 extern word cheats_enabled INIT(= 0);

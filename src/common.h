@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2019  Dávid Nagy
+Copyright (C) 2013-2020  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -13,9 +13,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-The authors of this program may be contacted at http://forum.princed.org
+The authors of this program may be contacted at https://forum.princed.org
 */
 
 #ifndef COMMON_H
@@ -25,10 +25,8 @@ The authors of this program may be contacted at http://forum.princed.org
 extern "C" {
 #endif
 
-
 #include <stdio.h>
 #include <stdlib.h>
-#include <fcntl.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <stdint.h>
@@ -66,6 +64,15 @@ extern "C" {
 #ifndef ABS
 #define ABS(x) ((x)<0?-(x):(x))
 #endif
+
+#define snprintf_check(dst, size, ...)	do {			\
+		int __len;					\
+		__len = snprintf(dst, size, __VA_ARGS__);	\
+		if (__len < 0 || __len >= size) {		\
+			fprintf(stderr, "%s: buffer truncation detected!\n", __func__);\
+			quit(2);				\
+		}						\
+	} while (0)
 
 #ifdef __cplusplus
 }

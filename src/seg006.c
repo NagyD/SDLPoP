@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2019  Dávid Nagy
+Copyright (C) 2013-2020  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -13,9 +13,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-The authors of this program may be contacted at http://forum.princed.org
+The authors of this program may be contacted at https://forum.princed.org
 */
 
 #include "common.h"
@@ -1256,6 +1256,8 @@ void __pascal far control_kid() {
 	}
 }
 
+// This was moved to custom_options_type.
+/*
 const auto_move_type demo_moves[] = {
 {0x00, 0},
 {0x01, 1},
@@ -1283,6 +1285,7 @@ const auto_move_type demo_moves[] = {
 {0xCD, 0},
 {0xE9,-1},
 };
+*/
 
 // seg006:0D49
 void __pascal far do_demo() {
@@ -1294,7 +1297,7 @@ void __pascal far do_demo() {
 		autocontrol_opponent();
 		guard_skill = 11;
 	} else {
-		do_auto_moves(demo_moves);
+		do_auto_moves(custom->demo_moves);
 	}
 }
 
@@ -1430,7 +1433,8 @@ int __pascal far can_grab() {
 	// can't grab through floor
 	if (tile_is_floor(through_tile)) return 0;
 	// can't grab a shaking loose floor
-	if (curr_tile2 == tiles_11_loose && modifier != 0) return 0;
+	// Allow climbing onto a shaking loose floor if the delay is greater than the default. TODO: This should be a separate option.
+	if (curr_tile2 == tiles_11_loose && modifier != 0 && !(custom->loose_floor_delay > 11)) return 0;
 	// a doortop with floor can be grabbed only from the left (looking right)
 	if (curr_tile2 == tiles_7_doortop_with_floor && Char.direction < dir_0_right) return 0;
 	// can't grab something that has no floor

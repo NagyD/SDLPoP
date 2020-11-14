@@ -1,4 +1,4 @@
-AMIGAOS4
+AMIGAOS4 (see main/master doc/ChangeLog.txt file)
 ********
 (2020.06.06)
 -Added Makefile.amigaos4 to build PoP executable.
@@ -13,6 +13,11 @@ AMIGAOS4
 -Updated to SDLPoP 1.20 (big-endian branch was 1.19).
 -Added gamecontrollerdb.txt file mappings (gamepad support database) [seg009.c].
 -Fixed saving/loading SDLPoP.cfg from PoP drawer [seg009.c].
+(2020.08.22)
+-Updated to SDLPoP 1.21: common.h. config.h data.h lighting.c menu.c types.h options.c
+                         replay.c screenshot.c seg000.c seg001.c seg002.c seg003.c
+                         seg006.c seg009.c
+-Removed amigaos4 code to load gamecontrollerdb.txt [seg009.c], implemented in master branch.
 
 
 Thanks to (in no special order):

@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2019  Dávid Nagy
+Copyright (C) 2013-2020  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -13,9 +13,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-The authors of this program may be contacted at http://forum.princed.org
+The authors of this program may be contacted at https://forum.princed.org
 */
 
 #include "common.h"
@@ -262,7 +262,11 @@ void __pascal far animate_potion() {
 	if (trob.type >= 0 && is_trob_in_drawn_room()) {
 		type = curr_modifier & 0xF8;
 		curr_modifier = bubble_next_frame(curr_modifier & 0x07) | type;
+#ifdef FIX_LOOSE_NEXT_TO_POTION
+		redraw_at_trob();
+#else
 		set_redraw_anim_curr();
+#endif
 	}
 }
 
@@ -273,7 +277,11 @@ void __pascal far animate_sword() {
 		if (curr_modifier == 0) {
 			curr_modifier = (prandom(255) & 0x3F) + 0x28;
 		}
+#ifdef FIX_LOOSE_NEXT_TO_POTION
+		redraw_at_trob();
+#else
 		set_redraw_anim_curr();
+#endif
 	}
 }
 
@@ -458,7 +466,7 @@ Possible values of trob_type:
 					}
 				}
 			} else {
-				sound_interruptible[15] = 0;
+				sound_interruptible[sound_15_leveldoor_sliding] = 0;
 				play_sound(sound_15_leveldoor_sliding); // level door sliding (opening)
 			}
 		}
@@ -829,7 +837,7 @@ void __pascal far animate_loose() {
 		++curr_modifier;
 		if (curr_modifier & 0x80) {
 			// just shaking
-			// don't shake on level 13
+			// don't stop on level 13, needed for the auto-falling floors
 			if (current_level == 13) return;
 			if (curr_modifier >= 0x84) {
 				curr_modifier = 0;
@@ -839,7 +847,7 @@ void __pascal far animate_loose() {
 		} else {
 			// something is on the floor
 			// should it fall already?
-			if (curr_modifier >= 11) {
+			if (curr_modifier >= /*11*/ custom->loose_floor_delay) {
 				curr_modifier = remove_loose(room = trob.room, tilepos = trob.tilepos);
 				trob.type = -1;
 				curmob.xh = (tilepos % 10) << 2;
@@ -931,6 +939,7 @@ int __pascal far next_chomper_timing(byte timing) {
 
 // seg007:0FB4
 void __pascal far loose_make_shake() {
+	// don't shake on level 13
 	if (curr_room_modif[curr_tilepos] == 0 && current_level != 13) {
 		curr_room_modif[curr_tilepos] = 0x80;
 		add_trob(curr_room, curr_tilepos, 1);
