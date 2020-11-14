@@ -261,7 +261,7 @@ typedef struct chtab_type {
 	word chtab_palette_bits;
 	word has_palette_bits;
 	// This is a variable-size array, with n_images elements.
-	image_type* far images[0];
+	image_type* far images[];
 } chtab_type;
 
 typedef struct full_image_type {
@@ -427,7 +427,7 @@ SDL_COMPILE_TIME_ASSERT(dat_res_size, sizeof(dat_res_type) == 8);
 
 typedef struct dat_table_type {
 	Uint16 res_count;
-	dat_res_type entries[0];
+	dat_res_type entries[];
 } dat_table_type;
 SDL_COMPILE_TIME_ASSERT(dat_table_size, sizeof(dat_table_type) == 2);
 
@@ -435,7 +435,7 @@ typedef struct image_data_type {
 	Uint16 height;
 	Uint16 width;
 	Uint16 flags;
-	byte data[0];
+	byte data[];
 } image_data_type;
 SDL_COMPILE_TIME_ASSERT(image_data_size, sizeof(image_data_type) == 6);
 #pragma pack(pop)
@@ -493,7 +493,7 @@ typedef struct rawfont_type {
 	short height_below_baseline;
 	short space_between_lines;
 	short space_between_chars;
-	word offsets[0];
+	word offsets[];
 } rawfont_type;
 SDL_COMPILE_TIME_ASSERT(rawfont_type, sizeof(rawfont_type) == 10);
 #pragma pack(pop)
@@ -523,7 +523,7 @@ typedef struct note_type {
 SDL_COMPILE_TIME_ASSERT(note_type, sizeof(note_type) == 3);
 typedef struct speaker_type { // IBM
 	word tempo;
-	note_type notes[0];
+	note_type notes[];
 } speaker_type;
 SDL_COMPILE_TIME_ASSERT(speaker_type, sizeof(speaker_type) == 2);
 
@@ -532,7 +532,7 @@ typedef struct digi_type { // wave in 1.0 and 1.1
 	word sample_count;
 	word unknown;
 	byte sample_size; // =8
-	byte samples[0];
+	byte samples[];
 } digi_type;
 SDL_COMPILE_TIME_ASSERT(digi_type, sizeof(digi_type) == 7);
 
@@ -542,7 +542,7 @@ typedef struct digi_new_type { // wave in 1.3 and 1.4 (and PoP2)
 	word sample_count;
 	word unknown;
 	word unknown2;
-	byte samples[0];
+	byte samples[];
 } digi_new_type;
 SDL_COMPILE_TIME_ASSERT(digi_new_type, sizeof(digi_new_type) == 9);
 
@@ -570,7 +570,7 @@ typedef struct ogg_type {
 
 typedef struct converted_audio_type {
 	int length;
-	short samples[0];
+	short samples[];
 } converted_audio_type;
 
 typedef struct sound_buffer_type {
