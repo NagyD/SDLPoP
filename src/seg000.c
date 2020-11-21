@@ -62,6 +62,7 @@ void far pop_main() {
 #ifdef USE_MENU
 	load_ingame_settings();
 #endif
+	if (check_param("mute")) is_sound_on = 0;
 	turn_sound_on_off((is_sound_on != 0) * 15); // Turn off sound/music if those options were set.
 
 #ifdef USE_REPLAY

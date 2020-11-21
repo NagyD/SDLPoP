@@ -576,3 +576,4 @@ FIXED: Guards appeared in the current room when they fell into spikes in an adja
 FIXED: Show an error message if a data file is missing.
 FIXED: "Remember guard hp" for non-standard guards.
 FIXED: Colored torches were not restored on quickload if you (quit and) restarted the game after quicksave.
+DONE: Added command-line parameter "mute": Start the game with sound off.

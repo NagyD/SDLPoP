@@ -121,6 +121,7 @@ What command-line options are there?
 * --screenshot-level-extras -- Similar to the above, except lots of additional info is displayed on the picture.
 	* You can find the meaning of each symbol in Map_Symbols.txt.
 * stdsnd -- Use PC speaker sounds.
+* mute -- Start the game with sound off. (You can still enable sound with Ctrl+S.)
 
 What keys can I use?
 -----------------------
