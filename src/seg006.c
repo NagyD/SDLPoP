@@ -1237,9 +1237,9 @@ void __pascal far control_kid() {
 	if (current_level == 0 && !check_param("playdemo")) {
 		do_demo();
 		control();
-		// we can start the game or load a game during the demo
+		// The player can start a new game or load a saved game during the demo.
 		key = key_test_quit();
-		if (key == 0x0C) { // ctrl-L
+		if (key == (SDL_SCANCODE_L | WITH_CTRL)) { // ctrl-L
 			if (load_game()) {
 				start_game();
 			}
