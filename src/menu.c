@@ -1575,6 +1575,25 @@ void draw_settings_area(settings_area_type* settings_area) {
 	if (scroll_position + num_drawn_settings < settings_area->setting_count) {
 		draw_image_with_blending(arrowhead_down_image, 200, 151);
 	}
+
+	// Draw a scroll bar if needed.
+	// It's not clickable yet, it just shows where you are in the list.
+	if (num_drawn_settings < settings_area->setting_count) {
+		const int scrollbar_width = 2;
+		rect_type scrollbar_rect = {
+			.top = settings_area_rect.top - 5, .bottom = settings_area_rect.bottom,
+			.left = settings_area_rect.right + 10 - scrollbar_width, .right = settings_area_rect.right + 10
+		};
+		method_5_rect(&scrollbar_rect, blitters_0_no_transp, color_8_darkgray);
+
+		int scrollbar_height = scrollbar_rect.bottom - scrollbar_rect.top;
+		rect_type scrollbar_slider_rect = {
+			.top = scrollbar_rect.top + scroll_position * scrollbar_height / settings_area->setting_count,
+			.bottom = scrollbar_rect.top + (scroll_position + num_drawn_settings) * scrollbar_height / settings_area->setting_count,
+			.left = scrollbar_rect.left, .right = scrollbar_rect.right
+		};
+		method_5_rect(&scrollbar_slider_rect, blitters_0_no_transp, color_7_lightgray);
+	}
 }
 
 void draw_settings_menu() {
