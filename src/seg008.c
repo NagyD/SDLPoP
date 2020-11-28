@@ -1842,7 +1842,7 @@ void __pascal far display_text_bottom(const char near *text) {
 	draw_rect(&rect_bottom_text, 0);
 	show_text(&rect_bottom_text, 0, 1, text);
 #ifndef USE_TEXT
-	SDL_WM_SetCaption(text, NULL);
+	SDL_SetWindowTitle(window_, text);
 #endif
 }
 
@@ -1854,7 +1854,7 @@ void __pascal far erase_bottom_text(int arg_0) {
 		text_time_remaining = 0;
 	}
 #ifndef USE_TEXT
-	SDL_WM_SetCaption("", NULL);
+	SDL_SetWindowTitle(window_, WINDOW_TITLE);
 #endif
 }
 

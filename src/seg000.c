@@ -2272,6 +2272,7 @@ void show_splash() {
 	show_text_with_color(&splash_text_1_rect, 0, 0, splash_text_1, color_15_brightwhite);
 	show_text_with_color(&splash_text_2_rect, 0, -1, splash_text_2, color_7_lightgray);
 
+#ifdef USE_TEXT // Don't wait for a keypress if there is no text for the user to read.
 	int key = 0;
 	do {
 		idle();
@@ -2294,4 +2295,6 @@ void show_splash() {
 	}
 	key_states[SDL_SCANCODE_LSHIFT] = 0; // don't immediately start the game if shift was pressed!
 	key_states[SDL_SCANCODE_RSHIFT] = 0;
+#endif
 }
+

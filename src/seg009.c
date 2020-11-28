@@ -1583,7 +1583,7 @@ void __pascal far show_text(const rect_type far *rect_ptr,int x_align,int y_alig
 }
 
 // seg009:04FF
-void __pascal far show_text_with_color(const rect_type far *rect_ptr,int x_align,int y_align,char far *text,int color) {
+void __pascal far show_text_with_color(const rect_type far *rect_ptr,int x_align,int y_align,const char far *text,int color) {
 	//short saved_textcolor;
 	//saved_textcolor = textstate.textcolor;
 	//textstate.textcolor = color;
@@ -1597,7 +1597,7 @@ void __pascal far set_curr_pos(int xpos,int ypos) {
 }
 
 // seg009:0C44
-void __pascal far show_dialog(char *text) {
+void __pascal far show_dialog(const char *text) {
 	// stub
 	puts(text);
 }
@@ -1607,6 +1607,28 @@ int __pascal far input_str(const rect_type far *rect,char *buffer,int max_length
 	// stub
 	strncpy(buffer, "dummy input text", max_length);
 	return strlen(buffer);
+}
+
+int __pascal far showmessage(char far *text,int arg_4,void far *arg_0) {
+	// stub
+	puts(text);
+	return 0;
+}
+
+void __pascal far init_copyprot_dialog() {
+	// stub
+}
+
+void __pascal far draw_dialog_frame(dialog_type *dialog) {
+	// stub
+}
+
+void __pascal far add_dialog_rect(dialog_type *dialog) {
+	// stub
+}
+
+void __pascal far dialog_method_2_frame(dialog_type *dialog) {
+	// stub
 }
 
 #endif // USE_TEXT

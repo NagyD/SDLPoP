@@ -235,8 +235,12 @@ The authors of this program may be contacted at https://forum.princed.org
 // Useful if SDL detected a gamepad but there is none.
 #define USE_AUTO_INPUT_MODE
 
+#ifdef USE_TEXT // The menu won't work without text.
+
 // Display the in-game menu.
 #define USE_MENU
+
+#endif
 
 #define USE_COLORED_TORCHES
 
