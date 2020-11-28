@@ -518,6 +518,8 @@ FILE* fopen_UTF8(const char* filename, const char* mode);
 #define fopen fopen_UTF8
 int chdir_UTF8(const char* path);
 #define chdir chdir_UTF8
+int mkdir_UTF8(const char* path);
+#define mkdir mkdir_UTF8
 int access_UTF8(const char* filename_UTF8, int mode);
 #ifdef access
 #undef access

@@ -584,3 +584,6 @@ DONE: A scrollbar appears in the pause menu if scrolling is possible.
 DONE: Added command-line parameter "playdemo": Make the demo level playable.
 FIXED: Fixed the detection of Ctrl+L during the demo level.
 FIXED: Create the screenshots directory in SDLPoP's directory, even if the current directory is something else.
+	This is to match how the replay folder works.
+FIXED: On Windows, use Unicode/UTF-8 for mkdir().
+	So the replay and screenshots directories can be created within non-ASCII paths.

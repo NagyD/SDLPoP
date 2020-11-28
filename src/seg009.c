@@ -95,6 +95,13 @@ int chdir_UTF8(const char* path_UTF8) {
 	return result;
 }
 
+int mkdir_UTF8(const char* path_UTF8) {
+	WCHAR* path_UTF16 = WIN_UTF8ToString(path_UTF8);
+	int result = _wmkdir(path_UTF16);
+	SDL_free(path_UTF16);
+	return result;
+}
+
 int access_UTF8(const char* filename_UTF8, int mode) {
 	WCHAR* filename_UTF16 = WIN_UTF8ToString(filename_UTF8);
 	int result = _waccess(filename_UTF16, mode);
