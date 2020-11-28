@@ -896,8 +896,8 @@ extern bool escape_key_suppressed;
 extern int menu_control_scroll_y;
 extern sbyte is_menu_shown;
 extern byte enable_pause_menu INIT(= 1);
-extern char mods_folder[POP_MAX_PATH] INIT(= "mods");
 #endif
+extern char mods_folder[POP_MAX_PATH] INIT(= "mods");
 
 #undef INIT
 #undef extern

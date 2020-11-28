@@ -170,13 +170,13 @@ static int global_ini_callback(const char *section, const char *name, const char
 	if (check_ini_section("General")) {
 #ifdef USE_MENU
 		process_boolean("enable_pause_menu", &enable_pause_menu);
+#endif
 		if (strcasecmp(name, "mods_folder") == 0) {
 			if (value[0] != '\0' && strcasecmp(value, "default") != 0) {
 				strcpy(mods_folder, locate_file(value));
 			}
 			return 1;
 		}
-#endif
 		process_boolean("enable_copyprot", &enable_copyprot);
 		process_boolean("enable_music", &enable_music);
 		process_boolean("enable_fade", &enable_fade);
