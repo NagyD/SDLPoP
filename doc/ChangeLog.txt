@@ -581,3 +581,4 @@ FIXED: Fixed compiling with some features #undefined. (USE_TEXT, USE_LIGHTING, U
 DONE: Hide references to various features if the game was compiled without them.
 DONE: A scrollbar appears in the pause menu if scrolling is possible.
 	It's not clickable yet, it just shows where you are in the list.
+DONE: Added command-line parameter "playdemo": Make the demo level playable.

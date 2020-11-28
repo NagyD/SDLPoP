@@ -104,7 +104,7 @@ How do I run it?
 What command-line options are there?
 ---------------------------------------
 * megahit -- Enable cheats.
-* a number from 0 to 15 -- Start the given level. (if cheats are enabled)
+* a number from 0 to 15 -- Start the given level. (Works only together with `megahit` or `record`.)
 * draw -- Draw directly to the screen, skipping the offscreen buffer.
 * full -- Run in full screen mode.
 * demo -- Run in demo mode: only the first two levels will be playable, and quotes from magazine reviews will be displayed.
@@ -122,6 +122,8 @@ What command-line options are there?
 	* You can find the meaning of each symbol in Map_Symbols.txt.
 * stdsnd -- Use PC speaker sounds.
 * mute -- Start the game with sound off. (You can still enable sound with Ctrl+S.)
+* playdemo -- Make the demo level playable.
+	* You may want to use it together with options which start the demo level immediately, such as `megahit 0 playdemo` or `record 0 playdemo`.
 
 What keys can I use?
 -----------------------
