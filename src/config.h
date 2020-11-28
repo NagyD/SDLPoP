@@ -65,8 +65,12 @@ The authors of this program may be contacted at https://forum.princed.org
 // The one minute penalty will also be applied when quickloading from e.g. the title screen.
 #define USE_QUICKLOAD_PENALTY
 
+#ifdef USE_QUICKSAVE // Replay relies on quicksave, because the replay file begins with a quicksave of the initial state.
+
 // Enable recording/replay feature.
 #define USE_REPLAY
+
+#endif
 
 // Adds a way to crouch immediately after climbing up: press down and forward simultaneously.
 // In the original game, this could not be done (pressing down always causes the kid to climb down).
