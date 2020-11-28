@@ -577,3 +577,5 @@ FIXED: Show an error message if a data file is missing.
 FIXED: "Remember guard hp" for non-standard guards.
 FIXED: Colored torches were not restored on quickload if you (quit and) restarted the game after quicksave.
 DONE: Added command-line parameter "mute": Start the game with sound off.
+FIXED: Fixed compiling with some features #undefined. (USE_TEXT, USE_LIGHTING, USE_MENU)
+DONE: Hide references to various features if the game was compiled without them.
