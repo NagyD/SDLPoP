@@ -225,7 +225,7 @@ The authors of this program may be contacted at https://forum.princed.org
 
 
 
-// Darken those parts of the screen that are not near a torch.
+// Darken those parts of the screen which are not near a torch.
 #define USE_LIGHTING
 
 // Enable screenshot features.

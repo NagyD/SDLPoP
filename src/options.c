@@ -438,7 +438,9 @@ void set_options_to_default() {
 	enable_quicksave = 1;
 	enable_quicksave_penalty = 1;
 	enable_replay = 1;
+#ifdef USE_LIGHTING
 	enable_lighting = 0;
+#endif
 	// By default, all the fixes are used, unless otherwise specified.
 	// So, if one of these options is omitted from the INI file, they default to true.
 	memset(&fixes_saved, 1, sizeof(fixes_saved));

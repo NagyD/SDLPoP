@@ -354,9 +354,11 @@ setting_type visuals_settings[] = {
 		{.id = SETTING_ENABLE_FLASH, .style = SETTING_STYLE_TOGGLE, .linked = &enable_flash,
 				.text = "Flashing enabled",
 				.explanation = "Turn flashing on or off."},
+#ifdef USE_LIGHTING
 		{.id = SETTING_ENABLE_LIGHTING, .style = SETTING_STYLE_TOGGLE, .linked = &enable_lighting,
 				.text = "Torch shadows enabled",
-				.explanation = "Darken those parts of the screen that are not near a torch."},
+				.explanation = "Darken those parts of the screen which are not near a torch."},
+#endif
 };
 
 setting_type gameplay_settings[] = {
@@ -1221,6 +1223,7 @@ void turn_setting_on_off(int setting_id, byte new_state, void* linked) {
 #endif
 			}
 			break;
+#ifdef USE_LIGHTING
 		case SETTING_ENABLE_LIGHTING:
 			enable_lighting = new_state;
 			if (new_state && lighting_mask == NULL) {
@@ -1228,6 +1231,7 @@ void turn_setting_on_off(int setting_id, byte new_state, void* linked) {
 			}
 			need_full_redraw = 1;
 			break;
+#endif
 		case SETTING_ENABLE_SOUND:
 			turn_sound_on_off((new_state != 0) * 15);
 			break;
@@ -1626,7 +1630,9 @@ void confirmation_dialog_result(int which_dialog, int button) {
 			were_settings_changed = true;
 			set_options_to_default();
 			turn_setting_on_off(SETTING_USE_INTEGER_SCALING, use_integer_scaling, NULL);
+#ifdef USE_LIGHTING
 			turn_setting_on_off(SETTING_ENABLE_LIGHTING, enable_lighting, NULL);
+#endif
 			apply_aspect_ratio();
 			turn_sound_on_off((is_sound_on != 0) * 15);
 			turn_music_on_off(enable_music);
@@ -1997,7 +2003,9 @@ void process_ingame_settings_user_managed(SDL_RWops* rw, rw_process_func_type pr
 	process(scaling_type);
 	process(enable_fade);
 	process(enable_flash);
+#ifdef USE_LIGHTING
 	process(enable_lighting);
+#endif
 }
 
 void process_ingame_settings_mod_managed(SDL_RWops* rw, rw_process_func_type process_func) {
