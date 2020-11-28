@@ -22,12 +22,14 @@ The authors of this program may be contacted at https://forum.princed.org
 
 #ifdef USE_SCREENSHOT
 
-const char screenshots_folder[] = "screenshots";
+char screenshots_folder[POP_MAX_PATH] = "screenshots";
 char screenshot_filename[POP_MAX_PATH] = "screenshot.png";
 int screenshot_index = 0;
 
 // Use incrementing numbers and a separate folder, like DOSBox.
 void make_screenshot_filename() {
+	// Create the screenshots directory in SDLPoP's directory, even if the current directory is something else.
+	strncpy(screenshots_folder, locate_file("screenshots"), sizeof(screenshots_folder));
 	// Create the folder if it doesn't exist yet:
 #if defined WIN32 || _WIN32 || WIN64 || _WIN64
 	mkdir (screenshots_folder);

@@ -583,3 +583,4 @@ DONE: A scrollbar appears in the pause menu if scrolling is possible.
 	It's not clickable yet, it just shows where you are in the list.
 DONE: Added command-line parameter "playdemo": Make the demo level playable.
 FIXED: Fixed the detection of Ctrl+L during the demo level.
+FIXED: Create the screenshots directory in SDLPoP's directory, even if the current directory is something else.
