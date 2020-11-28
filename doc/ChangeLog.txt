@@ -587,3 +587,5 @@ FIXED: Create the screenshots directory in SDLPoP's directory, even if the curre
 	This is to match how the replay folder works.
 FIXED: On Windows, use Unicode/UTF-8 for mkdir().
 	So the replay and screenshots directories can be created within non-ASCII paths.
+FIXED: After quickload, show the room where the prince is, even if the player moved the view away from it (with the H,J,U,N keys).
+FIXED: After quickload, don't draw guard HP if a previously viewed room (with the H,J,U,N keys) had a guard but the current room doesn't have one.
