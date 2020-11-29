@@ -97,7 +97,7 @@ void far pop_main() {
 
 	/*video_mode =*/ parse_grmode();
 
-	init_timer(60);
+	init_timer(BASE_FPS);
 	parse_cmdline_sound();
 
 	set_hc_pal();
@@ -1901,6 +1901,10 @@ void __pascal far transition_ltr() {
 	// Estimated transition fps based on the speed of the transition on an Apple IIe.
 	// See: https://www.youtube.com/watch?v=7m7j2VuWhQ0
 	int transition_fps = 120;
+#ifdef USE_FAST_FORWARD
+	extern int audio_speed;
+	transition_fps *= audio_speed;
+#endif
 	Uint64 counters_per_frame = perf_frequency / transition_fps;
 	last_transition_counter = SDL_GetPerformanceCounter();
 	int overshoot = 0;

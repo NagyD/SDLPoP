@@ -246,7 +246,22 @@ The authors of this program may be contacted at https://forum.princed.org
 
 #endif
 
+// Enable colored torches. A torch can be colored by changing its modifier in a level editor.
 #define USE_COLORED_TORCHES
+
+// Enable fast forwarding with the backtick key.
+#define USE_FAST_FORWARD
+
+// Set how much should the fast forwarding speed up the game.
+#define FAST_FORWARD_RATIO 10
+
+// Speed up the sound during fast forward using resampling.
+// If disabled, the sound is sped up by clipping out parts from it.
+//#define FAST_FORWARD_RESAMPLE_SOUND
+
+// Mute the sound during fast forward.
+//#define FAST_FORWARD_MUTE
+
 
 // Default SDL_Joystick button values
 #define SDL_JOYSTICK_BUTTON_Y 2

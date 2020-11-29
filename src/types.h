@@ -1318,4 +1318,6 @@ typedef struct custom_options_type {
 
 typedef struct directory_listing_type directory_listing_type;
 
+#define BASE_FPS 60
+
 #endif

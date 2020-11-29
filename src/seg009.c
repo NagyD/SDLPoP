@@ -1952,7 +1952,25 @@ void ogg_callback(void *userdata, Uint8 *stream, int len) {
 	}
 }
 
-void audio_callback(void* userdata, Uint8* stream, int len) {
+#ifdef USE_FAST_FORWARD
+int audio_speed = 1; // =1 normally, >1 during fast forwarding
+#endif
+
+void audio_callback(void* userdata, Uint8* stream_orig, int len_orig) {
+
+	Uint8* stream;
+	int len;
+#ifdef USE_FAST_FORWARD
+	if (audio_speed > 1) {
+		len = len_orig * audio_speed;
+		stream = malloc(len);
+	} else
+#endif
+	{
+		len = len_orig;
+		stream = stream_orig;
+	}
+
 	memset(stream, digi_audiospec->silence, len);
 	if (digi_playing) {
 		digi_callback(userdata, stream, len);
@@ -1966,6 +1984,45 @@ void audio_callback(void* userdata, Uint8* stream, int len) {
 	} else if (ogg_playing) {
 		ogg_callback(userdata, stream, len);
 	}
+
+#ifdef USE_FAST_FORWARD
+	if (audio_speed > 1) {
+
+#ifdef FAST_FORWARD_MUTE
+		memset(stream_orig, digi_audiospec->silence, len_orig);
+#else
+#ifdef FAST_FORWARD_RESAMPLE_SOUND
+		static SDL_AudioCVT cvt;
+		static bool cvt_initialized = false;
+		if (!cvt_initialized) {
+			SDL_BuildAudioCVT(&cvt,
+				digi_audiospec->format, digi_audiospec->channels, digi_audiospec->freq * audio_speed,
+				digi_audiospec->format, digi_audiospec->channels, digi_audiospec->freq);
+			cvt_initialized = true;
+		}
+		//realloc(stream, len * cvt.len_mult);
+		//cvt.buf = stream;
+		cvt.len = len;
+		cvt.buf = malloc(cvt.len * cvt.len_mult);
+		memcpy(cvt.buf, stream, cvt.len);
+		//printf("cvt.needed = %d\n", cvt.needed);
+		//printf("cvt.len_mult = %d\n", cvt.len_mult);
+		//printf("cvt.len_ratio = %lf\n", cvt.len_ratio);
+		SDL_ConvertAudio(&cvt);
+
+		memcpy(stream_orig, cvt.buf, len_orig);
+		free(cvt.buf);
+		cvt.buf = NULL;
+#else
+		// Hack: use the beginning of the buffer instead of resampling.
+		memcpy(stream_orig, stream, len_orig);
+#endif
+#endif
+
+		free(stream);
+	}
+#endif
+
 }
 
 int digi_unavailable = 0;
@@ -3144,10 +3201,13 @@ void process_events() {
 				int scancode = event.key.keysym.scancode;
 
 				// Handle these separately, so they won't interrupt things that are usually interrupted by a keypress. (pause, cutscene)
+#ifdef USE_FAST_FORWARD
 				if (scancode == SDL_SCANCODE_GRAVE) {
-					init_timer(60 * 10); // fast-forward on
+					init_timer(BASE_FPS * FAST_FORWARD_RATIO); // fast-forward on
+					audio_speed = FAST_FORWARD_RATIO;
 					break;
 				}
+#endif
 #ifdef USE_SCREENSHOT
 				if (scancode == SDL_SCANCODE_F12) {
 					if (modifier & KMOD_SHIFT) {
@@ -3240,10 +3300,13 @@ void process_events() {
 				// If Alt was held down from Alt+Tab but now it's released: stop ignoring Tab.
 				if (event.key.keysym.scancode == SDL_SCANCODE_TAB && ignore_tab) ignore_tab = false;
 
+#ifdef USE_FAST_FORWARD
 				if (event.key.keysym.scancode == SDL_SCANCODE_GRAVE) {
-					init_timer(60); // fast-forward off
+					init_timer(BASE_FPS); // fast-forward off
+					audio_speed = 1;
 					break;
 				}
+#endif
 
 				key_states[event.key.keysym.scancode] = 0;
 #ifdef USE_MENU
