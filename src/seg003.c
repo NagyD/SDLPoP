@@ -523,7 +523,7 @@ void __pascal far check_mirror() {
 			loadkid();
 			load_frame();
 			check_mirror_image();
-			if (distance_mirror >= 0 && custom->show_mirror_image) {
+			if (distance_mirror >= 0 && custom->show_mirror_image && Char.room == drawn_room) {
 				load_frame_to_obj();
 				reset_obj_clip();
 				clip_top = y_clip[Char.curr_row + 1];

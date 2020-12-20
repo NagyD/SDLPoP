@@ -591,3 +591,4 @@ FIXED: After quickload, show the room where the prince is, even if the player mo
 FIXED: After quickload, don't draw guard HP if a previously viewed room (with the H,J,U,N keys) had a guard but the current room doesn't have one.
 DONE: Speed up music, sounds, and transitions during fast forwarding.
 FIXED: Prevent the modifier remapping from accessing out-of-range rooms.
+FIXED: Don't show the mirror image if the prince is not in the currently shown room.
