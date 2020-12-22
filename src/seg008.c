@@ -1139,8 +1139,10 @@ void __pascal far alter_mods_allrm() {
 	memset(torch_colors, 0, sizeof(torch_colors));
 #endif
 
-	// used_rooms is 25 on some levels.
-	for (room = 1; room <= level.used_rooms && room <= 24; room++) {
+	// level.used_rooms is 25 on some levels. Limit it to the actual number of rooms.
+	if (level.used_rooms > 24) level.used_rooms = 24;
+
+	for (room = 1; room <= level.used_rooms; room++) {
 		get_room_address(room);
 		room_L = level.roomlinks[room-1].left;
 		room_R = level.roomlinks[room-1].right;

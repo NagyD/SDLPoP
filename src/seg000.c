@@ -1121,6 +1121,9 @@ void reset_level_unused_fields(bool loading_clean_level) {
 	memset(level.fill_2, 0, sizeof(level.fill_2));
 	memset(level.fill_3, 0, sizeof(level.fill_3));
 
+	// level.used_rooms is 25 on some levels. Limit it to the actual number of rooms.
+	if (level.used_rooms > 24) level.used_rooms = 24;
+
 	// For these fields, only use the bits that are actually used, and set the rest to zero.
 	// Good for repurposing the unused bits in the future.
 	int i;
