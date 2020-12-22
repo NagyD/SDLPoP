@@ -901,6 +901,8 @@ extern byte enable_pause_menu INIT(= 1);
 #endif
 extern char mods_folder[POP_MAX_PATH] INIT(= "mods");
 
+extern int play_demo_level;
+
 #undef INIT
 #undef extern
 

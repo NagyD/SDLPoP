@@ -131,6 +131,9 @@ void far pop_main() {
 			}
 		}
 	}
+
+	play_demo_level = (check_param("playdemo") != NULL);
+
 #ifdef USE_SCREENSHOT
 	init_screenshot();
 #endif
