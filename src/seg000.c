@@ -775,6 +775,10 @@ int __pascal far process_key() {
 				draw_guard_hp(0, 10);
 				next_room = room_B;
 			break;
+			case SDL_SCANCODE_B | WITH_CTRL: // Ctrl+B --> Go back to the room where the prince is. (Undo H,J,U,N.)
+				draw_guard_hp(0, 10);
+				next_room = Kid.room;
+			break;
 			case SDL_SCANCODE_B | WITH_SHIFT: // shift-b
 				is_blind_mode = !is_blind_mode;
 				if (is_blind_mode) {

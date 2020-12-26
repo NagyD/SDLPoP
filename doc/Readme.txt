@@ -195,6 +195,7 @@ Cheats:
 * j: look at room to the right
 * u: look at room above
 * n: look at room below
+* Ctrl+B: Go back to the room where the prince is. (Undo H,J,U,N.)
 * Shift-B: toggle hiding of non-animated objects
 * Shift-S: Restore lost hit-point. (Like a small red potion.)
 * Shift-T: Give more hit-points. (Like a big red potion.)
