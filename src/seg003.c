@@ -496,13 +496,19 @@ void __pascal far timers() {
 	if (resurrect_time > 0) {
 		--resurrect_time;
 	}
+
+	if (is_feather_fall) is_feather_fall++;
+
 	if (is_feather_fall && !check_sound_playing()) {
+		printf("slow fall ended at: rem_min = %d, rem_tick = %d\n", rem_min, rem_tick);
+		printf("length = %d ticks\n", is_feather_fall);
 #ifdef USE_REPLAY
 		if (recording) special_move = MOVE_EFFECT_END;
 		if (!replaying) // during replays, feather effect gets cancelled in do_replay_move()
 #endif
 		is_feather_fall = 0;
 	}
+
 	// Special event: mouse
 	if (current_level == /*8*/ custom->mouse_level && Char.room == /*16*/ custom->mouse_room && leveldoor_open) {
 		++leveldoor_open;

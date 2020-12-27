@@ -1747,6 +1747,7 @@ void __pascal far toggle_upside() {
 
 // seg000:15F8
 void __pascal far feather_fall() {
+	printf("slow fall started at: rem_min = %d, rem_tick = %d\n", rem_min, rem_tick);
 	is_feather_fall = 1;
 	flash_color = 2; // green
 	flash_time = 3;
