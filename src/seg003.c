@@ -499,7 +499,7 @@ void __pascal far timers() {
 
 	if (is_feather_fall) is_feather_fall++;
 
-	if (is_feather_fall && !check_sound_playing()) {
+	if (is_feather_fall && (!check_sound_playing() || is_feather_fall > 225)) {
 		printf("slow fall ended at: rem_min = %d, rem_tick = %d\n", rem_min, rem_tick);
 		printf("length = %d ticks\n", is_feather_fall);
 #ifdef USE_REPLAY
