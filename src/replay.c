@@ -238,6 +238,7 @@ void list_replay_files() {
 };
 
 byte open_replay_file(const char *filename) {
+	printf("Opening replay file: %s\n", filename);
 	if (replay_file_open) fclose(replay_fp);
 	replay_fp = fopen(filename, "rb");
 	if (replay_fp != NULL) {
@@ -513,6 +514,9 @@ int process_to_buffer(void* data, size_t data_size) {
 }
 
 int process_load_from_buffer(void* data, size_t data_size) {
+	// Prevent torches from being randomly colored when an older replay is loaded.
+	if (savestate_offset >= savestate_size) return 0;
+
 	memcpy(data, savestate_buffer + savestate_offset, data_size);
 	savestate_offset += data_size;
 	return 1;
@@ -551,6 +555,7 @@ void reload_resources() {
 int restore_savestate_from_buffer() {
 	int ok = 0;
 	savestate_offset = 0;
+	// This condition should be checked in process_load_from_buffer() instead of here.
 	while (savestate_offset < savestate_size) {
 		ok = quick_process(process_load_from_buffer);
 	}
