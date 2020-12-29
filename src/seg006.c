@@ -1234,7 +1234,11 @@ void __pascal far control_kid() {
 	if (grab_timer != 0) {
 		--grab_timer;
 	}
+#ifdef USE_REPLAY
 	if (current_level == 0 && !play_demo_level && !replaying) {
+#else
+	if (current_level == 0 && !play_demo_level) {
+#endif
 		do_demo();
 		control();
 		// The player can start a new game or load a saved game during the demo.
