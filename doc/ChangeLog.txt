@@ -596,3 +596,4 @@ DONE: Added a new cheat key: Ctrl+B: Go back to the room where the prince is. (U
 FIXED: Fixed the length of feather fall in fast-forward mode.
 FIXED: Prevent torches from being randomly colored when an older replay is loaded.
 FIXED: If the prince is fighting a guard, and the player does a quickload to a state where the prince is near the mouse, the prince would draw the sword.
+DONE: When backing offscreen (to the left) from the first guard on level 7, simulate the glitch from DOS PoP, which causes the prince to fall through the floor.
