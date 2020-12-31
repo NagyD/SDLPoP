@@ -630,6 +630,9 @@ Possible results in can_guard_see_kid:
 	short right_pos;
 	kid_frame = Kid.frame;
 	if (Guard.charid == charid_24_mouse) {
+		// If the prince is fighting a guard, and the player does a quickload to a state where the prince is near the mouse, the prince would draw the sword.
+		// The following line prevents this.
+		can_guard_see_kid = 0;
 		return;
 	}
 	if ((Guard.charid != charid_1_shadow || current_level == 12) &&

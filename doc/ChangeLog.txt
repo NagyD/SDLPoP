@@ -595,3 +595,4 @@ FIXED: Don't show the mirror image if the prince is not in the currently shown r
 DONE: Added a new cheat key: Ctrl+B: Go back to the room where the prince is. (Undo H,J,U,N.)
 FIXED: Fixed the length of feather fall in fast-forward mode.
 FIXED: Prevent torches from being randomly colored when an older replay is loaded.
+FIXED: If the prince is fighting a guard, and the player does a quickload to a state where the prince is near the mouse, the prince would draw the sword.
