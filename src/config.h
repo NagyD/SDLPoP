@@ -238,6 +238,9 @@ The authors of this program may be contacted at https://forum.princed.org
 
 #define USE_COLORED_TORCHES
 
+// Draw your sword anywhere with Alt.
+#define DRAW_SWORD_ANYWHERE
+
 // Default SDL_Joystick button values
 #define SDL_JOYSTICK_BUTTON_Y 2
 #define SDL_JOYSTICK_BUTTON_X 3

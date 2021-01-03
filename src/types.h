@@ -1130,6 +1130,9 @@ enum colorids {
 enum replay_special_moves {
 	MOVE_RESTART_LEVEL = 1, // player pressed Ctrl+A
 	MOVE_EFFECT_END = 2,    // music stops, causing the end of feather effect or level 1 crouch immobilization
+#ifdef DRAW_SWORD_ANYWHERE
+	MOVE_DRAW_SWORD = 3,    // Drawing sword with Alt.
+#endif
 };
 
 enum replay_seek_targets {

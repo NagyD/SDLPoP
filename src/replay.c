@@ -729,6 +729,10 @@ void do_replay_move() {
 		else
 			control_shift = (curr_move.shift) ? -1 : 0;
 
+#ifdef DRAW_SWORD_ANYWHERE
+		control_alt = 0;
+#endif
+
 		if (curr_move.special == MOVE_RESTART_LEVEL) { // restart level
 			stop_sounds();
 			is_restart_level = 1;
@@ -737,6 +741,11 @@ void do_replay_move() {
 			if (need_level1_music == 2) need_level1_music = 0;
 			is_feather_fall = 0;
 		}
+#ifdef DRAW_SWORD_ANYWHERE
+		else if (curr_move.special == MOVE_DRAW_SWORD) {
+			control_alt = -1;
+		}
+#endif
 
 //    if (curr_tick > 5 ) printf("rem_tick: %d\t curr_tick: %d\tlast 5 moves: %d, %d, %d, %d, %d\n", rem_tick, curr_tick,
 //                               moves[curr_tick-4], moves[curr_tick-3], moves[curr_tick-2], moves[curr_tick-1], moves[curr_tick]);

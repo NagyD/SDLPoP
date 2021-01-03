@@ -323,12 +323,15 @@ void __pascal far control_standing() {
 		return;
 	}
 
-	// Draw the sword anytime with Ctrl.
-	if (have_sword && Char.charid == charid_0_kid && (key_states[SDL_SCANCODE_LALT] || key_states[SDL_SCANCODE_RALT]))
+#ifdef DRAW_SWORD_ANYWHERE
+	// Draw the sword anytime with Alt.
+	if (have_sword && Char.charid == charid_0_kid && control_alt)
 	{
+		if (recording) special_move = MOVE_DRAW_SWORD;
 		draw_sword();
 		return;
 	}
+#endif
 
 	if (Char.charid != charid_0_kid && control_down < 0 && control_forward < 0) {
 		draw_sword();

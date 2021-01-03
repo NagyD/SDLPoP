@@ -1688,6 +1688,9 @@ void __pascal far read_keyb_control() {
 		control_x = 1;
 	}
 	control_shift = -(key_states[SDL_SCANCODE_LSHIFT] || key_states[SDL_SCANCODE_RSHIFT]);
+#ifdef DRAW_SWORD_ANYWHERE
+	control_alt = -(key_states[SDL_SCANCODE_LALT] || key_states[SDL_SCANCODE_RALT]);
+#endif
 
 	#ifdef USE_DEBUG_CHEATS
 	if (cheats_enabled && debug_cheats_enabled) {

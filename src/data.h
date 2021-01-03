@@ -244,6 +244,10 @@ extern sbyte control_y;
 // data:4612
 extern sbyte control_x;
 
+#ifdef DRAW_SWORD_ANYWHERE
+extern sbyte control_alt;
+#endif
+
 #ifdef USE_FADE
 // data:4CCA
 extern word is_global_fading;
