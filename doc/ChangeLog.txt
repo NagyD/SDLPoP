@@ -597,3 +597,4 @@ FIXED: Fixed the length of feather fall in fast-forward mode.
 FIXED: Prevent torches from being randomly colored when an older replay is loaded.
 FIXED: If the prince is fighting a guard, and the player does a quickload to a state where the prince is near the mouse, the prince would draw the sword.
 DONE: Added options for changing speeds. They are detected from PRINCE.EXE. (Used in Hurry up Prince, for example.)
+DONE: In the settings menu, allow using Page Up, Page Down, Home, End.

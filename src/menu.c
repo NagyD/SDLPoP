@@ -1633,18 +1633,52 @@ void draw_settings_menu() {
 				hovering_item_changed = true;
 			}
 		} else if (controlled_area == 1) {
+			// settings area
 			int old_highlighted_setting_id = highlighted_setting_id;
-			if (menu_control_y == 1) {
-				highlighted_setting_id = next_setting_id;
-				if (at_scroll_down_boundary) {
-					menu_scroll(1);
-				}
-			} else if (menu_control_y == -1) {
-				highlighted_setting_id = previous_setting_id;
-				if (at_scroll_up_boundary) {
-					menu_scroll(-1);
+
+			// Why does the global variable contain the ID instead of the index?...
+			// Find the index from the ID.
+			settings_area_type* current_settings_area = get_settings_area(active_settings_subsection);
+			int highlighted_setting_index = -1;
+			for (int i = 0; i < current_settings_area->setting_count; i++) {
+				if (highlighted_setting_id == current_settings_area->settings[i].id) {
+					highlighted_setting_index = i;
+					break;
 				}
 			}
+
+			int last = current_settings_area->setting_count - 1;
+			int max_scroll = MAX(0, current_settings_area->setting_count - 9);
+
+			if (menu_control_y > 0) {
+				// DOWN
+				highlighted_setting_index += menu_control_y;
+				if (highlighted_setting_index > last) highlighted_setting_index = last;
+
+				// With Page Down, try to leave the selection in the same row visually.
+				if (menu_control_y > +1) scroll_position += menu_control_y;
+
+			} else if (menu_control_y < 0) {
+				// UP
+				highlighted_setting_index += menu_control_y;
+				if (highlighted_setting_index < 0) highlighted_setting_index = 0;
+
+				// With Page Up, try to leave the selection in the same row visually.
+				if (menu_control_y < -1) scroll_position += menu_control_y;
+
+			}
+
+			if (menu_control_y != 0) {
+				// We check both directions in both cases, to scroll the highlighted row back into sight even if the user scrolled it out of sight (with the mouse wheel).
+				if (highlighted_setting_index - 8 > scroll_position) scroll_position = highlighted_setting_index - 8;
+				if (highlighted_setting_index < scroll_position) scroll_position = highlighted_setting_index;
+				if (scroll_position > max_scroll) scroll_position = max_scroll;
+				if (scroll_position < 0) scroll_position = 0;
+			}
+
+			// Find the ID from the index.
+			highlighted_setting_id = current_settings_area->settings[highlighted_setting_index].id;
+
 			if (old_highlighted_setting_id != highlighted_setting_id) {
 				hovering_item_changed = true;
 			}
@@ -2001,6 +2035,18 @@ int key_test_paused_menu(int key) {
 			break;
 		case SDL_SCANCODE_DOWN:
 			menu_control_y = 1;
+			break;
+		case SDL_SCANCODE_PAGEUP:
+			menu_control_y = -9;
+			break;
+		case SDL_SCANCODE_PAGEDOWN:
+			menu_control_y = +9;
+			break;
+		case SDL_SCANCODE_HOME:
+			menu_control_y = -1000;
+			break;
+		case SDL_SCANCODE_END:
+			menu_control_y = +1000;
 			break;
 		case SDL_SCANCODE_RIGHT:
 			menu_control_x = 1;
