@@ -292,7 +292,7 @@ void __pascal far animate_chomper() {
 	if (trob.type >= 0) {
 		blood = curr_modifier & 0x80;
 		frame = (curr_modifier & 0x7F) + 1;
-		if (frame > 15) {
+		if (frame > /*15*/ custom->chomper_speed) {
 			frame = 1;
 		}
 		curr_modifier = blood | frame;

@@ -1313,6 +1313,11 @@ typedef struct custom_options_type {
 	auto_move_type demo_moves[25]; // prince on demo level
 	auto_move_type shad_drink_move[8]; // shadow on level 5
 
+	// speeds
+	byte base_speed;
+	byte fight_speed;
+	byte chomper_speed;
+
 } custom_options_type;
 #pragma pack(pop)
 

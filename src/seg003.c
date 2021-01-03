@@ -358,10 +358,10 @@ int __pascal far play_level_2() {
 #endif
 		if (Kid.sword == sword_2_drawn) {
 			// speed when fighting (smaller is faster)
-			set_timer_length(timer_1, 6);
+			set_timer_length(timer_1, /*6*/ custom->fight_speed);
 		} else {
 			// speed when not fighting (smaller is faster)
-			set_timer_length(timer_1, 5);
+			set_timer_length(timer_1, /*5*/ custom->base_speed);
 		}
 		guardhp_delta = 0;
 		hitp_delta = 0;

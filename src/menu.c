@@ -267,6 +267,9 @@ enum setting_ids {
 	SETTING_WIN_LEVEL,
 	SETTING_WIN_ROOM,
 	SETTING_LOOSE_FLOOR_DELAY,
+	SETTING_BASE_SPEED,
+	SETTING_FIGHT_SPEED,
+	SETTING_CHOMPER_SPEED,
 	SETTING_LEVEL_SETTINGS,
 	SETTING_LEVEL_TYPE,
 	SETTING_LEVEL_COLOR,
@@ -861,6 +864,18 @@ setting_type mods_settings[] = {
 				.linked = &custom_saved.loose_floor_delay, .number_type = SETTING_BYTE, .min = 0, .max = 127,
 				.text = "Loose floor delay",
 				.explanation = "Number of seconds to wait before a loose floor falls.\n(default = 0.92)"},
+		{.id = SETTING_BASE_SPEED, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.base_speed, .number_type = SETTING_BYTE, .min = 1, .max = 127,
+				.text = "Base speed",
+				.explanation = "Game speed when not fighting (delay between frames in 1/60 seconds). Smaller is faster.\n(default = 5)"},
+		{.id = SETTING_FIGHT_SPEED, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.fight_speed, .number_type = SETTING_BYTE, .min = 1, .max = 127,
+				.text = "Fight speed",
+				.explanation = "Game speed when fighting (delay between frames in 1/60 seconds). Smaller is faster.\n(default = 6)"},
+		{.id = SETTING_CHOMPER_SPEED, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.chomper_speed, .number_type = SETTING_BYTE, .min = 0, .max = 127,
+				.text = "Chomper speed",
+				.explanation = "Chomper speed (length of the animation cycle in frames). Smaller is faster.\n(default = 15)"},
 };
 
 NAMES_LIST(level_type_setting_names, { "Dungeon", "Palace", });
