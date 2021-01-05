@@ -122,7 +122,7 @@ bool parse_midi(midi_raw_chunk_type* midi, parsed_midi_type* parsed_midi) {
 		printf("Warning: Midi sound does not have any tracks.\n");
 		return 0;
 	}
-	int division = SDL_SwapBE16(midi->header.time_division);
+	int division = SDL_SwapBE16(midi->header.delta);
 	if (division < 0) {
 		division = (-(division / 256)) * (division & 0xFF); // Translate time delta from the alternative SMTPE format.
 	}
@@ -130,7 +130,7 @@ bool parse_midi(midi_raw_chunk_type* midi, parsed_midi_type* parsed_midi) {
 
 	parsed_midi->tracks = calloc(1, num_tracks * sizeof(midi_track_type));
 	parsed_midi->num_tracks = num_tracks;
-	midi_raw_chunk_type* next_track_chunk = (midi_raw_chunk_type*) midi->header.tracks; // The first track chunk starts after the header chunk.
+	midi_raw_chunk_type* next_track_chunk = (midi_raw_chunk_type*) midi->tracks; // The first track chunk starts after the header chunk.
 	byte last_event_type = 0;
 	for (int track_index = 0; track_index < num_tracks; ++track_index) {
 		midi_raw_chunk_type* track_chunk = next_track_chunk;
@@ -140,9 +140,9 @@ bool parse_midi(midi_raw_chunk_type* midi, parsed_midi_type* parsed_midi) {
 			memset(&parsed_midi, 0, sizeof(parsed_midi));
 			return 0;
 		}
-		next_track_chunk = (midi_raw_chunk_type*) (track_chunk->data + (dword) SDL_SwapBE32(track_chunk->chunk_length));
+		next_track_chunk = (midi_raw_chunk_type*) ((byte *)&track_chunk->header.format + (dword) SDL_SwapBE32(track_chunk->chunk_length));
 		midi_track_type* track = &parsed_midi->tracks[track_index];
-		byte* buffer_position = track_chunk->data;
+		byte* buffer_position = (byte *)&track_chunk->header.format;
 		for (;;) {
 			track->events = realloc(track->events, (++track->num_events) * sizeof(midi_event_type));
 			midi_event_type* event = &track->events[track->num_events - 1];

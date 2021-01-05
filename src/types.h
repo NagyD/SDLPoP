@@ -546,19 +546,17 @@ typedef struct digi_new_type { // wave in 1.3 and 1.4 (and PoP2)
 } digi_new_type;
 SDL_COMPILE_TIME_ASSERT(digi_new_type, sizeof(digi_new_type) == 9);
 
-typedef struct midi_type {
-	char chunk_type[4];
-	dword chunk_length;
-	union {
-		struct {
+typedef struct midi_type_header {
 			word format;
 			word num_tracks;
 			word delta;
-			byte tracks[0];
-		} header;
-		byte data[0];
-	};
+} midi_type_header;
 
+typedef struct midi_type {
+	char chunk_type[4];
+	dword chunk_length;
+	midi_type_header header;
+	byte tracks[];
 } midi_type;
 
 typedef struct ogg_type {
@@ -589,16 +587,8 @@ typedef struct sound_buffer_type {
 typedef struct midi_raw_chunk_type {
 	char chunk_type[4];
 	dword chunk_length;
-	union {
-		struct {
-			word format;
-			word num_tracks;
-			word time_division;
-			byte tracks[0];
-		} header;
-		byte data[0];
-	};
-
+	midi_type_header header;
+	byte tracks[];
 } midi_raw_chunk_type;
 
 typedef struct midi_event_type {
