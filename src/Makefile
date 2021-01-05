@@ -10,7 +10,7 @@ BIN = ../prince
 OS      := $(shell uname)
 
 CPPFLAGS += -Wall -D_XOPEN_SOURCE=700
-CFLAGS += -std=c99 -O2
+CFLAGS += -std=c11 -O2
 
 ifeq ($(OS),Darwin)
 LIBS := $(shell sdl2-config --libs) -lSDL2_image
