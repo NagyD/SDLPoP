@@ -9,7 +9,7 @@ BIN = ../prince
 
 OS      := $(shell uname)
 
-CPPFLAGS += -Wall -D_GNU_SOURCE=1
+CPPFLAGS += -Wall -D_XOPEN_SOURCE=700
 CFLAGS += -std=c99 -O2
 
 ifeq ($(OS),Darwin)
