@@ -1,0 +1,20 @@
+﻿This document describes the format of the replay files (*.p1r) used by SDLPoP.
+
+* 3 bytes: magic number: "P1R"
+* 2 byte: replay_format_class: always 0 for now.
+* 1 byte: REPLAY_FORMAT_CURR_VERSION
+* 1 byte: REPLAY_FORMAT_DEPRECATION_NUMBER
+* 8 bytes: creation timestamp
+* 1 byte: length of levelset_name
+* n bytes: levelset_name
+* 1 byte: length of implementation_name
+* n bytes: implementation_name
+* 4 bytes: savestate_size
+* n bytes: savestate_buffer (see quick_process() for its contents)
+* for each section of options: (see the replay_options_sections[] array)
+	* 4 bytes: section_size
+	* n bytes: section data (see the options_process_*() functions for their contents)
+* 2 bytes: start_level
+* 4 bytes: saved_random_seed
+* 4 bytes: num_replay_ticks
+* n bytes: moves (see replay_move_type)
