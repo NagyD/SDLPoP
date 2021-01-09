@@ -190,6 +190,10 @@ void __pascal far redraw_needed(short tilepos) {
 			draw_tile_anim_topright();
 			draw_tile_anim_right();
 			draw_tile_anim();
+#ifdef FIX_ABOVE_GATE
+			draw_tile_fore();
+			draw_tile_bottom(0);
+#endif
 		}
 	}
 	if (redraw_frames2[tilepos]) {

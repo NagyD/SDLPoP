@@ -212,6 +212,11 @@ The authors of this program may be contacted at https://forum.princed.org
 
 #define FIX_SPIKED_GUARD
 
+// Fix graphical glitches with an opening gate:
+// 1. with a loose floor above and a wall above-right.
+// 2. with the top half of a big pillar above-right.
+#define FIX_ABOVE_GATE
+
 
 // Debug features:
 
