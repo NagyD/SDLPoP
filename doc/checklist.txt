@@ -1,0 +1,6 @@
+Things to do before a new release:
+
+* Replace "(upcoming)" with the release date and the version number in ChangeLog.txt .
+* Replace "(upcoming)" (if any) with the version number in Readme.txt .
+* Update the version number in config.h and CMakeLists.txt .
+* Update the copyright year in every source file. (Although ideally it should be updated on New Year's Day, or at least before the first actual commit of the year.)
