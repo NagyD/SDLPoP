@@ -2388,6 +2388,9 @@ void init_overlay() {
 SDL_Surface* onscreen_surface_2x;
 
 void init_scaling() {
+	// Don't crash in validate mode.
+	if (renderer_ == NULL) return;
+
 	if (texture_sharp == NULL) {
 		texture_sharp = SDL_CreateTexture(renderer_, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, 320, 200);
 	}
