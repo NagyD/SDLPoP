@@ -1576,12 +1576,16 @@ void __pascal far play_sound(int sound_id) {
 // seg000:1304
 void __pascal far play_next_sound() {
 	if (next_sound >= 0) {
+	/*
 		if (!check_sound_playing() ||
 			(sound_interruptible[current_sound] != 0 && sound_prio_table[next_sound] <= sound_prio_table[current_sound])
 		) {
+	*/
 			current_sound = next_sound;
 			play_sound_from_buffer(sound_pointers[current_sound]);
+	/*
 		}
+	*/
 	}
 	next_sound = -1;
 }

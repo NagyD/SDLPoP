@@ -1750,12 +1750,18 @@ void __pascal far speaker_sound_stop() {
 	SDL_UnlockAudio();
 }
 
-// The current buffer, holds the resampled sound data.
-byte* digi_buffer = NULL;
-// The current position in digi_buffer.
-byte* digi_remaining_pos = NULL;
-// The remaining length.
-size_t digi_remaining_length = 0;
+typedef struct playing_digi_type {
+	// The current buffer, holds the resampled sound data.
+	byte* digi_buffer;
+	// The current position in digi_buffer.
+	byte* digi_remaining_pos;
+	// The remaining length.
+	size_t digi_remaining_length;
+} playing_digi_type;
+
+#define MAX_PLAYING_DIGIS 10
+playing_digi_type playing_digis[MAX_PLAYING_DIGIS];
+int playing_digi_count = 0;
 
 // The properties of the audio device.
 SDL_AudioSpec* digi_audiospec = NULL;
@@ -1777,9 +1783,8 @@ void stop_digi() {
 		digi_audiospec = NULL;
 	}
 	*/
-	digi_buffer = NULL;
-	digi_remaining_length = 0;
-	digi_remaining_pos = NULL;
+	memset(playing_digis, 0, sizeof(playing_digis)); // not strictly necessary
+	playing_digi_count = 0;
 	SDL_UnlockAudio();
 }
 
@@ -1889,32 +1894,53 @@ void __pascal far play_speaker_sound(sound_buffer_type far *buffer) {
 }
 
 void digi_callback(void *userdata, Uint8 *stream, int len) {
-	// Don't go over the end of either the input or the output buffer.
-	size_t copy_len = MIN(len, digi_remaining_length);
-	//printf("digi_callback(): copy_len = %d\n", copy_len);
-	//printf("digi_callback(): len = %d\n", len);
-	if (is_sound_on) {
-		// Copy the next part of the input of the output.
-		memcpy(stream, digi_remaining_pos, copy_len);
-		// In case the sound does not fill the buffer: fill the rest of the buffer with silence.
-		memset(stream + copy_len, digi_audiospec->silence, len - copy_len);
-	} else {
-		// If sound is off: Mute the sound but keep track of where we are.
-		memset(stream, digi_audiospec->silence, len);
+	printf("playing_digi_count = %d\n", playing_digi_count);
+	for (int digi_index = 0; digi_index < playing_digi_count; digi_index++) {
+		playing_digi_type* current_playing_digi = &playing_digis[digi_index];
+
+		// Don't go over the end of either the input or the output buffer.
+		size_t copy_len = MIN(len, current_playing_digi->digi_remaining_length);
+		//printf("digi_callback(): copy_len = %d\n", copy_len);
+		//printf("digi_callback(): len = %d\n", len);
+		if (is_sound_on) {
+			// Copy the next part of the input of the output.
+			//memcpy(stream, current_playing_digi->digi_remaining_pos, copy_len);
+			// In case the sound does not fill the buffer: fill the rest of the buffer with silence.
+			//memset(stream + copy_len, digi_audiospec->silence, len - copy_len);
+			int copy_samples = copy_len / 2; // Assuming 16 bits per sample!
+			short* temp_buffer = (short*)current_playing_digi->digi_remaining_pos;
+			for (int sample = 0; sample < copy_samples; sample++) {
+				((short*)stream)[sample] += temp_buffer[sample];
+			}
+		} else {
+			// If sound is off: Mute the sound but keep track of where we are.
+			//memset(stream, digi_audiospec->silence, len);
+		}
+		// If the sound ended, push an event.
+		if (digi_playing && current_playing_digi->digi_remaining_length == 0) {
+			//printf("digi_callback(): sound ended\n");
+			SDL_Event event;
+			memset(&event, 0, sizeof(event));
+			event.type = SDL_USEREVENT;
+			event.user.code = userevent_SOUND;
+			//digi_playing = 0;
+			SDL_PushEvent(&event);
+		}
+		// Advance the pointer.
+		current_playing_digi->digi_remaining_length -= copy_len;
+		current_playing_digi->digi_remaining_pos += copy_len;
 	}
-	// If the sound ended, push an event.
-	if (digi_playing && digi_remaining_length == 0) {
-		//printf("digi_callback(): sound ended\n");
-		SDL_Event event;
-		memset(&event, 0, sizeof(event));
-		event.type = SDL_USEREVENT;
-		event.user.code = userevent_SOUND;
-		digi_playing = 0;
-		SDL_PushEvent(&event);
+
+	// Delete the ended sounds from the list.
+	int dest_index = 0;
+	for (int source_index = 0; source_index < playing_digi_count; source_index++) {
+		if (playing_digis[source_index].digi_remaining_length > 0) {
+			if (dest_index != source_index) playing_digis[dest_index] = playing_digis[source_index];
+			dest_index++;
+		}
 	}
-	// Advance the pointer.
-	digi_remaining_length -= copy_len;
-	digi_remaining_pos += copy_len;
+	playing_digi_count = dest_index;
+	if (playing_digi_count == 0) digi_playing = 0;
 }
 
 void ogg_callback(void *userdata, Uint8 *stream, int len) {
@@ -1974,14 +2000,16 @@ void audio_callback(void* userdata, Uint8* stream_orig, int len_orig) {
 	memset(stream, digi_audiospec->silence, len);
 	if (digi_playing) {
 		digi_callback(userdata, stream, len);
-	} else if (speaker_playing) {
+	}
+	if (speaker_playing) {
 		speaker_callback(userdata, stream, len);
 	}
 	// Note: music sounds and digi sounds are allowed to play simultaneously (will be blended together)
 	// I.e., digi sounds and music will not cut each other short.
 	if (midi_playing) {
 		midi_callback(userdata, stream, len);
-	} else if (ogg_playing) {
+	}
+	if (ogg_playing) {
 		ogg_callback(userdata, stream, len);
 	}
 
@@ -2273,7 +2301,8 @@ void __pascal far play_digi_sound(sound_buffer_type far *buffer) {
 	//if (!is_sound_on) return;
 	init_digi();
 	if (digi_unavailable) return;
-	stop_digi();
+	//stop_digi();
+	if (playing_digi_count >= MAX_PLAYING_DIGIS) return;
 //	stop_sounds();
 	//printf("play_digi_sound(): called\n");
 	if ((buffer->type & 7) != sound_digi_converted) {
@@ -2281,10 +2310,12 @@ void __pascal far play_digi_sound(sound_buffer_type far *buffer) {
 		return;
 	}
 	SDL_LockAudio();
-	digi_buffer = (byte*) buffer->converted.samples;
+	playing_digi_type* current_playing_digi = &playing_digis[playing_digi_count];
+	current_playing_digi->digi_buffer = (byte*) buffer->converted.samples;
 	digi_playing = 1;
-	digi_remaining_length = buffer->converted.length;
-	digi_remaining_pos = digi_buffer;
+	current_playing_digi->digi_remaining_length = buffer->converted.length;
+	current_playing_digi->digi_remaining_pos = current_playing_digi->digi_buffer;
+	playing_digi_count++;
 	SDL_UnlockAudio();
 	SDL_PauseAudio(0);
 }
