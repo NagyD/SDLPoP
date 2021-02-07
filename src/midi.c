@@ -517,7 +517,8 @@ void midi_callback(void *userdata, Uint8 *stream, int len) {
 			OPL3_GenerateStream(&opl_chip, temp_buffer, advance_frames);
 			if (is_sound_on && enable_music) {
 				for (int sample = 0; sample < advance_frames * 2; ++sample) {
-					((short*)stream)[sample] += temp_buffer[sample];
+					//((short*)stream)[sample] += temp_buffer[sample];
+					saturating_add_to_s16(&( ((short*)stream)[sample] ), temp_buffer[sample]);
 				}
 			}
 			free(temp_buffer);

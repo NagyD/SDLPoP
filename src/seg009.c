@@ -1893,8 +1893,20 @@ void __pascal far play_speaker_sound(sound_buffer_type far *buffer) {
 	SDL_PauseAudio(0);
 }
 
+// Sound samples should be mixed together like this to prevent popping.
+Sint16 saturating_add_s16(Sint16 left, Sint16 right) {
+	Sint32 result = (Sint32)left + (Sint32)right;
+	if (result < INT16_MIN) result = INT16_MIN;
+	if (result > INT16_MAX) result = INT16_MAX;
+	return result;
+}
+
+void saturating_add_to_s16(Sint16* left, Sint16 right) {
+	*left = saturating_add_s16(*left, right);
+}
+
 void digi_callback(void *userdata, Uint8 *stream, int len) {
-	printf("playing_digi_count = %d\n", playing_digi_count);
+	//printf("playing_digi_count = %d\n", playing_digi_count);
 	for (int digi_index = 0; digi_index < playing_digi_count; digi_index++) {
 		playing_digi_type* current_playing_digi = &playing_digis[digi_index];
 
@@ -1910,7 +1922,8 @@ void digi_callback(void *userdata, Uint8 *stream, int len) {
 			int copy_samples = copy_len / 2; // Assuming 16 bits per sample!
 			short* temp_buffer = (short*)current_playing_digi->digi_remaining_pos;
 			for (int sample = 0; sample < copy_samples; sample++) {
-				((short*)stream)[sample] += temp_buffer[sample];
+				//((short*)stream)[sample] += temp_buffer[sample];
+				saturating_add_to_s16(&( ((short*)stream)[sample] ), temp_buffer[sample]);
 			}
 		} else {
 			// If sound is off: Mute the sound but keep track of where we are.
@@ -1932,6 +1945,7 @@ void digi_callback(void *userdata, Uint8 *stream, int len) {
 	}
 
 	// Delete the ended sounds from the list.
+	// Inspired by process_trobs().
 	int dest_index = 0;
 	for (int source_index = 0; source_index < playing_digi_count; source_index++) {
 		if (playing_digis[source_index].digi_remaining_length > 0) {
@@ -2320,6 +2334,29 @@ void __pascal far play_digi_sound(sound_buffer_type far *buffer) {
 	SDL_PauseAudio(0);
 }
 
+void stop_digi_from_buffer(sound_buffer_type far *buffer) {
+	if (buffer->type != sound_digi_converted) return;
+	SDL_LockAudio();
+	byte* digi_buffer = (byte*) buffer->converted.samples;
+	for (int source_index = 0; source_index < playing_digi_count; source_index++) {
+		if (playing_digis[source_index].digi_buffer == digi_buffer) {
+			playing_digis[source_index].digi_remaining_length = 0;
+		}
+	}
+	SDL_UnlockAudio();
+}
+
+bool is_digi_playing_from_buffer(sound_buffer_type far *buffer) {
+	if (buffer->type != sound_digi_converted) return false;
+	byte* digi_buffer = (byte*) buffer->converted.samples;
+	for (int source_index = 0; source_index < playing_digi_count; source_index++) {
+		if (playing_digis[source_index].digi_buffer == digi_buffer) {
+			return true;
+		}
+	}
+	return false;
+}
+
 void free_sound(sound_buffer_type far *buffer) {
 	if (buffer == NULL) return;
     if (buffer->type == sound_ogg) {
@@ -2378,6 +2415,10 @@ void __pascal far turn_sound_on_off(byte new_state) {
 // seg009:7299
 int __pascal far check_sound_playing() {
 	return speaker_playing || digi_playing || midi_playing || ogg_playing;
+}
+
+int check_sound_playing_except_digi() {
+	return speaker_playing || midi_playing || ogg_playing;
 }
 
 void apply_aspect_ratio() {

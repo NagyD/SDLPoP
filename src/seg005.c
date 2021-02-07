@@ -113,6 +113,7 @@ void __pascal far do_fall() {
 // seg005:0090
 void __pascal far land() {
 	word seq_id;
+	stop_sound(sound_1_falling);
 	is_screaming = 0;
 	Char.y = y_land[Char.curr_row + 1];
 	if (get_tile_at_char() != tiles_2_spike) {

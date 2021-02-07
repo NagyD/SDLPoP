@@ -603,6 +603,7 @@ FIXED: Fixed graphical glitches with an opening gate:
 	2. with the top half of a big pillar above-right.
 FIXED: Validate mode crashed with the error "init_scaling: SDL_CreateTexture: Invalid renderer".
 DONE: First implementation of multiple sounds playing at once. (#235)
-	Problems:
-	* The screaming of the prince doesn't stop when he lands.
-	* The level door sliding pops badly. It is erroneously played in multiple copies at the same time, causing the sample values to overflow.
+	This revealed the following cases when the game relies on sounds interrupting each other:
+	FIXED: The screaming of the prince doesn't stop when he lands.
+	FIXED: The level door sliding pops badly. It is erroneously played in multiple copies at the same time, causing the sample values to overflow.
+	FIXED: The level door sliding doesn't stop when the door slams.

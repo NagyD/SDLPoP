@@ -1107,6 +1107,7 @@ void __pascal far check_grab() {
 			play_seq();
 			grab_timer = 12;
 			play_sound(sound_9_grab); // grab
+			stop_sound(sound_1_falling);
 			is_screaming = 0;
 #ifdef FIX_CHOMPERS_NOT_STARTING
 			if (fixes->fix_chompers_not_starting) start_chompers();
@@ -1194,7 +1195,7 @@ void __pascal far play_kid() {
 			load_fram_det_col();
 			set_start_pos();
 		}
-		if (check_sound_playing() && current_sound != 5) { // gate opening
+		if (check_sound_playing_except_digi() && current_sound != 5) { // gate opening
 			return;
 		}
 		is_show_time = 0;

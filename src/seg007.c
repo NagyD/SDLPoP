@@ -439,13 +439,16 @@ Possible values of trob_type:
 			if ((sbyte)curr_modifier < 0) {
 				curr_modifier = 0;
 				trob.type = -1;
+				stop_sound(sound_15_leveldoor_sliding);
 				play_sound(sound_14_leveldoor_closing); // level door closing
 			} else {
 				if (trob.type == 4 &&
 					(sound_flags & sfDigi)
 				) {
 					sound_interruptible[sound_15_leveldoor_sliding] = 1;
-					play_sound(sound_15_leveldoor_sliding); // level door sliding (closing)
+					if (!is_sound_playing(sound_15_leveldoor_sliding)) {
+						play_sound(sound_15_leveldoor_sliding); // level door sliding (closing)
+					}
 				}
 			}
 		} else {
@@ -454,9 +457,10 @@ Possible values of trob_type:
 			if (curr_modifier >= 43) {
 				trob.type = -1;
 #ifdef FIX_FEATHER_INTERRUPTED_BY_LEVELDOOR
-				if (!(fixes->fix_feather_interrupted_by_leveldoor && is_feather_fall))
+				//if (!(fixes->fix_feather_interrupted_by_leveldoor && is_feather_fall))
 #endif
-				stop_sounds();
+				//stop_sounds();
+				stop_sound(sound_15_leveldoor_sliding);
 				if (leveldoor_open == 0 || leveldoor_open == 2) {
 					leveldoor_open = 1;
 					if (current_level == /*4*/ custom->mirror_level) {
@@ -467,7 +471,9 @@ Possible values of trob_type:
 				}
 			} else {
 				sound_interruptible[sound_15_leveldoor_sliding] = 0;
-				play_sound(sound_15_leveldoor_sliding); // level door sliding (opening)
+				if (!is_sound_playing(sound_15_leveldoor_sliding)) {
+					play_sound(sound_15_leveldoor_sliding); // level door sliding (opening)
+				}
 			}
 		}
 	}

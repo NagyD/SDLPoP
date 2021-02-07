@@ -78,6 +78,8 @@ void show_splash();
 void check_quick_op();
 void restore_room_after_quick_load();
 #endif // USE_QUICKSAVE
+void stop_sound(int sound_id);
+bool is_sound_playing(int sound_id);
 
 // SEG001.C
 int __pascal far proc_cutscene_frame(int wait_frames);
@@ -635,6 +637,11 @@ void set_chtab_palette(chtab_type* chtab, byte* colors, int n_colors);
 int has_timer_stopped(int index);
 sound_buffer_type* load_sound(int index);
 void free_sound(sound_buffer_type far *buffer);
+void stop_digi_from_buffer(sound_buffer_type far *buffer);
+bool is_digi_playing_from_buffer(sound_buffer_type far *buffer);
+Sint16 saturating_add_s16(Sint16 left, Sint16 right);
+void saturating_add_to_s16(Sint16* left, Sint16 right);
+int check_sound_playing_except_digi();
 
 // SEQTABLE.C
 void apply_seqtbl_patches();

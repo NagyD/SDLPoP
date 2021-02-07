@@ -104,8 +104,9 @@ void __pascal far play_level(int level_number) {
 		do_startpos();
 		have_sword = /*(level_number != 1)*/ (level_number == 0 || level_number >= custom->have_sword_from_level);
 		find_start_level_door();
+		stop_sounds();
 		// busy waiting?
-		while (check_sound_playing() && !do_paused()) idle();
+		while (check_sound_playing_except_digi() && !do_paused()) idle();
 		stop_sounds();
 		#ifdef USE_REPLAY
 		if (replaying) replay_restore_level();

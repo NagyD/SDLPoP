@@ -1564,6 +1564,15 @@ void fix_sound_priorities() {
 
 // seg000:12C5
 void __pascal far play_sound(int sound_id) {
+	// For digi sounds, use the new system which allows playing multiple sounds at once.
+	sound_buffer_type* sound = sound_pointers[sound_id];
+	if (sound != NULL && sound->type == sound_digi_converted) {
+		// Don't let the same sound play more than once (e.g. loose floors on level 11).
+		if (is_sound_playing(sound_id)) return;
+		play_sound_from_buffer(sound);
+		return;
+	}
+	// For other sounds, keep using the old system.
 	//printf("Would play sound %d\n", sound_id);
 	if (next_sound < 0 || sound_prio_table[sound_id] <= sound_prio_table[next_sound]) {
 		if (NULL == sound_pointers[sound_id]) return;
@@ -1576,18 +1585,22 @@ void __pascal far play_sound(int sound_id) {
 // seg000:1304
 void __pascal far play_next_sound() {
 	if (next_sound >= 0) {
-	/*
-		if (!check_sound_playing() ||
+		if (!check_sound_playing_except_digi() ||
 			(sound_interruptible[current_sound] != 0 && sound_prio_table[next_sound] <= sound_prio_table[current_sound])
 		) {
-	*/
 			current_sound = next_sound;
 			play_sound_from_buffer(sound_pointers[current_sound]);
-	/*
 		}
-	*/
 	}
 	next_sound = -1;
+}
+
+void stop_sound(int sound_id) {
+	stop_digi_from_buffer(sound_pointers[sound_id]);
+}
+
+bool is_sound_playing(int sound_id) {
+	return is_digi_playing_from_buffer(sound_pointers[sound_id]);
 }
 
 // seg000:1353
