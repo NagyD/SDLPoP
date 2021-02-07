@@ -1,7 +1,7 @@
 SDLPoP
 ======
 
-An open-source port of Prince of Persia, based on the disassembly of the DOS version.
+An open-source port of Prince of Persia, based on the disassembly of the DOS version, extended with new features.
 
 Links
 -----
@@ -55,6 +55,9 @@ What is this?
 This is an open-source port/conversion of the DOS game Prince of Persia.
 It is based on the disassembly of the original PoP1 for DOS.
 
+Note, however, that SDLPoP has many new features not found in the original game.
+These are marked as such in the command-line and the keys sections below.
+
 Where can I download that disassembly?
 --------------------------------------
 * Here: https://forum.princed.org/viewtopic.php?f=68&t=3423
@@ -106,8 +109,11 @@ What command-line options are there?
 * megahit -- Enable cheats.
 * a number from 0 to 15 -- Start the given level. (Works only together with `megahit` or `record`.)
 * draw -- Draw directly to the screen, skipping the offscreen buffer.
-* full -- Run in full screen mode.
 * demo -- Run in demo mode: only the first two levels will be playable, and quotes from magazine reviews will be displayed.
+* stdsnd -- Use PC speaker sounds.
+
+**The following don't exist in the original game:**
+* full -- Run in full screen mode.
 * record -- Start recording immediately. (See the Replays section.)
 * replay or a *.P1R filename -- Start replaying immediately. (See the Replays section.)
 * validate "replays/replay.p1r" -- Print out information about a replay file and quit. (See the Replays section.)
@@ -120,14 +126,13 @@ What command-line options are there?
 * --screenshot-level -- Similar to the above, except the whole level is screenshotted, thus creating a level map.
 * --screenshot-level-extras -- Similar to the above, except lots of additional info is displayed on the picture.
 	* You can find the meaning of each symbol in Map_Symbols.txt.
-* stdsnd -- Use PC speaker sounds.
 * mute -- Start the game with sound off. (You can still enable sound with Ctrl+S.)
 * playdemo -- Make the demo level playable.
 	* You may want to use it together with options which start the demo level immediately, such as `megahit 0 playdemo` or `record 0 playdemo`.
 
 What keys can I use?
 -----------------------
-Controlling the kid:
+### Controlling the kid:
 * Left: turn or run left
 * Right: turn or run right
 * Up: jump or climb up
@@ -140,7 +145,7 @@ Controlling the kid:
 
 You can also use the numeric keypad.
 
-Gamepad equivalents:
+### Gamepad equivalents:
 * D-Pad: arrows
 * Joystick: left/right (for all-directional joystick movement, set joystick_only_horizontal to false in SDLPoP.ini)
 * A: down
@@ -151,7 +156,7 @@ Gamepad equivalents:
 If SDLPoP does not work correctly with your gamepad, it might help if you download gamecontrollerdb.txt and configure SDLPoP to use it.
 See SDLPoP.ini for details.
 
-Controlling the game:
+### Controlling the game:
 * Esc: pause game
 * Space: show time left
 * Ctrl+A: restart level
@@ -163,25 +168,28 @@ Controlling the game:
 * Ctrl+R: return to intro
 * Ctrl+S: sound on/off
 * Ctrl+V: show version of SDLPoP
+* Ctrl+Q: quit game
+* Ctrl+L: load game (when in the intro)
+
+**The following don't exist in the original game:**
 * Ctrl+C: show versions of SDL:
 	* COMP: the SDL version SDLPoP was compiled against, i.e. the version of the SDL headers.
 	* LINK: the SDL version SDLPoP was linked against, i.e. the version of SDL2.dll (or its equivalent on other platforms).
-* Ctrl+Q: quit game
-* Ctrl+L: load game (when in the intro)
 * Alt+Enter: toggle fullscreen
 * F6: quicksave
 * F9: quickload
 * F12: Save a screenshot to the screenshots folder.
-* Backspace: display in-game menu
+* Backspace: Display the in-game menu. (Esc will also display the menu but you can turn that off.)
 * `: Fast forward. (It's the key above Tab. It might have a different label depending on your keyboard layout.)
 
-Viewing or recording replays:
+### Viewing or recording replays:
+**Replays don't exist in the original game.**
 * Ctrl+Tab (in game, or on title screen): start or stop recording
 * Tab (on title screen): view/cycle through the saved replays in the SDLPoP directory
 * F (while viewing a replay): skip forward to the next room
 * Shift+F (while viewing a replay): skip forward to the next level
 
-Cheats:
+### Cheats:
 * Shift+L: go to next level
 * C: show numbers of current and adjacent rooms
 * Shift+C: show numbers of diagonally adjacent rooms
@@ -195,15 +203,18 @@ Cheats:
 * J: look at room to the right
 * U: look at room above
 * N: look at room below
-* Ctrl+B: Go back to the room where the prince is. (Undo H,J,U,N.)
 * Shift+B: toggle hiding of non-animated objects
 * Shift+S: Restore lost hit-point. (Like a small red potion.)
 * Shift+T: Give more hit-points. (Like a big red potion.)
+
+**The following don't exist in the original game:**
+* Ctrl+B: Go back to the room where the prince is. (Undo H,J,U,N.)
 * Shift+F12: Save a screenshot of the whole level to the screenshots folder, thus creating a level map.
 * Ctrl+Shift+F12: Save a screenshot of the whole level with extras to the screenshots folder.
 	* You can find the meaning of each symbol in Map_Symbols.txt.
 
-Debug cheats:
+### Debug cheats:
+**These don't exist in the original game.**
 * [: shift kid 1 pixel to the left
 * ]: shift kid 1 pixel to the right
 * T: toggle timer
@@ -270,6 +281,7 @@ The Apoplexy level editor supports these additional tiles since v3.0: https://ww
 
 REPLAYS
 =======
+**Replays don't exist in the original game.**
 
 How do replays work?
 -----------------------
