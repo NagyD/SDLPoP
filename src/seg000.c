@@ -533,7 +533,7 @@ int __pascal far process_key() {
 				start_recording();
 			} else
 			#endif
-			if (key == (SDL_SCANCODE_L | WITH_CTRL)) { // ctrl-L
+			if (key == (SDL_SCANCODE_L | WITH_CTRL)) { // Ctrl+L
 				if (!load_game()) return 0;
 			} else {
 				start_level = custom->first_level; // 1
@@ -548,9 +548,9 @@ int __pascal far process_key() {
 			start_game();
 		}
 	}
-	// If the Kid died, enter or shift will restart the level.
+	// If the Kid died, Enter or Shift will restart the level.
 	if (rem_min != 0 && Kid.alive > 6 && (control_shift || key == SDL_SCANCODE_RETURN)) {
-		key = SDL_SCANCODE_A | WITH_CTRL; // ctrl-a
+		key = SDL_SCANCODE_A | WITH_CTRL; // Ctrl+A
 	}
 #ifdef USE_REPLAY
 	if (recording) key_press_while_recording(&key);
@@ -560,7 +560,7 @@ int __pascal far process_key() {
 	if (is_keyboard_mode) clear_kbd_buf();
 
 	switch(key) {
-		case SDL_SCANCODE_ESCAPE: // esc
+		case SDL_SCANCODE_ESCAPE: // Esc
 		case SDL_SCANCODE_ESCAPE | WITH_SHIFT: // allow pause while grabbing
 			is_paused = 1;
 #ifdef USE_MENU
@@ -575,23 +575,23 @@ int __pascal far process_key() {
 			}
 #endif
 		break;
-		case SDL_SCANCODE_SPACE: // space
+		case SDL_SCANCODE_SPACE: // Space
 			is_show_time = 1;
 		break;
-		case SDL_SCANCODE_A | WITH_CTRL: // ctrl-a
+		case SDL_SCANCODE_A | WITH_CTRL: // Ctrl+A
 			if (current_level != 15) {
 				stop_sounds();
 				is_restart_level = 1;
 			}
 		break;
-		case SDL_SCANCODE_G | WITH_CTRL: // ctrl-g
+		case SDL_SCANCODE_G | WITH_CTRL: // Ctrl+G
 			// CusPoP: first and last level where saving is allowed
 //			if (current_level > 2 && current_level < 14) { // original
 			if (current_level >= custom->saving_allowed_first_level && current_level <= custom->saving_allowed_last_level) {
 				save_game();
 			}
 		break;
-		case SDL_SCANCODE_J | WITH_CTRL: // ctrl-j
+		case SDL_SCANCODE_J | WITH_CTRL: // Ctrl+J
 			if ((sound_flags & sfDigi) && sound_mode == smTandy) {
 				answer_text = "JOYSTICK UNAVAILABLE";
 			} else {
@@ -603,20 +603,20 @@ int __pascal far process_key() {
 			}
 			need_show_text = 1;
 		break;
-		case SDL_SCANCODE_K | WITH_CTRL: // ctrl-k
+		case SDL_SCANCODE_K | WITH_CTRL: // Ctrl+K
 			answer_text = "KEYBOARD MODE";
 			is_joyst_mode = 0;
 			is_keyboard_mode = 1;
 			need_show_text = 1;
 		break;
-		case SDL_SCANCODE_R | WITH_CTRL: // ctrl-r
+		case SDL_SCANCODE_R | WITH_CTRL: // Ctrl+R
 			start_level = -1;
 #ifdef USE_MENU
 			if (is_menu_shown) menu_was_closed(); // Do necessary cleanup.
 #endif
 			start_game();
 		break;
-		case SDL_SCANCODE_S | WITH_CTRL: // ctrl-s
+		case SDL_SCANCODE_S | WITH_CTRL: // Ctrl+S
 			turn_sound_on_off((!is_sound_on) * 15);
 			answer_text = "SOUND OFF";
 			if (is_sound_on) {
@@ -625,13 +625,13 @@ int __pascal far process_key() {
 			//
 			need_show_text = 1;
 		break;
-		case SDL_SCANCODE_V | WITH_CTRL: // ctrl-v
+		case SDL_SCANCODE_V | WITH_CTRL: // Ctrl+V
 			//answer_text = "PRINCE OF PERSIA  V1.0";
 			snprintf(sprintf_temp, sizeof(sprintf_temp), "SDLPoP v%s\n", SDLPOP_VERSION);
 			answer_text = sprintf_temp;
 			need_show_text = 1;
 		break;
-		case SDL_SCANCODE_C | WITH_CTRL: // ctrl-c
+		case SDL_SCANCODE_C | WITH_CTRL: // Ctrl+C
 		{
 			SDL_version verc, verl;
 			SDL_VERSION (&verc);
@@ -644,9 +644,9 @@ int __pascal far process_key() {
 			need_show_text = 1;
 		}
 		break;
-		case SDL_SCANCODE_L | WITH_SHIFT: // shift-l
+		case SDL_SCANCODE_L | WITH_SHIFT: // Shift+L
 			if (current_level < custom->shift_L_allowed_until_level /* 4 */ || cheats_enabled) {
-				// if shift is not released within the delay, the cutscene is skipped
+				// if Shift is not released within the delay, the cutscene is skipped
 				Uint32 delay = 250;
 				key_states[SDL_SCANCODE_LSHIFT] = 0;
 				key_states[SDL_SCANCODE_RSHIFT] = 0;
@@ -706,7 +706,7 @@ int __pascal far process_key() {
 				answer_text = /*&*/sprintf_temp;
 				need_show_text = 1;
 			break;
-			case SDL_SCANCODE_C | WITH_SHIFT: // shift-c
+			case SDL_SCANCODE_C | WITH_SHIFT: // Shift+C
 				snprintf(sprintf_temp, sizeof(sprintf_temp), "AL%d AR%d BL%d BR%d", room_AL, room_AR, room_BL, room_BR);
 				answer_text = /*&*/sprintf_temp;
 				need_show_text = 1;
@@ -753,10 +753,10 @@ int __pascal far process_key() {
 					Guard.alive = 0;
 				}
 			break;
-			case SDL_SCANCODE_I | WITH_SHIFT: // shift+I --> invert cheat
+			case SDL_SCANCODE_I | WITH_SHIFT: // Shift+I --> invert cheat
 				toggle_upside();
 			break;
-			case SDL_SCANCODE_W | WITH_SHIFT: // shift+W --> feather fall cheat
+			case SDL_SCANCODE_W | WITH_SHIFT: // Shift+W --> feather fall cheat
 				feather_fall();
 			break;
 			case SDL_SCANCODE_H: // H --> view room to the left
@@ -779,7 +779,7 @@ int __pascal far process_key() {
 				draw_guard_hp(0, 10);
 				next_room = Kid.room;
 			break;
-			case SDL_SCANCODE_B | WITH_SHIFT: // shift-b
+			case SDL_SCANCODE_B | WITH_SHIFT: // Shift+B
 				is_blind_mode = !is_blind_mode;
 				if (is_blind_mode) {
 					draw_rect(&rect_top, 0);
@@ -787,7 +787,7 @@ int __pascal far process_key() {
 					need_full_redraw = 1;
 				}
 			break;
-			case SDL_SCANCODE_S | WITH_SHIFT: // shift-s
+			case SDL_SCANCODE_S | WITH_SHIFT: // Shift+S
 				if (hitp_curr != hitp_max) {
 					play_sound(sound_33_small_potion); // small potion (cheat)
 					hitp_delta = 1;
@@ -795,7 +795,7 @@ int __pascal far process_key() {
 					flash_time = 2;
 				}
 			break;
-			case SDL_SCANCODE_T | WITH_SHIFT: // shift-t
+			case SDL_SCANCODE_T | WITH_SHIFT: // Shift+T
 				play_sound(sound_30_big_potion); // big potion (cheat)
 				flash_color = 4; // red
 				flash_time = 4;
@@ -2318,7 +2318,7 @@ void show_splash() {
 		extern int last_key_scancode; // defined in seg009.c
 		last_key_scancode = key; // can immediately do Ctrl+L, etc from the splash screen
 	}
-	key_states[SDL_SCANCODE_LSHIFT] = 0; // don't immediately start the game if shift was pressed!
+	key_states[SDL_SCANCODE_LSHIFT] = 0; // don't immediately start the game if Shift was pressed!
 	key_states[SDL_SCANCODE_RSHIFT] = 0;
 #endif
 }

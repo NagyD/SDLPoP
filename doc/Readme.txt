@@ -128,15 +128,15 @@ What command-line options are there?
 What keys can I use?
 -----------------------
 Controlling the kid:
-* left: turn or run left
-* right: turn or run right
-* up: jump or climb up
-* down: crouch or climb down
-* shift: pick up things
-* shift+left/right: careful step
-* home or up+left: jump left
-* page up or up+right: jump right
-* shift while falling: grab onto ledge
+* Left: turn or run left
+* Right: turn or run right
+* Up: jump or climb up
+* Down: crouch or climb down
+* Shift: pick up things
+* Shift+Left/Right: careful step
+* Home or Up+Left: jump left
+* Page Up or Up+Right: jump right
+* Shift while falling: grab onto ledge
 
 You can also use the numeric keypad.
 
@@ -145,7 +145,7 @@ Gamepad equivalents:
 * Joystick: left/right (for all-directional joystick movement, set joystick_only_horizontal to false in SDLPoP.ini)
 * A: down
 * Y: up
-* X or triggers: shift
+* X or triggers: Shift
 * Start or Back: display in-game menu
 
 If SDLPoP does not work correctly with your gamepad, it might help if you download gamecontrollerdb.txt and configure SDLPoP to use it.
@@ -154,21 +154,21 @@ See SDLPoP.ini for details.
 Controlling the game:
 * Esc: pause game
 * Space: show time left
-* Ctrl-A: restart level
-* Ctrl-G: save game (on levels 3..13)
-* Ctrl-J: joystick/gamepad mode
-* Ctrl-K: keyboard mode
+* Ctrl+A: restart level
+* Ctrl+G: save game (on levels 3..13)
+* Ctrl+J: joystick/gamepad mode
+* Ctrl+K: keyboard mode
 	* The initial mode is joystick/gamepad if such a device is detected, otherwise keyboard mode.
 	* The game will automatically change input mode when there is input from either device.
-* Ctrl-R: return to intro
-* Ctrl-S: sound on/off
-* Ctrl-V: show version of SDLPoP
-* Ctrl-C: show versions of SDL:
+* Ctrl+R: return to intro
+* Ctrl+S: sound on/off
+* Ctrl+V: show version of SDLPoP
+* Ctrl+C: show versions of SDL:
 	* COMP: the SDL version SDLPoP was compiled against, i.e. the version of the SDL headers.
 	* LINK: the SDL version SDLPoP was linked against, i.e. the version of SDL2.dll (or its equivalent on other platforms).
-* Ctrl-Q: quit game
-* Ctrl-L: load game (when in the intro)
-* Alt-Enter: toggle fullscreen
+* Ctrl+Q: quit game
+* Ctrl+L: load game (when in the intro)
+* Alt+Enter: toggle fullscreen
 * F6: quicksave
 * F9: quickload
 * F12: Save a screenshot to the screenshots folder.
@@ -179,26 +179,26 @@ Viewing or recording replays:
 * Ctrl+Tab (in game, or on title screen): start or stop recording
 * Tab (on title screen): view/cycle through the saved replays in the SDLPoP directory
 * F (while viewing a replay): skip forward to the next room
-* Shift-F (while viewing a replay): skip forward to the next level
+* Shift+F (while viewing a replay): skip forward to the next level
 
 Cheats:
-* Shift-L: go to next level
-* c: show numbers of current and adjacent rooms
-* Shift-C: show numbers of diagonally adjacent rooms
+* Shift+L: go to next level
+* C: show numbers of current and adjacent rooms
+* Shift+C: show numbers of diagonally adjacent rooms
 * -: less remaining time
 * +: more remaining time
-* r: resurrect kid
-* k: kill guard
-* Shift-I: flip screen upside-down
-* Shift-W: slow falling
-* h: look at room to the left
-* j: look at room to the right
-* u: look at room above
-* n: look at room below
+* R: resurrect kid
+* K: kill guard
+* Shift+I: flip screen upside-down
+* Shift+W: slow falling
+* H: look at room to the left
+* J: look at room to the right
+* U: look at room above
+* N: look at room below
 * Ctrl+B: Go back to the room where the prince is. (Undo H,J,U,N.)
-* Shift-B: toggle hiding of non-animated objects
-* Shift-S: Restore lost hit-point. (Like a small red potion.)
-* Shift-T: Give more hit-points. (Like a big red potion.)
+* Shift+B: toggle hiding of non-animated objects
+* Shift+S: Restore lost hit-point. (Like a small red potion.)
+* Shift+T: Give more hit-points. (Like a big red potion.)
 * Shift+F12: Save a screenshot of the whole level to the screenshots folder, thus creating a level map.
 * Ctrl+Shift+F12: Save a screenshot of the whole level with extras to the screenshots folder.
 	* You can find the meaning of each symbol in Map_Symbols.txt.
@@ -206,7 +206,7 @@ Cheats:
 Debug cheats:
 * [: shift kid 1 pixel to the left
 * ]: shift kid 1 pixel to the right
-* t: toggle timer
+* T: toggle timer
 
 Where is the music?
 ----------------------
@@ -387,6 +387,6 @@ macOS
 
 * PLAY!
 	1. In the project root directory. Type `./prince` or `./prince full`.
-	2. Hit Control-Q to quit.
+	2. Hit Ctrl+Q to quit.
 
 * Tested on OSX 10.9.5, OSX 10.11.2, macOS 10.13 and 10.14.

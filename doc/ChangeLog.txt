@@ -191,10 +191,10 @@ Fixed some memory leaks.
 ================
 (version 1.14)
 FIXED: Changed project type to GUI in the "release" project, too.
-FIXED: Ctrl-S did not turn off mixer sounds.
-FIXED: Ctrl-S did not stop currently playing sounds.
-DONE: Toggle fullscreen with alt-enter.
-FIXED: If the game is in full screen, and I switch away (alt-tab) and back, most of the screen will be black, until it is redrawn.
+FIXED: Ctrl+S did not turn off mixer sounds.
+FIXED: Ctrl+S did not stop currently playing sounds.
+DONE: Toggle fullscreen with Alt+Enter.
+FIXED: If the game is in full screen, and I switch away (Alt+Tab) and back, most of the screen will be black, until it is redrawn.
 
 2015 August 3
 =============
@@ -222,7 +222,7 @@ FIXED: Hardcoded font (hc_font) appeared as white rectangles.
 
 New game additions and bug fixes:
 DONE: Added quicksaving and quickloading (F6 to quicksave anywhere in a level, F9 to quickload).
-- Also quicksave/quickload when shift is pressed
+- Also quicksave/quickload when Shift is pressed
 - Do not even attempt to quicksave after the kid has died
 - Deny quicksave during the feather fall effect
 - Allow quickloading from the title screen
@@ -516,7 +516,7 @@ FIXED: Fix looping "sword moving" sound if the player leaves a room exactly when
 FIXED: Support 8-bpp images in DAT files. For example the Pyramid mod contains some of these.
 FIXED: Improved map-making on levels with broken room links: If a room is mapped to an already used place, then put it to the bottom of the map.
 DONE: Load custom options from DOS PRINCE.EXE files.
-DONE: Added a hotkey to display SDL versions. (Ctrl-C)
+DONE: Added a hotkey to display SDL versions. (Ctrl+C)
 FIXED: Better support for high-DPI (Retina) displays.
 FIXED: Disable integer scaling menu item if SDL version is too old.
 DONE: Save screenshots and maps into a separate folder and add numbers to the filenames.
@@ -602,3 +602,4 @@ FIXED: Fixed graphical glitches with an opening gate:
 	1. with a loose floor above and a wall above-right.
 	2. with the top half of a big pillar above-right.
 FIXED: Validate mode crashed with the error "init_scaling: SDL_CreateTexture: Invalid renderer".
+DONE: Rewrote all mentions of key combinations to the "Ctrl+A" style.

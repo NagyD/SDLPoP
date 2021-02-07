@@ -1088,7 +1088,7 @@ void __pascal far check_grab() {
 	#define MAX_GRAB_FALLING_SPEED 32
 	#endif
 
-	if (control_shift < 0 && // press shift to grab
+	if (control_shift < 0 && // press Shift to grab
 		Char.fall_y < MAX_GRAB_FALLING_SPEED && // you can't grab if you're falling too fast ...
 		Char.alive < 0 && // ... or dead
 		(word)y_land[Char.curr_row + 1] <= (word)(Char.y + 25)
@@ -1243,7 +1243,7 @@ void __pascal far control_kid() {
 		control();
 		// The player can start a new game or load a saved game during the demo.
 		key = key_test_quit();
-		if (key == (SDL_SCANCODE_L | WITH_CTRL)) { // ctrl-L
+		if (key == (SDL_SCANCODE_L | WITH_CTRL)) { // Ctrl+L
 			if (load_game()) {
 				start_game();
 			}

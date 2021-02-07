@@ -264,7 +264,7 @@ void __pascal far restore_stuff() {
 int __pascal far key_test_quit() {
 	word key;
 	key = read_key();
-	if (key == (SDL_SCANCODE_Q | WITH_CTRL)) { // ctrl-q
+	if (key == (SDL_SCANCODE_Q | WITH_CTRL)) { // Ctrl+Q
 
 		#ifdef USE_REPLAY
 		if (recording) save_recorded_replay();
@@ -1535,7 +1535,7 @@ int __pascal far input_str(const rect_type far *rect,char *buffer,int max_length
 					draw_text_cursor(current_xpos, ypos, color);
 					cursor_visible = !cursor_visible;
 				}
-				if (key == SDL_SCANCODE_RETURN) { // enter
+				if (key == SDL_SCANCODE_RETURN) { // Enter
 					buffer[length] = 0;
 					return length;
 				} else break;
@@ -1546,13 +1546,13 @@ int __pascal far input_str(const rect_type far *rect,char *buffer,int max_length
 		char entered_char = last_text_input <= 0x7E ? last_text_input : 0;
 		clear_kbd_buf();
 
-		if (key == SDL_SCANCODE_ESCAPE) { // esc
+		if (key == SDL_SCANCODE_ESCAPE) { // Esc
 			draw_rect(rect, bgcolor);
 			buffer[0] = 0;
 			return -1;
 		}
 		if (length != 0 && (key == SDL_SCANCODE_BACKSPACE ||
-				key == SDL_SCANCODE_DELETE)) { // backspace, delete
+				key == SDL_SCANCODE_DELETE)) { // Backspace, Delete
 			--length;
 			draw_text_cursor(current_xpos, ypos, bgcolor);
 			current_xpos -= get_char_width(buffer[length]);
@@ -3232,7 +3232,7 @@ void process_events() {
 				{
 					// Only if the Enter key was pressed down right now.
 					if (key_states[scancode] == 0) {
-						// Alt-Enter: toggle fullscreen mode
+						// Alt+Enter: toggle fullscreen mode
 						toggle_fullscreen();
 						key_states[scancode] = 1;
 					}
@@ -3347,7 +3347,7 @@ void process_events() {
 
 					case SDL_CONTROLLER_BUTTON_A:          joy_AY_buttons_state = 1;  break; /*** A (down) ***/
 					case SDL_CONTROLLER_BUTTON_Y:          joy_AY_buttons_state = -1; break; /*** Y (up) ***/
-					case SDL_CONTROLLER_BUTTON_X:          joy_X_button_state = 1;    break; /*** X (shift) ***/
+					case SDL_CONTROLLER_BUTTON_X:          joy_X_button_state = 1;    break; /*** X (Shift) ***/
 					case SDL_CONTROLLER_BUTTON_B:          joy_B_button_state = 1;    break; /*** B (unused) ***/
 
 					case SDL_CONTROLLER_BUTTON_START:
@@ -3372,7 +3372,7 @@ void process_events() {
 
 					case SDL_CONTROLLER_BUTTON_A:          joy_AY_buttons_state = 0; break; /*** A (down) ***/
 					case SDL_CONTROLLER_BUTTON_Y:          joy_AY_buttons_state = 0; break; /*** Y (up) ***/
-					case SDL_CONTROLLER_BUTTON_X:          joy_X_button_state = 0;   break; /*** X (shift) ***/
+					case SDL_CONTROLLER_BUTTON_X:          joy_X_button_state = 0;   break; /*** X (Shift) ***/
 					case SDL_CONTROLLER_BUTTON_B:          joy_B_button_state = 0;   break; /*** B (unused) ***/
 
 					default: break;
@@ -3408,11 +3408,11 @@ void process_events() {
 #endif
 				if (event.type == SDL_JOYBUTTONDOWN) {
 					if      (event.jbutton.button == SDL_JOYSTICK_BUTTON_Y)   joy_AY_buttons_state = -1; // Y (up)
-					else if (event.jbutton.button == SDL_JOYSTICK_BUTTON_X)   joy_X_button_state = -1;   // X (shift)
+					else if (event.jbutton.button == SDL_JOYSTICK_BUTTON_X)   joy_X_button_state = -1;   // X (Shift)
 				}
 				else if (event.type == SDL_JOYBUTTONUP) {
 					if      (event.jbutton.button == SDL_JOYSTICK_BUTTON_Y)   joy_AY_buttons_state = 0;  // Y (up)
-					else if (event.jbutton.button == SDL_JOYSTICK_BUTTON_X)   joy_X_button_state = 0;    // X (shift)
+					else if (event.jbutton.button == SDL_JOYSTICK_BUTTON_X)   joy_X_button_state = 0;    // X (Shift)
 				}
 				break;
 
@@ -3429,7 +3429,7 @@ void process_events() {
 				memset(key_states, 0, sizeof(key_states));
 			}
 			// Note: event.active.state can contain multiple flags or'ed.
-			// If the game is in full screen, and I switch away (alt-tab) and back, most of the screen will be black, until it is redrawn.
+			// If the game is in full screen, and I switch away (Alt+Tab) and back, most of the screen will be black, until it is redrawn.
 			if ((event.active.state & SDL_APPACTIVE) && event.active.gain == 1) {
 				update_screen();
 			}

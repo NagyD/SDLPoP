@@ -728,7 +728,7 @@ void do_replay_move() {
 		control_x = curr_move.x;
 		control_y = curr_move.y;
 
-		// Ignore shift if the kid is dead: restart moves are hard-coded as a 'special move'.
+		// Ignore Shift if the kid is dead: restart moves are hard-coded as a 'special move'.
 		if (rem_min != 0 && Kid.alive > 6)
 			control_shift = 0;
 		else
