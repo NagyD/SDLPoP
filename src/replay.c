@@ -937,9 +937,11 @@ void key_press_while_replaying(int* key_ptr) {
 		// ...but these are allowable actions:
 		case SDL_SCANCODE_ESCAPE:               // pause
 		case SDL_SCANCODE_ESCAPE | WITH_SHIFT:
+		case SDL_SCANCODE_BACKSPACE:            // menu
 		case SDL_SCANCODE_SPACE:                // time
 		case SDL_SCANCODE_S | WITH_CTRL:        // sound toggle
 		case SDL_SCANCODE_V | WITH_CTRL:        // version
+		case SDL_SCANCODE_C | WITH_CTRL:        // SDL version
 		case SDL_SCANCODE_C:                    // room numbers
 		case SDL_SCANCODE_C | WITH_SHIFT:
 		case SDL_SCANCODE_I | WITH_SHIFT:       // invert
