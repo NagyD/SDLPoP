@@ -605,3 +605,4 @@ FIXED: Validate mode crashed with the error "init_scaling: SDL_CreateTexture: In
 DONE: Rewrote all mentions of key combinations to the "Ctrl+A" style.
 DONE: Marked which features of SDLPoP are not in the original game. (To prevent confusions like #197)
 DONE: Allow Backspace and Ctrl+C during replay.
+DONE: During playback, display the number of ticks since start, if the timer is shown (debug cheats: T).

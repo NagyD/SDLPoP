@@ -2566,6 +2566,26 @@ void draw_overlay() {
 			rect_type timer_text_rect = {2, 2, 10, 100};
 			draw_rect_with_alpha(&timer_box_rect, color_0_black, 128);
 			show_text(&timer_text_rect, -1, -1, timer_text);
+
+#ifdef USE_REPLAY
+			// During playback, display the number of ticks since start, if the timer is shown (debug cheats: T).
+			if (replaying) {
+				char ticks_text[12];
+				snprintf(ticks_text, sizeof(ticks_text), "T: %d", curr_tick);
+				rect_type ticks_box_rect = timer_box_rect;
+				ticks_box_rect.top += 12;
+				ticks_box_rect.bottom += 12;
+				rect_type ticks_text_rect = timer_text_rect;
+				ticks_text_rect.top += 12;
+				ticks_text_rect.bottom += 12;
+
+				draw_rect_with_alpha(&ticks_box_rect, color_0_black, 128);
+				show_text(&ticks_text_rect, -1, -1, ticks_text);
+
+				timer_box_rect.bottom += 12;
+			}
+#endif
+
 			drawn_rect = timer_box_rect; // Only need to blit this bit to the merged_surface.
 #endif
 		} else {

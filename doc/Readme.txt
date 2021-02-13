@@ -217,7 +217,7 @@ See SDLPoP.ini for details.
 **These don't exist in the original game.**
 * [: shift kid 1 pixel to the left
 * ]: shift kid 1 pixel to the right
-* T: toggle timer
+* T: Toggle timer (remaining minutes:seconds:ticks). Also shows the total elapsed ticks during playback.
 
 Where is the music?
 ----------------------

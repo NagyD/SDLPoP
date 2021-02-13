@@ -856,9 +856,9 @@ void replay_cycle() {
 		start_game();
 		return;
 	}
-	curr_tick = 0;
 	apply_replay_options();
 	restore_savestate_from_buffer();
+	curr_tick = 0; // Do this after restoring the savestate, in case the savestate contained a non-zero curr_tick.
 	show_level();
 }
 
