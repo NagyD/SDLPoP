@@ -633,6 +633,7 @@ void init_midi() {
 }
 
 void play_midi_sound(sound_buffer_type far *buffer) {
+	stop_midi();
 	if (buffer == NULL) return;
 	init_digi();
 	if (digi_unavailable) return;
