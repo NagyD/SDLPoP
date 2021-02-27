@@ -222,7 +222,12 @@ void __pascal far redraw_needed(short tilepos) {
 void __pascal far redraw_needed_above(int column) {
 	if (redraw_frames_above[column] != 0) {
 		--redraw_frames_above[column];
-		draw_tile_wipe(3);
+#ifdef FIX_BIGPILLAR_JUMP_UP
+		if (curr_tile != tiles_9_bigpillar_top)
+#endif
+		{
+			draw_tile_wipe(3);
+		}
 		draw_tile_floorright();
 		draw_tile_anim_topright();
 		draw_tile_right();

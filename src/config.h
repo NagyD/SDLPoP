@@ -228,6 +228,10 @@ The authors of this program may be contacted at https://forum.princed.org
 // Testcase: replays-testcases/SNES-PC-set level 11.p1r
 #define FIX_CORNER_GRAB
 
+// When the prince jumps up at the bottom of a big pillar split between two rooms, a part near the top of the screen disappears.
+// Example: The top row in the first room of the original level 5.
+#define FIX_BIGPILLAR_JUMP_UP
+
 
 // Debug features:
 
