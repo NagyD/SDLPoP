@@ -1,0 +1,5 @@
+The prince should grab the ledge at the gate and enter the next room.
+To pass the test: #define FIX_CORNER_GRAB in config.h
+
+Download mod: https://www.popot.org/custom_levels.php?mod=0000042
+More info: https://forum.princed.org/viewtopic.php?p=30410#p30410
