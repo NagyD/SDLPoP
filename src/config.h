@@ -223,6 +223,11 @@ The authors of this program may be contacted at https://forum.princed.org
 // Testcase: replays-testcases/Demo by Suave Prince level 11.p1r
 //#define FIX_COLL_FLAGS
 
+// The prince can now grab a ledge at the bottom right corner of a room with no room below.
+// Details: https://forum.princed.org/viewtopic.php?p=30410#p30410
+// Testcase: replays-testcases/SNES-PC-set level 11.p1r
+#define FIX_CORNER_GRAB
+
 
 // Debug features:
 

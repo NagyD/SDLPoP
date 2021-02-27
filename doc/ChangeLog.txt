@@ -567,6 +567,7 @@ ADDED: You can now use quicksave and quickload while recording a replay.
 
 FIXED: The prince can now grab a ledge at the bottom right corner of a room with no room below.
 	Details: https://forum.princed.org/viewtopic.php?p=30410#p30410
+	Testcase: replays-testcases/SNES-PC-set level 11.p1r
 FIXED: Don't allow killing a skeleton in cheat mode.
 FIXED: Ctrl+S didn't mute music (except death music).
 FIXED: A falling tile on the left side of a pillar could cause the blue stripe to be drawn over the pillar.
