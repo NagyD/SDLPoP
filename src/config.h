@@ -218,6 +218,11 @@ The authors of this program may be contacted at https://forum.princed.org
 // 2. with the top half of a big pillar above-right.
 #define FIX_ABOVE_GATE
 
+// Disable this fix to make it possible to go through a certain closed gate on level 11 of Demo by Suave Prince.
+// Details: https://forum.princed.org/viewtopic.php?p=32326#p32326
+// Testcase: replays-testcases/Demo by Suave Prince level 11.p1r
+//#define FIX_COLL_FLAGS
+
 
 // Debug features:
 

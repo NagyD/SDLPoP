@@ -607,3 +607,6 @@ DONE: Marked which features of SDLPoP are not in the original game. (To prevent 
 DONE: Allow Backspace and Ctrl+C during replay.
 DONE: During playback, display the number of ticks since start, if the timer is shown (debug cheats: T).
 FIXED: Fixed crashing when a MIDI music interrupted another one.
+FIXED: Make it possible to go through a certain closed gate on level 11 of Demo by Suave Prince.
+	Details: https://forum.princed.org/viewtopic.php?p=32326#p32326
+	Testcase: replays-testcases/Demo by Suave Prince level 11.p1r

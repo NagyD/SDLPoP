@@ -100,10 +100,12 @@ void __pascal far move_coll_to_prev() {
 		below_row_coll_room[column] = -1;
 		above_row_coll_room[column] = -1;
 		curr_row_coll_room[column] = -1;
+#ifdef FIX_COLL_FLAGS
 		// bugfix:
 		curr_row_coll_flags[column] = 0;
 		below_row_coll_flags[column] = 0;
 		above_row_coll_flags[column] = 0;
+#endif
 	}
 }
 
@@ -346,11 +348,13 @@ void __pascal far clear_coll_rooms() {
 	memset_near(curr_row_coll_room, -1, sizeof(curr_row_coll_room));
 	memset_near(below_row_coll_room, -1, sizeof(below_row_coll_room));
 	memset_near(above_row_coll_room, -1, sizeof(above_row_coll_room));
+#ifdef FIX_COLL_FLAGS
 	// workaround
 	memset_near(prev_coll_flags, 0, sizeof(prev_coll_flags));
 	memset_near(curr_row_coll_flags, 0, sizeof(curr_row_coll_flags));
 	memset_near(below_row_coll_flags, 0, sizeof(below_row_coll_flags));
 	memset_near(above_row_coll_flags, 0, sizeof(above_row_coll_flags));
+#endif
 	prev_collision_row = -1;
 }
 
