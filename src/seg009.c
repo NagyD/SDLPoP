@@ -2597,7 +2597,8 @@ void draw_overlay() {
 		} else if (overlay == 3) { // Feather timer
 #ifdef USE_DEBUG_CHEATS
 			char timer_text[32];
-			snprintf(timer_text, sizeof(timer_text), "%02d:%02d", is_feather_fall / 12, is_feather_fall % 12);
+			int ticks_per_sec = get_ticks_per_sec(timer_1);
+			snprintf(timer_text, sizeof(timer_text), "%02d:%02d", is_feather_fall / ticks_per_sec, is_feather_fall % ticks_per_sec);
 			int expected_numeric_chars = 6;
 			int extra_numeric_chars = MAX(0, strnlen(timer_text, sizeof(timer_text)) - 8);
 			int line_width = 5 + (expected_numeric_chars + extra_numeric_chars) * 9;
