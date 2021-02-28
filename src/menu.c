@@ -196,6 +196,7 @@ enum setting_ids {
 	SETTING_FIX_HIDDEN_FLOORS_DURING_FLASHING,
 	SETTING_FIX_HANG_ON_TELEPORT,
 	SETTING_FIX_EXIT_DOOR,
+	SETTING_FIX_QUICKSAVE_DURING_FEATHER,
 	SETTING_USE_CUSTOM_OPTIONS,
 	SETTING_START_MINUTES_LEFT,
 	SETTING_START_TICKS_LEFT,
@@ -547,6 +548,10 @@ setting_type gameplay_settings[] = {
 				.linked = &fixes_saved.fix_exit_door, .required = &use_fixes_and_enhancements,
 				.text = "Fix exit doors",
 				.explanation = "You can enter closed exit doors after you met the shadow or Jaffar died, or after you opened one of multiple exits."},
+		{.id = SETTING_FIX_QUICKSAVE_DURING_FEATHER, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fixes_saved.fix_quicksave_during_feather, .required = &use_fixes_and_enhancements,
+				.text = "Fix quick save in feather mode",
+				.explanation = "You cannot save game while floating in feather mode."},
 };
 
 NAMES_LIST(tile_type_setting_names, {

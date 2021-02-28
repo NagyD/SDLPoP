@@ -1242,6 +1242,13 @@ void __pascal far control_kid() {
 	word key;
 	if (Char.alive < 0 && hitp_curr == 0) {
 		Char.alive = 0;
+		// stop feather fall when kid dies
+		if (fixes->fix_quicksave_during_feather && is_feather_fall > 0) {
+			is_feather_fall = 0;
+			if (check_sound_playing()) {
+				stop_sounds();
+			}
+		}
 	}
 	if (grab_timer != 0) {
 		--grab_timer;

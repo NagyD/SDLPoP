@@ -381,6 +381,12 @@ void restore_room_after_quick_load() {
 	curr_guard_color = temp1;
 	next_level = temp2;
 
+	// feather fall can only get restored if the fix enabled
+	if (!fixes->fix_quicksave_during_feather && is_feather_fall > 0) {
+		is_feather_fall = 0;
+		stop_sounds();
+	}
+
 	//need_full_redraw = 1;
 	different_room = 1;
 	// Show the room where the prince is, even if the player moved the view away from it (with the H,J,U,N keys).
@@ -465,7 +471,7 @@ int quick_load() {
 void check_quick_op() {
 	if (!enable_quicksave) return;
 	if (need_quick_save) {
-		if (!is_feather_fall && quick_save()) {
+		if ((!is_feather_fall || fixes->fix_quicksave_during_feather) && quick_save()) {
 			display_text_bottom("QUICKSAVE");
 		} else {
 			display_text_bottom("NO QUICKSAVE");
@@ -805,6 +811,13 @@ int __pascal far process_key() {
 			case SDL_SCANCODE_T:
 				is_timer_displayed = 1 - is_timer_displayed; // toggle
 			break;
+			case SDL_SCANCODE_F:
+				if (fixes->fix_quicksave_during_feather) {
+					is_feather_timer_displayed = 1 - is_feather_timer_displayed; // toggle
+				} else {
+					is_feather_timer_displayed = 0;
+				}
+			break;
 			#endif
 		}
 	}
@@ -819,6 +832,10 @@ int __pascal far process_key() {
 
 // seg000:08EB
 void __pascal far play_frame() {
+	// play feather fall music if there is more than 1 second of feather fall left
+	if (fixes->fix_quicksave_during_feather && is_feather_fall >= 10 && !check_sound_playing()) {
+		play_sound(sound_39_low_weight);
+	}
 	do_mobs();
 	process_trobs();
 	check_skel();
@@ -1670,6 +1687,12 @@ int __pascal far do_paused() {
 		is_paused = 0; // fix being able to pause the game during the ending sequence
 	}
 	if (is_paused) {
+		// feather fall gets interrupted by pause
+		if (fixes->fix_quicksave_during_feather &&
+				is_feather_fall > 0 &&
+				check_sound_playing()) {
+			stop_sounds();
+		}
 		display_text_bottom("GAME PAUSED");
 #ifdef USE_MENU
 		if (enable_pause_menu || is_menu_shown) {
@@ -1748,7 +1771,12 @@ void __pascal far toggle_upside() {
 // seg000:15F8
 void __pascal far feather_fall() {
 	printf("slow fall started at: rem_min = %d, rem_tick = %d\n", rem_min, rem_tick);
-	is_feather_fall = 1;
+	if (fixes->fix_quicksave_during_feather) {
+		// feather fall is treated as a timer
+		is_feather_fall = FEATHER_FALL_LENGTH * get_ticks_per_sec(timer_1);
+	} else {
+		is_feather_fall = 1;
+	}
 	flash_color = 2; // green
 	flash_time = 3;
 	stop_sounds();

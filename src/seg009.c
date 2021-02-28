@@ -2538,6 +2538,12 @@ void draw_overlay() {
 	is_overlay_displayed = false;
 #ifdef USE_DEBUG_CHEATS
 	if (is_timer_displayed && start_level > 0) overlay = 1; // Timer overlay
+	else if (fixes->fix_quicksave_during_feather &&
+				is_feather_timer_displayed &&
+				start_level > 0 &&
+				is_feather_fall > 0) {
+		overlay = 3; // Feather timer overlay
+	}
 #endif
 #ifdef USE_MENU
 	// Menu overlay - not drawn here directly, only copied from the overlay surface.
@@ -2585,6 +2591,21 @@ void draw_overlay() {
 				timer_box_rect.bottom += 12;
 			}
 #endif
+
+			drawn_rect = timer_box_rect; // Only need to blit this bit to the merged_surface.
+#endif
+		} else if (overlay == 3) { // Feather timer
+#ifdef USE_DEBUG_CHEATS
+			char timer_text[32];
+			snprintf(timer_text, sizeof(timer_text), "%02d:%02d", is_feather_fall / 12, is_feather_fall % 12);
+			int expected_numeric_chars = 6;
+			int extra_numeric_chars = MAX(0, strnlen(timer_text, sizeof(timer_text)) - 8);
+			int line_width = 5 + (expected_numeric_chars + extra_numeric_chars) * 9;
+
+			rect_type timer_box_rect = {0, 0, 11, 2 + line_width};
+			rect_type timer_text_rect = {2, 2, 10, 100};
+			draw_rect_with_alpha(&timer_box_rect, color_0_black, 128);
+			show_text_with_color(&timer_text_rect, -1, -1, timer_text, color_10_brightgreen);
 
 			drawn_rect = timer_box_rect; // Only need to blit this bit to the merged_surface.
 #endif
@@ -3181,8 +3202,36 @@ void reset_timer(int timer_index) {
 #endif
 }
 
+double get_ticks_per_sec(int timer_index) {
+	return (double) fps / wait_time[timer_index];
+}
+
+void recalculate_feather_fall_timer(double previous_ticks_per_second, double ticks_per_second) {
+	if (is_feather_fall <= MAX(previous_ticks_per_second, ticks_per_second) ||
+			previous_ticks_per_second == ticks_per_second) {
+		return;
+	}
+	// there are more ticks per second in base mode vs fight mode so
+	// feather fall length needs to be recalculated
+	is_feather_fall = is_feather_fall / previous_ticks_per_second * ticks_per_second;
+}
+
 void set_timer_length(int timer_index, int length) {
+	if (!fixes->fix_quicksave_during_feather) {
+		wait_time[timer_index] = length;
+		return;
+	}
+	if (is_feather_fall == 0 ||
+			wait_time[timer_index] < custom->base_speed ||
+			wait_time[timer_index] > custom->fight_speed) {
+		wait_time[timer_index] = length;
+		return;
+	}
+	double previous_ticks_per_second, ticks_per_second;
+	previous_ticks_per_second = get_ticks_per_sec(timer_index);
 	wait_time[timer_index] = length;
+	ticks_per_second = get_ticks_per_sec(timer_index);
+	recalculate_feather_fall_timer(previous_ticks_per_second, ticks_per_second);
 }
 
 void __pascal start_timer(int timer_index, int length) {

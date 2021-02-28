@@ -887,6 +887,7 @@ extern word cheats_enabled INIT(= 0);
 #ifdef USE_DEBUG_CHEATS
 extern byte debug_cheats_enabled INIT(= 0);
 extern byte is_timer_displayed INIT(= 0);
+extern byte is_feather_timer_displayed INIT(= 0);
 #endif
 
 #ifdef USE_MENU

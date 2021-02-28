@@ -597,6 +597,7 @@ const rect_type far * __pascal far method_5_rect(const rect_type far *rect,int b
 void draw_rect_with_alpha(const rect_type* rect, byte color, byte alpha);
 image_type far * __pascal far method_6_blit_img_to_scr(image_type far *image,int xpos,int ypos,int blit);
 void reset_timer(int timer_index);
+double get_ticks_per_sec(int timer_index);
 void set_timer_length(int timer_index, int length);
 void __pascal start_timer(int timer_index, int length);
 int __pascal do_wait(int timer_index);
