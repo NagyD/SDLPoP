@@ -227,8 +227,8 @@ void __pascal far redraw_needed_above(int column) {
 #endif
 		{
 			draw_tile_wipe(3);
+			draw_tile_floorright();
 		}
-		draw_tile_floorright();
 		draw_tile_anim_topright();
 		draw_tile_right();
 		draw_tile_bottom(1);
