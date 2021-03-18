@@ -902,7 +902,25 @@ void __pascal far hurt_by_sword() {
 				Char.direction < dir_0_right && // looking left
 				(curr_tile2 == tiles_4_gate || get_tile_at_char() == tiles_4_gate)
 			) {
-				Char.x = x_bump[tile_col - (curr_tile2 != tiles_4_gate) + 5] + 7;
+				#ifdef FIX_OFFSCREEN_GUARDS_DISAPPEARING
+				// a guard can get teleported to the other side of kid's room
+				// when fighting between rooms and hitting a gate
+				if (fixes->fix_offscreen_guards_disappearing) {
+					short gate_col = tile_col;
+					if (curr_room != Char.room)	{
+						if (curr_room == level.roomlinks[Char.room - 1].right) {
+							gate_col += 10;
+						} else if (curr_room == level.roomlinks[Char.room - 1].left) {
+							gate_col -= 10;
+						}
+					}
+					Char.x = x_bump[gate_col - (curr_tile2 != tiles_4_gate) + 5] + 7;
+				} else {
+				#endif
+					Char.x = x_bump[tile_col - (curr_tile2 != tiles_4_gate) + 5] + 7;
+				#ifdef FIX_OFFSCREEN_GUARDS_DISAPPEARING
+				}
+				#endif
 				Char.x = char_dx_forward(10);
 			}
 			Char.y = y_land[Char.curr_row + 1];

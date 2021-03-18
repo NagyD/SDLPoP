@@ -453,7 +453,25 @@ void __pascal far chomped() {
 	#endif
 		curr_room_modif[curr_tilepos] |= 0x80; // put blood
 	if (Char.frame != frame_178_chomped && Char.room == curr_room) {
-		Char.x = x_bump[tile_col + 5] + 7;
+		#ifdef FIX_OFFSCREEN_GUARDS_DISAPPEARING
+		// a guard can get teleported to the other side of kid's room
+		// when hitting a chomper in another room
+		if (fixes->fix_offscreen_guards_disappearing) {
+			short chomper_col = tile_col;
+			if (curr_room != Char.room)	{
+				if (curr_room == level.roomlinks[Char.room - 1].right) {
+					chomper_col += 10;
+				} else if (curr_room == level.roomlinks[Char.room - 1].left) {
+					chomper_col -= 10;
+				}
+			}
+			Char.x = x_bump[chomper_col + 5] + 7;
+		} else {
+		#endif
+			Char.x = x_bump[tile_col + 5] + 7;
+		#ifdef FIX_OFFSCREEN_GUARDS_DISAPPEARING
+		}
+		#endif
 		Char.x = char_dx_forward(7 - !Char.direction);
 		Char.y = y_land[Char.curr_row + 1];
 		take_hp(100);
