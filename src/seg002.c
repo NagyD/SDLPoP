@@ -113,7 +113,6 @@ void __pascal far enter_guard() {
 	room_minus_1 = drawn_room - 1;
 	frame = Char.frame; // hm?
 	guard_tile = level.guards_tile[room_minus_1];
-
 #ifndef FIX_OFFSCREEN_GUARDS_DISAPPEARING
 	if (guard_tile >= 30) return;
 #else
@@ -138,11 +137,18 @@ void __pascal far enter_guard() {
 			if (other_guard_dir == dir_0_right) other_guard_x -= 9; // only retrieve a guard if they will be visible
 			if (other_guard_dir == dir_FF_left) other_guard_x += 1; // getting these right was mostly trial and error
 			// only retrieve offscreen guards
-			if (!(other_guard_x < 58 + 4)) return;
+			if (!(other_guard_x < 58 + 4)) {
+				// check the left offscreen guard
+				if (left_guard_tile >= 0 && left_guard_tile < 30) {
+					goto loc_left_guard_tile;
+				}
+				return;
+			}
 			delta_x = 140; // guard leaves to the left
 			guard_tile = right_guard_tile;
 		}
 		else if (left_guard_tile >= 0 && left_guard_tile < 30) {
+loc_left_guard_tile:
 			other_room_minus_1 = room_L - 1;
 			other_guard_x = level.guards_x[other_room_minus_1];
 			other_guard_dir = level.guards_dir[other_room_minus_1];
