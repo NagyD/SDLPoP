@@ -613,3 +613,5 @@ FIXED: Make it possible to go through a certain closed gate on level 11 of Demo 
 	Testcase: replays-testcases/Demo by Suave Prince level 11.p1r
 FIXED: When the prince jumps up at the bottom of a big pillar split between two rooms, a part near the top of the screen disappears.
 	Example: The top row in the first room of the original level 5.
+DONE: Added a debug cheat to quickload but keep the currently loaded level. (Shift+F9)
+	Motivation: https://forum.princed.org/viewtopic.php?p=32556#p32556

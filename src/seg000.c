@@ -254,7 +254,15 @@ int quick_process(process_func_type process_func) {
 	int ok = 1;
 #define process(x) ok = ok && process_func(&(x), sizeof(x))
 	// level
-	process(level);
+#ifdef USE_DEBUG_CHEATS
+	// Don't load the level if the user holds either Shift key while pressing F9.
+	if (debug_cheats_enabled && (key_states[SDL_SCANCODE_LSHIFT] || key_states[SDL_SCANCODE_RSHIFT])) {
+		fseek(quick_fp, sizeof(level), SEEK_CUR);
+	} else
+#endif
+	{
+		process(level);
+	}
 	process(checkpoint);
 	process(upside_down);
 	process(drawn_room);

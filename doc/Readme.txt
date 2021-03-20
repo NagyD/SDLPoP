@@ -218,6 +218,12 @@ See SDLPoP.ini for details.
 * [: shift kid 1 pixel to the left
 * ]: shift kid 1 pixel to the right
 * T: Toggle timer (remaining minutes:seconds:ticks). Also shows the total elapsed ticks during playback.
+* Shift+F9: Quickload but keep the currently loaded level.
+	* Intended use: Suppose you made a quicksave after you got the prince or a guard into a specific position needed for a trick.
+	Then you try to do the trick, but you realize that you need to change the level slightly to make the trick work. So you edit the level.
+	But you can't use a (regular) quickload to get back to the saved position, because that would load the previous version of the level from the quicksave file.
+	In this situation, press Ctrl+A to load the new version of the level, then press Shift+F9 to load the quicksave onto this new level.
+	* Motivation: https://forum.princed.org/viewtopic.php?p=32556#p32556
 
 Where is the music?
 ----------------------
