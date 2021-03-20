@@ -151,60 +151,62 @@ You can also use the numeric keypad.
 * A: down
 * Y: up
 * X or triggers: Shift
-* Start or Back: display in-game menu
+* Start or Back: Display in-game menu.
 
 If SDLPoP does not work correctly with your gamepad, it might help if you download gamecontrollerdb.txt and configure SDLPoP to use it.
 See SDLPoP.ini for details.
 
 ### Controlling the game:
-* Esc: pause game
-* Space: show time left
-* Ctrl+A: restart level
-* Ctrl+G: save game (on levels 3..13)
-* Ctrl+J: joystick/gamepad mode
-* Ctrl+K: keyboard mode
+* Esc: Pause game.
+* Space: Show how much time is left.
+* Ctrl+A: Restart level.
+* Ctrl+G: Save game (on levels 3..13).
+	* This saves only the level number, the remaining time, and the number of hit points.
+* Ctrl+L: Load game (press in the intro).
+	* The game will continue from the beginning of the level where you saved.
+* Ctrl+J: Joystick/gamepad mode.
+* Ctrl+K: Keyboard mode.
 	* The initial mode is joystick/gamepad if such a device is detected, otherwise keyboard mode.
-	* The game will automatically change input mode when there is input from either device.
-* Ctrl+R: return to intro
-* Ctrl+S: sound on/off
-* Ctrl+V: show version of SDLPoP
-* Ctrl+Q: quit game
-* Ctrl+L: load game (when in the intro)
+	* Since version 1.18, SDLPoP automatically changes the input mode when there is input from either device. As a result, Ctrl+K and Ctrl+J are now redundant.
+* Ctrl+R: Return to intro.
+* Ctrl+S: Sound on/off.
+* Ctrl+V: Show version of SDLPoP.
+* Ctrl+Q: Quit game.
 
 **The following don't exist in the original game:**
-* Ctrl+C: show versions of SDL:
+* Ctrl+C: Show versions of SDL:
 	* COMP: the SDL version SDLPoP was compiled against, i.e. the version of the SDL headers.
 	* LINK: the SDL version SDLPoP was linked against, i.e. the version of SDL2.dll (or its equivalent on other platforms).
-* Alt+Enter: toggle fullscreen
-* F6: quicksave
-* F9: quickload
+* Alt+Enter: Toggle full-screen mode.
+* F6: Quicksave: Save the exact state of the game.
+* F9: Quickload: Load what the last quicksave saved.
 * F12: Save a screenshot to the screenshots folder.
-* Backspace: Display the in-game menu. (Esc will also display the menu but you can turn that off.)
+* Backspace: Display the in-game menu. (Esc will also display the menu by default, but you can turn that off.)
 * `: Fast forward. (It's the key above Tab. It might have a different label depending on your keyboard layout.)
 
 ### Viewing or recording replays:
 **Replays don't exist in the original game.**
-* Ctrl+Tab (in game, or on title screen): start or stop recording
-* Tab (on title screen): view/cycle through the saved replays in the SDLPoP directory
-* F (while viewing a replay): skip forward to the next room
-* Shift+F (while viewing a replay): skip forward to the next level
+* Ctrl+Tab (in game, or on title screen): Start or stop recording.
+* Tab (on title screen): View/cycle through the saved replays in the SDLPoP directory.
+* F (while viewing a replay): Skip forward to the next room.
+* Shift+F (while viewing a replay): Skip forward to the next level.
 
 ### Cheats:
-* Shift+L: go to next level
-* C: show numbers of current and adjacent rooms
-* Shift+C: show numbers of diagonally adjacent rooms
-* -: less remaining time
-* +: more remaining time
-* R: resurrect kid
-* K: kill guard
-* Shift+I: flip screen upside-down
-* Shift+W: slow falling
-* H: look at room to the left
-* J: look at room to the right
-* U: look at room above
-* N: look at room below
-* Shift+B: toggle hiding of non-animated objects
-* Shift+S: Restore lost hit-point. (Like a small red potion.)
+* Shift+L: Go to next level.
+* C: Show numbers of current and adjacent rooms.
+* Shift+C: Show numbers of diagonally adjacent rooms.
+* -: Decrease remaining time by one minute.
+* +: Increase remaining time by one minute.
+* R: Resurrect kid.
+* K: Kill guard.
+* Shift+I: Flip the screen upside down.
+* Shift+W: Slow falling.
+* H: Look at the room to the left.
+* J: Look at the room to the right.
+* U: Look at the room above.
+* N: Look at the room below.
+* Shift+B: Toggle hiding of non-animated objects. (Also known as "blind mode".)
+* Shift+S: Restore a lost hit-point. (Like a small red potion.)
 * Shift+T: Give more hit-points. (Like a big red potion.)
 
 **The following don't exist in the original game:**
@@ -215,8 +217,8 @@ See SDLPoP.ini for details.
 
 ### Debug cheats:
 **These don't exist in the original game.**
-* [: shift kid 1 pixel to the left
-* ]: shift kid 1 pixel to the right
+* [: Shift kid 1 pixel to the left.
+* ]: Shift kid 1 pixel to the right.
 * T: Toggle timer (remaining minutes:seconds:ticks). Also shows the total elapsed ticks during playback.
 * Shift+F9: Quickload but keep the currently loaded level.
 	* Intended use: Suppose you made a quicksave after you got the prince or a guard into a specific position needed for a trick.
