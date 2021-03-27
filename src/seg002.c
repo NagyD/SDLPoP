@@ -113,7 +113,6 @@ void __pascal far enter_guard() {
 	room_minus_1 = drawn_room - 1;
 	frame = Char.frame; // hm?
 	guard_tile = level.guards_tile[room_minus_1];
-
 #ifndef FIX_OFFSCREEN_GUARDS_DISAPPEARING
 	if (guard_tile >= 30) return;
 #else
@@ -138,11 +137,18 @@ void __pascal far enter_guard() {
 			if (other_guard_dir == dir_0_right) other_guard_x -= 9; // only retrieve a guard if they will be visible
 			if (other_guard_dir == dir_FF_left) other_guard_x += 1; // getting these right was mostly trial and error
 			// only retrieve offscreen guards
-			if (!(other_guard_x < 58 + 4)) return;
+			if (!(other_guard_x < 58 + 4)) {
+				// check the left offscreen guard
+				if (left_guard_tile >= 0 && left_guard_tile < 30) {
+					goto loc_left_guard_tile;
+				}
+				return;
+			}
 			delta_x = 140; // guard leaves to the left
 			guard_tile = right_guard_tile;
 		}
 		else if (left_guard_tile >= 0 && left_guard_tile < 30) {
+loc_left_guard_tile:
 			other_room_minus_1 = room_L - 1;
 			other_guard_x = level.guards_x[other_room_minus_1];
 			other_guard_dir = level.guards_dir[other_room_minus_1];
@@ -902,7 +908,25 @@ void __pascal far hurt_by_sword() {
 				Char.direction < dir_0_right && // looking left
 				(curr_tile2 == tiles_4_gate || get_tile_at_char() == tiles_4_gate)
 			) {
-				Char.x = x_bump[tile_col - (curr_tile2 != tiles_4_gate) + 5] + 7;
+				#ifdef FIX_OFFSCREEN_GUARDS_DISAPPEARING
+				// a guard can get teleported to the other side of kid's room
+				// when fighting between rooms and hitting a gate
+				if (fixes->fix_offscreen_guards_disappearing) {
+					short gate_col = tile_col;
+					if (curr_room != Char.room)	{
+						if (curr_room == level.roomlinks[Char.room - 1].right) {
+							gate_col += 10;
+						} else if (curr_room == level.roomlinks[Char.room - 1].left) {
+							gate_col -= 10;
+						}
+					}
+					Char.x = x_bump[gate_col - (curr_tile2 != tiles_4_gate) + 5] + 7;
+				} else {
+				#endif
+					Char.x = x_bump[tile_col - (curr_tile2 != tiles_4_gate) + 5] + 7;
+				#ifdef FIX_OFFSCREEN_GUARDS_DISAPPEARING
+				}
+				#endif
 				Char.x = char_dx_forward(10);
 			}
 			Char.y = y_land[Char.curr_row + 1];

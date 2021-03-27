@@ -210,9 +210,6 @@ The authors of this program may be contacted at https://forum.princed.org
 // A guard standing on a door top (with floor) should not become inactive.
 #define FIX_DOORTOP_DISABLING_GUARD
 
-// Fix guards appearing in the current room when they fell into spikes in an adjacent room. (Example: original level 11, room 22.)
-#define FIX_SPIKED_GUARD
-
 // Fix graphical glitches with an opening gate:
 // 1. with a loose floor above and a wall above-right.
 // 2. with the top half of a big pillar above-right.
