@@ -219,7 +219,8 @@ See SDLPoP.ini for details.
 **These don't exist in the original game.**
 * [: Shift kid 1 pixel to the left.
 * ]: Shift kid 1 pixel to the right.
-* T: Toggle timer (remaining minutes:seconds:ticks). Also shows the total elapsed ticks during playback.
+* T: Toggle display of timer (remaining minutes:seconds:ticks). Also shows the total elapsed ticks during playback.
+* F: Toggle display of the remaining feather fall time. (Only if "Fix quick save in feather mode" is enabled.)
 * Shift+F9: Quickload but keep the currently loaded level.
 	* Intended use: Suppose you made a quicksave after you got the prince or a guard into a specific position needed for a trick.
 	Then you try to do the trick, but you realize that you need to change the level slightly to make the trick work. So you edit the level.

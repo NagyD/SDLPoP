@@ -615,3 +615,7 @@ FIXED: When the prince jumps up at the bottom of a big pillar split between two 
 	Example: The top row in the first room of the original level 5.
 DONE: Added a debug cheat to quickload but keep the currently loaded level. (Shift+F9)
 	Motivation: https://forum.princed.org/viewtopic.php?p=32556#p32556
+FIXED: Fixed spiked/chomped/bumped guards teleporting into the wrong room. (if fixes are enabled)
+	Details: https://github.com/NagyD/SDLPoP/pull/237
+FIXED: Quicksave during feather fall mode. (if fixes are enabled)
+	Details: https://github.com/NagyD/SDLPoP/pull/236
