@@ -1212,6 +1212,7 @@ typedef struct fixes_options_type {
 	byte fix_hidden_floors_during_flashing;
 	byte fix_hang_on_teleport;
 	byte fix_exit_door;
+	byte fix_quicksave_during_feather;
 } fixes_options_type;
 
 #define NUM_GUARD_SKILLS 12
@@ -1324,5 +1325,7 @@ typedef struct custom_options_type {
 typedef struct directory_listing_type directory_listing_type;
 
 #define BASE_FPS 60
+
+#define FEATHER_FALL_LENGTH 18.75
 
 #endif

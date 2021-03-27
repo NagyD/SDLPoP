@@ -497,16 +497,33 @@ void __pascal far timers() {
 		--resurrect_time;
 	}
 
-	if (is_feather_fall) is_feather_fall++;
+	if (fixes->fix_quicksave_during_feather) {
+		if (is_feather_fall > 0) {
+			--is_feather_fall;
+			if (is_feather_fall == 0) {
+				if (check_sound_playing()) {
+					stop_sounds();
+				}
 
-	if (is_feather_fall && (!check_sound_playing() || is_feather_fall > 225)) {
-		printf("slow fall ended at: rem_min = %d, rem_tick = %d\n", rem_min, rem_tick);
-		printf("length = %d ticks\n", is_feather_fall);
-#ifdef USE_REPLAY
-		if (recording) special_move = MOVE_EFFECT_END;
-		if (!replaying) // during replays, feather effect gets cancelled in do_replay_move()
-#endif
-		is_feather_fall = 0;
+				printf("slow fall ended at: rem_min = %d, rem_tick = %d\n", rem_min, rem_tick);
+				printf("length = %d ticks\n", is_feather_fall);
+	#ifdef USE_REPLAY
+				if (recording) special_move = MOVE_EFFECT_END;
+	#endif
+			}
+		}
+	} else {
+		if (is_feather_fall) is_feather_fall++;
+
+		if (is_feather_fall && (!check_sound_playing() || is_feather_fall > 225)) {
+			printf("slow fall ended at: rem_min = %d, rem_tick = %d\n", rem_min, rem_tick);
+			printf("length = %d ticks\n", is_feather_fall);
+	#ifdef USE_REPLAY
+			if (recording) special_move = MOVE_EFFECT_END;
+			if (!replaying) // during replays, feather effect gets cancelled in do_replay_move()
+	#endif
+			is_feather_fall = 0;
+		}
 	}
 
 	// Special event: mouse

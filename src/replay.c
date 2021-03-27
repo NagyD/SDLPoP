@@ -363,6 +363,7 @@ void options_process_fixes(SDL_RWops* rw, rw_process_func_type process_func) {
 	process(fixes_options_replay.fix_hidden_floors_during_flashing);
 	process(fixes_options_replay.fix_hang_on_teleport);
 	process(fixes_options_replay.fix_exit_door);
+	process(fixes_options_replay.fix_quicksave_during_feather);
 }
 
 void options_process_custom_general(SDL_RWops* rw, rw_process_func_type process_func) {
