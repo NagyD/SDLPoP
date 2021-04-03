@@ -1,0 +1,7 @@
+﻿After the prince falls in to the wall, no glitched room should appear.
+To pass the test: #define FIX_ENTERING_GLITCHED_ROOMS in config.h
+
+The same #define fixes another similar glitch as well:
+When the prince dies behind a wall, and he is revived with R, he appears in a glitched room. (Example: The bottom right room of level 3.)
+
+More info: https://forum.princed.org/viewtopic.php?f=68&t=4467

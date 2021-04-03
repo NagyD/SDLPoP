@@ -376,8 +376,15 @@ void __pascal far exit_room() {
 
 // seg002:0486
 int __pascal far goto_other_room(short direction) {
+	//printf("goto_other_room: direction = %d, Char.room = %d\n", direction, Char.room);
 	short opposite_dir;
-	Char.room = ((byte*)&level.roomlinks[Char.room - 1])[direction];
+	byte other_room = ((byte*)&level.roomlinks[Char.room - 1])[direction];
+#ifdef FIX_ENTERING_GLITCHED_ROOMS
+	if (Char.room == 0) {
+		other_room = 0;
+	}
+#endif
+	Char.room = other_room;
 	if (direction == 0) {
 		// left
 		Char.x += 140;

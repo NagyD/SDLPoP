@@ -229,6 +229,11 @@ The authors of this program may be contacted at https://forum.princed.org
 // Example: The top row in the first room of the original level 5.
 #define FIX_BIGPILLAR_JUMP_UP
 
+// When the prince dies behind a wall, and he is revived with R, he appears in a glitched room. (Example: The bottom right room of level 3.)
+// The same room can also be reached by falling into a wall. (Falling into the wall, itself, is a different glitch, though.)
+// Testcase: replays-testcases/Original level 2 falling into wall.p1r
+#define FIX_ENTERING_GLITCHED_ROOMS
+
 
 // Debug features:
 
