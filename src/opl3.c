@@ -1164,7 +1164,7 @@ void OPL3_Generate(opl3_chip *chip, Bit16s *buf)
         const opl3_channel *chan = &chip->channel[ii];
         Bit16s * const *chanout = chan->out;
         const Bit16s accm = *chanout[0] + *chanout[1] + *chanout[2] + *chanout[3];
-        mixed += (Bit16s)(accm & chan->cha);
+        mixed += (Bit16s)(accm & chan->chb);
     }
 
     chip->mixbuff[1] = mixed;
