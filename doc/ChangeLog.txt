@@ -622,3 +622,6 @@ FIXED: Quicksave during feather fall mode. (if fixes are enabled)
 FIXED: Prevent the prince from entering a glitched room when he falls into a wall or he is revived near a wall.
 	Details: replays-testcases/Original level 2 falling into wall.txt
 	Testcase: replays-testcases/Original level 2 falling into wall.p1r
+FIXED: Optimized OPL mixing (MIDI music).
+	Details: https://github.com/NagyD/SDLPoP/pull/238
+	"More importantly: when run on a Raspberry Pi Zero, the music went from unusable to perfect,"
