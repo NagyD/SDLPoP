@@ -485,23 +485,33 @@ void __pascal far chomped() {
 void __pascal far check_gate_push() {
 	// Closing gate pushes Kid
 	short frame;
-	short var_4;
+	short orig_col;
 	frame = Char.frame;
 	if (Char.action == actions_7_turn ||
 		frame == frame_15_stand || // stand
 		(frame >= frame_108_fall_land_2 && frame < 111) // crouch
 	) {
 		get_tile_at_char();
-		var_4 = tile_col;
+		orig_col = tile_col;
+		int orig_room = curr_room;
 		if ((curr_tile2 == tiles_4_gate ||
 			get_tile(curr_room, --tile_col, tile_row) == tiles_4_gate) &&
 			(curr_row_coll_flags[tile_col] & prev_coll_flags[tile_col]) == 0xFF &&
 			can_bump_into_gate()
 		) {
 			bumped_sound();
-			// push Kid left if var_4 <= tile_col, gate at char's tile
-			// push Kid right if var_4 > tile_col, gate is left from char's tile
-			Char.x += 5 - (var_4 <= tile_col) * 10;
+#ifdef FIX_CAPED_PRINCE_SLIDING_THROUGH_GATE
+			// If get_tile() changed curr_room from orig_room to the left neighbor of orig_room (because tile_col was outside room orig_room),
+			// then change tile_col (and curr_room) so that orig_col and tile_col are meant in the same room.
+			if (curr_room == level.roomlinks[orig_room - 1].left) {
+				tile_col -= 10;
+				curr_room = orig_room;
+			}
+#endif
+			//printf("check_gate_push: orig_col = %d, tile_col = %d, curr_room = %d, Char.room = %d, orig_room = %d\n", orig_col, tile_col, curr_room, Char.room, orig_room);
+			// push Kid left if orig_col <= tile_col, gate at char's tile
+			// push Kid right if orig_col > tile_col, gate is left from char's tile
+			Char.x += 5 - (orig_col <= tile_col) * 10;
 		}
 	}
 }

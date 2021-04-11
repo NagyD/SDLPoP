@@ -234,6 +234,14 @@ The authors of this program may be contacted at https://forum.princed.org
 // Testcase: replays-testcases/Original level 2 falling into wall.p1r
 #define FIX_ENTERING_GLITCHED_ROOMS
 
+// If you are using the caped prince graphics, and crouch with your back towards a closed gate on the left edge on the room, then the prince will slide through the gate.
+// You can also try this with the original graphics if your use the debug cheat "[" to push the prince into the gate.
+// This option fixes that.
+// You can get the caped prince graphics here: https://www.popot.org/custom_levels.php?action=KID.DAT (it's the one by Veke)
+// Video: https://www.popot.org/documentation.php?doc=TricksPage3#83
+// Explanation: https://forum.princed.org/viewtopic.php?p=32701#p32701
+#define FIX_CAPED_PRINCE_SLIDING_THROUGH_GATE
+
 
 // Debug features:
 

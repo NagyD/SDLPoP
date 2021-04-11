@@ -625,3 +625,5 @@ FIXED: Prevent the prince from entering a glitched room when he falls into a wal
 FIXED: Optimized OPL mixing (MIDI music).
 	Details: https://github.com/NagyD/SDLPoP/pull/238
 	"More importantly: when run on a Raspberry Pi Zero, the music went from unusable to perfect,"
+FIXED: Fixed the prince sliding through closed gates when you are using the caped prince graphics.
+	Details: See FIX_CAPED_PRINCE_SLIDING_THROUGH_GATE in config.h .
