@@ -213,6 +213,7 @@ The authors of this program may be contacted at https://forum.princed.org
 // Fix graphical glitches with an opening gate:
 // 1. with a loose floor above and a wall above-right.
 // 2. with the top half of a big pillar above-right.
+// Details: https://forum.princed.org/viewtopic.php?p=31884#p31884
 #define FIX_ABOVE_GATE
 
 // Disable this fix to make it possible to go through a certain closed gate on level 11 of Demo by Suave Prince.
@@ -227,11 +228,15 @@ The authors of this program may be contacted at https://forum.princed.org
 
 // When the prince jumps up at the bottom of a big pillar split between two rooms, a part near the top of the screen disappears.
 // Example: The top row in the first room of the original level 5.
+// Videos: https://forum.princed.org/viewtopic.php?p=32227#p32227
+// Explanation: https://forum.princed.org/viewtopic.php?p=32414#p32414
 #define FIX_BIGPILLAR_JUMP_UP
 
-// When the prince dies behind a wall, and he is revived with R, he appears in a glitched room. (Example: The bottom right room of level 3.)
+// When the prince dies behind a wall, and he is revived with R, he appears in a glitched room.
+// (Example: The bottom right part of the bottom right room of level 3.)
 // The same room can also be reached by falling into a wall. (Falling into the wall, itself, is a different glitch, though.)
 // Testcase: replays-testcases/Original level 2 falling into wall.p1r
+// More info: https://forum.princed.org/viewtopic.php?f=68&t=4467
 #define FIX_ENTERING_GLITCHED_ROOMS
 
 // If you are using the caped prince graphics, and crouch with your back towards a closed gate on the left edge on the room, then the prince will slide through the gate.

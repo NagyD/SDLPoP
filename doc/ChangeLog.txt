@@ -568,6 +568,7 @@ ADDED: You can now use quicksave and quickload while recording a replay.
 FIXED: The prince can now grab a ledge at the bottom right corner of a room with no room below.
 	Details: https://forum.princed.org/viewtopic.php?p=30410#p30410
 	Testcase: replays-testcases/SNES-PC-set level 11.p1r
+	See FIX_CORNER_GRAB in config.h .
 FIXED: Don't allow killing a skeleton in cheat mode.
 FIXED: Ctrl+S didn't mute music (except death music).
 FIXED: A falling tile on the left side of a pillar could cause the blue stripe to be drawn over the pillar.
@@ -602,6 +603,7 @@ DONE: In the settings menu, allow using Page Up, Page Down, Home, End.
 FIXED: Fixed graphical glitches with an opening gate:
 	1. with a loose floor above and a wall above-right.
 	2. with the top half of a big pillar above-right.
+	See FIX_ABOVE_GATE in config.h .
 FIXED: Validate mode crashed with the error "init_scaling: SDL_CreateTexture: Invalid renderer".
 DONE: Rewrote all mentions of key combinations to the "Ctrl+A" style.
 DONE: Marked which features of SDLPoP are not in the original game. (To prevent confusions like #197)
@@ -611,8 +613,10 @@ FIXED: Fixed crashing when a MIDI music interrupted another one.
 FIXED: Make it possible to go through a certain closed gate on level 11 of Demo by Suave Prince.
 	Details: https://forum.princed.org/viewtopic.php?p=32326#p32326
 	Testcase: replays-testcases/Demo by Suave Prince level 11.p1r
+	See FIX_COLL_FLAGS in config.h .
 FIXED: When the prince jumps up at the bottom of a big pillar split between two rooms, a part near the top of the screen disappears.
 	Example: The top row in the first room of the original level 5.
+	Details: See FIX_BIGPILLAR_JUMP_UP in config.h .
 DONE: Added a debug cheat to quickload but keep the currently loaded level. (Shift+F9)
 	Motivation: https://forum.princed.org/viewtopic.php?p=32556#p32556
 FIXED: Fixed spiked/chomped/bumped guards teleporting into the wrong room. (if fixes are enabled)
@@ -622,6 +626,7 @@ FIXED: Quicksave during feather fall mode. (if fixes are enabled)
 FIXED: Prevent the prince from entering a glitched room when he falls into a wall or he is revived near a wall.
 	Details: replays-testcases/Original level 2 falling into wall.txt
 	Testcase: replays-testcases/Original level 2 falling into wall.p1r
+	See FIX_ENTERING_GLITCHED_ROOMS in config.h .
 FIXED: Optimized OPL mixing (MIDI music).
 	Details: https://github.com/NagyD/SDLPoP/pull/238
 	"More importantly: when run on a Raspberry Pi Zero, the music went from unusable to perfect,"
