@@ -526,7 +526,7 @@ int access_UTF8(const char* filename_UTF8, int mode);
 #endif
 #define access access_UTF8
 #endif //_WIN32
-directory_listing_type* create_directory_listing_and_find_first_file(const char* directory, const char* extension);
+directory_listing_type* create_directory_listing_and_find_first_file(const char* directory, const char* pattern);
 char* get_current_filename_from_directory_listing(directory_listing_type* data);
 bool find_next_file(directory_listing_type* data);
 void close_directory_listing(directory_listing_type* data);

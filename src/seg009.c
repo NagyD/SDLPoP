@@ -61,15 +61,49 @@ bool file_exists(const char* filename) {
 }
 
 const char* locate_file_(const char* filename, char* path_buffer, int buffer_size) {
-	if(file_exists(filename)) {
+	//printf("filename = %s\n", filename);
+
+	if (file_exists(filename)) {
 		return filename;
-	} else {
-		// If failed, it may be that SDLPoP is being run from the wrong different working directory.
-		// We can try to rescue the situation by loading from the directory of the executable.
-		find_exe_dir();
-        snprintf_check(path_buffer, buffer_size, "%s/%s", exe_dir, filename);
-        return (const char*) path_buffer;
 	}
+
+	{
+		// Try a case-insensitive match, in case the filename exists with a different case on a case-sensitive filesystem.
+		directory_listing_type* directory_listing = create_directory_listing_and_find_first_file(".", filename);
+		if (directory_listing != NULL) {
+			const char* filename2 = get_current_filename_from_directory_listing(directory_listing);
+			snprintf_check(path_buffer, buffer_size, "%s", filename2);
+			//printf("filename2 = %s\n", filename2);
+			close_directory_listing(directory_listing);
+			directory_listing = NULL;
+			return path_buffer;
+		}
+	}
+
+	// If failed, it may be that SDLPoP is being run from the wrong different working directory.
+	// We can try to rescue the situation by loading from the directory of the executable.
+	find_exe_dir();
+	snprintf_check(path_buffer, buffer_size, "%s/%s", exe_dir, filename);
+
+	if (file_exists(path_buffer)) {
+		return (const char*) path_buffer;
+	}
+
+	{
+		// Try a case-insensitive match, in case the filename exists with a different case on a case-sensitive filesystem.
+		directory_listing_type* directory_listing = create_directory_listing_and_find_first_file(exe_dir, filename);
+		if (directory_listing != NULL) {
+			const char* filename2 = get_current_filename_from_directory_listing(directory_listing);
+			snprintf_check(path_buffer, buffer_size, "%s/%s", exe_dir, filename2);
+			//printf("filename2 = %s\n", filename2);
+			close_directory_listing(directory_listing);
+			directory_listing = NULL;
+			return path_buffer;
+		}
+	}
+
+    // Give up and let the caller handle that the file does not exist.
+    return filename;
 }
 
 #ifdef _WIN32
@@ -123,10 +157,10 @@ struct directory_listing_type {
 	char* current_filename_UTF8;
 };
 
-directory_listing_type* create_directory_listing_and_find_first_file(const char* directory, const char* extension) {
+directory_listing_type* create_directory_listing_and_find_first_file(const char* directory, const char* pattern) {
 	directory_listing_type* directory_listing = calloc(1, sizeof(directory_listing_type));
 	char search_pattern[POP_MAX_PATH];
-	snprintf_check(search_pattern, POP_MAX_PATH, "%s/*.%s", directory, extension);
+	snprintf_check(search_pattern, POP_MAX_PATH, "%s/%s", directory, pattern);
 	WCHAR* search_pattern_UTF16 = WIN_UTF8ToString(search_pattern);
 	directory_listing->search_handle = FindFirstFileW( search_pattern_UTF16, &directory_listing->find_data );
 	SDL_free(search_pattern_UTF16);
@@ -164,15 +198,23 @@ struct directory_listing_type {
 	const char* extension;
 };
 
-directory_listing_type* create_directory_listing_and_find_first_file(const char* directory, const char* extension) {
+directory_listing_type* create_directory_listing_and_find_first_file(const char* directory, const char* pattern) {
 	directory_listing_type* data = calloc(1, sizeof(directory_listing_type));
 	bool ok = false;
 	data->dp = opendir(directory);
 	if (data->dp != NULL) {
 		struct dirent* ep;
 		while ((ep = readdir(data->dp))) {
-			char *ext = strrchr(ep->d_name, '.');
-			if (ext != NULL && strcasecmp(ext+1, extension) == 0) {
+			bool match = false;
+			if (pattern[0] == '*' && pattern[1] == '.') {
+				// If the pattern starts with "*.": Look at only the extension of the found filename.
+				char *ext = strrchr(ep->d_name, '.');
+				match = (ext != NULL && strcasecmp(ext+1, pattern+2) == 0);
+			} else {
+				// Otherwise, look at the whole filename. (We are assuming that pattern contains no wildcards!)
+				match = strcasecmp(ep->d_name, extension) == 0;
+			}
+			if (match) {
 				data->found_filename = ep->d_name;
 				data->extension = extension;
 				ok = true;

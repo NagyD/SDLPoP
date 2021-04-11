@@ -513,7 +513,7 @@ void load_dos_exe_modifications(const char* folder_name) {
 		dos_version = identify_dos_exe_version(info.st_size);
 	} else {
 		// PRINCE.EXE not found, try to search for other .EXE files in the same folder.
-		directory_listing_type* directory_listing = create_directory_listing_and_find_first_file(folder_name, "exe");
+		directory_listing_type* directory_listing = create_directory_listing_and_find_first_file(folder_name, "*.exe");
 		if (directory_listing != NULL) {
 			do {
 				char* current_filename = get_current_filename_from_directory_listing(directory_listing);

@@ -195,7 +195,7 @@ void list_replay_files() {
 
 	num_replay_files = 0;
 
-	directory_listing_type* directory_listing = create_directory_listing_and_find_first_file(replays_folder, "p1r");
+	directory_listing_type* directory_listing = create_directory_listing_and_find_first_file(replays_folder, "*.p1r");
 	if (directory_listing == NULL) {
 		return;
 	}
