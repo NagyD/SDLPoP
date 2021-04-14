@@ -102,6 +102,9 @@ The authors of this program may be contacted at https://forum.princed.org
 
 // The mentioned tricks can be found here: https://www.popot.org/documentation.php?doc=Tricks
 
+// A compilation-time option to disable all fixes. Useful for automated solving tools that require vanilla emulation. 
+#ifndef DISABLE_ALL_FIXES
+
 // If a room is linked to itself on the left, the closing sounds of the gates in that room can't be heard.
 #define FIX_GATE_SOUNDS
 
@@ -247,6 +250,7 @@ The authors of this program may be contacted at https://forum.princed.org
 // Explanation: https://forum.princed.org/viewtopic.php?p=32701#p32701
 #define FIX_CAPED_PRINCE_SLIDING_THROUGH_GATE
 
+#endif
 
 // Debug features:
 
