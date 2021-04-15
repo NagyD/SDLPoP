@@ -1432,7 +1432,7 @@ void __pascal far draw_leveldoor() {
 
 // seg008:1E0C
 void __pascal far get_room_address(int room) {
-	if (room < 0 || room > 24) printf("Tried to access room %d, not in 0..24.\n", room);
+	//if (room < 0 || room > 24) printf("Tried to access room %d, not in 0..24.\n", room);
 	loaded_room = (word) room;
 	if (room) {
 		curr_room_tiles = &level.fg[(room-1)*30];
