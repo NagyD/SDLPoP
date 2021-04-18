@@ -876,7 +876,9 @@ void __pascal far loose_shake(int arg_0) {
 			// Sounds 20,21,22: loose floor shaking
 			sound_id = prandom(2) + sound_20_loose_shake_1;
 		} while(sound_id == last_loose_sound);
+#ifdef DISABLE_ALL_FIXES
 		prandom(2); // For vanilla pop compatibility, an RNG cycle is wasted here
+#endif
 		if (sound_flags & sfDigi) {
 			last_loose_sound = sound_id;
 			// random sample rate (10500..11500)
