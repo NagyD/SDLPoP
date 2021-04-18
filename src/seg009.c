@@ -267,7 +267,7 @@ int __pascal far key_test_quit() {
 	if (key == (SDL_SCANCODE_Q | WITH_CTRL)) { // Ctrl+Q
 
 		#ifdef USE_REPLAY
-		if (recording) save_recorded_replay();
+		if (recording) save_recorded_replay_dialog();
 		#endif
 		#ifdef USE_MENU
 		if (is_menu_shown) menu_was_closed();

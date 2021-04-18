@@ -602,7 +602,7 @@ void add_replay_move() {
 
 void stop_recording() {
 	recording = 0;
-	if (save_recorded_replay()) {
+	if (save_recorded_replay_dialog()) {
 		display_text_bottom("REPLAY SAVED");
 	} else {
 		display_text_bottom("REPLAY CANCELED");
@@ -750,84 +750,90 @@ void do_replay_move() {
 	}
 }
 
-int save_recorded_replay() {
-	// prompt for replay filename
-	rect_type rect;
-	short bgcolor = color_8_darkgray;
-	short color = color_15_brightwhite;
-	current_target_surface = onscreen_surface_;
-	method_1_blit_rect(offscreen_surface, onscreen_surface_, &copyprot_dialog->peel_rect, &copyprot_dialog->peel_rect, 0);
-	draw_dialog_frame(copyprot_dialog);
-	shrink2_rect(&rect, &copyprot_dialog->text_rect, 2, 1);
-	show_text_with_color(&rect, 0, 0, "Save replay\nenter the filename...\n\n", color_15_brightwhite);
-	clear_kbd_buf();
+int save_recorded_replay_dialog() {
+ // prompt for replay filename
+ rect_type rect;
+ short bgcolor = color_8_darkgray;
+ short color = color_15_brightwhite;
+ current_target_surface = onscreen_surface_;
+ method_1_blit_rect(offscreen_surface, onscreen_surface_, &copyprot_dialog->peel_rect, &copyprot_dialog->peel_rect, 0);
+ draw_dialog_frame(copyprot_dialog);
+ shrink2_rect(&rect, &copyprot_dialog->text_rect, 2, 1);
+ show_text_with_color(&rect, 0, 0, "Save replay\nenter the filename...\n\n", color_15_brightwhite);
+ clear_kbd_buf();
 
-	rect_type text_rect;
-	rect_type input_rect = {104,   64,  118,  256};
-	offset4_rect_add(&text_rect, &input_rect, -2, 0, 2, 0);
-	//peel_type* peel = read_peel_from_screen(&input_rect);
-	draw_rect(&text_rect, bgcolor);
-	current_target_surface = onscreen_surface_;
-	need_full_redraw = 1; // lazy: instead of neatly restoring the dialog peel, just redraw the whole screen
+ rect_type text_rect;
+ rect_type input_rect = {104,   64,  118,  256};
+ offset4_rect_add(&text_rect, &input_rect, -2, 0, 2, 0);
+ //peel_type* peel = read_peel_from_screen(&input_rect);
+ draw_rect(&text_rect, bgcolor);
+ current_target_surface = onscreen_surface_;
+ need_full_redraw = 1; // lazy: instead of neatly restoring the dialog peel, just redraw the whole screen
 
-	char input_filename[POP_MAX_PATH] = "";
-	int input_length;
-	do {
-		input_length = input_str(&input_rect, input_filename, 64, "", 0, 0, color, bgcolor);
-	} while (input_length == 0); // filename must be at least 1 character
+ char input_filename[POP_MAX_PATH] = "";
+ int input_length;
+ do {
+  input_length = input_str(&input_rect, input_filename, 64, "", 0, 0, color, bgcolor);
+ } while (input_length == 0); // filename must be at least 1 character
 
-	if (input_length < 0) {
-		return 0;  // Escape was pressed -> discard the replay
-	}
+ if (input_length < 0) {
+  return 0;  // Escape was pressed -> discard the replay
+ }
 
-	char full_filename[POP_MAX_PATH] = "";
-	snprintf_check(full_filename, sizeof(full_filename), "%s/%s.p1r", replays_folder, input_filename);
+ char full_filename[POP_MAX_PATH] = "";
+ snprintf_check(full_filename, sizeof(full_filename), "%s/%s.p1r", replays_folder, input_filename);
 
-	// create the "replays" folder if it does not exist already
+ // create the "replays" folder if it does not exist already
 #if defined WIN32 || _WIN32 || WIN64 || _WIN64
-	mkdir (replays_folder);
+ mkdir (replays_folder);
 #else
-	mkdir (replays_folder, 0700);
+ mkdir (replays_folder, 0700);
 #endif
 
-	// NOTE: We currently overwrite the replay file if it exists already. Maybe warn / ask for confirmation??
+ // NOTE: We currently overwrite the replay file if it exists already. Maybe warn / ask for confirmation??
 
-	replay_fp = fopen(full_filename, "wb");
-	if (replay_fp != NULL) {
-		fwrite(replay_magic_number, COUNT(replay_magic_number), 1, replay_fp); // magic number "P1R"
-		fwrite(&replay_format_class, sizeof(replay_format_class), 1, replay_fp);
-		putc(REPLAY_FORMAT_CURR_VERSION, replay_fp);
-		putc(REPLAY_FORMAT_DEPRECATION_NUMBER, replay_fp);
-		Sint64 seconds = time(NULL);
-		fwrite(&seconds, sizeof(seconds), 1, replay_fp);
-		// levelset_name
-		putc(strnlen(levelset_name, UINT8_MAX), replay_fp); // length of the levelset name (is zero for original levels)
-		fputs(levelset_name, replay_fp);
-		// implementation name
-		putc(strnlen(implementation_name, UINT8_MAX), replay_fp);
-		fputs(implementation_name, replay_fp);
-		// embed a savestate into the replay
-		fwrite(&savestate_size, sizeof(savestate_size), 1, replay_fp);
-		fwrite(savestate_buffer, savestate_size, 1, replay_fp);
+ return save_recorded_replay(full_filename);
+}
 
-		// save the options, organized per section
-		byte temp_options[POP_MAX_OPTIONS_SIZE];
-		for (int i = 0; i < COUNT(replay_options_sections); ++i) {
-			dword section_size = save_options_to_buffer(temp_options, sizeof(temp_options), replay_options_sections[i].section_func);
-			fwrite(&section_size, sizeof(section_size), 1, replay_fp);
-			fwrite(temp_options, section_size, 1, replay_fp);
-		}
+int save_recorded_replay(const char* full_filename)
+{
+ replay_fp = fopen(full_filename, "wb");
+ if (replay_fp != NULL) {
+  fwrite(replay_magic_number, COUNT(replay_magic_number), 1, replay_fp); // magic number "P1R"
+  fwrite(&replay_format_class, sizeof(replay_format_class), 1, replay_fp);
+  putc(REPLAY_FORMAT_CURR_VERSION, replay_fp);
+  putc(REPLAY_FORMAT_DEPRECATION_NUMBER, replay_fp);
+  Sint64 seconds = time(NULL);
+  fwrite(&seconds, sizeof(seconds), 1, replay_fp);
+  // levelset_name
+  putc(strnlen(levelset_name, UINT8_MAX), replay_fp); // length of the levelset name (is zero for original levels)
+  fputs(levelset_name, replay_fp);
+  // implementation name
+  putc(strnlen(implementation_name, UINT8_MAX), replay_fp);
+  fputs(implementation_name, replay_fp);
+  // embed a savestate into the replay
+  fwrite(&savestate_size, sizeof(savestate_size), 1, replay_fp);
+  fwrite(savestate_buffer, savestate_size, 1, replay_fp);
 
-		// save the rest of the replay data
-		fwrite(&start_level, sizeof(start_level), 1, replay_fp);
-		fwrite(&saved_random_seed, sizeof(saved_random_seed), 1, replay_fp);
-		num_replay_ticks = curr_tick;
-		fwrite(&num_replay_ticks, sizeof(num_replay_ticks), 1, replay_fp);
-		fwrite(moves, num_replay_ticks, 1, replay_fp);
-		fclose(replay_fp);
-		replay_fp = NULL;
-	}
-	return 1;
+  // save the options, organized per section
+  byte temp_options[POP_MAX_OPTIONS_SIZE];
+  for (int i = 0; i < COUNT(replay_options_sections); ++i) {
+   dword section_size = save_options_to_buffer(temp_options, sizeof(temp_options), replay_options_sections[i].section_func);
+   fwrite(&section_size, sizeof(section_size), 1, replay_fp);
+   fwrite(temp_options, section_size, 1, replay_fp);
+  }
+
+  // save the rest of the replay data
+  fwrite(&start_level, sizeof(start_level), 1, replay_fp);
+  fwrite(&saved_random_seed, sizeof(saved_random_seed), 1, replay_fp);
+  num_replay_ticks = curr_tick;
+  fwrite(&num_replay_ticks, sizeof(num_replay_ticks), 1, replay_fp);
+  fwrite(moves, num_replay_ticks, 1, replay_fp);
+  fclose(replay_fp);
+  replay_fp = NULL;
+ }
+
+ return 1;
 }
 
 byte open_next_replay_file() {
@@ -918,7 +924,7 @@ void key_press_while_recording(int* key_ptr) {
 			special_move = MOVE_RESTART_LEVEL;
 			break;
 		case SDL_SCANCODE_R | WITH_CTRL:
-			save_recorded_replay();
+			save_recorded_replay_dialog();
 			recording = 0;
 		default:
 			break;
