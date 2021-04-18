@@ -73,7 +73,7 @@ int __pascal far find_room_of_tile() {
 		//find_room_of_tile();
 		goto again;
 	}
-#ifdef FIX_CORNER_GRAB
+#ifndef FIX_CORNER_GRAB
 	// if (tile_row < 0) was here originally
 	if (tile_row < 0) {
 		tile_row += 3;
