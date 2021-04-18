@@ -634,3 +634,5 @@ FIXED: Fixed the prince sliding through closed gates when you are using the cape
 	Details: See FIX_CAPED_PRINCE_SLIDING_THROUGH_GATE in config.h .
 DONE: Added a compilation-time flag to disable all fixes for vanilla execution.
 	Details: https://github.com/NagyD/SDLPoP/pull/239
+FIXED: If the prince dies on level 14, don't return to the intro after the level was restarted.
+	Details: See FIX_LEVEL_14_RESTARTING in config.h .
