@@ -20,7 +20,7 @@ The authors of this program may be contacted at https://forum.princed.org
 
 #include "common.h"
 #include <time.h>
-#include <replay.h>
+#include "replay.h"
 
 #ifdef USE_REPLAY
 
