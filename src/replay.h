@@ -93,31 +93,4 @@ typedef struct replay_info_type {
                 }      \
  } while (0)
 
-// The functions options_process_* below each process (read/write) a section of options variables (using SDL_RWops)
-// This is I/O for the *binary* representation of the relevant options - this gets saved as part of a replay.
-
-typedef int rw_process_func_type(SDL_RWops* rw, void* data, size_t data_size);
-typedef void process_options_section_func_type(SDL_RWops* rw, rw_process_func_type process_func);
-
-#define process(x) if (!process_func(rw, &(x), sizeof(x))) return
-fixes_options_type fixes_options_replay;
-
-// struct for keeping track of both the normal and the replay options (which we want to easily switch between)
-// (separately for each 'section', so adding future options becomes easy without messing up the format!)
-typedef struct replay_options_section_type {
- dword data_size;
- byte replay_data[POP_MAX_OPTIONS_SIZE]; // binary representation of the options that are active during the replay
- byte stored_data[POP_MAX_OPTIONS_SIZE]; // normal options are restored from this, after the replay is finished
- process_options_section_func_type* section_func;
-} replay_options_section_type;
-
-replay_options_section_type replay_options_sections[] = {
- {.section_func = options_process_features},
- {.section_func = options_process_enhancements},
- {.section_func = options_process_fixes},
- {.section_func = options_process_custom_general},
- {.section_func = options_process_custom_per_level},
-};
-
-
 #endif

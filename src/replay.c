@@ -238,22 +238,21 @@ void start_with_replay_file(const char *filename) {
 	}
 }
 
-// output the current options to a memory buffer (e.g. to remember them before a replay is loaded)
-size_t save_options_to_buffer(void* options_buffer, size_t max_size, process_options_section_func_type* process_section_func) {
- SDL_RWops* rw = SDL_RWFromMem(options_buffer, max_size);
- process_section_func(rw, process_rw_write);
- Sint64 section_size = SDL_RWtell(rw);
- if (section_size < 0) section_size = 0;
- SDL_RWclose(rw);
- return (size_t) section_size;
-}
+// The functions options_process_* below each process (read/write) a section of options variables (using SDL_RWops)
+// This is I/O for the *binary* representation of the relevant options - this gets saved as part of a replay.
 
+typedef int rw_process_func_type(SDL_RWops* rw, void* data, size_t data_size);
+typedef void process_options_section_func_type(SDL_RWops* rw, rw_process_func_type process_func);
+
+#define process(x) if (!process_func(rw, &(x), sizeof(x))) return
 
 void options_process_features(SDL_RWops* rw, rw_process_func_type process_func) {
 	process(enable_copyprot);
 	process(enable_quicksave);
 	process(enable_quicksave_penalty);
 }
+
+fixes_options_type fixes_options_replay;
 
 void options_process_enhancements(SDL_RWops* rw, rw_process_func_type process_func) {
 	process(use_fixes_and_enhancements);
@@ -383,12 +382,41 @@ void options_process_custom_per_level(SDL_RWops* rw, rw_process_func_type proces
 
 #undef process
 
+// struct for keeping track of both the normal and the replay options (which we want to easily switch between)
+// (separately for each 'section', so adding future options becomes easy without messing up the format!)
+typedef struct replay_options_section_type {
+	dword data_size;
+	byte replay_data[POP_MAX_OPTIONS_SIZE]; // binary representation of the options that are active during the replay
+	byte stored_data[POP_MAX_OPTIONS_SIZE]; // normal options are restored from this, after the replay is finished
+	process_options_section_func_type* section_func;
+} replay_options_section_type;
+
+replay_options_section_type replay_options_sections[] = {
+	{.section_func = options_process_features},
+	{.section_func = options_process_enhancements},
+	{.section_func = options_process_fixes},
+	{.section_func = options_process_custom_general},
+	{.section_func = options_process_custom_per_level},
+};
+
+// output the current options to a memory buffer (e.g. to remember them before a replay is loaded)
+size_t save_options_to_buffer(void* options_buffer, size_t max_size, process_options_section_func_type* process_section_func) {
+	SDL_RWops* rw = SDL_RWFromMem(options_buffer, max_size);
+	process_section_func(rw, process_rw_write);
+	Sint64 section_size = SDL_RWtell(rw);
+	if (section_size < 0) section_size = 0;
+	SDL_RWclose(rw);
+	return (size_t) section_size;
+}
+
 // restore the options from a memory buffer (e.g. reapply the original options after a replay is finished)
 void load_options_from_buffer(void* options_buffer, size_t options_size, process_options_section_func_type* process_section_func) {
 	SDL_RWops* rw = SDL_RWFromMem(options_buffer, options_size);
 	process_section_func(rw, process_rw_read);
 	SDL_RWclose(rw);
 }
+
+
 
 void init_record_replay() {
 	if (!enable_replay) return;
