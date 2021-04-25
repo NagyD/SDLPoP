@@ -751,7 +751,6 @@ void do_replay_move() {
 }
 
 int save_recorded_replay_dialog() {
-int save_recorded_replay() {
 	// prompt for replay filename
 	rect_type rect;
 	short bgcolor = color_8_darkgray;
