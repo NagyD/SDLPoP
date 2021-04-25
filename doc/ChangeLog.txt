@@ -636,3 +636,6 @@ DONE: Added a compilation-time flag to disable all fixes for vanilla execution.
 	Details: https://github.com/NagyD/SDLPoP/pull/239
 FIXED: If the prince dies on level 14, don't return to the intro after the level was restarted.
 	Details: See FIX_LEVEL_14_RESTARTING in config.h .
+DONE: Waste an RNG cycle in loose_shake() to match DOS PoP.
+DONE: In new replays, use deprecation_number = 2. On playback, waste the RNG cycle only if deprecation_number >= 2.
+	Older replays have deprecation_number <= 1, and we don't waste the RNG cycle when playing them back.
