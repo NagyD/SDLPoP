@@ -751,43 +751,44 @@ void do_replay_move() {
 }
 
 int save_recorded_replay_dialog() {
- // prompt for replay filename
- rect_type rect;
- short bgcolor = color_8_darkgray;
- short color = color_15_brightwhite;
- current_target_surface = onscreen_surface_;
- method_1_blit_rect(offscreen_surface, onscreen_surface_, &copyprot_dialog->peel_rect, &copyprot_dialog->peel_rect, 0);
- draw_dialog_frame(copyprot_dialog);
- shrink2_rect(&rect, &copyprot_dialog->text_rect, 2, 1);
- show_text_with_color(&rect, 0, 0, "Save replay\nenter the filename...\n\n", color_15_brightwhite);
- clear_kbd_buf();
+int save_recorded_replay() {
+	// prompt for replay filename
+	rect_type rect;
+	short bgcolor = color_8_darkgray;
+	short color = color_15_brightwhite;
+	current_target_surface = onscreen_surface_;
+	method_1_blit_rect(offscreen_surface, onscreen_surface_, &copyprot_dialog->peel_rect, &copyprot_dialog->peel_rect, 0);
+	draw_dialog_frame(copyprot_dialog);
+	shrink2_rect(&rect, &copyprot_dialog->text_rect, 2, 1);
+	show_text_with_color(&rect, 0, 0, "Save replay\nenter the filename...\n\n", color_15_brightwhite);
+	clear_kbd_buf();
 
- rect_type text_rect;
- rect_type input_rect = {104,   64,  118,  256};
- offset4_rect_add(&text_rect, &input_rect, -2, 0, 2, 0);
- //peel_type* peel = read_peel_from_screen(&input_rect);
- draw_rect(&text_rect, bgcolor);
- current_target_surface = onscreen_surface_;
- need_full_redraw = 1; // lazy: instead of neatly restoring the dialog peel, just redraw the whole screen
+	rect_type text_rect;
+	rect_type input_rect = {104,   64,  118,  256};
+	offset4_rect_add(&text_rect, &input_rect, -2, 0, 2, 0);
+	//peel_type* peel = read_peel_from_screen(&input_rect);
+	draw_rect(&text_rect, bgcolor);
+	current_target_surface = onscreen_surface_;
+	need_full_redraw = 1; // lazy: instead of neatly restoring the dialog peel, just redraw the whole screen
 
- char input_filename[POP_MAX_PATH] = "";
- int input_length;
- do {
-  input_length = input_str(&input_rect, input_filename, 64, "", 0, 0, color, bgcolor);
- } while (input_length == 0); // filename must be at least 1 character
+	char input_filename[POP_MAX_PATH] = "";
+	int input_length;
+	do {
+		input_length = input_str(&input_rect, input_filename, 64, "", 0, 0, color, bgcolor);
+	} while (input_length == 0); // filename must be at least 1 character
 
- if (input_length < 0) {
-  return 0;  // Escape was pressed -> discard the replay
- }
+	if (input_length < 0) {
+		return 0;  // Escape was pressed -> discard the replay
+	}
 
- char full_filename[POP_MAX_PATH] = "";
- snprintf_check(full_filename, sizeof(full_filename), "%s/%s.p1r", replays_folder, input_filename);
+	char full_filename[POP_MAX_PATH] = "";
+	snprintf_check(full_filename, sizeof(full_filename), "%s/%s.p1r", replays_folder, input_filename);
 
- // create the "replays" folder if it does not exist already
+	// create the "replays" folder if it does not exist already
 #if defined WIN32 || _WIN32 || WIN64 || _WIN64
- mkdir (replays_folder);
+	mkdir (replays_folder);
 #else
- mkdir (replays_folder, 0700);
+	mkdir (replays_folder, 0700);
 #endif
 
  // NOTE: We currently overwrite the replay file if it exists already. Maybe warn / ask for confirmation??
