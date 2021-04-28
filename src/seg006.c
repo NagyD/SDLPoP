@@ -765,7 +765,7 @@ int __pascal far get_tile_div_mod(int xpos) {
 	}
 
 	// Considering the case of positive overflow
-	size_t tblSize = COUNT(tile_div_tbl);
+ int tblSize = COUNT(tile_div_tbl);
  if (xpos >= tblSize) {
   // In this case DOS PoP reads the bytes directly after tile_div_tbl[], that is: and tile_mod_tbl[]
   // Here we simulate these reads.
