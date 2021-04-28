@@ -63,7 +63,7 @@ Fixed bugs:
 FIXED: When the screen is flashing, there may be black rectangles around the moving objects.
 FIXED: Can't do level 7 trick.
 
-2014 August 01
+2014 August 01 
 ==============
 New feature:
 DONE: Support LEVELS.DAT
@@ -632,5 +632,5 @@ FIXED: Optimized OPL mixing (MIDI music).
 	"More importantly: when run on a Raspberry Pi Zero, the music went from unusable to perfect,"
 FIXED: Fixed the prince sliding through closed gates when you are using the caped prince graphics.
 	Details: See FIX_CAPED_PRINCE_SLIDING_THROUGH_GATE in config.h .
-DONE: When backing offscreen (to the left) from the first guard on level 7, simulate the glitch from DOS PoP, which causes the prince to fall through the floor.
-	Details: See https://github.com/NagyD/SDLPoP/issues/229      
+DONE: When backing offscreen (to the left) from the first guard on level 7 (among others), simulate the glitch from DOS PoP, which causes the prince to fall through the floor.
+ Details: See https://github.com/NagyD/SDLPoP/issues/229    
