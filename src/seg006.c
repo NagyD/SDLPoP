@@ -726,13 +726,19 @@ const byte tile_mod_tbl[256] = {
 
 // seg006:03F0
 int __pascal far get_tile_div_mod(int xpos) {
+	// Determine tile column (xh) and the position within the tile (xl) from xpos.
+
 	// xpos might be negative if the kid is far off left.
 	// In this case, the array index overflows.
-/*	if (xpos < 0 || xpos >= 256) {
+	if (xpos < 0 || xpos >= 256) {
 		printf("get_tile_div_mod(): xpos = %d\n", xpos);
-	}*/
+	}
+
+// DOS PoP does this:
 //	obj_xl = tile_mod_tbl[xpos];
 //	return tile_div_tbl[xpos];
+
+	// xpos uses a coordinate system in which the left edge of the screen is 58, and each tile is 14 units wide.
 	int x = xpos - 58;
 	int xl = x % 14;
 	int xh = x / 14;
@@ -742,6 +748,22 @@ int __pascal far get_tile_div_mod(int xpos) {
 		// Modulo returns a negative number if x is negative, but we want 0 <= xl < 14.
 		xl += 14;
 	}
+
+	if (xpos < 0) {
+		// In this case DOS PoP reads the bytes directly before tile_div_tbl[] and tile_mod_tbl[] in the memory.
+		// Here we simulate these reads.
+		// Before tile_mod_tbl[] is tile_div_tbl[], and before tile_div_tbl[] are the following bytes:
+		static const byte bogus[] = {0x02, 0x00, 0x41, 0x00, 0x80, 0x00, 0xBF, 0x00, 0xFE, 0x00, 0xFF, 0x01, 0x01, 0xFF, 0xC4, 0xFF, 0x03, 0x00, 0x42, 0x00, 0x81, 0x00, 0xC0, 0x00, 0xF8, 0xFF, 0x37, 0x00, 0x76, 0x00, 0xB5, 0x00, 0xF4, 0x00};
+		if (COUNT(bogus) + xpos >= 0) {
+			xh = bogus[COUNT(bogus) + xpos]; // simulating tile_div_tbl[xpos]
+			xl = tile_div_tbl[COUNT(tile_div_tbl) + xpos]; // simulating tile_mod_tbl[xpos]
+		} else {
+			printf("xpos = %d (< %d) out of range for simulation of index overflow!\n", xpos, -COUNT(bogus));
+		}
+	}
+
+	// TODO: Do the same for xpos >= 256.
+
 	obj_xl = xl;
 	return xh;
 }
