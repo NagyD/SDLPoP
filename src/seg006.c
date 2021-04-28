@@ -749,6 +749,8 @@ int __pascal far get_tile_div_mod(int xpos) {
 		xl += 14;
 	}
 
+	// For compatibility with the DOS version, we allow for overflow access to these tables
+	// Considering the case of negative overflow
 	if (xpos < 0) {
 		// In this case DOS PoP reads the bytes directly before tile_div_tbl[] and tile_mod_tbl[] in the memory.
 		// Here we simulate these reads.
@@ -758,11 +760,24 @@ int __pascal far get_tile_div_mod(int xpos) {
 			xh = bogus[COUNT(bogus) + xpos]; // simulating tile_div_tbl[xpos]
 			xl = tile_div_tbl[COUNT(tile_div_tbl) + xpos]; // simulating tile_mod_tbl[xpos]
 		} else {
-			printf("xpos = %d (< %d) out of range for simulation of index overflow!\n", xpos, -COUNT(bogus));
+			printf("xpos = %d (< %ld) out of range for simulation of index overflow!\n", xpos, -COUNT(bogus));
 		}
 	}
 
-	// TODO: Do the same for xpos >= 256.
+	// Considering the case of positive overflow
+	size_t tblSize = COUNT(tile_div_tbl);
+ if (xpos >= tblSize) {
+  // In this case DOS PoP reads the bytes directly after tile_div_tbl[], that is: and tile_mod_tbl[]
+  // Here we simulate these reads.
+  // After tile_mod_tbl[] there are the following bytes:
+  static const byte bogus[] = {0xF4, 0x02, 0x10, 0x1E, 0x2C, 0x3A, 0x48, 0x56, 0x64, 0x72, 0x80, 0x8E, 0x9C, 0xAA, 0xB8, 0xC6, 0xD4, 0xE2, 0xF0, 0xFE, 0x00, 0x0A, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x0A, 0x0D, 0x00, 0x00, 0x00, 0x00};
+  if (xpos-tblSize < COUNT(bogus)) {
+   xh = tile_mod_tbl[xpos-tblSize]; // simulating tile_div_tbl[xpos]
+   xl = bogus[xpos-tblSize]; // simulating tile_mod_tbl[xpos]
+  } else {
+   printf("xpos = %d (> %ld) out of range for simulation of index overflow!\n", xpos, COUNT(bogus)+tblSize);
+  }
+ }
 
 	obj_xl = xl;
 	return xh;
