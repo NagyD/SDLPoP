@@ -505,8 +505,8 @@ void __pascal far timers() {
 					stop_sounds();
 				}
 
-				printf("slow fall ended at: rem_min = %d, rem_tick = %d\n", rem_min, rem_tick);
-				printf("length = %d ticks\n", is_feather_fall);
+				//printf("slow fall ended at: rem_min = %d, rem_tick = %d\n", rem_min, rem_tick);
+				//printf("length = %d ticks\n", is_feather_fall);
 	#ifdef USE_REPLAY
 				if (recording) special_move = MOVE_EFFECT_END;
 	#endif
@@ -516,8 +516,8 @@ void __pascal far timers() {
 		if (is_feather_fall) is_feather_fall++;
 
 		if (is_feather_fall && (!check_sound_playing() || is_feather_fall > 225)) {
-			printf("slow fall ended at: rem_min = %d, rem_tick = %d\n", rem_min, rem_tick);
-			printf("length = %d ticks\n", is_feather_fall);
+			//printf("slow fall ended at: rem_min = %d, rem_tick = %d\n", rem_min, rem_tick);
+			//printf("length = %d ticks\n", is_feather_fall);
 	#ifdef USE_REPLAY
 			if (recording) special_move = MOVE_EFFECT_END;
 			if (!replaying) // during replays, feather effect gets cancelled in do_replay_move()
