@@ -728,12 +728,6 @@ const byte tile_mod_tbl[256] = {
 int __pascal far get_tile_div_mod(int xpos) {
 	// Determine tile column (xh) and the position within the tile (xl) from xpos.
 
-	// xpos might be negative if the kid is far off left.
-	// In this case, the array index overflows.
-	if (xpos < 0 || xpos >= 256) {
-		printf("get_tile_div_mod(): xpos = %d\n", xpos);
-	}
-
 // DOS PoP does this:
 //	obj_xl = tile_mod_tbl[xpos];
 //	return tile_div_tbl[xpos];
@@ -765,7 +759,7 @@ int __pascal far get_tile_div_mod(int xpos) {
 	}
 
 	// Considering the case of positive overflow
-	size_t tblSize = COUNT(tile_div_tbl);
+	int tblSize = 256;
  if (xpos >= tblSize) {
   // In this case DOS PoP reads the bytes directly after tile_div_tbl[], that is: and tile_mod_tbl[]
   // Here we simulate these reads.
