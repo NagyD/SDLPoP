@@ -632,5 +632,12 @@ FIXED: Optimized OPL mixing (MIDI music).
 	"More importantly: when run on a Raspberry Pi Zero, the music went from unusable to perfect,"
 FIXED: Fixed the prince sliding through closed gates when you are using the caped prince graphics.
 	Details: See FIX_CAPED_PRINCE_SLIDING_THROUGH_GATE in config.h .
+DONE: Added a compilation-time flag to disable all fixes for vanilla execution.
+	Details: https://github.com/NagyD/SDLPoP/pull/239
+FIXED: If the prince dies on level 14, don't return to the intro after the level was restarted.
+	Details: See FIX_LEVEL_14_RESTARTING in config.h .
+DONE: Waste an RNG cycle in loose_shake() to match DOS PoP.
+DONE: In new replays, use deprecation_number = 2. On playback, waste the RNG cycle only if deprecation_number >= 2.
+	Older replays have deprecation_number <= 1, and we don't waste the RNG cycle when playing them back.
 DONE: When backing offscreen (to the left) from the first guard on level 7 (among others), simulate the glitch from DOS PoP, which causes the prince to fall through the floor.
  Details: See https://github.com/NagyD/SDLPoP/issues/229    

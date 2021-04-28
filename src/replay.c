@@ -29,7 +29,8 @@ const char* implementation_name = "SDLPoP v" SDLPOP_VERSION;
 
 #define REPLAY_FORMAT_CURR_VERSION       102 // current version number of the replay format
 #define REPLAY_FORMAT_MIN_VERSION        101 // SDLPoP will open replays with this version number and higher
-#define REPLAY_FORMAT_DEPRECATION_NUMBER 1   // SDLPoP won't open replays with a higher deprecation number
+#define REPLAY_FORMAT_DEPRECATION_NUMBER 2   // SDLPoP won't open replays with a higher deprecation number
+// If deprecation_number >= 2: Waste an RNG cycle in loose_shake() to match DOS PoP.
 
 #define MAX_REPLAY_DURATION 345600 // 8 hours: 720 * 60 * 8 ticks
 byte moves[MAX_REPLAY_DURATION] = {0}; // static memory for now because it is easier (should this be dynamic?)
@@ -156,6 +157,8 @@ int read_replay_header(replay_header_type* header, FILE* fp, char* error_message
 		}
 		return 0;
 	}
+
+	g_deprecation_number = deprecation_number;
 
 	if (is_validate_mode) {
 		static byte is_replay_info_printed = 0;
