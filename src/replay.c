@@ -797,41 +797,41 @@ int save_recorded_replay_dialog() {
 
 int save_recorded_replay(const char* full_filename)
 {
- replay_fp = fopen(full_filename, "wb");
- if (replay_fp != NULL) {
-  fwrite(replay_magic_number, COUNT(replay_magic_number), 1, replay_fp); // magic number "P1R"
-  fwrite(&replay_format_class, sizeof(replay_format_class), 1, replay_fp);
-  putc(REPLAY_FORMAT_CURR_VERSION, replay_fp);
-  putc(REPLAY_FORMAT_DEPRECATION_NUMBER, replay_fp);
-  Sint64 seconds = time(NULL);
-  fwrite(&seconds, sizeof(seconds), 1, replay_fp);
-  // levelset_name
-  putc(strnlen(levelset_name, UINT8_MAX), replay_fp); // length of the levelset name (is zero for original levels)
-  fputs(levelset_name, replay_fp);
-  // implementation name
-  putc(strnlen(implementation_name, UINT8_MAX), replay_fp);
-  fputs(implementation_name, replay_fp);
-  // embed a savestate into the replay
-  fwrite(&savestate_size, sizeof(savestate_size), 1, replay_fp);
-  fwrite(savestate_buffer, savestate_size, 1, replay_fp);
+	replay_fp = fopen(full_filename, "wb");
+	if (replay_fp != NULL) {
+	fwrite(replay_magic_number, COUNT(replay_magic_number), 1, replay_fp); // magic number "P1R"
+	fwrite(&replay_format_class, sizeof(replay_format_class), 1, replay_fp);
+	putc(REPLAY_FORMAT_CURR_VERSION, replay_fp);
+	putc(REPLAY_FORMAT_DEPRECATION_NUMBER, replay_fp);
+	Sint64 seconds = time(NULL);
+	fwrite(&seconds, sizeof(seconds), 1, replay_fp);
+	// levelset_name
+	putc(strnlen(levelset_name, UINT8_MAX), replay_fp); // length of the levelset name (is zero for original levels)
+	fputs(levelset_name, replay_fp);
+	// implementation name
+	putc(strnlen(implementation_name, UINT8_MAX), replay_fp);
+	fputs(implementation_name, replay_fp);
+	// embed a savestate into the replay
+	fwrite(&savestate_size, sizeof(savestate_size), 1, replay_fp);
+	fwrite(savestate_buffer, savestate_size, 1, replay_fp);
 
-  // save the options, organized per section
-  byte temp_options[POP_MAX_OPTIONS_SIZE];
-  for (int i = 0; i < COUNT(replay_options_sections); ++i) {
-   dword section_size = save_options_to_buffer(temp_options, sizeof(temp_options), replay_options_sections[i].section_func);
-   fwrite(&section_size, sizeof(section_size), 1, replay_fp);
-   fwrite(temp_options, section_size, 1, replay_fp);
-  }
+	// save the options, organized per section
+	byte temp_options[POP_MAX_OPTIONS_SIZE];
+	for (int i = 0; i < COUNT(replay_options_sections); ++i) {
+	dword section_size = save_options_to_buffer(temp_options, sizeof(temp_options), replay_options_sections[i].section_func);
+	fwrite(&section_size, sizeof(section_size), 1, replay_fp);
+	fwrite(temp_options, section_size, 1, replay_fp);
+	}
 
-  // save the rest of the replay data
-  fwrite(&start_level, sizeof(start_level), 1, replay_fp);
-  fwrite(&saved_random_seed, sizeof(saved_random_seed), 1, replay_fp);
-  num_replay_ticks = curr_tick;
-  fwrite(&num_replay_ticks, sizeof(num_replay_ticks), 1, replay_fp);
-  fwrite(moves, num_replay_ticks, 1, replay_fp);
-  fclose(replay_fp);
-  replay_fp = NULL;
- }
+	// save the rest of the replay data
+	fwrite(&start_level, sizeof(start_level), 1, replay_fp);
+	fwrite(&saved_random_seed, sizeof(saved_random_seed), 1, replay_fp);
+	num_replay_ticks = curr_tick;
+	fwrite(&num_replay_ticks, sizeof(num_replay_ticks), 1, replay_fp);
+	fwrite(moves, num_replay_ticks, 1, replay_fp);
+	fclose(replay_fp);
+	replay_fp = NULL;
+	}
 
  return 1;
 }
