@@ -63,7 +63,7 @@ Fixed bugs:
 FIXED: When the screen is flashing, there may be black rectangles around the moving objects.
 FIXED: Can't do level 7 trick.
 
-2014 August 01
+2014 August 01 
 ==============
 New feature:
 DONE: Support LEVELS.DAT
@@ -639,3 +639,5 @@ FIXED: If the prince dies on level 14, don't return to the intro after the level
 DONE: Waste an RNG cycle in loose_shake() to match DOS PoP.
 DONE: In new replays, use deprecation_number = 2. On playback, waste the RNG cycle only if deprecation_number >= 2.
 	Older replays have deprecation_number <= 1, and we don't waste the RNG cycle when playing them back.
+DONE: When backing offscreen (to the left) from the first guard on level 7 (among others), simulate the glitch from DOS PoP, which causes the prince to fall through the floor.
+ Details: See https://github.com/NagyD/SDLPoP/issues/229    
