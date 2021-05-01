@@ -877,8 +877,11 @@ void __pascal far loose_shake(int arg_0) {
 			sound_id = prandom(2) + sound_20_loose_shake_1;
 		} while(sound_id == last_loose_sound);
 
+#ifdef USE_REPLAY
 		// Skip this prandom call if we are replaying, and the replay file was made with an old version of SDLPoP (which didn't have this call).
-		if (!(replaying && g_deprecation_number < 2)) {
+		if (!(replaying && g_deprecation_number < 2))
+#endif
+		{
 			prandom(2); // For vanilla pop compatibility, an RNG cycle is wasted here
 			// Note: In DOS PoP, it's wasted a few lines below.
 		}

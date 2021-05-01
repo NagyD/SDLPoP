@@ -908,7 +908,9 @@ extern char mods_folder[POP_MAX_PATH] INIT(= "mods");
 
 extern int play_demo_level;
 
+#ifdef USE_REPLAY
 extern int g_deprecation_number;
+#endif
 
 #undef INIT
 #undef extern
