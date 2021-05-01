@@ -790,7 +790,7 @@ int save_recorded_replay_dialog() {
 	mkdir (replays_folder, 0700);
 #endif
 
- // NOTE: We currently overwrite the replay file if it exists already. Maybe warn / ask for confirmation??
+	// NOTE: We currently overwrite the replay file if it exists already. Maybe warn / ask for confirmation??
 
  return save_recorded_replay(full_filename);
 }
