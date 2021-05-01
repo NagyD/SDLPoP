@@ -1,5 +1,5 @@
 The prince should go through the last closed gate, into a room with a guard.
-To pass the test: #undef FIX_COLL_FLAGS in config.h
+To pass the test: disable FIX_COLL_FLAGS and FIX_CAPED_PRINCE_SLIDING_THROUGH_GATE in config.h
 
 Download mod: https://forum.princed.org/viewtopic.php?p=29792#p29792
 More info: https://forum.princed.org/viewtopic.php?p=32326#p32326
