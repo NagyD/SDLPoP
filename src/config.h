@@ -250,6 +250,11 @@ The authors of this program may be contacted at https://forum.princed.org
 // Explanation: https://forum.princed.org/viewtopic.php?p=32701#p32701
 #define FIX_CAPED_PRINCE_SLIDING_THROUGH_GATE
 
+// If the prince dies on level 14, restarting the level will not stop the "Press Button to Continue" timer, and the game will return to the intro after a few seconds.
+// How to reproduce: https://forum.princed.org/viewtopic.php?p=16926#p16926
+// Technical explanation: https://forum.princed.org/viewtopic.php?p=16408#p16408 (the second half of the post)
+#define FIX_LEVEL_14_RESTARTING
+
 #endif // ifndef DISABLE_ALL_FIXES
 
 // Debug features:

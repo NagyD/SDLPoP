@@ -1821,6 +1821,9 @@ void __pascal far show_time() {
 
 // seg008:25A8
 void __pascal far show_level() {
+#ifdef FIX_LEVEL_14_RESTARTING
+	text_time_remaining = text_time_total = 0;
+#endif
 	byte disp_level;
 	char sprintf_temp[32];
 	disp_level = current_level;
