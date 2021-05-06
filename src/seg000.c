@@ -343,6 +343,8 @@ int quick_process(process_func_type process_func) {
 	process(ctrl1_up);
 	process(ctrl1_down);
 	process(ctrl1_shift2);
+ // For proper emulation of the overflow glitch
+ process(exit_room_timer);
 	// replay recording state
 #ifdef USE_REPLAY
 	process(curr_tick);
