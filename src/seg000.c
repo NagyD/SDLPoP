@@ -421,7 +421,7 @@ void restore_room_after_quick_load() {
 	// Get rid of "press button" message if kid was dead before quickload.
 	text_time_total = text_time_remaining = 0;
 	//next_sound = current_sound = -1;
-	exit_room_timer = 0;
+ //exit_room_timer = 0; // This prevents the overflow glitch from happening
 }
 
 int quick_load() {
@@ -1251,6 +1251,7 @@ void __pascal far check_the_end() {
 			end_sequence();
 		}
 		different_room = 1;
+		exit_room_timer = 2; // Added to remember exit room timer
 		loadkid();
 		anim_tile_modif();
 		start_chompers();
