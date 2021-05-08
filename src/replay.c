@@ -605,7 +605,7 @@ void add_replay_move() {
 
 void stop_recording() {
 	recording = 0;
-	if (save_recorded_replay()) {
+	if (save_recorded_replay_dialog()) {
 		display_text_bottom("REPLAY SAVED");
 	} else {
 		display_text_bottom("REPLAY CANCELED");
@@ -753,7 +753,7 @@ void do_replay_move() {
 	}
 }
 
-int save_recorded_replay() {
+int save_recorded_replay_dialog() {
 	// prompt for replay filename
 	rect_type rect;
 	short bgcolor = color_8_darkgray;
@@ -795,6 +795,11 @@ int save_recorded_replay() {
 
 	// NOTE: We currently overwrite the replay file if it exists already. Maybe warn / ask for confirmation??
 
+ return save_recorded_replay(full_filename);
+}
+
+int save_recorded_replay(const char* full_filename)
+{
 	replay_fp = fopen(full_filename, "wb");
 	if (replay_fp != NULL) {
 		fwrite(replay_magic_number, COUNT(replay_magic_number), 1, replay_fp); // magic number "P1R"
@@ -830,6 +835,7 @@ int save_recorded_replay() {
 		fclose(replay_fp);
 		replay_fp = NULL;
 	}
+
 	return 1;
 }
 
@@ -921,7 +927,7 @@ void key_press_while_recording(int* key_ptr) {
 			special_move = MOVE_RESTART_LEVEL;
 			break;
 		case SDL_SCANCODE_R | WITH_CTRL:
-			save_recorded_replay();
+			save_recorded_replay_dialog();
 			recording = 0;
 		default:
 			break;

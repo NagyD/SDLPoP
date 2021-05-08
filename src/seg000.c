@@ -1778,7 +1778,7 @@ void __pascal far toggle_upside() {
 
 // seg000:15F8
 void __pascal far feather_fall() {
-	printf("slow fall started at: rem_min = %d, rem_tick = %d\n", rem_min, rem_tick);
+	//printf("slow fall started at: rem_min = %d, rem_tick = %d\n", rem_min, rem_tick);
 	if (fixes->fix_quicksave_during_feather) {
 		// feather fall is treated as a timer
 		is_feather_fall = FEATHER_FALL_LENGTH * get_ticks_per_sec(timer_1);
