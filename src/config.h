@@ -248,6 +248,7 @@ The authors of this program may be contacted at https://forum.princed.org
 // You can get the caped prince graphics here: https://www.popot.org/custom_levels.php?action=KID.DAT (it's the one by Veke)
 // Video: https://www.popot.org/documentation.php?doc=TricksPage3#83
 // Explanation: https://forum.princed.org/viewtopic.php?p=32701#p32701
+// This also fixes the bug described at FIX_COLL_FLAGS.
 #define FIX_CAPED_PRINCE_SLIDING_THROUGH_GATE
 
 // If the prince dies on level 14, restarting the level will not stop the "Press Button to Continue" timer, and the game will return to the intro after a few seconds.

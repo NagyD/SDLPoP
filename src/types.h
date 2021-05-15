@@ -1216,6 +1216,7 @@ typedef struct fixes_options_type {
 	byte fix_hang_on_teleport;
 	byte fix_exit_door;
 	byte fix_quicksave_during_feather;
+	byte fix_caped_prince_sliding_through_gate;
 } fixes_options_type;
 
 #define NUM_GUARD_SKILLS 12

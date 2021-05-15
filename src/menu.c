@@ -197,6 +197,7 @@ enum setting_ids {
 	SETTING_FIX_HANG_ON_TELEPORT,
 	SETTING_FIX_EXIT_DOOR,
 	SETTING_FIX_QUICKSAVE_DURING_FEATHER,
+	SETTING_FIX_CAPED_PRINCE_SLIDING_THROUGH_GATE,
 	SETTING_USE_CUSTOM_OPTIONS,
 	SETTING_START_MINUTES_LEFT,
 	SETTING_START_TICKS_LEFT,
@@ -552,6 +553,10 @@ setting_type gameplay_settings[] = {
 				.linked = &fixes_saved.fix_quicksave_during_feather, .required = &use_fixes_and_enhancements,
 				.text = "Fix quick save in feather mode",
 				.explanation = "You cannot save game while floating in feather mode."},
+		{.id = SETTING_FIX_CAPED_PRINCE_SLIDING_THROUGH_GATE, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fixes_saved.fix_caped_prince_sliding_through_gate, .required = &use_fixes_and_enhancements,
+				.text = "Fix sliding through closed gate",
+				.explanation = "If you are using the caped prince graphics, and crouch with your back towards a closed gate on the left edge on the room, then the prince will slide through the gate."},
 };
 
 NAMES_LIST(tile_type_setting_names, {
