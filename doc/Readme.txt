@@ -335,7 +335,11 @@ Windows
 	* For Dev-C++ you need the MinGW Development Libraries of SDL2:
 		* https://libsdl.org/download-2.0.php
 		* https://libsdl.org/projects/SDL_image/
-	* To install these, just extract the contents of the i686-w64-mingw32 folder from each archive to the Dev-Cpp folder.
+		* Download the `*-mingw.tar.gz` files.
+	* To install these, just extract the contents of the `i686-w64-mingw32` folder from each archive to:
+		* on 64-bit Windows: `c:\Program Files (x86)\Dev-Cpp\MinGW64\`.
+		* on 32-bit Windows: `c:\Program Files\Dev-Cpp\MinGW64\`.
+		* You need to "merge" the contents of the `bin`, `include`, etc. folders in the archives into the existing folders with the same name in the `MinGW64` folder.
 	* To compile, open one of the .dev files and click the compile icon.
 
 * Building with Visual Studio:
