@@ -273,6 +273,7 @@ static int global_ini_callback(const char *section, const char *name, const char
 		process_boolean("fix_hang_on_teleport", &fixes_saved.fix_hang_on_teleport);
 		process_boolean("fix_exit_door", &fixes_saved.fix_exit_door);
 		process_boolean("fix_quicksave_during_feather", &fixes_saved.fix_quicksave_during_feather);
+		process_boolean("fix_quicksave_during_lvl1_music", &fixes_saved.fix_quicksave_during_lvl1_music);
 	}
 
 	if (check_ini_section("CustomGameplay")) {
