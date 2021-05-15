@@ -197,6 +197,7 @@ enum setting_ids {
 	SETTING_FIX_HANG_ON_TELEPORT,
 	SETTING_FIX_EXIT_DOOR,
 	SETTING_FIX_QUICKSAVE_DURING_FEATHER,
+	SETTING_FIX_QUICKSAVE_DURING_LVL1_MUSIC,
 	SETTING_USE_CUSTOM_OPTIONS,
 	SETTING_START_MINUTES_LEFT,
 	SETTING_START_TICKS_LEFT,
@@ -552,6 +553,10 @@ setting_type gameplay_settings[] = {
 				.linked = &fixes_saved.fix_quicksave_during_feather, .required = &use_fixes_and_enhancements,
 				.text = "Fix quick save in feather mode",
 				.explanation = "You cannot save game while floating in feather mode."},
+		{.id = SETTING_FIX_QUICKSAVE_DURING_LVL1_MUSIC, .style = SETTING_STYLE_TOGGLE,
+		    .linked = &fixes_saved.fix_quicksave_during_lvl1_music, .required = &use_fixes_and_enhancements,
+		    .text = "Fix quick save during level 1 initial music",
+		    .explanation = "If you save during the level 1 initial music and reload, you stand up faster than otherwise."},
 };
 
 NAMES_LIST(tile_type_setting_names, {

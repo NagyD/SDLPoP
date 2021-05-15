@@ -1216,6 +1216,7 @@ typedef struct fixes_options_type {
 	byte fix_hang_on_teleport;
 	byte fix_exit_door;
 	byte fix_quicksave_during_feather;
+	byte fix_quicksave_during_lvl1_music;
 } fixes_options_type;
 
 #define NUM_GUARD_SKILLS 12
@@ -1244,6 +1245,8 @@ typedef struct custom_options_type {
 	word demo_hitp;
 	word demo_end_room;
 	word intro_music_level;
+	word intro_music_time_initial;
+	word intro_music_time_restart;
 	word have_sword_from_level;
 	word checkpoint_level;
 	sbyte checkpoint_respawn_dir;

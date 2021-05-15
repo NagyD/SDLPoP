@@ -307,19 +307,27 @@ void __pascal far control() {
 // seg005:02EB
 void __pascal far control_crouched() {
 	if (need_level1_music != 0 && current_level == /*1*/ custom->intro_music_level) {
-		// Special event: music when crouching
-		if (! check_sound_playing()) {
-			if (need_level1_music == 1) {
-				play_sound(sound_25_presentation); // presentation (level 1 start)
-				need_level1_music = 2;
-			} else {
-#ifdef USE_REPLAY
-				if (recording) special_move = MOVE_EFFECT_END;
-				if (!replaying) // during replays, crouch immobilization gets cancelled in do_replay_move()
-#endif
-				need_level1_music = 0;
-			}
-		}
+
+	 if (fixes->fix_quicksave_during_lvl1_music)
+	 {
+	  need_level1_music--;
+	 }
+	 else
+	 {
+   // Special event: music when crouching
+   if (! check_sound_playing()) {
+    if (need_level1_music == 1) {
+     play_sound(sound_25_presentation); // presentation (level 1 start)
+     need_level1_music = 2;
+    } else {
+     #ifdef USE_REPLAY
+     if (recording) special_move = MOVE_EFFECT_END;
+     if (!replaying) // during replays, crouch immobilization gets cancelled in do_replay_move()
+     #endif
+     need_level1_music = 0;
+    }
+   }
+	 }
 	} else {
 		need_level1_music = 0;
 		if (control_shift2 < 0 && check_get_item()) return;
