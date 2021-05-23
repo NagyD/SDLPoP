@@ -1682,7 +1682,7 @@ peel_type* __pascal far read_peel_from_screen(const rect_type far *rect) {
 	SDL_Surface* peel_surface = SDL_CreateRGBSurface(0, rect->right - rect->left, rect->bottom - rect->top, 32, 0xFF, 0xFF<<8, 0xFF<<16, 0xFF<<24);
 #endif
 	if (peel_surface == NULL) {
-		sdlperror("restore_peel: SDL_CreateRGBSurface");
+		sdlperror("read_peel_from_screen: SDL_CreateRGBSurface");
 		quit(1);
 	}
 	result->peel = peel_surface;
