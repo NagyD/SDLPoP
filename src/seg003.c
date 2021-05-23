@@ -42,7 +42,12 @@ void __pascal far init_game(int level) {
 		rem_tick = custom->start_ticks_left;    // 719
 		hitp_beg_lev = custom->start_hitp;      // 3
 	}
-	need_level1_music = (level == /*1*/ custom->intro_music_level);
+
+	if (fixes->fix_quicksave_during_lvl1_music)
+  if (level == /*1*/ custom->intro_music_level) need_level1_music = custom->intro_music_time_initial;
+	else
+	 need_level1_music = (level == /*1*/ custom->intro_music_level);
+
 	play_level(level);
 }
 
@@ -367,6 +372,10 @@ int __pascal far play_level_2() {
 		hitp_delta = 0;
 		timers();
 		play_frame();
+
+	 if (need_level1_music != 0 && current_level == /*1*/ custom->intro_music_level)
+	  if (fixes->fix_quicksave_during_lvl1_music)
+	   need_level1_music = custom->intro_music_time_restart;
 
 #ifdef USE_REPLAY
 		// At the exact "end of level" frame, preserve the seed to ensure reproducibility,
