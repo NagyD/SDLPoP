@@ -47,7 +47,7 @@ extern int digi_unavailable; // seg009.c
 static opl3_chip opl_chip;
 static void* instruments_data;
 static instrument_type* instruments;
-static dword num_instruments;
+static int num_instruments;
 static byte voice_note[MAX_OPL_VOICES];
 static int voice_instrument[MAX_OPL_VOICES];
 static int voice_channel[MAX_OPL_VOICES];
@@ -56,7 +56,7 @@ static int last_used_voice;
 static int num_midi_tracks;
 static parsed_midi_type parsed_midi;
 static midi_track_type* midi_tracks;
-static uint64_t midi_current_pos; // in MIDI ticks
+static int64_t midi_current_pos; // in MIDI ticks
 static float midi_current_pos_fract_part; // partial ticks after the decimal point
 static int ticks_to_next_pause; // in MIDI ticks
 static dword us_per_beat;
@@ -383,7 +383,7 @@ static void midi_note_off(midi_event_type* event) {
 }
 
 static instrument_type* get_instrument(int id) {
-	if (id < num_instruments) {
+	if (id >= 0 && id < num_instruments) {
 		return &instruments[id];
 	} else {
 		return &instruments[0];
@@ -474,6 +474,7 @@ static void process_midi_event(midi_event_type* event) {
 					midi_semitones_higher = data[5]; // Make all notes higher by this amount.
 				}
 			}
+			break;
 		case 0xFF: // Meta event
 			switch(event->meta.type) {
 				default: break;
@@ -573,7 +574,7 @@ void midi_callback(void *userdata, Uint8 *stream, int len) {
 				return;
 			} else {
 				// Need to delay (let the OPL chip do its work) until one of the tracks needs to process a MIDI event again.
-				uint64_t first_next_pause_tick = INT64_MAX;
+				int64_t first_next_pause_tick = INT64_MAX;
 				for (int i = 0; i < num_midi_tracks; ++i) {
 					midi_track_type* track = &midi_tracks[i];
 					if (track->event_index >= track->num_events || midi_current_pos >= track->next_pause_tick) continue;
@@ -622,7 +623,7 @@ void init_midi() {
 		printf("Missing MIDI instruments data (resource 1)\n");
 	} else {
 		num_instruments = *(byte*)instruments_data;
-		if (size == 1 + num_instruments*sizeof(instrument_type)) {
+		if (size == 1 + num_instruments*(int)sizeof(instrument_type)) {
 			instruments = (instrument_type*) ((byte*)instruments_data+1);
 		} else {
 			printf("MIDI instruments data (resource 1) is not the expected size\n");

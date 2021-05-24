@@ -1576,6 +1576,7 @@ void __pascal far draw_objtable_item(int index) {
 			if (obj_id == 0xFF) return;
 			// the Kid blinks a bit after uniting with shadow
 			if (united_with_shadow && (united_with_shadow % 2) == 0) goto shadow;
+			// fallthrough!
 		case 2: // Guard
 		case 3: // sword
 		case 5: // hurt splash

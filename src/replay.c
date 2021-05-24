@@ -180,7 +180,7 @@ int read_replay_header(replay_header_type* header, FILE* fp, char* error_message
 }
 
 int num_replay_files = 0; // number of listed replays
-size_t max_replay_files = 128; // initially, may grow if there are > 128 replay files found
+int max_replay_files = 128; // initially, may grow if there are > 128 replay files found
 replay_info_type* replay_list = NULL;
 
 // Compare function -- for qsort() in list_replay_files() below

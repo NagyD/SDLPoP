@@ -1755,7 +1755,7 @@ byte* digi_buffer = NULL;
 // The current position in digi_buffer.
 byte* digi_remaining_pos = NULL;
 // The remaining length.
-size_t digi_remaining_length = 0;
+int digi_remaining_length = 0;
 
 // The properties of the audio device.
 SDL_AudioSpec* digi_audiospec = NULL;
@@ -2565,7 +2565,7 @@ void draw_overlay() {
 				         rem_min - 1, rem_tick / 12, rem_tick % 12);
 			}
 			int expected_numeric_chars = 6;
-			int extra_numeric_chars = MAX(0, strnlen(timer_text, sizeof(timer_text)) - 8);
+			int extra_numeric_chars = MAX(0, (int)strnlen(timer_text, sizeof(timer_text)) - 8);
 			int line_width = 5 + (expected_numeric_chars + extra_numeric_chars) * 9;
 
 			rect_type timer_box_rect = {0, 0, 11, 2 + line_width};
@@ -2600,7 +2600,7 @@ void draw_overlay() {
 			int ticks_per_sec = get_ticks_per_sec(timer_1);
 			snprintf(timer_text, sizeof(timer_text), "%02d:%02d", is_feather_fall / ticks_per_sec, is_feather_fall % ticks_per_sec);
 			int expected_numeric_chars = 6;
-			int extra_numeric_chars = MAX(0, strnlen(timer_text, sizeof(timer_text)) - 8);
+			int extra_numeric_chars = MAX(0, (int)strnlen(timer_text, sizeof(timer_text)) - 8);
 			int line_width = 5 + (expected_numeric_chars + extra_numeric_chars) * 9;
 
 			rect_type timer_box_rect = {0, 0, 11, 2 + line_width};
@@ -3507,6 +3507,7 @@ void process_events() {
 				switch (event.window.event) {
 					case SDL_WINDOWEVENT_SIZE_CHANGED:
 						window_resized();
+						// fallthrough!
 					//case SDL_WINDOWEVENT_MOVED:
 					//case SDL_WINDOWEVENT_RESTORED:
 					case SDL_WINDOWEVENT_EXPOSED:

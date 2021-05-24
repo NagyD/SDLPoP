@@ -225,13 +225,13 @@ void draw_extras() {
 			*/
 			char events[256*4] = ""; // More than enough space to list all the numbers from 0 to 255.
 			int events_pos = 0;
-			for (int event=first_event; event<=last_event && events_pos<sizeof(events); event++) {
+			for (int event=first_event; event<=last_event && events_pos<(int)sizeof(events); event++) {
 				int len = snprintf(events+events_pos, sizeof(events)-events_pos, "%d ", event+EVENT_OFFSET);
 				if (len < 0) break; // snprintf might return -1 if the buffer is too small.
 				events_pos += len;
 			}
 			--events_pos;
-			if (events_pos>0 && events_pos<sizeof(events)) events[events_pos]='\0'; // trim trailing space
+			if (events_pos>0 && events_pos<(int)sizeof(events)) events[events_pos]='\0'; // trim trailing space
 			rect_type buttonmod_rect = {y/*+50-3*/, x, y+60-3, x+32};
 			show_text_with_color(&buttonmod_rect, 0, 1, events, color_14_brightyellow);
 		}
@@ -241,15 +241,15 @@ void draw_extras() {
 		// door events that point here
 		char events[256*4] = "";
 		int events_pos = 0;
-		for (int event=0; event<256 && events_pos<sizeof(events); event++) {
+		for (int event=0; event<256 && events_pos<(int)sizeof(events); event++) {
 			if (event_used[event] && get_doorlink_room(event) == drawn_room && get_doorlink_tile(event) == tilepos) {
-				int len = snprintf(events+events_pos, sizeof(events)-events_pos, "%d ", event+EVENT_OFFSET);
+				int len = snprintf(events+events_pos, (int)sizeof(events)-events_pos, "%d ", event+EVENT_OFFSET);
 				if (len < 0) break;
 				events_pos += len;
 			}
 		}
 		--events_pos;
-		if (events_pos>0 && events_pos<sizeof(events)) events[events_pos]='\0'; // trim trailing space
+		if (events_pos>0 && events_pos<(int)sizeof(events)) events[events_pos]='\0'; // trim trailing space
 		if (*events) {
 			//printf("room %d, tile %d, events: %s\n", drawn_room, tilepos, events); // debug
 			rect_type events_rect = {y,x,y+63-3,x+32-7};

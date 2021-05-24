@@ -68,7 +68,7 @@ extern "C" {
 #define snprintf_check(dst, size, ...)	do {			\
 		int __len;					\
 		__len = snprintf(dst, size, __VA_ARGS__);	\
-		if (__len < 0 || __len >= size) {		\
+		if (__len < 0 || __len >= (int)size) {		\
 			fprintf(stderr, "%s: buffer truncation detected!\n", __func__);\
 			quit(2);				\
 		}						\

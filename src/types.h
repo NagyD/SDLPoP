@@ -1142,7 +1142,7 @@ enum replay_seek_targets {
 };
 #endif
 
-#define COUNT(array) (sizeof(array)/sizeof(array[0]))
+#define COUNT(array) ((int) (sizeof(array)/sizeof(array[0])) )
 
 // These are or'ed with SDL_SCANCODE_* constants in last_key_scancode.
 enum key_modifiers {
