@@ -664,7 +664,7 @@ Possible results in can_guard_see_kid:
 		// This fixes that.
 		if (Kid.action == actions_2_hang_climb || Kid.action == actions_6_hang_straight) left_pos += 14;
 #endif
-		printf("Kid.curr_col = %d, Kid.action = %d\n", Kid.curr_col, Kid.action);
+		//printf("Kid.curr_col = %d, Kid.action = %d\n", Kid.curr_col, Kid.action);
 		right_pos = x_bump[Guard.curr_col + 5] + 7;
 		if (left_pos > right_pos) {
 			temp = left_pos;
