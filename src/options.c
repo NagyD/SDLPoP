@@ -737,6 +737,12 @@ void load_mod_options() {
 			}
 		} else {
 			printf("Mod '%s' not found\n", levelset_name);
+			char message[256];
+			snprintf_check(message, sizeof(message), "Cannot find the mod '%s' in the mods folder.", levelset_name);
+			show_dialog(message);
+#ifdef USE_REPLAY
+			if (replaying) show_dialog("If the replay file restarts the level or advances to the next level, a wrong level will be loaded.");
+#endif
 		}
 		if (!ok) {
 			use_custom_levelset = 0;

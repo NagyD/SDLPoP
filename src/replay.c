@@ -671,8 +671,9 @@ void start_replay() {
 		//if (num_replay_files == 0) return;
 	}
 	if (!load_replay()) return;
-	apply_replay_options();
+	// Set replaying before applying options, so the latter can display an appropriate error message if the referenced mod is missing.
 	replaying = 1;
+	apply_replay_options();
 	curr_tick = 0;
 }
 

@@ -643,3 +643,4 @@ DONE: When backing offscreen (to the left) from the first guard on level 7 (amon
 	Details: See https://github.com/NagyD/SDLPoP/issues/229
 FIXED: On Windows, use Unicode/UTF-8 for stat().
 	So SDLPoP can load levels from mod folders when a replay file restarts the level or advances to the next level.
+DONE: Added a more visible error message when a mod referenced by a replay file cannot be found in the mods folder.
