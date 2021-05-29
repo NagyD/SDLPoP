@@ -641,3 +641,5 @@ DONE: In new replays, use deprecation_number = 2. On playback, waste the RNG cyc
 	Older replays have deprecation_number <= 1, and we don't waste the RNG cycle when playing them back.
 DONE: When backing offscreen (to the left) from the first guard on level 7 (among others), simulate the glitch from DOS PoP, which causes the prince to fall through the floor.
 	Details: See https://github.com/NagyD/SDLPoP/issues/229
+FIXED: On Windows, use Unicode/UTF-8 for stat().
+	So SDLPoP can load levels from mod folders when a replay file restarts the level or advances to the next level.

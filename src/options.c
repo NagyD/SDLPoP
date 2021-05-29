@@ -714,6 +714,7 @@ void load_mod_options() {
 		char folder_name[POP_MAX_PATH];
 		snprintf_check(folder_name, sizeof(folder_name), "%s/%s", mods_folder, levelset_name);
 		const char* located_folder_name = locate_file(folder_name);
+		//printf("located_folder_name = %s\n", located_folder_name);
 		bool ok = false;
 		struct stat info;
 		if (stat(located_folder_name, &info) == 0) {
