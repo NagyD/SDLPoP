@@ -1,0 +1,5 @@
+Replay files will be created here.
+You can also put downloaded replay files here.
+Tab will cycle between replay files in this directory.
+
+For details, see Readme.txt, sections "Viewing or recording replays" and "REPLAYS".
