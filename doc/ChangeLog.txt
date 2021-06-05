@@ -567,7 +567,7 @@ ADDED: You can now use quicksave and quickload while recording a replay.
 
 FIXED: The prince can now grab a ledge at the bottom right corner of a room with no room below.
 	Details: https://forum.princed.org/viewtopic.php?p=30410#p30410
-	Testcase: replays-testcases/SNES-PC-set level 11.p1r
+	Testcase: doc/replays-testcases/SNES-PC-set level 11.p1r
 	See FIX_CORNER_GRAB in config.h .
 FIXED: Don't allow killing a skeleton in cheat mode.
 FIXED: Ctrl+S didn't mute music (except death music).
@@ -612,7 +612,7 @@ DONE: During playback, display the number of ticks since start, if the timer is 
 FIXED: Fixed crashing when a MIDI music interrupted another one.
 FIXED: Make it possible to go through a certain closed gate on level 11 of Demo by Suave Prince.
 	Details: https://forum.princed.org/viewtopic.php?p=32326#p32326
-	Testcase: replays-testcases/Demo by Suave Prince level 11.p1r
+	Testcase: doc/replays-testcases/Demo by Suave Prince level 11.p1r
 	See FIX_COLL_FLAGS in config.h .
 FIXED: When the prince jumps up at the bottom of a big pillar split between two rooms, a part near the top of the screen disappears.
 	Example: The top row in the first room of the original level 5.
@@ -624,8 +624,8 @@ FIXED: Fixed spiked/chomped/bumped guards teleporting into the wrong room. (if f
 FIXED: Quicksave during feather fall mode. (if fixes are enabled)
 	Details: https://github.com/NagyD/SDLPoP/pull/236
 FIXED: Prevent the prince from entering a glitched room when he falls into a wall or he is revived near a wall.
-	Details: replays-testcases/Original level 2 falling into wall.txt
-	Testcase: replays-testcases/Original level 2 falling into wall.p1r
+	Details: doc/replays-testcases/Original level 2 falling into wall.txt
+	Testcase: doc/replays-testcases/Original level 2 falling into wall.p1r
 	See FIX_ENTERING_GLITCHED_ROOMS in config.h .
 FIXED: Optimized OPL mixing (MIDI music).
 	Details: https://github.com/NagyD/SDLPoP/pull/238
