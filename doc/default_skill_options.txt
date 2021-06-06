@@ -1,0 +1,116 @@
+; The following customization options can be used for guard skills:
+; strikeprob = Probability of striking, from 0 to 255.
+; restrikeprob = Probability of re-striking after block, from 0 to 255.
+; blockprob = Probability of blocking, from 0 to 255.
+; impblockprob = Probability of improper blocking, from 0 to 255.
+; advprob = Probability of going into hit range, from 0 to 255.
+; refractimer = Refractory period after pain, in frames.
+; extrastrength = Extra hit points.
+
+[Skill 0]
+strikeprob    = 61
+restrikeprob  = 0
+blockprob     = 0
+impblockprob  = 0
+advprob       = 255
+refractimer   = 16
+extrastrength = 0
+
+[Skill 1]
+strikeprob    = 100
+restrikeprob  = 0
+blockprob     = 150
+impblockprob  = 61
+advprob       = 200
+refractimer   = 16
+extrastrength = 0
+
+[Skill 2]
+strikeprob    = 61
+restrikeprob  = 0
+blockprob     = 150
+impblockprob  = 61
+advprob       = 200
+refractimer   = 16
+extrastrength = 0
+
+[Skill 3]
+strikeprob    = 61
+restrikeprob  = 5
+blockprob     = 200
+impblockprob  = 100
+advprob       = 200
+refractimer   = 16
+extrastrength = 0
+
+[Skill 4]
+strikeprob    = 61
+restrikeprob  = 5
+blockprob     = 200
+impblockprob  = 100
+advprob       = 255
+refractimer   = 8
+extrastrength = 1
+
+[Skill 5]
+strikeprob    = 40
+restrikeprob  = 175
+blockprob     = 255
+impblockprob  = 145
+advprob       = 255
+refractimer   = 8
+extrastrength = 0
+
+[Skill 6]
+strikeprob    = 100
+restrikeprob  = 16
+blockprob     = 200
+impblockprob  = 100
+advprob       = 200
+refractimer   = 8
+extrastrength = 0
+
+[Skill 7]
+strikeprob    = 220
+restrikeprob  = 8
+blockprob     = 250
+impblockprob  = 250
+advprob       = 0
+refractimer   = 8
+extrastrength = 0
+
+[Skill 8]
+strikeprob    = 0
+restrikeprob  = 0
+blockprob     = 0
+impblockprob  = 0
+advprob       = 0
+refractimer   = 0
+extrastrength = 0
+
+[Skill 9]
+strikeprob    = 48
+restrikeprob  = 255
+blockprob     = 255
+impblockprob  = 145
+advprob       = 255
+refractimer   = 8
+extrastrength = 0
+
+[Skill 10] ; a in apoplexy
+strikeprob    = 32
+restrikeprob  = 255
+blockprob     = 255
+impblockprob  = 255
+advprob       = 100
+refractimer   = 0
+extrastrength = 0
+
+[Skill 11] ; b in apoplexy
+strikeprob    = 48
+restrikeprob  = 150
+blockprob     = 255
+impblockprob  = 175
+advprob       = 100
+refractimer   = 0
+extrastrength = 0

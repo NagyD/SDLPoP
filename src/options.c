@@ -79,7 +79,9 @@ int ini_load(const char *filename,
 }
 
 NAMES_LIST(level_type_names, {"dungeon", "palace"});
-NAMES_LIST(guard_type_names, {"guard", "fat", "skel", "vizier", "shadow"});
+//NAMES_LIST(guard_type_names, {"guard", "fat", "skel", "vizier", "shadow"});
+// NAMES_LIST must start from 0, so I need KEY_VALUE_LIST if I want to assign a name to -1.
+KEY_VALUE_LIST(guard_type_names, {{"none", -1}, {"guard", 0}, {"fat", 1}, {"skel", 2}, {"vizier", 3}, {"shadow", 4}});
 NAMES_LIST(tile_type_names, {
 				"empty", "floor", "spike", "pillar", "gate",                                        // 0..4
 				"stuck", "closer", "doortop_with_floor", "bigpillar_bottom", "bigpillar_top",       // 5..9
