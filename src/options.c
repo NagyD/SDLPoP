@@ -404,9 +404,26 @@ static int global_ini_callback(const char *section, const char *name, const char
 			process_byte("entry_pose", &custom_saved.tbl_entry_pose[ini_level], &entry_pose_names_list);
 			process_sbyte("seamless_exit", &custom_saved.tbl_seamless_exit[ini_level], NULL);
 		} else {
-			// TODO: warning?
+			printf("Warning: Invalid section [Level %d] in the INI!\n", ini_level);
 		}
 	}
+
+	// [Skill 0], etc.
+	int ini_skill = -1;
+	if (strncasecmp(section, "Skill ", 6) == 0 && sscanf(section+6, "%d", &ini_skill) == 1) {
+		if (ini_skill >= 0 && ini_skill < NUM_GUARD_SKILLS) {
+			process_word("strikeprob",    &custom_saved.strikeprob   [ini_skill], NULL);
+			process_word("restrikeprob",  &custom_saved.restrikeprob [ini_skill], NULL);
+			process_word("blockprob",     &custom_saved.blockprob    [ini_skill], NULL);
+			process_word("impblockprob",  &custom_saved.impblockprob [ini_skill], NULL);
+			process_word("advprob",       &custom_saved.advprob      [ini_skill], NULL);
+			process_word("refractimer",   &custom_saved.refractimer  [ini_skill], NULL);
+			process_word("extrastrength", &custom_saved.extrastrength[ini_skill], NULL);
+		} else {
+			printf("Warning: Invalid section [Skill %d] in the INI!\n", ini_skill);
+		}
+	}
+
 	return 0;
 }
 
