@@ -98,11 +98,10 @@ How do I run it?
 	See the COMPILING section.
 	Thanks to StaticReturn and Poirot for this!
 
-* **eComStation (OS/2):**
-	* Unofficial binaries were posted here: https://forum.princed.org/viewtopic.php?p=18431#p18431
-	* Alternate link: https://hobbes.nmsu.edu/?search=sdlpop
-	* Or you can compile for yourself using gcc, according to that post.
-	* Thanks to digi@os2.snc.ru for the bugfixes!
+* You can find compiled versions for these three platforms here: https://www.popot.org/get_the_games.php?game=SDLPoP
+
+* Unofficial ports for other systems can be found here: https://forum.princed.org/viewtopic.php?f=126&t=4728
+	* These were not made by the authors of SDLPoP.
 
 What command-line options are there?
 ---------------------------------------
