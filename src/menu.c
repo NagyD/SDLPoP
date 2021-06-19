@@ -198,6 +198,7 @@ enum setting_ids {
 	SETTING_FIX_EXIT_DOOR,
 	SETTING_FIX_QUICKSAVE_DURING_FEATHER,
 	SETTING_FIX_CAPED_PRINCE_SLIDING_THROUGH_GATE,
+	SETTING_FIX_DOORTOP_DISABLING_GUARD,
 	SETTING_USE_CUSTOM_OPTIONS,
 	SETTING_START_MINUTES_LEFT,
 	SETTING_START_TICKS_LEFT,
@@ -557,6 +558,10 @@ setting_type gameplay_settings[] = {
 				.linked = &fixes_saved.fix_caped_prince_sliding_through_gate, .required = &use_fixes_and_enhancements,
 				.text = "Fix sliding through closed gate",
 				.explanation = "If you are using the caped prince graphics, and crouch with your back towards a closed gate on the left edge on the room, then the prince will slide through the gate."},
+		{.id = SETTING_FIX_DOORTOP_DISABLING_GUARD, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fixes_saved.fix_doortop_disabling_guard, .required = &use_fixes_and_enhancements,
+				.text = "Fix door top disabling guard",
+				.explanation = "Guards become inactive if they are standing on a door top (with floor), or if the prince is standing on a door top."},
 };
 
 NAMES_LIST(tile_type_setting_names, {

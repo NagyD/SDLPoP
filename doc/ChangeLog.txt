@@ -645,3 +645,4 @@ FIXED: On Windows, use Unicode/UTF-8 for stat().
 	So SDLPoP can load levels from mod folders when a replay file restarts the level or advances to the next level.
 DONE: Added a more visible error message when a mod referenced by a replay file cannot be found in the mods folder.
 DONE: Allow guard skill customizations in SDLPoP.ini.
+DONE: Made FIX_DOORTOP_DISABLING_GUARD configurable.
