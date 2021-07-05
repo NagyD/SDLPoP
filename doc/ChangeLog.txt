@@ -561,7 +561,7 @@ DONE: Added fast forward.
 ADDED: You can now use quicksave and quickload while recording a replay.
 	TODO: Verify that the quickloaded state is from the currently running recording.
 
-2021 May 23
+2021 July 5
 =================
 (version 1.22)
 
