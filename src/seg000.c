@@ -245,7 +245,7 @@ int process_save(void* data, size_t data_size) {
 }
 
 int process_load(void* data, size_t data_size) {
-	return fread(data, data_size, 1, quick_fp) == 1;
+	return fcache_read(data, data_size, 1, quick_fp) == 1;
 }
 
 typedef int process_func_type(void* data, size_t data_size);
@@ -426,12 +426,12 @@ int quick_load() {
 	int ok = 0;
 	char custom_quick_path[POP_MAX_PATH];
 	const char* path = get_quick_path(custom_quick_path, sizeof(custom_quick_path));
-	quick_fp = fopen(path, "rb");
+	quick_fp = fcache_open(path, "rb");
 	if (quick_fp != NULL) {
 		// check quicksave version is compatible
 		process_load(quick_control, COUNT(quick_control));
 		if (strcmp(quick_control, quick_version) != 0) {
-			fclose(quick_fp);
+			fcache_close(quick_fp);
 			quick_fp = NULL;
 			return 0;
 		}
@@ -445,7 +445,7 @@ int quick_load() {
 		word old_rem_tick = rem_tick;
 
 		ok = quick_process(process_load);
-		fclose(quick_fp);
+		fcache_close(quick_fp);
 		quick_fp = NULL;
 
 		restore_room_after_quick_load();
@@ -1032,6 +1032,7 @@ void __pascal far load_sounds(int first,int last) {
 			sound_pointers[current] = load_sound(current);
 		}
 	}
+
 	if (midi_dat) close_dat(midi_dat);
 	if (digi1_dat) close_dat(digi1_dat);
 //	if (digi2_dat) close_dat(digi2_dat);
@@ -2057,7 +2058,7 @@ void __pascal far save_game() {
 	if (handle == NULL) goto loc_1DB8;
 	if (fwrite(&rem_min, 1, 2, handle) == 2) goto loc_1DC9;
 	loc_1D9B:
-	fclose(handle);
+	fcache_close(handle);
 	if (!success) {
 		remove(save_path);
 	}
@@ -2085,11 +2086,11 @@ short __pascal far load_game() {
 	success = 0;
 	char custom_save_path[POP_MAX_PATH];
 	const char* save_path = get_save_path(custom_save_path, sizeof(custom_save_path));
-	handle = fopen(save_path, "rb");
+	handle = fcache_open(save_path, "rb");
 	if (handle == NULL) goto loc_1E99;
-	if (fread(&rem_min, 1, 2, handle) == 2) goto loc_1E9E;
+	if (fcache_read(&rem_min, 1, 2, handle) == 2) goto loc_1E9E;
 	loc_1E8E:
-	fclose(handle);
+	fcache_close(handle);
 	loc_1E99:
 	return success;
 	loc_1E9E:

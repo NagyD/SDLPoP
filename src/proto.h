@@ -509,6 +509,11 @@ void __pascal far draw_right_mark (word arg2, word arg1);
 image_type* get_image(short chtab_id, int id);
 
 // SEG009.C
+FILE* fcache_open(const char * filename, const char * mode);
+size_t fcache_read(void * ptr, size_t size, size_t count, FILE * stream);
+int fcache_seek(FILE * stream, long int offset, int origin);
+int fcache_tell(FILE * stream);
+int fcache_close(FILE* file);
 void sdlperror(const char* header);
 bool file_exists(const char* filename);
 #define locate_file(filename) locate_file_(filename, alloca(POP_MAX_PATH), POP_MAX_PATH)
