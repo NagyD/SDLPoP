@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2020  Dávid Nagy
+Copyright (C) 2013-2021  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -68,7 +68,7 @@ extern "C" {
 #define snprintf_check(dst, size, ...)	do {			\
 		int __len;					\
 		__len = snprintf(dst, size, __VA_ARGS__);	\
-		if (__len < 0 || __len >= size) {		\
+		if (__len < 0 || __len >= (int)size) {		\
 			fprintf(stderr, "%s: buffer truncation detected!\n", __func__);\
 			quit(2);				\
 		}						\

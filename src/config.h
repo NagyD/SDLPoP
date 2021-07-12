@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2020  Dávid Nagy
+Copyright (C) 2013-2021  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ The authors of this program may be contacted at https://forum.princed.org
 #define POP_MAX_PATH 256
 #define POP_MAX_OPTIONS_SIZE 256
 
-#define SDLPOP_VERSION "1.21"
+#define SDLPOP_VERSION "1.22"
 #define WINDOW_TITLE "Prince of Persia (SDLPoP) v" SDLPOP_VERSION
 
 // Enable or disable the SDL hardware accelerated renderer backend
@@ -65,8 +65,12 @@ The authors of this program may be contacted at https://forum.princed.org
 // The one minute penalty will also be applied when quickloading from e.g. the title screen.
 #define USE_QUICKLOAD_PENALTY
 
+#ifdef USE_QUICKSAVE // Replay relies on quicksave, because the replay file begins with a quicksave of the initial state.
+
 // Enable recording/replay feature.
 #define USE_REPLAY
+
+#endif
 
 // Adds a way to crouch immediately after climbing up: press down and forward simultaneously.
 // In the original game, this could not be done (pressing down always causes the kid to climb down).
@@ -97,6 +101,9 @@ The authors of this program may be contacted at https://forum.princed.org
 // Bugfixes:
 
 // The mentioned tricks can be found here: https://www.popot.org/documentation.php?doc=Tricks
+
+// A compilation-time option to disable all fixes. Useful for automated solving tools that require vanilla emulation. 
+#ifndef DISABLE_ALL_FIXES
 
 // If a room is linked to itself on the left, the closing sounds of the gates in that room can't be heard.
 #define FIX_GATE_SOUNDS
@@ -206,6 +213,50 @@ The authors of this program may be contacted at https://forum.princed.org
 // A guard standing on a door top (with floor) should not become inactive.
 #define FIX_DOORTOP_DISABLING_GUARD
 
+// Fix graphical glitches with an opening gate:
+// 1. with a loose floor above and a wall above-right.
+// 2. with the top half of a big pillar above-right.
+// Details: https://forum.princed.org/viewtopic.php?p=31884#p31884
+#define FIX_ABOVE_GATE
+
+// Disable this fix to make it possible to go through a certain closed gate on level 11 of Demo by Suave Prince.
+// Details: https://forum.princed.org/viewtopic.php?p=32326#p32326
+// Testcase: doc/replays-testcases/Demo by Suave Prince level 11.p1r
+//#define FIX_COLL_FLAGS
+
+// The prince can now grab a ledge at the bottom right corner of a room with no room below.
+// Details: https://forum.princed.org/viewtopic.php?p=30410#p30410
+// Testcase: doc/replays-testcases/SNES-PC-set level 11.p1r
+#define FIX_CORNER_GRAB
+
+// When the prince jumps up at the bottom of a big pillar split between two rooms, a part near the top of the screen disappears.
+// Example: The top row in the first room of the original level 5.
+// Videos: https://forum.princed.org/viewtopic.php?p=32227#p32227
+// Explanation: https://forum.princed.org/viewtopic.php?p=32414#p32414
+#define FIX_BIGPILLAR_JUMP_UP
+
+// When the prince dies behind a wall, and he is revived with R, he appears in a glitched room.
+// (Example: The bottom right part of the bottom right room of level 3.)
+// The same room can also be reached by falling into a wall. (Falling into the wall, itself, is a different glitch, though.)
+// Testcase: doc/replays-testcases/Original level 2 falling into wall.p1r
+// More info: https://forum.princed.org/viewtopic.php?f=68&t=4467
+#define FIX_ENTERING_GLITCHED_ROOMS
+
+// If you are using the caped prince graphics, and crouch with your back towards a closed gate on the left edge on the room, then the prince will slide through the gate.
+// You can also try this with the original graphics if your use the debug cheat "[" to push the prince into the gate.
+// This option fixes that.
+// You can get the caped prince graphics here: https://www.popot.org/custom_levels.php?action=KID.DAT (it's the one by Veke)
+// Video: https://www.popot.org/documentation.php?doc=TricksPage3#83
+// Explanation: https://forum.princed.org/viewtopic.php?p=32701#p32701
+// This also fixes the bug described at FIX_COLL_FLAGS.
+#define FIX_CAPED_PRINCE_SLIDING_THROUGH_GATE
+
+// If the prince dies on level 14, restarting the level will not stop the "Press Button to Continue" timer, and the game will return to the intro after a few seconds.
+// How to reproduce: https://forum.princed.org/viewtopic.php?p=16926#p16926
+// Technical explanation: https://forum.princed.org/viewtopic.php?p=16408#p16408 (the second half of the post)
+#define FIX_LEVEL_14_RESTARTING
+
+#endif // ifndef DISABLE_ALL_FIXES
 
 // Debug features:
 
@@ -223,7 +274,7 @@ The authors of this program may be contacted at https://forum.princed.org
 
 
 
-// Darken those parts of the screen that are not near a torch.
+// Darken those parts of the screen which are not near a torch.
 #define USE_LIGHTING
 
 // Enable screenshot features.
@@ -233,10 +284,29 @@ The authors of this program may be contacted at https://forum.princed.org
 // Useful if SDL detected a gamepad but there is none.
 #define USE_AUTO_INPUT_MODE
 
+#ifdef USE_TEXT // The menu won't work without text.
+
 // Display the in-game menu.
 #define USE_MENU
 
+#endif
+
+// Enable colored torches. A torch can be colored by changing its modifier in a level editor.
 #define USE_COLORED_TORCHES
+
+// Enable fast forwarding with the backtick key.
+#define USE_FAST_FORWARD
+
+// Set how much should the fast forwarding speed up the game.
+#define FAST_FORWARD_RATIO 10
+
+// Speed up the sound during fast forward using resampling.
+// If disabled, the sound is sped up by clipping out parts from it.
+//#define FAST_FORWARD_RESAMPLE_SOUND
+
+// Mute the sound during fast forward.
+//#define FAST_FORWARD_MUTE
+
 
 // Default SDL_Joystick button values
 #define SDL_JOYSTICK_BUTTON_Y 2

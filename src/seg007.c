@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2020  Dávid Nagy
+Copyright (C) 2013-2021  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -292,7 +292,7 @@ void __pascal far animate_chomper() {
 	if (trob.type >= 0) {
 		blood = curr_modifier & 0x80;
 		frame = (curr_modifier & 0x7F) + 1;
-		if (frame > 15) {
+		if (frame > /*15*/ custom->chomper_speed) {
 			frame = 1;
 		}
 		curr_modifier = blood | frame;
@@ -876,6 +876,16 @@ void __pascal far loose_shake(int arg_0) {
 			// Sounds 20,21,22: loose floor shaking
 			sound_id = prandom(2) + sound_20_loose_shake_1;
 		} while(sound_id == last_loose_sound);
+
+#ifdef USE_REPLAY
+		// Skip this prandom call if we are replaying, and the replay file was made with an old version of SDLPoP (which didn't have this call).
+		if (!(replaying && g_deprecation_number < 2))
+#endif
+		{
+			prandom(2); // For vanilla pop compatibility, an RNG cycle is wasted here
+			// Note: In DOS PoP, it's wasted a few lines below.
+		}
+
 		if (sound_flags & sfDigi) {
 			last_loose_sound = sound_id;
 			// random sample rate (10500..11500)
@@ -1132,7 +1142,7 @@ void __pascal far draw_mob() {
 	if (curmob.room == drawn_room) {
 		if (curmob.y >= 210) return;
 	} else if (curmob.room == room_B) {
-		if (ABS(ypos) >= 18) return;
+		if (ABS((sbyte)ypos) >= 18) return;
 		curmob.y += 192;
 		ypos = curmob.y;
 	} else if (curmob.room == room_A) {

@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2020  Dávid Nagy
+Copyright (C) 2013-2021  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -62,6 +62,7 @@ void far pop_main() {
 #ifdef USE_MENU
 	load_ingame_settings();
 #endif
+	if (check_param("mute")) is_sound_on = 0;
 	turn_sound_on_off((is_sound_on != 0) * 15); // Turn off sound/music if those options were set.
 
 #ifdef USE_REPLAY
@@ -96,7 +97,7 @@ void far pop_main() {
 
 	/*video_mode =*/ parse_grmode();
 
-	init_timer(60);
+	init_timer(BASE_FPS);
 	parse_cmdline_sound();
 
 	set_hc_pal();
@@ -130,6 +131,9 @@ void far pop_main() {
 			}
 		}
 	}
+
+	play_demo_level = (check_param("playdemo") != NULL);
+
 #ifdef USE_SCREENSHOT
 	init_screenshot();
 #endif
@@ -250,7 +254,15 @@ int quick_process(process_func_type process_func) {
 	int ok = 1;
 #define process(x) ok = ok && process_func(&(x), sizeof(x))
 	// level
-	process(level);
+#ifdef USE_DEBUG_CHEATS
+	// Don't load the level if the user holds either Shift key while pressing F9.
+	if (debug_cheats_enabled && (key_states[SDL_SCANCODE_LSHIFT] || key_states[SDL_SCANCODE_RSHIFT])) {
+		fseek(quick_fp, sizeof(level), SEEK_CUR);
+	} else
+#endif
+	{
+		process(level);
+	}
 	process(checkpoint);
 	process(upside_down);
 	process(drawn_room);
@@ -335,6 +347,9 @@ int quick_process(process_func_type process_func) {
 #ifdef USE_REPLAY
 	process(curr_tick);
 #endif
+#ifdef USE_COLORED_TORCHES
+	process(torch_colors);
+#endif
 #undef process
 	return ok;
 }
@@ -374,9 +389,16 @@ void restore_room_after_quick_load() {
 	curr_guard_color = temp1;
 	next_level = temp2;
 
+	// feather fall can only get restored if the fix enabled
+	if (!fixes->fix_quicksave_during_feather && is_feather_fall > 0) {
+		is_feather_fall = 0;
+		stop_sounds();
+	}
+
 	//need_full_redraw = 1;
 	different_room = 1;
-	next_room = drawn_room;
+	// Show the room where the prince is, even if the player moved the view away from it (with the H,J,U,N keys).
+	next_room = drawn_room = Kid.room;
 	load_room_links();
 	//draw_level_first();
 	//gen_palace_wall_colors();
@@ -385,6 +407,13 @@ void restore_room_after_quick_load() {
 	//redraw_screen(1); // for room_L
 
 	hitp_delta = guardhp_delta = 1; // force HP redraw
+	// Don't draw guard HP if a previously viewed room (with the H,J,U,N keys) had a guard but the current room doesn't have one.
+	if (Guard.room != drawn_room) {
+		// Like in clear_char().
+		Guard.direction = dir_56_none;
+		guardhp_curr = 0;
+	}
+
 	draw_hp();
 	loadkid_and_opp();
 	// Get rid of "press button" message if kid was dead before quickload.
@@ -450,7 +479,7 @@ int quick_load() {
 void check_quick_op() {
 	if (!enable_quicksave) return;
 	if (need_quick_save) {
-		if (!is_feather_fall && quick_save()) {
+		if ((!is_feather_fall || fixes->fix_quicksave_during_feather) && quick_save()) {
 			display_text_bottom("QUICKSAVE");
 		} else {
 			display_text_bottom("NO QUICKSAVE");
@@ -518,7 +547,7 @@ int __pascal far process_key() {
 				start_recording();
 			} else
 			#endif
-			if (key == (SDL_SCANCODE_L | WITH_CTRL)) { // ctrl-L
+			if (key == (SDL_SCANCODE_L | WITH_CTRL)) { // Ctrl+L
 				if (!load_game()) return 0;
 			} else {
 				start_level = custom->first_level; // 1
@@ -533,9 +562,9 @@ int __pascal far process_key() {
 			start_game();
 		}
 	}
-	// If the Kid died, enter or shift will restart the level.
+	// If the Kid died, Enter or Shift will restart the level.
 	if (rem_min != 0 && Kid.alive > 6 && (control_shift || key == SDL_SCANCODE_RETURN)) {
-		key = SDL_SCANCODE_A | WITH_CTRL; // ctrl-a
+		key = SDL_SCANCODE_A | WITH_CTRL; // Ctrl+A
 	}
 #ifdef USE_REPLAY
 	if (recording) key_press_while_recording(&key);
@@ -545,7 +574,7 @@ int __pascal far process_key() {
 	if (is_keyboard_mode) clear_kbd_buf();
 
 	switch(key) {
-		case SDL_SCANCODE_ESCAPE: // esc
+		case SDL_SCANCODE_ESCAPE: // Esc
 		case SDL_SCANCODE_ESCAPE | WITH_SHIFT: // allow pause while grabbing
 			is_paused = 1;
 #ifdef USE_MENU
@@ -560,23 +589,23 @@ int __pascal far process_key() {
 			}
 #endif
 		break;
-		case SDL_SCANCODE_SPACE: // space
+		case SDL_SCANCODE_SPACE: // Space
 			is_show_time = 1;
 		break;
-		case SDL_SCANCODE_A | WITH_CTRL: // ctrl-a
+		case SDL_SCANCODE_A | WITH_CTRL: // Ctrl+A
 			if (current_level != 15) {
 				stop_sounds();
 				is_restart_level = 1;
 			}
 		break;
-		case SDL_SCANCODE_G | WITH_CTRL: // ctrl-g
+		case SDL_SCANCODE_G | WITH_CTRL: // Ctrl+G
 			// CusPoP: first and last level where saving is allowed
 //			if (current_level > 2 && current_level < 14) { // original
 			if (current_level >= custom->saving_allowed_first_level && current_level <= custom->saving_allowed_last_level) {
 				save_game();
 			}
 		break;
-		case SDL_SCANCODE_J | WITH_CTRL: // ctrl-j
+		case SDL_SCANCODE_J | WITH_CTRL: // Ctrl+J
 			if ((sound_flags & sfDigi) && sound_mode == smTandy) {
 				answer_text = "JOYSTICK UNAVAILABLE";
 			} else {
@@ -588,20 +617,20 @@ int __pascal far process_key() {
 			}
 			need_show_text = 1;
 		break;
-		case SDL_SCANCODE_K | WITH_CTRL: // ctrl-k
+		case SDL_SCANCODE_K | WITH_CTRL: // Ctrl+K
 			answer_text = "KEYBOARD MODE";
 			is_joyst_mode = 0;
 			is_keyboard_mode = 1;
 			need_show_text = 1;
 		break;
-		case SDL_SCANCODE_R | WITH_CTRL: // ctrl-r
+		case SDL_SCANCODE_R | WITH_CTRL: // Ctrl+R
 			start_level = -1;
 #ifdef USE_MENU
 			if (is_menu_shown) menu_was_closed(); // Do necessary cleanup.
 #endif
 			start_game();
 		break;
-		case SDL_SCANCODE_S | WITH_CTRL: // ctrl-s
+		case SDL_SCANCODE_S | WITH_CTRL: // Ctrl+S
 			turn_sound_on_off((!is_sound_on) * 15);
 			answer_text = "SOUND OFF";
 			if (is_sound_on) {
@@ -610,13 +639,13 @@ int __pascal far process_key() {
 			//
 			need_show_text = 1;
 		break;
-		case SDL_SCANCODE_V | WITH_CTRL: // ctrl-v
+		case SDL_SCANCODE_V | WITH_CTRL: // Ctrl+V
 			//answer_text = "PRINCE OF PERSIA  V1.0";
 			snprintf(sprintf_temp, sizeof(sprintf_temp), "SDLPoP v%s\n", SDLPOP_VERSION);
 			answer_text = sprintf_temp;
 			need_show_text = 1;
 		break;
-		case SDL_SCANCODE_C | WITH_CTRL: // ctrl-c
+		case SDL_SCANCODE_C | WITH_CTRL: // Ctrl+C
 		{
 			SDL_version verc, verl;
 			SDL_VERSION (&verc);
@@ -629,16 +658,16 @@ int __pascal far process_key() {
 			need_show_text = 1;
 		}
 		break;
-		case SDL_SCANCODE_L | WITH_SHIFT: // shift-l
+		case SDL_SCANCODE_L | WITH_SHIFT: // Shift+L
 			if (current_level < custom->shift_L_allowed_until_level /* 4 */ || cheats_enabled) {
-				// if shift is not released within the delay, the cutscene is skipped
+				// if Shift is not released within the delay, the cutscene is skipped
 				Uint32 delay = 250;
 				key_states[SDL_SCANCODE_LSHIFT] = 0;
 				key_states[SDL_SCANCODE_RSHIFT] = 0;
 				SDL_TimerID timer;
 				timer = SDL_AddTimer(delay, temp_shift_release_callback, NULL);
 				if (timer == 0) {
-					sdlperror("SDL_AddTimer");
+					sdlperror("process_key: SDL_AddTimer");
 					quit(1);
 				}
 				if (current_level == 14) {
@@ -691,7 +720,7 @@ int __pascal far process_key() {
 				answer_text = /*&*/sprintf_temp;
 				need_show_text = 1;
 			break;
-			case SDL_SCANCODE_C | WITH_SHIFT: // shift-c
+			case SDL_SCANCODE_C | WITH_SHIFT: // Shift+C
 				snprintf(sprintf_temp, sizeof(sprintf_temp), "AL%d AR%d BL%d BR%d", room_AL, room_AR, room_BL, room_BR);
 				answer_text = /*&*/sprintf_temp;
 				need_show_text = 1;
@@ -733,13 +762,15 @@ int __pascal far process_key() {
 				}
 			break;
 			case SDL_SCANCODE_K: // K --> kill guard cheat
-				guardhp_delta = -guardhp_curr;
-				Guard.alive = 0;
+				if (Guard.charid != charid_4_skeleton) {
+					guardhp_delta = -guardhp_curr;
+					Guard.alive = 0;
+				}
 			break;
-			case SDL_SCANCODE_I | WITH_SHIFT: // shift+I --> invert cheat
+			case SDL_SCANCODE_I | WITH_SHIFT: // Shift+I --> invert cheat
 				toggle_upside();
 			break;
-			case SDL_SCANCODE_W | WITH_SHIFT: // shift+W --> feather fall cheat
+			case SDL_SCANCODE_W | WITH_SHIFT: // Shift+W --> feather fall cheat
 				feather_fall();
 			break;
 			case SDL_SCANCODE_H: // H --> view room to the left
@@ -758,7 +789,11 @@ int __pascal far process_key() {
 				draw_guard_hp(0, 10);
 				next_room = room_B;
 			break;
-			case SDL_SCANCODE_B | WITH_SHIFT: // shift-b
+			case SDL_SCANCODE_B | WITH_CTRL: // Ctrl+B --> Go back to the room where the prince is. (Undo H,J,U,N.)
+				draw_guard_hp(0, 10);
+				next_room = Kid.room;
+			break;
+			case SDL_SCANCODE_B | WITH_SHIFT: // Shift+B
 				is_blind_mode = !is_blind_mode;
 				if (is_blind_mode) {
 					draw_rect(&rect_top, 0);
@@ -766,7 +801,7 @@ int __pascal far process_key() {
 					need_full_redraw = 1;
 				}
 			break;
-			case SDL_SCANCODE_S | WITH_SHIFT: // shift-s
+			case SDL_SCANCODE_S | WITH_SHIFT: // Shift+S
 				if (hitp_curr != hitp_max) {
 					play_sound(sound_33_small_potion); // small potion (cheat)
 					hitp_delta = 1;
@@ -774,7 +809,7 @@ int __pascal far process_key() {
 					flash_time = 2;
 				}
 			break;
-			case SDL_SCANCODE_T | WITH_SHIFT: // shift-t
+			case SDL_SCANCODE_T | WITH_SHIFT: // Shift+T
 				play_sound(sound_30_big_potion); // big potion (cheat)
 				flash_color = 4; // red
 				flash_time = 4;
@@ -783,6 +818,13 @@ int __pascal far process_key() {
 			#ifdef USE_DEBUG_CHEATS
 			case SDL_SCANCODE_T:
 				is_timer_displayed = 1 - is_timer_displayed; // toggle
+			break;
+			case SDL_SCANCODE_F:
+				if (fixes->fix_quicksave_during_feather) {
+					is_feather_timer_displayed = 1 - is_feather_timer_displayed; // toggle
+				} else {
+					is_feather_timer_displayed = 0;
+				}
 			break;
 			#endif
 		}
@@ -798,6 +840,10 @@ int __pascal far process_key() {
 
 // seg000:08EB
 void __pascal far play_frame() {
+	// play feather fall music if there is more than 1 second of feather fall left
+	if (fixes->fix_quicksave_during_feather && is_feather_fall >= 10 && !check_sound_playing()) {
+		play_sound(sound_39_low_weight);
+	}
 	do_mobs();
 	process_trobs();
 	check_skel();
@@ -1103,6 +1149,9 @@ void reset_level_unused_fields(bool loading_clean_level) {
 	memset(level.fill_1, 0, sizeof(level.fill_1));
 	memset(level.fill_2, 0, sizeof(level.fill_2));
 	memset(level.fill_3, 0, sizeof(level.fill_3));
+
+	// level.used_rooms is 25 on some levels. Limit it to the actual number of rooms.
+	if (level.used_rooms > 24) level.used_rooms = 24;
 
 	// For these fields, only use the bits that are actually used, and set the rest to zero.
 	// Good for repurposing the unused bits in the future.
@@ -1646,6 +1695,12 @@ int __pascal far do_paused() {
 		is_paused = 0; // fix being able to pause the game during the ending sequence
 	}
 	if (is_paused) {
+		// feather fall gets interrupted by pause
+		if (fixes->fix_quicksave_during_feather &&
+				is_feather_fall > 0 &&
+				check_sound_playing()) {
+			stop_sounds();
+		}
 		display_text_bottom("GAME PAUSED");
 #ifdef USE_MENU
 		if (enable_pause_menu || is_menu_shown) {
@@ -1723,7 +1778,13 @@ void __pascal far toggle_upside() {
 
 // seg000:15F8
 void __pascal far feather_fall() {
-	is_feather_fall = 1;
+	//printf("slow fall started at: rem_min = %d, rem_tick = %d\n", rem_min, rem_tick);
+	if (fixes->fix_quicksave_during_feather) {
+		// feather fall is treated as a timer
+		is_feather_fall = FEATHER_FALL_LENGTH * get_ticks_per_sec(timer_1);
+	} else {
+		is_feather_fall = 1;
+	}
 	flash_color = 2; // green
 	flash_time = 3;
 	stop_sounds();
@@ -1887,6 +1948,10 @@ void __pascal far transition_ltr() {
 	// Estimated transition fps based on the speed of the transition on an Apple IIe.
 	// See: https://www.youtube.com/watch?v=7m7j2VuWhQ0
 	int transition_fps = 120;
+#ifdef USE_FAST_FORWARD
+	extern int audio_speed;
+	transition_fps *= audio_speed;
+#endif
 	Uint64 counters_per_frame = perf_frequency / transition_fps;
 	last_transition_counter = SDL_GetPerformanceCounter();
 	int overshoot = 0;
@@ -1928,31 +1993,6 @@ void __pascal far release_title_images() {
 	}
 }
 
-// seg000:1C3A
-void __pascal far draw_image_2(int id, chtab_type* chtab_ptr, int xpos, int ypos, int blit) {
-	image_type* source;
-	image_type* decoded_image;
-	image_type* mask;
-	mask = NULL;
-	if (NULL == chtab_ptr) return;
-	source = chtab_ptr->images[id];
-	decoded_image = source;
-	if (blit != blitters_0_no_transp && blit != blitters_10h_transp) {
-		method_3_blit_mono(decoded_image, xpos, ypos, blitters_0_no_transp, blit);
-	} else if (blit == blitters_10h_transp) {
-		if (graphics_mode == gmCga || graphics_mode == gmHgaHerc) {
-			//...
-		} else {
-			mask = decoded_image;
-		}
-		draw_image_transp(decoded_image, mask, xpos, ypos);
-		if (graphics_mode == gmCga || graphics_mode == gmHgaHerc) {
-			free_far(mask);
-		}
-	} else {
-		method_6_blit_img_to_scr(decoded_image, xpos, ypos, blit);
-	}
-}
 // seg000:1C3A
 void __pascal far draw_full_image(enum full_image_id id) {
 	image_type* decoded_image;
@@ -2269,8 +2309,10 @@ const rect_type splash_text_2_rect = {50, 0, 200, 320};
 
 const char* splash_text_1 = "SDLPoP " SDLPOP_VERSION;
 const char* splash_text_2 =
+#ifdef USE_QUICKSAVE
 		"To quick save/load, press F6/F9 in-game.\n"
 		"\n"
+#endif
 #ifdef USE_REPLAY
 		"To record replays, press Ctrl+Tab in-game.\n"
 		"To view replays, press Tab on the title screen.\n"
@@ -2291,6 +2333,7 @@ void show_splash() {
 	show_text_with_color(&splash_text_1_rect, 0, 0, splash_text_1, color_15_brightwhite);
 	show_text_with_color(&splash_text_2_rect, 0, -1, splash_text_2, color_7_lightgray);
 
+#ifdef USE_TEXT // Don't wait for a keypress if there is no text for the user to read.
 	int key = 0;
 	do {
 		idle();
@@ -2311,6 +2354,8 @@ void show_splash() {
 		extern int last_key_scancode; // defined in seg009.c
 		last_key_scancode = key; // can immediately do Ctrl+L, etc from the splash screen
 	}
-	key_states[SDL_SCANCODE_LSHIFT] = 0; // don't immediately start the game if shift was pressed!
+	key_states[SDL_SCANCODE_LSHIFT] = 0; // don't immediately start the game if Shift was pressed!
 	key_states[SDL_SCANCODE_RSHIFT] = 0;
+#endif
 }
+

@@ -18,6 +18,11 @@ AMIGAOS4 (see main/master doc/ChangeLog.txt file)
                          replay.c screenshot.c seg000.c seg001.c seg002.c seg003.c
                          seg006.c seg009.c
 -Removed amigaos4 code to load gamecontrollerdb.txt [seg009.c], implemented in master branch.
+(2021.07.10)
+-Updated to SDLPoP 1.22: common.h. config.h data.c lighting.c menu.c midi.c options.c
+                         proto.h replay.c screenshot.c seg000.c seg002.c seg003.c seg004.c
+                         seg005.c seg006.c seg007.c seg008.c seg009.c types.h
+-Compiled with "old" stb_vorbis.c (v1.14) as latest (v1.20) makes audio crawl.
 
 
 Thanks to (in no special order):
@@ -35,3 +40,11 @@ https://www.popot.org/custom_levels.php
 
 Just unpack inside mods/ drawer AND if it has a <FILENAME>.EXE, remove it.
 Then in SDLPoP.ini change "levelset = original" with "levelset = _custom_level_drawername_"
+
+
+AUDIO IS SLOW/AWFULL
+********************
+Use ogg/flac music files from here: (38 MB)
+	https://www.popot.org/get_the_games/various/PoP1_DOS_music.zip
+It's the last link here: https://www.popot.org/get_the_games.php?game=1
+Copy the OGG files to the data/music folder.

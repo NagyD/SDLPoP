@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2020  Dávid Nagy
+Copyright (C) 2013-2021  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -358,10 +358,10 @@ int __pascal far play_level_2() {
 #endif
 		if (Kid.sword == sword_2_drawn) {
 			// speed when fighting (smaller is faster)
-			set_timer_length(timer_1, 6);
+			set_timer_length(timer_1, /*6*/ custom->fight_speed);
 		} else {
 			// speed when not fighting (smaller is faster)
-			set_timer_length(timer_1, 5);
+			set_timer_length(timer_1, /*5*/ custom->base_speed);
 		}
 		guardhp_delta = 0;
 		hitp_delta = 0;
@@ -496,13 +496,36 @@ void __pascal far timers() {
 	if (resurrect_time > 0) {
 		--resurrect_time;
 	}
-	if (is_feather_fall && !check_sound_playing()) {
-#ifdef USE_REPLAY
-		if (recording) special_move = MOVE_EFFECT_END;
-		if (!replaying) // during replays, feather effect gets cancelled in do_replay_move()
-#endif
-		is_feather_fall = 0;
+
+	if (fixes->fix_quicksave_during_feather) {
+		if (is_feather_fall > 0) {
+			--is_feather_fall;
+			if (is_feather_fall == 0) {
+				if (check_sound_playing()) {
+					stop_sounds();
+				}
+
+				//printf("slow fall ended at: rem_min = %d, rem_tick = %d\n", rem_min, rem_tick);
+				//printf("length = %d ticks\n", is_feather_fall);
+	#ifdef USE_REPLAY
+				if (recording) special_move = MOVE_EFFECT_END;
+	#endif
+			}
+		}
+	} else {
+		if (is_feather_fall) is_feather_fall++;
+
+		if (is_feather_fall && (!check_sound_playing() || is_feather_fall > 225)) {
+			//printf("slow fall ended at: rem_min = %d, rem_tick = %d\n", rem_min, rem_tick);
+			//printf("length = %d ticks\n", is_feather_fall);
+	#ifdef USE_REPLAY
+			if (recording) special_move = MOVE_EFFECT_END;
+			if (!replaying) // during replays, feather effect gets cancelled in do_replay_move()
+	#endif
+			is_feather_fall = 0;
+		}
 	}
+
 	// Special event: mouse
 	if (current_level == /*8*/ custom->mouse_level && Char.room == /*16*/ custom->mouse_room && leveldoor_open) {
 		++leveldoor_open;
@@ -523,7 +546,7 @@ void __pascal far check_mirror() {
 			loadkid();
 			load_frame();
 			check_mirror_image();
-			if (distance_mirror >= 0 && custom->show_mirror_image) {
+			if (distance_mirror >= 0 && custom->show_mirror_image && Char.room == drawn_room) {
 				load_frame_to_obj();
 				reset_obj_clip();
 				clip_top = y_clip[Char.curr_row + 1];
@@ -624,6 +647,9 @@ Possible results in can_guard_see_kid:
 	short right_pos;
 	kid_frame = Kid.frame;
 	if (Guard.charid == charid_24_mouse) {
+		// If the prince is fighting a guard, and the player does a quickload to a state where the prince is near the mouse, the prince would draw the sword.
+		// The following line prevents this.
+		can_guard_see_kid = 0;
 		return;
 	}
 	if ((Guard.charid != charid_1_shadow || current_level == 12) &&
@@ -633,6 +659,14 @@ Possible results in can_guard_see_kid:
 	) {
 		can_guard_see_kid = 2;
 		left_pos = x_bump[Kid.curr_col + 5] + 7;
+#ifdef FIX_DOORTOP_DISABLING_GUARD
+		if (fixes->fix_doortop_disabling_guard) {
+			// When the kid is hanging on the right side of a doortop, Kid.curr_col points at the doortop tile and a guard on the left side will see the prince.
+			// This fixes that.
+			if (Kid.action == actions_2_hang_climb || Kid.action == actions_6_hang_straight) left_pos += 14;
+		}
+#endif
+		//printf("Kid.curr_col = %d, Kid.action = %d\n", Kid.curr_col, Kid.action);
 		right_pos = x_bump[Guard.curr_col + 5] + 7;
 		if (left_pos > right_pos) {
 			temp = left_pos;
@@ -646,7 +680,7 @@ Possible results in can_guard_see_kid:
 		// A gate is on the right side of a tile, so it doesn't count.
 		if (get_tile_at_kid(right_pos) == tiles_4_gate
 #ifdef FIX_DOORTOP_DISABLING_GUARD
-			|| get_tile_at_kid(right_pos) == tiles_7_doortop_with_floor || get_tile_at_kid(right_pos) == tiles_12_doortop
+			|| (fixes->fix_doortop_disabling_guard && (get_tile_at_kid(right_pos) == tiles_7_doortop_with_floor || get_tile_at_kid(right_pos) == tiles_12_doortop))
 #endif
 		) {
 			right_pos -= 14;
