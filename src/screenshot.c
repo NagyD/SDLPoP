@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2020  Dávid Nagy
+Copyright (C) 2013-2021  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,12 +22,14 @@ The authors of this program may be contacted at https://forum.princed.org
 
 #ifdef USE_SCREENSHOT
 
-const char screenshots_folder[] = "screenshots";
-char screenshot_filename[POP_MAX_PATH] = "screenshot.png";
+char screenshots_folder[POP_MAX_PATH] = "screenshots";
+char screenshot_filename[POP_MAX_PATH*2] = "screenshot.png";
 int screenshot_index = 0;
 
 // Use incrementing numbers and a separate folder, like DOSBox.
 void make_screenshot_filename() {
+	// Create the screenshots directory in SDLPoP's directory, even if the current directory is something else.
+	strncpy(screenshots_folder, locate_file("screenshots"), sizeof(screenshots_folder));
 	// Create the folder if it doesn't exist yet:
 #if defined WIN32 || _WIN32 || WIN64 || _WIN64
 	mkdir (screenshots_folder);
@@ -223,13 +225,13 @@ void draw_extras() {
 			*/
 			char events[256*4] = ""; // More than enough space to list all the numbers from 0 to 255.
 			int events_pos = 0;
-			for (int event=first_event; event<=last_event && events_pos<sizeof(events); event++) {
+			for (int event=first_event; event<=last_event && events_pos<(int)sizeof(events); event++) {
 				int len = snprintf(events+events_pos, sizeof(events)-events_pos, "%d ", event+EVENT_OFFSET);
 				if (len < 0) break; // snprintf might return -1 if the buffer is too small.
 				events_pos += len;
 			}
 			--events_pos;
-			if (events_pos>0 && events_pos<sizeof(events)) events[events_pos]='\0'; // trim trailing space
+			if (events_pos>0 && events_pos<(int)sizeof(events)) events[events_pos]='\0'; // trim trailing space
 			rect_type buttonmod_rect = {y/*+50-3*/, x, y+60-3, x+32};
 			show_text_with_color(&buttonmod_rect, 0, 1, events, color_14_brightyellow);
 		}
@@ -239,15 +241,15 @@ void draw_extras() {
 		// door events that point here
 		char events[256*4] = "";
 		int events_pos = 0;
-		for (int event=0; event<256 && events_pos<sizeof(events); event++) {
+		for (int event=0; event<256 && events_pos<(int)sizeof(events); event++) {
 			if (event_used[event] && get_doorlink_room(event) == drawn_room && get_doorlink_tile(event) == tilepos) {
-				int len = snprintf(events+events_pos, sizeof(events)-events_pos, "%d ", event+EVENT_OFFSET);
+				int len = snprintf(events+events_pos, (int)sizeof(events)-events_pos, "%d ", event+EVENT_OFFSET);
 				if (len < 0) break;
 				events_pos += len;
 			}
 		}
 		--events_pos;
-		if (events_pos>0 && events_pos<sizeof(events)) events[events_pos]='\0'; // trim trailing space
+		if (events_pos>0 && events_pos<(int)sizeof(events)) events[events_pos]='\0'; // trim trailing space
 		if (*events) {
 			//printf("room %d, tile %d, events: %s\n", drawn_room, tilepos, events); // debug
 			rect_type events_rect = {y,x,y+63-3,x+32-7};

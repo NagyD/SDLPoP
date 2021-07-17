@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2020  Dávid Nagy
+Copyright (C) 2013-2021  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -29,7 +29,8 @@ const char* implementation_name = "SDLPoP v" SDLPOP_VERSION;
 
 #define REPLAY_FORMAT_CURR_VERSION       102 // current version number of the replay format
 #define REPLAY_FORMAT_MIN_VERSION        101 // SDLPoP will open replays with this version number and higher
-#define REPLAY_FORMAT_DEPRECATION_NUMBER 1   // SDLPoP won't open replays with a higher deprecation number
+#define REPLAY_FORMAT_DEPRECATION_NUMBER 2   // SDLPoP won't open replays with a higher deprecation number
+// If deprecation_number >= 2: Waste an RNG cycle in loose_shake() to match DOS PoP.
 
 #define MAX_REPLAY_DURATION 345600 // 8 hours: 720 * 60 * 8 ticks
 byte moves[MAX_REPLAY_DURATION] = {0}; // static memory for now because it is easier (should this be dynamic?)
@@ -157,6 +158,8 @@ int read_replay_header(replay_header_type* header, FILE* fp, char* error_message
 		return 0;
 	}
 
+	g_deprecation_number = deprecation_number;
+
 	if (is_validate_mode) {
 		static byte is_replay_info_printed = 0;
 		if (!is_replay_info_printed) {
@@ -177,7 +180,7 @@ int read_replay_header(replay_header_type* header, FILE* fp, char* error_message
 }
 
 int num_replay_files = 0; // number of listed replays
-size_t max_replay_files = 128; // initially, may grow if there are > 128 replay files found
+int max_replay_files = 128; // initially, may grow if there are > 128 replay files found
 replay_info_type* replay_list = NULL;
 
 // Compare function -- for qsort() in list_replay_files() below
@@ -238,6 +241,7 @@ void list_replay_files() {
 };
 
 byte open_replay_file(const char *filename) {
+	printf("Opening replay file: %s\n", filename);
 	if (replay_file_open) fclose(replay_fp);
 	replay_fp = fopen(filename, "rb");
 	if (replay_fp != NULL) {
@@ -306,15 +310,6 @@ void start_with_replay_file(const char *filename) {
 	}
 }
 
-int process_rw_write(SDL_RWops* rw, void* data, size_t data_size) {
-	return SDL_RWwrite(rw, data, data_size, 1);
-}
-
-int process_rw_read(SDL_RWops* rw, void* data, size_t data_size) {
-	return SDL_RWread(rw, data, data_size, 1);
-	// if this returns 0, most likely the end of the stream has been reached
-}
-
 // The functions options_process_* below each process (read/write) a section of options variables (using SDL_RWops)
 // This is I/O for the *binary* representation of the relevant options - this gets saved as part of a replay.
 
@@ -371,6 +366,9 @@ void options_process_fixes(SDL_RWops* rw, rw_process_func_type process_func) {
 	process(fixes_options_replay.fix_hidden_floors_during_flashing);
 	process(fixes_options_replay.fix_hang_on_teleport);
 	process(fixes_options_replay.fix_exit_door);
+	process(fixes_options_replay.fix_quicksave_during_feather);
+	process(fixes_options_replay.fix_caped_prince_sliding_through_gate);
+	process(fixes_options_replay.fix_doortop_disabling_guard);
 }
 
 void options_process_custom_general(SDL_RWops* rw, rw_process_func_type process_func) {
@@ -522,6 +520,9 @@ int process_to_buffer(void* data, size_t data_size) {
 }
 
 int process_load_from_buffer(void* data, size_t data_size) {
+	// Prevent torches from being randomly colored when an older replay is loaded.
+	if (savestate_offset >= savestate_size) return 0;
+
 	memcpy(data, savestate_buffer + savestate_offset, data_size);
 	savestate_offset += data_size;
 	return 1;
@@ -560,6 +561,7 @@ void reload_resources() {
 int restore_savestate_from_buffer() {
 	int ok = 0;
 	savestate_offset = 0;
+	// This condition should be checked in process_load_from_buffer() instead of here.
 	while (savestate_offset < savestate_size) {
 		ok = quick_process(process_load_from_buffer);
 	}
@@ -605,7 +607,7 @@ void add_replay_move() {
 
 void stop_recording() {
 	recording = 0;
-	if (save_recorded_replay()) {
+	if (save_recorded_replay_dialog()) {
 		display_text_bottom("REPLAY SAVED");
 	} else {
 		display_text_bottom("REPLAY CANCELED");
@@ -670,8 +672,9 @@ void start_replay() {
 		//if (num_replay_files == 0) return;
 	}
 	if (!load_replay()) return;
-	apply_replay_options();
+	// Set replaying before applying options, so the latter can display an appropriate error message if the referenced mod is missing.
 	replaying = 1;
+	apply_replay_options();
 	curr_tick = 0;
 }
 
@@ -732,7 +735,7 @@ void do_replay_move() {
 		control_x = curr_move.x;
 		control_y = curr_move.y;
 
-		// Ignore shift if the kid is dead: restart moves are hard-coded as a 'special move'.
+		// Ignore Shift if the kid is dead: restart moves are hard-coded as a 'special move'.
 		if (rem_min != 0 && Kid.alive > 6)
 			control_shift = 0;
 		else
@@ -753,7 +756,7 @@ void do_replay_move() {
 	}
 }
 
-int save_recorded_replay() {
+int save_recorded_replay_dialog() {
 	// prompt for replay filename
 	rect_type rect;
 	short bgcolor = color_8_darkgray;
@@ -795,6 +798,11 @@ int save_recorded_replay() {
 
 	// NOTE: We currently overwrite the replay file if it exists already. Maybe warn / ask for confirmation??
 
+ return save_recorded_replay(full_filename);
+}
+
+int save_recorded_replay(const char* full_filename)
+{
 	replay_fp = fopen(full_filename, "wb");
 	if (replay_fp != NULL) {
 		fwrite(replay_magic_number, COUNT(replay_magic_number), 1, replay_fp); // magic number "P1R"
@@ -830,6 +838,7 @@ int save_recorded_replay() {
 		fclose(replay_fp);
 		replay_fp = NULL;
 	}
+
 	return 1;
 }
 
@@ -860,9 +869,9 @@ void replay_cycle() {
 		start_game();
 		return;
 	}
-	curr_tick = 0;
 	apply_replay_options();
 	restore_savestate_from_buffer();
+	curr_tick = 0; // Do this after restoring the savestate, in case the savestate contained a non-zero curr_tick.
 	show_level();
 }
 
@@ -921,7 +930,7 @@ void key_press_while_recording(int* key_ptr) {
 			special_move = MOVE_RESTART_LEVEL;
 			break;
 		case SDL_SCANCODE_R | WITH_CTRL:
-			save_recorded_replay();
+			save_recorded_replay_dialog();
 			recording = 0;
 		default:
 			break;
@@ -941,9 +950,11 @@ void key_press_while_replaying(int* key_ptr) {
 		// ...but these are allowable actions:
 		case SDL_SCANCODE_ESCAPE:               // pause
 		case SDL_SCANCODE_ESCAPE | WITH_SHIFT:
+		case SDL_SCANCODE_BACKSPACE:            // menu
 		case SDL_SCANCODE_SPACE:                // time
 		case SDL_SCANCODE_S | WITH_CTRL:        // sound toggle
 		case SDL_SCANCODE_V | WITH_CTRL:        // version
+		case SDL_SCANCODE_C | WITH_CTRL:        // SDL version
 		case SDL_SCANCODE_C:                    // room numbers
 		case SDL_SCANCODE_C | WITH_SHIFT:
 		case SDL_SCANCODE_I | WITH_SHIFT:       // invert

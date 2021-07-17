@@ -3,12 +3,12 @@ For recent changes, look at GitHub: https://github.com/NagyD/SDLPoP/commits/mast
 
 2012 July 28
 ============
-Released disassembly of PoP1 DOS: http://forum.princed.org/viewtopic.php?p=11347#p11347
+Released disassembly of PoP1 DOS: https://forum.princed.org/viewtopic.php?p=11347#p11347
 
 2013 September 01
 =================
 I posted the room-drawing code (rewritten to C+SDL) in the forum.
-http://forum.princed.org/viewtopic.php?f=68&t=3368
+https://forum.princed.org/viewtopic.php?f=68&t=3368
 
 2013 December
 =============
@@ -16,7 +16,7 @@ Started rewriting the further parts of the disassembly to C.
 
 2014 January 03
 ===============
-Released disassembly: http://forum.princed.org/viewtopic.php?p=14291#p14291
+Released disassembly: https://forum.princed.org/viewtopic.php?p=14291#p14291
 
 2014 January
 ============
@@ -31,13 +31,13 @@ Made the code compatible with GNU/Linux.
 2014 July 11
 ============
 First public mention of the port.
-http://forum.princed.org/viewtopic.php?p=14975#p14975
+https://forum.princed.org/viewtopic.php?p=14975#p14975
 
 2014 July 21
 ============
 (version 1.00)
 The first public release.
-http://forum.princed.org/viewtopic.php?f=69&t=3512
+https://forum.princed.org/viewtopic.php?f=69&t=3512
 
 2014 July 22
 ============
@@ -191,10 +191,10 @@ Fixed some memory leaks.
 ================
 (version 1.14)
 FIXED: Changed project type to GUI in the "release" project, too.
-FIXED: Ctrl-S did not turn off mixer sounds.
-FIXED: Ctrl-S did not stop currently playing sounds.
-DONE: Toggle fullscreen with alt-enter.
-FIXED: If the game is in full screen, and I switch away (alt-tab) and back, most of the screen will be black, until it is redrawn.
+FIXED: Ctrl+S did not turn off mixer sounds.
+FIXED: Ctrl+S did not stop currently playing sounds.
+DONE: Toggle fullscreen with Alt+Enter.
+FIXED: If the game is in full screen, and I switch away (Alt+Tab) and back, most of the screen will be black, until it is redrawn.
 
 2015 August 3
 =============
@@ -222,7 +222,7 @@ FIXED: Hardcoded font (hc_font) appeared as white rectangles.
 
 New game additions and bug fixes:
 DONE: Added quicksaving and quickloading (F6 to quicksave anywhere in a level, F9 to quickload).
-- Also quicksave/quickload when shift is pressed
+- Also quicksave/quickload when Shift is pressed
 - Do not even attempt to quicksave after the kid has died
 - Deny quicksave during the feather fall effect
 - Allow quickloading from the title screen
@@ -516,7 +516,7 @@ FIXED: Fix looping "sword moving" sound if the player leaves a room exactly when
 FIXED: Support 8-bpp images in DAT files. For example the Pyramid mod contains some of these.
 FIXED: Improved map-making on levels with broken room links: If a room is mapped to an already used place, then put it to the bottom of the map.
 DONE: Load custom options from DOS PRINCE.EXE files.
-DONE: Added a hotkey to display SDL versions. (Ctrl-C)
+DONE: Added a hotkey to display SDL versions. (Ctrl+C)
 FIXED: Better support for high-DPI (Retina) displays.
 FIXED: Disable integer scaling menu item if SDL version is too old.
 DONE: Save screenshots and maps into a separate folder and add numbers to the filenames.
@@ -525,8 +525,124 @@ DONE: Added support for PC speaker sounds. Use command-line parameter "stdsnd".
 DONE: Added support for colored torch flames.
 FIXED: Torches appearing in the leftmost column are now animated. (They are actually in the rightmost column of the left-side room.)
 
-(no release date yet)
+2019 October 13
 =================
-(upcoming version)
+(version 1.20)
 
+FIXED: Fixed crash on Linux when the prince fell out of the level while a guard was active.
 FIXED: With start_in_blind_mode enabled, moving objects were not displayed until blind mode was toggled off+on.
+FIXED: Fix upside-down screen when using PRINCE.EXE from v1.3 or v1.4.
+FIXED: Tell Windows that SDLPoP is DPI aware to prevent unwanted stretching.
+DONE: Added customization option for loose floor delay. (Used in Neon Persia.)
+FIXED: Fix detection of "allow triggering any tile" hack.
+DONE: Enable use_custom_options by default in the INI.
+FIXED: Fix priorities of sword and spike sounds. (As in PoP 1.3.)
+	The "spiked" sound didn't interrupt the normal spikes sound when the prince ran into spikes.
+	With PoP 1.3 sounds, the "guard hurt" sound didn't play when you hit a guard directly after parrying.
+
+2020 August 20
+=================
+(version 1.21)
+
+FIXED: Skeletons not on level 3 did not behave like skeletons.
+FIXED: Don't crash if the intro music is interrupted by Tab in PC Speaker mode.
+FIXED: Don't switch to PC Speaker mode if there is a mod name in the replay file.
+DONE: Detect guard skill customizations in PRINCE.EXE. (Used in Illusions of Persia, for example.)
+	TODO: Should we add the guard skill options to the INI, the CFG, the replays, or the settings menu?
+FIXED: Don't draw the right edge of loose floors on the left side of a potion or sword.
+FIXED: A guard standing on a door top (with floor) should not become inactive.
+FIXED: Left jump (top-left) didn't work on some gamepads.
+FIXED: Replaying from the command line did not work if there were no replay files in the replay folder.
+DONE: Added support for gamecontrollerdb.txt file.
+DONE: Detect changes of the shadow's starting positions and automatic moves in PRINCE.EXE.
+DONE: Added "Restart Game" to the pause menu, so now it's possible to restart the game using a controller.
+DONE: Added fast forward.
+	TODO: Speed up music and sound effects during fast forwarding.
+ADDED: You can now use quicksave and quickload while recording a replay.
+	TODO: Verify that the quickloaded state is from the currently running recording.
+
+2021 July 5
+=================
+(version 1.22)
+
+FIXED: The prince can now grab a ledge at the bottom right corner of a room with no room below.
+	Details: https://forum.princed.org/viewtopic.php?p=30410#p30410
+	Testcase: doc/replays-testcases/SNES-PC-set level 11.p1r
+	See FIX_CORNER_GRAB in config.h .
+FIXED: Don't allow killing a skeleton in cheat mode.
+FIXED: Ctrl+S didn't mute music (except death music).
+FIXED: A falling tile on the left side of a pillar could cause the blue stripe to be drawn over the pillar.
+FIXED: The top of moving gates became glitched on levels using non-default palettes.
+FIXED: The right edge of pressed drop buttons was black if a big pillar was next to them.
+FIXED: Guards appeared in the current room when they fell into spikes in an adjacent room. (Example: original level 11, room 22.)
+FIXED: Show an error message if a data file is missing.
+FIXED: "Remember guard hp" for non-standard guards.
+FIXED: Colored torches were not restored on quickload if you (quit and) restarted the game after quicksave.
+DONE: Added command-line parameter "mute": Start the game with sound off.
+FIXED: Fixed compiling with some features #undefined. (USE_TEXT, USE_LIGHTING, USE_MENU)
+DONE: Hide references to various features if the game was compiled without them.
+DONE: A scrollbar appears in the pause menu if scrolling is possible.
+	It's not clickable yet, it just shows where you are in the list.
+DONE: Added command-line parameter "playdemo": Make the demo level playable.
+FIXED: Fixed the detection of Ctrl+L during the demo level.
+FIXED: Create the screenshots directory in SDLPoP's directory, even if the current directory is something else.
+	This is to match how the replay folder works.
+FIXED: On Windows, use Unicode/UTF-8 for mkdir().
+	So the replay and screenshots directories can be created within non-ASCII paths.
+FIXED: After quickload, show the room where the prince is, even if the player moved the view away from it (with the H,J,U,N keys).
+FIXED: After quickload, don't draw guard HP if a previously viewed room (with the H,J,U,N keys) had a guard but the current room doesn't have one.
+DONE: Speed up music, sounds, and transitions during fast forwarding.
+FIXED: Prevent the modifier remapping from accessing out-of-range rooms.
+FIXED: Don't show the mirror image if the prince is not in the currently shown room.
+DONE: Added a new cheat key: Ctrl+B: Go back to the room where the prince is. (Undo H,J,U,N.)
+FIXED: Fixed the length of feather fall in fast-forward mode.
+FIXED: Prevent torches from being randomly colored when an older replay is loaded.
+FIXED: If the prince is fighting a guard, and the player does a quickload to a state where the prince is near the mouse, the prince would draw the sword.
+DONE: Added options for changing speeds. They are detected from PRINCE.EXE. (Used in Hurry up Prince, for example.)
+DONE: In the settings menu, allow using Page Up, Page Down, Home, End.
+FIXED: Fixed graphical glitches with an opening gate:
+	1. with a loose floor above and a wall above-right.
+	2. with the top half of a big pillar above-right.
+	See FIX_ABOVE_GATE in config.h .
+FIXED: Validate mode crashed with the error "init_scaling: SDL_CreateTexture: Invalid renderer".
+DONE: Rewrote all mentions of key combinations to the "Ctrl+A" style.
+DONE: Marked which features of SDLPoP are not in the original game. (To prevent confusions like #197)
+DONE: Allow Backspace and Ctrl+C during replay.
+DONE: During playback, display the number of ticks since start, if the timer is shown (debug cheats: T).
+FIXED: Fixed crashing when a MIDI music interrupted another one.
+FIXED: Make it possible to go through a certain closed gate on level 11 of Demo by Suave Prince.
+	Details: https://forum.princed.org/viewtopic.php?p=32326#p32326
+	Testcase: doc/replays-testcases/Demo by Suave Prince level 11.p1r
+	See FIX_COLL_FLAGS in config.h .
+FIXED: When the prince jumps up at the bottom of a big pillar split between two rooms, a part near the top of the screen disappears.
+	Example: The top row in the first room of the original level 5.
+	Details: See FIX_BIGPILLAR_JUMP_UP in config.h .
+DONE: Added a debug cheat to quickload but keep the currently loaded level. (Shift+F9)
+	Motivation: https://forum.princed.org/viewtopic.php?p=32556#p32556
+FIXED: Fixed spiked/chomped/bumped guards teleporting into the wrong room. (if fixes are enabled)
+	Details: https://github.com/NagyD/SDLPoP/pull/237
+FIXED: Quicksave during feather fall mode. (if fixes are enabled)
+	Details: https://github.com/NagyD/SDLPoP/pull/236
+FIXED: Prevent the prince from entering a glitched room when he falls into a wall or he is revived near a wall.
+	Details: doc/replays-testcases/Original level 2 falling into wall.txt
+	Testcase: doc/replays-testcases/Original level 2 falling into wall.p1r
+	See FIX_ENTERING_GLITCHED_ROOMS in config.h .
+FIXED: Optimized OPL mixing (MIDI music).
+	Details: https://github.com/NagyD/SDLPoP/pull/238
+	"More importantly: when run on a Raspberry Pi Zero, the music went from unusable to perfect,"
+FIXED: Fixed the prince sliding through closed gates when you are using the caped prince graphics.
+	Details: See FIX_CAPED_PRINCE_SLIDING_THROUGH_GATE in config.h .
+DONE: Added a compilation-time flag to disable all fixes for vanilla execution.
+	Details: https://github.com/NagyD/SDLPoP/pull/239
+FIXED: If the prince dies on level 14, don't return to the intro after the level was restarted.
+	Details: See FIX_LEVEL_14_RESTARTING in config.h .
+DONE: Waste an RNG cycle in loose_shake() to match DOS PoP.
+DONE: In new replays, use deprecation_number = 2. On playback, waste the RNG cycle only if deprecation_number >= 2.
+	Older replays have deprecation_number <= 1, and we don't waste the RNG cycle when playing them back.
+DONE: When backing offscreen (to the left) from the first guard on level 7 (among others), simulate the glitch from DOS PoP, which causes the prince to fall through the floor.
+	Details: See https://github.com/NagyD/SDLPoP/issues/229
+FIXED: On Windows, use Unicode/UTF-8 for stat().
+	So SDLPoP can load levels from mod folders when a replay file restarts the level or advances to the next level.
+DONE: Added a more visible error message when a mod referenced by a replay file cannot be found in the mods folder.
+DONE: Allow guard skill customizations in SDLPoP.ini.
+DONE: Made FIX_DOORTOP_DISABLING_GUARD configurable.

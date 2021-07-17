@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2020  Dávid Nagy
+Copyright (C) 2013-2021  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -214,7 +214,25 @@ void __pascal far spiked() {
 	// If someone falls into spikes, those spikes become harmless (to others).
 	curr_room_modif[curr_tilepos] = 0xFF;
 	Char.y = y_land[Char.curr_row + 1];
-	Char.x = x_bump[tile_col + 5] + 10;
+	#ifdef FIX_OFFSCREEN_GUARDS_DISAPPEARING
+	// a guard can get teleported to the other side of kid's room
+	// when landing on spikes in another room
+	if (fixes->fix_offscreen_guards_disappearing) {
+		short spike_col = tile_col;
+		if (curr_room != Char.room)	{
+			if (curr_room == level.roomlinks[Char.room - 1].right) {
+				spike_col += 10;
+			} else if (curr_room == level.roomlinks[Char.room - 1].left) {
+				spike_col -= 10;
+			}
+		}
+		Char.x = x_bump[spike_col + 5] + 10;
+	} else {
+	#endif
+		Char.x = x_bump[tile_col + 5] + 10;
+	#ifdef FIX_OFFSCREEN_GUARDS_DISAPPEARING
+	}
+	#endif
 	Char.x = char_dx_forward(8);
 	Char.fall_y = 0;
 	play_sound(sound_48_spiked); // something spiked

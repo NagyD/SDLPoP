@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2020  Dávid Nagy
+Copyright (C) 2013-2021  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -83,8 +83,10 @@ pause_menu_item_type pause_menu_items[] = {
 		{.id = PAUSE_MENU_RESUME,        .text = "RESUME"},
 		// TODO: Add a cheats menu, where you can choose a cheat from a list?
 		/*{.id = PAUSE_MENU_CHEATS,        .text = "CHEATS", .required = &cheats_enabled},*/
-		{.id = PAUSE_MENU_SAVE_GAME,     .text = "SAVE GAME"},
-		{.id = PAUSE_MENU_LOAD_GAME,     .text = "LOAD GAME"},
+#ifdef USE_QUICKSAVE // TODO: If quicksave is disabled, show regular save/load instead?
+		{.id = PAUSE_MENU_SAVE_GAME,     .text = "QUICKSAVE"},
+		{.id = PAUSE_MENU_LOAD_GAME,     .text = "QUICKLOAD"},
+#endif
 		{.id = PAUSE_MENU_RESTART_LEVEL, .text = "RESTART LEVEL"},
 		{.id = PAUSE_MENU_SETTINGS,      .text = "SETTINGS"},
 		{.id = PAUSE_MENU_RESTART_GAME,  .text = "RESTART GAME"},
@@ -194,6 +196,9 @@ enum setting_ids {
 	SETTING_FIX_HIDDEN_FLOORS_DURING_FLASHING,
 	SETTING_FIX_HANG_ON_TELEPORT,
 	SETTING_FIX_EXIT_DOOR,
+	SETTING_FIX_QUICKSAVE_DURING_FEATHER,
+	SETTING_FIX_CAPED_PRINCE_SLIDING_THROUGH_GATE,
+	SETTING_FIX_DOORTOP_DISABLING_GUARD,
 	SETTING_USE_CUSTOM_OPTIONS,
 	SETTING_START_MINUTES_LEFT,
 	SETTING_START_TICKS_LEFT,
@@ -265,6 +270,9 @@ enum setting_ids {
 	SETTING_WIN_LEVEL,
 	SETTING_WIN_ROOM,
 	SETTING_LOOSE_FLOOR_DELAY,
+	SETTING_BASE_SPEED,
+	SETTING_FIGHT_SPEED,
+	SETTING_CHOMPER_SPEED,
 	SETTING_LEVEL_SETTINGS,
 	SETTING_LEVEL_TYPE,
 	SETTING_LEVEL_COLOR,
@@ -348,24 +356,33 @@ setting_type visuals_settings[] = {
 				.explanation = "Sharp - Use nearest neighbour resampling.\n"
 						"Fuzzy - First upscale to double size, then use smooth scaling.\n"
 						"Blurry - Use smooth scaling."},
+#ifdef USE_FADE
 		{.id = SETTING_ENABLE_FADE, .style = SETTING_STYLE_TOGGLE, .linked = &enable_fade,
 				.text = "Fading enabled",
 				.explanation = "Turn fading on or off."},
+#endif
+#ifdef USE_FLASH
 		{.id = SETTING_ENABLE_FLASH, .style = SETTING_STYLE_TOGGLE, .linked = &enable_flash,
 				.text = "Flashing enabled",
 				.explanation = "Turn flashing on or off."},
+#endif
+#ifdef USE_LIGHTING
 		{.id = SETTING_ENABLE_LIGHTING, .style = SETTING_STYLE_TOGGLE, .linked = &enable_lighting,
 				.text = "Torch shadows enabled",
-				.explanation = "Darken those parts of the screen that are not near a torch."},
+				.explanation = "Darken those parts of the screen which are not near a torch."},
+#endif
 };
 
 setting_type gameplay_settings[] = {
 		{.id = SETTING_ENABLE_CHEATS, .style = SETTING_STYLE_TOGGLE, .linked = &cheats_enabled,
 				.text = "Enable cheats",
 				.explanation = "Turn cheats on or off."/*"\nAlso, display the CHEATS option on the pause menu."*/},
+#ifdef USE_COPYPROT
 		{.id = SETTING_ENABLE_COPYPROT, .style = SETTING_STYLE_TOGGLE, .linked = &enable_copyprot,
 				.text = "Enable copy protection level",
 				.explanation = "Enable or disable the potions (copy protection) level."},
+#endif
+#ifdef USE_QUICKSAVE
 		{.id = SETTING_ENABLE_QUICKSAVE, .style = SETTING_STYLE_TOGGLE, .linked = &enable_quicksave,
 				.text = "Enable quicksave",
 				.explanation = "Enable quicksave/load feature.\nPress F6 to quicksave, F9 to quickload."},
@@ -374,11 +391,14 @@ setting_type gameplay_settings[] = {
 				.explanation = "Try to let time run out when quickloading (similar to dying).\n"
 						"Actually, the 'remaining time' will still be restored, "
 						"but a penalty (up to one minute) will be applied."},
+#endif
+#ifdef USE_REPLAY
 		{.id = SETTING_ENABLE_REPLAY, .style = SETTING_STYLE_TOGGLE, .linked = &enable_replay,
 				.text = "Enable replays",
 				.explanation = "Enable recording/replay feature.\n"
 						"Press Ctrl+Tab in-game to start recording.\n"
 						"To stop, press Ctrl+Tab again."},
+#endif
 		{.id = SETTING_USE_FIXES_AND_ENHANCEMENTS, .style = SETTING_STYLE_TOGGLE, .linked = &use_fixes_and_enhancements,
 				.text = "Enhanced mode (allow bug fixes)",
 				.explanation = "Turn on game fixes and enhancements.\n"
@@ -530,6 +550,18 @@ setting_type gameplay_settings[] = {
 				.linked = &fixes_saved.fix_exit_door, .required = &use_fixes_and_enhancements,
 				.text = "Fix exit doors",
 				.explanation = "You can enter closed exit doors after you met the shadow or Jaffar died, or after you opened one of multiple exits."},
+		{.id = SETTING_FIX_QUICKSAVE_DURING_FEATHER, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fixes_saved.fix_quicksave_during_feather, .required = &use_fixes_and_enhancements,
+				.text = "Fix quick save in feather mode",
+				.explanation = "You cannot save game while floating in feather mode."},
+		{.id = SETTING_FIX_CAPED_PRINCE_SLIDING_THROUGH_GATE, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fixes_saved.fix_caped_prince_sliding_through_gate, .required = &use_fixes_and_enhancements,
+				.text = "Fix sliding through closed gate",
+				.explanation = "If you are using the caped prince graphics, and crouch with your back towards a closed gate on the left edge on the room, then the prince will slide through the gate."},
+		{.id = SETTING_FIX_DOORTOP_DISABLING_GUARD, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fixes_saved.fix_doortop_disabling_guard, .required = &use_fixes_and_enhancements,
+				.text = "Fix door top disabling guard",
+				.explanation = "Guards become inactive if they are standing on a door top (with floor), or if the prince is standing on a door top."},
 };
 
 NAMES_LIST(tile_type_setting_names, {
@@ -847,6 +879,18 @@ setting_type mods_settings[] = {
 				.linked = &custom_saved.loose_floor_delay, .number_type = SETTING_BYTE, .min = 0, .max = 127,
 				.text = "Loose floor delay",
 				.explanation = "Number of seconds to wait before a loose floor falls.\n(default = 0.92)"},
+		{.id = SETTING_BASE_SPEED, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.base_speed, .number_type = SETTING_BYTE, .min = 1, .max = 127,
+				.text = "Base speed",
+				.explanation = "Game speed when not fighting (delay between frames in 1/60 seconds). Smaller is faster.\n(default = 5)"},
+		{.id = SETTING_FIGHT_SPEED, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.fight_speed, .number_type = SETTING_BYTE, .min = 1, .max = 127,
+				.text = "Fight speed",
+				.explanation = "Game speed when fighting (delay between frames in 1/60 seconds). Smaller is faster.\n(default = 6)"},
+		{.id = SETTING_CHOMPER_SPEED, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.chomper_speed, .number_type = SETTING_BYTE, .min = 0, .max = 127,
+				.text = "Chomper speed",
+				.explanation = "Chomper speed (length of the animation cycle in frames). Smaller is faster.\n(default = 15)"},
 };
 
 NAMES_LIST(level_type_setting_names, { "Dungeon", "Palace", });
@@ -1221,6 +1265,7 @@ void turn_setting_on_off(int setting_id, byte new_state, void* linked) {
 #endif
 			}
 			break;
+#ifdef USE_LIGHTING
 		case SETTING_ENABLE_LIGHTING:
 			enable_lighting = new_state;
 			if (new_state && lighting_mask == NULL) {
@@ -1228,6 +1273,7 @@ void turn_setting_on_off(int setting_id, byte new_state, void* linked) {
 			}
 			need_full_redraw = 1;
 			break;
+#endif
 		case SETTING_ENABLE_SOUND:
 			turn_sound_on_off((new_state != 0) * 15);
 			break;
@@ -1401,7 +1447,7 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 		rect_to_sdlrect(&setting_box, &dest_rect);
 		uint32_t rgb_color = SDL_MapRGBA(overlay_surface->format, 55, 55, 55, 255);
 		if (SDL_FillRect(overlay_surface, &dest_rect, rgb_color) != 0) {
-			sdlperror("SDL_FillRect");
+			sdlperror("draw_setting: SDL_FillRect");
 			quit(1);
 		}
 		rect_type left_side_of_setting_box = setting_box;
@@ -1559,6 +1605,25 @@ void draw_settings_area(settings_area_type* settings_area) {
 	if (scroll_position + num_drawn_settings < settings_area->setting_count) {
 		draw_image_with_blending(arrowhead_down_image, 200, 151);
 	}
+
+	// Draw a scroll bar if needed.
+	// It's not clickable yet, it just shows where you are in the list.
+	if (num_drawn_settings < settings_area->setting_count) {
+		const int scrollbar_width = 2;
+		rect_type scrollbar_rect = {
+			.top = settings_area_rect.top - 5, .bottom = settings_area_rect.bottom,
+			.left = settings_area_rect.right + 10 - scrollbar_width, .right = settings_area_rect.right + 10
+		};
+		method_5_rect(&scrollbar_rect, blitters_0_no_transp, color_8_darkgray);
+
+		int scrollbar_height = scrollbar_rect.bottom - scrollbar_rect.top;
+		rect_type scrollbar_slider_rect = {
+			.top = scrollbar_rect.top + scroll_position * scrollbar_height / settings_area->setting_count,
+			.bottom = scrollbar_rect.top + (scroll_position + num_drawn_settings) * scrollbar_height / settings_area->setting_count,
+			.left = scrollbar_rect.left, .right = scrollbar_rect.right
+		};
+		method_5_rect(&scrollbar_slider_rect, blitters_0_no_transp, color_7_lightgray);
+	}
 }
 
 void draw_settings_menu() {
@@ -1583,18 +1648,52 @@ void draw_settings_menu() {
 				hovering_item_changed = true;
 			}
 		} else if (controlled_area == 1) {
+			// settings area
 			int old_highlighted_setting_id = highlighted_setting_id;
-			if (menu_control_y == 1) {
-				highlighted_setting_id = next_setting_id;
-				if (at_scroll_down_boundary) {
-					menu_scroll(1);
-				}
-			} else if (menu_control_y == -1) {
-				highlighted_setting_id = previous_setting_id;
-				if (at_scroll_up_boundary) {
-					menu_scroll(-1);
+
+			// Why does the global variable contain the ID instead of the index?...
+			// Find the index from the ID.
+			settings_area_type* current_settings_area = get_settings_area(active_settings_subsection);
+			int highlighted_setting_index = -1;
+			for (int i = 0; i < current_settings_area->setting_count; i++) {
+				if (highlighted_setting_id == current_settings_area->settings[i].id) {
+					highlighted_setting_index = i;
+					break;
 				}
 			}
+
+			int last = current_settings_area->setting_count - 1;
+			int max_scroll = MAX(0, current_settings_area->setting_count - 9);
+
+			if (menu_control_y > 0) {
+				// DOWN
+				highlighted_setting_index += menu_control_y;
+				if (highlighted_setting_index > last) highlighted_setting_index = last;
+
+				// With Page Down, try to leave the selection in the same row visually.
+				if (menu_control_y > +1) scroll_position += menu_control_y;
+
+			} else if (menu_control_y < 0) {
+				// UP
+				highlighted_setting_index += menu_control_y;
+				if (highlighted_setting_index < 0) highlighted_setting_index = 0;
+
+				// With Page Up, try to leave the selection in the same row visually.
+				if (menu_control_y < -1) scroll_position += menu_control_y;
+
+			}
+
+			if (menu_control_y != 0) {
+				// We check both directions in both cases, to scroll the highlighted row back into sight even if the user scrolled it out of sight (with the mouse wheel).
+				if (highlighted_setting_index - 8 > scroll_position) scroll_position = highlighted_setting_index - 8;
+				if (highlighted_setting_index < scroll_position) scroll_position = highlighted_setting_index;
+				if (scroll_position > max_scroll) scroll_position = max_scroll;
+				if (scroll_position < 0) scroll_position = 0;
+			}
+
+			// Find the ID from the index.
+			highlighted_setting_id = current_settings_area->settings[highlighted_setting_index].id;
+
 			if (old_highlighted_setting_id != highlighted_setting_id) {
 				hovering_item_changed = true;
 			}
@@ -1626,7 +1725,9 @@ void confirmation_dialog_result(int which_dialog, int button) {
 			were_settings_changed = true;
 			set_options_to_default();
 			turn_setting_on_off(SETTING_USE_INTEGER_SCALING, use_integer_scaling, NULL);
+#ifdef USE_LIGHTING
 			turn_setting_on_off(SETTING_ENABLE_LIGHTING, enable_lighting, NULL);
+#endif
 			apply_aspect_ratio();
 			turn_sound_on_off((is_sound_on != 0) * 15);
 			turn_music_on_off(enable_music);
@@ -1950,6 +2051,18 @@ int key_test_paused_menu(int key) {
 		case SDL_SCANCODE_DOWN:
 			menu_control_y = 1;
 			break;
+		case SDL_SCANCODE_PAGEUP:
+			menu_control_y = -9;
+			break;
+		case SDL_SCANCODE_PAGEDOWN:
+			menu_control_y = +9;
+			break;
+		case SDL_SCANCODE_HOME:
+			menu_control_y = -1000;
+			break;
+		case SDL_SCANCODE_END:
+			menu_control_y = +1000;
+			break;
 		case SDL_SCANCODE_RIGHT:
 			menu_control_x = 1;
 			break;
@@ -1997,7 +2110,9 @@ void process_ingame_settings_user_managed(SDL_RWops* rw, rw_process_func_type pr
 	process(scaling_type);
 	process(enable_fade);
 	process(enable_flash);
+#ifdef USE_LIGHTING
 	process(enable_lighting);
+#endif
 }
 
 void process_ingame_settings_mod_managed(SDL_RWops* rw, rw_process_func_type process_func) {

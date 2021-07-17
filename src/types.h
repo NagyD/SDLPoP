@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2020  Dávid Nagy
+Copyright (C) 2013-2021  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,13 +24,16 @@ The authors of this program may be contacted at https://forum.princed.org
 #define STB_VORBIS_HEADER_ONLY
 #include "stb_vorbis.c"
 
-#if !defined(_MSC_VER)
-# include <SDL2/SDL.h>
-# include <SDL2/SDL_image.h>
-#else
+//#if !defined(_MSC_VER)
+//# include <SDL2/SDL.h>
+//# include <SDL2/SDL_image.h>
+//#else
+// These headers for SDL seem to be the pkgconfig/meson standard as per the
+// latest versions. If the old ones should be used, the ifdef must be used
+// to compare versions. 
 # include <SDL.h>
 # include <SDL_image.h>
-#endif
+//#endif
 
 #if SDL_BYTEORDER != SDL_LIL_ENDIAN
 //#error This program is not (yet) prepared for big endian CPUs, please contact the author.
@@ -261,7 +264,7 @@ typedef struct chtab_type {
 	word chtab_palette_bits;
 	word has_palette_bits;
 	// This is a variable-size array, with n_images elements.
-	image_type* far images[0];
+	image_type* far images[];
 } chtab_type;
 
 typedef struct full_image_type {
@@ -427,7 +430,7 @@ SDL_COMPILE_TIME_ASSERT(dat_res_size, sizeof(dat_res_type) == 8);
 
 typedef struct dat_table_type {
 	Uint16 res_count;
-	dat_res_type entries[0];
+	dat_res_type entries[];
 } dat_table_type;
 SDL_COMPILE_TIME_ASSERT(dat_table_size, sizeof(dat_table_type) == 2);
 
@@ -435,7 +438,7 @@ typedef struct image_data_type {
 	Uint16 height;
 	Uint16 width;
 	Uint16 flags;
-	byte data[0];
+	byte data[];
 } image_data_type;
 SDL_COMPILE_TIME_ASSERT(image_data_size, sizeof(image_data_type) == 6);
 #pragma pack(pop)
@@ -493,7 +496,7 @@ typedef struct rawfont_type {
 	short height_below_baseline;
 	short space_between_lines;
 	short space_between_chars;
-	word offsets[0];
+	word offsets[];
 } rawfont_type;
 SDL_COMPILE_TIME_ASSERT(rawfont_type, sizeof(rawfont_type) == 10);
 #pragma pack(pop)
@@ -523,7 +526,7 @@ typedef struct note_type {
 SDL_COMPILE_TIME_ASSERT(note_type, sizeof(note_type) == 3);
 typedef struct speaker_type { // IBM
 	word tempo;
-	note_type notes[0];
+	note_type notes[];
 } speaker_type;
 SDL_COMPILE_TIME_ASSERT(speaker_type, sizeof(speaker_type) == 2);
 
@@ -532,7 +535,7 @@ typedef struct digi_type { // wave in 1.0 and 1.1
 	word sample_count;
 	word unknown;
 	byte sample_size; // =8
-	byte samples[0];
+	byte samples[];
 } digi_type;
 SDL_COMPILE_TIME_ASSERT(digi_type, sizeof(digi_type) == 7);
 
@@ -542,7 +545,7 @@ typedef struct digi_new_type { // wave in 1.3 and 1.4 (and PoP2)
 	word sample_count;
 	word unknown;
 	word unknown2;
-	byte samples[0];
+	byte samples[];
 } digi_new_type;
 SDL_COMPILE_TIME_ASSERT(digi_new_type, sizeof(digi_new_type) == 9);
 
@@ -570,7 +573,7 @@ typedef struct ogg_type {
 
 typedef struct converted_audio_type {
 	int length;
-	short samples[0];
+	short samples[];
 } converted_audio_type;
 
 typedef struct sound_buffer_type {
@@ -1139,7 +1142,7 @@ enum replay_seek_targets {
 };
 #endif
 
-#define COUNT(array) (sizeof(array)/sizeof(array[0]))
+#define COUNT(array) ((int) (sizeof(array)/sizeof(array[0])) )
 
 // These are or'ed with SDL_SCANCODE_* constants in last_key_scancode.
 enum key_modifiers {
@@ -1212,6 +1215,9 @@ typedef struct fixes_options_type {
 	byte fix_hidden_floors_during_flashing;
 	byte fix_hang_on_teleport;
 	byte fix_exit_door;
+	byte fix_quicksave_during_feather;
+	byte fix_caped_prince_sliding_through_gate;
+	byte fix_doortop_disabling_guard;
 } fixes_options_type;
 
 #define NUM_GUARD_SKILLS 12
@@ -1313,9 +1319,18 @@ typedef struct custom_options_type {
 	auto_move_type demo_moves[25]; // prince on demo level
 	auto_move_type shad_drink_move[8]; // shadow on level 5
 
+	// speeds
+	byte base_speed;
+	byte fight_speed;
+	byte chomper_speed;
+
 } custom_options_type;
 #pragma pack(pop)
 
 typedef struct directory_listing_type directory_listing_type;
+
+#define BASE_FPS 60
+
+#define FEATHER_FALL_LENGTH 18.75
 
 #endif

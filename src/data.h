@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2020  Dávid Nagy
+Copyright (C) 2013-2021  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -160,6 +160,10 @@ extern word room_AL;
 
 // data:4F84
 extern level_type level;
+
+#ifdef USE_COLORED_TORCHES
+extern byte torch_colors[24+1][30]; // indexed 1..24
+#endif
 
 
 // data:42AA
@@ -674,8 +678,10 @@ extern word justblocked; // name from Apple II source
 extern word last_loose_sound;
 
 extern int last_key_scancode;
+#ifdef USE_TEXT
 extern font_type hc_font INIT(= {0x01,0xFF, 7,2,1,1, NULL});
 extern textstate_type textstate INIT(= {0,0,0,15,&hc_font});
+#endif
 extern int need_quick_save INIT(= 0);
 extern int need_quick_load INIT(= 0);
 
@@ -715,7 +721,7 @@ extern byte enable_info_screen INIT(= 1);
 extern byte enable_controller_rumble INIT(= 0);
 extern byte joystick_only_horizontal INIT(= 0);
 extern int joystick_threshold INIT(= 8000);
-extern char gamecontrollerdb_file[POP_MAX_PATH] INIT(= "gamecontrollerdb.txt");
+extern char gamecontrollerdb_file[POP_MAX_PATH] INIT(= "");
 extern byte enable_quicksave INIT(= 1);
 extern byte enable_quicksave_penalty INIT(= 1);
 extern byte enable_replay INIT(= 1);
@@ -832,6 +838,11 @@ extern custom_options_type custom_defaults INIT(= {
 		// automatic moves
 		.demo_moves = {{0x00, 0}, {0x01, 1}, {0x0D, 0}, {0x1E, 1}, {0x25, 5}, {0x2F, 0}, {0x30, 1}, {0x41, 0}, {0x49, 2}, {0x4B, 0}, {0x63, 2}, {0x64, 0}, {0x73, 5}, {0x80, 6}, {0x88, 3}, {0x9D, 7}, {0x9E, 0}, {0x9F, 1}, {0xAB, 4}, {0xB1, 0}, {0xB2, 1}, {0xBC, 0}, {0xC1, 1}, {0xCD, 0}, {0xE9,-1}},
 		.shad_drink_move = {{0x00, 0}, {0x01, 1}, {0x0E, 0}, {0x12, 6}, {0x1D, 7}, {0x2D, 2}, {0x31, 1}, {0xFF,-2}},
+
+		// speeds
+		.base_speed = 5,
+		.fight_speed = 6,
+		.chomper_speed = 15,
 });
 extern custom_options_type* custom INIT(= &custom_defaults);
 
@@ -876,6 +887,7 @@ extern word cheats_enabled INIT(= 0);
 #ifdef USE_DEBUG_CHEATS
 extern byte debug_cheats_enabled INIT(= 0);
 extern byte is_timer_displayed INIT(= 0);
+extern byte is_feather_timer_displayed INIT(= 0);
 #endif
 
 #ifdef USE_MENU
@@ -891,7 +903,13 @@ extern bool escape_key_suppressed;
 extern int menu_control_scroll_y;
 extern sbyte is_menu_shown;
 extern byte enable_pause_menu INIT(= 1);
+#endif
 extern char mods_folder[POP_MAX_PATH] INIT(= "mods");
+
+extern int play_demo_level;
+
+#ifdef USE_REPLAY
+extern int g_deprecation_number;
 #endif
 
 #undef INIT

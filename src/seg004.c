@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2020  Dávid Nagy
+Copyright (C) 2013-2021  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -100,10 +100,12 @@ void __pascal far move_coll_to_prev() {
 		below_row_coll_room[column] = -1;
 		above_row_coll_room[column] = -1;
 		curr_row_coll_room[column] = -1;
+#ifdef FIX_COLL_FLAGS
 		// bugfix:
 		curr_row_coll_flags[column] = 0;
 		below_row_coll_flags[column] = 0;
 		above_row_coll_flags[column] = 0;
+#endif
 	}
 }
 
@@ -346,11 +348,13 @@ void __pascal far clear_coll_rooms() {
 	memset_near(curr_row_coll_room, -1, sizeof(curr_row_coll_room));
 	memset_near(below_row_coll_room, -1, sizeof(below_row_coll_room));
 	memset_near(above_row_coll_room, -1, sizeof(above_row_coll_room));
+#ifdef FIX_COLL_FLAGS
 	// workaround
 	memset_near(prev_coll_flags, 0, sizeof(prev_coll_flags));
 	memset_near(curr_row_coll_flags, 0, sizeof(curr_row_coll_flags));
 	memset_near(below_row_coll_flags, 0, sizeof(below_row_coll_flags));
 	memset_near(above_row_coll_flags, 0, sizeof(above_row_coll_flags));
+#endif
 	prev_collision_row = -1;
 }
 
@@ -449,7 +453,25 @@ void __pascal far chomped() {
 	#endif
 		curr_room_modif[curr_tilepos] |= 0x80; // put blood
 	if (Char.frame != frame_178_chomped && Char.room == curr_room) {
-		Char.x = x_bump[tile_col + 5] + 7;
+		#ifdef FIX_OFFSCREEN_GUARDS_DISAPPEARING
+		// a guard can get teleported to the other side of kid's room
+		// when hitting a chomper in another room
+		if (fixes->fix_offscreen_guards_disappearing) {
+			short chomper_col = tile_col;
+			if (curr_room != Char.room)	{
+				if (curr_room == level.roomlinks[Char.room - 1].right) {
+					chomper_col += 10;
+				} else if (curr_room == level.roomlinks[Char.room - 1].left) {
+					chomper_col -= 10;
+				}
+			}
+			Char.x = x_bump[chomper_col + 5] + 7;
+		} else {
+		#endif
+			Char.x = x_bump[tile_col + 5] + 7;
+		#ifdef FIX_OFFSCREEN_GUARDS_DISAPPEARING
+		}
+		#endif
 		Char.x = char_dx_forward(7 - !Char.direction);
 		Char.y = y_land[Char.curr_row + 1];
 		take_hp(100);
@@ -463,23 +485,35 @@ void __pascal far chomped() {
 void __pascal far check_gate_push() {
 	// Closing gate pushes Kid
 	short frame;
-	short var_4;
+	short orig_col;
 	frame = Char.frame;
 	if (Char.action == actions_7_turn ||
 		frame == frame_15_stand || // stand
 		(frame >= frame_108_fall_land_2 && frame < 111) // crouch
 	) {
 		get_tile_at_char();
-		var_4 = tile_col;
+		orig_col = tile_col;
+		int orig_room = curr_room;
 		if ((curr_tile2 == tiles_4_gate ||
 			get_tile(curr_room, --tile_col, tile_row) == tiles_4_gate) &&
 			(curr_row_coll_flags[tile_col] & prev_coll_flags[tile_col]) == 0xFF &&
 			can_bump_into_gate()
 		) {
 			bumped_sound();
-			// push Kid left if var_4 <= tile_col, gate at char's tile
-			// push Kid right if var_4 > tile_col, gate is left from char's tile
-			Char.x += 5 - (var_4 <= tile_col) * 10;
+#ifdef FIX_CAPED_PRINCE_SLIDING_THROUGH_GATE
+			if (fixes->fix_caped_prince_sliding_through_gate) {
+				// If get_tile() changed curr_room from orig_room to the left neighbor of orig_room (because tile_col was outside room orig_room),
+				// then change tile_col (and curr_room) so that orig_col and tile_col are meant in the same room.
+				if (curr_room == level.roomlinks[orig_room - 1].left) {
+					tile_col -= 10;
+					curr_room = orig_room;
+				}
+			}
+#endif
+			//printf("check_gate_push: orig_col = %d, tile_col = %d, curr_room = %d, Char.room = %d, orig_room = %d\n", orig_col, tile_col, curr_room, Char.room, orig_room);
+			// push Kid left if orig_col <= tile_col, gate at char's tile
+			// push Kid right if orig_col > tile_col, gate is left from char's tile
+			Char.x += 5 - (orig_col <= tile_col) * 10;
 		}
 	}
 }

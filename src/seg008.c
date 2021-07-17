@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2020  Dávid Nagy
+Copyright (C) 2013-2021  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -71,10 +71,6 @@ short drawn_col;
 byte tile_left;
 // data:4CCC
 byte modifier_left;
-
-#ifdef USE_COLORED_TORCHES
-byte torch_colors[24+1][30]; // indexed 1..24
-#endif
 
 // seg008:0006
 void __pascal far redraw_room() {
@@ -194,6 +190,10 @@ void __pascal far redraw_needed(short tilepos) {
 			draw_tile_anim_topright();
 			draw_tile_anim_right();
 			draw_tile_anim();
+#ifdef FIX_ABOVE_GATE
+			draw_tile_fore();
+			draw_tile_bottom(0);
+#endif
 		}
 	}
 	if (redraw_frames2[tilepos]) {
@@ -222,8 +222,13 @@ void __pascal far redraw_needed(short tilepos) {
 void __pascal far redraw_needed_above(int column) {
 	if (redraw_frames_above[column] != 0) {
 		--redraw_frames_above[column];
-		draw_tile_wipe(3);
-		draw_tile_floorright();
+#ifdef FIX_BIGPILLAR_JUMP_UP
+		if (curr_tile != tiles_9_bigpillar_top)
+#endif
+		{
+			draw_tile_wipe(3);
+			draw_tile_floorright();
+		}
 		draw_tile_anim_topright();
 		draw_tile_right();
 		draw_tile_bottom(1);
@@ -453,7 +458,7 @@ void __pascal far draw_tile_right() {
 			if (id) {
 				if (tile_left == tiles_5_stuck) {
 					blit = blitters_10h_transp;
-					if (curr_tile == tiles_0_empty || curr_tile == tiles_5_stuck) {
+					if (curr_tile == tiles_0_empty || curr_tile == tiles_5_stuck || !tile_is_floor(curr_tile)) {
 						id = 42; /*floor B*/
 					}
 				} else {
@@ -932,7 +937,7 @@ SDL_Surface* hflip(SDL_Surface* input) {
 	SDL_SetSurfacePalette(output, input->format->palette);
 	// The copied image will be overwritten anyway.
 	if (output == NULL) {
-		sdlperror("SDL_ConvertSurface");
+		sdlperror("hflip: SDL_ConvertSurface");
 		quit(1);
 	}
 
@@ -946,7 +951,7 @@ SDL_Surface* hflip(SDL_Surface* input) {
 		SDL_Rect srcrect = {source_x, 0, 1, height};
 		SDL_Rect dstrect = {target_x, 0, 1, height};
 		if (SDL_BlitSurface(input/*32*/, &srcrect, output, &dstrect) != 0) {
-			sdlperror("SDL_BlitSurface");
+			sdlperror("hflip: SDL_BlitSurface");
 			quit(1);
 		}
 	}
@@ -1138,6 +1143,14 @@ void __pascal far draw_gate_fore() {
 void __pascal far alter_mods_allrm() {
 	word tilepos;
 	word room;
+
+#ifdef USE_COLORED_TORCHES
+	memset(torch_colors, 0, sizeof(torch_colors));
+#endif
+
+	// level.used_rooms is 25 on some levels. Limit it to the actual number of rooms.
+	if (level.used_rooms > 24) level.used_rooms = 24;
+
 	for (room = 1; room <= level.used_rooms; room++) {
 		get_room_address(room);
 		room_L = level.roomlinks[room-1].left;
@@ -1419,6 +1432,7 @@ void __pascal far draw_leveldoor() {
 
 // seg008:1E0C
 void __pascal far get_room_address(int room) {
+	//if (room < 0 || room > 24) printf("Tried to access room %d, not in 0..24.\n", room);
 	loaded_room = (word) room;
 	if (room) {
 		curr_room_tiles = &level.fg[(room-1)*30];
@@ -1562,6 +1576,7 @@ void __pascal far draw_objtable_item(int index) {
 			if (obj_id == 0xFF) return;
 			// the Kid blinks a bit after uniting with shadow
 			if (united_with_shadow && (united_with_shadow % 2) == 0) goto shadow;
+			// fallthrough!
 		case 2: // Guard
 		case 3: // sword
 		case 5: // hurt splash
@@ -1807,6 +1822,9 @@ void __pascal far show_time() {
 
 // seg008:25A8
 void __pascal far show_level() {
+#ifdef FIX_LEVEL_14_RESTARTING
+	text_time_remaining = text_time_total = 0;
+#endif
 	byte disp_level;
 	char sprintf_temp[32];
 	disp_level = current_level;
@@ -1841,7 +1859,7 @@ void __pascal far display_text_bottom(const char near *text) {
 	draw_rect(&rect_bottom_text, 0);
 	show_text(&rect_bottom_text, 0, 1, text);
 #ifndef USE_TEXT
-	SDL_WM_SetCaption(text, NULL);
+	SDL_SetWindowTitle(window_, text);
 #endif
 }
 
@@ -1853,7 +1871,7 @@ void __pascal far erase_bottom_text(int arg_0) {
 		text_time_remaining = 0;
 	}
 #ifndef USE_TEXT
-	SDL_WM_SetCaption("", NULL);
+	SDL_SetWindowTitle(window_, WINDOW_TITLE);
 #endif
 }
 

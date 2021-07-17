@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2020  Dávid Nagy
+Copyright (C) 2013-2021  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -59,7 +59,6 @@ void __pascal far gen_palace_wall_colors();
 void __pascal far show_title();
 void __pascal far transition_ltr();
 void __pascal far release_title_images();
-void __pascal far draw_image_2(int id,chtab_type* chtab_ptr,int xpos,int ypos,int blit);
 void __pascal far draw_full_image(enum full_image_id id);
 void __pascal far load_kid_sprite();
 void __pascal far save_game();
@@ -514,17 +513,30 @@ void sdlperror(const char* header);
 bool file_exists(const char* filename);
 #define locate_file(filename) locate_file_(filename, alloca(POP_MAX_PATH), POP_MAX_PATH)
 const char* locate_file_(const char* filename, char* path_buffer, int buffer_size);
+
 #ifdef _WIN32
+
 FILE* fopen_UTF8(const char* filename, const char* mode);
 #define fopen fopen_UTF8
+
 int chdir_UTF8(const char* path);
 #define chdir chdir_UTF8
+
+int mkdir_UTF8(const char* path);
+#define mkdir mkdir_UTF8
+
 int access_UTF8(const char* filename_UTF8, int mode);
 #ifdef access
 #undef access
 #endif
 #define access access_UTF8
+
+int stat_UTF8(const char *filename_UTF8, struct stat *_Stat);
+// We define a function-like macro, because `stat` is also the name of the type, and we don't want to redefine that.
+#define stat(filename_UTF8, _Stat) stat_UTF8(filename_UTF8, _Stat)
+
 #endif //_WIN32
+
 directory_listing_type* create_directory_listing_and_find_first_file(const char* directory, const char* extension);
 char* get_current_filename_from_directory_listing(directory_listing_type* data);
 bool find_next_file(directory_listing_type* data);
@@ -596,6 +608,7 @@ const rect_type far * __pascal far method_5_rect(const rect_type far *rect,int b
 void draw_rect_with_alpha(const rect_type* rect, byte color, byte alpha);
 image_type far * __pascal far method_6_blit_img_to_scr(image_type far *image,int xpos,int ypos,int blit);
 void reset_timer(int timer_index);
+double get_ticks_per_sec(int timer_index);
 void set_timer_length(int timer_index, int length);
 void __pascal start_timer(int timer_index, int length);
 int __pascal do_wait(int timer_index);
@@ -664,7 +677,8 @@ void stop_recording();
 void start_replay();
 void end_replay();
 void do_replay_move();
-int save_recorded_replay();
+int save_recorded_replay_dialog();
+int save_recorded_replay(const char* full_filename);
 void replay_cycle();
 int load_replay();
 void key_press_while_recording(int* key_ptr);

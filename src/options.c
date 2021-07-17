@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2020  Dávid Nagy
+Copyright (C) 2013-2021  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -83,7 +83,9 @@ int ini_load(const char *filename,
 }
 
 NAMES_LIST(level_type_names, {"dungeon", "palace"});
-NAMES_LIST(guard_type_names, {"guard", "fat", "skel", "vizier", "shadow"});
+//NAMES_LIST(guard_type_names, {"guard", "fat", "skel", "vizier", "shadow"});
+// NAMES_LIST must start from 0, so I need KEY_VALUE_LIST if I want to assign a name to -1.
+KEY_VALUE_LIST(guard_type_names, {{"none", -1}, {"guard", 0}, {"fat", 1}, {"skel", 2}, {"vizier", 3}, {"shadow", 4}});
 NAMES_LIST(tile_type_names, {
 				"empty", "floor", "spike", "pillar", "gate",                                        // 0..4
 				"stuck", "closer", "doortop_with_floor", "bigpillar_bottom", "bigpillar_top",       // 5..9
@@ -174,13 +176,13 @@ static int global_ini_callback(const char *section, const char *name, const char
 	if (check_ini_section("General")) {
 #ifdef USE_MENU
 		process_boolean("enable_pause_menu", &enable_pause_menu);
+#endif
 		if (strcasecmp(name, "mods_folder") == 0) {
 			if (value[0] != '\0' && strcasecmp(value, "default") != 0) {
 				strcpy(mods_folder, locate_file(value));
 			}
 			return 1;
 		}
-#endif
 		process_boolean("enable_copyprot", &enable_copyprot);
 		process_boolean("enable_music", &enable_music);
 		process_boolean("enable_fade", &enable_fade);
@@ -276,6 +278,9 @@ static int global_ini_callback(const char *section, const char *name, const char
 		process_boolean("fix_hidden_floors_during_flashing", &fixes_saved.fix_hidden_floors_during_flashing);
 		process_boolean("fix_hang_on_teleport", &fixes_saved.fix_hang_on_teleport);
 		process_boolean("fix_exit_door", &fixes_saved.fix_exit_door);
+		process_boolean("fix_quicksave_during_feather", &fixes_saved.fix_quicksave_during_feather);
+		process_boolean("fix_caped_prince_sliding_through_gate", &fixes_saved.fix_caped_prince_sliding_through_gate);
+		process_boolean("fix_doortop_disabling_guard", &fixes_saved.fix_doortop_disabling_guard);
 	}
 
 	if (check_ini_section("CustomGameplay")) {
@@ -380,6 +385,9 @@ static int global_ini_callback(const char *section, const char *name, const char
 		process_word("win_level", &custom_saved.win_level, &never_is_16_list);
 		process_byte("win_room", &custom_saved.win_room, NULL);
 		process_byte("loose_floor_delay", &custom_saved.loose_floor_delay, NULL);
+		process_byte("base_speed", &custom_saved.base_speed, NULL);
+		process_byte("fight_speed", &custom_saved.fight_speed, NULL);
+		process_byte("chomper_speed", &custom_saved.chomper_speed, NULL);
 	} // end of section [CustomGameplay]
 
 	// [Level 1], etc.
@@ -403,9 +411,26 @@ static int global_ini_callback(const char *section, const char *name, const char
 			process_byte("entry_pose", &custom_saved.tbl_entry_pose[ini_level], &entry_pose_names_list);
 			process_sbyte("seamless_exit", &custom_saved.tbl_seamless_exit[ini_level], NULL);
 		} else {
-			// TODO: warning?
+			printf("Warning: Invalid section [Level %d] in the INI!\n", ini_level);
 		}
 	}
+
+	// [Skill 0], etc.
+	int ini_skill = -1;
+	if (strncasecmp(section, "Skill ", 6) == 0 && sscanf(section+6, "%d", &ini_skill) == 1) {
+		if (ini_skill >= 0 && ini_skill < NUM_GUARD_SKILLS) {
+			process_word("strikeprob",    &custom_saved.strikeprob   [ini_skill], NULL);
+			process_word("restrikeprob",  &custom_saved.restrikeprob [ini_skill], NULL);
+			process_word("blockprob",     &custom_saved.blockprob    [ini_skill], NULL);
+			process_word("impblockprob",  &custom_saved.impblockprob [ini_skill], NULL);
+			process_word("advprob",       &custom_saved.advprob      [ini_skill], NULL);
+			process_word("refractimer",   &custom_saved.refractimer  [ini_skill], NULL);
+			process_word("extrastrength", &custom_saved.extrastrength[ini_skill], NULL);
+		} else {
+			printf("Warning: Invalid section [Skill %d] in the INI!\n", ini_skill);
+		}
+	}
+
 	return 0;
 }
 
@@ -442,7 +467,9 @@ void set_options_to_default() {
 	enable_quicksave = 1;
 	enable_quicksave_penalty = 1;
 	enable_replay = 1;
+#ifdef USE_LIGHTING
 	enable_lighting = 0;
+#endif
 	// By default, all the fixes are used, unless otherwise specified.
 	// So, if one of these options is omitted from the INI file, they default to true.
 	memset(&fixes_saved, 1, sizeof(fixes_saved));
@@ -689,6 +716,11 @@ void load_dos_exe_modifications(const char* folder_name) {
 		process(&custom_saved.shad_drink_move,  8*4, {     -1, 0x1D492,      -1, 0x1D384,      -1, 0x19D2E}); // in the packed versions, the four zero bytes at the start are compressed
 		process(&custom_saved.demo_moves     , 25*4, {0x1B8EE, 0x1D4B2, 0x1C70B, 0x1D3A4, 0x18ADD, 0x19D4E});
 
+		// speeds
+		process(&custom_saved.base_speed   , 1, { 0x4F01, 0x65B1, 0x5389, 0x5AC9, 0x4E45, 0x5F75 });
+		process(&custom_saved.fight_speed  , 1, { 0x4EF9, 0x65A9, 0x5381, 0x5AC1, 0x4E3D, 0x5F6D });
+		process(&custom_saved.chomper_speed, 1, { 0x8BBD, 0xA26D, 0x906D, 0x97AD, 0x8B29, 0x9C59 });
+
 		// The order of offsets is: dos_10_packed, dos_10_unpacked, dos_13_packed, dos_13_unpacked, dos_14_packed, dos_14_unpacked
 
 #undef process
@@ -706,6 +738,7 @@ void load_mod_options() {
 		char folder_name[POP_MAX_PATH];
 		snprintf_check(folder_name, sizeof(folder_name), "%s/%s", mods_folder, levelset_name);
 		const char* located_folder_name = locate_file(folder_name);
+		//printf("located_folder_name = %s\n", located_folder_name);
 		bool ok = false;
 		struct stat info;
 		if (stat(located_folder_name, &info) == 0) {
@@ -728,6 +761,12 @@ void load_mod_options() {
 			}
 		} else {
 			printf("Mod '%s' not found\n", levelset_name);
+			char message[256];
+			snprintf_check(message, sizeof(message), "Cannot find the mod '%s' in the mods folder.", levelset_name);
+			show_dialog(message);
+#ifdef USE_REPLAY
+			if (replaying) show_dialog("If the replay file restarts the level or advances to the next level, a wrong level will be loaded.");
+#endif
 		}
 		if (!ok) {
 			use_custom_levelset = 0;
@@ -737,3 +776,14 @@ void load_mod_options() {
 	turn_fixes_and_enhancements_on_off(use_fixes_and_enhancements);
 	turn_custom_options_on_off(use_custom_options);
 }
+
+int process_rw_write(SDL_RWops* rw, void* data, size_t data_size) {
+	return SDL_RWwrite(rw, data, data_size, 1);
+}
+
+int process_rw_read(SDL_RWops* rw, void* data, size_t data_size) {
+	return SDL_RWread(rw, data, data_size, 1);
+	// if this returns 0, most likely the end of the stream has been reached
+}
+
+

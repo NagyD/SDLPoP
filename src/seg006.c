@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2020  Dávid Nagy
+Copyright (C) 2013-2021  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -45,6 +45,18 @@ int __pascal far get_tile(int room,int col,int row) {
 // seg006:005D
 int __pascal far find_room_of_tile() {
 	again:
+#ifdef FIX_CORNER_GRAB
+	// Check tile_row < 0 first, this way the prince can grab a ledge at the bottom right corner of a room with no room below.
+	// Details: https://forum.princed.org/viewtopic.php?p=30410#p30410
+	if (tile_row < 0) {
+		tile_row += 3;
+		if (curr_room) {
+			curr_room = level.roomlinks[curr_room - 1].up;
+		}
+		//find_room_of_tile();
+		goto again;
+	}
+#endif
 	if (tile_col < 0) {
 		tile_col += 10;
 		if (curr_room) {
@@ -52,21 +64,27 @@ int __pascal far find_room_of_tile() {
 		}
 		//find_room_of_tile();
 		goto again;
-	} else if (tile_col >= 10) {
+	}
+	if (tile_col >= 10) {
 		tile_col -= 10;
 		if (curr_room) {
 			curr_room = level.roomlinks[curr_room - 1].right;
 		}
 		//find_room_of_tile();
 		goto again;
-	} else if (tile_row < 0) {
+	}
+#ifndef FIX_CORNER_GRAB
+	// if (tile_row < 0) was here originally
+	if (tile_row < 0) {
 		tile_row += 3;
 		if (curr_room) {
 			curr_room = level.roomlinks[curr_room - 1].up;
 		}
 		//find_room_of_tile();
 		goto again;
-	} else if (tile_row >= 3) {
+	}
+#endif
+	if (tile_row >= 3) {
 		tile_row -= 3;
 		if (curr_room) {
 			curr_room = level.roomlinks[curr_room - 1].down;
@@ -574,6 +592,7 @@ void __pascal far play_seq() {
 				}
 				// fallthrough!
 			case SEQ_JMP: // jump
+				//Char.curr_seq = *(const word*)(SEQTBL_0 + Char.curr_seq);
 				Char.curr_seq = SDL_SwapLE16(*(const word*)(SEQTBL_0 + Char.curr_seq));
 				break;
 			case SEQ_UP: // up
@@ -708,13 +727,13 @@ const byte tile_mod_tbl[256] = {
 
 // seg006:03F0
 int __pascal far get_tile_div_mod(int xpos) {
-	// xpos might be negative if the kid is far off left.
-	// In this case, the array index overflows.
-/*	if (xpos < 0 || xpos >= 256) {
-		printf("get_tile_div_mod(): xpos = %d\n", xpos);
-	}*/
+	// Determine tile column (xh) and the position within the tile (xl) from xpos.
+
+// DOS PoP does this:
 //	obj_xl = tile_mod_tbl[xpos];
 //	return tile_div_tbl[xpos];
+
+	// xpos uses a coordinate system in which the left edge of the screen is 58, and each tile is 14 units wide.
 	int x = xpos - 58;
 	int xl = x % 14;
 	int xh = x / 14;
@@ -724,6 +743,38 @@ int __pascal far get_tile_div_mod(int xpos) {
 		// Modulo returns a negative number if x is negative, but we want 0 <= xl < 14.
 		xl += 14;
 	}
+
+	// For compatibility with the DOS version, we allow for overflow access to these tables
+	// Considering the case of negative overflow
+	if (xpos < 0) {
+		// In this case DOS PoP reads the bytes directly before tile_div_tbl[] and tile_mod_tbl[] in the memory.
+		// Here we simulate these reads.
+		// Before tile_mod_tbl[] is tile_div_tbl[], and before tile_div_tbl[] are the following bytes:
+		static const byte bogus[] = {0x02, 0x00, 0x41, 0x00, 0x80, 0x00, 0xBF, 0x00, 0xFE, 0x00, 0xFF, 0x01, 0x01, 0xFF, 0xC4, 0xFF, 0x03, 0x00, 0x42, 0x00, 0x81, 0x00, 0xC0, 0x00, 0xF8, 0xFF, 0x37, 0x00, 0x76, 0x00, 0xB5, 0x00, 0xF4, 0x00};
+		if (COUNT(bogus) + xpos >= 0) {
+			xh = bogus[COUNT(bogus) + xpos]; // simulating tile_div_tbl[xpos]
+			xl = tile_div_tbl[COUNT(tile_div_tbl) + xpos]; // simulating tile_mod_tbl[xpos]
+		} else {
+			printf("xpos = %d (< %d) out of range for simulation of index overflow!\n", xpos, -(int)COUNT(bogus));
+		}
+	}
+
+	// Considering the case of positive overflow
+	int tblSize = 256;
+
+ if (xpos >= tblSize) {
+  // In this case DOS PoP reads the bytes directly after tile_div_tbl[], that is: and tile_mod_tbl[]
+  // Here we simulate these reads.
+  // After tile_mod_tbl[] there are the following bytes:
+  static const byte bogus[] = {0xF4, 0x02, 0x10, 0x1E, 0x2C, 0x3A, 0x48, 0x56, 0x64, 0x72, 0x80, 0x8E, 0x9C, 0xAA, 0xB8, 0xC6, 0xD4, 0xE2, 0xF0, 0xFE, 0x00, 0x0A, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x0A, 0x0D, 0x00, 0x00, 0x00, 0x00};
+  if (xpos-tblSize < COUNT(bogus)) {
+   xh = tile_mod_tbl[xpos-tblSize]; // simulating tile_div_tbl[xpos]
+   xl = bogus[xpos-tblSize]; // simulating tile_mod_tbl[xpos]
+  } else {
+   printf("xpos = %d (> %d) out of range for simulation of index overflow!\n", xpos, (int)COUNT(bogus)+tblSize);
+  }
+ }
+
 	obj_xl = xl;
 	return xh;
 }
@@ -1082,7 +1133,7 @@ void __pascal far check_grab() {
 	#define MAX_GRAB_FALLING_SPEED 32
 	#endif
 
-	if (control_shift < 0 && // press shift to grab
+	if (control_shift < 0 && // press Shift to grab
 		Char.fall_y < MAX_GRAB_FALLING_SPEED && // you can't grab if you're falling too fast ...
 		Char.alive < 0 && // ... or dead
 		(word)y_land[Char.curr_row + 1] <= (word)(Char.y + 25)
@@ -1224,16 +1275,27 @@ void __pascal far control_kid() {
 	word key;
 	if (Char.alive < 0 && hitp_curr == 0) {
 		Char.alive = 0;
+		// stop feather fall when kid dies
+		if (fixes->fix_quicksave_during_feather && is_feather_fall > 0) {
+			is_feather_fall = 0;
+			if (check_sound_playing()) {
+				stop_sounds();
+			}
+		}
 	}
 	if (grab_timer != 0) {
 		--grab_timer;
 	}
-	if (current_level == 0) {
+#ifdef USE_REPLAY
+	if (current_level == 0 && !play_demo_level && !replaying) {
+#else
+	if (current_level == 0 && !play_demo_level) {
+#endif
 		do_demo();
 		control();
-		// we can start the game or load a game while the demo
+		// The player can start a new game or load a saved game during the demo.
 		key = key_test_quit();
-		if (key == 0x0C) { // ctrl-L
+		if (key == (SDL_SCANCODE_L | WITH_CTRL)) { // Ctrl+L
 			if (load_game()) {
 				start_game();
 			}
