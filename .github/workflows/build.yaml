@@ -13,7 +13,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        gcc-version: [10]
         include:
           - name: x86_64
             package: ""
@@ -29,9 +28,11 @@ jobs:
       - name: Install deps
         run: |
           sudo apt update
-          sudo apt install -y make libsdl2-image-dev gcc-${{ matrix.gcc-version }}${{ matrix.package }}
+          sudo apt install -y make libsdl2-image-dev gcc-10${{ matrix.package }}
       - name: Build
-        run: make -C src -j $(nproc) all CC=${{ matrix.cc }}-${{ matrix.gcc-version }}
+        env:
+          CFLAGS: "-I/usr/include"
+        run: make -C src -j $(nproc) all CC=${{ matrix.cc }}-10 
       - name: List
         run: ls -l
 
