@@ -14,13 +14,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: x86_64
+          - name: amd64
             package: ""
             cc: "gcc"
           - name: armv7
             package: "-arm-linux-gnueabihf"
             cc: "arm-linux-gnueabihf-gcc"
-          - name: aarch64-linux-gnu
+          - name: aarch64
             package: "-aarch64-linux-gnu"
             cc: "aarch64-linux-gnu-gcc"
     steps:
@@ -31,8 +31,8 @@ jobs:
           sudo apt install -y make libsdl2-image-dev gcc-10${{ matrix.package }}
       - name: Build
         env:
-          CFLAGS: "-I/usr/include"
-        run: make -C src -j $(nproc) all CC=${{ matrix.cc }}-10 
+          CFLAGS: "-I/usr/include/x86_64-linux-gnu/SDL2"
+        run: make -C src -j $(nproc) all CC=${{ matrix.cc }}-10  
       - name: List
         run: ls -l
 
