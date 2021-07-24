@@ -8,13 +8,28 @@ on:
 
 jobs:
   build-linux:
+    name: Build ${{ matrix.target }}
     runs-on: ubuntu-latest
+    container:
+      image: ${{ matrix.image }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: ubuntu:21.04
+            target: x86_64
+          - image: arm32v7/ubuntu:21.04
+            target: arm-linux-gnueabihf
+          - image: arm64v8/ubuntu:21.04
+            target: aarch64-linux-gnu
     steps:
       - uses: actions/checkout@v2
       - name: Install deps
         run: |
-          sudo apt update
-          sudo apt install -y libsdl2-image-dev
+          apt update
+          apt install -y make gcc libsdl2-image-dev
       - name: Build
-        run: make -C src all
+        run: make -C src -j $(nproc) all
+      - name: List
+        run: ls -l
 
