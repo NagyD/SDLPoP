@@ -1,0 +1,20 @@
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+      - github-actions
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install deps
+        run: |
+          sudo apt update
+          sudo apt install -y libsdl2-image-dev
+      - name: Build
+        run: make -C src all
+
