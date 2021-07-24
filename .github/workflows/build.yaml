@@ -10,16 +10,13 @@ jobs:
   build-linux:
     name: Build ${{ matrix.name }}
     runs-on: ubuntu-latest
-    container:
-      image: ubuntu:21.04
     strategy:
       fail-fast: false
       matrix:
-        gcc-version: 10
-        cc: ""
-        package: ""
+        gcc-version: [10]
         include:
           - name: x86_64
+            package: ""
             cc: "gcc"
           - name: armv7
             package: "-arm-linux-gnueabihf"
@@ -31,8 +28,8 @@ jobs:
       - uses: actions/checkout@v2
       - name: Install deps
         run: |
-          apt update
-          apt install -y make libsdl2-image-dev gcc-${{ matrix.gcc-version }}${{ matrix.package }}
+          sudo apt update
+          sudo apt install -y make libsdl2-image-dev gcc-${{ matrix.gcc-version }}${{ matrix.package }}
       - name: Build
         run: make -C src -j $(nproc) all CC=${{ matrix.cc }}-${{ matrix.gcc-version }}
       - name: List
