@@ -838,7 +838,7 @@ void __pascal far animate_loose() {
 		if (curr_modifier & 0x80) {
 			// just shaking
 			// don't stop on level 13, needed for the auto-falling floors
-			if (current_level == 13) return;
+			if (current_level == /*13*/ custom->loose_tiles_level) return;
 			if (curr_modifier >= 0x84) {
 				curr_modifier = 0;
 				trob.type = -1;
@@ -950,7 +950,7 @@ int __pascal far next_chomper_timing(byte timing) {
 // seg007:0FB4
 void __pascal far loose_make_shake() {
 	// don't shake on level 13
-	if (curr_room_modif[curr_tilepos] == 0 && current_level != 13) {
+	if (curr_room_modif[curr_tilepos] == 0 && current_level != /*13*/ custom->loose_tiles_level) {
 		curr_room_modif[curr_tilepos] = 0x80;
 		add_trob(curr_room, curr_tilepos, 1);
 	}
@@ -1227,7 +1227,7 @@ void __pascal far fell_on_your_head() {
 	action = Char.action;
 	// loose floors hurt you in frames 5..14 (running) only on level 13
 	if (
-		(current_level == 13 || (frame < frame_5_start_run || frame >= 15)) &&
+		(current_level == /*13*/ custom->loose_tiles_level || (frame < frame_5_start_run || frame >= 15)) &&
 		(action < actions_2_hang_climb || action == actions_7_turn)
 	) {
 		Char.y = y_land[Char.curr_row + 1];
