@@ -17,7 +17,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${SDLPoP_SOURCE_DIR}/..")
 #set(SDL2 "/usr/local/Cellar/sdl2/2.0.5")
 
 if (NOT(WIN32) AND (DEFINED SDL2))
-    include_directories(${SDL2}/include)
+    include_directories(${SDL2}/include/SDL2)
     link_directories(${SDL2}/lib)
 endif()
 

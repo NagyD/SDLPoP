@@ -12,13 +12,11 @@ OS      := $(shell uname)
 CPPFLAGS += -Wall -D_GNU_SOURCE=1
 CFLAGS += -std=gnu99 -O2
 
-ifeq ($(OS),Darwin)
-LIBS := $(shell sdl2-config --libs) -lSDL2_image
-CFLAGS += -I/opt/local/include
-CPPFLAGS += -D_THREAD_SAFE -DOSX
-else
-LIBS := $(shell pkg-config --libs   sdl2 SDL2_image)
+LIBS := $(shell pkg-config --libs sdl2 SDL2_image)
 CFLAGS += $(shell pkg-config --cflags sdl2 SDL2_image)
+
+ifeq ($(OS),Darwin)
+CPPFLAGS += -D_THREAD_SAFE -DOSX
 endif
 
 all: $(BIN)
