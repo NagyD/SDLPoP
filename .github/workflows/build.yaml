@@ -8,28 +8,33 @@ on:
 
 jobs:
   build-linux:
-    name: Build ${{ matrix.target }}
+    name: Build ${{ matrix.name }}
     runs-on: ubuntu-latest
     container:
-      image: ${{ matrix.image }}
+      image: ubuntu:21.04
     strategy:
       fail-fast: false
       matrix:
+        gcc-version: 10
+        cc: ""
+        package: ""
         include:
-          - image: ubuntu:21.04
-            target: x86_64
-          - image: arm32v7/ubuntu:21.04
-            target: arm-linux-gnueabihf
-          - image: arm64v8/ubuntu:21.04
-            target: aarch64-linux-gnu
+          - name: x86_64
+            cc: "gcc"
+          - name: armv7
+            package: "-arm-linux-gnueabihf"
+            cc: "arm-linux-gnueabihf-gcc"
+          - name: aarch64-linux-gnu
+            package: "-aarch64-linux-gnu"
+            cc: "aarch64-linux-gnu-gcc"
     steps:
       - uses: actions/checkout@v2
       - name: Install deps
         run: |
           apt update
-          apt install -y make gcc libsdl2-image-dev
+          apt install -y make libsdl2-image-dev gcc-${{ matrix.gcc-version }}${{ matrix.package }}
       - name: Build
-        run: make -C src -j $(nproc) all
+        run: make -C src -j $(nproc) all CC=${{ matrix.cc }}-${{ matrix.gcc-version }}
       - name: List
         run: ls -l
 
