@@ -599,6 +599,15 @@ void __pascal far draw_tile_base() {
 	word ybottom;
 	word id;
 	ybottom = draw_main_y;
+#ifdef USE_SUPER_HIGH_JUMP
+	// Latice tiles are drawn in the draw_tile_fore() method.
+	if (fixes->enable_super_high_jump) {
+		if ((curr_tile >= tiles_26_lattice_down && curr_tile <= tiles_29_lattice_right) ||
+			(tile_left == tiles_26_lattice_down && curr_tile == tiles_12_doortop)) {
+			return;
+		}
+	}
+#endif
 	if (tile_left == tiles_26_lattice_down && curr_tile == tiles_12_doortop) {
 		id = 6; // Lattice + door A
 		ybottom += 3;
@@ -696,7 +705,24 @@ void __pascal far draw_tile_fore() {
 				wall_pattern(1, 1);
 			}
 			break;
+#ifdef USE_SUPER_HIGH_JUMP
+		// Draw front parts of lattice in the foretable
+		// so prince is not in front of it while jumping.
+		case tiles_26_lattice_down:
+		case tiles_27_lattice_small:
+		case tiles_28_lattice_left:
+		case tiles_29_lattice_right:
+			if (fixes->enable_super_high_jump) {
+				add_foretable(id_chtab_6_environment, tile_table[curr_tile].base_id, draw_xh, 0, tile_table[curr_tile].base_y + draw_main_y, blitters_10h_transp, 0);
+			}
+			// do not break
 		default:
+			if (fixes->enable_super_high_jump && tile_left == tiles_26_lattice_down && curr_tile == tiles_12_doortop) {
+				add_foretable(id_chtab_6_environment, 6, draw_xh, 0, tile_table[curr_tile].base_y + draw_main_y + 3, blitters_10h_transp, 0);
+			}
+#else
+		default:
+#endif
 			id = tile_table[curr_tile].fore_id;
 			if (id == 0) return;
 			if (curr_tile == tiles_10_potion) {

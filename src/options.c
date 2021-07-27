@@ -277,6 +277,7 @@ static int global_ini_callback(const char *section, const char *name, const char
 		process_boolean("fix_quicksave_during_feather", &fixes_saved.fix_quicksave_during_feather);
 		process_boolean("fix_caped_prince_sliding_through_gate", &fixes_saved.fix_caped_prince_sliding_through_gate);
 		process_boolean("fix_doortop_disabling_guard", &fixes_saved.fix_doortop_disabling_guard);
+		process_boolean("enable_super_high_jump", &fixes_saved.enable_super_high_jump);
 	}
 
 	if (check_ini_section("CustomGameplay")) {

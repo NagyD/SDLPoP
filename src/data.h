@@ -308,6 +308,13 @@ extern chtab_type* chtab_title50;
 // data:405E
 extern short hof_count;
 
+#ifdef USE_SUPER_HIGH_JUMP
+extern byte super_jump_timer INIT(=0);
+extern byte super_jump_fall INIT(=0);
+extern byte super_jump_room;
+extern sbyte super_jump_col;
+extern sbyte super_jump_row;
+#endif
 
 // data:009A
 extern word demo_mode INIT(= 0);

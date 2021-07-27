@@ -637,7 +637,7 @@ byte seqtbl[] = {
 	dy(2), frame_79_jumphang,
 	dy(4), jmp(hangdrop), // goto "hangdrop"
 
-	LABEL(superhijump) // superhijump (when weightless)
+	LABEL(superhijump) // superhijump (when weightless) - this sequence is not being used in PoP1
 	frame_67_start_jump_up_1, frame_68_start_jump_up_2, frame_69_start_jump_up_3, frame_70_jumphang,
 	frame_71_jumphang, frame_72_jumphang, frame_73_jumphang, frame_74_jumphang,
 	frame_75_jumphang, frame_76_jumphang,
@@ -645,11 +645,19 @@ byte seqtbl[] = {
 	dy(-3), frame_78_jumphang,
 	dy(-4), frame_79_jumphang,
 	dy(-10), frame_79_jumphang,
+#ifdef USE_SUPER_HIGH_JUMP // prevents kid from jumping too high into the ceiling
+	dy(-8), frame_79_jumphang,
+	dy(-6), frame_79_jumphang,
+	dy(-5), frame_79_jumphang,
+	dy(-4), frame_79_jumphang,
+	dy(-4), frame_79_jumphang,
+#else
 	dy(-9), frame_79_jumphang,
 	dy(-8), frame_79_jumphang,
 	dy(-7), frame_79_jumphang,
 	dy(-6), frame_79_jumphang,
 	dy(-5), frame_79_jumphang,
+#endif
 	dy(-4), frame_79_jumphang,
 	dy(-3), frame_79_jumphang,
 	dy(-2), frame_79_jumphang,
