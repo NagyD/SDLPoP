@@ -1171,7 +1171,11 @@ void __pascal far check_grab() {
 #endif
 #ifdef USE_SUPER_HIGH_JUMP
 			if (fixes->enable_super_high_jump) {
-	            super_jump_fall = 0;
+				// grabbing a loose tile is in a room above and resetting the flag
+				// during a fall can cause a guard in the room to disappear
+				if (curr_tile2 != tiles_11_loose || (curr_room_tiles[curr_tilepos] & 0x20) != 0) {
+					super_jump_fall = 0;
+				}
 			}
 #endif
 		}
