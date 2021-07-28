@@ -422,7 +422,7 @@ setting_type gameplay_settings[] = {
 		{.id = SETTING_enable_super_high_jump, .style = SETTING_STYLE_TOGGLE,
 				.linked = &fixes_saved.enable_super_high_jump, .required = &use_fixes_and_enhancements,
 				.text = "Enable super high jump",
-				.explanation = "Prince in feature mode (after drinking a green potion) can jump 2 stories high."},
+				.explanation = "Prince in feather mode (after drinking a green potion) can jump 2 stories high."},
 		{.id = SETTING_FIX_GATE_SOUNDS, .style = SETTING_STYLE_TOGGLE,
 				.linked = &fixes_saved.fix_gate_sounds, .required = &use_fixes_and_enhancements,
 				.text = "Fix gate sounds bug",
