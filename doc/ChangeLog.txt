@@ -646,3 +646,12 @@ FIXED: On Windows, use Unicode/UTF-8 for stat().
 DONE: Added a more visible error message when a mod referenced by a replay file cannot be found in the mods folder.
 DONE: Allow guard skill customizations in SDLPoP.ini.
 DONE: Made FIX_DOORTOP_DISABLING_GUARD configurable.
+
+
+(no release date yet)
+=================
+(upcoming version)
+
+DONE: Adjust SDL2 headers search path in CMake or macOS builds
+FIXED: Don't hardcode level 13 for the loose floor events.
+DONE: Mention the tricks page in the INI, since tricks are mentioned there.
