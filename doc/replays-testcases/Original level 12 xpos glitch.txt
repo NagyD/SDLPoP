@@ -1,0 +1,4 @@
+﻿When the prince lands after the jump, he should not temporarily move to the left (for two frames).
+To pass the test: #define FIX_SPRITE_XPOS in config.h
+
+More info: https://forum.princed.org/viewtopic.php?p=33336#p33336
