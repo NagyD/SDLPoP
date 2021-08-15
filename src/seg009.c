@@ -363,7 +363,7 @@ static FILE* open_dat_from_root_or_data_dir(const char* filename) {
 int __pascal far showmessage(char far *text,int arg_4,void far *arg_0);
 
 // seg009:0F58
-dat_type *__pascal open_dat(const char *filename,int drive) {
+dat_type *__pascal open_dat(const char *filename, int optional) {
 	FILE* fp = NULL;
 	if (!use_custom_levelset) {
 		fp = open_dat_from_root_or_data_dir(filename);
@@ -397,7 +397,7 @@ dat_type *__pascal open_dat(const char *filename,int drive) {
 			goto failed;
 		pointer->handle = fp;
 		pointer->dat_table = dat_table;
-	} else {
+	} else if (optional == 0) {
 		// showmessage will crash if we call if before certain things are initialized!
 		// Solution: In pop_main(), I moved the first open_dat() call after init_copyprot_dialog().
 		// /*
@@ -1116,7 +1116,7 @@ extern byte hc_small_font_data[];
 
 void load_font() {
 	// Try to load font from a file.
-	dat_type* dathandle = open_dat("font", 0);
+	dat_type* dathandle = open_dat("font", 1);
 	hc_font.chtab = load_sprites_from_file(1000, 1<<1, 0);
 	close_dat(dathandle);
 	if (hc_font.chtab == NULL) {
