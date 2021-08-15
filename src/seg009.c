@@ -398,7 +398,9 @@ dat_type *__pascal open_dat(const char *filename,int drive) {
 		pointer->handle = fp;
 		pointer->dat_table = dat_table;
 	} else {
-		/* // showmessage will crash if we call if before certain things are initialized!
+		// showmessage will crash if we call if before certain things are initialized!
+		// Solution: In pop_main(), I moved the first open_dat() call after init_copyprot_dialog().
+		// /*
 		// There is no DAT file, verify whether the corresponding directory exists.
 		char filename_no_ext[POP_MAX_PATH];
 		// strip the .DAT file extension from the filename (use folders simply named TITLE, KID, VPALACE, etc.)
@@ -407,20 +409,20 @@ dat_type *__pascal open_dat(const char *filename,int drive) {
 		if (len >= 5 && filename_no_ext[len-4] == '.') {
 			filename_no_ext[len-4] = '\0'; // terminate, so ".DAT" is deleted from the filename
 		}
-		char filename[POP_MAX_PATH];
-		snprintf_check(filename,sizeof(filename),"data/%s",filename_no_ext);
-		const char* data_path = locate_file(filename);
+		char foldername[POP_MAX_PATH];
+		snprintf_check(foldername,sizeof(foldername),"data/%s",filename_no_ext);
+		const char* data_path = locate_file(foldername);
 		struct stat path_stat;
 		int result = stat(data_path, &path_stat);
 		if (result != 0 || !S_ISDIR(path_stat.st_mode)) {
 			char error_message[256];
-			snprintf_check(error_message, sizeof(error_message), "Cannot find a required data file: %s\nPress any key to quit.", filename);
+			snprintf_check(error_message, sizeof(error_message), "Cannot find a required data file: %s or folder: %s\nPress any key to quit.", filename, foldername);
 			if (onscreen_surface_ != NULL && copyprot_dialog != NULL) { // otherwise showmessage will crash
 				showmessage(error_message, 1, &key_test_quit);
 				quit(1);
 			}
 		}
-		*/
+		// */
 	}
 out:
 	// stub
@@ -461,7 +463,7 @@ chtab_type* __pascal load_sprites_from_file(int resource,int palette_bits, int q
 			char error_message[256];
 			// Unfortunately we don't know at this point which data file is missing. So we use the name of the last opened DAT file.
 			// It's also possible that the DAT file exists and it just doesn't contain the needed resource.
-			snprintf_check(error_message, sizeof(error_message), "Cannot find a required data file: %s\nMake sure that the data/ folder exists.\nPress any key to quit.", dat_chain_ptr->filename);
+			snprintf_check(error_message, sizeof(error_message), "Can't load sprites from resource %d.\nThe last opened data file is: %s\nPress any key to quit.", resource, dat_chain_ptr->filename);
 			showmessage(error_message, 1, &key_test_quit);
 			quit(1);
 		}
