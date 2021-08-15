@@ -658,3 +658,5 @@ DONE: Mention the tricks page in the INI, since tricks are mentioned there.
 FIXED: If a sprite's xpos is negative and divisible by 8, it appeared shifted 8 pixels to the left.
 	Details: See FIX_SPRITE_XPOS in config.h .
 FIXED: Report any missing data file as soon as we try to open it, instead of only when we try to load data from it.
+FIXED: If the place of a special event was changed, show it at its new place on level maps.
+	This works only with events whose place can be customized.
