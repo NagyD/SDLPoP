@@ -111,7 +111,7 @@ int ypos[NUMBER_OF_ROOMS+1] = {0};
 
 // Show annotations for non-visible things, like: room bounds, room numbers, door events, loose floors, potion types, special events, ...
 // (this will make the function even more like a cheat)
-// TODO: guard HPs, skill? fake tiles?
+// TODO: fake tiles?
 void draw_extras() {
 	// ambiguous tiles
 	// The editor branch has something similar...
@@ -413,6 +413,27 @@ void draw_extras() {
 			char* start_text = (start_dir == dir_0_right) ? "start\n->" : "start\n<-";
 			rect_type start_rect = {y,x-10,y+63,x+32+10};
 			show_text_with_color(&start_rect, 0, 0, start_text, color_14_brightyellow);
+		}
+
+		// guard info
+		//if (tilepos == level.guards_tile[drawn_room-1]) {
+		if (Guard.direction != dir_56_none && tilepos == Guard.curr_row * 10 + Guard.curr_col) {
+			//int screen_x = (Guard.x - 54) * 320 / 140;
+			loadshad();
+			load_frame_to_obj();
+			int screen_x = calc_screen_x_coord(obj_x);
+			// Put it above the guard's head.
+			if (Guard.direction == dir_0_right) screen_x -= 10; else screen_x += 10;
+
+			rect_type event_rect = {y+2, screen_x-16-10, y+63, screen_x+16+10};
+			char guard_info[20];
+			/*
+			snprintf(guard_info, sizeof(guard_info), "sk: %d\nhp: %d", guard_skill, guardhp_max);
+			show_text_with_color(&event_rect, 0, 0, guard_info, color_12_brightred);
+			*/
+			snprintf(guard_info, sizeof(guard_info), "s%d h%d", guard_skill, guardhp_max);
+			show_text_with_color(&event_rect, 0, -1, guard_info, /*color_12_brightred*/ color_14_brightyellow);
+			// Yellow text is more readable than red.
 		}
 
 	}

@@ -660,3 +660,4 @@ FIXED: If a sprite's xpos is negative and divisible by 8, it appeared shifted 8 
 FIXED: Report any missing data file as soon as we try to open it, instead of only when we try to load data from it.
 FIXED: If the place of a special event was changed, show it at its new place on level maps.
 	This works only with events whose place can be customized.
+DONE: Show guards' HP and skills on the maps.
