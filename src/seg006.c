@@ -867,7 +867,12 @@ void __pascal far fall_accel() {
 // seg006:05AE
 void __pascal far fall_speed() {
 	Char.y += Char.fall_y;
+#ifdef USE_SUPER_HIGH_JUMP
+	// Do not fall forward during super high jumps
+	if (Char.action == actions_4_in_freefall && (!fixes->enable_super_high_jump || super_jump_fall == 0)) {
+#else
 	if (Char.action == actions_4_in_freefall) {
+#endif
 		Char.x = char_dx_forward(Char.fall_x);
 		load_fram_det_col();
 	}
@@ -1137,19 +1142,32 @@ void __pascal far check_grab() {
 	#define MAX_GRAB_FALLING_SPEED 32
 	#endif
 
+#ifdef USE_SUPER_HIGH_JUMP
+	if ((control_shift < 0 || (fixes->enable_super_high_jump && super_jump_fall && control_y < 0)) && // press shift or up arrow to grab
+#else
 	if (control_shift < 0 && // press Shift to grab
+#endif
 		Char.fall_y < MAX_GRAB_FALLING_SPEED && // you can't grab if you're falling too fast ...
 		Char.alive < 0 && // ... or dead
 		(word)y_land[Char.curr_row + 1] <= (word)(Char.y + 25)
 	) {
 		//printf("Falling speed: %d\t x: %d\n", Char.fall_y, Char.x);
 		old_x = Char.x;
+#ifdef USE_SUPER_HIGH_JUMP
+		// delta_x of 2 makes grabbing easier
+        Char.x = char_dx_forward(-8 + (fixes->enable_super_high_jump && super_jump_fall ? 2 : 0));
+#else
 		Char.x = char_dx_forward(-8);
+#endif
 		load_fram_det_col();
 		if ( ! can_grab_front_above()) {
 			Char.x = old_x;
 		} else {
+#ifdef USE_SUPER_HIGH_JUMP
+			Char.x = char_dx_forward(distance_to_edge_weight() - (fixes->enable_super_high_jump && super_jump_fall ? 2 : 0));
+#else
 			Char.x = char_dx_forward(distance_to_edge_weight());
+#endif
 			Char.y = y_land[Char.curr_row + 1];
 			Char.fall_y = 0;
 			seqtbl_offset_char(seq_15_grab_ledge_midair); // grab a ledge (after falling)
@@ -1650,6 +1668,18 @@ void __pascal far clip_char() {
 	room = Char.room;
 	row = Char.curr_row;
 	reset_obj_clip();
+#ifdef USE_SUPER_HIGH_JUMP
+	// Clip kid during a super jump when jumping up into
+	// a trapestry with lattice
+	if (fixes->enable_super_high_jump &&
+		 (frame == frame_79_jumphang || frame == frame_106_fall)) {
+		int top_left_tile = get_tile(room, char_col_left - 1, y_to_row_mod4(char_top_y + 10));
+		if (top_left_tile == tiles_12_doortop && curr_room_modif[curr_tilepos] == 0 /* doortop with lattice */) {
+			obj_clip_top = y_land[tile_row + 1] - 22;
+			return;
+		}
+	}
+#endif
 	// frames 217..228: going up the level door
 	if (frame >= frame_224_exit_stairs_8 && frame < 229) {
 		obj_clip_top = leveldoor_ybottom + 1;

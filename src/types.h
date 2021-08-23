@@ -1028,6 +1028,9 @@ enum seqids {
 	seq_45_bumpfall = 45,
 	seq_46_hardbump = 46,
 	seq_47_bump = 47,
+#ifdef USE_SUPER_HIGH_JUMP
+	seq_48_super_high_jump = 48,
+#endif
 	seq_49_stand_up_from_crouch = 49,
 	seq_50_crouch = 50,
 	seq_51_spiked = 51,
@@ -1218,6 +1221,7 @@ typedef struct fixes_options_type {
 	byte fix_quicksave_during_feather;
 	byte fix_caped_prince_sliding_through_gate;
 	byte fix_doortop_disabling_guard;
+	byte enable_super_high_jump;
 } fixes_options_type;
 
 #define NUM_GUARD_SKILLS 12

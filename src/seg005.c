@@ -114,6 +114,13 @@ void __pascal far do_fall() {
 void __pascal far land() {
 	word seq_id;
 	is_screaming = 0;
+
+	#ifdef USE_SUPER_HIGH_JUMP
+	if (fixes->enable_super_high_jump) {
+		super_jump_fall = 0;
+	}
+	#endif
+
 	Char.y = y_land[Char.curr_row + 1];
 	if (get_tile_at_char() != tiles_2_spike) {
 
@@ -698,12 +705,40 @@ void __pascal far jump_up() {
 		Char.x = char_dx_forward(-1);
 	}
 	#endif
+	#ifdef USE_SUPER_HIGH_JUMP
+    int char_col = get_tile_div_mod(back_delta_x(0) + dx_weight() - 6);
+    get_tile(Char.room, char_col, Char.curr_row - 1);
+    if (curr_tile2 != tiles_20_wall && ! tile_is_floor(curr_tile2)) {
+        if (fixes->enable_super_high_jump && is_feather_fall) { // super high jump can only happen in feather mode
+            if (curr_room == 0 && Char.curr_row == 0) { // there is no room above
+                seqtbl_offset_char(seq_14_jump_up_into_ceiling);
+            } else {
+                get_tile(Char.room, char_col, Char.curr_row - 2); // the target top tile
+                bool is_top_floor = tile_is_floor(curr_tile2) || curr_tile2 == tiles_20_wall;
+                if (is_top_floor && curr_tile2 == tiles_11_loose && (curr_room_tiles[curr_tilepos] & 0x20) == 0) {
+                    is_top_floor = false; // a regular loose floor above should not be treated as a floor
+                }
+                // kid should jump slightly higher if the top tile is not a floor
+                super_jump_timer = is_top_floor ? 22 : 24;
+                super_jump_room = curr_room;
+                super_jump_col = tile_col;
+                super_jump_row = tile_row;
+                seqtbl_offset_char(seq_48_super_high_jump); // jump up 2 rows with nothing above
+            }
+        } else {
+            seqtbl_offset_char(seq_28_jump_up_with_nothing_above); // jump up with nothing above
+        }
+    } else {
+        seqtbl_offset_char(seq_14_jump_up_into_ceiling); // jump up with wall or floor above
+    }
+	#else
 	get_tile(Char.room, get_tile_div_mod(back_delta_x(0) + dx_weight() - 6), Char.curr_row - 1);
 	if (curr_tile2 != tiles_20_wall && ! tile_is_floor(curr_tile2)) {
 		seqtbl_offset_char(seq_28_jump_up_with_nothing_above); // jump up with nothing above
 	} else {
 		seqtbl_offset_char(seq_14_jump_up_into_ceiling); // jump up with wall or floor above
 	}
+	#endif
 }
 
 // seg005:0968
@@ -711,7 +746,11 @@ void __pascal far control_hanging() {
 	if (Char.alive < 0) {
 		if (grab_timer == 0 && control_y < 0) {
 			can_climb_up();
+#ifdef USE_SUPER_HIGH_JUMP
+		} else if (control_shift < 0 || (fixes->enable_super_high_jump && super_jump_fall && control_y < 0)) {
+#else
 		} else if (control_shift < 0) {
+#endif
 			// hanging against a wall or a doortop
 			if (Char.action != actions_6_hang_straight &&
 				(get_tile_at_char() == tiles_20_wall ||
@@ -742,6 +781,11 @@ void __pascal far can_climb_up() {
 	short seq_id;
 	seq_id = seq_10_climb_up; // climb up
 	control_up = control_shift2 = release_arrows();
+#ifdef USE_SUPER_HIGH_JUMP
+	if (fixes->enable_super_high_jump) {
+		super_jump_fall = 0;
+	}
+#endif
 	get_tile_above_char();
 	if (((curr_tile2 == tiles_13_mirror || curr_tile2 == tiles_18_chomper) &&
 		Char.direction == dir_0_right) ||
@@ -756,6 +800,11 @@ void __pascal far can_climb_up() {
 // seg005:0A46
 void __pascal far hang_fall() {
 	control_down = release_arrows();
+#ifdef USE_SUPER_HIGH_JUMP
+	if (fixes->enable_super_high_jump) {
+		super_jump_fall = 0;
+	}
+#endif
 	if (! tile_is_floor(get_tile_behind_char()) &&
 		! tile_is_floor(get_tile_at_char())
 	) {

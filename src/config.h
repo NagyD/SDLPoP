@@ -263,6 +263,10 @@ The authors of this program may be contacted at https://forum.princed.org
 
 #endif // ifndef DISABLE_ALL_FIXES
 
+// Prince can jump 2 stories up in feather fall mode
+#define USE_SUPER_HIGH_JUMP
+
+
 // Debug features:
 
 // When the program starts, check whether the deobfuscated sequence table (seqtbl.c) is correct.

@@ -331,6 +331,7 @@ void options_process_enhancements(SDL_RWops* rw, rw_process_func_type process_fu
 	process(fixes_options_replay.enable_crouch_after_climbing);
 	process(fixes_options_replay.enable_freeze_time_during_end_music);
 	process(fixes_options_replay.enable_remember_guard_hp);
+	process(fixes_options_replay.enable_super_high_jump);
 }
 
 void options_process_fixes(SDL_RWops* rw, rw_process_func_type process_func) {

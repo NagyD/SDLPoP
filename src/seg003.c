@@ -504,6 +504,11 @@ void __pascal far timers() {
 				if (check_sound_playing()) {
 					stop_sounds();
 				}
+	#ifdef USE_SUPER_HIGH_JUMP
+				if (fixes->enable_super_high_jump) {
+					super_jump_fall = 0;
+				}
+	#endif
 
 				//printf("slow fall ended at: rem_min = %d, rem_tick = %d\n", rem_min, rem_tick);
 				//printf("length = %d ticks\n", is_feather_fall);
@@ -523,6 +528,11 @@ void __pascal far timers() {
 			if (!replaying) // during replays, feather effect gets cancelled in do_replay_move()
 	#endif
 			is_feather_fall = 0;
+	#ifdef USE_SUPER_HIGH_JUMP
+			if (fixes->enable_super_high_jump) {
+				super_jump_fall = 0;
+			}
+	#endif
 		}
 	}
 
@@ -534,6 +544,39 @@ void __pascal far timers() {
 			do_mouse();
 		}
 	}
+#ifdef USE_SUPER_HIGH_JUMP
+	if (fixes->enable_super_high_jump && super_jump_timer > 0) {
+		--super_jump_timer;
+		if (super_jump_timer == 0 && Kid.frame == frame_79_jumphang) {
+		    if (get_tile(super_jump_room, super_jump_col, super_jump_row) == tiles_11_loose &&
+		            (curr_room_tiles[curr_tilepos] & 0x20) == 0) {
+		        make_loose_fall(1); // knocks the true loose tile above
+		        do_knock(super_jump_room, super_jump_row); // shakes the rest of loose tiles
+		    } else if (curr_tile2 == tiles_20_wall || tile_is_floor(curr_tile2)) {
+		        if (super_jump_row < 2) {
+		            Kid.curr_row = super_jump_row + 1;
+		            Kid.y = y_land[super_jump_row + 2] + 10;
+		        }
+		        do_knock(super_jump_room, super_jump_row); // shakes loose tiles in the row
+		    } else if (!tile_is_floor(curr_tile2)) {
+		        if (super_jump_row == 2) {
+		            Kid.room = level.roomlinks[Kid.room - 1].up;
+		        }
+		        if (Kid.room != 0) { // there is a room above
+					// positions kid for grabbing
+		            Kid.curr_row = super_jump_row + 1;
+		            Kid.y = y_land[super_jump_row + 2] - 10;
+		            Kid.fall_x = 0;
+		            Kid.fall_y = 0;
+		            super_jump_fall = 1;
+		            // gives kid an ability to grab the above front tile
+		            seqtbl_offset_kid_char(seq_19_fall);
+		            play_seq();
+		        }
+		    }
+		}
+	}
+#endif
 }
 
 // seg003:0798
