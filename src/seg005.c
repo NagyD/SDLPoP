@@ -746,7 +746,11 @@ void __pascal far control_hanging() {
 	if (Char.alive < 0) {
 		if (grab_timer == 0 && control_y < 0) {
 			can_climb_up();
+#ifdef USE_SUPER_HIGH_JUMP
+		} else if (control_shift < 0 || (fixes->enable_super_high_jump && super_jump_fall && control_y < 0)) {
+#else
 		} else if (control_shift < 0) {
+#endif
 			// hanging against a wall or a doortop
 			if (Char.action != actions_6_hang_straight &&
 				(get_tile_at_char() == tiles_20_wall ||
@@ -777,6 +781,11 @@ void __pascal far can_climb_up() {
 	short seq_id;
 	seq_id = seq_10_climb_up; // climb up
 	control_up = control_shift2 = release_arrows();
+#ifdef USE_SUPER_HIGH_JUMP
+	if (fixes->enable_super_high_jump) {
+		super_jump_fall = 0;
+	}
+#endif
 	get_tile_above_char();
 	if (((curr_tile2 == tiles_13_mirror || curr_tile2 == tiles_18_chomper) &&
 		Char.direction == dir_0_right) ||
@@ -791,6 +800,11 @@ void __pascal far can_climb_up() {
 // seg005:0A46
 void __pascal far hang_fall() {
 	control_down = release_arrows();
+#ifdef USE_SUPER_HIGH_JUMP
+	if (fixes->enable_super_high_jump) {
+		super_jump_fall = 0;
+	}
+#endif
 	if (! tile_is_floor(get_tile_behind_char()) &&
 		! tile_is_floor(get_tile_at_char())
 	) {

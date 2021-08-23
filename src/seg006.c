@@ -1142,7 +1142,11 @@ void __pascal far check_grab() {
 	#define MAX_GRAB_FALLING_SPEED 32
 	#endif
 
+#ifdef USE_SUPER_HIGH_JUMP
+	if ((control_shift < 0 || (fixes->enable_super_high_jump && super_jump_fall && control_y < 0)) && // press shift or up arrow to grab
+#else
 	if (control_shift < 0 && // press Shift to grab
+#endif
 		Char.fall_y < MAX_GRAB_FALLING_SPEED && // you can't grab if you're falling too fast ...
 		Char.alive < 0 && // ... or dead
 		(word)y_land[Char.curr_row + 1] <= (word)(Char.y + 25)
@@ -1173,15 +1177,6 @@ void __pascal far check_grab() {
 			is_screaming = 0;
 #ifdef FIX_CHOMPERS_NOT_STARTING
 			if (fixes->fix_chompers_not_starting) start_chompers();
-#endif
-#ifdef USE_SUPER_HIGH_JUMP
-			if (fixes->enable_super_high_jump) {
-				// grabbing a loose tile is in a room above and resetting the flag
-				// during a fall can cause a guard in the room to disappear
-				if (curr_tile2 != tiles_11_loose || (curr_room_tiles[curr_tilepos] & 0x20) != 0) {
-					super_jump_fall = 0;
-				}
-			}
 #endif
 		}
 	}
