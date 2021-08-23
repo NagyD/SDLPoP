@@ -26,9 +26,13 @@ Items marked with [!] can't be found on the original levels.
 		2. what events point to a tile.
 	In both cases, the same tile can have multiple numbers.
 	Case 2 shows only those events that can be triggered from the reachable rooms.
+* Guards:
+	yellow "s5 h4": The first number is the skill, the second is the number of hit points.
+	Guard skills are documented in default_skill_options.txt and here: https://www.popot.org/documentation.php?doc=PoP1GuardTypes
 * Special events: (in yellow)
 	You can find more information about them here: https://www.popot.org/documentation.php?doc=PoP1SpecialEvents
-	Note: SDLPoP does not yet recognize if an event was placed elsewhere by a mod.
+	Note: Since (upcoming version), SDLPoP recognizes if certain events were placed elsewhere by a mod.
+		This works only with events whose place can be customized.
 	* level 0:
 		* "exit": Complete the level by entering this room.
 	* level 1:

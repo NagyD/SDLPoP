@@ -256,6 +256,11 @@ The authors of this program may be contacted at https://forum.princed.org
 // Technical explanation: https://forum.princed.org/viewtopic.php?p=16408#p16408 (the second half of the post)
 #define FIX_LEVEL_14_RESTARTING
 
+// If a sprite's xpos is negative and divisible by 8, it will appear shifted 8 pixels to the left.
+// Testcase: doc/replays-testcases/Original level 12 xpos glitch.p1r
+// Explanation: https://forum.princed.org/viewtopic.php?p=33336#p33336
+#define FIX_SPRITE_XPOS
+
 #endif // ifndef DISABLE_ALL_FIXES
 
 // Prince can jump 2 stories up in feather fall mode

@@ -837,6 +837,10 @@ void __pascal far reset_obj_clip() {
 
 // seg006:051C
 void __pascal far x_to_xh_and_xl(int xpos, sbyte *xh_addr, sbyte *xl_addr) {
+#ifdef FIX_SPRITE_XPOS
+	*xh_addr = xpos >> 3;
+	*xl_addr = xpos & 7;
+#else
 	if (xpos < 0) {
 		*xh_addr = -((ABS(-xpos) >> 3) + 1);
 		*xl_addr = - ((-xpos - 1) % 8 - 7);
@@ -844,6 +848,7 @@ void __pascal far x_to_xh_and_xl(int xpos, sbyte *xh_addr, sbyte *xl_addr) {
 		*xh_addr = ABS(xpos) >> 3;
 		*xl_addr = xpos % 8;
 	}
+#endif
 }
 
 // seg006:057C

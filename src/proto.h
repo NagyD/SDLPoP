@@ -551,7 +551,7 @@ void __pascal far restore_stuff();
 int __pascal far key_test_quit();
 const char* __pascal far check_param(const char *param);
 int __pascal far pop_wait(int timer_index,int time);
-dat_type *__pascal open_dat(const char *file,int drive);
+dat_type *__pascal open_dat(const char *file, int optional);
 void __pascal far set_loaded_palette(dat_pal_type far *palette_ptr);
 chtab_type* __pascal load_sprites_from_file(int resource,int palette_bits, int quit_on_error);
 void __pascal far free_chtab(chtab_type *chtab_ptr);

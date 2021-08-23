@@ -646,3 +646,18 @@ FIXED: On Windows, use Unicode/UTF-8 for stat().
 DONE: Added a more visible error message when a mod referenced by a replay file cannot be found in the mods folder.
 DONE: Allow guard skill customizations in SDLPoP.ini.
 DONE: Made FIX_DOORTOP_DISABLING_GUARD configurable.
+
+
+(no release date yet)
+=================
+(upcoming version)
+
+DONE: Adjust SDL2 headers search path in CMake or macOS builds
+FIXED: Don't hardcode level 13 for the loose floor events.
+DONE: Mention the tricks page in the INI, since tricks are mentioned there.
+FIXED: If a sprite's xpos is negative and divisible by 8, it appeared shifted 8 pixels to the left.
+	Details: See FIX_SPRITE_XPOS in config.h .
+FIXED: Report any missing data file as soon as we try to open it, instead of only when we try to load data from it.
+FIXED: If the place of a special event was changed, show it at its new place on level maps.
+	This works only with events whose place can be customized.
+DONE: Show guards' HP and skills on the maps.

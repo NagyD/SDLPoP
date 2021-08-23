@@ -93,8 +93,6 @@ void far pop_main() {
 	char sprintf_temp[100];
 	int i;
 
-	dathandle = open_dat("PRINCE.DAT", 0);
-
 	/*video_mode =*/ parse_grmode();
 
 	init_timer(BASE_FPS);
@@ -117,6 +115,9 @@ void far pop_main() {
 #ifdef USE_REPLAY
 	init_record_replay();
 #endif
+
+	// I moved this after init_copyprot_dialog(), so open_dat() can show an error dialog if needed.
+	dathandle = open_dat("PRINCE.DAT", 0);
 
 	if (cheats_enabled
 		#ifdef USE_REPLAY

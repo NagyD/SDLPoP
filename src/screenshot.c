@@ -111,7 +111,7 @@ int ypos[NUMBER_OF_ROOMS+1] = {0};
 
 // Show annotations for non-visible things, like: room bounds, room numbers, door events, loose floors, potion types, special events, ...
 // (this will make the function even more like a cheat)
-// TODO: guard HPs, skill? fake tiles?
+// TODO: fake tiles?
 void draw_extras() {
 	// ambiguous tiles
 	// The editor branch has something similar...
@@ -258,77 +258,129 @@ void draw_extras() {
 
 		// special events
 		char* special_event = NULL;
-		if (current_level == 0 && drawn_room == 24) {
+
+		if (current_level == 0 && drawn_room == /*24*/ custom->demo_end_room) {
 			special_event = "exit"; // exit by entering this room
 		}
+
 		// not marked: level 1 falling entry
+
 		if (current_level == 1 && drawn_room == 5 && tilepos == 2) {
 			special_event = "start\ntrig"; // triggered at start
 		}
+
 		if (current_level == 3 && drawn_room == 7 && col == 0) {
 			special_event = "<-\nchk point"; // checkpoint activation
 		}
-		if (current_level == 3 && drawn_room == 7 && tilepos == 4) {
+
+		if (current_level == /*3*/ custom->checkpoint_level &&
+			drawn_room == /*7*/ custom->checkpoint_clear_tile_room &&
+			tilepos == /*4*/ custom->checkpoint_clear_tile_col * 10 + custom->checkpoint_clear_tile_row
+		) {
 			special_event = "removed"; // loose floor is removed
 		}
+
 		if (current_level == 3 && drawn_room == 2 && tile_type == tiles_4_gate) {
 			special_event = "loud"; // closing can be heard everywhere
 		}
-		if (current_level == 3 && drawn_room == 2 && tilepos == 6) {
+
+		if (current_level == /*3*/ custom->checkpoint_level &&
+			drawn_room == /*2*/ custom->checkpoint_respawn_room &&
+			tilepos == /*6*/ custom->checkpoint_respawn_tilepos
+		) {
 			special_event = "check point"; // restart at checkpoint
-			// TODO: Show this room even if it is unreachable from the start via room links?
+			// TODO: Show this room (and connected rooms) even if it is unreachable from the start via room links?
 		}
-		if (current_level == 3 && drawn_room == 1 && tilepos == 15 && tile_type == tiles_21_skeleton) {
+
+		if (current_level == /*3*/ custom->skeleton_level &&
+			drawn_room == /*1*/ custom->skeleton_room &&
+			tilepos == /*15*/ custom->skeleton_row * 10 + custom->skeleton_column &&
+			tile_type == tiles_21_skeleton
+		) {
 			special_event = "skel wake"; // skeleton wakes
 		}
+
 		if (current_level == 3 && drawn_room == 3 && tilepos == 14) {
-			special_event = "skel cont"; // skeleton continue
+			special_event = "skel cont"; // skeleton continues here if it falls into this room
 		}
-		if (current_level == 4 && drawn_room == 4 && tilepos == 4) {
+
+		if (current_level == /*4*/ custom->mirror_level &&
+			drawn_room == /*4*/ custom->mirror_room &&
+			tilepos == /*4*/ custom->mirror_row * 10 + custom->mirror_column
+		) {
 			special_event = "mirror"; // mirror appears
 		}
+
 		// not marked: level 4 mirror clip
+
 		// not marked: level 5 shadow, required opening gate
+
 		if (current_level == 5 && drawn_room == 24 && tilepos == 3 && tile_type == tiles_10_potion) {
 			special_event = "stolen"; // stolen potion
 		}
+
 		// not marked: level 6 shadow (it's already visible)
-		if (current_level == 6 && drawn_room == 1 && row == 2) {
+
+		if (current_level == /*6*/ custom->falling_exit_level &&
+			drawn_room == /*1*/ custom->falling_exit_room &&
+			row == 2
+		) {
 			special_event = "exit\ndown"; // exit by falling
 		}
+
 		// not marked: level 7 falling entry
-		if (current_level == 8 && drawn_room == 16 && tilepos == 9) {
+
+		if (current_level == /*8*/ custom->mouse_level &&
+			drawn_room == /*16*/ custom->mouse_room &&
+			tilepos == 9 // top right corner
+		) {
 			special_event = "mouse"; // mouse comes
 		}
+
 		if (current_level == 12 && drawn_room == 15 && tilepos == 1 && tile_type == tiles_22_sword) {
-			special_event = "disapp"; // sword disappears
+			special_event = "disapp"; // the sword disappears from here
 		}
+
 		if (current_level == 12 && drawn_room == 18 && col == 9) {
-			special_event = "disapp\n->"; // sword disappears
+			special_event = "disapp\n->"; // the sword disappears if you exit this room
 		}
+
 		// not marked: level 12 shadow
+
 		if (current_level == 12 && row == 0 && (drawn_room == 2 || (drawn_room == 13 && col >= 6))) {
 			special_event = "floor"; // floors appear
 		}
-		if (current_level == 12 && drawn_room == 23) {
+
+		if (/*current_level == 12 &&*/ drawn_room == /*23*/ custom->tbl_seamless_exit[current_level]) {
 			special_event = "exit"; // exit by entering this room
 		}
-		if (current_level == 13 && (drawn_room == level.roomlinks[23-1].up || drawn_room == level.roomlinks[16-1].up) && (tilepos >= 22 && tilepos <= 27)) {
+
+		if (current_level == /*13*/ custom->loose_tiles_level &&
+			(drawn_room == level.roomlinks[/*23*/ custom->loose_tiles_room_1 - 1].up ||
+				drawn_room == level.roomlinks[/*16*/ custom->loose_tiles_room_2 - 1].up) &&
+			(tilepos >= /*22*/ custom->loose_tiles_first_tile && tilepos <= /*27*/ custom->loose_tiles_last_tile)
+		) {
 			special_event = "fall"; // falling loose floors
 		}
+
 		if (current_level == 13 && drawn_room == 3 && col == 9) {
 			special_event = "meet\n->"; // meet Jaffar
 		}
+
 		// not marked: flash
+
 		if (current_level == 13 && drawn_room == 24 && tilepos == 0) {
 			special_event = "Jffr\ntrig"; // triggered when player enters any room from the right after Jaffar died
 		}
-		if (current_level == 14 && drawn_room == 5) {
+
+		if (current_level == /*14*/ custom->win_level && drawn_room == /*5*/ custom->win_room) {
 			special_event = "end"; // end of game
 		}
+
 		if (has_trigger_potion && drawn_room == 8 && tilepos == 0) {
 			special_event = "blue\ntrig"; // triggered when player drinks an open potion
 		}
+
 		if (special_event) {
 			rect_type event_rect = {y,x-10,y+63,x+32+10};
 			show_text_with_color(&event_rect, 0, 0, special_event, color_14_brightyellow);
@@ -361,6 +413,27 @@ void draw_extras() {
 			char* start_text = (start_dir == dir_0_right) ? "start\n->" : "start\n<-";
 			rect_type start_rect = {y,x-10,y+63,x+32+10};
 			show_text_with_color(&start_rect, 0, 0, start_text, color_14_brightyellow);
+		}
+
+		// guard info
+		//if (tilepos == level.guards_tile[drawn_room-1]) {
+		if (Guard.direction != dir_56_none && tilepos == Guard.curr_row * 10 + Guard.curr_col) {
+			//int screen_x = (Guard.x - 54) * 320 / 140;
+			loadshad();
+			load_frame_to_obj();
+			int screen_x = calc_screen_x_coord(obj_x);
+			// Put it above the guard's head.
+			if (Guard.direction == dir_0_right) screen_x -= 10; else screen_x += 10;
+
+			rect_type event_rect = {y+2, screen_x-16-10, y+63, screen_x+16+10};
+			char guard_info[20];
+			/*
+			snprintf(guard_info, sizeof(guard_info), "sk: %d\nhp: %d", guard_skill, guardhp_max);
+			show_text_with_color(&event_rect, 0, 0, guard_info, color_12_brightred);
+			*/
+			snprintf(guard_info, sizeof(guard_info), "s%d h%d", guard_skill, guardhp_max);
+			show_text_with_color(&event_rect, 0, -1, guard_info, /*color_12_brightred*/ color_14_brightyellow);
+			// Yellow text is more readable than red.
 		}
 
 	}
