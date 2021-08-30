@@ -504,12 +504,6 @@ void __pascal far timers() {
 				if (check_sound_playing()) {
 					stop_sounds();
 				}
-	#ifdef USE_SUPER_HIGH_JUMP
-				if (fixes->enable_super_high_jump) {
-					super_jump_fall = 0;
-				}
-	#endif
-
 				//printf("slow fall ended at: rem_min = %d, rem_tick = %d\n", rem_min, rem_tick);
 				//printf("length = %d ticks\n", is_feather_fall);
 	#ifdef USE_REPLAY
@@ -528,11 +522,6 @@ void __pascal far timers() {
 			if (!replaying) // during replays, feather effect gets cancelled in do_replay_move()
 	#endif
 			is_feather_fall = 0;
-	#ifdef USE_SUPER_HIGH_JUMP
-			if (fixes->enable_super_high_jump) {
-				super_jump_fall = 0;
-			}
-	#endif
 		}
 	}
 

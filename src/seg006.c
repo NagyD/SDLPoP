@@ -1154,8 +1154,9 @@ void __pascal far check_grab() {
 		//printf("Falling speed: %d\t x: %d\n", Char.fall_y, Char.x);
 		old_x = Char.x;
 #ifdef USE_SUPER_HIGH_JUMP
-		// delta_x of 2 makes grabbing easier
-        Char.x = char_dx_forward(-8 + (fixes->enable_super_high_jump && super_jump_fall ? 2 : 0));
+// delta_x makes grabbing easier
+#define SUPER_HIGH_JUMP_DELTA_X (Char.direction == dir_FF_left ? 3 : 5)
+        Char.x = char_dx_forward(-8 + (fixes->enable_super_high_jump && super_jump_fall ? SUPER_HIGH_JUMP_DELTA_X : 0));
 #else
 		Char.x = char_dx_forward(-8);
 #endif
@@ -1164,7 +1165,7 @@ void __pascal far check_grab() {
 			Char.x = old_x;
 		} else {
 #ifdef USE_SUPER_HIGH_JUMP
-			Char.x = char_dx_forward(distance_to_edge_weight() - (fixes->enable_super_high_jump && super_jump_fall ? 2 : 0));
+			Char.x = char_dx_forward(distance_to_edge_weight() - (fixes->enable_super_high_jump && super_jump_fall ? SUPER_HIGH_JUMP_DELTA_X : 0));
 #else
 			Char.x = char_dx_forward(distance_to_edge_weight());
 #endif
