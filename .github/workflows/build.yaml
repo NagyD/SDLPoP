@@ -1,3 +1,5 @@
+name: CI
+
 on:
   pull_request:
   push:
@@ -31,7 +33,7 @@ jobs:
           sudo apt install -y make libsdl2-image-dev gcc-10${{ matrix.package }}
       - name: Build
         env:
-          CFLAGS: "-I/usr/include/x86_64-linux-gnu/SDL2"
+          CFLAGS: "-I/usr/include/x86_64-linux-gnu/SDL2 -I/usr/include/x86_64-linux-gnu"
         run: make -C src -j $(nproc) all CC=${{ matrix.cc }}-10  
       - name: List
         run: ls -l
