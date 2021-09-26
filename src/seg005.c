@@ -1141,6 +1141,7 @@ void teleport() {
 		Char.x = x_bump[Char.curr_col + 5] + 14 + 7; // Center on the destination teleport.
 		Char.y = y_land[Char.curr_row + 1];
 		next_room = Char.room;
+		clear_coll_rooms(); // Without this, the prince will sometimes end up at the wrong place.
 		leave_guard();
 		seqtbl_offset_char(seq_5_turn);
 		play_sound(sound_45_jump_through_mirror);
