@@ -636,6 +636,15 @@ void __pascal far play_seq() {
 						if (recording || replaying) break; // don't do end level music in replays
 #endif
 
+#ifdef USE_TELEPORTS
+						// Don't play end level music if the player entered a teleport.
+						if (pickup_obj_type != -1) {
+							//play_sound(sound_45_jump_through_mirror);
+							// Don't wait until the kid walks all the way up the stairs. (optional)
+							teleport();
+							break;
+						}
+#endif
 						if (is_sound_on) {
 							if (current_level == 4) {
 								play_sound(sound_32_shadow_music); // end level with shadow (level 4)
@@ -647,6 +656,13 @@ void __pascal far play_seq() {
 				}
 				break;
 			case SEQ_END_LEVEL: // end level
+#ifdef USE_TELEPORTS
+				// If the player entered a teleport, don't go to the next level.
+				if (pickup_obj_type != -1) {
+					teleport();
+					break;
+				}
+#endif
 				++next_level;
 #ifdef USE_REPLAY
 				// Preserve the seed in this frame, to ensure reproducibility of the replay in the next level,

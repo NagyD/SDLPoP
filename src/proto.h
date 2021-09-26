@@ -271,6 +271,9 @@ void __pascal far control_with_sword();
 void __pascal far swordfight();
 void __pascal far sword_strike();
 void __pascal far parry();
+#ifdef USE_TELEPORTS
+void teleport();
+#endif
 
 // SEG006.C
 int __pascal far get_tile(int room,int col,int row);

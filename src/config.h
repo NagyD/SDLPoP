@@ -316,6 +316,10 @@ The authors of this program may be contacted at https://forum.princed.org
 // Mute the sound during fast forward.
 //#define FAST_FORWARD_MUTE
 
+// Turn the balconies into teleports.
+// Each balcony (whose left half has a non-zero modifier) will behave as a teleport to another balcony with the same modifier.
+#define USE_TELEPORTS
+
 
 // Default SDL_Joystick button values
 #define SDL_JOYSTICK_BUTTON_Y 2
