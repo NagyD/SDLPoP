@@ -550,7 +550,7 @@ void reload_resources() {
 	// chtabs 3 and higher will be freed/reloaded in load_lev_spr() (called by restore_room_after_quick_load())
 	// However, chtabs 0-2 are usually not freed at all (they are loaded only once, in init_game_main())
 	// So we should reload them manually (PRINCE.DAT and KID.DAT may still have been modified after all!)
-	dat_type* dat = open_dat("PRINCE.DAT", 0);
+	dat_type* dat = open_dat("PRINCE.DAT", 'G');
 	// PRINCE.DAT: sword
 	chtab_addrs[id_chtab_0_sword] = load_sprites_from_file(700, 1<<2, 1);
 	// PRINCE.DAT: flame, sword on floor, potion

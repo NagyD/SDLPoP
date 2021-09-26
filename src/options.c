@@ -205,6 +205,9 @@ static int global_ini_callback(const char *section, const char *name, const char
 			return 1;
 		}
 
+		process_boolean("always_use_original_music", &always_use_original_music);
+		process_boolean("always_use_original_graphics", &always_use_original_graphics);
+
 		if (strcasecmp(name, "gamecontrollerdb_file") == 0) {
 			if (value[0] != '\0') {
 				strcpy(gamecontrollerdb_file, locate_file(value));

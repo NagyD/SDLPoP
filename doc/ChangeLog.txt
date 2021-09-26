@@ -662,3 +662,4 @@ FIXED: If the place of a special event was changed, show it at its new place on 
 	This works only with events whose place can be customized.
 DONE: Show guards' HP and skills on the maps.
 FIXED: Don't complain about data files missing from the mod folder.
+DONE: Added options to use the original music and/or graphics for custom levelsets.

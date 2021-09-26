@@ -117,7 +117,7 @@ void far pop_main() {
 #endif
 
 	// I moved this after init_copyprot_dialog(), so open_dat() can show an error dialog if needed.
-	dathandle = open_dat("PRINCE.DAT", 0);
+	dathandle = open_dat("PRINCE.DAT", 'G');
 
 	if (cheats_enabled
 		#ifdef USE_REPLAY
@@ -1101,7 +1101,7 @@ void __pascal far load_lev_spr(int level) {
 	guardtype = custom->tbl_guard_type[current_level];
 	if (guardtype != -1) {
 		if (guardtype == 0) {
-			dathandle = open_dat(custom->tbl_level_type[current_level] ? "GUARD1.DAT" : "GUARD2.DAT", 0);
+			dathandle = open_dat(custom->tbl_level_type[current_level] ? "GUARD1.DAT" : "GUARD2.DAT", 'G');
 		}
 		load_chtab_from_file(id_chtab_5_guard, 750, tbl_guard_dat[guardtype], 1<<8);
 		if (dathandle) {
@@ -1631,7 +1631,7 @@ void __pascal far load_chtab_from_file(int chtab_id,int resource,const char near
 	//printf("Loading chtab %d, id %d from %s\n",chtab_id,resource,filename);
 	dat_type* dathandle;
 	if (chtab_addrs[chtab_id] != NULL) return;
-	dathandle = open_dat(filename, 0);
+	dathandle = open_dat(filename, 'G');
 	chtab_addrs[chtab_id] = load_sprites_from_file(resource, palette_bits, 1);
 	close_dat(dathandle);
 }
@@ -1669,7 +1669,7 @@ void __pascal far load_more_opt_graf(const char *filename) {
 	for (graf_index = 0; graf_index < 8; ++graf_index) {
 		/*if (...) */ {
 			if (dathandle == NULL) {
-				dathandle = open_dat(filename, 0);
+				dathandle = open_dat(filename, 'G');
 				load_from_opendats_to_area(200, &area, sizeof(area), "pal");
 				area.palette.row_bits = 0x20;
 			}
@@ -2174,15 +2174,19 @@ void free_all_sounds() {
 }
 
 void load_all_sounds() {
-	if (!use_custom_levelset) {
+	if (!use_custom_levelset || always_use_original_music) {
 		load_sounds(0, 43);
 		load_opt_sounds(43, 56); //added
 	} else {
-		// First load any sounds included in the mod folder...
-		skip_normal_data_files = true;
-		load_sounds(0, 43);
-		load_opt_sounds(43, 56);
-		skip_normal_data_files = false;
+		// Put it here instead to use data/ for all music and sounds, not just for those in data/music/.
+		//if (!always_use_original_music)
+		{
+			// First load any sounds included in the mod folder...
+			skip_normal_data_files = true;
+			load_sounds(0, 43);
+			load_opt_sounds(43, 56);
+			skip_normal_data_files = false;
+		}
 		// ... then load any missing sounds from SDLPoP's own resources.
 		skip_mod_data_files = true;
 		load_sounds(0, 43);
@@ -2200,7 +2204,7 @@ void __pascal far free_optsnd_chtab() {
 // seg000:22C8
 void __pascal far load_title_images(int bgcolor) {
 	dat_type* dathandle;
-	dathandle = open_dat("TITLE.DAT", 0);
+	dathandle = open_dat("TITLE.DAT", 'G');
 	chtab_title40 = load_sprites_from_file(40, 1<<11, 1);
 	chtab_title50 = load_sprites_from_file(50, 1<<12, 1);
 	close_dat(dathandle);

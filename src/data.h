@@ -919,6 +919,9 @@ extern int play_demo_level;
 extern int g_deprecation_number;
 #endif
 
+extern byte always_use_original_music;
+extern byte always_use_original_graphics;
+
 #undef INIT
 #undef extern
 

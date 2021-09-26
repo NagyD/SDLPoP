@@ -240,6 +240,17 @@ Since version 1.15, music is included.</s>
 
 Since version 1.18, SDLPoP can play music from the MIDISND*.DAT files and OGG files are not included.
 
+Using custom music
+----------------------
+
+You can still copy OGG files to `data/music` or `mods/<modname>/music` to override music for the original game or a mod, respectively.
+To use the music in `data/music` for all mods as well, enable the `always_use_original_music` option in `SDLPoP.ini`.
+
+The possible file names can be found in `data/music/names.txt`.
+The file name has to be the part after the equals sign, followed by `.ogg`.
+
+You can find an example alternate music set in the ZIP mentioned above, in the `ogg_MT-32` folder.
+
 MODS
 ====
 

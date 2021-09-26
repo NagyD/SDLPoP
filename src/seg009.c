@@ -373,7 +373,7 @@ dat_type *__pascal open_dat(const char *filename, int optional) {
 		// (This is possible only if open_dat() was called by load_all_sounds().)
 		if (!skip_mod_data_files && skip_normal_data_files) optional = 1;
 
-		if (!skip_mod_data_files) {
+		if (!skip_mod_data_files && !(always_use_original_graphics && optional == 'G')) {
 			char filename_mod[POP_MAX_PATH];
 			// before checking the root directory, first try mods/MODNAME/
 			snprintf_check(filename_mod, sizeof(filename_mod), "%s/%s", mod_data_path, filename);
