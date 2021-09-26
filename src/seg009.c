@@ -369,6 +369,10 @@ dat_type *__pascal open_dat(const char *filename, int optional) {
 		fp = open_dat_from_root_or_data_dir(filename);
 	}
 	else {
+		// Don't complain about missing data files if we are only looking in the mod folder, because they might exist in the data folder.
+		// (This is possible only if open_dat() was called by load_all_sounds().)
+		if (!skip_mod_data_files && skip_normal_data_files) optional = 1;
+
 		if (!skip_mod_data_files) {
 			char filename_mod[POP_MAX_PATH];
 			// before checking the root directory, first try mods/MODNAME/
