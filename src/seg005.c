@@ -408,7 +408,7 @@ void __pascal far control_standing() {
 
 // seg005:0482
 void __pascal far up_pressed() {
-	// If there is a level door nearby, enter it.
+	// If there is an open level door nearby, enter it.
 	int leveldoor_tilepos = -1;
 	if (get_tile_at_char() == tiles_16_level_door_left) leveldoor_tilepos = curr_tilepos;
 	else if (get_tile_behind_char() == tiles_16_level_door_left) leveldoor_tilepos = curr_tilepos;
@@ -421,15 +421,13 @@ void __pascal far up_pressed() {
 			: leveldoor_open
 		)
 	){
-#ifdef USE_TELEPORTS
-		pickup_obj_type = -1;
-#endif
 		go_up_leveldoor();
 		return;
 	}
 
 #ifdef USE_TELEPORTS
 	// If there is a teleport nearby, enter it.
+	// (A teleport is a repurposed left half balcony with a non-zero modifier.)
 	leveldoor_tilepos = -1;
 	// This detection is not perfect...
 	if (get_tile_at_char() == tiles_23_balcony_left) leveldoor_tilepos = curr_tilepos;
@@ -442,6 +440,7 @@ void __pascal far up_pressed() {
 		if (pickup_obj_type > 0)
 		{
 			go_up_leveldoor();
+			seqtbl_offset_char(seq_teleport);
 			return;
 		}
 	}

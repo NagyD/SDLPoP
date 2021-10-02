@@ -196,6 +196,11 @@ The authors of this program may be contacted at https://forum.princed.org
 #define Mleave              4  + Mraise             //SEQTBL_BASE + 2285  // 0x225B
 #define Mclimb              19 + Mleave             //SEQTBL_BASE + 2304  // 0x226E
 #define Mclimb_loop         2  + Mclimb             //SEQTBL_BASE + 2306  // 0x2270
+#ifdef USE_TELEPORTS
+#define teleport            4  + Mclimb_loop
+#define teleport_loop       81 + teleport
+#endif
+// TODO: What are we going to do if we add yet another sequence, and we want to allow compiling with that sequence but without teleports?
 
 const word seqtbl_offsets[] = {
         0x0000,         startrun,       stand,          standjump,
@@ -226,7 +231,10 @@ const word seqtbl_offsets[] = {
         Vexit,          Mclimb,         Vraise,         Plie,
         patchfall,      Mscurry,        Mstop,          Mleave,
         Pembrace,       Pwaiting,       Pstroke,        Prise,
-        Pcrouch,        Pslump,         Mraise
+        Pcrouch,        Pslump,         Mraise,
+#ifdef USE_TELEPORTS
+		teleport,
+#endif
 };
 
 // data:196E
@@ -1138,8 +1146,31 @@ byte seqtbl[] = {
 
 	LABEL(Mclimb) // Mouse: climb
 	frame_186_mouse_1, frame_186_mouse_1, /* ":loop" */ LABEL(Mclimb_loop) frame_188_mouse_stand,
-	jmp(Mclimb_loop) // goto ":loop"
+	jmp(Mclimb_loop), // goto ":loop"
 
+#ifdef USE_TELEPORTS
+	// Based on climbstairs.
+	LABEL(teleport)
+	act(actions_5_bumped),
+	dx(-5), dy(-1), snd(SND_FOOTSTEP), frame_217_exit_stairs_1,
+	frame_218_exit_stairs_2, frame_219_exit_stairs_3,
+	dx(1), frame_220_exit_stairs_4,
+	dx(-4), dy(-3), snd(SND_FOOTSTEP), frame_221_exit_stairs_5,
+	dx(-4), dy(-2), frame_222_exit_stairs_6,
+	dx(-2), dy(-3), frame_223_exit_stairs_7,
+	dx(-3), dy(-8), /*snd(SND_LEVEL),*/ snd(SND_FOOTSTEP), frame_224_exit_stairs_8,
+	dx(-1), dy(-1), frame_225_exit_stairs_9,
+	dx(-3), dy(-4), frame_226_exit_stairs_10,
+	dx(-1), dy(-5), snd(SND_FOOTSTEP), frame_227_exit_stairs_11,
+	dx(-2), dy(-1), frame_228_exit_stairs_12,
+	frame_0,
+	snd(SND_FOOTSTEP), frame_0, frame_0, frame_0,
+	snd(SND_FOOTSTEP), frame_0, frame_0, frame_0,
+	snd(SND_FOOTSTEP), frame_0, frame_0, frame_0,
+	snd(SND_FOOTSTEP), /*SEQ_END_LEVEL,*/ SEQ_GET_ITEM, 2, // get_item 2 triggers the teleport effect, like in SNES PoP.
+	/* ":loop" */ LABEL(teleport_loop) frame_0,
+	jmp(teleport_loop), // goto ":loop"
+#endif
 };
 
 void apply_seqtbl_patches() {
