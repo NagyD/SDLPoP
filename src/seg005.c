@@ -406,6 +406,10 @@ void __pascal far control_standing() {
 	}
 }
 
+int source_modifier;
+int source_room;
+int source_tilepos;
+
 // seg005:0482
 void __pascal far up_pressed() {
 	// If there is an open level door nearby, enter it.
@@ -439,6 +443,9 @@ void __pascal far up_pressed() {
 		// Optional: Balconies with zero modifiers remain regular balconies.
 		if (pickup_obj_type > 0)
 		{
+			source_modifier = pickup_obj_type;
+			source_room = curr_room;
+			source_tilepos = curr_tilepos;
 			go_up_leveldoor();
 			seqtbl_offset_char(seq_teleport);
 			return;
@@ -1104,9 +1111,9 @@ void __pascal far parry() {
 #ifdef USE_TELEPORTS
 void teleport() {
 	// Ideally these variables should be global and be initialized in up_pressed().
-	int source_modifier = pickup_obj_type;
-	int source_room = Char.room;
-	int source_tilepos = Char.curr_row * 10 + Char.curr_col - 1;
+	//int source_modifier = pickup_obj_type;
+	//int source_room = Char.room;
+	//int source_tilepos = Char.curr_row * 10 + Char.curr_col - 1;
 
 	bool found = false;
 	int dest_room, dest_tilepos;
