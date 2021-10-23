@@ -21,6 +21,7 @@ Contributors:
 * Andrew (bug reports)
 * htamas (inspiration, dungeon wall drawing algorithm, bug reports)
 * Norbert (EndeavourAccuracy on GitHub) (bug reports, suggestions, improved gamepad support)
+	* teleport graphics
 * musa (bug reports)
 * Eugene (bug reports)
 * StaticReturn (Mac OS X: Makefile (for older SDL1 version), bug reports)

@@ -420,7 +420,17 @@ void __pascal far draw_tile_topright() {
 	} else if (tiletype == tiles_20_wall) {
 		add_backtable(id_chtab_7_environmentwall, 2, draw_xh, 0, draw_bottom_y, blitters_2_or, 0);
 	} else {
-		add_backtable(id_chtab_6_environment, tile_table[tiletype].topright_id, draw_xh, 0, draw_bottom_y, blitters_2_or, 0);
+		int id = tile_table[tiletype].topright_id;
+#ifdef USE_TELEPORTS
+		// Use teleport graphics if the left half of the balcony has a non-zero modifier.
+		if (
+			(tiletype == tiles_23_balcony_left && row_below_left_[drawn_col].modifier != 0)
+			|| (tiletype == tiles_24_balcony_right && row_below_left_[drawn_col-1].modifier != 0)
+		) {
+			id += 4;
+		}
+#endif
+		add_backtable(id_chtab_6_environment, id, draw_xh, 0, draw_bottom_y, blitters_2_or, 0);
 	}
 }
 
@@ -455,6 +465,21 @@ void __pascal far draw_tile_right() {
 	switch (tile_left) {
 		default:
 			id = tile_table[tile_left].right_id;
+#ifdef USE_TELEPORTS
+			// Use teleport graphics if the left half of the balcony has a non-zero modifier.
+			if (tile_left == tiles_23_balcony_left && modifier_left != 0) {
+				id += 4;
+			} else if (tile_left == tiles_24_balcony_right) {
+				// Read the modifier of the tile two places to the left.
+				// It's not prefetched in advance as in draw_tile_topright().
+				byte tile_left_by_2;
+				byte modifier_left_by_2;
+				get_tile_to_draw(drawn_room, drawn_col-2, drawn_row, &tile_left_by_2, &modifier_left_by_2, tiles_20_wall);
+				if (modifier_left_by_2 != 0) {
+					id += 4;
+				}
+			}
+#endif
 			if (id) {
 				if (tile_left == tiles_5_stuck) {
 					blit = blitters_10h_transp;
