@@ -250,6 +250,14 @@ typedef struct level_type {
 	byte fill_3[18];
 } level_type;
 SDL_COMPILE_TIME_ASSERT(level_size, sizeof(level_type) == 2305);
+
+// Unused fields are cleared in reset_level_unused_fields().
+
+// On the original levels, roomxs[] and roomys[] contain the x/y coordinates of the rooms. They were used by Mechner's level editor.
+
+// fill_2[] is used by RoomShaker: If you place a Debug Start in RoomShaker,
+// the start_* fields will contain the location of the Debug Start, and fill_2[] will contain the location of the Player Start.
+
 #pragma pack(pop)
 
 typedef SDL_Surface surface_type;

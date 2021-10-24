@@ -1152,6 +1152,7 @@ void __pascal far load_level() {
 void reset_level_unused_fields(bool loading_clean_level) {
 	// Entirely unused fields in the level format: reset to zero for now
 	// They can be repurposed to add new stuff to the level format in the future
+	// WIP: https://www.popot.org/documentation/documents/multiplayer.txt
 	memset(level.roomxs, 0, sizeof(level.roomxs));
 	memset(level.roomys, 0, sizeof(level.roomys));
 	memset(level.fill_1, 0, sizeof(level.fill_1));
