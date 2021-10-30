@@ -663,3 +663,5 @@ FIXED: If the place of a special event was changed, show it at its new place on 
 DONE: Show guards' HP and skills on the maps.
 FIXED: Don't complain about data files missing from the mod folder.
 DONE: Added options to use the original music and/or graphics for custom levelsets.
+DONE: Added gamecontroller hotplug support. SDLPoP now detects controllers plugged in while the game is already running.
+	Details: https://github.com/NagyD/SDLPoP/pull/256

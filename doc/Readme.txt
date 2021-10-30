@@ -155,6 +155,8 @@ You can also use the numeric keypad.
 If SDLPoP does not work correctly with your gamepad, it might help if you download gamecontrollerdb.txt and configure SDLPoP to use it.
 See SDLPoP.ini for details.
 
+Since (upcoming version) SDLPoP now detects controllers plugged in while the game is already running. (hotplug)
+
 ### Controlling the game:
 * Esc: Pause game.
 * Space: Show how much time is left.
