@@ -1389,6 +1389,9 @@ void __pascal far draw_tables() {
 	draw_wipes(0);
 	draw_table(0); // backtable
 	//printf("midtable_count = %d\n", midtable_count); // debug
+#ifdef FIX_BLACK_RECT // I'm not sure if this is the best way to fix this.
+	draw_wipes(1);
+#endif
 	draw_table(3); // midtable
 	draw_wipes(1);
 	draw_table(1); // foretable

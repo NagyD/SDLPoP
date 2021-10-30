@@ -261,6 +261,14 @@ The authors of this program may be contacted at https://forum.princed.org
 // Explanation: https://forum.princed.org/viewtopic.php?p=33336#p33336
 #define FIX_SPRITE_XPOS
 
+// On the original level 5, if you leave the room while the shadow is drinking the potion, the shadow runs to the right.
+// He will eventually fall into the wall, at this point a black rectangle appears on the wall.
+// It's also related to the raise button next to the wall. The rectangle won't appear without that button.
+// Testcase: doc/replays-testcases/Original level 5 shadow into wall.p1r
+// See also: https://github.com/NagyD/SDLPoP/issues/254
+#define FIX_BLACK_RECT
+// TODO: Also fix the shadow not turning around and/or falling into the wall? Or would that break mods?
+
 #endif // ifndef DISABLE_ALL_FIXES
 
 // Prince can jump 2 stories up in feather fall mode

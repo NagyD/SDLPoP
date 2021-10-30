@@ -665,3 +665,5 @@ FIXED: Don't complain about data files missing from the mod folder.
 DONE: Added options to use the original music and/or graphics for custom levelsets.
 DONE: Added gamecontroller hotplug support. SDLPoP now detects controllers plugged in while the game is already running.
 	Details: https://github.com/NagyD/SDLPoP/pull/256
+FIXED: Fixed black rectangle appearing when the shadow falls into the wall.
+	Details: See FIX_BLACK_RECT in config.h and https://github.com/NagyD/SDLPoP/issues/254
