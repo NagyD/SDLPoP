@@ -242,6 +242,11 @@ void __pascal far redraw_screen(int drawing_different_room) {
 	//remove_flash();
 	if (drawing_different_room) {
 		draw_rect(&rect_top, 0);
+#ifdef USE_DARK_TRANSITION
+		// Briefly show a dark screen when changing rooms, like in the original game.
+		update_screen();
+		SDL_Delay(100);
+#endif
 	}
 
 	different_room = 0;

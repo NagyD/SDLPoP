@@ -324,6 +324,9 @@ The authors of this program may be contacted at https://forum.princed.org
 // Mute the sound during fast forward.
 //#define FAST_FORWARD_MUTE
 
+// Briefly show a dark screen when changing rooms, like in the original game.
+#define USE_DARK_TRANSITION
+
 
 // Default SDL_Joystick button values
 #define SDL_JOYSTICK_BUTTON_Y 2
