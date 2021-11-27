@@ -27,7 +27,7 @@ char screenshot_filename[POP_MAX_PATH] = "screenshot.png";
 int screenshot_index = 0;
 
 // Use incrementing numbers and a separate folder, like DOSBox.
-void make_screenshot_filename() {
+void make_screenshot_filename(void) {
 	// Create the screenshots directory in SDLPoP's directory, even if the current directory is something else.
 	strncpy(screenshots_folder, locate_file("screenshots"), sizeof(screenshots_folder));
 	// Create the folder if it doesn't exist yet:
@@ -112,7 +112,7 @@ int ypos[NUMBER_OF_ROOMS+1] = {0};
 // Show annotations for non-visible things, like: room bounds, room numbers, door events, loose floors, potion types, special events, ...
 // (this will make the function even more like a cheat)
 // TODO: fake tiles?
-void draw_extras() {
+void draw_extras(void) {
 	// ambiguous tiles
 	// The editor branch has something similar...
 	for (int tilepos=0;tilepos<30;tilepos++) {
