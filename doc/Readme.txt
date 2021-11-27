@@ -412,10 +412,10 @@ macOS
 -----
 * Get SDL2 and dependencies
 	1. Install "port" from https://www.macports.org/
-	2. `sudo port install libsdl2 libsdl2_image`
+	2. `sudo port install libsdl2 libsdl2_image pkgconfig`
 	* or
 	1. Install "homebrew"
-	2. `brew install sdl2 sdl2_image`
+	2. `brew install sdl2 sdl2_image pkg-config`
 
 * Get development tools:
 	1. Install Xcode.
