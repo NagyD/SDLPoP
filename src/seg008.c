@@ -1450,12 +1450,12 @@ void __pascal far draw_leveldoor() {
 		}
 	}
 	leveldoor_ybottom = ybottom - (modifier_left & 3) - 48;
-	for (var_6 = ybottom - modifier_left;
-		add_backtable(id_chtab_6_environment, 33 /*level door bottom*/, draw_xh + 1, 0, leveldoor_ybottom, blitters_0_no_transp, 0),
-			var_6 > leveldoor_ybottom;
-		leveldoor_ybottom += 4) {
-		;
-	} // runs at least once?
+   do { // runs at least once
+      var_6 = ybottom - modifier_left;
+      add_backtable(id_chtab_6_environment, 33 /*level door bottom*/, draw_xh + 1, 0, leveldoor_ybottom, blitters_0_no_transp, 0);
+      if (var_6 > leveldoor_ybottom) leveldoor_ybottom += 4;
+      else break;
+   } while (true);
 	add_backtable(id_chtab_6_environment, 34 /*level door top*/, draw_xh + 1, 0, draw_main_y - 64, blitters_0_no_transp, 0);
 }
 
