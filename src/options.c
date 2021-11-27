@@ -50,7 +50,7 @@ int ini_load(const char *filename,
 	FILE *f;
 	int cnt;
 
-	f = fopen(filename, "r");
+	f = fcache_open(filename, "r");
 	if (!f) {
 		return -1;
 	}
@@ -69,12 +69,12 @@ int ini_load(const char *filename,
 		if (fscanf(f, " ;%*[^\n]") != 0 ||
 		    fscanf(f, " \n") != 0) {
 			fprintf(stderr, "short read from %s!?\n", filename);
-			fclose(f);
+			fcache_close(f);
 			return -1;
 		}
 	}
 
-	fclose(f);
+	fcache_close(f);
 	return 0;
 }
 
@@ -530,12 +530,15 @@ int identify_dos_exe_version(int filesize) {
 void load_dos_exe_modifications(const char* folder_name) {
 	char filename[POP_MAX_PATH];
 	snprintf(filename, sizeof(filename), "%s/%s", folder_name, "PRINCE.EXE");
-	FILE* fp = fopen(filename, "rb");
+	FILE* fp = fcache_open(filename, "rb");
+	size_t execSize = 0;
 
 	int dos_version = -1;
-	struct stat info;
-	if (fp != NULL && fstat(fileno(fp), &info) == 0 && info.st_size > 0) {
-		dos_version = identify_dos_exe_version(info.st_size);
+	if (fp != NULL) {
+  fcache_seek(fp, 0, SEEK_END);
+  execSize = fcache_tell(fp);
+  fcache_seek(fp, 0, SEEK_SET);
+		dos_version = identify_dos_exe_version(execSize);
 	} else {
 		// PRINCE.EXE not found, try to search for other .EXE files in the same folder.
 		directory_listing_type* directory_listing = create_directory_listing_and_find_first_file(folder_name, "exe");
@@ -543,13 +546,16 @@ void load_dos_exe_modifications(const char* folder_name) {
 			do {
 				char* current_filename = get_current_filename_from_directory_listing(directory_listing);
 				snprintf(filename, sizeof(filename), "%s/%s", folder_name, current_filename);
-				fp = fopen(filename, "rb");
-				if (fp != NULL && fstat(fileno(fp), &info) == 0 && info.st_size > 0) {
-					dos_version = identify_dos_exe_version(info.st_size);
+				fp = fcache_open(filename, "rb");
+				if (fp != NULL) {
+				 fcache_seek(fp, 0, SEEK_END);
+				 execSize = fcache_tell(fp);
+				 fcache_seek(fp, 0, SEEK_SET);
+					dos_version = identify_dos_exe_version(execSize);
 					if (dos_version >= 0) {
 						break; // We found a DOS executable with the right size!
 					}
-					fclose(fp);
+					fcache_close(fp);
 					fp = NULL;
 				}
 				// Keep looking until we find an .EXE with the right size, or until there are no .EXE files left.
@@ -560,10 +566,10 @@ void load_dos_exe_modifications(const char* folder_name) {
 
 	if (dos_version >= 0) {
 		turn_custom_options_on_off(1);
-		byte* exe_memory = malloc((size_t) info.st_size);
-		if (fread(exe_memory, (size_t) info.st_size, 1, fp) != 1) {
+		byte* exe_memory = malloc(execSize);
+		if (fcache_read(exe_memory, execSize, 1, fp) != 1) {
 			fprintf(stderr, "Could not read %s!?\n", filename);
-			fclose(fp);
+			fcache_close(fp);
 			return;
 		}
 
@@ -575,7 +581,7 @@ void load_dos_exe_modifications(const char* folder_name) {
 		do { \
 			static const int offsets[6] = __VA_ARGS__; \
 			int offset = offsets[dos_version]; \
-			read_ok = read_exe_bytes(x, nbytes, exe_memory, offset, info.st_size); \
+			read_ok = read_exe_bytes(x, nbytes, exe_memory, offset, execSize); \
 		} while(0)
 
 		// Offsets and comparisons are derived from princehack.xml
@@ -727,7 +733,7 @@ void load_dos_exe_modifications(const char* folder_name) {
 		free(exe_memory);
 	}
 
-	if (fp != NULL) fclose(fp);
+	if (fp != NULL) fcache_close(fp);
 }
 
 

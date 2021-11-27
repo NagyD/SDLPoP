@@ -21,6 +21,7 @@ The authors of this program may be contacted at https://forum.princed.org
 #include "common.h"
 #include <time.h>
 #include <errno.h>
+#include <string.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -28,6 +29,111 @@ The authors of this program may be contacted at https://forum.princed.org
 #else
 #include "dirent.h"
 #endif
+
+#define __MAX_CACHED_FILES 2048
+long int _cachedFilePointerTable[__MAX_CACHED_FILES];
+char* _cachedFileBufferTable[__MAX_CACHED_FILES];
+size_t _cachedFileBufferSizes[__MAX_CACHED_FILES];
+char _cachedFilePathTable[__MAX_CACHED_FILES][POP_MAX_PATH];
+size_t _cachedFileCounter = 0;
+
+FILE* fcache_open(const char * filename, const char * mode)
+{
+ // Check if already cached, and return it directly from cache if it is
+ for (size_t i = 0; i < _cachedFileCounter; i++)
+  if (strcmp(filename, _cachedFilePathTable[i]) == 0)
+  {
+   _cachedFilePointerTable[i] = 0; // Rewinding
+   return (FILE*)i;
+  }
+
+ // Checking if file is directory. Do not open in that case.
+ struct stat path_stat;
+ stat(filename, &path_stat);
+ if (S_ISREG(path_stat.st_mode) == 0) return NULL;
+
+ // Open source file
+ FILE *srcFile = fopen(filename, "rb");
+
+ // If failed to load, return immediately
+ if (srcFile == NULL) return NULL;
+
+ // Finding out file's size
+ fseek(srcFile, 0, SEEK_END);
+ long int fileSize = ftell(srcFile);
+ fseek(srcFile, 0, SEEK_SET);
+
+ // Creating cached file buffer
+ _cachedFileBufferTable[_cachedFileCounter] = malloc(fileSize);
+
+ // Reading source file info buffer
+ fread(_cachedFileBufferTable[_cachedFileCounter], 1, fileSize, srcFile);
+
+ // Closing source file
+ fclose(srcFile);
+
+ // Add filepath to the cache table
+ strcpy(_cachedFilePathTable[_cachedFileCounter], filename);
+
+ // Storing file size
+ _cachedFileBufferSizes[_cachedFileCounter] = fileSize;
+
+ // Resetting pointer
+ _cachedFilePointerTable[_cachedFileCounter] = 0;
+
+ // Setting found ptr
+ FILE* foundPtr = (FILE*) _cachedFileCounter;
+
+ // Increase cached file counter
+ _cachedFileCounter++;
+
+ return foundPtr;
+}
+
+size_t fcache_read(void * ptr, size_t size, size_t count, FILE * stream)
+{
+ size_t fileId = (size_t) stream;
+ size_t readCount = _cachedFileBufferSizes[fileId] / size;
+ if (readCount > count) readCount = count;
+
+ // Copying data from cached file to pointer
+ memcpy(ptr, &_cachedFileBufferTable[fileId][_cachedFilePointerTable[fileId]], readCount * size);
+
+ // Advancing file pointer
+ _cachedFilePointerTable[fileId] += readCount * size;
+
+ // Returning number of elements read
+ return readCount;
+}
+
+int fcache_seek(FILE * stream, long int offset, int origin)
+{
+  long int base;
+  size_t fileId = (size_t) stream;
+  if (origin == SEEK_SET) base = 0;
+  if (origin == SEEK_CUR) base = _cachedFilePointerTable[fileId];
+  if (origin == SEEK_END) base = _cachedFileBufferSizes[fileId] - 1;
+
+  long int dest = base + offset;
+  if (dest > _cachedFileBufferSizes[fileId] - 1) return -1;
+  if (dest < 0) return -1;
+
+  _cachedFilePointerTable[fileId] = base + offset;
+
+  return 0;
+}
+
+int fcache_tell(FILE * stream)
+{
+  size_t fileId = (size_t) stream;
+  return _cachedFilePointerTable[fileId] + 1;
+}
+
+int fcache_close(FILE* file)
+{
+ // Do not actually close it. This will be done at the end
+ return 0;
+}
 
 // Most functions in this file are different from those in the original game.
 
@@ -338,7 +444,7 @@ int __pascal far pop_wait(int timer_index,int time) {
 
 static FILE* open_dat_from_root_or_data_dir(const char* filename) {
 	FILE* fp = NULL;
-	fp = fopen(filename, "rb");
+	fp = fcache_open(filename, "rb");
 
 	// if failed, try if the DAT file can be opened in the data/ directory, instead of the main folder
 	if (fp == NULL) {
@@ -351,11 +457,7 @@ static FILE* open_dat_from_root_or_data_dir(const char* filename) {
         }
 
 		// verify that this is a regular file and not a directory (otherwise, don't open)
-		struct stat path_stat;
-		stat(data_path, &path_stat);
-		if (S_ISREG(path_stat.st_mode)) {
-			fp = fopen(data_path, "rb");
-		}
+		fp = fcache_open(data_path, "rb");
 	}
 	return fp;
 }
@@ -377,7 +479,7 @@ dat_type *__pascal open_dat(const char *filename, int optional) {
 			char filename_mod[POP_MAX_PATH];
 			// before checking the root directory, first try mods/MODNAME/
 			snprintf_check(filename_mod, sizeof(filename_mod), "%s/%s", mod_data_path, filename);
-			fp = fopen(filename_mod, "rb");
+			fp = fcache_open(filename_mod, "rb");
 		}
 		if (fp == NULL && !skip_normal_data_files) {
 			fp = open_dat_from_root_or_data_dir(filename);
@@ -392,12 +494,12 @@ dat_type *__pascal open_dat(const char *filename, int optional) {
 	dat_chain_ptr = pointer;
 
 	if (fp != NULL) {
-		if (fread(&dat_header, 6, 1, fp) != 1)
+		if (fcache_read(&dat_header, 6, 1, fp) != 1)
 			goto failed;
 		dat_table = (dat_table_type*) malloc(dat_header.table_size);
 		if (dat_table == NULL ||
-		    fseek(fp, dat_header.table_offset, SEEK_SET) ||
-		    fread(dat_table, dat_header.table_size, 1, fp) != 1)
+		    fcache_seek(fp, dat_header.table_offset, SEEK_SET) ||
+		    fcache_read(dat_table, dat_header.table_size, 1, fp) != 1)
 			goto failed;
 		pointer->handle = fp;
 		pointer->dat_table = dat_table;
@@ -434,7 +536,7 @@ out:
 failed:
 	perror(filename);
 	if (fp)
-		fclose(fp);
+		fcache_close(fp);
 	if (dat_table)
 		free(dat_table);
 	goto out;
@@ -2116,6 +2218,7 @@ char* sound_name(int index) {
 sound_buffer_type* convert_digi_sound(sound_buffer_type* digi_buffer);
 
 sound_buffer_type* load_sound(int index) {
+
 	sound_buffer_type* result = NULL;
 	//printf("load_sound(%d)\n", index);
 	init_digi();
@@ -2131,27 +2234,26 @@ sound_buffer_type* load_sound(int index) {
 				if (!skip_mod_data_files) {
 					// before checking the root directory, first try mods/MODNAME/
 					snprintf_check(filename, sizeof(filename), "%s/music/%s.ogg", mod_data_path, sound_name(index));
-					fp = fopen(filename, "rb");
+					fp = fcache_open(filename, "rb");
 				}
 				if (fp == NULL && !skip_normal_data_files) {
 					snprintf_check(filename, sizeof(filename), "data/music/%s.ogg", sound_name(index));
-					fp = fopen(locate_file(filename), "rb");
+					fp = fcache_open(locate_file(filename), "rb");
 				}
 				if (fp == NULL) {
 					break;
 				}
 				// Read the entire file (undecoded) into memory.
-				struct stat info;
-				if (fstat(fileno(fp), &info))
-					break;
-				size_t file_size = (size_t) MAX(0, info.st_size);
+			 fcache_seek(fp, 0, SEEK_END);
+			 long int file_size = fcache_tell(fp);
+			 fcache_seek(fp, 0, SEEK_SET);
 				byte* file_contents = malloc(file_size);
-				if (fread(file_contents, 1, file_size, fp) != file_size) {
+				if (fcache_read(file_contents, 1, file_size, fp) != file_size) {
 					free(file_contents);
-					fclose(fp);
+					fcache_close(fp);
 					break;
 				}
-				fclose(fp);
+				fcache_close(fp);
 
 				// Decoding the entire file immediately would make the loading time much longer.
 				// However, we can also create the decoder now, and only use it when we are actually playing the file.
@@ -2184,6 +2286,7 @@ sound_buffer_type* load_sound(int index) {
 	if (result == NULL && !skip_normal_data_files) {
 		fprintf(stderr, "Failed to load sound %d '%s'\n", index, sound_name(index));
 	}
+
 	return result;
 }
 
@@ -2742,8 +2845,8 @@ void load_from_opendats_metadata(int resource_id, const char* extension, FILE** 
 				// found
 				*result = data_DAT;
 				*size = dat_table->entries[i].size;
-				if (fseek(fp, dat_table->entries[i].offset, SEEK_SET) ||
-				    fread(checksum, 1, 1, fp) != 1) {
+				if (fcache_seek(fp, dat_table->entries[i].offset, SEEK_SET) ||
+				    fcache_read(checksum, 1, 1, fp) != 1) {
 					perror(pointer->filename);
 					fp = NULL;
 				}
@@ -2761,9 +2864,15 @@ void load_from_opendats_metadata(int resource_id, const char* extension, FILE** 
 				filename_no_ext[len-4] = '\0'; // terminate, so ".DAT" is deleted from the filename
 			}
 			snprintf_check(image_filename,sizeof(image_filename),"data/%s/res%d.%s",filename_no_ext, resource_id, extension);
+
 			if (!use_custom_levelset) {
 				//printf("loading (binary) %s",image_filename);
-				fp = fopen(locate_file(image_filename), "rb");
+			 const char* filename = locate_file(image_filename);
+			 //printf("File: %s\n", filename);
+				fp = fcache_open(filename, "rb");
+    if (fp != NULL) {
+      *result = data_directory;
+    }
 			}
 			else {
 				if (!skip_mod_data_files) {
@@ -2771,23 +2880,19 @@ void load_from_opendats_metadata(int resource_id, const char* extension, FILE** 
 					// before checking data/, first try mods/MODNAME/data/
 					snprintf_check(image_filename_mod, sizeof(image_filename_mod), "%s/%s", mod_data_path, image_filename);
 					//printf("loading (binary) %s",image_filename_mod);
-					fp = fopen(locate_file(image_filename_mod), "rb");
+					fp = fcache_open(locate_file(image_filename_mod), "rb");
 				}
 				if (fp == NULL && !skip_normal_data_files) {
-					fp = fopen(locate_file(image_filename), "rb");
+					fp = fcache_open(locate_file(image_filename), "rb");
 				}
 			}
 
 			if (fp != NULL) {
-				struct stat buf;
-				if (fstat(fileno(fp), &buf) == 0) {
 					*result = data_directory;
-					*size = buf.st_size;
-				} else {
-					perror(image_filename);
-					fclose(fp);
-					fp = NULL;
-				}
+
+					fcache_seek(fp, 0L, SEEK_END);
+					*size = fcache_tell(fp);
+					fcache_seek(fp, 0L, SEEK_SET);
 			}
 		}
 	}
@@ -2807,7 +2912,7 @@ void __pascal far close_dat(dat_type far *pointer) {
 	while (curr != NULL) {
 		if (curr == pointer) {
 			*prev = curr->next_dat;
-			if (curr->handle) fclose(curr->handle);
+			if (curr->handle) fcache_close(curr->handle);
 			if (curr->dat_table) free(curr->dat_table);
 			free(curr);
 			return;
@@ -2831,16 +2936,19 @@ void far *__pascal load_from_opendats_alloc(int resource, const char* extension,
 	if (out_result != NULL) *out_result = result;
 	if (out_size != NULL) *out_size = size;
 	if (result == data_none) return NULL;
+
 	void* area = malloc(size);
 	//read(fd, area, size);
-	if (fread(area, size, 1, fp) != 1) {
+	if (fcache_read(area, size, 1, fp) != 1) {
+	 printf("ERROR\n");
 		fprintf(stderr, "%s: %s, resource %d, size %d, failed: %s\n",
 			__func__, pointer->filename, resource,
 			size, strerror(errno));
 		free(area);
 		area = NULL;
 	}
-	if (result == data_directory) fclose(fp);
+
+	if (result == data_directory) fcache_close(fp);
 	/* XXX: check checksum */
 	return area;
 }
@@ -2856,13 +2964,13 @@ int __pascal far load_from_opendats_to_area(int resource,void far *area,int leng
 	FILE* fp = NULL;
 	load_from_opendats_metadata(resource, extension, &fp, &result, &checksum, &size, &pointer);
 	if (result == data_none) return 0;
-	if (fread(area, MIN(size, length), 1, fp) != 1) {
+	if (fcache_read(area, MIN(size, length), 1, fp) != 1) {
 		fprintf(stderr, "%s: %s, resource %d, size %d, failed: %s\n",
 			__func__, pointer->filename, resource,
 			size, strerror(errno));
 		memset(area, 0, MIN(size, length));
 	}
-	if (result == data_directory) fclose(fp);
+	if (result == data_directory) fcache_close(fp);
 	/* XXX: check checksum */
 	return 0;
 }
