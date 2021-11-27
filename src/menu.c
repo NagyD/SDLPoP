@@ -199,6 +199,7 @@ enum setting_ids {
 	SETTING_FIX_QUICKSAVE_DURING_FEATHER,
 	SETTING_FIX_CAPED_PRINCE_SLIDING_THROUGH_GATE,
 	SETTING_FIX_DOORTOP_DISABLING_GUARD,
+	SETTING_FIX_JUMPING_OVER_GUARD,
 	SETTING_enable_super_high_jump,
 	SETTING_USE_CUSTOM_OPTIONS,
 	SETTING_START_MINUTES_LEFT,
@@ -567,6 +568,10 @@ setting_type gameplay_settings[] = {
 				.linked = &fixes_saved.fix_doortop_disabling_guard, .required = &use_fixes_and_enhancements,
 				.text = "Fix door top disabling guard",
 				.explanation = "Guards become inactive if they are standing on a door top (with floor), or if the prince is standing on a door top."},
+		{.id = SETTING_FIX_JUMPING_OVER_GUARD, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fixes_saved.fix_jumping_over_guard, .required = &use_fixes_and_enhancements,
+				.text = "Fix jumping over guard",
+				.explanation = "Prince can jump over guards with a properly timed running jump."},
 };
 
 NAMES_LIST(tile_type_setting_names, {

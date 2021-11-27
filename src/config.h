@@ -269,6 +269,11 @@ The authors of this program may be contacted at https://forum.princed.org
 #define FIX_BLACK_RECT
 // TODO: Also fix the shadow not turning around and/or falling into the wall? Or would that break mods?
 
+// The prince can jump over a guard with a properly timed running jump.
+// His character's x coordinate ends up in the column behind the guard which causes the bump sequence
+// not to work correctly.
+#define FIX_JUMPING_OVER_GUARD
+
 #endif // ifndef DISABLE_ALL_FIXES
 
 // Prince can jump 2 stories up in feather fall mode
