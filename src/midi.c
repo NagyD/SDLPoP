@@ -511,7 +511,7 @@ void midi_callback(void *userdata, Uint8 *stream, int len) {
 			int64_t us_to_next_pause = ticks_to_next_pause * us_per_beat / ticks_per_beat;
 			int64_t us_needed = frames_needed * ONE_SECOND_IN_US / mixing_freq;
 			int64_t advance_us = MIN(us_to_next_pause, us_needed);
-			int available_frames = ((advance_us * mixing_freq) + ONE_SECOND_IN_US - 1) / ONE_SECOND_IN_US; // round up.
+			int available_frames = (int)(((advance_us * mixing_freq) + ONE_SECOND_IN_US - 1) / ONE_SECOND_IN_US); // round up.
 			int advance_frames = MIN(available_frames, frames_needed);
 			advance_us = advance_frames * ONE_SECOND_IN_US / mixing_freq; // recalculate, in case the rounding up increased this.
 			short* temp_buffer = malloc(advance_frames * 4);
@@ -584,7 +584,7 @@ void midi_callback(void *userdata, Uint8 *stream, int len) {
 					printf("MIDI: Couldn't figure out how long to delay (this is a bug)\n");
 					quit(1);
 				}
-				ticks_to_next_pause = first_next_pause_tick - midi_current_pos;
+				ticks_to_next_pause = (int)(first_next_pause_tick - midi_current_pos);
 				if (ticks_to_next_pause < 0) {
 					printf("Tried to delay a negative amount of time (this is a bug)\n"); // This should never happen?
 					quit(1);

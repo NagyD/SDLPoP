@@ -535,7 +535,7 @@ void load_dos_exe_modifications(const char* folder_name) {
 	int dos_version = -1;
 	struct stat info;
 	if (fp != NULL && fstat(fileno(fp), &info) == 0 && info.st_size > 0) {
-		dos_version = identify_dos_exe_version(info.st_size);
+		dos_version = identify_dos_exe_version((int)info.st_size);
 	} else {
 		// PRINCE.EXE not found, try to search for other .EXE files in the same folder.
 		directory_listing_type* directory_listing = create_directory_listing_and_find_first_file(folder_name, "exe");
@@ -545,7 +545,7 @@ void load_dos_exe_modifications(const char* folder_name) {
 				snprintf(filename, sizeof(filename), "%s/%s", folder_name, current_filename);
 				fp = fopen(filename, "rb");
 				if (fp != NULL && fstat(fileno(fp), &info) == 0 && info.st_size > 0) {
-					dos_version = identify_dos_exe_version(info.st_size);
+					dos_version = identify_dos_exe_version((int)info.st_size);
 					if (dos_version >= 0) {
 						break; // We found a DOS executable with the right size!
 					}
@@ -575,7 +575,7 @@ void load_dos_exe_modifications(const char* folder_name) {
 		do { \
 			static const int offsets[6] = __VA_ARGS__; \
 			int offset = offsets[dos_version]; \
-			read_ok = read_exe_bytes(x, nbytes, exe_memory, offset, info.st_size); \
+			read_ok = read_exe_bytes(x, nbytes, exe_memory, offset, (int)info.st_size); \
 		} while(0)
 
 		// Offsets and comparisons are derived from princehack.xml
@@ -778,11 +778,11 @@ void load_mod_options() {
 }
 
 int process_rw_write(SDL_RWops* rw, void* data, size_t data_size) {
-	return SDL_RWwrite(rw, data, data_size, 1);
+	return (int)SDL_RWwrite(rw, data, data_size, 1);
 }
 
 int process_rw_read(SDL_RWops* rw, void* data, size_t data_size) {
-	return SDL_RWread(rw, data, data_size, 1);
+	return (int)SDL_RWread(rw, data, data_size, 1);
 	// if this returns 0, most likely the end of the stream has been reached
 }
 
