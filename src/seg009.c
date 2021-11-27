@@ -245,7 +245,7 @@ void __pascal far clear_kbd_buf() {
 word __pascal far prandom(word max) {
 	if (!seed_was_init) {
 		// init from current time
-		random_seed = time(NULL);
+		random_seed = (dword)time(NULL);
 		seed_was_init = 1;
 	}
 	random_seed = random_seed * 214013 + 2531011;
@@ -1331,7 +1331,7 @@ const rect_type far *__pascal draw_text(const rect_type far *rect_ptr,int x_alig
 void __pascal far show_text(const rect_type far *rect_ptr,int x_align,int y_align,const char far *text) {
 	// stub
 	//printf("show_text: %s\n",text);
-	draw_text(rect_ptr, x_align, y_align, text, strlen(text));
+	draw_text(rect_ptr, x_align, y_align, text, (int)strlen(text));
 }
 
 // seg009:04FF
@@ -2156,7 +2156,7 @@ sound_buffer_type* load_sound(int index) {
 				// Decoding the entire file immediately would make the loading time much longer.
 				// However, we can also create the decoder now, and only use it when we are actually playing the file.
 				// (In the audio callback, we'll decode chunks of samples to the output stream, as needed).
-				stb_vorbis* decoder = stb_vorbis_open_memory(file_contents, file_size, NULL, NULL);
+				stb_vorbis* decoder = stb_vorbis_open_memory(file_contents, (int)file_size, NULL, NULL);
 				if (decoder == NULL) {
 					free(file_contents);
 					break;
@@ -2782,7 +2782,7 @@ void load_from_opendats_metadata(int resource_id, const char* extension, FILE** 
 				struct stat buf;
 				if (fstat(fileno(fp), &buf) == 0) {
 					*result = data_directory;
-					*size = buf.st_size;
+					*size = (int)buf.st_size;
 				} else {
 					perror(image_filename);
 					fclose(fp);
