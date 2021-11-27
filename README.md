@@ -40,7 +40,7 @@ Contributors:
 * DarkPrince (bug reports)
 * Andrey Vasilkin / digi@os2.snc.ru (eComStation (OS/2) support)
 * mfn (fixed a small bug when `USE_MIXER` is undefined)
-* diddledan (Visual C++/NMake support)
+* diddledani (Visual C++/NMake support)
 * zaps166 (small Makefile fixes)
 * usineur (faster music loading)
 * yaqxsw (icon)
@@ -98,9 +98,12 @@ This program is open source under the GNU General Public License terms, see `COP
 * Compile the game manually (see instructions below).
 * Start the game with `./prince`.
 
-##### macOS
+#### macOS
 
 * See the compilation instructions below. Thanks to StaticReturn and Poirot.
+
+#### Compiled versions
+
 * You can find compiled versions for these three platforms here: https://www.popot.org/get_the_games.php?game=SDLPoP
 * Unofficial ports for other systems can be found here: https://forum.princed.org/viewtopic.php?f=126&t=4728. These were not made by the authors of SDLPoP.
 
@@ -121,7 +124,7 @@ This program is open source under the GNU General Public License terms, see `COP
 * `mod "Mod Name"` -- Run with custom data files from the folder "mods/Mod Name/"
 * `debug` -- Enable debug cheats.
 * `--version`, `-v` -- Display SDLPoP version and quit.
-* `--help`, `-h`, -? -- Display help and quit. (Currently it only points to this Readme...)
+* `--help`, `-h`, `-?` -- Display help and quit. (Currently it only points to this Readme...)
 * `seed=number` -- Set initial random seed, for testing.
 * `--screenshot` -- Must be used with megahit and a level number. When the level starts, a screenshot is saved to the screenshots folder and the game quits.
 * `--screenshot-level` -- Similar to the above, except the whole level is screenshotted, thus creating a level map.
@@ -232,7 +235,7 @@ Since (upcoming version) SDLPoP now detects controllers plugged in while the gam
 * F: Toggle display of the remaining feather fall time. (Only if "Fix quick save in feather mode" is enabled.)
 * Shift+F9: Quickload but keep the currently loaded level.
 
-Intended use of quickload:
+Intended use of Shift+F9:
 
 * Suppose you made a quicksave after you got the prince or a guard into a specific position needed for a trick.
 * Then you try to do the trick, but you realize that you need to change the level slightly to make the trick work. So you edit the level.
@@ -274,7 +277,7 @@ You can either copy the modified .DAT files to the folder of the game, or the ga
 Since version 1.17, the game can also load from mod folders that have been placed in the "mods/" directory.
 If you use this method, only the files different from the original V1.0 data are required in the mod's folder.
 
-To choose which mod from the `mods/` folder to play, do one of the following:
+To choose which mod to play from the `mods/` folder, do one of the following:
 
 * Open SDLPoP.ini and change the 'levelset' option to the name of the mod's folder.
 * Use the command line option "mod", like so: `prince mod "Mod Name"`
@@ -369,6 +372,7 @@ To install these, just extract the contents of the `i686-w64-mingw32` folder fro
 * on 32-bit Windows: `c:\Program Files\Dev-Cpp\MinGW64\`
 
 You need to "merge" the contents of the `bin`, `include`, etc. folders in the archives into the existing folders with the same name in the `MinGW64` folder.
+
 To compile, open one of the .dev files and click the compile icon.
 
 #### Visual Studio
@@ -392,6 +396,9 @@ To compile, open one of the .dev files and click the compile icon.
        (download the Visual C++ 32/64-bit development package)
     * (You could create a small batch file to automate the above steps on your system.)
 * Alternatively, you can also build SDLPoP using MSVC with NMake (use the makefile src/NMakefile).
+
+#### CMake
+
 * You can also use CMake, in conjunction with the MinGW-w64 toolchain.
     * You could either invoke CMake from the command line yourself, or use an IDE that uses CMake internally.
     * As an example, CLion uses CMake as its project model.
@@ -418,7 +425,9 @@ Download the SDL2 and SDL2 image sources:
 * SDL2: https://libsdl.org/download-2.0.php
 * SDL2 image: https://libsdl.org/projects/SDL_image/
 
-Build the libraries:
+Build and install these libraries according to their documentation.
+
+Then build the game:
 
     make all
 
