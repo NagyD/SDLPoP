@@ -459,7 +459,7 @@ typedef struct dat_type {
 	// handle and dat_table are NULL if the DAT is a directory.
 } dat_type;
 
-typedef void __pascal far (*cutscene_ptr_type)();
+typedef void __pascal far (*cutscene_ptr_type)(void);
 
 #ifdef USE_FADE
 typedef struct palette_fade_type {

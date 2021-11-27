@@ -189,7 +189,7 @@ static int compare_replay_creation_time(const void* a, const void* b) {
 	return (int) difftime( ((replay_info_type*)b)->creation_time, ((replay_info_type*)a)->creation_time );
 }
 
-void list_replay_files() {
+void list_replay_files(void) {
 
 	if (replay_list == NULL) {
 		// need to allocate enough memory to store info about all replay files in the directory
@@ -254,7 +254,7 @@ byte open_replay_file(const char *filename) {
 	}
 }
 
-void change_working_dir_to_sdlpop_root() {
+void change_working_dir_to_sdlpop_root(void) {
 	char* exe_path = g_argv[0];
 	// strip away everything after the last slash or backslash in the path
 	int len;
@@ -529,7 +529,7 @@ int process_load_from_buffer(void* data, size_t data_size) {
 	return 1;
 }
 
-int savestate_to_buffer() {
+int savestate_to_buffer(void) {
 	int ok = 0;
 	if (savestate_buffer == NULL)
 		savestate_buffer = malloc(MAX_SAVESTATE_SIZE);
@@ -542,7 +542,7 @@ int savestate_to_buffer() {
 	return ok;
 }
 
-void reload_resources() {
+void reload_resources(void) {
 	// the replay's levelset might use different sounds, so we need to free and reload sounds
 	free_all_sounds();
 	load_all_sounds();
@@ -617,7 +617,7 @@ void stop_recording() {
 	text_time_remaining = 24;
 }
 
-void apply_replay_options() {
+void apply_replay_options(void) {
 	// store the current options, so they can be restored later
 	for (int i = 0; i < COUNT(replay_options_sections); ++i) {
 		save_options_to_buffer(replay_options_sections[i].stored_data, POP_MAX_OPTIONS_SIZE, replay_options_sections[i].section_func);
@@ -640,7 +640,7 @@ void apply_replay_options() {
 	reload_resources();
 }
 
-void restore_normal_options() {
+void restore_normal_options(void) {
 	// apply the stored options
 	for (int i = 0; i < COUNT(replay_options_sections); ++i) {
 		load_options_from_buffer(replay_options_sections[i].stored_data, POP_MAX_OPTIONS_SIZE, replay_options_sections[i].section_func);
@@ -843,7 +843,7 @@ int save_recorded_replay(const char* full_filename)
 	return 1;
 }
 
-byte open_next_replay_file() {
+byte open_next_replay_file(void) {
 	if (next_replay_number > num_replay_files-1) {
 		return 0; // reached the last replay file, return to title screen
 	}

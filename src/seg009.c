@@ -40,7 +40,7 @@ void sdlperror(const char* header) {
 char exe_dir[POP_MAX_PATH] = ".";
 bool found_exe_dir = false;
 
-void find_exe_dir() {
+void find_exe_dir(void) {
 	if (found_exe_dir) return;
 	snprintf_check(exe_dir, sizeof(exe_dir), "%s", g_argv[0]);
 	char* last_slash = NULL;
@@ -1118,7 +1118,7 @@ font_type load_font_from_data(/*const*/ rawfont_type* data) {
 // Small font data (hardcoded), defined in menu.c
 extern byte hc_small_font_data[];
 
-void load_font() {
+void load_font(void) {
 	// Try to load font from a file.
 	dat_type* dathandle = open_dat("font", 1);
 	hc_font.chtab = load_sprites_from_file(1000, 1<<1, 0);
@@ -1755,7 +1755,7 @@ int speaker_note_index;
 // Tracks how long the last (partially played) speaker note has been playing (for the audio callback).
 int current_speaker_note_samples_already_emitted;
 
-void __pascal far speaker_sound_stop() {
+void __pascal far speaker_sound_stop(void) {
 	if (!speaker_playing) return;
 	SDL_LockAudio();
 	speaker_playing = 0;
@@ -1777,7 +1777,7 @@ SDL_AudioSpec* digi_audiospec = NULL;
 // The desired samplerate. Everything will be resampled to this.
 const int digi_samplerate = 44100;
 
-void stop_digi() {
+void stop_digi(void) {
 //	SDL_PauseAudio(1);
 	if (!digi_playing) return;
 	SDL_LockAudio();
@@ -1801,7 +1801,7 @@ void stop_digi() {
 // Decoder for the currently playing OGG sound. (This also holds the playback position.)
 stb_vorbis* ogg_decoder;
 
-void stop_ogg() {
+void stop_ogg(void) {
     SDL_PauseAudio(1);
     if (!ogg_playing) return;
     ogg_playing = 0;
@@ -2391,7 +2391,7 @@ void window_resized() {
 #endif
 }
 
-void init_overlay() {
+void init_overlay(void) {
 	static bool initialized = false;
 	if (!initialized) {
 		overlay_surface = SDL_CreateRGBSurface(0, 320, 200, 32, 0xFF, 0xFF << 8, 0xFF << 16, 0xFF << 24) ;
@@ -2402,7 +2402,7 @@ void init_overlay() {
 
 SDL_Surface* onscreen_surface_2x;
 
-void init_scaling() {
+void init_scaling(void) {
 	// Don't crash in validate mode.
 	if (renderer_ == NULL) return;
 
@@ -2548,7 +2548,7 @@ SDL_Surface* get_final_surface() {
 	}
 }
 
-void draw_overlay() {
+void draw_overlay(void) {
 	int overlay = 0;
 	is_overlay_displayed = false;
 #ifdef USE_DEBUG_CHEATS
@@ -2960,7 +2960,7 @@ image_type far * __pascal far method_3_blit_mono(image_type far *image,int xpos,
 bool RGB24_bug_checked = false;
 bool RGB24_bug_affected;
 
-bool RGB24_bug_check() {
+bool RGB24_bug_check(void) {
 	if (!RGB24_bug_checked) {
 		// Check if the bug occurs in this version of SDL.
 		SDL_Surface* test_surface = SDL_CreateRGBSurface(0, 1, 1, 24, 0, 0, 0, 0);
@@ -3260,7 +3260,7 @@ void __pascal start_timer(int timer_index, int length) {
 	wait_time[timer_index] = length;
 }
 
-void toggle_fullscreen() {
+void toggle_fullscreen(void) {
 	uint32_t flags = SDL_GetWindowFlags(window_);
 	if (flags & SDL_WINDOW_FULLSCREEN_DESKTOP) {
 		SDL_SetWindowFullscreen(window_, 0);

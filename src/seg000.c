@@ -28,7 +28,7 @@ dat_type * dathandle;
 // data:4C08
 word need_redraw_because_flipped;
 
-void fix_sound_priorities();
+void fix_sound_priorities(void);
 
 // seg000:0000
 void far pop_main() {
@@ -375,7 +375,7 @@ const char* get_quick_path(char* custom_path_buffer, size_t max_len) {
 	return custom_path_buffer;
 }
 
-int quick_save() {
+int quick_save(void) {
 	int ok = 0;
 	char custom_quick_path[POP_MAX_PATH];
 	const char* path = get_quick_path(custom_quick_path, sizeof(custom_quick_path));
@@ -430,7 +430,7 @@ void restore_room_after_quick_load() {
 	exit_room_timer = 0;
 }
 
-int quick_load() {
+int quick_load(void) {
 	int ok = 0;
 	char custom_quick_path[POP_MAX_PATH];
 	const char* path = get_quick_path(custom_quick_path, sizeof(custom_quick_path));

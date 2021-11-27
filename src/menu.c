@@ -31,7 +31,7 @@ image_type* arrowhead_down_image;
 image_type* arrowhead_left_image;
 image_type* arrowhead_right_image;
 
-void load_arrowhead_images() {
+void load_arrowhead_images(void) {
 	// Make a dummy palette for decode_image().
 	dat_pal_type dat_pal;
 	memset(&dat_pal, 0, sizeof(dat_pal));
@@ -1018,7 +1018,7 @@ bool is_mouse_over_rect(rect_type* rect) {
 }
 
 // Maps the cursor position into a coordinate between (0,0) and (320,200) and sets mouse_x, mouse_y and mouse_moved.
-void read_mouse_state() {
+void read_mouse_state(void) {
 	float scale_x, scale_y;
 	SDL_RenderGetScale(renderer_, &scale_x, &scale_y);
 	int logical_width, logical_height;
@@ -1097,7 +1097,7 @@ void enter_settings_subsection(int settings_menu_id) {
 	}
 }
 
-void leave_settings_subsection() {
+void leave_settings_subsection(void) {
 	if (active_settings_subsection == SETTINGS_MENU_LEVEL_CUSTOMIZATION) {
 		enter_settings_subsection(SETTINGS_MENU_MODS);
 	} else {
@@ -1109,7 +1109,7 @@ void leave_settings_subsection() {
 	}
 }
 
-void reset_paused_menu() {
+void reset_paused_menu(void) {
 	drawn_menu = 0;
 	controlled_area = 0;
 	hovering_pause_menu_item = PAUSE_MENU_RESUME;
@@ -1218,7 +1218,7 @@ void draw_pause_menu_item(pause_menu_item_type* item, rect_type* parent, int* y_
 
 }
 
-void draw_pause_menu() {
+void draw_pause_menu(void) {
 	pause_menu_alpha = 120;
 	draw_rect_with_alpha(&screen_rect, color_0_black, pause_menu_alpha);
 	draw_rect_with_alpha(&rect_bottom_text, color_0_black, 0); // Transparent so that the text "GAME PAUSED" is visible.
@@ -1631,7 +1631,7 @@ void draw_settings_area(settings_area_type* settings_area) {
 	}
 }
 
-void draw_settings_menu() {
+void draw_settings_menu(void) {
 	settings_area_type* settings_area = get_settings_area(active_settings_subsection);
 	pause_menu_alpha = (settings_area == NULL) ? 220 : 255;
 	draw_rect_with_alpha(&screen_rect, color_0_black, pause_menu_alpha);
@@ -1817,7 +1817,7 @@ void draw_confirmation_dialog(int which_dialog, const char* text) {
 	clear_menu_controls();
 }
 
-void draw_select_level_dialog() {
+void draw_select_level_dialog(void) {
 	clear_menu_controls();
 	int old_edited_level_number = -1;
 	for (;;) {
@@ -2153,7 +2153,8 @@ unsigned int crc32c(unsigned char *message, size_t size) {
 	/* Through with table setup, now calculate the CRC. */
 	i = 0;
 	crc = 0xFFFFFFFF;
-	while ((byte = message[i]), size--) {
+	while (size--) {
+		byte = message[i];
 		crc = (crc >> 8) ^ table[(crc ^ byte) & 0xFF];
 		i = i + 1;
 	}
@@ -2162,7 +2163,7 @@ unsigned int crc32c(unsigned char *message, size_t size) {
 
 dword exe_crc = 0;
 
-void calculate_exe_crc() {
+void calculate_exe_crc(void) {
 	if (exe_crc == 0) {
 		// Get the CRC32 fingerprint of the executable.
 		FILE* exe_file = fopen(g_argv[0], "rb");
@@ -2185,7 +2186,7 @@ void calculate_exe_crc() {
 	}
 }
 
-void save_ingame_settings() {
+void save_ingame_settings(void) {
 	SDL_RWops* rw = SDL_RWFromFile(locate_file("SDLPoP.cfg"), "wb");
 	if (rw != NULL) {
 		calculate_exe_crc();
@@ -2199,7 +2200,7 @@ void save_ingame_settings() {
 	}
 }
 
-void load_ingame_settings() {
+void load_ingame_settings(void) {
 	// We want the SDLPoP.cfg file (in-game menu settings) to override the SDLPoP.ini file,
 	// but ONLY if the .ini file wasn't modified since the last time the .cfg file was saved!
 	struct stat st_ini, st_cfg;
@@ -2236,7 +2237,7 @@ void load_ingame_settings() {
 	}
 }
 
-void menu_was_closed() {
+void menu_was_closed(void) {
 	is_paused = 0;
 	is_menu_shown = 0;
 	escape_key_suppressed = (key_states[SDL_SCANCODE_BACKSPACE] || key_states[SDL_SCANCODE_ESCAPE]);

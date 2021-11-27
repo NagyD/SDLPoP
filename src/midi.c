@@ -606,7 +606,7 @@ void stop_midi() {
 	SDL_UnlockAudio();
 }
 
-void free_midi_resources() {
+void free_midi_resources(void) {
 	free(instruments_data);
 }
 
