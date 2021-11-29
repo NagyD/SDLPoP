@@ -85,8 +85,8 @@ extern dialog_type* copyprot_dialog;
 // data:2944
 extern dialog_settings_type dialog_settings
 	INIT(= {
-		add_dialog_rect,
-		dialog_method_2_frame,
+		(void(*)(dialog_type *))(add_dialog_rect),
+		(void(*)(dialog_type *))(dialog_method_2_frame),
 		4, 4, 4, 4, 3, 4, 1
 	});
 // data:2B76
