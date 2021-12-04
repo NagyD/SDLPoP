@@ -526,12 +526,15 @@ enum sound_type {
     sound_ogg = 5,
 	sound_digi_converted = 6,
 };
+
 #pragma pack(push,1)
+
 typedef struct note_type {
 	word frequency; // 0x00 or 0x01 = rest, 0x12 = end
 	byte length;
 } note_type;
 SDL_COMPILE_TIME_ASSERT(note_type, sizeof(note_type) == 3);
+
 typedef struct speaker_type { // IBM
 	word tempo;
 	note_type notes[];
@@ -569,7 +572,6 @@ typedef struct midi_type {
 		} header;
 		byte data[0];
 	};
-
 } midi_type;
 
 typedef struct ogg_type {
@@ -609,8 +611,9 @@ typedef struct midi_raw_chunk_type {
 		} header;
 		byte data[0];
 	};
-
 } midi_raw_chunk_type;
+
+#pragma pack(pop)
 
 typedef struct midi_event_type {
 	dword delta_time;
@@ -649,6 +652,7 @@ typedef struct parsed_midi_type {
 } parsed_midi_type;
 
 #pragma pack(push, 1)
+
 typedef struct operator_type {
 	byte mul;
 	byte ksl_tl;
@@ -656,6 +660,7 @@ typedef struct operator_type {
 	byte s_r;
 	byte waveform;
 } operator_type;
+SDL_COMPILE_TIME_ASSERT(operator_type, sizeof(operator_type) == 5);
 
 typedef struct instrument_type {
 	byte blocknum_low;
@@ -665,6 +670,8 @@ typedef struct instrument_type {
 	byte percussion;
 	byte unknown[2];
 } instrument_type;
+SDL_COMPILE_TIME_ASSERT(instrument_type, sizeof(instrument_type) == 16);
+
 #pragma pack(pop)
 
 struct dialog_type; // (declaration only)
@@ -687,8 +694,6 @@ typedef struct dialog_type {
 	word has_peel;
 	peel_type* peel;
 } dialog_type;
-
-#pragma pack(pop)
 
 enum soundids {
 	sound_0_fell_to_death = 0,
