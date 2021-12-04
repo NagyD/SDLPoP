@@ -649,6 +649,15 @@ void __pascal far bump_into_opponent() {
 			}
 			#endif
 
+			#ifdef FIX_JUMPING_OVER_GUARD
+			if (fixes->fix_jumping_over_guard) {
+				if ((Char.direction == dir_0_right && Char.x > Opp.x) ||
+				        (Char.direction == dir_FF_left && Char.x < Opp.x)) {
+					Char.x = Opp.x;
+				}
+			}
+			#endif
+
 			Char.y = y_land[Char.curr_row + 1];
 			Char.fall_y = 0;
 			seqtbl_offset_char(seq_47_bump); // bump into opponent
