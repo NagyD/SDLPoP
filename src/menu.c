@@ -1527,7 +1527,7 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 					increase_setting(setting, value);
 				} else {
 					char* value_text = print_setting_value(setting, value);
-					int value_text_width = get_line_width(value_text, strlen(value_text));
+					int value_text_width = get_line_width(value_text, (int)strlen(value_text));
 					rect_type left_hitbox = right_hitbox;
 					left_hitbox.left -= (value_text_width + 10);
 					left_hitbox.right -= (value_text_width + 5);
@@ -1548,7 +1548,7 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 		show_text_with_color(&text_rect, 1, -1, value_text, selected_color);
 
 		if (highlighted_setting_id == setting->id) {
-			int value_text_width = get_line_width(value_text, strlen(value_text));
+			int value_text_width = get_line_width(value_text, (int)strlen(value_text));
 			draw_image_with_blending(arrowhead_right_image, text_rect.right + 2, text_rect.top);
 			draw_image_with_blending(arrowhead_left_image, text_rect.right - value_text_width - 6, text_rect.top);
 		}
@@ -2159,7 +2159,7 @@ unsigned int crc32c(unsigned char *message, size_t size) {
 	i = 0;
 	crc = 0xFFFFFFFF;
 	while (size--) {
-		byte = message[i];
+      byte = message[i];
 		crc = (crc >> 8) ^ table[(crc ^ byte) & 0xFF];
 		i = i + 1;
 	}
