@@ -693,6 +693,7 @@ void __pascal far grab_up_no_floor_behind() {
 // seg005:08E6
 void __pascal far jump_up() {
 	short distance;
+	word delta_x;
 	control_up = release_arrows();
 	distance = get_edge_distance();
 	if (distance < 4 && edge_type == 1) {
@@ -706,9 +707,15 @@ void __pascal far jump_up() {
 	}
 	#endif
 	#ifdef USE_SUPER_HIGH_JUMP
-    int char_col = get_tile_div_mod(back_delta_x(0) + dx_weight() - 6);
+	// kid should be able to grab 2 tiles above from an edge of a floor tile
+	if (is_feather_fall && !tile_is_floor(get_tile_above_char()) && curr_tile2 != tiles_20_wall) {
+		delta_x = Char.direction == dir_FF_left ? 1 : 3;
+	} else {
+		delta_x = 0;
+	}
+    int char_col = get_tile_div_mod(back_delta_x(delta_x) + dx_weight() - 6);
     get_tile(Char.room, char_col, Char.curr_row - 1);
-    if (curr_tile2 != tiles_20_wall && ! tile_is_floor(curr_tile2)) {
+    if (curr_tile2 != tiles_20_wall && !tile_is_floor(curr_tile2)) {
         if (fixes->enable_super_high_jump && is_feather_fall) { // super high jump can only happen in feather mode
             if (curr_room == 0 && Char.curr_row == 0) { // there is no room above
                 seqtbl_offset_char(seq_14_jump_up_into_ceiling);
