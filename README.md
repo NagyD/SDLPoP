@@ -77,6 +77,9 @@ Sources which helped in making the disassembly:
 
 This program is open source under the GNU General Public License terms, see `COPYING` and `src/GPLv3.h`.
 
+The following files are external libraries with their own licenses: `src/opl3.c`, `src/opl3.h`, `src/stb_vorbis.c`.
+See their contents for license information.
+
 ## USAGE
 
 ### Running the game
