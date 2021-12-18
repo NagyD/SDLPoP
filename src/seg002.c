@@ -273,11 +273,11 @@ void __pascal far leave_guard() {
 	word room_minus_1;
 
 #ifdef USE_SUPER_HIGH_JUMP
-    // Do not leave guard during super high jumps when the room does not change.
-    // Kid's "y" coordinate keeps him in the lower room visually (in timers()).
-    if (fixes->enable_super_high_jump && super_jump_fall && drawn_room == next_room)	 {
-        return;
-    }
+	// Do not leave guard during super high jumps when the room does not change.
+	// Kid's "y" coordinate keeps him in the lower room visually (in timers()).
+	if (fixes->enable_super_high_jump && super_jump_fall && drawn_room == next_room)	 {
+		return;
+	}
 #endif
 
 	if (Guard.direction == dir_56_none || Guard.charid == charid_1_shadow || Guard.charid == charid_24_mouse) {

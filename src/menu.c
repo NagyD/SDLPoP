@@ -2159,7 +2159,7 @@ unsigned int crc32c(unsigned char *message, size_t size) {
 	i = 0;
 	crc = 0xFFFFFFFF;
 	while (size--) {
-      byte = message[i];
+		byte = message[i];
 		crc = (crc >> 8) ^ table[(crc ^ byte) & 0xFF];
 		i = i + 1;
 	}

@@ -518,12 +518,12 @@ typedef enum data_location {
 } data_location;
 
 enum sound_type {
-    sound_speaker = 0,
-    sound_digi = 1,
-    sound_midi = 2,
-    sound_chunk = 3,
-    sound_music = 4,
-    sound_ogg = 5,
+	sound_speaker = 0,
+	sound_digi = 1,
+	sound_midi = 2,
+	sound_chunk = 3,
+	sound_music = 4,
+	sound_ogg = 5,
 	sound_digi_converted = 6,
 };
 
@@ -575,10 +575,10 @@ typedef struct midi_type {
 } midi_type;
 
 typedef struct ogg_type {
-    //byte sample_size; // =16
-    int total_length;
-    byte* file_contents;
-    stb_vorbis* decoder;
+	//byte sample_size; // =16
+	int total_length;
+	byte* file_contents;
+	stb_vorbis* decoder;
 } ogg_type;
 
 typedef struct converted_audio_type {
@@ -593,7 +593,7 @@ typedef struct sound_buffer_type {
 		digi_type digi;
 		digi_new_type digi_new;
 		midi_type midi;
-        ogg_type ogg;
+		ogg_type ogg;
 		converted_audio_type converted;
 	};
 } sound_buffer_type;

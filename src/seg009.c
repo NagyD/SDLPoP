@@ -57,7 +57,7 @@ void find_exe_dir(void) {
 }
 
 bool file_exists(const char* filename) {
-    return (access(filename, F_OK) != -1);
+	return (access(filename, F_OK) != -1);
 }
 
 const char* locate_file_(const char* filename, char* path_buffer, int buffer_size) {
@@ -67,8 +67,8 @@ const char* locate_file_(const char* filename, char* path_buffer, int buffer_siz
 		// If failed, it may be that SDLPoP is being run from the wrong different working directory.
 		// We can try to rescue the situation by loading from the directory of the executable.
 		find_exe_dir();
-        snprintf_check(path_buffer, buffer_size, "%s/%s", exe_dir, filename);
-        return (const char*) path_buffer;
+		snprintf_check(path_buffer, buffer_size, "%s/%s", exe_dir, filename);
+		return (const char*) path_buffer;
 	}
 }
 
@@ -345,10 +345,10 @@ static FILE* open_dat_from_root_or_data_dir(const char* filename) {
 		char data_path[POP_MAX_PATH];
 		snprintf_check(data_path, sizeof(data_path), "data/%s", filename);
 
-        if (!file_exists(data_path)) {
-            find_exe_dir();
-            snprintf_check(data_path, sizeof(data_path), "%s/data/%s", exe_dir, filename);
-        }
+		if (!file_exists(data_path)) {
+			find_exe_dir();
+			snprintf_check(data_path, sizeof(data_path), "%s/data/%s", exe_dir, filename);
+		}
 
 		// verify that this is a regular file and not a directory (otherwise, don't open)
 		struct stat path_stat;
@@ -1802,12 +1802,12 @@ void stop_digi(void) {
 stb_vorbis* ogg_decoder;
 
 void stop_ogg(void) {
-    SDL_PauseAudio(1);
-    if (!ogg_playing) return;
-    ogg_playing = 0;
-    SDL_LockAudio();
-    ogg_decoder = NULL;
-    SDL_UnlockAudio();
+	SDL_PauseAudio(1);
+	if (!ogg_playing) return;
+	ogg_playing = 0;
+	SDL_LockAudio();
+	ogg_decoder = NULL;
+	SDL_UnlockAudio();
 }
 
 // seg009:7214
@@ -1816,7 +1816,7 @@ void __pascal far stop_sounds() {
 	stop_digi();
 	stop_midi();
 	speaker_sound_stop();
-    stop_ogg();
+	stop_ogg();
 }
 
 short square_wave_state = 4000; // If the amplitude is too high, the speaker sounds will be really loud!
@@ -1933,12 +1933,12 @@ void digi_callback(void *userdata, Uint8 *stream, int len) {
 }
 
 void ogg_callback(void *userdata, Uint8 *stream, int len) {
-    int output_channels = digi_audiospec->channels;
-    int bytes_per_sample = sizeof(short) * output_channels;
-    int samples_requested = len / bytes_per_sample;
+	int output_channels = digi_audiospec->channels;
+	int bytes_per_sample = sizeof(short) * output_channels;
+	int samples_requested = len / bytes_per_sample;
 
 	int samples_filled;
-    if (is_sound_on) {
+	if (is_sound_on) {
 		samples_filled = stb_vorbis_get_samples_short_interleaved(ogg_decoder, output_channels,
                                                                       (short*) stream, len / sizeof(short));
 		if (samples_filled < samples_requested) {
@@ -2196,7 +2196,7 @@ void play_ogg_sound(sound_buffer_type *buffer) {
 	stb_vorbis_seek_start(buffer->ogg.decoder);
 
 	SDL_LockAudio();
-    ogg_decoder = buffer->ogg.decoder;
+	ogg_decoder = buffer->ogg.decoder;
 	SDL_UnlockAudio();
 	SDL_PauseAudio(0);
 
@@ -2306,8 +2306,8 @@ void __pascal far play_digi_sound(sound_buffer_type far *buffer) {
 
 void free_sound(sound_buffer_type far *buffer) {
 	if (buffer == NULL) return;
-    if (buffer->type == sound_ogg) {
-        stb_vorbis_close(buffer->ogg.decoder);
+	if (buffer->type == sound_ogg) {
+		stb_vorbis_close(buffer->ogg.decoder);
 		free(buffer->ogg.file_contents);
 	}
 	free(buffer);

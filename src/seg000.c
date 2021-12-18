@@ -352,11 +352,11 @@ int quick_process(process_func_type process_func) {
 	process(torch_colors);
 #endif
 #ifdef USE_SUPER_HIGH_JUMP
-    process(super_jump_fall);
-    process(super_jump_timer);
-    process(super_jump_room);
-    process(super_jump_col);
-    process(super_jump_row);
+	process(super_jump_fall);
+	process(super_jump_timer);
+	process(super_jump_room);
+	process(super_jump_col);
+	process(super_jump_row);
 #endif
 	process(is_guard_notice);
 	process(can_guard_see_kid);

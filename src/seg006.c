@@ -761,18 +761,18 @@ int __pascal far get_tile_div_mod(int xpos) {
 	// Considering the case of positive overflow
 	int tblSize = 256;
 
- if (xpos >= tblSize) {
-  // In this case DOS PoP reads the bytes directly after tile_div_tbl[], that is: and tile_mod_tbl[]
-  // Here we simulate these reads.
-  // After tile_mod_tbl[] there are the following bytes:
-  static const byte bogus[] = {0xF4, 0x02, 0x10, 0x1E, 0x2C, 0x3A, 0x48, 0x56, 0x64, 0x72, 0x80, 0x8E, 0x9C, 0xAA, 0xB8, 0xC6, 0xD4, 0xE2, 0xF0, 0xFE, 0x00, 0x0A, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x0A, 0x0D, 0x00, 0x00, 0x00, 0x00};
-  if (xpos-tblSize < COUNT(bogus)) {
-   xh = tile_mod_tbl[xpos-tblSize]; // simulating tile_div_tbl[xpos]
-   xl = bogus[xpos-tblSize]; // simulating tile_mod_tbl[xpos]
-  } else {
-   printf("xpos = %d (> %d) out of range for simulation of index overflow!\n", xpos, (int)COUNT(bogus)+tblSize);
-  }
- }
+	if (xpos >= tblSize) {
+		// In this case DOS PoP reads the bytes directly after tile_div_tbl[], that is: and tile_mod_tbl[]
+		// Here we simulate these reads.
+		// After tile_mod_tbl[] there are the following bytes:
+		static const byte bogus[] = {0xF4, 0x02, 0x10, 0x1E, 0x2C, 0x3A, 0x48, 0x56, 0x64, 0x72, 0x80, 0x8E, 0x9C, 0xAA, 0xB8, 0xC6, 0xD4, 0xE2, 0xF0, 0xFE, 0x00, 0x0A, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x0A, 0x0D, 0x00, 0x00, 0x00, 0x00};
+		if (xpos-tblSize < COUNT(bogus)) {
+			xh = tile_mod_tbl[xpos-tblSize]; // simulating tile_div_tbl[xpos]
+			xl = bogus[xpos-tblSize]; // simulating tile_mod_tbl[xpos]
+		} else {
+			printf("xpos = %d (> %d) out of range for simulation of index overflow!\n", xpos, (int)COUNT(bogus)+tblSize);
+		}
+	}
 
 	obj_xl = xl;
 	return xh;
@@ -1156,7 +1156,7 @@ void __pascal far check_grab() {
 #ifdef USE_SUPER_HIGH_JUMP
 // delta_x makes grabbing easier
 #define SUPER_HIGH_JUMP_DELTA_X (Char.direction == dir_FF_left ? 3 : 5)
-        Char.x = char_dx_forward(-8 + (fixes->enable_super_high_jump && super_jump_fall ? SUPER_HIGH_JUMP_DELTA_X : 0));
+		Char.x = char_dx_forward(-8 + (fixes->enable_super_high_jump && super_jump_fall ? SUPER_HIGH_JUMP_DELTA_X : 0));
 #else
 		Char.x = char_dx_forward(-8);
 #endif

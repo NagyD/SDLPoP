@@ -82,7 +82,8 @@ typedef struct replay_info_type {
 
 #define REPLAY_HEADER_ERROR_MESSAGE_MAX 512
 
-#define fread_check(dst, size, elements, fp)	do {		\
+#define fread_check(dst, size, elements, fp)	\
+	do {		\
 		size_t __count;					\
 		__count = fread(dst, size, elements, fp);	\
 		if (__count != (elements)) {			\
@@ -90,8 +91,8 @@ typedef struct replay_info_type {
 				snprintf_check(error_message, REPLAY_HEADER_ERROR_MESSAGE_MAX,\
 					       #dst " missing -- not a valid replay file!");\
 			}					\
-                return 0; /* incompatible file */		\
-                }						\
+			return 0; /* incompatible file */		\
+		}						\
 	} while (0)
 
 int read_replay_header(replay_header_type* header, FILE* fp, char* error_message) {
@@ -800,7 +801,7 @@ int save_recorded_replay_dialog() {
 
 	// NOTE: We currently overwrite the replay file if it exists already. Maybe warn / ask for confirmation??
 
- return save_recorded_replay(full_filename);
+	return save_recorded_replay(full_filename);
 }
 
 int save_recorded_replay(const char* full_filename)

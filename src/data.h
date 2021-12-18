@@ -753,14 +753,14 @@ extern custom_options_type custom_defaults INIT(= {
 		.saving_allowed_last_level = 13,
 		.start_upside_down = 0,
 		.start_in_blind_mode = 0,
-        // data:009E
-        .copyprot_level = 2,
+		// data:009E
+		.copyprot_level = 2,
 		.drawn_tile_top_level_edge = tiles_1_floor,
 		.drawn_tile_left_level_edge = tiles_20_wall,
 		.level_edge_hit_tile = tiles_20_wall,
 		.allow_triggering_any_tile = 0,
 		.enable_wda_in_palace = 0,
-        .vga_palette = VGA_PALETTE_DEFAULT,
+		.vga_palette = VGA_PALETTE_DEFAULT,
 		.first_level = 1,
 		.skip_title = 0,
 		.shift_L_allowed_until_level = 4,
@@ -820,9 +820,9 @@ extern custom_options_type custom_defaults INIT(= {
 		// data:02B2
 		.tbl_level_type = {0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 0},
 		// 1.3
-        .tbl_level_color = {0, 0, 0, 1, 0, 0, 0, 1, 2, 2, 0, 0, 3, 3, 4, 0},
+		.tbl_level_color = {0, 0, 0, 1, 0, 0, 0, 1, 2, 2, 0, 0, 3, 3, 4, 0},
 		// data:03D4
-        .tbl_guard_type = {0, 0, 0, 2, 0, 0, 1, 0, 0, 0, 0, 0, 4, 3, -1, -1},
+		.tbl_guard_type = {0, 0, 0, 2, 0, 0, 1, 0, 0, 0, 0, 0, 4, 3, -1, -1},
 		// data:0EDA
 		.tbl_guard_hp = {4, 3, 3, 3, 3, 4, 5, 4, 4, 5, 5, 5, 4, 6, 0, 0},
 		.tbl_cutscenes_by_index = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15},

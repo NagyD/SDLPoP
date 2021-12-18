@@ -713,31 +713,31 @@ void __pascal far jump_up() {
 	} else {
 		delta_x = 0;
 	}
-    int char_col = get_tile_div_mod(back_delta_x(delta_x) + dx_weight() - 6);
-    get_tile(Char.room, char_col, Char.curr_row - 1);
-    if (curr_tile2 != tiles_20_wall && !tile_is_floor(curr_tile2)) {
-        if (fixes->enable_super_high_jump && is_feather_fall) { // super high jump can only happen in feather mode
-            if (curr_room == 0 && Char.curr_row == 0) { // there is no room above
-                seqtbl_offset_char(seq_14_jump_up_into_ceiling);
-            } else {
-                get_tile(Char.room, char_col, Char.curr_row - 2); // the target top tile
-                bool is_top_floor = tile_is_floor(curr_tile2) || curr_tile2 == tiles_20_wall;
-                if (is_top_floor && curr_tile2 == tiles_11_loose && (curr_room_tiles[curr_tilepos] & 0x20) == 0) {
-                    is_top_floor = false; // a regular loose floor above should not be treated as a floor
-                }
-                // kid should jump slightly higher if the top tile is not a floor
-                super_jump_timer = is_top_floor ? 22 : 24;
-                super_jump_room = curr_room;
-                super_jump_col = tile_col;
-                super_jump_row = tile_row;
-                seqtbl_offset_char(seq_48_super_high_jump); // jump up 2 rows with nothing above
-            }
-        } else {
-            seqtbl_offset_char(seq_28_jump_up_with_nothing_above); // jump up with nothing above
-        }
-    } else {
-        seqtbl_offset_char(seq_14_jump_up_into_ceiling); // jump up with wall or floor above
-    }
+	int char_col = get_tile_div_mod(back_delta_x(delta_x) + dx_weight() - 6);
+	get_tile(Char.room, char_col, Char.curr_row - 1);
+	if (curr_tile2 != tiles_20_wall && !tile_is_floor(curr_tile2)) {
+		if (fixes->enable_super_high_jump && is_feather_fall) { // super high jump can only happen in feather mode
+			if (curr_room == 0 && Char.curr_row == 0) { // there is no room above
+				seqtbl_offset_char(seq_14_jump_up_into_ceiling);
+			} else {
+				get_tile(Char.room, char_col, Char.curr_row - 2); // the target top tile
+				bool is_top_floor = tile_is_floor(curr_tile2) || curr_tile2 == tiles_20_wall;
+				if (is_top_floor && curr_tile2 == tiles_11_loose && (curr_room_tiles[curr_tilepos] & 0x20) == 0) {
+					is_top_floor = false; // a regular loose floor above should not be treated as a floor
+				}
+				// kid should jump slightly higher if the top tile is not a floor
+				super_jump_timer = is_top_floor ? 22 : 24;
+				super_jump_room = curr_room;
+				super_jump_col = tile_col;
+				super_jump_row = tile_row;
+				seqtbl_offset_char(seq_48_super_high_jump); // jump up 2 rows with nothing above
+			}
+		} else {
+			seqtbl_offset_char(seq_28_jump_up_with_nothing_above); // jump up with nothing above
+		}
+	} else {
+		seqtbl_offset_char(seq_14_jump_up_into_ceiling); // jump up with wall or floor above
+	}
 	#else
 	get_tile(Char.room, get_tile_div_mod(back_delta_x(0) + dx_weight() - 6), Char.curr_row - 1);
 	if (curr_tile2 != tiles_20_wall && ! tile_is_floor(curr_tile2)) {
