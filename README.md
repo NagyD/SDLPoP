@@ -44,6 +44,23 @@ Contributors:
 * zaps166 (small Makefile fixes)
 * usineur (faster music loading)
 * yaqxsw (icon)
+* SergioMartin86
+* dstarosta
+* Ryzee119
+* berikv
+* xyproto
+* BarrOff
+* icculus
+* thrimbor
+* vanfanel
+* asppsa
+* akien-mga
+* mbeijen
+* alebcay
+* ckorn
+* Rondom
+* yuv422
+* dive
 
 Usernames on the list above refer to either GitHub users or users from `forum.princed.org`.
 
