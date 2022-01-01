@@ -377,8 +377,7 @@ While recording, make a quicksave to mark your place, and press quickload to ret
 
 #### Dev-C++
 
-* I originally used Dev-C++ version 4.9.9.2 from here: https://sourceforge.net/projects/dev-cpp/files/Binaries/
-* More recently, I'm using this version: https://sourceforge.net/projects/orwelldevcpp/
+* Use this version of Dev-C++: https://sourceforge.net/projects/orwelldevcpp/
 
 You need the MinGW Development Libraries of SDL2:
 
