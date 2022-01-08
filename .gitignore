@@ -4,6 +4,7 @@ PRINCE.HOF
 # PoP saved game file
 PRINCE.SAV
 QUICKSAVE.SAV
+QUICKSAVE*.SAV
 
 # PoP recorded gameplay (replay)
 *.P1R

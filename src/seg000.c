@@ -2453,7 +2453,9 @@ const rect_type splash_text_2_rect = {50, 0, 200, 320};
 const char* splash_text_1 = "SDLPoP " SDLPOP_VERSION;
 const char* splash_text_2 =
 #ifdef USE_QUICKSAVE
-		"To quick save/load, press F6/F9 in-game.\n"
+		"You can use 5 quicksave slots.\n"
+		"To quicksave, press F1, F2, F3, F4, or F5 in-game.\n"
+		"To quickload, press F6, F7, F8, F9, or F10 in-game.\n"
 		"\n"
 #endif
 #ifdef USE_REPLAY

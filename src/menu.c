@@ -387,7 +387,7 @@ setting_type gameplay_settings[] = {
 #ifdef USE_QUICKSAVE
 		{.id = SETTING_ENABLE_QUICKSAVE, .style = SETTING_STYLE_TOGGLE, .linked = &enable_quicksave,
 				.text = "Enable quicksave",
-				.explanation = "Enable quicksave/load feature.\nPress F6 to quicksave, F9 to quickload."},
+				.explanation = "Enable quicksave/load feature.\nPress F1..F5 to quicksave, F6..F10 to quickload."},
 		{.id = SETTING_ENABLE_QUICKSAVE_PENALTY, .style = SETTING_STYLE_TOGGLE, .linked = &enable_quicksave_penalty,
 				.text = "Quicksave time penalty",
 				.explanation = "Try to let time run out when quickloading (similar to dying).\n"
@@ -2087,6 +2087,7 @@ int key_test_paused_menu(int key) {
 		case SDL_SCANCODE_BACKSPACE:
 			menu_control_back = 1;
 			break;
+		/* TODO: support multiple slots as in seg000.c?
 		case SDL_SCANCODE_F6:
 		case SDL_SCANCODE_F6 | WITH_SHIFT:
 			if (Kid.alive < 0) need_quick_save = 1;
@@ -2097,6 +2098,7 @@ int key_test_paused_menu(int key) {
 			need_quick_load = 1;
 			need_close_menu = true;
 			break;
+		*/
 	}
 	return 0;
 }
