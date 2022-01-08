@@ -28,7 +28,7 @@ dat_type * dathandle;
 // data:4C08
 word need_redraw_because_flipped;
 
-void fix_sound_priorities(void);
+void fix_sound_priorities();
 
 // seg000:0000
 void far pop_main() {
@@ -117,7 +117,7 @@ void far pop_main() {
 #endif
 
 	// I moved this after init_copyprot_dialog(), so open_dat() can show an error dialog if needed.
-	dathandle = open_dat("PRINCE.DAT", 'G');
+	dathandle = open_dat("PRINCE.DAT", 0);
 
 	if (cheats_enabled
 		#ifdef USE_REPLAY
@@ -352,32 +352,70 @@ int quick_process(process_func_type process_func) {
 	process(torch_colors);
 #endif
 #ifdef USE_SUPER_HIGH_JUMP
-	process(super_jump_fall);
-	process(super_jump_timer);
-	process(super_jump_room);
-	process(super_jump_col);
-	process(super_jump_row);
+    process(super_jump_fall);
+    process(super_jump_timer);
+    process(super_jump_room);
+    process(super_jump_col);
+    process(super_jump_row);
 #endif
-	process(is_guard_notice);
-	process(can_guard_see_kid);
 #undef process
 	return ok;
 }
 
-const char* quick_file = "QUICKSAVE.SAV";
+const char* quick_file = "QUICKSAVE_F1.SAV";
+const char* quick_file2 = "QUICKSAVE_F2.SAV";
+const char* quick_file3 = "QUICKSAVE_F3.SAV";
+const char* quick_file4 = "QUICKSAVE_F4.SAV";
+const char* quick_file5 = "QUICKSAVE_F5.SAV";
 const char quick_version[] = "V1.16b4 ";
 char quick_control[] = "........";
 
 const char* get_quick_path(char* custom_path_buffer, size_t max_len) {
 	if (!use_custom_levelset) {
-		return quick_file;
+		switch (slot_key)
+		{
+		case 2:
+			return quick_file2;
+			break;
+		case 3:
+			return quick_file3;
+			break;
+		case 4:
+			return quick_file4;
+			break;
+		case 5:
+			return quick_file5;
+			break;
+
+		default:
+			return quick_file;
+			break;
+		}
 	}
 	// if playing a custom levelset, try to use the mod folder
-	snprintf_check(custom_path_buffer, max_len, "%s/%s", mod_data_path, quick_file /*QUICKSAVE.SAV*/ );
+	switch (slot_key)
+		{
+		case 2:
+			snprintf_check(custom_path_buffer, max_len, "%s/%s", mod_data_path, quick_file2 /*QUICKSAVE_F2.SAV*/ );
+			break;
+		case 3:
+			snprintf_check(custom_path_buffer, max_len, "%s/%s", mod_data_path, quick_file3 /*QUICKSAVE_F3.SAV*/ );
+			break;
+		case 4:
+			snprintf_check(custom_path_buffer, max_len, "%s/%s", mod_data_path, quick_file4 /*QUICKSAVE_F4.SAV*/ );
+			break;
+		case 5:
+			snprintf_check(custom_path_buffer, max_len, "%s/%s", mod_data_path, quick_file5 /*QUICKSAVE_F5.SAV*/ );
+			break;
+		
+		default:
+			snprintf_check(custom_path_buffer, max_len, "%s/%s", mod_data_path, quick_file /*QUICKSAVE.SAV*/ );
+			break;
+		}
 	return custom_path_buffer;
 }
 
-int quick_save(void) {
+int quick_save() {
 	int ok = 0;
 	char custom_quick_path[POP_MAX_PATH];
 	const char* path = get_quick_path(custom_quick_path, sizeof(custom_quick_path));
@@ -412,7 +450,7 @@ void restore_room_after_quick_load() {
 	load_room_links();
 	//draw_level_first();
 	//gen_palace_wall_colors();
-	//is_guard_notice = 0; // prevent guard turning around immediately
+	is_guard_notice = 0; // prevent guard turning around immediately
 	draw_game_frame(); // for falling
 	//redraw_screen(1); // for room_L
 
@@ -432,7 +470,7 @@ void restore_room_after_quick_load() {
 	exit_room_timer = 0;
 }
 
-int quick_load(void) {
+int quick_load() {
 	int ok = 0;
 	char custom_quick_path[POP_MAX_PATH];
 	const char* path = get_quick_path(custom_quick_path, sizeof(custom_quick_path));
@@ -490,7 +528,25 @@ void check_quick_op() {
 	if (!enable_quicksave) return;
 	if (need_quick_save) {
 		if ((!is_feather_fall || fixes->fix_quicksave_during_feather) && quick_save()) {
-			display_text_bottom("QUICKSAVE");
+			switch (slot_key)
+			{
+			case 2:
+				display_text_bottom("QUICKSAVE F2");
+				break;
+			case 3:
+				display_text_bottom("QUICKSAVE F3");
+				break;
+			case 4:
+				display_text_bottom("QUICKSAVE F4");
+				break;
+			case 5:
+				display_text_bottom("QUICKSAVE F5");
+				break;
+			
+			default:
+			display_text_bottom("QUICKSAVE F1");
+				break;
+			}
 		} else {
 			display_text_bottom("NO QUICKSAVE");
 		}
@@ -507,7 +563,25 @@ void check_quick_op() {
 #endif
 */
 		if (quick_load()) {
-			display_text_bottom("QUICKLOAD");
+			switch (slot_key)
+			{
+			case 2:
+				display_text_bottom("QUICKLOAD F2");
+				break;
+			case 3:
+				display_text_bottom("QUICKLOAD F3");
+				break;
+			case 4:
+				display_text_bottom("QUICKLOAD F4");
+				break;
+			case 5:
+				display_text_bottom("QUICKLOAD F5");
+				break;
+			
+			default:
+			display_text_bottom("QUICKLOAD F1");
+				break;
+			}
 		} else {
 			display_text_bottom("NO QUICKLOAD");
 		}
@@ -702,12 +776,64 @@ int __pascal far process_key() {
 			}
 		break;
 #ifdef USE_QUICKSAVE
+		case SDL_SCANCODE_F1:
+		case SDL_SCANCODE_F1 | WITH_SHIFT:
+			if (Kid.alive < 0) {
+				slot_key = 1;
+				need_quick_save = 1;
+			}
+		break;
+		case SDL_SCANCODE_F2:
+		case SDL_SCANCODE_F2 | WITH_SHIFT:
+			if (Kid.alive < 0) {
+				slot_key = 2;
+				need_quick_save = 1;
+			}
+		break;
+		case SDL_SCANCODE_F3:
+		case SDL_SCANCODE_F3 | WITH_SHIFT:
+			if (Kid.alive < 0) {
+				slot_key = 3;
+				need_quick_save = 1;
+			}
+		break;
+		case SDL_SCANCODE_F4:
+		case SDL_SCANCODE_F4 | WITH_SHIFT:
+			if (Kid.alive < 0) {
+				slot_key = 4;
+				need_quick_save = 1;
+			}
+		break;
+		case SDL_SCANCODE_F5:
+		case SDL_SCANCODE_F5 | WITH_SHIFT:
+			if (Kid.alive < 0) {
+				slot_key = 5;
+				need_quick_save = 1;
+			}
+		break;
 		case SDL_SCANCODE_F6:
 		case SDL_SCANCODE_F6 | WITH_SHIFT:
-			if (Kid.alive < 0) need_quick_save = 1;
+			slot_key = 1;
+			need_quick_load = 1;
+		break;
+		case SDL_SCANCODE_F7:
+		case SDL_SCANCODE_F7 | WITH_SHIFT:
+			slot_key = 2;
+			need_quick_load = 1;
+		break;
+		case SDL_SCANCODE_F8:
+		case SDL_SCANCODE_F8 | WITH_SHIFT:
+			slot_key = 3;
+			need_quick_load = 1;
 		break;
 		case SDL_SCANCODE_F9:
 		case SDL_SCANCODE_F9 | WITH_SHIFT:
+			slot_key = 4;
+			need_quick_load = 1;
+		break;
+		case SDL_SCANCODE_F10:
+		case SDL_SCANCODE_F10 | WITH_SHIFT:
+			slot_key = 5;
 			need_quick_load = 1;
 		break;
 #ifdef USE_REPLAY
@@ -1103,7 +1229,7 @@ void __pascal far load_lev_spr(int level) {
 	guardtype = custom->tbl_guard_type[current_level];
 	if (guardtype != -1) {
 		if (guardtype == 0) {
-			dathandle = open_dat(custom->tbl_level_type[current_level] ? "GUARD1.DAT" : "GUARD2.DAT", 'G');
+			dathandle = open_dat(custom->tbl_level_type[current_level] ? "GUARD1.DAT" : "GUARD2.DAT", 0);
 		}
 		load_chtab_from_file(id_chtab_5_guard, 750, tbl_guard_dat[guardtype], 1<<8);
 		if (dathandle) {
@@ -1154,7 +1280,6 @@ void __pascal far load_level() {
 void reset_level_unused_fields(bool loading_clean_level) {
 	// Entirely unused fields in the level format: reset to zero for now
 	// They can be repurposed to add new stuff to the level format in the future
-	// WIP: https://www.popot.org/documentation/documents/multiplayer.txt
 	memset(level.roomxs, 0, sizeof(level.roomxs));
 	memset(level.roomys, 0, sizeof(level.roomys));
 	memset(level.fill_1, 0, sizeof(level.fill_1));
@@ -1634,7 +1759,7 @@ void __pascal far load_chtab_from_file(int chtab_id,int resource,const char near
 	//printf("Loading chtab %d, id %d from %s\n",chtab_id,resource,filename);
 	dat_type* dathandle;
 	if (chtab_addrs[chtab_id] != NULL) return;
-	dathandle = open_dat(filename, 'G');
+	dathandle = open_dat(filename, 0);
 	chtab_addrs[chtab_id] = load_sprites_from_file(resource, palette_bits, 1);
 	close_dat(dathandle);
 }
@@ -1672,7 +1797,7 @@ void __pascal far load_more_opt_graf(const char *filename) {
 	for (graf_index = 0; graf_index < 8; ++graf_index) {
 		/*if (...) */ {
 			if (dathandle == NULL) {
-				dathandle = open_dat(filename, 'G');
+				dathandle = open_dat(filename, 0);
 				load_from_opendats_to_area(200, &area, sizeof(area), "pal");
 				area.palette.row_bits = 0x20;
 			}
@@ -2177,19 +2302,15 @@ void free_all_sounds() {
 }
 
 void load_all_sounds() {
-	if (!use_custom_levelset || always_use_original_music) {
+	if (!use_custom_levelset) {
 		load_sounds(0, 43);
 		load_opt_sounds(43, 56); //added
 	} else {
-		// Put it here instead to use data/ for all music and sounds, not just for those in data/music/.
-		//if (!always_use_original_music)
-		{
-			// First load any sounds included in the mod folder...
-			skip_normal_data_files = true;
-			load_sounds(0, 43);
-			load_opt_sounds(43, 56);
-			skip_normal_data_files = false;
-		}
+		// First load any sounds included in the mod folder...
+		skip_normal_data_files = true;
+		load_sounds(0, 43);
+		load_opt_sounds(43, 56);
+		skip_normal_data_files = false;
 		// ... then load any missing sounds from SDLPoP's own resources.
 		skip_mod_data_files = true;
 		load_sounds(0, 43);
@@ -2207,7 +2328,7 @@ void __pascal far free_optsnd_chtab() {
 // seg000:22C8
 void __pascal far load_title_images(int bgcolor) {
 	dat_type* dathandle;
-	dathandle = open_dat("TITLE.DAT", 'G');
+	dathandle = open_dat("TITLE.DAT", 0);
 	chtab_title40 = load_sprites_from_file(40, 1<<11, 1);
 	chtab_title50 = load_sprites_from_file(50, 1<<12, 1);
 	close_dat(dathandle);
