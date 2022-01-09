@@ -533,20 +533,20 @@ void check_quick_op() {
 			switch (slot_key)
 			{
 			case 2:
-				display_text_bottom("QUICKSAVE F2");
+				display_text_bottom("SAVED TO SLOT 2");
 				break;
 			case 3:
-				display_text_bottom("QUICKSAVE F3");
+				display_text_bottom("SAVED TO SLOT 3");
 				break;
 			case 4:
-				display_text_bottom("QUICKSAVE F4");
+				display_text_bottom("SAVED TO SLOT 4");
 				break;
 			case 5:
-				display_text_bottom("QUICKSAVE F5");
+				display_text_bottom("SAVED TO SLOT 5");
 				break;
 			
 			default:
-			display_text_bottom("QUICKSAVE F1");
+			display_text_bottom("SAVED TO SLOT 1");
 				break;
 			}
 		} else {
@@ -568,20 +568,20 @@ void check_quick_op() {
 			switch (slot_key)
 			{
 			case 2:
-				display_text_bottom("QUICKLOAD F2");
+				display_text_bottom("LOADED FROM SLOT 2");
 				break;
 			case 3:
-				display_text_bottom("QUICKLOAD F3");
+				display_text_bottom("LOADED FROM SLOT 3");
 				break;
 			case 4:
-				display_text_bottom("QUICKLOAD F4");
+				display_text_bottom("LOADED FROM SLOT 4");
 				break;
 			case 5:
-				display_text_bottom("QUICKLOAD F5");
+				display_text_bottom("LOADED FROM SLOT 5");
 				break;
 			
 			default:
-			display_text_bottom("QUICKLOAD F1");
+			display_text_bottom("LOADED FROM SLOT 1");
 				break;
 			}
 		} else {
@@ -813,28 +813,28 @@ int __pascal far process_key() {
 				need_quick_save = 1;
 			}
 		break;
-		case SDL_SCANCODE_F6:
-		case SDL_SCANCODE_F6 | WITH_SHIFT:
+		// case SDL_SCANCODE_F6:
+		case SDL_SCANCODE_F1 | WITH_CTRL:
 			slot_key = 1;
 			need_quick_load = 1;
 		break;
-		case SDL_SCANCODE_F7:
-		case SDL_SCANCODE_F7 | WITH_SHIFT:
+		// case SDL_SCANCODE_F7:
+		case SDL_SCANCODE_F2 | WITH_CTRL:
 			slot_key = 2;
 			need_quick_load = 1;
 		break;
-		case SDL_SCANCODE_F8:
-		case SDL_SCANCODE_F8 | WITH_SHIFT:
+		// case SDL_SCANCODE_F8:
+		case SDL_SCANCODE_F3 | WITH_CTRL:
 			slot_key = 3;
 			need_quick_load = 1;
 		break;
-		case SDL_SCANCODE_F9:
-		case SDL_SCANCODE_F9 | WITH_SHIFT:
+		// case SDL_SCANCODE_F9:
+		case SDL_SCANCODE_F4 | WITH_CTRL:
 			slot_key = 4;
 			need_quick_load = 1;
 		break;
-		case SDL_SCANCODE_F10:
-		case SDL_SCANCODE_F10 | WITH_SHIFT:
+		// case SDL_SCANCODE_F5:
+		case SDL_SCANCODE_F5 | WITH_CTRL:
 			slot_key = 5;
 			need_quick_load = 1;
 		break;
@@ -2455,7 +2455,7 @@ const char* splash_text_2 =
 #ifdef USE_QUICKSAVE
 		"You can use 5 quicksave slots.\n"
 		"To quicksave, press F1, F2, F3, F4, or F5 in-game.\n"
-		"To quickload, press F6, F7, F8, F9, or F10 in-game.\n"
+		"To quickload, Ctrl with quicksave slot button in-game.\n"
 		"\n"
 #endif
 #ifdef USE_REPLAY
