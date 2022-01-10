@@ -84,8 +84,8 @@ pause_menu_item_type pause_menu_items[] = {
 		// TODO: Add a cheats menu, where you can choose a cheat from a list?
 		/*{.id = PAUSE_MENU_CHEATS,        .text = "CHEATS", .required = &cheats_enabled},*/
 #ifdef USE_QUICKSAVE // TODO: If quicksave is disabled, show regular save/load instead?
-		{.id = PAUSE_MENU_SAVE_GAME,     .text = "SAVE TO SLOT 1"},
-		{.id = PAUSE_MENU_LOAD_GAME,     .text = "LOAD FROM SLOT 1"},
+		{.id = PAUSE_MENU_SAVE_GAME,     .text = "QUICKSAVE"},
+		{.id = PAUSE_MENU_LOAD_GAME,     .text = "QUICKLOAD"},
 #endif
 		{.id = PAUSE_MENU_RESTART_LEVEL, .text = "RESTART LEVEL"},
 		{.id = PAUSE_MENU_SETTINGS,      .text = "SETTINGS"},
@@ -387,7 +387,7 @@ setting_type gameplay_settings[] = {
 #ifdef USE_QUICKSAVE
 		{.id = SETTING_ENABLE_QUICKSAVE, .style = SETTING_STYLE_TOGGLE, .linked = &enable_quicksave,
 				.text = "Enable quicksave",
-				.explanation = "Enable quicksave/load feature.\nPress F1..F5 to quicksave, press F1..F5 with Ctrl to quickload."},
+				.explanation = "Enable quicksave/load feature.\nPress 1 to 5 to select slot. Press F6/F9 to Save/Load from selected slot."},
 		{.id = SETTING_ENABLE_QUICKSAVE_PENALTY, .style = SETTING_STYLE_TOGGLE, .linked = &enable_quicksave_penalty,
 				.text = "Quicksave time penalty",
 				.explanation = "Try to let time run out when quickloading (similar to dying).\n"
@@ -1131,14 +1131,12 @@ void pause_menu_clicked(pause_menu_item_type* item) {
 		case PAUSE_MENU_SAVE_GAME:
 			// TODO: Manual save games?
 			if (Kid.alive < 0) {
-				slot_key = 1;
 				need_quick_save = 1;
 			}
 			need_close_menu = true;
 			break;
 		case PAUSE_MENU_LOAD_GAME:
 			// TODO: Manual save games?
-			slot_key = 1;
 			need_quick_load = 1;
 			need_close_menu = true;
 			stop_sounds();
