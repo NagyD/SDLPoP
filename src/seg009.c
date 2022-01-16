@@ -2983,6 +2983,7 @@ void process_events() {
 						key_states[scancode] = 1;
 					}
 				} else {
+					last_any_key_scancode = scancode; // for showmessage_any_key
 					key_states[scancode] = 1;
 					switch (scancode) {
 						// Keys that are ignored by themselves:

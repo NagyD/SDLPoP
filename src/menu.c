@@ -76,6 +76,7 @@ enum pause_menu_item_ids {
 	SETTINGS_MENU_MODS,
 	SETTINGS_MENU_LEVEL_CUSTOMIZATION,
 	SETTINGS_MENU_BACK,
+	SETTINGS_MENU_CONTROLS,
 };
 
 pause_menu_item_type pause_menu_items[] = {
@@ -111,6 +112,7 @@ pause_menu_item_type settings_menu_items[] = {
 		{.id = SETTINGS_MENU_GAMEPLAY, .text = "GAMEPLAY"},
 		{.id = SETTINGS_MENU_VISUALS, .text = "VISUALS"},
 		{.id = SETTINGS_MENU_MODS, .text = "MODS"},
+		{.id = SETTINGS_MENU_CONTROLS, .text = "CONTROLS"},
 		{.id = SETTINGS_MENU_BACK, .text = "BACK"},
 };
 int active_settings_subsection = 0;
@@ -125,6 +127,7 @@ enum menu_setting_style_ids {
 	SETTING_STYLE_TOGGLE,
 	SETTING_STYLE_NUMBER,
 	SETTING_STYLE_TEXT_ONLY,
+	SETTING_STYLE_KEY,
 };
 
 enum menu_setting_number_type_ids {
@@ -270,6 +273,13 @@ enum setting_ids {
 	SETTING_CUTSCENE,
 	SETTING_ENTRY_POSE,
 	SETTING_SEAMLESS_EXIT,
+	SETTING_KEY_LEFT,
+	SETTING_KEY_RIGHT,
+	SETTING_KEY_UP,
+	SETTING_KEY_DOWN,
+	SETTING_KEY_JUMP_LEFT,
+	SETTING_KEY_JUMP_RIGHT,
+	SETTING_KEY_ACTION,
 };
 
 typedef struct setting_type {
@@ -884,6 +894,37 @@ setting_type level_settings[] = {
 						"Set to -1 to disable."},
 };
 
+setting_type controls_settings[] = {
+		{.id = SETTING_KEY_LEFT, .style = SETTING_STYLE_KEY, .required = NULL,
+				.linked = &key_left, .number_type = SETTING_INT,
+				.text = "Left",
+				.explanation = ""},
+		{.id = SETTING_KEY_RIGHT, .style = SETTING_STYLE_KEY, .required = NULL,
+				.linked = &key_right, .number_type = SETTING_INT,
+				.text = "Right",
+				.explanation = ""},
+		{.id = SETTING_KEY_UP, .style = SETTING_STYLE_KEY, .required = NULL,
+				.linked = &key_up, .number_type = SETTING_INT,
+				.text = "Up",
+				.explanation = ""},
+		{.id = SETTING_KEY_DOWN, .style = SETTING_STYLE_KEY, .required = NULL,
+				.linked = &key_down, .number_type = SETTING_INT,
+				.text = "Down",
+				.explanation = ""},
+		{.id = SETTING_KEY_JUMP_LEFT, .style = SETTING_STYLE_KEY, .required = NULL,
+				.linked = &key_jump_left, .number_type = SETTING_INT,
+				.text = "Jump left",
+				.explanation = ""},
+		{.id = SETTING_KEY_JUMP_RIGHT, .style = SETTING_STYLE_KEY, .required = NULL,
+				.linked = &key_jump_right, .number_type = SETTING_INT,
+				.text = "Jump right",
+				.explanation = ""},
+		{.id = SETTING_KEY_ACTION, .style = SETTING_STYLE_KEY, .required = NULL,
+				.linked = &key_action, .number_type = SETTING_INT,
+				.text = "Action",
+				.explanation = ""},
+};
+
 typedef struct settings_area_type {
 	setting_type* settings;
 	int setting_count;
@@ -894,6 +935,7 @@ settings_area_type gameplay_settings_area = { .settings = gameplay_settings, .se
 settings_area_type visuals_settings_area = { .settings = visuals_settings, .setting_count = COUNT(visuals_settings)};
 settings_area_type mods_settings_area = { .settings = mods_settings, .setting_count = COUNT(mods_settings)};
 settings_area_type level_settings_area = { .settings = level_settings, .setting_count = COUNT(level_settings)};
+settings_area_type controls_settings_area = { .settings = controls_settings, .setting_count = COUNT(controls_settings)};
 
 settings_area_type* get_settings_area(int menu_item_id) {
 	switch(menu_item_id) {
@@ -909,6 +951,8 @@ settings_area_type* get_settings_area(int menu_item_id) {
 			return &mods_settings_area;
 		case SETTINGS_MENU_LEVEL_CUSTOMIZATION:
 			return &level_settings_area;
+		case SETTINGS_MENU_CONTROLS:
+			return &controls_settings_area;
 	}
 }
 
@@ -951,6 +995,7 @@ void init_menu() {
 	init_settings_list(gameplay_settings, COUNT(gameplay_settings));
 	init_settings_list(mods_settings, COUNT(mods_settings));
 	init_settings_list(level_settings, COUNT(level_settings));
+	init_settings_list(controls_settings, COUNT(controls_settings));
 }
 
 bool is_mouse_over_rect(rect_type* rect) {
@@ -1092,6 +1137,7 @@ void pause_menu_clicked(pause_menu_item_type* item) {
 		case SETTINGS_MENU_GAMEPLAY:
 		case SETTINGS_MENU_VISUALS:
 		case SETTINGS_MENU_MODS:
+		case SETTINGS_MENU_CONTROLS:
 			enter_settings_subsection(item->id);
 			break;
 		case SETTINGS_MENU_BACK:
@@ -1480,6 +1526,24 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 			int value_text_width = get_line_width(value_text, strlen(value_text));
 			draw_image_with_blending(arrowhead_right_image, text_rect.right + 2, text_rect.top);
 			draw_image_with_blending(arrowhead_left_image, text_rect.right - value_text_width - 6, text_rect.top);
+		}
+
+	} else if (setting->style == SETTING_STYLE_KEY && !disabled) {
+		int value = get_setting_value(setting);
+		if (highlighted_setting_id == setting->id) {
+			if (pressed_enter || (mouse_clicked && is_mouse_over_rect(&setting_box))) {
+				redefine_key(setting->text, setting->linked);
+			}
+		}
+
+		value = get_setting_value(setting); // May have been updated.
+		//char* value_text = print_setting_value(setting, value);
+		char value_text[256];
+		snprintf(value_text, sizeof(value_text), "%s (%d)", SDL_GetScancodeName(value), value);
+		show_text_with_color(&text_rect, 1, -1, value_text, selected_color);
+
+		if (highlighted_setting_id == setting->id) {
+			//
 		}
 
 	} else {

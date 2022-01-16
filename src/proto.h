@@ -78,6 +78,7 @@ void show_splash();
 void check_quick_op();
 void restore_room_after_quick_load();
 #endif // USE_QUICKSAVE
+void redefine_key(const char* name, int* key);
 
 // SEG001.C
 int __pascal far proc_cutscene_frame(int wait_frames);

@@ -615,6 +615,7 @@ extern word justblocked; // name from Apple II source
 extern word last_loose_sound;
 
 extern int last_key_scancode;
+extern int last_any_key_scancode; // for showmessage_any_key
 extern font_type hc_font INIT(= {0x01,0xFF, 7,2,1,1, NULL});
 extern textstate_type textstate INIT(= {0,0,0,15,&hc_font});
 extern int need_quick_save INIT(= 0);
@@ -778,6 +779,14 @@ extern sbyte is_menu_shown;
 extern byte enable_pause_menu INIT(= 1);
 extern char mods_folder[POP_MAX_PATH] INIT(= "mods");
 #endif
+
+extern int key_left       INIT(= SDL_SCANCODE_LEFT);
+extern int key_right      INIT(= SDL_SCANCODE_RIGHT);
+extern int key_up         INIT(= SDL_SCANCODE_UP);
+extern int key_down       INIT(= SDL_SCANCODE_DOWN);
+extern int key_jump_left  INIT(= SDL_SCANCODE_HOME);
+extern int key_jump_right INIT(= SDL_SCANCODE_PAGEUP);
+extern int key_action     INIT(= SDL_SCANCODE_RSHIFT);
 
 #undef INIT
 #undef extern
