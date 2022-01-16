@@ -1,0 +1,4 @@
+After the shadow falls into the wall, no black rectangle should appear on the wall.
+To pass the test: #define FIX_BLACK_RECT in config.h
+
+More info: https://github.com/NagyD/SDLPoP/issues/254

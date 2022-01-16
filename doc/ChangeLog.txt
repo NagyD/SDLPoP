@@ -667,5 +667,6 @@ DONE: Added gamecontroller hotplug support. SDLPoP now detects controllers plugg
 	Details: https://github.com/NagyD/SDLPoP/pull/256
 FIXED: Fixed black rectangle appearing when the shadow falls into the wall.
 	Details: See FIX_BLACK_RECT in config.h and https://github.com/NagyD/SDLPoP/issues/254
+	Testcase: doc/replays-testcases/Original level 5 shadow into wall.p1r
 DONE: Briefly show a dark screen when changing rooms, like in the original game.
 	See USE_DARK_TRANSITION in config.h .
