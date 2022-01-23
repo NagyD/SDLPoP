@@ -97,6 +97,9 @@ The authors of this program may be contacted at https://forum.princed.org
 // The elasped time is still kept track of, so that the shortest times will appear in the Hall of Fame.
 #define ALLOW_INFINITE_TIME
 
+// Experimental: Keep animating the guard after he fell offscreen.
+#define KEEP_FALLEN_GUARD
+
 
 // Bugfixes:
 

@@ -259,7 +259,19 @@ void __pascal far check_guard_fallout() {
 		Guard.direction = /*dir_0_right*/ custom->skeleton_reappear_dir;
 		Guard.alive = -1;
 		leave_guard();
-	} else {
+	}
+#ifdef KEEP_FALLEN_GUARD
+	else if (level.roomlinks[Guard.room - 1].down != 0) {
+		// Move one room below:
+		Guard.room = level.roomlinks[Guard.room - 1].down;
+		// Adjust coordinates to the room below:
+		Guard.y -= 189;
+		Guard.curr_row -= 3;
+		// Remove from current room:
+		level.guards_tile[drawn_room - 1] = -1;
+	}
+#endif
+	else {
 		on_guard_killed();
 		level.guards_tile[drawn_room - 1] = -1;
 		Guard.direction = dir_56_none;

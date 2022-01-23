@@ -1226,7 +1226,10 @@ void __pascal far play_guard_frame() {
 		load_fram_det_col();
 		check_killed_shadow();
 		play_guard();
-		if (Char.room == drawn_room) {
+#ifndef KEEP_FALLEN_GUARD
+		if (Char.room == drawn_room)
+#endif
+		{
 			play_seq();
 			if (Char.x >= 44 && Char.x < 211) {
 				fall_accel();
