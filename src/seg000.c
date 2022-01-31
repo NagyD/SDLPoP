@@ -344,6 +344,10 @@ int quick_process(process_func_type process_func) {
 	process(ctrl1_up);
 	process(ctrl1_down);
 	process(ctrl1_shift2);
+	// slot variables
+	process(slot_key);
+	process(slot_save_wait_timer);
+	process(slot_load_wait_timer);
 	// replay recording state
 #ifdef USE_REPLAY
 	process(curr_tick);
@@ -364,11 +368,11 @@ int quick_process(process_func_type process_func) {
 	return ok;
 }
 
-const char* quick_file = "QUICKSAVE_F1.SAV";
-const char* quick_file2 = "QUICKSAVE_F2.SAV";
-const char* quick_file3 = "QUICKSAVE_F3.SAV";
-const char* quick_file4 = "QUICKSAVE_F4.SAV";
-const char* quick_file5 = "QUICKSAVE_F5.SAV";
+const char* quick_file = "QUICKSAVE_1.SAV";
+const char* quick_file2 = "QUICKSAVE_2.SAV";
+const char* quick_file3 = "QUICKSAVE_3.SAV";
+const char* quick_file4 = "QUICKSAVE_4.SAV";
+const char* quick_file5 = "QUICKSAVE_5.SAV";
 const char quick_version[] = "V1.16b4 ";
 char quick_control[] = "........";
 
@@ -530,25 +534,7 @@ void check_quick_op() {
 	if (!enable_quicksave) return;
 	if (need_quick_save) {
 		if ((!is_feather_fall || fixes->fix_quicksave_during_feather) && quick_save()) {
-			switch (slot_key)
-			{
-			case 2:
-				display_text_bottom("SAVED TO SLOT 2");
-				break;
-			case 3:
-				display_text_bottom("SAVED TO SLOT 3");
-				break;
-			case 4:
-				display_text_bottom("SAVED TO SLOT 4");
-				break;
-			case 5:
-				display_text_bottom("SAVED TO SLOT 5");
-				break;
-			
-			default:
-			display_text_bottom("SAVED TO SLOT 1");
-				break;
-			}
+			/* User already gets notified game is saved before function gets called */
 		} else {
 			display_text_bottom("NO QUICKSAVE");
 		}
@@ -565,25 +551,7 @@ void check_quick_op() {
 #endif
 */
 		if (quick_load()) {
-			switch (slot_key)
-			{
-			case 2:
-				display_text_bottom("LOADED FROM SLOT 2");
-				break;
-			case 3:
-				display_text_bottom("LOADED FROM SLOT 3");
-				break;
-			case 4:
-				display_text_bottom("LOADED FROM SLOT 4");
-				break;
-			case 5:
-				display_text_bottom("LOADED FROM SLOT 5");
-				break;
-			
-			default:
-			display_text_bottom("LOADED FROM SLOT 1");
-				break;
-			}
+			/* User already gets notified game is loaded before function gets called */
 		} else {
 			display_text_bottom("NO QUICKLOAD");
 		}
@@ -781,50 +749,116 @@ int __pascal far process_key() {
 		case SDL_SCANCODE_1:
 		case SDL_SCANCODE_1 | WITH_SHIFT:
 			if (Kid.alive < 0) {
-				slot_key = 1;
-				text_time_remaining = 24;
-				display_text_bottom("SELECTED SLOT 1");
+				if (key_states[SDL_SCANCODE_F6] != key_states[SDL_KEYDOWN]) {
+					text_time_remaining = 24;
+					slot_key = 1;
+					slot_save_wait_timer = -1;
+					need_quick_save = 1;
+					display_text_bottom("SAVED TO SLOT 1");
+				}
+				else if (key_states[SDL_SCANCODE_F9] != key_states[SDL_KEYDOWN]) {
+					text_time_remaining = 24;
+					slot_key = 1;
+					slot_load_wait_timer = -1;
+					need_quick_load = 1;
+					display_text_bottom("LOADED FROM SLOT 1");
+				}
+				else { /* Code for independent num key presses goes here */ }
 			}
 		break;
 		case SDL_SCANCODE_2:
 		case SDL_SCANCODE_2 | WITH_SHIFT:
 			if (Kid.alive < 0) {
-				slot_key = 2;
-				text_time_remaining = 24;
-				display_text_bottom("SELECTED SLOT 2");
+				if (key_states[SDL_SCANCODE_F6] != key_states[SDL_KEYDOWN]) {
+					text_time_remaining = 24;
+					slot_key = 2;
+					slot_save_wait_timer = -1;
+					need_quick_save = 1;
+					display_text_bottom("SAVED TO SLOT 2");
+				}
+				else if (key_states[SDL_SCANCODE_F9] != key_states[SDL_KEYDOWN]) {
+					text_time_remaining = 24;
+					slot_key = 2;
+					need_quick_load = 1;
+					display_text_bottom("LOADED FROM SLOT 2");
+				}
+				else { /* Code for independent num key presses goes here */ }
 			}
 		break;
 		case SDL_SCANCODE_3:
 		case SDL_SCANCODE_3 | WITH_SHIFT:
 			if (Kid.alive < 0) {
-				slot_key = 3;
-				text_time_remaining = 24;
-				display_text_bottom("SELECTED SLOT 3");
+				if (key_states[SDL_SCANCODE_F6] != key_states[SDL_KEYDOWN]) {
+					text_time_remaining = 24;
+					slot_key = 3;
+					slot_save_wait_timer = -1;
+					need_quick_save = 1;
+					display_text_bottom("SAVED TO SLOT 3");
+				}
+				else if (key_states[SDL_SCANCODE_F9] != key_states[SDL_KEYDOWN]) {
+					text_time_remaining = 24;
+					slot_key = 3;
+					need_quick_load = 1;
+					display_text_bottom("LOADED FROM SLOT 3");
+				}
+				else { /* Code for independent num key presses goes here */ }
 			}
 		break;
 		case SDL_SCANCODE_4:
 		case SDL_SCANCODE_4 | WITH_SHIFT:
 			if (Kid.alive < 0) {
-				slot_key = 4;
-				text_time_remaining = 24;
-				display_text_bottom("SELECTED SLOT 4");
+				if (key_states[SDL_SCANCODE_F6] != key_states[SDL_KEYDOWN]) {
+					text_time_remaining = 24;
+					slot_key = 4;
+					slot_save_wait_timer = -1;
+					need_quick_save = 1;
+					display_text_bottom("SAVED TO SLOT 4");
+				}
+				else if (key_states[SDL_SCANCODE_F9] != key_states[SDL_KEYDOWN]) {
+					text_time_remaining = 24;
+					slot_key = 4;
+					need_quick_load = 1;
+					display_text_bottom("LOADED FROM SLOT 4");
+				}
+				else { /* Code for independent num key presses goes here */ }
 			}
 		break;
 		case SDL_SCANCODE_5:
 		case SDL_SCANCODE_5 | WITH_SHIFT:
 			if (Kid.alive < 0) {
-				slot_key = 5;
-				text_time_remaining = 24;
-				display_text_bottom("SELECTED SLOT 5");
+				if (key_states[SDL_SCANCODE_F6] != key_states[SDL_KEYDOWN]) {
+					text_time_remaining = 24;
+					slot_key = 5;
+					slot_save_wait_timer = -1;
+					need_quick_save = 1;
+					display_text_bottom("SAVED TO SLOT 5");
+				}
+				else if (key_states[SDL_SCANCODE_F9] != key_states[SDL_KEYDOWN]) {
+					text_time_remaining = 24;
+					slot_key = 5;
+					need_quick_load = 1;
+					display_text_bottom("LOADED FROM SLOT 5");
+				}
+				else { /* Code for independent num key presses goes here */ }
 			}
 		break;
 		case SDL_SCANCODE_F6:
 		case SDL_SCANCODE_F6 | WITH_SHIFT:
-			need_quick_save = 1;
+			if (slot_save_wait_timer < 0) {
+				/* Informs user for 2 seconds that latest slot will be used due to no keypress */
+				text_time_remaining = 24;
+				display_text_bottom("SAVING TO LATEST SLOT");
+				slot_save_wait_timer = 24; 
+			}
 		break;
 		case SDL_SCANCODE_F9:
 		case SDL_SCANCODE_F9 | WITH_SHIFT:
-			need_quick_load = 1;
+			if (slot_load_wait_timer < 0) {
+				/* Informs user for 2 seconds that latest slot will be used due to no keypress */
+				text_time_remaining = 24;
+				display_text_bottom("LOADING FROM LATEST SLOT");
+				slot_load_wait_timer = 24;
+			}
 		break;
 #ifdef USE_REPLAY
 		case SDL_SCANCODE_TAB | WITH_CTRL:
@@ -2442,8 +2476,7 @@ const char* splash_text_1 = "SDLPoP " SDLPOP_VERSION;
 const char* splash_text_2 =
 #ifdef USE_QUICKSAVE
 		"You can use 5 quicksave slots.\n"
-		"Press 1 to 5 to select slot.\n"
-		"Press F6/F9 to Save/Load from Selected slot.\n"
+		"Press F6/F9 with desired Num key to save/load in that slot."
 		"\n"
 #endif
 #ifdef USE_REPLAY

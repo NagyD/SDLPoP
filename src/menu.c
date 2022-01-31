@@ -1131,12 +1131,16 @@ void pause_menu_clicked(pause_menu_item_type* item) {
 		case PAUSE_MENU_SAVE_GAME:
 			// TODO: Manual save games?
 			if (Kid.alive < 0) {
+				text_time_remaining = 24;
+				display_text_bottom("SAVED TO LATEST SLOT.");
 				need_quick_save = 1;
 			}
 			need_close_menu = true;
 			break;
 		case PAUSE_MENU_LOAD_GAME:
 			// TODO: Manual save games?
+			text_time_remaining = 24;
+			display_text_bottom("LOADED FROM LATEST SLOT.");
 			need_quick_load = 1;
 			need_close_menu = true;
 			stop_sounds();

@@ -669,4 +669,4 @@ FIXED: Fixed black rectangle appearing when the shadow falls into the wall.
 	Details: See FIX_BLACK_RECT in config.h and https://github.com/NagyD/SDLPoP/issues/254
 DONE: Briefly show a dark screen when changing rooms, like in the original game.
 	See USE_DARK_TRANSITION in config.h .
-DONE: Multiple quicksave slots. Use F1..F5 to save to slot 1..5, F1..F5 with Ctrl to load from slot 1..5.
+DONE: Multiple quicksave slots.
