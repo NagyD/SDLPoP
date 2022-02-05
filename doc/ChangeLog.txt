@@ -670,3 +670,5 @@ FIXED: Fixed black rectangle appearing when the shadow falls into the wall.
 	Testcase: doc/replays-testcases/Original level 5 shadow into wall.p1r
 DONE: Briefly show a dark screen when changing rooms, like in the original game.
 	See USE_DARK_TRANSITION in config.h .
+DONE: Added support for reading mirror_column from the EXE if it's different from mirror_room.
+	(For Shauing's upcoming mod.)

@@ -668,13 +668,16 @@ void __pascal far autocontrol_mouse() {
 
 // seg002:081D
 void __pascal far autocontrol_shadow() {
-	if (current_level == 4) {
+	if (current_level == /*4*/ custom->mirror_level) {
 		autocontrol_shadow_level4();
-	} else if (current_level == 5) {
+	} /*else*/
+	if (current_level == 5 /*custom->???*/) {
 		autocontrol_shadow_level5();
-	} else if (current_level == 6) {
+	} /*else*/
+	if (current_level == 6 /*custom->???*/) {
 		autocontrol_shadow_level6();
-	} else if (current_level == 12) {
+	} /*else*/
+	if (current_level == 12 /*custom->???*/) {
 		autocontrol_shadow_level12();
 	}
 }
@@ -1132,7 +1135,7 @@ void __pascal far do_auto_moves(const auto_move_type *moves_ptr) {
 
 // seg002:1000
 void __pascal far autocontrol_shadow_level4() {
-	if (Char.room == 4) {
+	if (Char.room == /*4*/ custom->mirror_room) {
 		if (Char.x < 80) {
 			clear_char();
 		} else {

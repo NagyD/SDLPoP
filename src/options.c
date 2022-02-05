@@ -652,14 +652,24 @@ void load_dos_exe_modifications(const char* folder_name) {
 		process(&custom_saved.skeleton_reappear_dir, 1, {0x03b43, 0x051f3, -1, -1, -1, -1});
 		process(&custom_saved.mirror_level, 1, {0x08dc7, 0x0a477, 0x09274, 0x099b4, 0x08d30, 0x09e60});
 		process(&custom_saved.mirror_room, 1, {0x08dcb, 0x0a47b, 0x09278, 0x099b8, 0x08d34, 0x09e64});
-		if (read_ok) custom_saved.mirror_column = custom_saved.mirror_room;
+		if (read_ok) {
+			byte opcode;
+			process(&opcode, 1, {0x08dcb+2, 0x0a47b+2, 0x09278+2, 0x099b8+2, 0x08d34+2, 0x09e64+2});
+			if (opcode == 0x50) {
+				// 0xA47A: B8 XX 00 50 50 where XX is room *and* column!
+				custom_saved.mirror_column = custom_saved.mirror_room;
+			} else if (opcode == 0x6A) {
+				// 0xA47A: 68 RR 00 6A CC where RR is the room, CC is the column
+				process(&custom_saved.mirror_column, 1, {0x08dcb+3, 0x0a47b+3, 0x09278+3, 0x099b8+3, 0x08d34+3, 0x09e64+3});
+			}
+		}
 		process(&temp_word, 2, {0x08dcf, 0x0a47f, 0x0927c, 0x099bc, 0x08d38, 0x09e68}); // mirror row
 		if (read_ok) {
-			if (temp_word == 49195) {
+			if (temp_word == 0xC02B) { // 2B C0 = sub ax,ax
 				custom_saved.mirror_row = 0;
-			} else if (temp_word == 432) {
+			} else if (temp_word == 0x01B0) { // B0 01 = mov al,1
 				custom_saved.mirror_row = 1;
-			} else if (temp_word == 688) {
+			} else if (temp_word == 0x02B0) { // B0 02 = mov al,2
 				custom_saved.mirror_row = 2;
 			}
 		}
