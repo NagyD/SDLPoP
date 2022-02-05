@@ -672,3 +672,5 @@ DONE: Briefly show a dark screen when changing rooms, like in the original game.
 	See USE_DARK_TRANSITION in config.h .
 DONE: Added support for reading mirror_column from the EXE if it's different from mirror_room.
 	(For Shauing's upcoming mod.)
+DONE: Added support for changing where the shadow steals the potion and steps on the button.
+	(For Shauing's upcoming mod.)

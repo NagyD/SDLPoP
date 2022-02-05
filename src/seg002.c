@@ -78,10 +78,11 @@ void __pascal far check_shadow() {
 			do_init_shad(/*&*/custom->init_shad_12, 7 /*fall*/);
 			return;
 		}
-	} else if (current_level == 6) {
+	} /*else*/
+	if (current_level == /*6*/ custom->shadow_step_level) {
 		// Special event: level 6 shadow
 		Char.room = drawn_room;
-		if (Char.room == 1) {
+		if (Char.room == /*1*/ custom->shadow_step_room) {
 			if (leveldoor_open != 0x4D) {
 				play_sound(sound_25_presentation); // presentation (level 6 shadow)
 				leveldoor_open = 0x4D;
@@ -89,11 +90,12 @@ void __pascal far check_shadow() {
 			do_init_shad(/*&*/custom->init_shad_6, 2 /*stand*/);
 			return;
 		}
-	} else if (current_level == 5) {
+	} /*else*/
+	if (current_level == /*5*/ custom->shadow_steal_level) {
 		// Special event: level 5 shadow
 		Char.room = drawn_room;
-		if (Char.room == 24) {
-			if (get_tile(24, 3, 0) != tiles_10_potion) {
+		if (Char.room == /*24*/ custom->shadow_steal_room) {
+			if (get_tile(/*24*/ custom->shadow_steal_room, 3, 0) != tiles_10_potion) {
 				return;
 			}
 			do_init_shad(/*&*/custom->init_shad_5, 2 /*stand*/);
@@ -671,13 +673,13 @@ void __pascal far autocontrol_shadow() {
 	if (current_level == /*4*/ custom->mirror_level) {
 		autocontrol_shadow_level4();
 	} /*else*/
-	if (current_level == 5 /*custom->???*/) {
+	if (current_level == /*5*/ custom->shadow_steal_level) {
 		autocontrol_shadow_level5();
 	} /*else*/
-	if (current_level == 6 /*custom->???*/) {
+	if (current_level == /*6*/ custom->shadow_step_level) {
 		autocontrol_shadow_level6();
 	} /*else*/
-	if (current_level == 12 /*custom->???*/) {
+	if (current_level == 12) {
 		autocontrol_shadow_level12();
 	}
 }
@@ -1161,9 +1163,9 @@ const auto_move_type shad_drink_move[] = {
 
 // seg002:101A
 void __pascal far autocontrol_shadow_level5() {
-	if (Char.room == 24) {
+	if (Char.room == /*24*/ custom->shadow_steal_room) {
 		if (demo_time == 0) {
-			get_tile(24, 1, 0);
+			get_tile(/*24*/ custom->shadow_steal_room, 1, 0);
 			// is the door open?
 			if (curr_room_modif[curr_tilepos] < 80) return;
 			demo_index = 0;
@@ -1177,7 +1179,7 @@ void __pascal far autocontrol_shadow_level5() {
 
 // seg002:1064
 void __pascal far autocontrol_shadow_level6() {
-	if (Char.room == 1 &&
+	if (Char.room == /*1*/ custom->shadow_step_room &&
 		Kid.frame == frame_43_running_jump_4 && // a frame in run-jump
 		Kid.x < 128
 	) {

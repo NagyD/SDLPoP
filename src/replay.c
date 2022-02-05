@@ -445,6 +445,10 @@ void options_process_custom_general(SDL_RWops* rw, rw_process_func_type process_
 	process(custom->win_level);
 	process(custom->win_room);
 	process(custom->loose_floor_delay);
+	process(custom->shadow_steal_level);
+	process(custom->shadow_steal_room);
+	process(custom->shadow_step_level);
+	process(custom->shadow_step_room);
 }
 
 void options_process_custom_per_level(SDL_RWops* rw, rw_process_func_type process_func) {

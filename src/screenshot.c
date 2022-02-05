@@ -315,7 +315,11 @@ void draw_extras(void) {
 
 		// not marked: level 5 shadow, required opening gate
 
-		if (current_level == 5 && drawn_room == 24 && tilepos == 3 && tile_type == tiles_10_potion) {
+		if (current_level == /*5*/ custom->shadow_steal_level &&
+			drawn_room == /*24*/ custom->shadow_steal_room &&
+			tilepos == 3 &&
+			tile_type == tiles_10_potion
+		) {
 			special_event = "stolen"; // stolen potion
 		}
 

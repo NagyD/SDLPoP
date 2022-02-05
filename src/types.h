@@ -1290,6 +1290,12 @@ typedef struct custom_options_type {
 	byte mirror_row;
 	byte mirror_tile;
 	byte show_mirror_image;
+
+	byte shadow_steal_level;
+	byte shadow_steal_room;
+	byte shadow_step_level;
+	byte shadow_step_room;
+
 	word falling_exit_level;
 	byte falling_exit_room;
 	word falling_entry_level;
