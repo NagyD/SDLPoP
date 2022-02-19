@@ -274,6 +274,11 @@ The authors of this program may be contacted at https://forum.princed.org
 // not to work correctly.
 #define FIX_JUMPING_OVER_GUARD
 
+// The prince can fall down 2 rooms while climbing a loose tile located in the room above. (Trick 153)
+// It happens when the player hangs on the loose tile holding Shift for a second before climbing up.
+// The fix ensures the tile does not start to fall until the climbing sequence changes prince's current row.
+#define FIX_DROP_2_ROOMS_CLIMBING_LOOSE_TILE
+
 #endif // ifndef DISABLE_ALL_FIXES
 
 // Prince can jump 2 stories up in feather fall mode

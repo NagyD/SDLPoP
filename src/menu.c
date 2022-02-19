@@ -200,7 +200,8 @@ enum setting_ids {
 	SETTING_FIX_CAPED_PRINCE_SLIDING_THROUGH_GATE,
 	SETTING_FIX_DOORTOP_DISABLING_GUARD,
 	SETTING_FIX_JUMPING_OVER_GUARD,
-	SETTING_enable_super_high_jump,
+	SETTING_FIX_DROP_2_ROOMS_CLIMBING_LOOSE_TILE,
+	SETTING_ENABLE_SUPER_HIGH_JUMP,
 	SETTING_USE_CUSTOM_OPTIONS,
 	SETTING_START_MINUTES_LEFT,
 	SETTING_START_TICKS_LEFT,
@@ -426,7 +427,7 @@ setting_type gameplay_settings[] = {
 				.linked = &fixes_saved.enable_remember_guard_hp, .required = &use_fixes_and_enhancements,
 				.text = "Remember guard hitpoints",
 				.explanation = "Enable guard hitpoints not resetting to their default (maximum) value when re-entering the room."},
-		{.id = SETTING_enable_super_high_jump, .style = SETTING_STYLE_TOGGLE,
+		{.id = SETTING_ENABLE_SUPER_HIGH_JUMP, .style = SETTING_STYLE_TOGGLE,
 				.linked = &fixes_saved.enable_super_high_jump, .required = &use_fixes_and_enhancements,
 				.text = "Enable super high jump",
 				.explanation = "Prince in feather mode (after drinking a green potion) can jump 2 stories high."},
@@ -578,6 +579,10 @@ setting_type gameplay_settings[] = {
 				.linked = &fixes_saved.fix_jumping_over_guard, .required = &use_fixes_and_enhancements,
 				.text = "Fix jumping over guard",
 				.explanation = "Prince can jump over guards with a properly timed running jump."},
+		{.id = SETTING_FIX_DROP_2_ROOMS_CLIMBING_LOOSE_TILE, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fixes_saved.fix_drop_2_rooms_climbing_loose_tile, .required = &use_fixes_and_enhancements,
+				.text = "Fix dropping 2 rooms with loose tile",
+				.explanation = "Prince can fall 2 rooms down while climbing a loose tile in a room above. (Trick 153)"},
 };
 
 NAMES_LIST(tile_type_setting_names, {
