@@ -1,0 +1,5 @@
+﻿The prince should not end up in the room below the room where he starts.
+To pass the test: #define SETTING_FIX_DROP_2_ROOMS_CLIMBING_LOOSE_TILE in config.h and enable settings -> gameplay -> Fix dropping 2 rooms with loose tile.
+
+More info: https://github.com/NagyD/SDLPoP/pull/272
+https://www.popot.org/documentation.php?doc=TricksPage4#153

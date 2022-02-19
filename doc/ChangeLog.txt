@@ -674,3 +674,6 @@ DONE: Added support for reading mirror_column from the EXE if it's different fro
 	(For Shauing's upcoming mod.)
 DONE: Added support for changing where the shadow steals the potion and steps on the button.
 	(For Shauing's upcoming mod.)
+DONE: Added a configurable fix for trick 153
+	Details: See FIX_DROP_2_ROOMS_CLIMBING_LOOSE_TILE in config.h and https://github.com/NagyD/SDLPoP/pull/272
+	Testcase: doc/replays-testcases/trick_153.p1r
