@@ -148,6 +148,26 @@ void far pop_main() {
 
 byte* level_var_palettes;
 
+void clear_screen_except_status() {
+	draw_rect(&rect_top, 0);
+
+	rect_type rect_hp_left = {
+		.top = rect_top.bottom,
+		.left = screen_rect.left,
+		.bottom = screen_rect.bottom,
+		.right = rect_bottom_text.left,
+	};
+	draw_rect(&rect_hp_left, 0);
+
+	rect_type rect_hp_right = {
+		.top = rect_top.bottom,
+		.left = rect_bottom_text.right,
+		.bottom = screen_rect.bottom,
+		.right = screen_rect.right,
+	};
+	draw_rect(&rect_hp_right, 0);
+}
+
 // seg000:024F
 void __pascal far init_game_main() {
 	doorlink1_ad = /*&*/level.doorlinks1;
@@ -491,7 +511,8 @@ int quick_load(void) {
 		}
 
 		stop_sounds();
-		draw_rect(&screen_rect, 0);
+		clear_screen_except_status();
+		// draw_rect(&screen_rect, 0);
 		update_screen();
 		delay_ticks(5); // briefly display a black screen as a visual cue
 
@@ -749,14 +770,14 @@ int __pascal far process_key() {
 		case SDL_SCANCODE_1:
 		case SDL_SCANCODE_1 | WITH_SHIFT:
 			if (Kid.alive < 0) {
-				if (key_states[SDL_SCANCODE_F6] != key_states[SDL_KEYDOWN]) {
+				if (key_states[SDL_SCANCODE_F6] != 0) {
 					text_time_remaining = 24;
 					slot_key = 1;
 					slot_save_wait_timer = -1;
 					need_quick_save = 1;
 					display_text_bottom("SAVED TO SLOT 1");
 				}
-				else if (key_states[SDL_SCANCODE_F9] != key_states[SDL_KEYDOWN]) {
+				else if (key_states[SDL_SCANCODE_F9] != 0) {
 					text_time_remaining = 24;
 					slot_key = 1;
 					slot_load_wait_timer = -1;
@@ -769,14 +790,14 @@ int __pascal far process_key() {
 		case SDL_SCANCODE_2:
 		case SDL_SCANCODE_2 | WITH_SHIFT:
 			if (Kid.alive < 0) {
-				if (key_states[SDL_SCANCODE_F6] != key_states[SDL_KEYDOWN]) {
+				if (key_states[SDL_SCANCODE_F6] != 0) {
 					text_time_remaining = 24;
 					slot_key = 2;
 					slot_save_wait_timer = -1;
 					need_quick_save = 1;
 					display_text_bottom("SAVED TO SLOT 2");
 				}
-				else if (key_states[SDL_SCANCODE_F9] != key_states[SDL_KEYDOWN]) {
+				else if (key_states[SDL_SCANCODE_F9] != 0) {
 					text_time_remaining = 24;
 					slot_key = 2;
 					need_quick_load = 1;
@@ -788,14 +809,14 @@ int __pascal far process_key() {
 		case SDL_SCANCODE_3:
 		case SDL_SCANCODE_3 | WITH_SHIFT:
 			if (Kid.alive < 0) {
-				if (key_states[SDL_SCANCODE_F6] != key_states[SDL_KEYDOWN]) {
+				if (key_states[SDL_SCANCODE_F6] != 0) {
 					text_time_remaining = 24;
 					slot_key = 3;
 					slot_save_wait_timer = -1;
 					need_quick_save = 1;
 					display_text_bottom("SAVED TO SLOT 3");
 				}
-				else if (key_states[SDL_SCANCODE_F9] != key_states[SDL_KEYDOWN]) {
+				else if (key_states[SDL_SCANCODE_F9] != 0) {
 					text_time_remaining = 24;
 					slot_key = 3;
 					need_quick_load = 1;
@@ -807,14 +828,14 @@ int __pascal far process_key() {
 		case SDL_SCANCODE_4:
 		case SDL_SCANCODE_4 | WITH_SHIFT:
 			if (Kid.alive < 0) {
-				if (key_states[SDL_SCANCODE_F6] != key_states[SDL_KEYDOWN]) {
+				if (key_states[SDL_SCANCODE_F6] != 0) {
 					text_time_remaining = 24;
 					slot_key = 4;
 					slot_save_wait_timer = -1;
 					need_quick_save = 1;
 					display_text_bottom("SAVED TO SLOT 4");
 				}
-				else if (key_states[SDL_SCANCODE_F9] != key_states[SDL_KEYDOWN]) {
+				else if (key_states[SDL_SCANCODE_F9] != 0) {
 					text_time_remaining = 24;
 					slot_key = 4;
 					need_quick_load = 1;
@@ -826,14 +847,14 @@ int __pascal far process_key() {
 		case SDL_SCANCODE_5:
 		case SDL_SCANCODE_5 | WITH_SHIFT:
 			if (Kid.alive < 0) {
-				if (key_states[SDL_SCANCODE_F6] != key_states[SDL_KEYDOWN]) {
+				if (key_states[SDL_SCANCODE_F6] != 0) {
 					text_time_remaining = 24;
 					slot_key = 5;
 					slot_save_wait_timer = -1;
 					need_quick_save = 1;
 					display_text_bottom("SAVED TO SLOT 5");
 				}
-				else if (key_states[SDL_SCANCODE_F9] != key_states[SDL_KEYDOWN]) {
+				else if (key_states[SDL_SCANCODE_F9] != 0) {
 					text_time_remaining = 24;
 					slot_key = 5;
 					need_quick_load = 1;
@@ -1242,7 +1263,8 @@ void __pascal far load_lev_spr(int level) {
 	char filename[20];
 	dathandle = NULL;
 	current_level = next_level = level;
-	draw_rect(&screen_rect, 0);
+	clear_screen_except_status();
+	// draw_rect(&screen_rect, 0);
 	free_optsnd_chtab();
 	snprintf(filename, sizeof(filename), "%s%s.DAT",
 		tbl_envir_gr[graphics_mode],
