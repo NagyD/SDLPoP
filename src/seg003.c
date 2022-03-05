@@ -501,6 +501,22 @@ void __pascal far timers() {
 	if (resurrect_time > 0) {
 		--resurrect_time;
 	}
+	if (slot_save_wait_timer > -1) {
+		if (slot_save_wait_timer == 0) {
+			need_quick_save = 1;
+			text_time_remaining = 24;
+			display_text_bottom("SAVED TO LATEST SLOT.");
+		}
+		--slot_save_wait_timer;
+	}
+	if (slot_load_wait_timer > -1) {
+		if (slot_load_wait_timer == 0) {
+			need_quick_load = 1;
+			text_time_remaining = 24;
+			display_text_bottom("LOADED FROM LATEST SLOT.");
+		}
+		--slot_load_wait_timer;
+	}
 
 	if (fixes->fix_quicksave_during_feather) {
 		if (is_feather_fall > 0) {

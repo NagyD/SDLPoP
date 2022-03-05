@@ -387,7 +387,7 @@ setting_type gameplay_settings[] = {
 #ifdef USE_QUICKSAVE
 		{.id = SETTING_ENABLE_QUICKSAVE, .style = SETTING_STYLE_TOGGLE, .linked = &enable_quicksave,
 				.text = "Enable quicksave",
-				.explanation = "Enable quicksave/load feature.\nPress F1..F5 to quicksave, F6..F10 to quickload."},
+				.explanation = "Enable quicksave/load feature.\nPress 1 to 5 to select slot. Press F6/F9 to Save/Load from selected slot."},
 		{.id = SETTING_ENABLE_QUICKSAVE_PENALTY, .style = SETTING_STYLE_TOGGLE, .linked = &enable_quicksave_penalty,
 				.text = "Quicksave time penalty",
 				.explanation = "Try to let time run out when quickloading (similar to dying).\n"
@@ -1130,11 +1130,17 @@ void pause_menu_clicked(pause_menu_item_type* item) {
 			break;
 		case PAUSE_MENU_SAVE_GAME:
 			// TODO: Manual save games?
-			if (Kid.alive < 0) need_quick_save = 1;
+			if (Kid.alive < 0) {
+				text_time_remaining = 24;
+				display_text_bottom("SAVED TO LATEST SLOT.");
+				need_quick_save = 1;
+			}
 			need_close_menu = true;
 			break;
 		case PAUSE_MENU_LOAD_GAME:
 			// TODO: Manual save games?
+			text_time_remaining = 24;
+			display_text_bottom("LOADED FROM LATEST SLOT.");
 			need_quick_load = 1;
 			need_close_menu = true;
 			stop_sounds();

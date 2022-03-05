@@ -33,6 +33,9 @@ The authors of this program may be contacted at https://forum.princed.org
 
 // Stores which quick slot is being used
 extern int slot_key INIT(= 1);
+// Wait timer for F6/F9 press without num keys
+extern int slot_save_wait_timer INIT(= -1);
+extern int slot_load_wait_timer INIT(= -1);
 
 // data:5F8A
 extern word text_time_remaining;

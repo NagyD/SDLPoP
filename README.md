@@ -205,8 +205,8 @@ Since (upcoming version) SDLPoP now detects controllers plugged in while the gam
     * COMP: the SDL version SDLPoP was compiled against, i.e. the version of the SDL headers.
     * LINK: the SDL version SDLPoP was linked against, i.e. the version of SDL2.dll (or its equivalent on other platforms).
 * Alt+Enter: Toggle full-screen mode.
-* F1..F5: Quicksave: Save the exact state of the game, to slot 1..5.
-* F6..F10: Quickload: Load what the last quicksave saved, from slot 1..5.
+* Press 1 to 5 to select slot.
+* Press F6/F9 to Save/Load from selected slot.
 * F12: Save a screenshot to the screenshots folder.
 * Backspace: Display the in-game menu. (Esc will also display the menu by default, but you can turn that off.)
 * `: Fast forward. (It's the key above Tab. It might have a different label depending on your keyboard layout.)
