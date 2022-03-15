@@ -798,6 +798,12 @@ extern custom_options_type custom_defaults INIT(= {
 		.mirror_row = 0,
 		.mirror_tile = tiles_13_mirror,
 		.show_mirror_image = 1,
+
+		.shadow_steal_level = 5,
+		.shadow_steal_room = 24,
+		.shadow_step_level = 6,
+		.shadow_step_room = 1,
+
 		.falling_exit_level = 6,
 		.falling_exit_room = 1,
 		.falling_entry_level = 7,

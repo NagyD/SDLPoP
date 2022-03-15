@@ -277,7 +277,7 @@ void draw_extras(void) {
 			drawn_room == /*7*/ custom->checkpoint_clear_tile_room &&
 			tilepos == /*4*/ custom->checkpoint_clear_tile_col * 10 + custom->checkpoint_clear_tile_row
 		) {
-			special_event = "removed"; // loose floor is removed
+			special_event = "removed"; // this loose floor is removed when restarting at the checkpoint
 		}
 
 		if (current_level == 3 && drawn_room == 2 && tile_type == tiles_4_gate) {
@@ -300,7 +300,10 @@ void draw_extras(void) {
 			special_event = "skel wake"; // skeleton wakes
 		}
 
-		if (current_level == 3 && drawn_room == 3 && tilepos == 14) {
+		if (current_level == /*3*/ custom->skeleton_level &&
+			drawn_room == /*3*/ custom->skeleton_reappear_room &&
+			tilepos == /*14*/ custom->skeleton_reappear_row * 10 + (custom->skeleton_reappear_x - 58) / 14
+		) {
 			special_event = "skel cont"; // skeleton continues here if it falls into this room
 		}
 
@@ -315,7 +318,11 @@ void draw_extras(void) {
 
 		// not marked: level 5 shadow, required opening gate
 
-		if (current_level == 5 && drawn_room == 24 && tilepos == 3 && tile_type == tiles_10_potion) {
+		if (current_level == /*5*/ custom->shadow_steal_level &&
+			drawn_room == /*24*/ custom->shadow_steal_room &&
+			tilepos == 3 &&
+			tile_type == tiles_10_potion
+		) {
 			special_event = "stolen"; // stolen potion
 		}
 

@@ -372,6 +372,7 @@ void options_process_fixes(SDL_RWops* rw, rw_process_func_type process_func) {
 	process(fixes_options_replay.fix_caped_prince_sliding_through_gate);
 	process(fixes_options_replay.fix_doortop_disabling_guard);
 	process(fixes_options_replay.fix_jumping_over_guard);
+	process(fixes_options_replay.fix_drop_2_rooms_climbing_loose_tile);
 }
 
 void options_process_custom_general(SDL_RWops* rw, rw_process_func_type process_func) {
@@ -445,6 +446,10 @@ void options_process_custom_general(SDL_RWops* rw, rw_process_func_type process_
 	process(custom->win_level);
 	process(custom->win_room);
 	process(custom->loose_floor_delay);
+	process(custom->shadow_steal_level);
+	process(custom->shadow_steal_room);
+	process(custom->shadow_step_level);
+	process(custom->shadow_step_room);
 }
 
 void options_process_custom_per_level(SDL_RWops* rw, rw_process_func_type process_func) {

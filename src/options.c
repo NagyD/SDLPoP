@@ -282,6 +282,7 @@ static int global_ini_callback(const char *section, const char *name, const char
 		process_boolean("fix_doortop_disabling_guard", &fixes_saved.fix_doortop_disabling_guard);
 		process_boolean("enable_super_high_jump", &fixes_saved.enable_super_high_jump);
 		process_boolean("fix_jumping_over_guard", &fixes_saved.fix_jumping_over_guard);
+		process_boolean("fix_drop_2_rooms_climbing_loose_tile", &fixes_saved.fix_drop_2_rooms_climbing_loose_tile);
 	}
 
 	if (check_ini_section("CustomGameplay")) {
@@ -364,6 +365,12 @@ static int global_ini_callback(const char *section, const char *name, const char
 		process_byte("mirror_row", &custom_saved.mirror_row, &row_names_list);
 		process_byte("mirror_tile", &custom_saved.mirror_tile, &tile_type_names_list);
 		process_boolean("show_mirror_image", &custom_saved.show_mirror_image);
+
+		process_byte("shadow_steal_level", &custom_saved.shadow_steal_level, &never_is_16_list);
+		process_byte("shadow_steal_room", &custom_saved.shadow_steal_room, NULL);
+		process_byte("shadow_step_level", &custom_saved.shadow_step_level, &never_is_16_list);
+		process_byte("shadow_step_room", &custom_saved.shadow_step_room, NULL);
+
 		process_word("falling_exit_level", &custom_saved.falling_exit_level, &never_is_16_list);
 		process_byte("falling_exit_room", &custom_saved.falling_exit_room, NULL);
 		process_word("falling_entry_level", &custom_saved.falling_entry_level, &never_is_16_list);
@@ -652,20 +659,37 @@ void load_dos_exe_modifications(const char* folder_name) {
 		process(&custom_saved.skeleton_reappear_dir, 1, {0x03b43, 0x051f3, -1, -1, -1, -1});
 		process(&custom_saved.mirror_level, 1, {0x08dc7, 0x0a477, 0x09274, 0x099b4, 0x08d30, 0x09e60});
 		process(&custom_saved.mirror_room, 1, {0x08dcb, 0x0a47b, 0x09278, 0x099b8, 0x08d34, 0x09e64});
-		if (read_ok) custom_saved.mirror_column = custom_saved.mirror_room;
+		if (read_ok) {
+			byte opcode;
+			process(&opcode, 1, {0x08dcb+2, 0x0a47b+2, 0x09278+2, 0x099b8+2, 0x08d34+2, 0x09e64+2});
+			if (opcode == 0x50) {
+				// 0xA47A: B8 XX 00 50 50 where XX is room *and* column!
+				custom_saved.mirror_column = custom_saved.mirror_room;
+			} else if (opcode == 0x6A) {
+				// 0xA47A: 68 RR 00 6A CC where RR is the room, CC is the column
+				process(&custom_saved.mirror_column, 1, {0x08dcb+3, 0x0a47b+3, 0x09278+3, 0x099b8+3, 0x08d34+3, 0x09e64+3});
+			}
+		}
 		process(&temp_word, 2, {0x08dcf, 0x0a47f, 0x0927c, 0x099bc, 0x08d38, 0x09e68}); // mirror row
 		if (read_ok) {
-			if (temp_word == 49195) {
+			if (temp_word == 0xC02B) { // 2B C0 = sub ax,ax
 				custom_saved.mirror_row = 0;
-			} else if (temp_word == 432) {
+			} else if (temp_word == 0x01B0) { // B0 01 = mov al,1
 				custom_saved.mirror_row = 1;
-			} else if (temp_word == 688) {
+			} else if (temp_word == 0x02B0) { // B0 02 = mov al,2
 				custom_saved.mirror_row = 2;
 			}
 		}
 		process(&custom_saved.mirror_tile, 1, {0x08de3, 0x0a493, 0x09290, 0x099d0, 0x08d4c, 0x09e7c});
 		process(temp_bytes, 1, {0x051a2, 0x06852, 0x05636, 0x05d76, 0x050f2, 0x06222});
 		if (read_ok) custom_saved.show_mirror_image = (temp_bytes[0] != 0xEB);
+
+		process(&custom_saved.shadow_steal_level, 1, {-1, 0x5017, -1, -1, -1, -1});
+		process(&custom_saved.shadow_steal_room, 1, {-1, 0x5021, -1, -1, -1, -1});
+
+		process(&custom_saved.shadow_step_level, 1, {-1, 0x4FE7, -1, -1, -1, -1});
+		process(&custom_saved.shadow_step_room, 1, {-1, 0x4FF1, -1, -1, -1, -1});
+
 		process(&custom_saved.falling_exit_level, 1, {0x03eb2, 0x05562, -1, -1, -1, -1});
 		process(&custom_saved.falling_exit_room, 1, {0x03eb9, 0x05569, -1, -1, -1, -1});
 		process(&custom_saved.falling_entry_level, 1, {0x04cbd, 0x0636d, -1, -1, -1, -1});
