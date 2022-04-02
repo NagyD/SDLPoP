@@ -3506,7 +3506,7 @@ void process_events() {
 #endif
 				if (event.type == SDL_JOYBUTTONDOWN) {
 					if      (event.jbutton.button == SDL_JOYSTICK_BUTTON_Y)   joy_AY_buttons_state = -1; // Y (up)
-					else if (event.jbutton.button == SDL_JOYSTICK_BUTTON_X)   joy_X_button_state = -1;   // X (Shift)
+					else if (event.jbutton.button == SDL_JOYSTICK_BUTTON_X)   joy_X_button_state = 1;    // X (Shift)
 				}
 				else if (event.type == SDL_JOYBUTTONUP) {
 					if      (event.jbutton.button == SDL_JOYSTICK_BUTTON_Y)   joy_AY_buttons_state = 0;  // Y (up)
