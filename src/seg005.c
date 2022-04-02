@@ -214,6 +214,20 @@ void __pascal far land() {
 	seqtbl_offset_char(seq_id);
 	play_seq();
 	Char.fall_y = 0;
+
+#ifdef KEEP_FALLEN_GUARD_FIX_ATTEMPT
+	// https://forum.princed.org/viewtopic.php?p=34456#p34456
+	// 2. "leave_guard" should be called after the guard had landed in a room that is not "drawn_room".
+	printf("Char.charid = %d\n", Char.charid);
+	printf("Char.room = %d\n", Char.room);
+	printf("drawn_room = %d\n", drawn_room);
+	printf("Guard.action = %d\n", Guard.action);
+	if (Char.charid != charid_0_kid && Char.room != drawn_room) {
+		Char.action = 0;
+		leave_guard();
+		printf("!!!\n");
+	}
+#endif
 }
 
 // seg005:01B7

@@ -284,6 +284,16 @@ void __pascal far check_guard_fallout() {
 void __pascal far leave_guard() {
 	word room_minus_1;
 
+#ifdef KEEP_FALLEN_GUARD_FIX_ATTEMPT
+	// https://forum.princed.org/viewtopic.php?p=34456#p34456
+	// 1. "leave_guard" function should return if the "Guard.action" is 3 or 4,
+	// so that the guard does not get stuck in the air when you exit the room while he is falling.
+	if (Guard.action == actions_3_in_midair || Guard.action == actions_4_in_freefall) {
+		//follow_guard();
+		return;
+	}
+#endif
+
 #ifdef USE_SUPER_HIGH_JUMP
 	// Do not leave guard during super high jumps when the room does not change.
 	// Kid's "y" coordinate keeps him in the lower room visually (in timers()).
