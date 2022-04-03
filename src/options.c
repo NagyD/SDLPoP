@@ -608,7 +608,11 @@ void load_dos_exe_modifications(const char* folder_name) {
 		process(&custom_saved.drawn_tile_left_level_edge, 1, {0x0a26b, 0x0b91b, -1, -1, -1, -1});
 		process(&custom_saved.level_edge_hit_tile, 1, {0x06f02, 0x085b2, -1, -1, -1, -1});
 		process(temp_bytes, 2, {0x9111, 0xA7C1, 0x95BE, 0x9CFE, 0x907A, 0xA1AA}); // allow triggering any tile
-		if (read_ok) custom_saved.allow_triggering_any_tile = (temp_bytes[0] == 0x75 && temp_bytes[1] == 0x13);
+		if (read_ok) {
+			custom_saved.allow_triggering_any_tile = 
+				(temp_bytes[0] == 0x75 && temp_bytes[1] == 0x13) ||
+				(temp_bytes[0] == 0x90 && temp_bytes[1] == 0x90); // used in Micro Palace
+		}
 		process(temp_bytes, 1, {0x0a7bb, 0x0be6b, 0x0ac67, 0x0b3a7, 0x0a723, 0x0b853}); // enable WDA in palace
 		if (read_ok) custom_saved.enable_wda_in_palace = (temp_bytes[0] != 116);
 		process(&custom_saved.tbl_level_type, 16, {0x1acea, 0x1c842, 0x1b9ae, 0x1c5c6, 0x17d4c, 0x18f3c});
