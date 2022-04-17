@@ -283,6 +283,7 @@ static int global_ini_callback(const char *section, const char *name, const char
 		process_boolean("enable_super_high_jump", &fixes_saved.enable_super_high_jump);
 		process_boolean("fix_jumping_over_guard", &fixes_saved.fix_jumping_over_guard);
 		process_boolean("fix_drop_2_rooms_climbing_loose_tile", &fixes_saved.fix_drop_2_rooms_climbing_loose_tile);
+		process_boolean("fix_falling_through_floor_during_sword_strike", &fixes_saved.fix_falling_through_floor_during_sword_strike);
 	}
 
 	if (check_ini_section("CustomGameplay")) {

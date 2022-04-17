@@ -1237,6 +1237,7 @@ typedef struct fixes_options_type {
 	byte enable_super_high_jump;
 	byte fix_jumping_over_guard;
 	byte fix_drop_2_rooms_climbing_loose_tile;
+	byte fix_falling_through_floor_during_sword_strike;
 } fixes_options_type;
 
 #define NUM_GUARD_SKILLS 12

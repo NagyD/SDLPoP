@@ -281,6 +281,13 @@ The authors of this program may be contacted at https://forum.princed.org
 // See also: https://github.com/NagyD/SDLPoP/pull/272
 #define FIX_DROP_2_ROOMS_CLIMBING_LOOSE_TILE
 
+// The prince or a guard can fall through a floor during a sword strike even though there is a floor tile in front of him.
+// A strike sequence consists of 4 important frames, 151-154. Frame 153 is different from the other 3 because has a flag
+// that it "needs a floor". The problem is strike frames a pretty wide so the character's tile is not calculated correctly
+// causing him to visually fall through the floor.
+// This fix prevents falling during that frame treating it like it does not require a floor.
+#define FIX_FALLING_THROUGH_FLOOR_DURING_SWORD_STRIKE
+
 #endif // ifndef DISABLE_ALL_FIXES
 
 // Prince can jump 2 stories up in feather fall mode

@@ -373,6 +373,7 @@ void options_process_fixes(SDL_RWops* rw, rw_process_func_type process_func) {
 	process(fixes_options_replay.fix_doortop_disabling_guard);
 	process(fixes_options_replay.fix_jumping_over_guard);
 	process(fixes_options_replay.fix_drop_2_rooms_climbing_loose_tile);
+	process(fixes_options_replay.fix_falling_through_floor_during_sword_strike);
 }
 
 void options_process_custom_general(SDL_RWops* rw, rw_process_func_type process_func) {
