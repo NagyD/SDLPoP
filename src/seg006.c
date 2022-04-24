@@ -1011,6 +1011,14 @@ void __pascal far set_char_collision() {
 // seg006:0815
 void __pascal far check_on_floor() {
 	if (cur_frame.flags & FRAME_NEEDS_FLOOR) {
+#ifdef FIX_FALLING_THROUGH_FLOOR_DURING_SWORD_STRIKE
+        // We do not want the Prince or a guard to fall during that frame because it looks like he is falling
+        // through a floor. It is caused by a combination of the frame width and the dx value in the frame table.
+        // Other 3 frames in the sequence do not have the "FRAME_NEEDS_FLOOR" flag enabled but the frame 153 does.
+        if (fixes->fix_falling_through_floor_during_sword_strike) {
+			if (Char.frame == frame_153_strike_3) return;
+        }
+#endif
 		if (get_tile_at_char() == tiles_20_wall) {
 			in_wall();
 		}

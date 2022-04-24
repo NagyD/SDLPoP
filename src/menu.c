@@ -201,6 +201,7 @@ enum setting_ids {
 	SETTING_FIX_DOORTOP_DISABLING_GUARD,
 	SETTING_FIX_JUMPING_OVER_GUARD,
 	SETTING_FIX_DROP_2_ROOMS_CLIMBING_LOOSE_TILE,
+	SETTING_FIX_FALLING_THROUGH_FLOOR_DURING_SWORD_STRIKE,
 	SETTING_ENABLE_SUPER_HIGH_JUMP,
 	SETTING_USE_CUSTOM_OPTIONS,
 	SETTING_START_MINUTES_LEFT,
@@ -583,6 +584,10 @@ setting_type gameplay_settings[] = {
 				.linked = &fixes_saved.fix_drop_2_rooms_climbing_loose_tile, .required = &use_fixes_and_enhancements,
 				.text = "Fix dropping 2 rooms with loose tile",
 				.explanation = "Prince can fall 2 rooms down while climbing a loose tile in a room above. (Trick 153)"},
+		{.id = SETTING_FIX_FALLING_THROUGH_FLOOR_DURING_SWORD_STRIKE, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fixes_saved.fix_falling_through_floor_during_sword_strike, .required = &use_fixes_and_enhancements,
+				.text = "Fix dropping through floor striking",
+				.explanation = "Prince or guard can fall through the floor during a sword strike sequence."},
 };
 
 NAMES_LIST(tile_type_setting_names, {
