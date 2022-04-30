@@ -677,3 +677,6 @@ DONE: Added support for changing where the shadow steals the potion and steps on
 DONE: Added a configurable fix for trick 153
 	Details: See FIX_DROP_2_ROOMS_CLIMBING_LOOSE_TILE in config.h and https://github.com/NagyD/SDLPoP/pull/272
 	Testcase: doc/replays-testcases/trick_153.p1r
+DONE: Added a configurable fix for falling through floors during a sword strike.
+	Details: See FIX_FALLING_THROUGH_FLOOR_DURING_SWORD_STRIKE in config.h and https://github.com/NagyD/SDLPoP/pull/274
+	Testcase: doc/replays-testcases/Falling through floor (PR274).p1r

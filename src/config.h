@@ -286,6 +286,8 @@ The authors of this program may be contacted at https://forum.princed.org
 // that it "needs a floor". The problem is strike frames a pretty wide so the character's tile is not calculated correctly
 // causing him to visually fall through the floor.
 // This fix prevents falling during that frame treating it like it does not require a floor.
+// Testcase: doc/replays-testcases/Falling through floor (PR274).p1r
+// See also: https://github.com/NagyD/SDLPoP/pull/274
 #define FIX_FALLING_THROUGH_FLOOR_DURING_SWORD_STRIKE
 
 #endif // ifndef DISABLE_ALL_FIXES

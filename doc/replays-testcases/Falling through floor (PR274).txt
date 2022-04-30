@@ -1,0 +1,4 @@
+﻿The guard should not fall through the floor.
+To pass the test: #define FIX_FALLING_THROUGH_FLOOR_DURING_SWORD_STRIKE in config.h and enable Settings -> Gameplay -> Fix dropping through floor striking.
+
+More info: https://github.com/NagyD/SDLPoP/pull/274
