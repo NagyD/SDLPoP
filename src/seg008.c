@@ -715,7 +715,7 @@ void __pascal far draw_tile_fore() {
 			if (fixes->enable_super_high_jump) {
 				add_foretable(id_chtab_6_environment, tile_table[curr_tile].base_id, draw_xh, 0, tile_table[curr_tile].base_y + draw_main_y, blitters_10h_transp, 0);
 			}
-			// do not break
+			// fallthrough!
 		default:
 			if (fixes->enable_super_high_jump && tile_left == tiles_26_lattice_down && curr_tile == tiles_12_doortop) {
 				add_foretable(id_chtab_6_environment, 6, draw_xh, 0, tile_table[curr_tile].base_y + draw_main_y + 3, blitters_10h_transp, 0);
