@@ -680,3 +680,5 @@ DONE: Added a configurable fix for trick 153
 DONE: Added a configurable fix for falling through floors during a sword strike.
 	Details: See FIX_FALLING_THROUGH_FLOOR_DURING_SWORD_STRIKE in config.h and https://github.com/NagyD/SDLPoP/pull/274
 	Testcase: doc/replays-testcases/Falling through floor (PR274).p1r
+FIXED: Make the +/- keys work on the main keyboard, on any keyboard layout.
+	Details: https://github.com/NagyD/SDLPoP/pull/275

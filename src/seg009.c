@@ -3288,11 +3288,6 @@ void process_events() {
 				int modifier = event.key.keysym.mod;
 				int scancode = event.key.keysym.scancode;
 
-				switch (event.key.keysym.sym) {
-					case SDLK_MINUS: scancode = SDL_SCANCODE_KP_MINUS; break;
-					case SDLK_PLUS:  scancode = SDL_SCANCODE_KP_PLUS;  break;
-				}
-
 				// Handle these separately, so they won't interrupt things that are usually interrupted by a keypress. (pause, cutscene)
 #ifdef USE_FAST_FORWARD
 				if (scancode == SDL_SCANCODE_GRAVE) {
@@ -3521,6 +3516,16 @@ void process_events() {
 
 			case SDL_TEXTINPUT:
 				last_text_input = event.text.text[0]; // UTF-8 formatted char text input
+
+				// Make the +/- keys work on the main keyboard, on any keyboard layout.
+				// We check SDL_TEXTINPUT instead of SDL_KEYDOWN.
+				// If '+' is on Shift+something then we can't detect it in SDL_KEYDOWN,
+				// because event.key.keysym.sym only tells us what character would the key type without shift.
+				switch (last_text_input) {
+					case '-': last_key_scancode = SDL_SCANCODE_KP_MINUS; break;
+					case '+': last_key_scancode = SDL_SCANCODE_KP_PLUS;  break;
+				}
+
 				break;
 			case SDL_WINDOWEVENT:
 				// In case the user switches away while holding a key: do as if all keys were released.
