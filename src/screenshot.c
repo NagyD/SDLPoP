@@ -29,7 +29,7 @@ int screenshot_index = 0;
 // Use incrementing numbers and a separate folder, like DOSBox.
 void make_screenshot_filename(void) {
 	// Create the screenshots directory in SDLPoP's directory, even if the current directory is something else.
-	strncpy(screenshots_folder, locate_file("screenshots"), sizeof(screenshots_folder));
+	snprintf_check(screenshots_folder, sizeof(screenshots_folder), "%s", locate_file("screenshots"));
 	// Create the folder if it doesn't exist yet:
 #if defined WIN32 || _WIN32 || WIN64 || _WIN64
 	mkdir (screenshots_folder);
@@ -38,7 +38,7 @@ void make_screenshot_filename(void) {
 #endif
 	// Find the first unused filename:
 	for (;;) {
-		snprintf(screenshot_filename, sizeof(screenshot_filename), "%s/screenshot_%03d.png", screenshots_folder, screenshot_index);
+		snprintf_check(screenshot_filename, sizeof(screenshot_filename), "%s/screenshot_%03d.png", screenshots_folder, screenshot_index);
 		if (! file_exists(screenshot_filename)) {
 			return;
 		}
