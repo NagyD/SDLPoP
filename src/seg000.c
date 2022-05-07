@@ -735,8 +735,7 @@ int __pascal far process_key() {
 				answer_text = /*&*/sprintf_temp;
 				need_show_text = 1;
 			break;
-			case SDL_SCANCODE_MINUS:
-			case SDL_SCANCODE_KP_MINUS:		// '-' --> subtract time cheat
+			case SDL_SCANCODE_KP_MINUS: // '-' --> subtract time cheat
 				if (rem_min > 1) --rem_min;
 
 #ifdef ALLOW_INFINITE_TIME
@@ -748,8 +747,7 @@ int __pascal far process_key() {
 				text_time_remaining = 0;
 				is_show_time = 1;
 			break;
-			case SDL_SCANCODE_EQUALS | WITH_SHIFT: // '+'
-			case SDL_SCANCODE_KP_PLUS:	   // '+' --> add time cheat
+			case SDL_SCANCODE_KP_PLUS: // '+' --> add time cheat
 
 #ifdef ALLOW_INFINITE_TIME
 				if (rem_min < 0) { // if negative/infinite, time runs 'forward'

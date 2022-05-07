@@ -3288,6 +3288,11 @@ void process_events() {
 				int modifier = event.key.keysym.mod;
 				int scancode = event.key.keysym.scancode;
 
+				switch (event.key.keysym.sym) {
+					case SDLK_MINUS: scancode = SDL_SCANCODE_KP_MINUS; break;
+					case SDLK_PLUS:  scancode = SDL_SCANCODE_KP_PLUS;  break;
+				}
+
 				// Handle these separately, so they won't interrupt things that are usually interrupted by a keypress. (pause, cutscene)
 #ifdef USE_FAST_FORWARD
 				if (scancode == SDL_SCANCODE_GRAVE) {
