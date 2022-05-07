@@ -81,6 +81,12 @@ void far pop_main() {
 	}
 #endif
 
+	// Initialize everything before load_mod_options() so it can show an error dialog if needed.
+	/*video_mode =*/ parse_grmode();
+	current_target_surface = rect_sthg(onscreen_surface_, &screen_rect);
+	set_hc_pal();
+	init_copyprot_dialog();
+
 	load_mod_options();
 
 	// CusPop option
@@ -93,14 +99,9 @@ void far pop_main() {
 	char sprintf_temp[100];
 	int i;
 
-	/*video_mode =*/ parse_grmode();
-
 	init_timer(BASE_FPS);
 	parse_cmdline_sound();
 
-	set_hc_pal();
-
-	current_target_surface = rect_sthg(onscreen_surface_, &screen_rect);
 	show_loading();
 	set_joy_mode();
 	cheats_enabled = check_param("megahit") != NULL;
@@ -111,7 +112,6 @@ void far pop_main() {
 	draw_mode = check_param("draw") != NULL && cheats_enabled;
 	demo_mode = check_param("demo") != NULL;
 
-	init_copyprot_dialog();
 #ifdef USE_REPLAY
 	init_record_replay();
 #endif

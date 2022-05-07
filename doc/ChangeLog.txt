@@ -682,3 +682,5 @@ DONE: Added a configurable fix for falling through floors during a sword strike.
 	Testcase: doc/replays-testcases/Falling through floor (PR274).p1r
 FIXED: Make the +/- keys work on the main keyboard, on any keyboard layout.
 	Details: https://github.com/NagyD/SDLPoP/pull/275
+FIXED: Fixed crash when trying to load a non-existent mod from command line.
+	Details: https://github.com/NagyD/SDLPoP/issues/277
