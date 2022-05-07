@@ -732,6 +732,7 @@ extern char gamecontrollerdb_file[POP_MAX_PATH] INIT(= "");
 extern byte enable_quicksave INIT(= 1);
 extern byte enable_quicksave_penalty INIT(= 1);
 extern byte enable_replay INIT(= 1);
+extern byte use_hardware_acceleration INIT(= 2);
 extern byte use_correct_aspect_ratio INIT(= 0);
 extern byte use_integer_scaling INIT(= 0);
 extern byte scaling_type INIT(= 0);

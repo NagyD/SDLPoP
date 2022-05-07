@@ -149,6 +149,7 @@ enum setting_ids {
 	SETTING_JOYSTICK_THRESHOLD,
 	SETTING_JOYSTICK_ONLY_HORIZONTAL,
 	SETTING_FULLSCREEN,
+	SETTING_USE_HARDWARE_ACCELERATION,
 	SETTING_USE_CORRECT_ASPECT_RATIO,
 	SETTING_USE_INTEGER_SCALING,
 	SETTING_SCALING_TYPE,
@@ -336,6 +337,7 @@ setting_type general_settings[] = {
 				.text = "Restore defaults...", .explanation = "Revert all settings to the default state."},
 };
 
+NAMES_LIST(use_hardware_acceleration_setting_names, {"OFF", "ON", "AUTO",});
 NAMES_LIST(scaling_type_setting_names, {"Sharp", "Fuzzy", "Blurry",});
 
 int integer_scaling_possible =
@@ -350,6 +352,13 @@ setting_type visuals_settings[] = {
 		{.id = SETTING_FULLSCREEN, .style = SETTING_STYLE_TOGGLE, .linked = &start_fullscreen,
 				.text = "Start fullscreen",
 				.explanation = "Start the game in fullscreen mode.\nYou can also toggle fullscreen by pressing Alt+Enter."},
+		{.id = SETTING_USE_HARDWARE_ACCELERATION, .style = SETTING_STYLE_NUMBER, .number_type = SETTING_BYTE, .max = 2,
+				.linked = &use_hardware_acceleration, .names_list = &use_hardware_acceleration_setting_names_list,
+				.text = "Use hardware acceleration",
+				.explanation = "Auto - Use hardware acceleration, if available.\n"
+				               "On - Force hardware acceleration.\n"
+				               "Off - Disable hardware acceleration.\n"
+				               "Note: This requires a restart."},
 		{.id = SETTING_USE_CORRECT_ASPECT_RATIO, .style = SETTING_STYLE_TOGGLE, .linked = &use_correct_aspect_ratio,
 				.text = "Use 4:3 aspect ratio",
 				.explanation = "Render the game in the originally intended 4:3 aspect ratio."
@@ -2149,6 +2158,7 @@ void process_ingame_settings_user_managed(SDL_RWops* rw, rw_process_func_type pr
 	process(joystick_only_horizontal);
 	process(enable_replay);
 	process(start_fullscreen);
+	process(use_hardware_acceleration);
 	process(use_correct_aspect_ratio);
 	process(use_integer_scaling);
 	process(scaling_type);
