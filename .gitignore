@@ -64,6 +64,15 @@ build/
 # Visual Studio
 .vs/
 
+# CMake
+*CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+
+# Ninja
+.ninja*
+build.ninja
+
 # Windows thumbnail cache
 Thumbs.db
 
