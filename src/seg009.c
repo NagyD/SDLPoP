@@ -2441,10 +2441,14 @@ void __pascal far set_gr_mode(byte grmode) {
 #ifdef SDL_HINT_WINDOWS_DISABLE_THREAD_NAMING
 	SDL_SetHint(SDL_HINT_WINDOWS_DISABLE_THREAD_NAMING, "1");
 #endif
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_NOPARACHUTE |
-	             SDL_INIT_GAMECONTROLLER | SDL_INIT_HAPTIC ) != 0) {
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_NOPARACHUTE | SDL_INIT_GAMECONTROLLER) != 0) {
 		sdlperror("set_gr_mode: SDL_Init");
 		quit(1);
+	}
+	if (enable_controller_rumble) {
+		if (SDL_InitSubSystem(SDL_INIT_HAPTIC) != 0) {
+			printf("Warning: Haptic subsystem unavailable, ignoring enable_controller_rumble = true\n");
+		}
 	}
 
 	//SDL_EnableUNICODE(1); //deprecated
