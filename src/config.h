@@ -33,10 +33,6 @@ The authors of this program may be contacted at https://forum.princed.org
 #define SDLPOP_VERSION "1.22"
 #define WINDOW_TITLE "Prince of Persia (SDLPoP) v" SDLPOP_VERSION
 
-// Enable or disable the SDL hardware accelerated renderer backend
-// Uses a software backend otherwise
-#define USE_HW_ACCELERATION
-
 // Enable or disable fading.
 // Fading used to be very buggy, but now it works correctly.
 #define USE_FADE

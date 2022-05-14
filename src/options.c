@@ -78,6 +78,7 @@ int ini_load(const char *filename,
 	return 0;
 }
 
+NAMES_LIST(use_hardware_acceleration_names, {"false", "true", "default"}); // this is needed because use_hardware_acceleration is not a bool!
 NAMES_LIST(level_type_names, {"dungeon", "palace"});
 //NAMES_LIST(guard_type_names, {"guard", "fat", "skel", "vizier", "shadow"});
 // NAMES_LIST must start from 0, so I need KEY_VALUE_LIST if I want to assign a name to -1.
@@ -188,6 +189,7 @@ static int global_ini_callback(const char *section, const char *name, const char
 		process_boolean("start_fullscreen", &start_fullscreen);
 		process_word("pop_window_width", &pop_window_width, NULL);
 		process_word("pop_window_height", &pop_window_height, NULL);
+		process_byte("use_hardware_acceleration", &use_hardware_acceleration, &use_hardware_acceleration_names_list);
 		process_boolean("use_correct_aspect_ratio", &use_correct_aspect_ratio);
 		process_boolean("use_integer_scaling", &use_integer_scaling);
 		process_byte("scaling_type", &scaling_type, &scaling_type_names_list);
@@ -467,6 +469,7 @@ void set_options_to_default() {
 	enable_text = 1;
 	enable_info_screen = 1;
 	start_fullscreen = 0;
+	use_hardware_acceleration = 2;
 	use_correct_aspect_ratio = 0;
 	use_integer_scaling = 0;
 	scaling_type = 0;
