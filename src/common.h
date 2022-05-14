@@ -74,6 +74,18 @@ extern "C" {
 		}						\
 	} while (0)
 
+// Define a macro for marking intentional fallthroughs in switch blocks.
+// Details: https://github.com/NagyD/SDLPoP/pull/276
+// First define it as a dummy macro.
+#define FALLTHROUGH
+// If the compiler supports the attribute then redefine the macro to use that instead.
+#ifdef __has_c_attribute
+	#if __has_c_attribute(fallthrough)
+		#undef FALLTHROUGH
+		#define FALLTHROUGH [[fallthrough]]
+	#endif
+#endif
+
 #ifdef __cplusplus
 }
 #endif

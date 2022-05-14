@@ -162,7 +162,8 @@ bool parse_midi(midi_raw_chunk_type* midi, parsed_midi_type* parsed_midi) {
 				case 0xA0: // aftertouch
 				case 0xB0: // controller
 				case 0xE0: // pitch bend
-					num_channel_event_params = 2; //fallthrough
+					num_channel_event_params = 2;
+					FALLTHROUGH;
 				case 0xC0: // program change
 				case 0xD0: { // channel aftertouch
 					// Read the channel event.

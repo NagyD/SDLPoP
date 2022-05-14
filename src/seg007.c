@@ -1078,11 +1078,11 @@ void __pascal far loose_land() {
 		case tiles_15_opener:
 			curr_room_tiles[curr_tilepos] = tiles_14_debris;
 			button_type = tiles_14_debris;
-		// fallthrough!
+			FALLTHROUGH;
 		case tiles_6_closer:
 			trigger_button(1, button_type, -1);
 			tiletype = get_tile(curmob.room, curmob.xh >> 2, curmob.row);
-		// fallthrough!
+			FALLTHROUGH;
 		case tiles_1_floor:
 		case tiles_2_spike:
 		case tiles_10_potion:

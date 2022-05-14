@@ -567,7 +567,7 @@ void __pascal far draw_tile_bottom(word arg_0) {
 			break;
 		case tiles_12_doortop:
 			blit = blitters_2_or;
-			// fallthrough!
+			FALLTHROUGH;
 		default:
 			id = tile_table[curr_tile].bottom_id;
 			break;
@@ -650,7 +650,7 @@ void __pascal far draw_tile_anim() {
 				case 3: // slow fall
 				case 4: // upside down
 					color = 10; // green
-					// fallthrough!
+					FALLTHROUGH;
 				case 2: // life
 					pot_size = 1;
 					break;
@@ -715,7 +715,7 @@ void __pascal far draw_tile_fore() {
 			if (fixes->enable_super_high_jump) {
 				add_foretable(id_chtab_6_environment, tile_table[curr_tile].base_id, draw_xh, 0, tile_table[curr_tile].base_y + draw_main_y, blitters_10h_transp, 0);
 			}
-			// fallthrough!
+			FALLTHROUGH;
 		default:
 			if (fixes->enable_super_high_jump && tile_left == tiles_26_lattice_down && curr_tile == tiles_12_doortop) {
 				add_foretable(id_chtab_6_environment, 6, draw_xh, 0, tile_table[curr_tile].base_y + draw_main_y + 3, blitters_10h_transp, 0);
@@ -1605,7 +1605,7 @@ void __pascal far draw_objtable_item(int index) {
 			if (obj_id == 0xFF) return;
 			// the Kid blinks a bit after uniting with shadow
 			if (united_with_shadow && (united_with_shadow % 2) == 0) goto shadow;
-			// fallthrough!
+			FALLTHROUGH;
 		case 2: // Guard
 		case 3: // sword
 		case 5: // hurt splash

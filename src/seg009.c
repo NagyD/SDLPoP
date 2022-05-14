@@ -2490,7 +2490,7 @@ void __pascal far set_gr_mode(byte grmode) {
 		case 0:  flags |= SDL_RENDERER_SOFTWARE;    break;
 		case 1:  flags |= SDL_RENDERER_ACCELERATED; break;
 		case 2:  // let SDL decide
-		         // fallthrough!
+		         FALLTHROUGH;
 		default: break;
 	}
 	renderer_ = SDL_CreateRenderer(window_, -1 , flags | SDL_RENDERER_TARGETTEXTURE);
@@ -3552,7 +3552,7 @@ void process_events() {
 				switch (event.window.event) {
 					case SDL_WINDOWEVENT_SIZE_CHANGED:
 						window_resized();
-						// fallthrough!
+						FALLTHROUGH;
 					//case SDL_WINDOWEVENT_MOVED:
 					//case SDL_WINDOWEVENT_RESTORED:
 					case SDL_WINDOWEVENT_EXPOSED:
