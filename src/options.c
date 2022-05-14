@@ -175,7 +175,7 @@ static int global_ini_callback(const char *section, const char *name, const char
 #endif
 		if (strcasecmp(name, "mods_folder") == 0) {
 			if (value[0] != '\0' && strcasecmp(value, "default") != 0) {
-				strcpy(mods_folder, locate_file(value));
+				snprintf_check(mods_folder, sizeof(mods_folder), "%s", locate_file(value));
 			}
 			return 1;
 		}
@@ -210,7 +210,7 @@ static int global_ini_callback(const char *section, const char *name, const char
 
 		if (strcasecmp(name, "gamecontrollerdb_file") == 0) {
 			if (value[0] != '\0') {
-				strcpy(gamecontrollerdb_file, locate_file(value));
+				snprintf_check(gamecontrollerdb_file, sizeof(gamecontrollerdb_file), "%s", locate_file(value));
 			}
 			return 1;
 		}
@@ -225,7 +225,7 @@ static int global_ini_callback(const char *section, const char *name, const char
 
 		if (strcasecmp(name, "replays_folder") == 0) {
 			if (value[0] != '\0' && strcasecmp(value, "default") != 0) {
-				strcpy(replays_folder, locate_file(value));
+				snprintf_check(replays_folder, sizeof(replays_folder), "%s", locate_file(value));
 			}
 			return 1;
 		}
@@ -538,7 +538,7 @@ int identify_dos_exe_version(int filesize) {
 
 void load_dos_exe_modifications(const char* folder_name) {
 	char filename[POP_MAX_PATH];
-	snprintf(filename, sizeof(filename), "%s/%s", folder_name, "PRINCE.EXE");
+	snprintf_check(filename, sizeof(filename), "%s/%s", folder_name, "PRINCE.EXE");
 	FILE* fp = fopen(filename, "rb");
 
 	int dos_version = -1;
@@ -551,7 +551,7 @@ void load_dos_exe_modifications(const char* folder_name) {
 		if (directory_listing != NULL) {
 			do {
 				char* current_filename = get_current_filename_from_directory_listing(directory_listing);
-				snprintf(filename, sizeof(filename), "%s/%s", folder_name, current_filename);
+				snprintf_check(filename, sizeof(filename), "%s/%s", folder_name, current_filename);
 				fp = fopen(filename, "rb");
 				if (fp != NULL && fstat(fileno(fp), &info) == 0 && info.st_size > 0) {
 					dos_version = identify_dos_exe_version((int)info.st_size);
