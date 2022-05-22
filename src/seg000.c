@@ -583,9 +583,11 @@ int __pascal far process_key() {
 			is_keyboard_mode = 1;
 			need_show_text = 1;
 		break;
+		/*
 		case SDL_SCANCODE_K | WITH_CTRL | WITH_SHIFT: // ctrl-shift-k
 			redefine_keys();
 		break;
+		*/
 		case SDL_SCANCODE_R | WITH_CTRL: // ctrl-r
 			start_level = -1;
 #ifdef USE_MENU

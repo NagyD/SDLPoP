@@ -121,6 +121,8 @@ Controlling the kid:
 * page up or up+right: jump right
 You can also use the numeric keypad.
 
+The keyboard controls can be redefined in the pause menu.
+
 Gamepad equivalents:
 * D-Pad: arrows
 * Joystick: left/right (for all-directional joystick movement, set joystick_only_horizontal to false in SDLPoP.ini)
@@ -138,7 +140,6 @@ Controlling the game:
 * Ctrl-K: keyboard mode
 	The initial mode is joystick/gamepad if such a device is detected, otherwise keyboard mode.
 	The game will automatically change input mode when there is input from either device.
-* Ctrl-Shift-K: Redefine keyboard controls.
 * Ctrl-R: return to intro
 * Ctrl-S: sound on/off
 * Ctrl-V: show version of SDLPoP

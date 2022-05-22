@@ -1530,6 +1530,7 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 
 	} else if (setting->style == SETTING_STYLE_KEY && !disabled) {
 		int value = get_setting_value(setting);
+		// Problem: The rest of the menu items will not be drawn until the dialog is closed.
 		if (highlighted_setting_id == setting->id) {
 			if (pressed_enter || (mouse_clicked && is_mouse_over_rect(&setting_box))) {
 				redefine_key(setting->text, setting->linked);
