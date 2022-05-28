@@ -27,13 +27,13 @@ The authors of this program may be contacted at https://forum.princed.org
 #define DW(data_word) (data_word) & 0x00FF, (((data_word) & 0xFF00) >> 8)
 
 // Shorter notation for the sequence table instructions
-#define act(action) SEQ_ACTION, action
+#define act(action) SEQ_ACTION, (action)
 #define jmp(dest) SEQ_JMP, DW(dest)
 #define jmp_if_feather(dest) SEQ_JMP_IF_FEATHER, DW(dest)
-#define dx(amount) SEQ_DX, (byte) amount
-#define dy(amount) SEQ_DY, (byte) amount
-#define snd(sound) SEQ_SOUND, sound
-#define set_fall(x, y) SEQ_SET_FALL, (byte) x, (byte) y
+#define dx(amount) SEQ_DX, (byte) (amount)
+#define dy(amount) SEQ_DY, (byte) (amount)
+#define snd(sound) SEQ_SOUND, (sound)
+#define set_fall(x, y) SEQ_SET_FALL, (byte) (x), (byte) (y)
 
 // This splits the byte array into labeled "sections" that are packed tightly next to each other
 // However, it only seems to work correctly in the Debug configuration...
@@ -781,7 +781,7 @@ byte seqtbl[] = {
 	dx(3), frame_124_stepping_4,
 	dx(4), frame_125_stepping_5,
 	dx(3), frame_126_stepping_6,
-	dx(-)2, frame_128_stepping_8,
+	dx(-2), frame_128_stepping_8,
 	frame_129_stepping_9, frame_130_stepping_10, frame_131_stepping_11, frame_132_stepping_12,
 	jmp(stand), // goto "stand"
 
