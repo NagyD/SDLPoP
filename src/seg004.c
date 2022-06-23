@@ -187,6 +187,16 @@ void __pascal far check_bumped_look_left() {
 	if ((Char.sword == sword_2_drawn || Char.direction < dir_0_right) && // looking left
 		is_obstacle_at_col(bump_col_right_of_wall)
 	) {
+#ifdef USE_JUMP_GRAB
+        // Prince can grab a floor on top of a wall during a jump if Shift and up arrow keys are pressed.
+        if (fixes->enable_jump_grab && control_shift < 0) {
+            if (check_grab_run_jump()) {
+                return;
+            }
+            // reset obstacle tile values
+            is_obstacle_at_col(bump_col_right_of_wall);
+        }
+#endif
 		bumped(get_right_wall_xpos(curr_room, tile_col, tile_row) - char_x_left_coll, dir_0_right);
 	}
 }
@@ -196,6 +206,16 @@ void __pascal far check_bumped_look_right() {
 	if ((Char.sword == sword_2_drawn || Char.direction == dir_0_right) && // looking right
 		is_obstacle_at_col(bump_col_left_of_wall)
 	) {
+#ifdef USE_JUMP_GRAB
+        // Prince can grab a floor on top of a wall during a jump if Shift and up arrow keys are pressed.
+        if (fixes->enable_jump_grab && control_shift < 0) {
+            if (check_grab_run_jump()) {
+                return;
+            }
+            // reset obstacle tile values
+            is_obstacle_at_col(bump_col_left_of_wall);
+        }
+#endif
 		bumped(get_left_wall_xpos(curr_room, tile_col, tile_row) - char_x_right_coll, dir_FF_left);
 	}
 }

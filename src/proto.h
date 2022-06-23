@@ -353,6 +353,9 @@ void __pascal far add_sword_to_objtable(void);
 void __pascal far control_guard_inactive(void);
 int __pascal far char_opp_dist(void);
 void __pascal far inc_curr_row(void);
+#ifdef USE_JUMP_GRAB
+bool check_grab_run_jump(void);
+#endif
 
 // SEG007.C
 void __pascal far process_trobs(void);
