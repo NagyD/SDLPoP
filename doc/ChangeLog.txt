@@ -684,3 +684,7 @@ FIXED: Make the +/- keys work on the main keyboard, on any keyboard layout.
 	Details: https://github.com/NagyD/SDLPoP/pull/275
 FIXED: Fixed crash when trying to load a non-existent mod from command line.
 	Details: https://github.com/NagyD/SDLPoP/issues/277
+DONE: Added an ability to grab tiles while jumping forward.
+	Details: https://github.com/NagyD/SDLPoP/pull/283
+	See the comment for enable_jump_grab in SDLPoP.ini on how to use it.
+	Fixes and enhancements must be enabled for this.
