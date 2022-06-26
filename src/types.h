@@ -1005,6 +1005,7 @@ enum seqids {
 	seq_6_run_turn = 6,
 	seq_7_fall = 7,
 	seq_8_jump_up_and_grab_straight = 8,
+	seq_9_grab_while_jumping = 9,
 	seq_10_climb_up = 10,
 	seq_11_release_ledge_and_land = 11,
 	seq_13_stop_run = 13,
@@ -1238,6 +1239,7 @@ typedef struct fixes_options_type {
 	byte fix_jumping_over_guard;
 	byte fix_drop_2_rooms_climbing_loose_tile;
 	byte fix_falling_through_floor_during_sword_strike;
+	byte enable_jump_grab;
 } fixes_options_type;
 
 #define NUM_GUARD_SKILLS 12

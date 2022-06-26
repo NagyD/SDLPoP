@@ -291,6 +291,8 @@ The authors of this program may be contacted at https://forum.princed.org
 // Prince can jump 2 stories up in feather fall mode
 #define USE_SUPER_HIGH_JUMP
 
+// Prince can grab tiles on the row above from a standing or a running jump
+#define USE_JUMP_GRAB
 
 // Debug features:
 

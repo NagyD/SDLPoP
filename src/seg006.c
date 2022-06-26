@@ -884,6 +884,12 @@ void __pascal far check_action() {
 	short action;
 	action = Char.action;
 	frame = Char.frame;
+#ifdef USE_JUMP_GRAB
+    // Prince can grab tiles during a jump if Shift and up arrow, but not forward arrow, keys are pressed.
+    if (fixes->enable_jump_grab && action == actions_1_run_jump && control_shift < 0 && check_grab_run_jump()) {
+        return;
+    }
+#endif
 	// frame 109: crouching
 	if (action == actions_6_hang_straight ||
 		action == actions_5_bumped
@@ -1190,6 +1196,45 @@ void __pascal far check_grab() {
 		}
 	}
 }
+
+#ifdef USE_JUMP_GRAB
+bool check_grab_run_jump() {
+    // grabbing distance:
+    // running jump - about 2.5 tiles or closer
+    // standing jump - just over 1 tile, enough to jump over an abyss/obstacle
+    word frame;
+    short grab_col;
+    bool is_jump, is_running_jump;
+    frame = Char.frame;
+    is_jump = frame >= frame_22_standing_jump_7 && frame <= frame_23_standing_jump_8;
+    is_running_jump = frame >= frame_39_start_run_jump_6 && frame <= frame_41_running_jump_2;
+    if (Char.action == actions_1_run_jump &&
+            (is_jump || is_running_jump) &&
+            control_x == 0 && control_y < 0) {
+        if (can_grab_front_above()) { // can grab a ledge at a specific frame during a jump
+		    grab_col = tile_col;
+		    // Prince's and tile rooms can get out of sync at the edge of a room
+		    // causing teleportation
+    		if (curr_room != Char.room)	{
+    			if (curr_room == level.roomlinks[Char.room - 1].right) {
+    				grab_col += 10;
+    			} else if (curr_room == level.roomlinks[Char.room - 1].left) {
+    				grab_col -= 10;
+    			}
+    		}
+            Char.x = x_bump[grab_col + 5] + 7;
+            Char.x = char_dx_forward(Char.direction == dir_FF_left ? -12 : 2);
+            Char.y = y_land[Char.curr_row + 1];
+            seqtbl_offset_char(seq_9_grab_while_jumping); // grab a ledge
+            play_seq();
+            grab_timer = 12;
+            play_sound(sound_9_grab); // grab
+            return 1;
+        }
+    }
+    return 0;
+}
+#endif
 
 // seg006:0ABD
 int __pascal far can_grab_front_above() {
