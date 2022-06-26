@@ -1530,22 +1530,9 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 
 	} else if (setting->style == SETTING_STYLE_KEY && !disabled) {
 		int value = get_setting_value(setting);
-		// Problem: The rest of the menu items will not be drawn until the dialog is closed.
-		if (highlighted_setting_id == setting->id) {
-			if (pressed_enter || (mouse_clicked && is_mouse_over_rect(&setting_box))) {
-				redefine_key(setting->text, setting->linked);
-			}
-		}
-
-		value = get_setting_value(setting); // May have been updated.
-		//char* value_text = print_setting_value(setting, value);
 		char value_text[256];
 		snprintf(value_text, sizeof(value_text), "%s (%d)", SDL_GetScancodeName(value), value);
 		show_text_with_color(&text_rect, 1, -1, value_text, selected_color);
-
-		if (highlighted_setting_id == setting->id) {
-			//
-		}
 
 	} else {
 		// show text only
@@ -1561,6 +1548,34 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 				}
 			}
 
+		}
+	}
+
+	*y_offset += 15;
+}
+
+// Handle the redefining of keyboard controls separately from drawing the menu.
+// Otherwise the menu items under the current one will not be drawn until the dialog is closed.
+void handle_setting(setting_type* setting, rect_type* parent, int* y_offset, int inactive_text_color) {
+	rect_type text_rect = *parent;
+	text_rect.top += *y_offset;
+
+	rect_type setting_box = text_rect;
+	setting_box.top -= 5;
+	setting_box.bottom = setting_box.top + 15;
+	setting_box.left -= 10;
+	setting_box.right += 10;
+
+	bool disabled = false;
+	if (setting->required != NULL) {
+		disabled = !(*(byte*)setting->required);
+	}
+
+	if (setting->style == SETTING_STYLE_KEY && !disabled) {
+		if (highlighted_setting_id == setting->id) {
+			if (pressed_enter || (mouse_clicked && is_mouse_over_rect(&setting_box))) {
+				redefine_key(setting->text, setting->linked);
+			}
 		}
 	}
 
@@ -1585,24 +1600,36 @@ void draw_settings_area(settings_area_type* settings_area) {
 	if (settings_area == NULL) return;
 	rect_type settings_area_rect = {0, 80, 170, 320};
 	shrink2_rect(&settings_area_rect, &settings_area_rect, 20, 20);
-	int y_offset = 0;
-	int num_drawn_settings = 0;
+
+	int start_y_offset = 0;
 
 	// The MODS subsection with level specific settings is a special case:
 	// We want to display which level we are editing, and start drawing slightly lower.
 	if (active_settings_subsection == SETTINGS_MENU_LEVEL_CUSTOMIZATION) {
-		y_offset = 15;
+		start_y_offset = 15;
 		char level_text[16];
 		snprintf(level_text, sizeof(level_text), "LEVEL %d", menu_current_level);
 		show_text_with_color(&settings_area_rect, 0, -1, level_text, color_15_brightwhite);
 	}
 
+	int y_offset = start_y_offset;
+	int num_drawn_settings = 0;
 	for (int i = 0; (i < settings_area->setting_count) && (num_drawn_settings < 9); ++i) {
 		if (i >= scroll_position) {
 			++num_drawn_settings;
 			draw_setting(&settings_area->settings[i], &settings_area_rect, &y_offset, color_15_brightwhite);
 		}
 	}
+
+	y_offset = start_y_offset;
+	num_drawn_settings = 0;
+	for (int i = 0; (i < settings_area->setting_count) && (num_drawn_settings < 9); ++i) {
+		if (i >= scroll_position) {
+			++num_drawn_settings;
+			handle_setting(&settings_area->settings[i], &settings_area_rect, &y_offset, color_15_brightwhite);
+		}
+	}
+
 	if (scroll_position > 0) {
 		draw_image_with_blending(arrowhead_up_image, 200, 10);
 	}
