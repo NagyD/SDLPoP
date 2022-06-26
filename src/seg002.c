@@ -254,8 +254,11 @@ void __pascal far check_guard_fallout() {
 		clear_char();
 		saveshad();
 	} else if (Guard.charid == charid_4_skeleton &&
-		(Guard.room = level.roomlinks[Guard.room - 1].down) == /*3*/ custom->skeleton_reappear_room) {
+		// should the level number be checked too?
+		level.roomlinks[Guard.room - 1].down == /*3*/ custom->skeleton_reappear_room
+	) {
 		// if skeleton falls down into room 3
+		Guard.room = level.roomlinks[Guard.room - 1].down;
 		Guard.x = /*133*/ custom->skeleton_reappear_x;
 		Guard.curr_row = /*1*/ custom->skeleton_reappear_row;
 		Guard.direction = /*dir_0_right*/ custom->skeleton_reappear_dir;
