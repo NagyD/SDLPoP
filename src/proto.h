@@ -78,6 +78,7 @@ void show_splash(void);
 void check_quick_op(void);
 void restore_room_after_quick_load(void);
 #endif // USE_QUICKSAVE
+void redefine_key(const char* name, int* key);
 
 // SEG001.C
 int __pascal far proc_cutscene_frame(int wait_frames);
@@ -624,6 +625,7 @@ void __pascal do_simple_wait(int timer_index);
 void process_events(void);
 void idle(void);
 void __pascal far init_copyprot_dialog(void);
+int __pascal far showmessage(char far *text,int arg_4,void far *arg_0);
 dialog_type * __pascal far make_dialog_info(dialog_settings_type *settings, rect_type *dialog_rect,
                                             rect_type *text_rect, peel_type *dialog_peel);
 void __pascal far calc_dialog_peel_rect(dialog_type*dialog);
