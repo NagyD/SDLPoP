@@ -1204,6 +1204,7 @@ bool check_grab_run_jump() {
     // standing jump - just over 1 tile, enough to jump over an abyss/obstacle
     word frame;
     short grab_col;
+    short left_room, right_room;
     bool is_jump, is_running_jump;
     frame = Char.frame;
     is_jump = frame >= frame_22_standing_jump_7 && frame <= frame_23_standing_jump_8;
@@ -1212,16 +1213,22 @@ bool check_grab_run_jump() {
             (is_jump || is_running_jump) &&
             control_x == 0 && control_y < 0) {
         if (can_grab_front_above()) { // can grab a ledge at a specific frame during a jump
-		    grab_col = tile_col;
-		    // Prince's and tile rooms can get out of sync at the edge of a room
-		    // causing teleportation
-    		if (curr_room != Char.room)	{
-    			if (curr_room == level.roomlinks[Char.room - 1].right) {
-    				grab_col += 10;
-    			} else if (curr_room == level.roomlinks[Char.room - 1].left) {
-    				grab_col -= 10;
-    			}
-    		}
+            grab_col = tile_col;
+            // Prince's and tile rooms can get out of sync at the edge of a room
+            // causing teleportation
+            if (curr_room != Char.room) {
+                left_room = level.roomlinks[Char.room - 1].left;
+                right_room = level.roomlinks[Char.room - 1].right;
+                if (curr_room == right_room) {
+                    grab_col += 10;
+                } else if (curr_room == left_room) {
+                   grab_col -= 10;
+                } else if (right_room && curr_room == level.roomlinks[right_room - 1].up) {
+                   grab_col += 10;
+                } else if (left_room && curr_room == level.roomlinks[left_room - 1].up) {
+                   grab_col -= 10;
+                }
+            }
             Char.x = x_bump[grab_col + 5] + 7;
             Char.x = char_dx_forward(Char.direction == dir_FF_left ? -12 : 2);
             Char.y = y_land[Char.curr_row + 1];
