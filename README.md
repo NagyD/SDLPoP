@@ -333,7 +333,9 @@ Furthermore, SDLPoP opens up new possibilities for mod making. For example:
 * Alternate link: https://www.popot.org/custom_levels.php?mod=0000153
 
 Since version 1.16, there is support for fake tiles, for example walls that the prince can go through.
-The Apoplexy level editor supports these additional tiles since v3.0: https://www.apoplexy.org/ (Just don't overuse them, please!)
+The [Apoplexy level editor](https://www.popot.org/level_editors.php?editor=apoplexy) supports these additional tiles since v3.0. (Just don't overuse them, please!)
+
+See [doc/tiles.md](doc/tiles.md) for documentation on fake tiles.
 
 ## REPLAYS
 
