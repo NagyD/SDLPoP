@@ -1688,7 +1688,11 @@ void handle_setting(setting_type* setting, rect_type* parent, int* y_offset, int
 	if (setting->style == SETTING_STYLE_KEY && !disabled) {
 		if (highlighted_setting_id == setting->id) {
 			if (pressed_enter || (mouse_clicked && is_mouse_over_rect(&setting_box))) {
+				int value_before = get_setting_value(setting);
 				redefine_key(setting->text, setting->linked);
+				int value_after = get_setting_value(setting);
+				// This should be in redefine_key()?
+				if (value_before != value_after) were_settings_changed = true;
 			}
 		}
 	}
@@ -2259,6 +2263,14 @@ void process_ingame_settings_user_managed(SDL_RWops* rw, rw_process_func_type pr
 #ifdef USE_LIGHTING
 	process(enable_lighting);
 #endif
+	// TODO: put these into a single variable?
+	process(key_left      );
+	process(key_right     );
+	process(key_up        );
+	process(key_down      );
+	process(key_jump_left );
+	process(key_jump_right);
+	process(key_action    );
 }
 
 void process_ingame_settings_mod_managed(SDL_RWops* rw, rw_process_func_type process_func) {
