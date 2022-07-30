@@ -930,6 +930,7 @@ extern int g_deprecation_number;
 extern byte always_use_original_music;
 extern byte always_use_original_graphics;
 
+// controls
 extern int key_left       INIT(= SDL_SCANCODE_LEFT);
 extern int key_right      INIT(= SDL_SCANCODE_RIGHT);
 extern int key_up         INIT(= SDL_SCANCODE_UP);
@@ -937,6 +938,9 @@ extern int key_down       INIT(= SDL_SCANCODE_DOWN);
 extern int key_jump_left  INIT(= SDL_SCANCODE_HOME);
 extern int key_jump_right INIT(= SDL_SCANCODE_PAGEUP);
 extern int key_action     INIT(= SDL_SCANCODE_RSHIFT);
+// menus
+extern int key_enter      INIT(= SDL_SCANCODE_RETURN);
+extern int key_esc        INIT(= SDL_SCANCODE_ESCAPE);
 
 #undef INIT
 #undef extern

@@ -302,6 +302,8 @@ enum setting_ids {
 	SETTING_KEY_JUMP_LEFT,
 	SETTING_KEY_JUMP_RIGHT,
 	SETTING_KEY_ACTION,
+	SETTING_KEY_ENTER,
+	SETTING_KEY_ESC,
 };
 
 typedef struct setting_type {
@@ -1030,6 +1032,14 @@ setting_type controls_settings[] = {
 		{.id = SETTING_KEY_ACTION, .style = SETTING_STYLE_KEY, .required = NULL,
 				.linked = &key_action, .number_type = SETTING_INT,
 				.text = "Action",
+				.explanation = ""},
+		{.id = SETTING_KEY_ENTER, .style = SETTING_STYLE_KEY, .required = NULL,
+				.linked = &key_enter, .number_type = SETTING_INT,
+				.text = "Enter a menu",
+				.explanation = ""},
+		{.id = SETTING_KEY_ESC, .style = SETTING_STYLE_KEY, .required = NULL,
+				.linked = &key_esc, .number_type = SETTING_INT,
+				.text = "Exit a menu, pause",
 				.explanation = ""},
 };
 
@@ -2186,6 +2196,15 @@ int key_test_paused_menu(int key) {
 		}
 	}
 
+	// remap
+	if (key == key_up) key = SDL_SCANCODE_UP; else
+	if (key == key_down) key = SDL_SCANCODE_DOWN; else
+	if (key == key_left) key = SDL_SCANCODE_LEFT; else
+	if (key == key_right) key = SDL_SCANCODE_RIGHT; else
+	if (key == key_enter) key = SDL_SCANCODE_RETURN; else
+	if (key == key_esc) key = SDL_SCANCODE_ESCAPE; else
+	/*nothing*/;
+
 	switch(key) {
 		default:
 			if (key & WITH_CTRL) {
@@ -2271,6 +2290,8 @@ void process_ingame_settings_user_managed(SDL_RWops* rw, rw_process_func_type pr
 	process(key_jump_left );
 	process(key_jump_right);
 	process(key_action    );
+	process(key_enter     );
+	process(key_esc       );
 }
 
 void process_ingame_settings_mod_managed(SDL_RWops* rw, rw_process_func_type process_func) {

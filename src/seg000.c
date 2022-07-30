@@ -545,6 +545,11 @@ int __pascal far process_key() {
 	}
 #endif
 
+	// remap
+	if (key == key_enter) key = SDL_SCANCODE_RETURN; else
+	if (key == key_esc) key = SDL_SCANCODE_ESCAPE; else
+	/*nothing*/;
+
 	if (start_level < 0) {
 		if (key || control_shift) {
 			#ifdef USE_QUICKSAVE
@@ -1804,8 +1809,17 @@ int __pascal far showmessage_any_key(char far *text,int arg_4,void far *arg_0) {
 
 void redefine_key(const char* name, int* key) {
 	char message[256];
-	snprintf(message, sizeof(message), "Redefining keys:\nPress key for %s.\nOr press Esc to cancel.", name);
+	snprintf(message, sizeof(message), "Redefining keys:\nPress key for \"%s\".\nOr press Esc to cancel.", name);
+
+	// Use the regular big font for the dialog instead of the small menu font.
+	font_type* saved_font = textstate.ptr_font;
+	textstate.ptr_font = &hc_font;
+
 	int new_key = showmessage_any_key(message, 1, &key_test_quit);
+
+	// Switch back to the menu font.
+	textstate.ptr_font = saved_font;
+
 	if (new_key == SDL_SCANCODE_ESCAPE) return;
 	*key = new_key;
 }
