@@ -1514,6 +1514,13 @@ void __pascal far draw_text_cursor(int xpos,int ypos,int color) {
 
 // seg009:053C
 int __pascal far input_str(const rect_type far *rect,char *buffer,int max_length,const char *initial,int has_initial,int arg_4,int color,int bgcolor) {
+	// Display the screen keyboard if supported.
+	//SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
+	SDL_Rect sdlrect;
+	rect_to_sdlrect(rect, &sdlrect);
+	SDL_SetTextInputRect(&sdlrect);
+	SDL_StartTextInput();
+
 	short length;
 	word key;
 	short cursor_visible;
@@ -1552,6 +1559,7 @@ int __pascal far input_str(const rect_type far *rect,char *buffer,int max_length
 				}
 				if (key == SDL_SCANCODE_RETURN) { // Enter
 					buffer[length] = 0;
+					SDL_StopTextInput();
 					return length;
 				} else break;
 			}
@@ -1564,6 +1572,7 @@ int __pascal far input_str(const rect_type far *rect,char *buffer,int max_length
 		if (key == SDL_SCANCODE_ESCAPE) { // Esc
 			draw_rect(rect, bgcolor);
 			buffer[0] = 0;
+			SDL_StopTextInput();
 			return -1;
 		}
 		if (length != 0 && (key == SDL_SCANCODE_BACKSPACE ||
