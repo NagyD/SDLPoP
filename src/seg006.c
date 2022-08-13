@@ -1203,7 +1203,7 @@ bool check_grab_run_jump() {
     // running jump - about 2.5 tiles or closer
     // standing jump - just over 1 tile, enough to jump over an abyss/obstacle
     word frame;
-    short grab_col;
+    short grab_tile, grab_col;
     short left_room, right_room;
     bool is_jump, is_running_jump;
     frame = Char.frame;
@@ -1213,9 +1213,10 @@ bool check_grab_run_jump() {
             (is_jump || is_running_jump) &&
             control_x == 0 && control_y < 0) {
         if (can_grab_front_above()) { // can grab a ledge at a specific frame during a jump
+            grab_tile = curr_tile2;
             grab_col = tile_col;
             // Prince's and tile rooms can get out of sync at the edge of a room
-            // causing teleportation
+            // causing teleportation.
             if (curr_room != Char.room) {
                 left_room = level.roomlinks[Char.room - 1].left;
                 right_room = level.roomlinks[Char.room - 1].right;
@@ -1236,6 +1237,14 @@ bool check_grab_run_jump() {
             play_seq();
             grab_timer = 12;
             play_sound(sound_9_grab); // grab
+            // check_press() is not going to work on the next frame if Shift is released immediately
+            // because Char.frame changes to frame_81_hangdrop_1.
+            if (grab_tile == tiles_15_opener || grab_tile == tiles_6_closer) {
+                trigger_button(1, 0, -1);
+            } else if (grab_tile == tiles_11_loose) {
+                is_guard_notice = 1;
+                make_loose_fall(1);
+            }
             return 1;
         }
     }
