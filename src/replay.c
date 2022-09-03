@@ -831,6 +831,10 @@ int save_recorded_replay(const char* full_filename)
 		fwrite(&savestate_size, sizeof(savestate_size), 1, replay_fp);
 		fwrite(savestate_buffer, savestate_size, 1, replay_fp);
 
+		// Save the current options (not the defaults) into the replay!
+		fixes_options_replay = fixes_saved;
+		//custom = &custom_saved;
+
 		// save the options, organized per section
 		byte temp_options[POP_MAX_OPTIONS_SIZE];
 		for (int i = 0; i < COUNT(replay_options_sections); ++i) {
