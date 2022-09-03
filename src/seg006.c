@@ -1204,11 +1204,13 @@ bool check_grab_run_jump() {
     // standing jump - just over 1 tile, enough to jump over an abyss/obstacle
     word frame;
     short grab_tile, grab_col;
-    short left_room, right_room;
+    short left_room, right_room, up_room;
     bool is_jump, is_running_jump;
+    short char_room_m1;
     frame = Char.frame;
     is_jump = frame >= frame_22_standing_jump_7 && frame <= frame_23_standing_jump_8;
     is_running_jump = frame >= frame_39_start_run_jump_6 && frame <= frame_41_running_jump_2;
+    char_room_m1 = Char.room - 1;
     if (Char.action == actions_1_run_jump &&
             (is_jump || is_running_jump) &&
             control_x == 0 && control_y < 0) {
@@ -1218,16 +1220,21 @@ bool check_grab_run_jump() {
             // Prince's and tile rooms can get out of sync at the edge of a room
             // causing teleportation.
             if (curr_room != Char.room) {
-                left_room = level.roomlinks[Char.room - 1].left;
-                right_room = level.roomlinks[Char.room - 1].right;
+                left_room = level.roomlinks[char_room_m1].left;
+                right_room = level.roomlinks[char_room_m1].right;
+                up_room = level.roomlinks[char_room_m1].up;
                 if (curr_room == right_room) {
                     grab_col += 10;
                 } else if (curr_room == left_room) {
-                   grab_col -= 10;
+                    grab_col -= 10;
                 } else if (right_room && curr_room == level.roomlinks[right_room - 1].up) {
-                   grab_col += 10;
+                    grab_col += 10;
                 } else if (left_room && curr_room == level.roomlinks[left_room - 1].up) {
-                   grab_col -= 10;
+                    grab_col -= 10;
+                } else if (up_room && curr_room == level.roomlinks[up_room - 1].right) {
+                    grab_col += 10;
+                } else if (up_room && curr_room == level.roomlinks[up_room - 1].left) {
+                    grab_col -= 10;
                 }
             }
             Char.x = x_bump[grab_col + 5] + 7;
