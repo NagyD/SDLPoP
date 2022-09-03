@@ -1,0 +1,6 @@
+﻿The prince should grab the ledge on the left.
+To pass the test: #define USE_JUMP_GRAB in config.h and enable Settings -> Gameplay -> Enable jump grab.
+(For some reason, the latter is not enabled by the replay, even though I recorded with the setting enabled. 
+You need to enable it manually right after the playback starts.)
+
+More info: https://github.com/NagyD/SDLPoP/pull/289
