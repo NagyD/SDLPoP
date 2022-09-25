@@ -1160,7 +1160,7 @@ void reset_level_unused_fields(bool loading_clean_level) {
 	memset(level.fill_3, 0, sizeof(level.fill_3));
 
 	// level.used_rooms is 25 on some levels. Limit it to the actual number of rooms.
-	if (level.used_rooms > 24) level.used_rooms = 24;
+	if (level.used_rooms > ROOMCOUNT) level.used_rooms = ROOMCOUNT;
 
 	// For these fields, only use the bits that are actually used, and set the rest to zero.
 	// Good for repurposing the unused bits in the future.
@@ -1768,8 +1768,8 @@ void __pascal far copy_screen_rect(const rect_type far *source_rect_ptr) {
 	if (upside_down) {
 		target_rect_ptr = &target_rect;
 		/**target_rect_ptr*/target_rect = *source_rect_ptr;
-		/*target_rect_ptr->*/target_rect.top = 192 - source_rect_ptr->bottom;
-		/*target_rect_ptr->*/target_rect.bottom = 192 - source_rect_ptr->top;
+		/*target_rect_ptr->*/target_rect.top = SCREEN_GAMEPLAY_HEIGHT - source_rect_ptr->bottom;
+		/*target_rect_ptr->*/target_rect.bottom = SCREEN_GAMEPLAY_HEIGHT - source_rect_ptr->top;
 	} else {
 		target_rect_ptr = source_rect_ptr;
 	}

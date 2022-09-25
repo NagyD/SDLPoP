@@ -309,7 +309,7 @@ typedef struct char_type {
 	sbyte curr_row;
 	byte action;
 	sbyte fall_x;
-	sbyte fall_y;
+	sbyte fall_y; //Falling speed, but also used to check falling distance (less than 22 = one row, less than 33 = two rows)
 	byte room;
 	byte repeat;
 	byte charid;
@@ -1360,5 +1360,27 @@ typedef struct directory_listing_type directory_listing_type;
 #define BASE_FPS 60
 
 #define FEATHER_FALL_LENGTH 18.75
+
+enum
+{
+	EDGE_TYPE_CLOSER, // closer/sword/potion
+	EDGE_TYPE_EDGE, // edge
+	EDGE_TYPE_FLOOR, // floor (nothing near char)
+};
+
+#define TILE_SIZEX 14 // Horizontal size of tile in the internal coordinate system (a tile is 32 pixels wide in screen space)
+#define TILE_MIDX 7 // Middle horizontal point of a tile
+#define TILE_RIGHTX 13 // Right-most point of a tile
+#define TILE_SIZEY 63 // Vertical size of a tile (this also matches the pixel height of tiles in screen space)
+#define SCREENSPACE_X 58 // Position of the left-most pixel in screenspace in the internal coordinate system
+#define SCREEN_TILECOUNTX 10 // Quantity of columns of tiles visible in a room
+#define SCREEN_TILECOUNTY 3 // Quantity of rows of tiles visible in a room
+#define FIRST_ONSCREEN_COLUMN 5 // Used for referencing the first column visible in screen space in the x_bump array
+#define FALLING_SPEED_MAX 33
+#define FALLING_SPEED_ACCEL 3
+#define FALLING_SPEED_MAX_FEATHER 4
+#define FALLING_SPEED_ACCEL_FEATHER 1
+#define ROOMCOUNT 24 // Max quantity of rooms for any level
+#define SCREEN_GAMEPLAY_HEIGHT 192 // Portion of the screen space dedicated to gameplay graphics
 
 #endif

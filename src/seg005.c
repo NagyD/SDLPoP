@@ -233,10 +233,10 @@ void __pascal far spiked() {
 				spike_col -= 10;
 			}
 		}
-		Char.x = x_bump[spike_col + 5] + 10;
+		Char.x = x_bump[spike_col + FIRST_ONSCREEN_COLUMN] + 10;
 	} else {
 	#endif
-		Char.x = x_bump[tile_col + 5] + 10;
+		Char.x = x_bump[tile_col + FIRST_ONSCREEN_COLUMN] + 10;
 	#ifdef FIX_OFFSCREEN_GUARDS_DISAPPEARING
 	}
 	#endif
@@ -465,7 +465,7 @@ void __pascal far down_pressed() {
 
 // seg005:0574
 void __pascal far go_up_leveldoor() {
-	Char.x = x_bump[tile_col + 5] + 10;
+	Char.x = x_bump[tile_col + FIRST_ONSCREEN_COLUMN] + 10;
 	Char.direction = dir_FF_left; // right
 	seqtbl_offset_char(seq_70_go_up_on_level_door); // go up on level door
 }
@@ -530,7 +530,7 @@ void __pascal far forward_pressed() {
 	}
 	#endif
 
-	if (edge_type == 1 && curr_tile2 != tiles_18_chomper && distance < 8) {
+	if (edge_type == EDGE_TYPE_EDGE && curr_tile2 != tiles_18_chomper && distance < 8) {
 		// If char is near a wall, step instead of run.
 		if (control_forward < 0) {
 			safe_step();
@@ -565,7 +565,7 @@ void __pascal far safe_step() {
 	if (distance) {
 		Char.repeat = 1;
 		seqtbl_offset_char(distance + 28); // 29..42: safe step to edge
-	} else if (edge_type != 1 && Char.repeat != 0) {
+	} else if (edge_type != EDGE_TYPE_EDGE && Char.repeat != 0) {
 		Char.repeat = 0;
 		seqtbl_offset_char(seq_44_step_on_edge); // step on edge
 	} else {
@@ -598,7 +598,7 @@ void __pascal far get_item() {
 	short distance;
 	if (Char.frame != frame_109_crouch) { // crouching
 		distance = get_edge_distance();
-		if (edge_type != 2) {
+		if (edge_type != EDGE_TYPE_FLOOR) {
 			Char.x = char_dx_forward(distance);
 		}
 		if (Char.direction >= dir_0_right) {
@@ -677,7 +677,7 @@ void __pascal far jump_up_or_grab() {
 		grab_up_no_floor_behind();
 	} else {
 		// There is floor behind char, go back a bit.
-		Char.x = char_dx_forward(distance - 14);
+		Char.x = char_dx_forward(distance - TILE_SIZEX);
 		load_fram_det_col();
 		grab_up_with_floor_behind();
 	}
@@ -696,13 +696,13 @@ void __pascal far jump_up() {
 	word delta_x;
 	control_up = release_arrows();
 	distance = get_edge_distance();
-	if (distance < 4 && edge_type == 1) {
+	if (distance < 4 && edge_type == EDGE_TYPE_EDGE) {
 		Char.x = char_dx_forward(distance - 3);
 	}
 	#ifdef FIX_JUMP_DISTANCE_AT_EDGE
 	// When climbing up two floors, turning around and jumping upward, the kid falls down.
 	// This fix makes the workaround of Trick 25 unnecessary.
-	if (fixes->fix_jump_distance_at_edge && distance == 3 && edge_type == 0) {
+	if (fixes->fix_jump_distance_at_edge && distance == 3 && edge_type == EDGE_TYPE_CLOSER) {
 		Char.x = char_dx_forward(-1);
 	}
 	#endif
@@ -842,8 +842,8 @@ void __pascal far grab_up_with_floor_behind() {
 	// When climbing to a higher floor, the game unnecessarily checks how far away the edge below is;
 	// This contributes to sometimes "teleporting" considerable distances when climbing from firm ground
 	#define JUMP_STRAIGHT_CONDITION (fixes->fix_edge_distance_check_when_climbing)						\
-									? (distance < 4 && edge_type != 1)									\
-									: (distance < 4 && edge_distance < 4 && edge_type != 1)
+									? (distance < 4 && edge_type != EDGE_TYPE_EDGE)									\
+									: (distance < 4 && edge_distance < 4 && edge_type != EDGE_TYPE_EDGE)
 	#else
 	#define JUMP_STRAIGHT_CONDITION distance < 4 && edge_distance < 4 && edge_type != 1
 	#endif
@@ -871,7 +871,7 @@ void __pascal far run_jump() {
 			col += dir_front[Char.direction + 1];
 			get_tile(Char.room, col, Char.curr_row);
 			if (curr_tile2 == tiles_2_spike || ! tile_is_floor(curr_tile2)) {
-				var_8 = distance_to_edge(xpos) + 14 * var_2 - 14;
+				var_8 = distance_to_edge(xpos) + TILE_SIZEX * var_2 - TILE_SIZEX;
 				if ((word)var_8 < (word)-8 || var_8 >= 2) {
 					if (var_8 < 128) return;
 					var_8 = -3;
