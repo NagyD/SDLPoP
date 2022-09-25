@@ -501,12 +501,15 @@ extern mob_type mobs[14];
 // data:4332
 extern short tile_col;
 // data:229C
+// List of every floor position for the 3 rows on screen (and also the row above the screen and the row below the screen)
+// These positions correspond to the standing position of characters on a floor
 extern const short y_land[] INIT(= {-8, 55, 118, 181, 244});
 // data:5888
 extern word curr_guard_color;
 // data:288C
 extern byte key_states[SDL_NUM_SCANCODES];
 // data:24A6
+// List of the left-most position of every tile on the screen (and the 5 tiles to the left off-screen, and the 5 tiles to the right off-screen)
 extern const byte x_bump[] INIT(= {-12, 2, 16, 30, 44, 58, 72, 86, 100, 114, 128, 142, 156, 170, 184, 198, 212, 226, 240, 254});
 // data:42F4
 extern word is_screaming;
