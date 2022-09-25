@@ -2076,7 +2076,7 @@ void __pascal far draw_left_mark (word decal_variant, word arg2, word arg1) {
 	} else if (decal_variant > 1) {
 		lv2 = arg2 + 6;
 	}
-	ptr_add_table(RSET_WALL, image_id, draw_xh + (arg3 == 2 || arg3 == 3), lv2, draw_bottom_y - LPOS[decal_variant], BLIT_TRANS, 0);
+	ptr_add_table(RSET_WALL, image_id, draw_xh + (decal_variant == 2 || decal_variant == 3), lv2, draw_bottom_y - LPOS[decal_variant], BLIT_TRANS, 0);
 }
 
 void __pascal far draw_right_mark (word decal_variant, word arg1) {
@@ -2091,5 +2091,5 @@ void __pascal far draw_right_mark (word decal_variant, word arg1) {
 	} else {
 		arg1 -= 3;
 	}
-	ptr_add_table(RSET_WALL, image_id, draw_xh + (decalVariant > 1), arg1, draw_bottom_y - RPOS[decal_variant], BLIT_TRANS, 0);
+	ptr_add_table(RSET_WALL, image_id, draw_xh + (decal_variant > 1), arg1, draw_bottom_y - RPOS[decal_variant], BLIT_TRANS, 0);
 }
