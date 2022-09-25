@@ -859,24 +859,24 @@ void __pascal far grab_up_with_floor_behind() {
 
 // seg005:0AF7
 void __pascal far run_jump() {
-	short var_2;
+	short tiles_forward;
 	short xpos;
 	short col;
-	short var_8;
+	short pos_adjustment;
 	if (Char.frame >= frame_7_run) {
 		// Align Kid to edge of floor.
 		xpos = char_dx_forward(4);
 		col = get_tile_div_mod_m7(xpos);
-		for (var_2 = 0; var_2 < 2; ++var_2) {
+		for (tiles_forward = 0; tiles_forward < 2; ++tiles_forward) { // Iterate through current tile and the next two tiles looking for a tile the player should jump from
 			col += dir_front[Char.direction + 1];
 			get_tile(Char.room, col, Char.curr_row);
 			if (curr_tile2 == tiles_2_spike || ! tile_is_floor(curr_tile2)) {
-				var_8 = distance_to_edge(xpos) + TILE_SIZEX * var_2 - TILE_SIZEX;
-				if ((word)var_8 < (word)-8 || var_8 >= 2) {
-					if (var_8 < 128) return;
-					var_8 = -3;
+				pos_adjustment = distance_to_edge(xpos) + TILE_SIZEX * tiles_forward - TILE_SIZEX;
+				if ((word)pos_adjustment < (word)-8 || pos_adjustment >= 2) {
+					if (pos_adjustment < 128) return;
+					pos_adjustment = -3;
 				}
-				Char.x = char_dx_forward(var_8 + 4);
+				Char.x = char_dx_forward(pos_adjustment + 4);
 				break;
 			}
 		}
