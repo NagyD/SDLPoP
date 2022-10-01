@@ -733,14 +733,14 @@ int __pascal far get_tile_div_mod(int xpos) {
 //	return tile_div_tbl[xpos];
 
 	// xpos uses a coordinate system in which the left edge of the screen is 58, and each tile is 14 units wide.
-	int x = xpos - 58;
-	int xl = x % 14;
-	int xh = x / 14;
+	int x = xpos - SCREENSPACE_X;
+	int xl = x % TILE_SIZEX;
+	int xh = x / TILE_SIZEX;
 	if (xl < 0) {
 		// Integer division rounds towards zero, but we want to round down.
 		--xh;
 		// Modulo returns a negative number if x is negative, but we want 0 <= xl < 14.
-		xl += 14;
+		xl += TILE_SIZEX;
 	}
 
 	// For compatibility with the DOS version, we allow for overflow access to these tables
@@ -780,7 +780,7 @@ int __pascal far get_tile_div_mod(int xpos) {
 
 // seg006:0433
 int __pascal far y_to_row_mod4(int ypos) {
-	return (ypos + 60) / 63 % 4 - 1;
+	return (ypos + 60) / TILE_SIZEY % 4 - 1;
 }
 
 // seg006:044F
@@ -855,11 +855,11 @@ void __pascal far x_to_xh_and_xl(int xpos, sbyte *xh_addr, sbyte *xl_addr) {
 void __pascal far fall_accel() {
 	if (Char.action == actions_4_in_freefall) {
 		if (is_feather_fall) {
-			++Char.fall_y;
-			if (Char.fall_y > 4) Char.fall_y = 4;
+			Char.fall_y += FALLING_SPEED_ACCEL_FEATHER;
+			if (Char.fall_y > FALLING_SPEED_MAX_FEATHER) Char.fall_y = FALLING_SPEED_MAX_FEATHER;
 		} else {
-			Char.fall_y += 3;
-			if (Char.fall_y > 33) Char.fall_y = 33;
+			Char.fall_y += FALLING_SPEED_ACCEL;
+			if (Char.fall_y > FALLING_SPEED_MAX) Char.fall_y = FALLING_SPEED_MAX;
 		}
 	}
 }
@@ -1237,7 +1237,7 @@ bool check_grab_run_jump() {
                     grab_col -= 10;
                 }
             }
-            Char.x = x_bump[grab_col + 5] + 7;
+            Char.x = x_bump[grab_col + FIRST_ONSCREEN_COLUMN] + TILE_MIDX;
             Char.x = char_dx_forward(Char.direction == dir_FF_left ? -12 : 2);
             Char.y = y_land[Char.curr_row + 1];
             seqtbl_offset_char(seq_9_grab_while_jumping); // grab a ledge
@@ -1308,7 +1308,7 @@ int __pascal far distance_to_edge(int xpos) {
 	get_tile_div_mod_m7(xpos);
 	distance = obj_xl;
 	if (Char.direction == dir_0_right) {
-		distance = 13 - distance;
+		distance = TILE_RIGHTX - distance;
 	}
 	return distance;
 }

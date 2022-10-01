@@ -117,7 +117,7 @@ void __pascal far get_row_collision_data(short row, sbyte *row_coll_room_ptr, by
 	short column;
 	short left_wall_xpos;
 	room = Char.room;
-	coll_tile_left_xpos = x_bump[left_checked_col + 5] + 7;
+	coll_tile_left_xpos = x_bump[left_checked_col + FIRST_ONSCREEN_COLUMN] + TILE_MIDX;
 	for (column = left_checked_col; column <= right_checked_col; ++column) {
 		left_wall_xpos = get_left_wall_xpos(room, column, row);
 		right_wall_xpos = get_right_wall_xpos(room, column, row);
@@ -127,7 +127,7 @@ void __pascal far get_row_collision_data(short row, sbyte *row_coll_room_ptr, by
 		curr_flags |= (right_wall_xpos > char_x_left_coll) * 0xF0;
 		row_coll_flags_ptr[tile_col] = curr_flags;
 		row_coll_room_ptr[tile_col] = curr_room;
-		coll_tile_left_xpos += 14;
+		coll_tile_left_xpos += TILE_SIZEX;
 	}
 }
 
@@ -147,7 +147,7 @@ int __pascal far get_right_wall_xpos(int room,int column,int row) {
 	short type;
 	type = wall_type(get_tile(room, column, row));
 	if (type) {
-		return coll_tile_left_xpos - wall_dist_from_right[type] + 13;
+		return coll_tile_left_xpos - wall_dist_from_right[type] + TILE_RIGHTX;
 	} else {
 		return 0;
 	}
@@ -253,7 +253,7 @@ int __pascal far is_obstacle() {
 		jumped_through_mirror = -1;
 		return 0;
 	}
-	coll_tile_left_xpos = xpos_in_drawn_room(x_bump[tile_col + 5]) + 7;
+	coll_tile_left_xpos = xpos_in_drawn_room(x_bump[tile_col + FIRST_ONSCREEN_COLUMN]) + TILE_MIDX;
 	return 1;
 }
 
@@ -261,9 +261,9 @@ int __pascal far is_obstacle() {
 int __pascal far xpos_in_drawn_room(int xpos) {
 	if (curr_room != drawn_room) {
 		if (curr_room == room_L || curr_room == room_BL) {
-			xpos -= 140;
+			xpos -= TILE_SIZEX * SCREEN_TILECOUNTX;
 		} else if (curr_room == room_R || curr_room == room_BR) {
-			xpos += 140;
+			xpos += TILE_SIZEX * SCREEN_TILECOUNTX;
 		}
 	}
 	return xpos;
@@ -385,12 +385,6 @@ int __pascal far can_bump_into_gate() {
 
 // seg004:067C
 int __pascal far get_edge_distance() {
-/*
-Possible results in edge_type:
-0: closer/sword/potion
-1: edge
-2: floor (nothing near char)
-*/
 	short distance;
 	byte tiletype;
 	determine_col();
@@ -402,10 +396,10 @@ Possible results in edge_type:
 		distance = dist_from_wall_forward(tiletype);
 		if (distance >= 0) {
 			loc_59DD:
-			if (distance < 14) {
-				edge_type = 1;
+			if (distance <= TILE_RIGHTX) {
+				edge_type = EDGE_TYPE_EDGE;
 			} else {
-				edge_type = 2;
+				edge_type = EDGE_TYPE_FLOOR;
 				distance = 11;
 			}
 		} else {
@@ -416,7 +410,7 @@ Possible results in edge_type:
 		tiletype = get_tile_infrontof_char();
 		if (tiletype == tiles_12_doortop && Char.direction >= dir_0_right) {
 			loc_59FB:
-			edge_type = 0;
+			edge_type = EDGE_TYPE_CLOSER;
 			distance = distance_to_edge_weight();
 		} else {
 			if (wall_type(tiletype) != 0) {
@@ -432,14 +426,14 @@ Possible results in edge_type:
 			) {
 				distance = distance_to_edge_weight();
 				if (distance != 0) {
-					edge_type = 0;
+					edge_type = EDGE_TYPE_CLOSER;
 				} else {
-					edge_type = 2;
+					edge_type = EDGE_TYPE_FLOOR;
 					distance = 11;
 				}
 			} else {
 				if (tile_is_floor(tiletype)) {
-					edge_type = 2;
+					edge_type = EDGE_TYPE_FLOOR;
 					distance = 11;
 				} else {
 					goto loc_59FB;
@@ -480,15 +474,15 @@ void __pascal far chomped() {
 			short chomper_col = tile_col;
 			if (curr_room != Char.room)	{
 				if (curr_room == level.roomlinks[Char.room - 1].right) {
-					chomper_col += 10;
+					chomper_col += SCREEN_TILECOUNTX;
 				} else if (curr_room == level.roomlinks[Char.room - 1].left) {
-					chomper_col -= 10;
+					chomper_col -= SCREEN_TILECOUNTX;
 				}
 			}
-			Char.x = x_bump[chomper_col + 5] + 7;
+			Char.x = x_bump[chomper_col + FIRST_ONSCREEN_COLUMN] + TILE_MIDX;
 		} else {
 		#endif
-			Char.x = x_bump[tile_col + 5] + 7;
+			Char.x = x_bump[tile_col + FIRST_ONSCREEN_COLUMN] + TILE_MIDX;
 		#ifdef FIX_OFFSCREEN_GUARDS_DISAPPEARING
 		}
 		#endif
@@ -590,7 +584,7 @@ int __pascal far check_chomped_here() {
 	if (curr_tile2 == tiles_18_chomper &&
 		(curr_room_modif[curr_tilepos] & 0x7F) == 2
 	) {
-		coll_tile_left_xpos = x_bump[tile_col + 5] + 7;
+		coll_tile_left_xpos = x_bump[tile_col + FIRST_ONSCREEN_COLUMN] + TILE_MIDX;
 		if (get_left_wall_xpos(curr_room, tile_col, tile_row) < char_x_right_coll &&
 			get_right_wall_xpos(curr_room, tile_col, tile_row) > char_x_left_coll
 		) {
@@ -610,13 +604,13 @@ int __pascal far dist_from_wall_forward(byte tiletype) {
 	if (tiletype == tiles_4_gate && ! can_bump_into_gate()) {
 		return -1;
 	} else {
-		coll_tile_left_xpos = x_bump[tile_col + 5] + 7;
+		coll_tile_left_xpos = x_bump[tile_col + FIRST_ONSCREEN_COLUMN] + TILE_MIDX;
 		type = wall_type(tiletype);
 		if (type == 0) return -1;
 		if (Char.direction < dir_0_right) {
 			// looking left
-			//return wall_dist_from_right[type] + char_x_left_coll - coll_tile_left_xpos - 13;
-			return char_x_left_coll - (coll_tile_left_xpos + 13 - wall_dist_from_right[type]);
+			//return wall_dist_from_right[type] + char_x_left_coll - coll_tile_left_xpos - TILE_RIGHTX;
+			return char_x_left_coll - (coll_tile_left_xpos + TILE_RIGHTX - wall_dist_from_right[type]);
 		} else {
 			// looking right
 			return wall_dist_from_left[type] + coll_tile_left_xpos - char_x_right_coll;
@@ -633,8 +627,8 @@ int __pascal far dist_from_wall_behind(byte tiletype) {
 	} else {
 		if (Char.direction >= dir_0_right) {
 			// looking right
-			//return wall_dist_from_right[type] + char_x_left_coll - coll_tile_left_xpos - 13;
-			return char_x_left_coll - (coll_tile_left_xpos + 13 - wall_dist_from_right[type]);
+			//return wall_dist_from_right[type] + char_x_left_coll - coll_tile_left_xpos - TILE_RIGHTX;
+			return char_x_left_coll - (coll_tile_left_xpos + TILE_RIGHTX - wall_dist_from_right[type]);
 		} else {
 			// looking left
 			return wall_dist_from_left[type] + coll_tile_left_xpos - char_x_right_coll;

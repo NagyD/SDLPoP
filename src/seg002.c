@@ -178,7 +178,7 @@ loc_left_guard_tile:
 #endif
 
 	Char.room = drawn_room;
-	Char.curr_row = guard_tile / 10;
+	Char.curr_row = guard_tile / SCREEN_TILECOUNTX;
 	Char.y = y_land[Char.curr_row + 1];
 	Char.x = level.guards_x[room_minus_1];
 	Char.curr_col = get_tile_div_mod_m7(Char.x);
@@ -939,15 +939,15 @@ void __pascal far hurt_by_sword() {
 					short gate_col = tile_col;
 					if (curr_room != Char.room)	{
 						if (curr_room == level.roomlinks[Char.room - 1].right) {
-							gate_col += 10;
+							gate_col += SCREEN_TILECOUNTX;
 						} else if (curr_room == level.roomlinks[Char.room - 1].left) {
-							gate_col -= 10;
+							gate_col -= SCREEN_TILECOUNTX;
 						}
 					}
-					Char.x = x_bump[gate_col - (curr_tile2 != tiles_4_gate) + 5] + 7;
+					Char.x = x_bump[gate_col - (curr_tile2 != tiles_4_gate) + FIRST_ONSCREEN_COLUMN] + TILE_MIDX;
 				} else {
 				#endif
-					Char.x = x_bump[tile_col - (curr_tile2 != tiles_4_gate) + 5] + 7;
+					Char.x = x_bump[tile_col - (curr_tile2 != tiles_4_gate) + FIRST_ONSCREEN_COLUMN] + TILE_MIDX;
 				#ifdef FIX_OFFSCREEN_GUARDS_DISAPPEARING
 				}
 				#endif
@@ -1077,7 +1077,7 @@ void __pascal far check_skel() {
 			Char.curr_row = /*1*/ custom->skeleton_row;
 			Char.y = y_land[Char.curr_row + 1];
 			Char.curr_col = /*5*/ custom->skeleton_column;
-			Char.x = x_bump[Char.curr_col + 5] + 14;
+			Char.x = x_bump[Char.curr_col + FIRST_ONSCREEN_COLUMN] + TILE_SIZEX;
 			Char.direction = dir_FF_left;
 			seqtbl_offset_char(seq_88_skel_wake_up); // skel wake up
 			play_seq();
