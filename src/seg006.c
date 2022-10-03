@@ -108,9 +108,8 @@ int __pascal far get_tilepos(int tile_col,int tile_row) {
 
 // seg006:0124
 int __pascal far get_tilepos_nominus(int tile_col,int tile_row) {
-	short var_2;
-	var_2 = get_tilepos(tile_col, tile_row);
-	if (var_2 < 0) return 30; else return var_2;
+	short tilepos = get_tilepos(tile_col, tile_row);
+	if (tilepos < 0) return 30; else return tilepos;
 }
 
 // seg006:0144
@@ -548,9 +547,8 @@ void __pascal far load_frame() {
 
 // seg006:01F5
 short __pascal far dx_weight() {
-	sbyte var_2;
-	var_2 = cur_frame.dx - (cur_frame.flags & FRAME_WEIGHT_X);
-	return char_dx_forward(var_2);
+	sbyte offset = cur_frame.dx - (cur_frame.flags & FRAME_WEIGHT_X);
+	return char_dx_forward(offset);
 }
 
 // seg006:0213
@@ -1287,9 +1285,8 @@ int __pascal far get_tile_infrontof_char() {
 
 // seg006:0B30
 int __pascal far get_tile_infrontof2_char() {
-	short var_2;
-	var_2 = dir_front[Char.direction + 1];
-	return get_tile(Char.room, infrontx = (var_2 << 1) + Char.curr_col, Char.curr_row);
+	short direction = dir_front[Char.direction + 1];
+	return get_tile(Char.room, infrontx = (direction << 1) + Char.curr_col, Char.curr_row);
 }
 
 // seg006:0B66
@@ -1733,17 +1730,11 @@ void __pascal far check_spike_below() {
 
 // seg006:1231
 void __pascal far clip_char() {
-	short frame;
-	short room;
-	short action;
 	short col;
-	short var_A;
-	short row;
-	short var_E;
-	frame = Char.frame;
-	action = Char.action;
-	room = Char.room;
-	row = Char.curr_row;
+	short frame = Char.frame;
+	short action = Char.action;
+	short room = Char.room;
+	short row = Char.curr_row;
 	reset_obj_clip();
 #ifdef USE_SUPER_HIGH_JUMP
 	// Clip kid during a super jump when jumping up into
@@ -1771,11 +1762,12 @@ void __pascal far clip_char() {
 				get_tile(room, char_col_right, char_top_row) == tiles_20_wall ||
 				tile_is_floor(curr_tile2)
 			) {
-				var_E = row + 1;
-				if (var_E == 1 ||
-					((var_A = y_clip[var_E]) < obj_y && var_A - 15 < char_top_y)
+				short clip_row = row + 1;
+				short clip_y = y_clip[clip_row];
+				if (clip_row == 1 ||
+					(clip_y < obj_y && clip_y - 15 < char_top_y)
 				) {
-					obj_clip_top = char_top_y = y_clip[var_E];
+					obj_clip_top = char_top_y = clip_y;
 				}
 			}
 		}
