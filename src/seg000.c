@@ -901,7 +901,6 @@ void __pascal far play_frame() {
 
 // seg000:09B6
 void __pascal far draw_game_frame() {
-	short var_2;
 	if (need_full_redraw) {
 		redraw_screen(0);
 		need_full_redraw = 0;
@@ -965,11 +964,11 @@ void __pascal far draw_game_frame() {
 			if (text_time_total == 288 && text_time_remaining < 72) {
 				// 288: press button to continue
 				// Blink the message:
-				var_2 = text_time_remaining % 12;
-				if (var_2 > 3) {
+				short blink_frame = text_time_remaining % 12;
+				if (blink_frame > 3) {
 					erase_bottom_text(0);
 				} else {
-					if (var_2 == 3) {
+					if (blink_frame == 3) {
 						display_text_bottom("Press Button to Continue");
 						play_sound_from_buffer(sound_pointers[sound_38_blink]); // press button blink
 					}

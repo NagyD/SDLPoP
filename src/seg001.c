@@ -376,10 +376,9 @@ void __pascal far time_expired() {
 
 // seg001:0525
 void __pascal far cutscene_12() {
-	short var_2;
-	var_2 = hourglass_frame();
-	if (var_2 >= 6) {
-		set_hourglass_state(var_2);
+	short frame_num = hourglass_frame();
+	if (frame_num >= 6) {
+		set_hourglass_state(frame_num);
 		init_princess_x156();
 		saveshad();
 		play_sound(sound_40_cutscene_12_short_time); // cutscene 12 short time

@@ -137,10 +137,9 @@ void __pascal far redraw_20h() {
 
 // seg007:01E6
 void __pascal far draw_trob() {
-	word var_2;
-	var_2 = get_trob_right_pos_in_drawn_room();
-	set_redraw_anim(var_2, 1);
-	set_redraw_fore(var_2, 1);
+	word tilepos = get_trob_right_pos_in_drawn_room();
+	set_redraw_anim(tilepos, 1);
+	set_redraw_fore(tilepos, 1);
 	set_redraw_anim(get_trob_right_above_pos_in_drawn_room(), 1);
 }
 
@@ -802,10 +801,10 @@ void __pascal far died_on_button() {
 
 // seg007:0D3A
 void __pascal far animate_button() {
-	word var_2;
+	word timer;
 	if (trob.type >= 0) {
-		set_doorlink_timer(curr_modifier, var_2 = get_doorlink_timer(curr_modifier) - 1);
-		if (var_2 < 2) {
+		set_doorlink_timer(curr_modifier, timer = get_doorlink_timer(curr_modifier) - 1);
+		if (timer < 2) {
 			trob.type = -1;
 			redraw_11h();
 		}

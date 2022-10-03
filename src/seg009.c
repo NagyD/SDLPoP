@@ -646,7 +646,7 @@ byte far* __pascal far decompress_lzg_ud(byte far *dest,const byte far *source,i
 	const byte* source_pos = source;
 	byte* dest_pos = dest;
 	word mask = 0;
-	short var_6 = dest_length - 1;
+	short dest_end = dest_length - 1;
 	do {
 		mask >>= 1;
 		if ((mask & 0xFF00) == 0) {
@@ -656,7 +656,7 @@ byte far* __pascal far decompress_lzg_ud(byte far *dest,const byte far *source,i
 			*(window_pos++) = *dest_pos = *(source_pos++);
 			dest_pos += stride;
 			if (--remaining == 0) {
-				dest_pos -= var_6;
+				dest_pos -= dest_end;
 				remaining = height;
 			}
 			if (window_pos >= window_end) window_pos = window;
@@ -670,7 +670,7 @@ byte far* __pascal far decompress_lzg_ud(byte far *dest,const byte far *source,i
 				*(window_pos++) = *dest_pos = *(copy_source++);
 				dest_pos += stride;
 				if (--remaining == 0) {
-					dest_pos -= var_6;
+					dest_pos -= dest_end;
 					remaining = height;
 				}
 				if (copy_source >= window_end) copy_source = window;

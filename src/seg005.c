@@ -343,7 +343,6 @@ void __pascal far control_crouched() {
 
 // seg005:0358
 void __pascal far control_standing() {
-	short var_2;
 	if (control_shift2 < 0 && control_shift < 0 && check_get_item()) {
 		return;
 	}
@@ -354,10 +353,10 @@ void __pascal far control_standing() {
 	if (have_sword) {
 		if (offguard != 0 && control_shift >= 0) goto loc_6213;
 		if (can_guard_see_kid >= 2) {
-			var_2 = char_opp_dist();
-			if (var_2 >= -10 && var_2 < 90) {
+			short distance = char_opp_dist();
+			if (distance >= -10 && distance < 90) {
 				holding_sword = 1;
-				if ((word)var_2 < (word)-6) {
+				if ((word)distance < (word)-6) {
 					if (Opp.charid == charid_1_shadow &&
 						(Opp.action == actions_3_in_midair || (Opp.frame >= frame_107_fall_land_1 && Opp.frame < 118))
 					) {
@@ -1034,16 +1033,11 @@ void __pascal far sword_strike() {
 
 // seg005:0E0F
 void __pascal far parry() {
-	short opp_frame;
-	short char_frame;
-	short var_6;
-	short seq_id;
-	short char_charid;
-	char_frame = Char.frame;
-	opp_frame = Opp.frame;
-	char_charid = Char.charid;
-	seq_id = seq_62_parry; // defend (parry) with sword
-	var_6 = 0;
+	short char_frame = Char.frame;
+	short opp_frame = Opp.frame;
+	short char_charid = Char.charid;
+	short seq_id = seq_62_parry; // defend (parry) with sword
+	short do_play_seq = 0;
 	if (
 		char_frame == frame_158_stand_with_sword || // stand with sword
 		char_frame == frame_170_stand_with_sword || // stand with sword
@@ -1061,7 +1055,7 @@ void __pascal far parry() {
 				opp_frame != frame_162_block_to_strike
 			) {
 				if (opp_frame == frame_153_strike_3) { // strike
-					var_6 = 1;
+					do_play_seq = 1;
 				} else
 				if (char_charid != charid_0_kid) {
 					back_with_sword();
@@ -1077,7 +1071,7 @@ void __pascal far parry() {
 	}
 	control_up = 1; // disable automatic repeat
 	seqtbl_offset_char(seq_id);
-	if (var_6) {
+	if (do_play_seq) {
 		play_seq();
 	}
 }

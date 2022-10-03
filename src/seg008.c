@@ -450,7 +450,7 @@ const byte doortop_fram_bot[] = {78, 80, 82, 0};
 void __pascal far draw_tile_right() {
 	byte id;
 	byte blit;
-	byte var_2;
+	byte num;
 	if (curr_tile == tiles_20_wall) return;
 	switch (tile_left) {
 		default:
@@ -479,10 +479,10 @@ void __pascal far draw_tile_right() {
 			break;
 		case tiles_1_floor:
 			ptr_add_table(id_chtab_6_environment, 42 /*floor B*/, draw_xh, 0, tile_table[tile_left].right_y + draw_main_y, blitters_10h_transp, 0);
-			var_2 = modifier_left;
-			if (var_2 > 3) var_2 = 0;
-			if (var_2 == !!custom->tbl_level_type[current_level]) return;
-			add_backtable(id_chtab_6_environment, blueline_fram3[var_2], draw_xh, 0, draw_main_y - 20, blitters_0_no_transp, 0);
+			num = modifier_left;
+			if (num > 3) num = 0;
+			if (num == !!custom->tbl_level_type[current_level]) return;
+			add_backtable(id_chtab_6_environment, blueline_fram3[num], draw_xh, 0, draw_main_y - 20, blitters_0_no_transp, 0);
 			break;
 		case tiles_7_doortop_with_floor:
 		case tiles_12_doortop:
@@ -632,7 +632,7 @@ const byte chomper_fram_y[] = {0, 0, 0x25, 0x2F, 0x32};
 void __pascal far draw_tile_anim() {
 	word color;
 	word pot_size;
-	word var_4;
+	word chomper_num;
 	pot_size = 0;
 	color = 12; // red
 	switch (curr_tile) {
@@ -662,12 +662,12 @@ void __pascal far draw_tile_anim() {
 			add_midtable(id_chtab_1_flameswordpotion, (curr_modifier == 1) + 10, draw_xh, 0, draw_main_y - 3, blitters_10h_transp, curr_modifier == 1);
 			break;
 		case tiles_18_chomper:
-			var_4 = chomper_fram1[MIN(curr_modifier & 0x7F, 6)];
-			add_backtable(id_chtab_6_environment, chomper_fram_bot[var_4], draw_xh, 0, draw_main_y, blitters_10h_transp, 0);
+			chomper_num = chomper_fram1[MIN(curr_modifier & 0x7F, 6)];
+			add_backtable(id_chtab_6_environment, chomper_fram_bot[chomper_num], draw_xh, 0, draw_main_y, blitters_10h_transp, 0);
 			if (curr_modifier & 0x80) { // blood
-				add_backtable(id_chtab_6_environment, var_4 + 114, draw_xh + 1, 4, draw_main_y - 6, blitters_4Ch_mono_12, 0);
+				add_backtable(id_chtab_6_environment, chomper_num + 114, draw_xh + 1, 4, draw_main_y - 6, blitters_4Ch_mono_12, 0);
 			}
-			add_backtable(id_chtab_6_environment, chomper_fram_top[var_4], draw_xh, 0, draw_main_y - chomper_fram_y[var_4], blitters_10h_transp, 0);
+			add_backtable(id_chtab_6_environment, chomper_fram_top[chomper_num], draw_xh, 0, draw_main_y - chomper_fram_y[chomper_num], blitters_10h_transp, 0);
 			break;
 	}
 }
@@ -682,7 +682,7 @@ void __pascal far draw_tile_fore() {
 	byte xh;
 	word potion_type;
 	word id;
-	word var_2;
+	word chomper_num;
 	if (tile_left == tiles_4_gate && Kid.curr_row == drawn_row && Kid.curr_col == drawn_col - 1 && Kid.room != room_R) {
 		draw_gate_fore();
 	}
@@ -691,10 +691,10 @@ void __pascal far draw_tile_fore() {
 			add_foretable(id_chtab_6_environment, spikes_fram_fore[get_spike_frame(curr_modifier)], draw_xh, 0, draw_main_y - 2, blitters_10h_transp, 0);
 			break;
 		case tiles_18_chomper:
-			var_2 = chomper_fram1[MIN(curr_modifier & 0x7F, 6)];
-			add_foretable(id_chtab_6_environment, chomper_fram_for[var_2], draw_xh, 0, draw_main_y, blitters_10h_transp, 0);
+			chomper_num = chomper_fram1[MIN(curr_modifier & 0x7F, 6)];
+			add_foretable(id_chtab_6_environment, chomper_fram_for[chomper_num], draw_xh, 0, draw_main_y, blitters_10h_transp, 0);
 			if (curr_modifier & 0x80) {
-				add_foretable(id_chtab_6_environment, var_2 + 119, draw_xh + 1, 4, draw_main_y - 6, blitters_4Ch_mono_12, 0);
+				add_foretable(id_chtab_6_environment, chomper_num + 119, draw_xh + 1, 4, draw_main_y - 6, blitters_4Ch_mono_12, 0);
 			}
 			break;
 		case tiles_20_wall:
@@ -1118,7 +1118,6 @@ const byte door_fram_slice[] = {67, 59, 58, 57, 56, 55, 54, 53, 52};
 // seg008:17B7
 void __pascal far draw_gate_back() {
 	short ybottom;
-	word var_2;
 	calc_gate_pos();
 	if (gate_bottom_y + 12 < draw_main_y) {
 		add_backtable(id_chtab_6_environment, 50 /*gate bottom with B*/, draw_xh, 0, gate_bottom_y, blitters_0_no_transp, 0);
@@ -1146,9 +1145,9 @@ void __pascal far draw_gate_back() {
 			add_backtable(id_chtab_6_environment, 52 /*gate slice 8px*/, draw_xh, 0, ybottom, blitters_0_no_transp, 0);
 		}
 	}
-	var_2 = ybottom - gate_top_y + 1;
-	if (var_2 > 0 && var_2 < 9) {
-		add_backtable(id_chtab_6_environment, door_fram_slice[var_2], draw_xh, 0, ybottom, blitters_0_no_transp, 0);
+	word gate_frame = ybottom - gate_top_y + 1;
+	if (gate_frame > 0 && gate_frame < 9) {
+		add_backtable(id_chtab_6_environment, door_fram_slice[gate_frame], draw_xh, 0, ybottom, blitters_0_no_transp, 0);
 	}
 }
 
@@ -1433,9 +1432,7 @@ void __pascal far add_drect(rect_type *source) {
 
 // seg008:1D29
 void __pascal far draw_leveldoor() {
-	short var_6;
-	short ybottom;
-	ybottom = draw_main_y - 13;
+	short ybottom = draw_main_y - 13;
 	leveldoor_right = (draw_xh<<3)+48;
 	if (custom->tbl_level_type[current_level]) leveldoor_right += 8;
 	add_backtable(id_chtab_6_environment, 99 /*leveldoor stairs bottom*/, draw_xh + 1, 0, ybottom, blitters_0_no_transp, 0);
@@ -1450,10 +1447,10 @@ void __pascal far draw_leveldoor() {
 		}
 	}
 	leveldoor_ybottom = ybottom - (modifier_left & 3) - 48;
-	var_6 = ybottom - modifier_left;
+	short y = ybottom - modifier_left;
 	do { // runs at least once
 		add_backtable(id_chtab_6_environment, 33 /*level door bottom*/, draw_xh + 1, 0, leveldoor_ybottom, blitters_0_no_transp, 0);
-		if (var_6 > leveldoor_ybottom) leveldoor_ybottom += 4;
+		if (y > leveldoor_ybottom) leveldoor_ybottom += 4;
 		else break;
 	} while (true);
 	add_backtable(id_chtab_6_environment, 34 /*level door top*/, draw_xh + 1, 0, draw_main_y - 64, blitters_0_no_transp, 0);
@@ -1539,9 +1536,8 @@ void __pascal far draw_tile2() {
 // seg008:1F67
 void __pascal far draw_objtable_items_at_tile(byte tilepos) {
 	//printf("draw_objtable_items_at_tile(%d)\n",tilepos); // debug
-	short obj_count;
 	short obj_index;
-	obj_count = objtable_count;
+	short obj_count = objtable_count;
 	if (obj_count) {
 		for (obj_index = obj_count - 1, n_curr_objs = 0; obj_index >= 0; --obj_index) {
 			if (objtable[obj_index].tilepos == tilepos) {
