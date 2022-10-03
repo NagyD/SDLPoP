@@ -3945,11 +3945,10 @@ void __pascal far pal_restore_free_fadeout(palette_fade_type far *palette_buffer
 int __pascal far fade_out_frame(palette_fade_type far *palette_buffer) {
 	rgb_type* faded_pal_ptr;
 	word start;
-	word var_8;
 	word column;
 	word current_row_mask;
 	byte* curr_color_ptr;
-	var_8 = 1;
+	word finished_fading = 1;
 	++palette_buffer->fade_pos; // modified
 	/**/start_timer(timer_1, palette_buffer->wait_time); // too slow?
 	for (start=0,current_row_mask=1; start<0x100; start+=0x10, current_row_mask<<=1) {
@@ -3961,17 +3960,17 @@ int __pascal far fade_out_frame(palette_fade_type far *palette_buffer) {
 				curr_color_ptr = &faded_pal_ptr[column].r;
 				if (*curr_color_ptr != 0) {
 					--*curr_color_ptr;
-					var_8 = 0;
+					finished_fading = 0;
 				}
 				curr_color_ptr = &faded_pal_ptr[column].g;
 				if (*curr_color_ptr != 0) {
 					--*curr_color_ptr;
-					var_8 = 0;
+					finished_fading = 0;
 				}
 				curr_color_ptr = &faded_pal_ptr[column].b;
 				if (*curr_color_ptr != 0) {
 					--*curr_color_ptr;
-					var_8 = 0;
+					finished_fading = 0;
 				}
 			}
 		}
@@ -4010,7 +4009,7 @@ int __pascal far fade_out_frame(palette_fade_type far *palette_buffer) {
 	SDL_UnlockSurface(offscreen_surface);
 
 	do_simple_wait(timer_1); // can interrupt fading of cutscene
-	return var_8;
+	return finished_fading;
 }
 
 // seg009:1F28
