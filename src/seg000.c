@@ -1112,8 +1112,8 @@ void __pascal far load_lev_spr(int level) {
 			byte* wall_pal = env_pal + 0x30 * custom->tbl_level_type[current_level];
 			set_pal_arr(0x50, 0x10, (rgb_type*)env_pal);
 			set_pal_arr(0x60, 0x10, (rgb_type*)wall_pal);
-			set_chtab_palette(chtab_addrs[id_chtab_6_environment], env_pal);
-			set_chtab_palette(chtab_addrs[id_chtab_7_environmentwall], wall_pal);
+			set_chtab_palette(chtab_addrs[id_chtab_6_environment], env_pal, 0x10);
+			set_chtab_palette(chtab_addrs[id_chtab_7_environmentwall], wall_pal, 0x10);
 		}
 	}
 
