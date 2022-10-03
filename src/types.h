@@ -1382,5 +1382,6 @@ enum
 #define FALLING_SPEED_ACCEL_FEATHER 1
 #define ROOMCOUNT 24 // Max quantity of rooms for any level
 #define SCREEN_GAMEPLAY_HEIGHT 192 // Portion of the screen space dedicated to gameplay graphics
+#define TROBS_MAX 30
 
 #endif

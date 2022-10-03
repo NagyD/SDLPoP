@@ -667,7 +667,7 @@ void __pascal far do_trigger_list(short index,short button_type) {
 
 // seg007:0A5A
 void __pascal far add_trob(byte room,byte tilepos,sbyte type) {
-	if (trobs_count >= 30) {
+	if (trobs_count >= TROBS_MAX) {
 		show_dialog("Trobs Overflow");
 		return /*0*/; // added
 	}
@@ -677,7 +677,7 @@ void __pascal far add_trob(byte room,byte tilepos,sbyte type) {
 	short found = find_trob();
 	if (found == -1) {
 		// add new
-		if (trobs_count == 30) return;
+		if (trobs_count == TROBS_MAX) return;
 		trobs[trobs_count++] = trob;
 	} else {
 		// change existing
