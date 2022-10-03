@@ -157,9 +157,9 @@ void __pascal far init_game_main() {
 		// Guard palettes
 		guard_palettes = (byte*) load_from_opendats_alloc(10, "bin", NULL, NULL);
 		// (blood, hurt flash) #E00030 = red
-		set_pal(12, 0x38, 0x00, 0x0C, 1);
+		set_pal(12, 0x38, 0x00, 0x0C);
 		// (palace wall pattern) #C09850 = light brown
-		set_pal( 6, 0x30, 0x26, 0x14, 0);
+		set_pal( 6, 0x30, 0x26, 0x14);
 
 		// Level color variations (1.3)
 		level_var_palettes = load_from_opendats_alloc(20, "bin", NULL, NULL);
@@ -1116,10 +1116,10 @@ void __pascal far load_lev_spr(int level) {
 		if (level_color != 0) {
 			byte* env_pal = level_var_palettes + 0x30*(level_color-1);
 			byte* wall_pal = env_pal + 0x30 * custom->tbl_level_type[current_level];
-			set_pal_arr(0x50, 0x10, (rgb_type*)env_pal, 1);
-			set_pal_arr(0x60, 0x10, (rgb_type*)wall_pal, 1);
-			set_chtab_palette(chtab_addrs[id_chtab_6_environment], env_pal, 0x10);
-			set_chtab_palette(chtab_addrs[id_chtab_7_environmentwall], wall_pal, 0x10);
+			set_pal_arr(0x50, 0x10, (rgb_type*)env_pal);
+			set_pal_arr(0x60, 0x10, (rgb_type*)wall_pal);
+			set_chtab_palette(chtab_addrs[id_chtab_6_environment], env_pal);
+			set_chtab_palette(chtab_addrs[id_chtab_7_environmentwall], wall_pal);
 		}
 	}
 
@@ -2213,14 +2213,14 @@ void __pascal far load_title_images(int bgcolor) {
 		SDL_Color color;
 		if (bgcolor) {
 			// RGB(4,0,18h) = #100060 = dark blue
-			set_pal((find_first_pal_row(1<<11) << 4) + 14, 0x04, 0x00, 0x18, 1);
+			set_pal((find_first_pal_row(1<<11) << 4) + 14, 0x04, 0x00, 0x18);
 			color.r = 0x10;
 			color.g = 0x00;
 			color.b = 0x60;
 			color.a = 0xFF;
 		} else {
 			// RGB(20h,0,0) = #800000 = dark red
-			set_pal((find_first_pal_row(1<<11) << 4) + 14, 0x20, 0x00, 0x00, 1);
+			set_pal((find_first_pal_row(1<<11) << 4) + 14, 0x20, 0x00, 0x00);
 			color.r = 0x80;
 			color.g = 0x00;
 			color.b = 0x00;

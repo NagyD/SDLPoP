@@ -445,7 +445,7 @@ void __pascal far set_loaded_palette(dat_pal_type far *palette_ptr) {
 	int dest_row, dest_index, source_row;
 	for (dest_row = dest_index = source_row = 0; dest_row < 16; ++dest_row, dest_index += 0x10) {
 		if (palette_ptr->row_bits & (1 << dest_row)) {
-			set_pal_arr(dest_index, 16, palette_ptr->vga + source_row*0x10, 1);
+			set_pal_arr(dest_index, 16, palette_ptr->vga + source_row*0x10);
 			++source_row;
 		}
 	}
@@ -909,7 +909,7 @@ void __pascal far free_peel(peel_type *peel_ptr) {
 void __pascal far set_hc_pal() {
 	// stub
 	if (graphics_mode == gmMcgaVga) {
-		set_pal_arr(0, 16, custom->vga_palette, 1);
+		set_pal_arr(0, 16, custom->vga_palette);
 	} else {
 		// ...
 	}
@@ -2682,14 +2682,14 @@ void update_screen() {
 }
 
 // seg009:9289
-void __pascal far set_pal_arr(int start,int count,const rgb_type far *array,int vsync) {
+void __pascal far set_pal_arr(int start,int count,const rgb_type far *array) {
 	// stub
 	int i;
 	for (i = 0; i < count; ++i) {
 		if (array) {
-			set_pal(start + i, array[i].r, array[i].g, array[i].b, vsync);
+			set_pal(start + i, array[i].r, array[i].g, array[i].b);
 		} else {
-			set_pal(start + i, 0, 0, 0, vsync);
+			set_pal(start + i, 0, 0, 0);
 		}
 	}
 }
@@ -2697,7 +2697,7 @@ void __pascal far set_pal_arr(int start,int count,const rgb_type far *array,int 
 rgb_type palette[256];
 
 // seg009:92DF
-void __pascal far set_pal(int index,int red,int green,int blue,int vsync) {
+void __pascal far set_pal(int index,int red,int green,int blue) {
 	// stub
 	//palette[index] = ((red&0x3F)<<2)|((green&0x3F)<<2<<8)|((blue&0x3F)<<2<<16);
 	palette[index].r = red;
@@ -3797,7 +3797,6 @@ void __pascal far fade_in_2(surface_type near *source_surface,int which_rows) {
 palette_fade_type far *__pascal make_pal_buffer_fadein(surface_type *source_surface,int which_rows,int wait_time) {
 	palette_fade_type far* palette_buffer;
 	word curr_row;
-	word var_8;
 	word curr_row_mask;
 	palette_buffer = (palette_fade_type*) malloc_far(sizeof(palette_fade_type));
 	palette_buffer->which_rows = which_rows;
@@ -3807,11 +3806,10 @@ palette_fade_type far *__pascal make_pal_buffer_fadein(surface_type *source_surf
 	palette_buffer->proc_fade_frame = &fade_in_frame;
 	read_palette_256(palette_buffer->original_pal);
 	memcpy_far(palette_buffer->faded_pal, palette_buffer->original_pal, sizeof(palette_buffer->faded_pal));
-	var_8 = 0;
 	for (curr_row = 0, curr_row_mask = 1; curr_row < 0x10; ++curr_row, curr_row_mask<<=1) {
 		if (which_rows & curr_row_mask) {
 			memset_far(palette_buffer->faded_pal + (curr_row<<4), 0, sizeof(rgb_type[0x10]));
-			set_pal_arr(curr_row<<4, 0x10, NULL, (var_8++&3)==0);
+			set_pal_arr(curr_row<<4, 0x10, NULL);
 		}
 	}
 	//method_1_blit_rect(onscreen_surface_, source_surface, &screen_rect, &screen_rect, 0);
@@ -3858,10 +3856,9 @@ int __pascal far fade_in_frame(palette_fade_type far *palette_buffer) {
 			}
 		}
 	}
-	column = 0;
 	for (start = 0, current_row_mask = 1; start<0x100; start+=0x10, current_row_mask<<=1) {
 		if (palette_buffer->which_rows & current_row_mask) {
-			set_pal_arr(start, 0x10, palette_buffer->faded_pal + start, (column++&3)==0);
+			set_pal_arr(start, 0x10, palette_buffer->faded_pal + start);
 		}
 	}
 
@@ -3979,10 +3976,9 @@ int __pascal far fade_out_frame(palette_fade_type far *palette_buffer) {
 			}
 		}
 	}
-	column = 0;
 	for (start = 0, current_row_mask = 1; start<0x100; start+=0x10, current_row_mask<<=1) {
 		if (palette_buffer->which_rows & current_row_mask) {
-			set_pal_arr(start, 0x10, palette_buffer->faded_pal + start, (column++&3)==0);
+			set_pal_arr(start, 0x10, palette_buffer->faded_pal + start);
 		}
 	}
 
