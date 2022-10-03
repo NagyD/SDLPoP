@@ -125,7 +125,6 @@ void __pascal far load_room_links() {
 
 // seg008:0125
 void __pascal far draw_room() {
-	word saved_room;
 	load_leftroom();
 	for (drawn_row = 3; drawn_row--; ) { /*2,1,0*/
 		load_rowbelow();
@@ -136,7 +135,7 @@ void __pascal far draw_room() {
 			draw_tile();
 		}
 	}
-	saved_room = drawn_room;
+	word saved_room = drawn_room;
 	drawn_room = room_A;
 	load_room_links();
 	load_leftroom();
@@ -347,8 +346,7 @@ int __pascal far get_tile_to_draw(int room, int column, int row, byte *ptr_tilet
 const word col_xh[] = {0, 4, 8, 12, 16, 20, 24, 28, 32, 36};
 // seg008:03BB
 void __pascal far load_curr_and_left_tile() {
-	word tiletype;
-	tiletype = tiles_20_wall;
+	word tiletype = tiles_20_wall;
 	if (drawn_row == 2) {
 		tiletype = custom->drawn_tile_top_level_edge; // floor at top of level (default: tiles_1_floor)
 	}
@@ -359,9 +357,8 @@ void __pascal far load_curr_and_left_tile() {
 
 // seg008:041A
 void __pascal far load_leftroom() {
-	word row;
 	get_room_address(room_L);
-	for (row = 0; row < 3; ++row) {
+	for (word row = 0; row < 3; ++row) {
 		// wall at left of level (drawn_tile_left_level_edge), default: tiles_20_wall
 		get_tile_to_draw(room_L, 9, row, &leftroom_[row].tiletype, &leftroom_[row].modifier, custom->drawn_tile_left_level_edge);
 	}
@@ -412,8 +409,7 @@ const byte doortop_fram_top[] = {0, 81, 83, 0};
 
 // seg008:055A
 void __pascal far draw_tile_topright() {
-	byte tiletype;
-	tiletype = row_below_left_[drawn_col].tiletype;
+	byte tiletype = row_below_left_[drawn_col].tiletype;
 	if (tiletype == tiles_7_doortop_with_floor || tiletype == tiles_12_doortop) {
 		if (custom->tbl_level_type[current_level] == 0) return;
 		add_backtable(id_chtab_6_environment, doortop_fram_top[row_below_left_[drawn_col].modifier], draw_xh, 0, draw_bottom_y, blitters_2_or, 0);
@@ -428,14 +424,13 @@ const byte door_fram_top[] = {60, 61, 62, 63, 64, 65, 66, 67};
 
 // seg008:05D1
 void __pascal far draw_tile_anim_topright() {
-	word modifier;
 	if (	(curr_tile == tiles_0_empty ||
 		curr_tile == tiles_9_bigpillar_top ||
 		curr_tile == tiles_12_doortop)
 		&& row_below_left_[drawn_col].tiletype == tiles_4_gate
 	) {
 		add_backtable(id_chtab_6_environment, 68 /*gate top mask*/, draw_xh, 0, draw_bottom_y, blitters_40h_mono, 0);
-		modifier = row_below_left_[drawn_col].modifier;
+		word modifier = row_below_left_[drawn_col].modifier;
 		if (modifier > 188) modifier = 188;
 		add_backtable(id_chtab_6_environment, door_fram_top[(modifier>>2) % 8], draw_xh, 0, draw_bottom_y, blitters_2_or, 0);
 	}
@@ -552,12 +547,9 @@ const byte wall_fram_bottom[] = {7, 9, 5, 3};
 
 // seg008:0971
 void __pascal far draw_tile_bottom(word arg_0) {
-	word chtab_id;
-	byte id;
-	byte blit;
-	id = 0;
-	blit = blitters_0_no_transp;
-	chtab_id = id_chtab_6_environment;
+	byte id = 0;
+	byte blit = blitters_0_no_transp;
+	word chtab_id = id_chtab_6_environment;
 	switch (curr_tile) {
 		case tiles_20_wall:
 			if (custom->tbl_level_type[current_level] == 0 || custom->enable_wda_in_palace || graphics_mode != gmMcgaVga) {
@@ -596,9 +588,8 @@ const byte loose_fram_left[] = {41, 69, 41, 70, 70, 41, 41, 41, 70, 70, 70, 0};
 
 // seg008:0A8E
 void __pascal far draw_tile_base() {
-	word ybottom;
 	word id;
-	ybottom = draw_main_y;
+	word ybottom = draw_main_y;
 #ifdef USE_SUPER_HIGH_JUMP
 	// Latice tiles are drawn in the draw_tile_fore() method.
 	if (fixes->enable_super_high_jump) {
@@ -630,11 +621,9 @@ const byte chomper_fram_y[] = {0, 0, 0x25, 0x2F, 0x32};
 
 // seg008:0B2B
 void __pascal far draw_tile_anim() {
-	word color;
-	word pot_size;
 	word chomper_num;
-	pot_size = 0;
-	color = 12; // red
+	word pot_size = 0;
+	word color = 12; // red
 	switch (curr_tile) {
 		case tiles_2_spike:
 			ptr_add_table(id_chtab_6_environment, spikes_fram_left[get_spike_frame(curr_modifier)], draw_xh, 0, draw_main_y - 2, blitters_10h_transp, 0);
@@ -779,11 +768,10 @@ image_type* get_image(short chtab_id, int id) {
 
 // seg008:10A8
 int __pascal far add_backtable(short chtab_id, int id, sbyte xh, sbyte xl, int ybottom, int blit, byte peel) {
-	word index;
 	if (id == 0) {
 		return 0;
 	}
-	index = backtable_count;
+	word index = backtable_count;
 	if (index >= 200) {
 		show_dialog("BackTable Overflow");
 		return 0; // added
@@ -808,9 +796,8 @@ int __pascal far add_backtable(short chtab_id, int id, sbyte xh, sbyte xl, int y
 
 // seg008:1017
 int __pascal far add_foretable(short chtab_id, int id, sbyte xh, sbyte xl, int ybottom, int blit, byte peel) {
-	word index;
 	if (id == 0) return 0;
-	index = foretable_count;
+	word index = foretable_count;
 	if (index >= 200) {
 		show_dialog("ForeTable Overflow");
 		return 0; // added
@@ -835,11 +822,10 @@ int __pascal far add_foretable(short chtab_id, int id, sbyte xh, sbyte xl, int y
 
 // seg008:113A
 int __pascal far add_midtable(short chtab_id, int id, sbyte xh, sbyte xl, int ybottom, int blit, byte peel) {
-	word index;
 	if (id == 0) {
 		return 0;
 	}
-	index = midtable_count;
+	word index = midtable_count;
 	if (index >= 50) {
 		show_dialog("MidTable Overflow");
 		return 0; // added
@@ -886,8 +872,7 @@ void __pascal far add_peel(int left,int right,int top,int height) {
 
 // seg008:1254
 void __pascal far add_wipetable(sbyte layer,short left,short bottom,sbyte height,short width,sbyte color) {
-	word index;
-	index = wipetable_count;
+	word index = wipetable_count;
 	if (index >= 300) {
 		show_dialog("WipeTable Overflow");
 		return /*0*/; // added
@@ -907,10 +892,8 @@ void __pascal far add_wipetable(sbyte layer,short left,short bottom,sbyte height
 
 // seg008:12BB
 void __pascal far draw_table(int which_table) {
-	short index;
-	short count;
-	count = table_counts[which_table];
-	for (index = 0; index < count; ++index) {
+	short count = table_counts[which_table];
+	for (short index = 0; index < count; ++index) {
 		if (which_table == 3) {
 			draw_mid(index);
 		} else {
@@ -921,10 +904,8 @@ void __pascal far draw_table(int which_table) {
 
 // seg008:12FE
 void __pascal far draw_wipes(int which) {
-	word index;
-	word count;
-	count = wipetable_count;
-	for (index = 0; index < count; ++index) {
+	word count = wipetable_count;
+	for (word index = 0; index < count; ++index) {
 		if (which == wipetable[index].layer) {
 			draw_wipe(index);
 		}
@@ -988,34 +969,24 @@ SDL_Surface* hflip(SDL_Surface* input) {
 
 // seg008:140C
 void __pascal far draw_mid(int index) {
-	word need_free_mask;
-	word image_id;
 	image_type*far mask;
-	word chtab_id;
-	word blit_flip;
-	short ypos;
-	short xpos;
-	midtable_type* midtable_entry;
-	word blit;
-	word need_free_image;
-	image_type*far image;
 //	word image_flipped;
 
-	blit_flip = 0;
-	need_free_image = 0;
-	need_free_mask = 0;
-	midtable_entry = &midtable[index];
-	image_id = midtable_entry->id;
-	chtab_id = midtable_entry->chtab_id;
-	image = mask = get_image(chtab_id, image_id);
+	word blit_flip = 0;
+	word need_free_image = 0;
+	word need_free_mask = 0;
+	midtable_type* midtable_entry = &midtable[index];
+	word image_id = midtable_entry->id;
+	word chtab_id = midtable_entry->chtab_id;
+	image_type*far image = mask = get_image(chtab_id, image_id);
 	/*
 	if ((graphics_mode == gmCga || graphics_mode == gmHgaHerc) && chtab_shift[chtab_id]) {
 		mask = chtab_addrs[chtab_id]->images[image_id + chtab_addrs[chtab_id]->n_images / 2];
 	}
 	*/
-	xpos = midtable_entry->xh * 8 + midtable_entry->xl;
-	ypos = midtable_entry->y;
-	blit = midtable_entry->blit;
+	short xpos = midtable_entry->xh * 8 + midtable_entry->xl;
+	short ypos = midtable_entry->y;
+	word blit = midtable_entry->blit;
 	if (blit & 0x80) {
 		blit_flip = 0x8000;
 		blit &= 0x7F;
@@ -1087,8 +1058,7 @@ void __pascal far draw_image(image_type far *image,image_type far *mask,int xpos
 // seg008:1730
 void __pascal far draw_wipe(int index) {
 	rect_type rect;
-	wipetable_type* ptr;
-	ptr = &wipetable[index];
+	wipetable_type* ptr = &wipetable[index];
 	rect.left = rect.right = ptr->left;
 	rect.right += ptr->width;
 	rect.bottom = rect.top = ptr->bottom;
@@ -1117,7 +1087,6 @@ void __pascal far calc_gate_pos() {
 const byte door_fram_slice[] = {67, 59, 58, 57, 56, 55, 54, 53, 52};
 // seg008:17B7
 void __pascal far draw_gate_back() {
-	short ybottom;
 	calc_gate_pos();
 	if (gate_bottom_y + 12 < draw_main_y) {
 		add_backtable(id_chtab_6_environment, 50 /*gate bottom with B*/, draw_xh, 0, gate_bottom_y, blitters_0_no_transp, 0);
@@ -1139,7 +1108,7 @@ void __pascal far draw_gate_back() {
 		draw_tile_base();
 		add_backtable(id_chtab_6_environment, 51 /*gate bottom*/, draw_xh, 0, gate_bottom_y - 2, blitters_10h_transp, 0);
 	}
-	ybottom = gate_bottom_y - 12;
+	short ybottom = gate_bottom_y - 12;
 	if (ybottom < 192) {
 		for (; ybottom >= 0 && ybottom > 7 && ybottom - 7 > gate_top_y; ybottom -= 8) {
 			add_backtable(id_chtab_6_environment, 52 /*gate slice 8px*/, draw_xh, 0, ybottom, blitters_0_no_transp, 0);
@@ -1153,10 +1122,9 @@ void __pascal far draw_gate_back() {
 
 // seg008:18BE
 void __pascal far draw_gate_fore() {
-	short ybottom;
 	calc_gate_pos();
 	add_foretable(id_chtab_6_environment, 51 /*gate bottom*/, draw_xh, 0, gate_bottom_y - 2, blitters_10h_transp, 0);
-	ybottom = gate_bottom_y - 12;
+	short ybottom = gate_bottom_y - 12;
 	if (ybottom < 192) {
 		for (; ybottom >= 0 && ybottom > 7 && ybottom - 7 > gate_top_y; ybottom -= 8) {
 			add_foretable(id_chtab_6_environment, 52 /*gate slice 8px*/, draw_xh, 0, ybottom, blitters_10h_transp, 0);
@@ -1167,7 +1135,6 @@ void __pascal far draw_gate_fore() {
 // seg008:1937
 void __pascal far alter_mods_allrm() {
 	word tilepos;
-	word room;
 
 #ifdef USE_COLORED_TORCHES
 	memset(torch_colors, 0, sizeof(torch_colors));
@@ -1176,7 +1143,7 @@ void __pascal far alter_mods_allrm() {
 	// level.used_rooms is 25 on some levels. Limit it to the actual number of rooms.
 	if (level.used_rooms > 24) level.used_rooms = 24;
 
-	for (room = 1; room <= level.used_rooms; room++) {
+	for (word room = 1; room <= level.used_rooms; room++) {
 		get_room_address(room);
 		room_L = level.roomlinks[room-1].left;
 		room_R = level.roomlinks[room-1].right;
@@ -1189,11 +1156,9 @@ void __pascal far alter_mods_allrm() {
 // seg008:198E
 void __pascal far load_alter_mod(int tilepos) {
 	word wall_to_right;
-	word tiletype;
 	word wall_to_left;
-	byte* curr_tile_modif;
-	curr_tile_modif = tilepos + curr_room_modif;
-	tiletype = curr_room_tiles[tilepos] & 0x1F;
+	byte* curr_tile_modif = tilepos + curr_room_modif;
+	word tiletype = curr_room_tiles[tilepos] & 0x1F;
 	switch (tiletype) {
 		case tiles_4_gate:
 			if (*curr_tile_modif == 1) {
@@ -1343,7 +1308,6 @@ void __pascal far draw_moving() {
 
 // seg008:1B06
 void __pascal far redraw_needed_tiles() {
-	word saved_drawn_room;
 	load_leftroom();
 	draw_objtable_items_at_tile(30);
 	for (drawn_row = 3; drawn_row--; ) {
@@ -1355,7 +1319,7 @@ void __pascal far redraw_needed_tiles() {
 			redraw_needed(tbl_line[drawn_row] + drawn_col);
 		}
 	}
-	saved_drawn_room = drawn_room;
+	word saved_drawn_room = drawn_room;
 	drawn_room = room_A;
 	load_room_links();
 	load_leftroom();
@@ -1557,10 +1521,9 @@ void __pascal far draw_objtable_items_at_tile(byte tilepos) {
 void __pascal far sort_curr_objs() {
 	short swapped;
 	short temp;
-	short last;
 	short index;
 	// bubble sort
-	last = n_curr_objs - 1;
+	short last = n_curr_objs - 1;
 	do {
 		for (swapped = index = 0; index < last; ++index) {
 			if (compare_curr_objs(index, index + 1)) {
@@ -1576,11 +1539,9 @@ void __pascal far sort_curr_objs() {
 
 // seg008:203C
 int __pascal far compare_curr_objs(int index1,int index2) {
-	short obj_index1;
-	short obj_index2;
-	obj_index1 = curr_objs[index1];
+	short obj_index1 = curr_objs[index1];
 	if (objtable[obj_index1].obj_type == 1) return 1;
-	obj_index2 = curr_objs[index2];
+	short obj_index2 = curr_objs[index2];
 	if (objtable[obj_index2].obj_type == 1) return 0;
 	if (objtable[obj_index1].obj_type == 0x80 &&
 		objtable[obj_index2].obj_type == 0x80
@@ -1626,8 +1587,7 @@ void __pascal far draw_objtable_item(int index) {
 
 // seg008:2228
 int __pascal far load_obj_from_objtable(int index) {
-	objtable_type* curr_obj;
-	curr_obj = &objtable[index];
+	objtable_type* curr_obj = &objtable[index];
 	obj_xh = obj_x = curr_obj->xh;
 	obj_xl = curr_obj->xl;
 	obj_y = curr_obj->y;
@@ -1714,16 +1674,14 @@ void __pascal far add_guard_to_objtable() {
 
 // seg008:2388
 void __pascal far add_objtable(byte obj_type) {
-	word index;
-	objtable_type* entry_addr;
 	//printf("in add_objtable: objtable_count = %d\n",objtable_count); // debug
-	index = objtable_count++;
+	word index = objtable_count++;
 	//printf("in add_objtable: objtable_count = %d\n",objtable_count); // debug
 	if (index >= 50) {
 		show_dialog("ObjTable Overflow");
 		return /*0*/; // added
 	}
-	entry_addr = &objtable[index];
+	objtable_type* entry_addr = &objtable[index];
 	entry_addr->obj_type = obj_type;
 	x_to_xh_and_xl(obj_x, &entry_addr->xh, &entry_addr->xl);
 	entry_addr->y = obj_y;
@@ -1748,8 +1706,7 @@ void __pascal far mark_obj_tile_redraw(int index) {
 
 // seg008:2448
 void __pascal far load_frame_to_obj() {
-	word chtab_base;
-	chtab_base = id_chtab_2_kid;
+	word chtab_base = id_chtab_2_kid;
 	reset_obj_clip();
 	load_frame();
 	obj_direction = Char.direction;
@@ -1850,9 +1807,8 @@ void __pascal far show_level() {
 #ifdef FIX_LEVEL_14_RESTARTING
 	text_time_remaining = text_time_total = 0;
 #endif
-	byte disp_level;
 	char sprintf_temp[32];
-	disp_level = current_level;
+	byte disp_level = current_level;
 	if (disp_level != 0 && disp_level < /*14*/ custom->hide_level_number_from_level && seamless == 0) {
 		if (disp_level == 13) {
 			disp_level = /*12*/ custom->level_13_level_number;
@@ -1945,14 +1901,9 @@ void __pascal far erase_bottom_text(int arg_0) {
 
 // seg008:268F
 void __pascal far wall_pattern(int which_part,int which_table) {
-	// local variables
-	add_table_type saved_sim;
 	word bottom_divider; word middle_divider; byte bottom_divider_offset; byte middle_divider_offset;
-	byte bg_modifier;
-	dword saved_prng_state;
-	word is_dungeon;
 	// save the value for the sprite insertion method, so that it can be restored
-	saved_sim = ptr_add_table;
+	add_table_type saved_sim = ptr_add_table;
 	// set the sprite insertion method based on the arguments
 	if (which_table == 0) {
 		ptr_add_table = &add_backtable;
@@ -1960,11 +1911,11 @@ void __pascal far wall_pattern(int which_part,int which_table) {
 		ptr_add_table = &add_foretable;
 	}
 	// save the state of the pseudorandom number generator
-	saved_prng_state = random_seed;
+	dword saved_prng_state = random_seed;
 	// set the new seed
 	random_seed = drawn_room + tbl_line[drawn_row] + drawn_col;
 	prandom(1); // fetch a random number and discard it
-	is_dungeon = (custom->tbl_level_type[current_level] < DESIGN_PALACE) || custom->enable_wda_in_palace;
+	word is_dungeon = (custom->tbl_level_type[current_level] < DESIGN_PALACE) || custom->enable_wda_in_palace;
 	if ( (!is_dungeon) && (graphics_mode== GRAPHICS_VGA) ) {
 		// I haven't traced the palace WDA
 		//[...]
@@ -1991,7 +1942,7 @@ void __pascal far wall_pattern(int which_part,int which_table) {
 
 		// store the background modifier for the current tile in a local variable
 		// apparently, for walls, the modifier stores whether there are adjacent walls
-		bg_modifier = curr_modifier & 0x7F;
+		byte bg_modifier = curr_modifier & 0x7F;
 		switch (bg_modifier) {
 			case WALL_MODIFIER_WWW: // left and right tiles are walls
 				if (which_part != 0) {
@@ -2060,10 +2011,9 @@ void __pascal far wall_pattern(int which_part,int which_table) {
 }
 
 void __pascal far draw_left_mark (word decal_variant, word arg2, word arg1) {
-	word image_id; word lv2;
 	static const word LPOS[] = {58, 41, 37, 20, 16}; // Vertical render offset for all brick decal variants (last entry seems to be unused)
-	image_id = RES_WALL_MARK_TL;
-	lv2 = 0;
+	word image_id = RES_WALL_MARK_TL;
+	word lv2 = 0;
 	if (decal_variant % 2) { // Variants alternate between bottomleft and topleft decals
 		image_id = RES_WALL_MARK_BL;
 	}
@@ -2076,9 +2026,8 @@ void __pascal far draw_left_mark (word decal_variant, word arg2, word arg1) {
 }
 
 void __pascal far draw_right_mark (word decal_variant, word arg1) {
-	word image_id;
 	static const word RPOS[] = {52, 42, 31, 21}; // Vertical render offset for all brick decal variants (last entry seems to be unused)
-	image_id = RES_WALL_MARK_TR;
+	word image_id = RES_WALL_MARK_TR;
 	if (decal_variant % 2) { // Variants alternate between bottomright and topright decals
 		image_id = RES_WALL_MARK_BR;
 	}

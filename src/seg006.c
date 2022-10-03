@@ -517,10 +517,8 @@ void get_frame_internal(const frame_type frame_table[], int frame, const char* f
 
 // seg006:015A
 void __pascal far load_frame() {
-	short frame;
-	short add_frame;
-	frame = Char.frame;
-	add_frame = 0;
+	short frame = Char.frame;
+	short add_frame = 0;
 	switch (Char.charid) {
 		case charid_0_kid:
 		case charid_24_mouse:
@@ -878,10 +876,8 @@ void __pascal far fall_speed() {
 
 // seg006:05CD
 void __pascal far check_action() {
-	short frame;
-	short action;
-	action = Char.action;
-	frame = Char.frame;
+	short action = Char.action;
+	short frame = Char.frame;
 #ifdef USE_JUMP_GRAB
     // Prince can grab tiles during a jump if Shift and up arrow, but not forward arrow, keys are pressed.
     if (fixes->enable_jump_grab && action == actions_1_run_jump && control_shift < 0 && check_grab_run_jump()) {
@@ -933,11 +929,9 @@ int __pascal far tile_is_floor(int tiletype) {
 
 // seg006:0658
 void __pascal far check_spiked() {
-	short harmful;
-	short frame;
-	frame = Char.frame;
+	short frame = Char.frame;
 	if (get_tile(Char.room, Char.curr_col, Char.curr_row) == tiles_2_spike) {
-		harmful = is_spike_harmful();
+		short harmful = is_spike_harmful();
 		// frames 7..14: running
 		// frames 34..39: start run-jump
 		// frame 43: land from run-jump
@@ -953,8 +947,7 @@ void __pascal far check_spiked() {
 
 // seg006:06BD
 int __pascal far take_hp(int count) {
-	word dead;
-	dead = 0;
+	word dead = 0;
 	if (Char.charid == charid_0_kid) {
 		if (count >= hitp_curr) {
 			hitp_delta = -hitp_curr;
@@ -1067,9 +1060,8 @@ void __pascal far check_on_floor() {
 
 // seg006:08B9
 void __pascal far start_fall() {
-	short frame;
 	word seq_id;
-	frame = Char.frame;
+	short frame = Char.frame;
 	Char.sword = sword_0_sheathed;
 	inc_curr_row();
 	start_chompers();
@@ -1200,27 +1192,22 @@ bool check_grab_run_jump() {
     // grabbing distance:
     // running jump - about 2.5 tiles or closer
     // standing jump - just over 1 tile, enough to jump over an abyss/obstacle
-    word frame;
-    short grab_tile, grab_col;
-    short left_room, right_room, up_room;
-    bool is_jump, is_running_jump;
-    short char_room_m1;
-    frame = Char.frame;
-    is_jump = frame >= frame_22_standing_jump_7 && frame <= frame_23_standing_jump_8;
-    is_running_jump = frame >= frame_39_start_run_jump_6 && frame <= frame_41_running_jump_2;
-    char_room_m1 = Char.room - 1;
+    word frame = Char.frame;
+    bool is_jump = frame >= frame_22_standing_jump_7 && frame <= frame_23_standing_jump_8;
+    bool is_running_jump = frame >= frame_39_start_run_jump_6 && frame <= frame_41_running_jump_2;
+    short char_room_m1 = Char.room - 1;
     if (Char.action == actions_1_run_jump &&
             (is_jump || is_running_jump) &&
             control_x == 0 && control_y < 0) {
         if (can_grab_front_above()) { // can grab a ledge at a specific frame during a jump
-            grab_tile = curr_tile2;
-            grab_col = tile_col;
+            short grab_tile = curr_tile2;
+            short grab_col = tile_col;
             // Prince's and tile rooms can get out of sync at the edge of a room
             // causing teleportation.
             if (curr_room != Char.room) {
-                left_room = level.roomlinks[char_room_m1].left;
-                right_room = level.roomlinks[char_room_m1].right;
-                up_room = level.roomlinks[char_room_m1].up;
+                short left_room = level.roomlinks[char_room_m1].left;
+                short right_room = level.roomlinks[char_room_m1].right;
+                short up_room = level.roomlinks[char_room_m1].up;
                 if (curr_room == right_room) {
                     grab_col += 10;
                 } else if (curr_room == left_room) {
@@ -1266,8 +1253,7 @@ int __pascal far can_grab_front_above() {
 
 // seg006:0ACD
 void __pascal far in_wall() {
-	short delta_x;
-	delta_x = distance_to_edge_weight();
+	short delta_x = distance_to_edge_weight();
 	if (delta_x >= 8 || get_tile_infrontof_char() == tiles_20_wall) {
 		delta_x = 6 - delta_x;
 	} else {
@@ -1301,9 +1287,8 @@ int __pascal far distance_to_edge_weight() {
 
 // seg006:0B94
 int __pascal far distance_to_edge(int xpos) {
-	short distance;
 	get_tile_div_mod_m7(xpos);
-	distance = obj_xl;
+	short distance = obj_xl;
 	if (Char.direction == dir_0_right) {
 		distance = TILE_RIGHTX - distance;
 	}
@@ -1368,7 +1353,6 @@ void __pascal far play_kid() {
 
 // seg006:0CD1
 void __pascal far control_kid() {
-	word key;
 	if (Char.alive < 0 && hitp_curr == 0) {
 		Char.alive = 0;
 		// stop feather fall when kid dies
@@ -1390,7 +1374,7 @@ void __pascal far control_kid() {
 		do_demo();
 		control();
 		// The player can start a new game or load a saved game during the demo.
-		key = key_test_quit();
+		word key = key_test_quit();
 		if (key == (SDL_SCANCODE_L | WITH_CTRL)) { // Ctrl+L
 			if (load_game()) {
 				start_game();
@@ -1494,9 +1478,8 @@ void __pascal far user_control() {
 
 // seg006:0DDC
 void __pascal far flip_control_x() {
-	byte temp;
 	control_x = -control_x;
-	temp = control_forward;
+	byte temp = control_forward;
 	control_forward = control_backward;
 	control_backward = temp;
 }
@@ -1582,8 +1565,7 @@ void __pascal far read_user_control() {
 // seg006:0F55
 int __pascal far can_grab() {
 	// Can char grab curr_tile2 through through_tile?
-	byte modifier;
-	modifier = curr_room_modif[curr_tilepos];
+	byte modifier = curr_room_modif[curr_tilepos];
 	// can't grab through wall
 	if (through_tile == tiles_20_wall) return 0;
 	// can't grab through a door top if looking right
@@ -1658,10 +1640,8 @@ void __pascal far do_pickup(int obj_type) {
 
 // seg006:10E6
 void __pascal far check_press() {
-	short frame;
-	short action;
-	frame = Char.frame;
-	action = Char.action;
+	short frame = Char.frame;
+	short action = Char.action;
 	// frames 87..99: hanging
 	// frames 135..140: start climb up
 	if ((frame >= frame_87_hanging_1 && frame < 100) || (frame >= frame_135_climbing_1 && frame < frame_141_climbing_7)) {
@@ -1698,15 +1678,11 @@ void __pascal far check_press() {
 // seg006:1199
 void __pascal far check_spike_below() {
 	short not_finished;
-	short room;
-	short row;
-	short col;
-	short right_col;
-	right_col = get_tile_div_mod_m7(char_x_right);
+	short right_col = get_tile_div_mod_m7(char_x_right);
 	if (right_col < 0) return;
-	row = Char.curr_row;
-	room = Char.room;
-	for (col = get_tile_div_mod_m7(char_x_left); col <= right_col; ++col) {
+	short row = Char.curr_row;
+	short room = Char.room;
+	for (short col = get_tile_div_mod_m7(char_x_left); col <= right_col; ++col) {
 		row = Char.curr_row;
 		do {
 			not_finished = 0;
@@ -1730,7 +1706,6 @@ void __pascal far check_spike_below() {
 
 // seg006:1231
 void __pascal far clip_char() {
-	short col;
 	short frame = Char.frame;
 	short action = Char.action;
 	short room = Char.room;
@@ -1771,7 +1746,7 @@ void __pascal far clip_char() {
 				}
 			}
 		}
-		col = get_tile_div_mod(char_x_left_coll - 4);
+		short col = get_tile_div_mod(char_x_left_coll - 4);
 		if (get_tile(room, col + 1, row) == tiles_7_doortop_with_floor ||
 			curr_tile2 == tiles_12_doortop
 		) {
@@ -1814,10 +1789,8 @@ void __pascal far stuck_lower() {
 
 // seg006:13F3
 void __pascal far set_objtile_at_char() {
-	short char_frame;
-	short char_action;
-	char_frame = Char.frame;
-	char_action = Char.action;
+	short char_frame = Char.frame;
+	short char_action = Char.action;
 	if (char_action == actions_1_run_jump) {
 		tile_row = char_bottom_row;
 		tile_col = char_col_left;
@@ -1986,8 +1959,7 @@ void __pascal far load_obj() {
 
 // seg006:16CE
 void __pascal far draw_hurt_splash() {
-	short frame;
-	frame = Char.frame;
+	short frame = Char.frame;
 	if (frame != frame_178_chomped) { // chomped
 		save_obj();
 		obj_tilepos = -1;
@@ -2086,14 +2058,12 @@ const sword_table_type sword_tbl[] = {
 
 // seg006:1798
 void __pascal far add_sword_to_objtable() {
-	short frame;
-	short sword_frame;
-	frame = Char.frame;
+	short frame = Char.frame;
 	if ((frame >= frame_229_found_sword && frame < 238) || // found sword + put sword away
 		Char.sword != sword_0_sheathed ||
 		(Char.charid == charid_2_guard && Char.alive < 0)
 	) {
-		sword_frame = cur_frame.sword & 0x3F;
+		short sword_frame = cur_frame.sword & 0x3F;
 		if (sword_frame) {
 			obj_id = sword_tbl[sword_frame].id;
 			if (obj_id != 0xFF) {
@@ -2123,11 +2093,10 @@ void __pascal far control_guard_inactive() {
 int __pascal far char_opp_dist() {
 	// >0 if Opp is in front of char
 	// <0 if Opp is behind char
-	short distance;
 	if (Char.room != Opp.room) {
 		return 999;
 	}
-	distance = Opp.x - Char.x;
+	short distance = Opp.x - Char.x;
 	if (Char.direction < dir_0_right) {
 		distance = -distance;
 	}

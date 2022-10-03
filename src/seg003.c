@@ -448,11 +448,9 @@ void __pascal far redraw_at_char() {
 
 // seg003:0645
 void __pascal far redraw_at_char2() {
-	short char_action;
-	short char_frame;
 	void __pascal (* redraw_func)(short, byte);
-	char_action = Char.action;
-	char_frame = Char.frame;
+	short char_action = Char.action;
+	short char_frame = Char.frame;
 	redraw_func = &set_redraw2;
 	// frames 78..80: grab
 	if (char_frame < frame_78_jumphang || char_frame >= frame_80_jumphang) {
@@ -574,7 +572,6 @@ void __pascal far timers() {
 
 // seg003:0798
 void __pascal far check_mirror() {
-	word clip_top;
 	if (jumped_through_mirror == -1) {
 		jump_through_mirror();
 	} else {
@@ -585,7 +582,7 @@ void __pascal far check_mirror() {
 			if (distance_mirror >= 0 && custom->show_mirror_image && Char.room == drawn_room) {
 				load_frame_to_obj();
 				reset_obj_clip();
-				clip_top = y_clip[Char.curr_row + 1];
+				word clip_top = y_clip[Char.curr_row + 1];
 				if (clip_top < obj_y) {
 					obj_clip_top = clip_top;
 					obj_clip_left = (Char.curr_col << 5) + 9;
@@ -613,10 +610,8 @@ void __pascal far jump_through_mirror() {
 
 // seg003:085B
 void __pascal far check_mirror_image() {
-	short distance;
-	short xpos;
-	xpos = x_bump[Char.curr_col + FIRST_ONSCREEN_COLUMN] + 10; // I think 10 is the offset for mirror collision within a tile
-	distance = distance_to_edge_weight();
+	short xpos = x_bump[Char.curr_col + FIRST_ONSCREEN_COLUMN] + 10; // I think 10 is the offset for mirror collision within a tile
+	short distance = distance_to_edge_weight();
 	if (Char.direction >= dir_0_right) {
 		distance = (~distance) + TILE_SIZEX;
 	}
@@ -628,14 +623,13 @@ void __pascal far check_mirror_image() {
 // seg003:08AA
 void __pascal far bump_into_opponent() {
 	// This is called from play_kid_frame, so char=Kid, Opp=Guard
-	short distance;
 	if (can_guard_see_kid >= 2 &&
 		Char.sword == sword_0_sheathed && // Kid must not be in fighting pose
 		Opp.sword != sword_0_sheathed && // but Guard must
 		Opp.action < 2 &&
 		Char.direction != Opp.direction // must be facing toward each other
 	) {
-		distance = char_opp_dist();
+		short distance = char_opp_dist();
 		if (ABS(distance) <= 15) {
 
 			#ifdef FIX_PAINLESS_FALL_ON_GUARD
@@ -667,10 +661,8 @@ void __pascal far bump_into_opponent() {
 
 // seg003:0913
 void __pascal far pos_guards() {
-	short guard_tile;
-	short room1;
-	for (room1 = 0; room1 < ROOMCOUNT; ++room1) {
-		guard_tile = level.guards_tile[room1];
+	for (short room1 = 0; room1 < ROOMCOUNT; ++room1) {
+		short guard_tile = level.guards_tile[room1];
 		if (guard_tile < 30) {
 			level.guards_x[room1] = x_bump[(guard_tile % 10) + FIRST_ONSCREEN_COLUMN] + TILE_SIZEX;
 			level.guards_seq_hi[room1] = 0;
@@ -686,11 +678,7 @@ Possible results in can_guard_see_kid:
 1: Guard can see Kid, but won't come
 2: Guard can see Kid, and will come
 */
-	short kid_frame;
-	short left_pos;
-	short temp;
-	short right_pos;
-	kid_frame = Kid.frame;
+	short kid_frame = Kid.frame;
 	if (Guard.charid == charid_24_mouse) {
 		// If the prince is fighting a guard, and the player does a quickload to a state where the prince is near the mouse, the prince would draw the sword.
 		// The following line prevents this.
@@ -703,7 +691,7 @@ Possible results in can_guard_see_kid:
 		Guard.direction != dir_56_none && Kid.alive < 0 && Guard.alive < 0 && Kid.room == Guard.room && Kid.curr_row == Guard.curr_row
 	) {
 		can_guard_see_kid = 2;
-		left_pos = x_bump[Kid.curr_col + FIRST_ONSCREEN_COLUMN] + TILE_MIDX;
+		short left_pos = x_bump[Kid.curr_col + FIRST_ONSCREEN_COLUMN] + TILE_MIDX;
 #ifdef FIX_DOORTOP_DISABLING_GUARD
 		if (fixes->fix_doortop_disabling_guard) {
 			// When the kid is hanging on the right side of a doortop, Kid.curr_col points at the doortop tile and a guard on the left side will see the prince.
@@ -712,9 +700,9 @@ Possible results in can_guard_see_kid:
 		}
 #endif
 		//printf("Kid.curr_col = %d, Kid.action = %d\n", Kid.curr_col, Kid.action);
-		right_pos = x_bump[Guard.curr_col + FIRST_ONSCREEN_COLUMN] + TILE_MIDX;
+		short right_pos = x_bump[Guard.curr_col + FIRST_ONSCREEN_COLUMN] + TILE_MIDX;
 		if (left_pos > right_pos) {
-			temp = left_pos;
+			short temp = left_pos;
 			left_pos = right_pos;
 			right_pos = temp;
 		}

@@ -500,8 +500,7 @@ short princess_torch_frame[] = {1, 6};
 
 // seg001:0808
 void __pascal far princess_room_torch() {
-	short which;
-	for (which = 2; which--; ) {
+	for (short which = 2; which--; ) {
 		which_torch = !which_torch;
 		princess_torch_frame[which_torch] = get_torch_frame(princess_torch_frame[which_torch]);
 		add_backtable(id_chtab_1_flameswordpotion, princess_torch_frame[which_torch] + 1, princess_torch_pos_xh[which_torch], princess_torch_pos_xl[which_torch], 116, 0, 0);
@@ -568,14 +567,11 @@ void __pascal far remove_flash() {
 
 // seg001:09D7
 void __pascal far end_sequence() {
-	peel_type* peel;
-	short bgcolor;
-	short color;
 	rect_type rect;
 	short hof_index;
 	short i;
-	color = 0;
-	bgcolor = 15;
+	short color = 0;
+	short bgcolor = 15;
 	load_intro(1, &end_sequence_anim, 1);
 	clear_screen_and_sounds();
 	is_ending_sequence = true; // added (fix being able to pause the game during the end sequence)
@@ -613,7 +609,7 @@ void __pascal far end_sequence() {
 		draw_full_image(HOF_POP);
 		show_hof();
 		offset4_rect_add(&rect, &hof_rects[hof_index], -4, -1, -40, -1);
-		peel = read_peel_from_screen(&rect);
+		peel_type* peel = read_peel_from_screen(&rect);
 		if (graphics_mode == gmMcgaVga) {
 			color = 0xBE;
 			bgcolor = 0xB7;
@@ -655,7 +651,6 @@ void __pascal far expired() {
 
 // seg001:0CCD
 void __pascal far load_intro(int which_imgs,cutscene_ptr_type func,int free_sounds) {
-	short current_star;
 	draw_rect(&screen_rect, 0);
 	if (free_sounds) {
 		free_optional_sounds();
@@ -675,7 +670,7 @@ void __pascal far load_intro(int which_imgs,cutscene_ptr_type func,int free_soun
 	load_chtab_from_file(id_chtab_3_princessinstory, 800, "PV.DAT", 1<<9);
 	load_chtab_from_file(id_chtab_4_jaffarinstory_princessincutscenes,
 	                     50*which_imgs + 850, "PV.DAT", 1<<10);
-	for (current_star = 0; current_star < N_STARS; ++current_star) {
+	for (short current_star = 0; current_star < N_STARS; ++current_star) {
 		draw_star(current_star, 0);
 	}
 	current_target_surface = onscreen_surface_;
@@ -733,9 +728,8 @@ void __pascal far draw_star(int which_star,int mark_dirty) {
 // seg001:0E94
 void __pascal far show_hof() {
 	// Hall of Fame
-	short index;
 	char time_text[12];
-	for (index = 0; index < hof_count; ++index) {
+	for (short index = 0; index < hof_count; ++index) {
 
 #ifdef ALLOW_INFINITE_TIME
 		int minutes, seconds;
@@ -771,10 +765,9 @@ const char* get_hof_path(char* custom_path_buffer, size_t max_len) {
 
 // seg001:0F17
 void __pascal far hof_write() {
-	FILE* handle;
 	char custom_hof_path[POP_MAX_PATH];
 	const char* hof_path = get_hof_path(custom_hof_path, sizeof(custom_hof_path));
-	handle = fopen(hof_path, "wb");
+	FILE* handle = fopen(hof_path, "wb");
 	if (handle == NULL ||
 		fwrite(&hof_count, 1, 2, handle) != 2 ||
 		fwrite(&hof, 1, sizeof(hof), handle) != sizeof(hof))
@@ -785,11 +778,10 @@ void __pascal far hof_write() {
 
 // seg001:0F6C
 void __pascal far hof_read() {
-	FILE* handle;
 	hof_count = 0;
 	char custom_hof_path[POP_MAX_PATH];
 	const char* hof_path = get_hof_path(custom_hof_path, sizeof(custom_hof_path));
-	handle = fopen(hof_path, "rb");
+	FILE* handle = fopen(hof_path, "rb");
 	if (handle == NULL)
 		return;
 	if (fread(&hof_count, 1, 2, handle) != 2 ||
@@ -802,11 +794,9 @@ void __pascal far hof_read() {
 
 // seg001:0FC3
 void __pascal far show_hof_text(rect_type far *rect,int x_align,int y_align, const char *text) {
-	short shadow_color;
-	short text_color;
 	rect_type rect2;
-	text_color = 15;
-	shadow_color = 0;
+	short text_color = 15;
+	short shadow_color = 0;
 	if (graphics_mode == gmMcgaVga) {
 		text_color = 0xB7;
 	}
