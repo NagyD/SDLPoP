@@ -24,17 +24,17 @@ The authors of this program may be contacted at https://forum.princed.org
 extern const word seqtbl_offsets[];
 
 // seg005:000A
-void __pascal far seqtbl_offset_char(short seq_index) {
+void seqtbl_offset_char(short seq_index) {
 	Char.curr_seq = seqtbl_offsets[seq_index];
 }
 
 // seg005:001D
-void __pascal far seqtbl_offset_opp(int seq_index) {
+void seqtbl_offset_opp(int seq_index) {
 	Opp.curr_seq = seqtbl_offsets[seq_index];
 }
 
 // seg005:0030
-void __pascal far do_fall() {
+void do_fall() {
 	if (is_screaming == 0 && Char.fall_y >= 31) {
 		play_sound(sound_1_falling); // falling
 		is_screaming = 1;
@@ -111,7 +111,7 @@ void __pascal far do_fall() {
 }
 
 // seg005:0090
-void __pascal far land() {
+void land() {
 	word seq_id;
 	is_screaming = 0;
 
@@ -217,7 +217,7 @@ void __pascal far land() {
 }
 
 // seg005:01B7
-void __pascal far spiked() {
+void spiked() {
 	// If someone falls into spikes, those spikes become harmless (to others).
 	curr_room_modif[curr_tilepos] = 0xFF;
 	Char.y = y_land[Char.curr_row + 1];
@@ -249,7 +249,7 @@ void __pascal far spiked() {
 }
 
 // seg005:0213
-void __pascal far control() {
+void control() {
 	short char_frame = Char.frame;
 	if (Char.alive >= 0) {
 		if (char_frame == frame_15_stand || // stand
@@ -310,7 +310,7 @@ void __pascal far control() {
 }
 
 // seg005:02EB
-void __pascal far control_crouched() {
+void control_crouched() {
 	if (need_level1_music != 0 && current_level == /*1*/ custom->intro_music_level) {
 		// Special event: music when crouching
 		if (! check_sound_playing()) {
@@ -340,7 +340,7 @@ void __pascal far control_crouched() {
 }
 
 // seg005:0358
-void __pascal far control_standing() {
+void control_standing() {
 	if (control_shift2 < 0 && control_shift < 0 && check_get_item()) {
 		return;
 	}
@@ -404,7 +404,7 @@ void __pascal far control_standing() {
 }
 
 // seg005:0482
-void __pascal far up_pressed() {
+void up_pressed() {
 	int leveldoor_tilepos = -1;
 	if (get_tile_at_char() == tiles_16_level_door_left) leveldoor_tilepos = curr_tilepos;
 	else if (get_tile_behind_char() == tiles_16_level_door_left) leveldoor_tilepos = curr_tilepos;
@@ -428,7 +428,7 @@ void __pascal far up_pressed() {
 }
 
 // seg005:04C7
-void __pascal far down_pressed() {
+void down_pressed() {
 	control_down = 1; // disable automatic repeat
 	if (! tile_is_floor(get_tile_infrontof_char()) &&
 		distance_to_edge_weight() < 3
@@ -461,14 +461,14 @@ void __pascal far down_pressed() {
 }
 
 // seg005:0574
-void __pascal far go_up_leveldoor() {
+void go_up_leveldoor() {
 	Char.x = x_bump[tile_col + FIRST_ONSCREEN_COLUMN] + 10;
 	Char.direction = dir_FF_left; // right
 	seqtbl_offset_char(seq_70_go_up_on_level_door); // go up on level door
 }
 
 // seg005:058F
-void __pascal far control_turning() {
+void control_turning() {
 	if (control_shift >= 0 && control_x < 0 && control_y >= 0) {
 		seqtbl_offset_char(seq_43_start_run_after_turn); // start run and run (after turning)
 	}
@@ -491,13 +491,13 @@ void __pascal far control_turning() {
 }
 
 // seg005:05AD
-void __pascal far crouch() {
+void crouch() {
 	seqtbl_offset_char(seq_50_crouch); // crouch
 	control_down = release_arrows();
 }
 
 // seg005:05BE
-void __pascal far back_pressed() {
+void back_pressed() {
 	word seq_id;
 	control_backward = release_arrows();
 	// After turn, Kid will draw sword if ...
@@ -516,7 +516,7 @@ void __pascal far back_pressed() {
 }
 
 // seg005:060F
-void __pascal far forward_pressed() {
+void forward_pressed() {
 	short distance;
 	distance = get_edge_distance();
 	#ifdef ALLOW_CROUCH_AFTER_CLIMBING
@@ -538,7 +538,7 @@ void __pascal far forward_pressed() {
 }
 
 // seg005:0649
-void __pascal far control_running() {
+void control_running() {
 	if (control_x == 0 && (Char.frame == frame_7_run || Char.frame == frame_11_run)) {
 		control_forward = release_arrows();
 		seqtbl_offset_char(seq_13_stop_run); // stop run
@@ -554,7 +554,7 @@ void __pascal far control_running() {
 }
 
 // seg005:06A8
-void __pascal far safe_step() {
+void safe_step() {
 	control_shift2 = 1; // disable automatic repeat
 	control_forward = 1; // disable automatic repeat
 	short distance = get_edge_distance();
@@ -570,7 +570,7 @@ void __pascal far safe_step() {
 }
 
 // seg005:06F0
-int __pascal far check_get_item() {
+int check_get_item() {
 	if (get_tile_at_char() == tiles_10_potion ||
 		curr_tile2 == tiles_22_sword
 	) {
@@ -590,7 +590,7 @@ int __pascal far check_get_item() {
 }
 
 // seg005:073E
-void __pascal far get_item() {
+void get_item() {
 	if (Char.frame != frame_109_crouch) { // crouching
 		short distance = get_edge_distance();
 		if (edge_type != EDGE_TYPE_FLOOR) {
@@ -624,27 +624,27 @@ void __pascal far get_item() {
 }
 
 // seg005:07FF
-void __pascal far control_startrun() {
+void control_startrun() {
 	if (control_y < 0 && control_x < 0) {
 		standing_jump();
 	}
 }
 
 // seg005:0812
-void __pascal far control_jumpup() {
+void control_jumpup() {
 	if (control_x < 0 || control_forward < 0) {
 		standing_jump();
 	}
 }
 
 // seg005:0825
-void __pascal far standing_jump() {
+void standing_jump() {
 	control_up = control_forward = 1; // disable automatic repeat
 	seqtbl_offset_char(seq_3_standing_jump); // standing jump
 }
 
 // seg005:0836
-void __pascal far check_jump_up() {
+void check_jump_up() {
 	control_up = release_arrows();
 	through_tile = get_tile_above_char();
 	get_tile_front_above_char();
@@ -662,7 +662,7 @@ void __pascal far check_jump_up() {
 }
 
 // seg005:087B
-void __pascal far jump_up_or_grab() {
+void jump_up_or_grab() {
 	short distance = distance_to_edge_weight();
 	if (distance < 6) {
 		jump_up();
@@ -678,14 +678,14 @@ void __pascal far jump_up_or_grab() {
 }
 
 // seg005:08C7
-void __pascal far grab_up_no_floor_behind() {
+void grab_up_no_floor_behind() {
 	get_tile_above_char();
 	Char.x = char_dx_forward(distance_to_edge_weight() - 10);
 	seqtbl_offset_char(seq_16_jump_up_and_grab); // jump up and grab (no floor behind)
 }
 
 // seg005:08E6
-void __pascal far jump_up() {
+void jump_up() {
 	word delta_x;
 	control_up = release_arrows();
 	short distance = get_edge_distance();
@@ -742,7 +742,7 @@ void __pascal far jump_up() {
 }
 
 // seg005:0968
-void __pascal far control_hanging() {
+void control_hanging() {
 	if (Char.alive < 0) {
 		if (grab_timer == 0 && control_y < 0) {
 			can_climb_up();
@@ -777,7 +777,7 @@ void __pascal far control_hanging() {
 }
 
 // seg005:09DF
-void __pascal far can_climb_up() {
+void can_climb_up() {
 	short seq_id = seq_10_climb_up; // climb up
 	control_up = control_shift2 = release_arrows();
 #ifdef USE_SUPER_HIGH_JUMP
@@ -797,7 +797,7 @@ void __pascal far can_climb_up() {
 }
 
 // seg005:0A46
-void __pascal far hang_fall() {
+void hang_fall() {
 	control_down = release_arrows();
 #ifdef USE_SUPER_HIGH_JUMP
 	if (fixes->enable_super_high_jump) {
@@ -822,7 +822,7 @@ void __pascal far hang_fall() {
 }
 
 // seg005:0AA8
-void __pascal far grab_up_with_floor_behind() {
+void grab_up_with_floor_behind() {
 	short distance = distance_to_edge_weight();
 
 	// The global variable edge_type (which we need!) gets set as a side effect of get_edge_distance()
@@ -849,7 +849,7 @@ void __pascal far grab_up_with_floor_behind() {
 }
 
 // seg005:0AF7
-void __pascal far run_jump() {
+void run_jump() {
 	short pos_adjustment;
 	if (Char.frame >= frame_7_run) {
 		// Align Kid to edge of floor.
@@ -874,7 +874,7 @@ void __pascal far run_jump() {
 }
 
 // sseg005:0BB5
-void __pascal far back_with_sword() {
+void back_with_sword() {
 	short frame = Char.frame;
 	if (frame == frame_158_stand_with_sword || frame == frame_170_stand_with_sword || frame == frame_171_stand_with_sword) {
 		control_backward = 1; // disable automatic repeat
@@ -883,7 +883,7 @@ void __pascal far back_with_sword() {
 }
 
 // seg005:0BE3
-void __pascal far forward_with_sword() {
+void forward_with_sword() {
 	short frame = Char.frame;
 	if (frame == frame_158_stand_with_sword || frame == frame_170_stand_with_sword || frame == frame_171_stand_with_sword) {
 		control_forward = 1; // disable automatic repeat
@@ -896,7 +896,7 @@ void __pascal far forward_with_sword() {
 }
 
 // seg005:0C1D
-void __pascal far draw_sword() {
+void draw_sword() {
 	word seq_id = seq_55_draw_sword; // draw sword
 	control_forward = control_shift2 = release_arrows();
 #ifdef FIX_UNINTENDED_SWORD_STRIKE
@@ -915,7 +915,7 @@ void __pascal far draw_sword() {
 }
 
 // seg005:0C67
-void __pascal far control_with_sword() {
+void control_with_sword() {
 	if (Char.action < actions_2_hang_climb) {
 		if (get_tile_at_char() == tiles_11_loose || can_guard_see_kid >= 2) {
 			short distance = char_opp_dist();
@@ -949,7 +949,7 @@ void __pascal far control_with_sword() {
 }
 
 // seg005:0CDB
-void __pascal far swordfight() {
+void swordfight() {
 	short seq_id;
 	short frame = Char.frame;
 	short charid = Char.charid;
@@ -990,7 +990,7 @@ void __pascal far swordfight() {
 }
 
 // seg005:0DB0
-void __pascal far sword_strike() {
+void sword_strike() {
 	short frame;
 	short seq_id;
 	frame = Char.frame;
@@ -1015,7 +1015,7 @@ void __pascal far sword_strike() {
 }
 
 // seg005:0E0F
-void __pascal far parry() {
+void parry() {
 	short char_frame = Char.frame;
 	short opp_frame = Opp.frame;
 	short char_charid = Char.charid;

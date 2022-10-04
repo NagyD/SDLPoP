@@ -227,7 +227,7 @@ dat_type* dat_chain_ptr = NULL;
 char last_text_input;
 
 // seg009:000D
-int __pascal far read_key() {
+int read_key() {
 	// stub
 	int key = last_key_scancode;
 	last_key_scancode = 0;
@@ -235,14 +235,14 @@ int __pascal far read_key() {
 }
 
 // seg009:019A
-void __pascal far clear_kbd_buf() {
+void clear_kbd_buf() {
 	// stub
 	last_key_scancode = 0;
 	last_text_input = 0;
 }
 
 // seg009:040A
-word __pascal far prandom(word max) {
+word prandom(word max) {
 	if (!seed_was_init) {
 		// init from current time
 		random_seed = (dword)time(NULL);
@@ -253,24 +253,24 @@ word __pascal far prandom(word max) {
 }
 
 // seg009:0467
-int __pascal far round_xpos_to_byte(int xpos,int round_direction) {
+int round_xpos_to_byte(int xpos,int round_direction) {
 	// stub
 	return xpos;
 }
 
 // seg009:0C7A
-void __pascal far quit(int exit_code) {
+void quit(int exit_code) {
 	restore_stuff();
 	exit(exit_code);
 }
 
 // seg009:0C90
-void __pascal far restore_stuff() {
+void restore_stuff() {
 	SDL_Quit();
 }
 
 // seg009:0E33
-int __pascal far key_test_quit() {
+int key_test_quit() {
 	word key = read_key();
 	if (key == (SDL_SCANCODE_Q | WITH_CTRL)) { // Ctrl+Q
 
@@ -287,7 +287,7 @@ int __pascal far key_test_quit() {
 }
 
 // seg009:0E54
-const char* __pascal far check_param(const char *param) {
+const char* check_param(const char* param) {
 	// stub
 	for (short arg_index = 1; arg_index < g_argc; ++arg_index) {
 
@@ -329,7 +329,7 @@ const char* __pascal far check_param(const char *param) {
 }
 
 // seg009:0EDF
-int __pascal far pop_wait(int timer_index,int time) {
+int pop_wait(int timer_index,int time) {
 	start_timer(timer_index, time);
 	return do_wait(timer_index);
 }
@@ -358,10 +358,10 @@ static FILE* open_dat_from_root_or_data_dir(const char* filename) {
 	return fp;
 }
 
-int __pascal far showmessage(char far *text,int arg_4,void far *arg_0);
+int showmessage(char* text,int arg_4,void* arg_0);
 
 // seg009:0F58
-dat_type *__pascal open_dat(const char *filename, int optional) {
+dat_type* open_dat(const char* filename, int optional) {
 	FILE* fp = NULL;
 	if (!use_custom_levelset) {
 		fp = open_dat_from_root_or_data_dir(filename);
@@ -439,7 +439,7 @@ failed:
 }
 
 // seg009:9CAC
-void __pascal far set_loaded_palette(dat_pal_type far *palette_ptr) {
+void set_loaded_palette(dat_pal_type* palette_ptr) {
 	int dest_row, dest_index, source_row;
 	for (dest_row = dest_index = source_row = 0; dest_row < 16; ++dest_row, dest_index += 0x10) {
 		if (palette_ptr->row_bits & (1 << dest_row)) {
@@ -453,7 +453,7 @@ void __pascal far set_loaded_palette(dat_pal_type far *palette_ptr) {
 word chtab_palette_bits = 1;
 
 // seg009:104E
-chtab_type* __pascal load_sprites_from_file(int resource,int palette_bits, int quit_on_error) {
+chtab_type* load_sprites_from_file(int resource,int palette_bits, int quit_on_error) {
 	int i;
 	int n_images = 0;
 	//int has_palette_bits = 1;
@@ -489,7 +489,7 @@ chtab_type* __pascal load_sprites_from_file(int resource,int palette_bits, int q
 	}
 
 	n_images = shpl->n_images;
-	size_t alloc_size = sizeof(chtab_type) + sizeof(void far *) * n_images;
+	size_t alloc_size = sizeof(chtab_type) + sizeof(void *) * n_images;
 	chtab = (chtab_type*) malloc(alloc_size);
 	memset(chtab, 0, alloc_size);
 	chtab->n_images = n_images;
@@ -518,8 +518,8 @@ chtab_type* __pascal load_sprites_from_file(int resource,int palette_bits, int q
 }
 
 // seg009:11A8
-void __pascal far free_chtab(chtab_type *chtab_ptr) {
-	image_type far* curr_image;
+void free_chtab(chtab_type *chtab_ptr) {
+	image_type* curr_image;
 	if (graphics_mode == gmMcgaVga && chtab_ptr->has_palette_bits) {
 		chtab_palette_bits &= ~ chtab_ptr->chtab_palette_bits;
 	}
@@ -530,11 +530,11 @@ void __pascal far free_chtab(chtab_type *chtab_ptr) {
 			SDL_FreeSurface(curr_image);
 		}
 	}
-	free_near(chtab_ptr);
+	free(chtab_ptr);
 }
 
 // seg009:8CE6
-void __pascal far decompress_rle_lr(byte far *destination,const byte far *source,int dest_length) {
+void decompress_rle_lr(byte* destination,const byte* source,int dest_length) {
 	const byte* src_pos = source;
 	byte* dest_pos = destination;
 	short rem_length = dest_length;
@@ -558,7 +558,7 @@ void __pascal far decompress_rle_lr(byte far *destination,const byte far *source
 }
 
 // seg009:8D1C
-void __pascal far decompress_rle_ud(byte far *destination,const byte far *source,int dest_length,int width,int height) {
+void decompress_rle_ud(byte* destination,const byte* source,int dest_length,int width,int height) {
 	short rem_height = height;
 	const byte* src_pos = source;
 	byte* dest_pos = destination;
@@ -595,8 +595,8 @@ void __pascal far decompress_rle_ud(byte far *destination,const byte far *source
 }
 
 // seg009:90FA
-byte far* __pascal far decompress_lzg_lr(byte far *dest,const byte far *source,int dest_length) {
-	byte* window = (byte*) malloc_near(0x400);
+byte* decompress_lzg_lr(byte* dest,const byte* source,int dest_length) {
+	byte* window = (byte*) malloc(0x400);
 	if (window == NULL) return NULL;
 	memset(window, 0, 0x400);
 	byte* window_pos = window + 0x400 - 0x42; // bx
@@ -632,8 +632,8 @@ byte far* __pascal far decompress_lzg_lr(byte far *dest,const byte far *source,i
 }
 
 // seg009:91AD
-byte far* __pascal far decompress_lzg_ud(byte far *dest,const byte far *source,int dest_length,int stride,int height) {
-	byte* window = (byte*) malloc_near(0x400);
+byte* decompress_lzg_ud(byte* dest,const byte* source,int dest_length,int stride,int height) {
+	byte* window = (byte*) malloc(0x400);
 	if (window == NULL) return NULL;
 	memset(window, 0, 0x400);
 	byte* window_pos = window + 0x400 - 0x42; // bx
@@ -680,10 +680,10 @@ byte far* __pascal far decompress_lzg_ud(byte far *dest,const byte far *source,i
 }
 
 // seg009:938E
-void __pascal far decompr_img(byte far *dest,const image_data_type far *source,int decomp_size,int cmeth, int stride) {
+void decompr_img(byte* dest,const image_data_type* source,int decomp_size,int cmeth, int stride) {
 	switch (cmeth) {
 		case 0: // RAW left-to-right
-			memcpy_far(dest, &source->data, decomp_size);
+			memcpy(dest, &source->data, decomp_size);
 		break;
 		case 1: // RLE left-to-right
 			decompress_rle_lr(dest, source->data, decomp_size);
@@ -778,7 +778,7 @@ image_type* decode_image(image_data_type* image_data, dat_pal_type* palette) {
 }
 
 // seg009:121A
-image_type* far __pascal far load_image(int resource_id, dat_pal_type* palette) {
+image_type* load_image(int resource_id, dat_pal_type* palette) {
 	// stub
 	data_location result;
 	int size;
@@ -833,7 +833,7 @@ image_type* far __pascal far load_image(int resource_id, dat_pal_type* palette) 
 }
 
 // seg009:13C4
-void __pascal far draw_image_transp(image_type far *image,image_type far *mask,int xpos,int ypos) {
+void draw_image_transp(image_type* image,image_type* mask,int xpos,int ypos) {
 	if (graphics_mode == gmMcgaVga) {
 		draw_image_transp_vga(image, xpos, ypos);
 	} else {
@@ -842,7 +842,7 @@ void __pascal far draw_image_transp(image_type far *image,image_type far *mask,i
 }
 
 // seg009:157E
-int __pascal far set_joy_mode() {
+int set_joy_mode() {
 	// stub
 	if (SDL_NumJoysticks() < 1) {
 		is_joyst_mode = 0;
@@ -879,7 +879,7 @@ int __pascal far set_joy_mode() {
 }
 
 // seg009:178B
-surface_type far *__pascal make_offscreen_buffer(const rect_type far *rect) {
+surface_type* make_offscreen_buffer(const rect_type* rect) {
 	// stub
 #ifndef USE_ALPHA
 	// Bit order matches onscreen buffer, good for fading.
@@ -891,18 +891,18 @@ surface_type far *__pascal make_offscreen_buffer(const rect_type far *rect) {
 }
 
 // seg009:17BD
-void __pascal far free_surface(surface_type *surface) {
+void free_surface(surface_type* surface) {
 	SDL_FreeSurface(surface);
 }
 
 // seg009:17EA
-void __pascal far free_peel(peel_type *peel_ptr) {
+void free_peel(peel_type* peel_ptr) {
 	SDL_FreeSurface(peel_ptr->peel);
 	free(peel_ptr);
 }
 
 // seg009:182F
-void __pascal far set_hc_pal() {
+void set_hc_pal() {
 	// stub
 	if (graphics_mode == gmMcgaVga) {
 		set_pal_arr(0, 16, custom->vga_palette);
@@ -912,7 +912,7 @@ void __pascal far set_hc_pal() {
 }
 
 // seg009:2446
-void __pascal far flip_not_ega(byte far *memory,int height,int stride) {
+void flip_not_ega(byte* memory,int height,int stride) {
 	byte* row_buffer = (byte*) malloc(stride);
 	byte* top_ptr;
 	byte* bottom_ptr;
@@ -931,7 +931,7 @@ void __pascal far flip_not_ega(byte far *memory,int height,int stride) {
 }
 
 // seg009:19B1
-void __pascal far flip_screen(surface_type far *surface) {
+void flip_screen(surface_type* surface) {
 	// stub
 	if (graphics_mode != gmEga) {
 		if (SDL_LockSurface(surface) != 0) {
@@ -947,19 +947,19 @@ void __pascal far flip_screen(surface_type far *surface) {
 
 #ifndef USE_FADE
 // seg009:19EF
-void __pascal far fade_in_2(surface_type near *source_surface,int which_rows) {
+void fade_in_2(surface_type* source_surface,int which_rows) {
 	// stub
 	method_1_blit_rect(onscreen_surface_, source_surface, &screen_rect, &screen_rect, 0);
 }
 
 // seg009:1CC9
-void __pascal far fade_out_2(int rows) {
+void fade_out_2(int rows) {
 	// stub
 }
 #endif // USE_FADE
 
 // seg009:2288
-void __pascal far draw_image_transp_vga(image_type far *image,int xpos,int ypos) {
+void draw_image_transp_vga(image_type* image,int xpos,int ypos) {
 	// stub
 	method_6_blit_img_to_scr(image, xpos, ypos, blitters_10h_transp);
 }
@@ -1090,7 +1090,7 @@ font_type load_font_from_data(/*const*/ rawfont_type* data) {
 	if (data->offsets[0] == 0) {
 		load_font_character_offsets(data);
 	}
-	chtab_type* chtab = malloc(sizeof(chtab_type) + sizeof(image_type* far) * n_chars);
+	chtab_type* chtab = malloc(sizeof(chtab_type) + sizeof(image_type*) * n_chars);
 	int chr,index;
 	// Make a dummy palette for decode_image().
 	dat_pal_type dat_pal;
@@ -1131,7 +1131,7 @@ void load_font(void) {
 }
 
 // seg009:35C5
-int __pascal far get_char_width(byte character) {
+int get_char_width(byte character) {
 	font_type* font = textstate.ptr_font;
 	int width = 0;
 	if (character <= font->last_char && character >= font->first_char) {
@@ -1145,7 +1145,7 @@ int __pascal far get_char_width(byte character) {
 }
 
 // seg009:3E99
-int __pascal far find_linebreak(const char far *text,int length,int break_width,int x_align) {
+int find_linebreak(const char* text,int length,int break_width,int x_align) {
 	int curr_char_pos = 0;
 	short last_break_pos = 0; // in characters
 	short curr_line_width = 0; // in pixels
@@ -1179,7 +1179,7 @@ int __pascal far find_linebreak(const char far *text,int length,int break_width,
 }
 
 // seg009:403F
-int __pascal far get_line_width(const char far *text,int length) {
+int get_line_width(const char* text,int length) {
 	int width = 0;
 	const char* text_pos = text;
 	while (--length >= 0) {
@@ -1189,7 +1189,7 @@ int __pascal far get_line_width(const char far *text,int length) {
 }
 
 // seg009:3706
-int __pascal far draw_text_character(byte character) {
+int draw_text_character(byte character) {
 	//printf("going to do draw_text_character...\n");
 	font_type* font = textstate.ptr_font;
 	int width = 0;
@@ -1205,7 +1205,7 @@ int __pascal far draw_text_character(byte character) {
 }
 
 // seg009:377F
-int __pascal far draw_text_line(const char far *text,int length) {
+int draw_text_line(const char* text,int length) {
 	//hide_cursor();
 	int width = 0;
 	const char* text_pos = text;
@@ -1217,7 +1217,7 @@ int __pascal far draw_text_line(const char far *text,int length) {
 }
 
 // seg009:3755
-int __pascal far draw_cstring(const char far *string) {
+int draw_cstring(const char* string) {
 	//hide_cursor();
 	int width = 0;
 	const char* text_pos = string;
@@ -1229,7 +1229,7 @@ int __pascal far draw_cstring(const char far *string) {
 }
 
 // seg009:3F01
-const rect_type far *__pascal draw_text(const rect_type far *rect_ptr,int x_align,int y_align,const char far *text,int length) {
+const rect_type* draw_text(const rect_type* rect_ptr,int x_align,int y_align,const char* text,int length) {
 	//printf("going to do draw_text()...\n");
 	short rect_top;
 	short rect_height;
@@ -1322,14 +1322,14 @@ const rect_type far *__pascal draw_text(const rect_type far *rect_ptr,int x_alig
 }
 
 // seg009:3E4F
-void __pascal far show_text(const rect_type far *rect_ptr,int x_align,int y_align,const char far *text) {
+void show_text(const rect_type* rect_ptr,int x_align,int y_align,const char* text) {
 	// stub
 	//printf("show_text: %s\n",text);
 	draw_text(rect_ptr, x_align, y_align, text, (int)strlen(text));
 }
 
 // seg009:04FF
-void __pascal far show_text_with_color(const rect_type far *rect_ptr,int x_align,int y_align, const char far *text,int color) {
+void show_text_with_color(const rect_type* rect_ptr,int x_align,int y_align, const char* text,int color) {
 	short saved_textcolor;
 	saved_textcolor = textstate.textcolor;
 	textstate.textcolor = color;
@@ -1338,19 +1338,19 @@ void __pascal far show_text_with_color(const rect_type far *rect_ptr,int x_align
 }
 
 // seg009:3A91
-void __pascal far set_curr_pos(int xpos,int ypos) {
+void set_curr_pos(int xpos,int ypos) {
 	textstate.current_x = xpos;
 	textstate.current_y = ypos;
 }
 
 // seg009:145A
-void __pascal far init_copyprot_dialog() {
+void init_copyprot_dialog() {
 	copyprot_dialog = make_dialog_info(&dialog_settings, &dialog_rect_1, &dialog_rect_1, NULL);
 	copyprot_dialog->peel = read_peel_from_screen(&copyprot_dialog->peel_rect);
 }
 
 // seg009:0838
-int __pascal far showmessage(char far *text,int arg_4,void far *arg_0) {
+int showmessage(char* text,int arg_4,void *arg_0) {
 	word key;
 	rect_type rect;
 	//font_type* saved_font_ptr;
@@ -1381,10 +1381,10 @@ int __pascal far showmessage(char far *text,int arg_4,void far *arg_0) {
 }
 
 // seg009:08FB
-dialog_type * __pascal far make_dialog_info(dialog_settings_type *settings, rect_type *dialog_rect,
-                                            rect_type *text_rect, peel_type *dialog_peel) {
+dialog_type* make_dialog_info(dialog_settings_type* settings, rect_type* dialog_rect,
+                                            rect_type* text_rect, peel_type* dialog_peel) {
 	dialog_type* dialog_info;
-	dialog_info = malloc_near(sizeof(dialog_type));
+	dialog_info = malloc(sizeof(dialog_type));
 	dialog_info->settings = settings;
 	dialog_info->has_peel = 0;
 	dialog_info->peel = dialog_peel;
@@ -1398,7 +1398,7 @@ dialog_type * __pascal far make_dialog_info(dialog_settings_type *settings, rect
 }
 
 // seg009:0BE7
-void __pascal far calc_dialog_peel_rect(dialog_type*dialog) {
+void calc_dialog_peel_rect(dialog_type* dialog) {
 	dialog_settings_type* settings;
 	settings = dialog->settings;
 	dialog->peel_rect.left = dialog->text_rect.left - settings->left_border;
@@ -1408,7 +1408,7 @@ void __pascal far calc_dialog_peel_rect(dialog_type*dialog) {
 }
 
 // seg009:0BB0
-void __pascal far read_dialog_peel(dialog_type *dialog) {
+void read_dialog_peel(dialog_type* dialog) {
 	if (dialog->has_peel) {
 		if (dialog->peel == NULL) {
 			dialog->peel = read_peel_from_screen(&dialog->peel_rect);
@@ -1419,19 +1419,19 @@ void __pascal far read_dialog_peel(dialog_type *dialog) {
 }
 
 // seg009:09DE
-void __pascal far draw_dialog_frame(dialog_type *dialog) {
+void draw_dialog_frame(dialog_type* dialog) {
 	dialog->settings->method_2_frame(dialog);
 }
 
 // A pointer to this function is the first field of dialog_settings (data:2944)
 // Perhaps used when replacing a dialog's text with another text (?)
 // seg009:096F
-void __pascal far add_dialog_rect(dialog_type *dialog) {
+void add_dialog_rect(dialog_type* dialog) {
 	draw_rect(&dialog->text_rect, color_0_black);
 }
 
 // seg009:09F0
-void __pascal far dialog_method_2_frame(dialog_type *dialog) {
+void dialog_method_2_frame(dialog_type* dialog) {
 	rect_type rect;
 	short shadow_right = dialog->settings->shadow_right;
 	short shadow_bottom = dialog->settings->shadow_bottom;
@@ -1471,15 +1471,15 @@ void __pascal far dialog_method_2_frame(dialog_type *dialog) {
 }
 
 // seg009:0C44
-void __pascal far show_dialog(const char *text) {
+void show_dialog(const char* text) {
 	char string[256];
 	snprintf(string, sizeof(string), "%s\n\nPress any key to continue.", text);
 	showmessage(string, 1, &key_test_quit);
 }
 
 // seg009:0791
-int __pascal far get_text_center_y(const rect_type far *rect) {
-	const font_type far* font;
+int get_text_center_y(const rect_type* rect) {
+	const font_type* font;
 	short empty_height; // height of empty space above+below the line of text
 	font = &hc_font;//current_target_surface->ptr_font;
 	empty_height = rect->bottom - font->height_above_baseline - font->height_below_baseline - rect->top;
@@ -1487,7 +1487,7 @@ int __pascal far get_text_center_y(const rect_type far *rect) {
 }
 
 // seg009:3E77
-int __pascal far get_cstring_width(const char far *text) {
+int get_cstring_width(const char* text) {
 	int width = 0;
 	const char* text_pos = text;
 	char curr_char;
@@ -1498,7 +1498,7 @@ int __pascal far get_cstring_width(const char far *text) {
 }
 
 // seg009:0767
-void __pascal far draw_text_cursor(int xpos,int ypos,int color) {
+void draw_text_cursor(int xpos,int ypos,int color) {
 	set_curr_pos(xpos, ypos);
 	/*current_target_surface->*/textstate.textcolor = color;
 	draw_text_character('_');
@@ -1507,7 +1507,7 @@ void __pascal far draw_text_cursor(int xpos,int ypos,int color) {
 }
 
 // seg009:053C
-int __pascal far input_str(const rect_type far *rect,char *buffer,int max_length,const char *initial,int has_initial,int arg_4,int color,int bgcolor) {
+int input_str(const rect_type* rect,char* buffer,int max_length,const char *initial,int has_initial,int arg_4,int color,int bgcolor) {
 	// Display the screen keyboard if supported.
 	//SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
 	SDL_Rect sdlrect;
@@ -1591,20 +1591,20 @@ int __pascal far input_str(const rect_type far *rect,char *buffer,int max_length
 #else // USE_TEXT
 
 // seg009:3706
-int __pascal far draw_text_character(byte character) {
+int draw_text_character(byte character) {
 	// stub
 	printf("draw_text_character: %c\n",character);
 	return 0;
 }
 
 // seg009:3E4F
-void __pascal far show_text(const rect_type far *rect_ptr,int x_align,int y_align,const char far *text) {
+void show_text(const rect_type* rect_ptr,int x_align,int y_align,const char *text) {
 	// stub
 	printf("show_text: %s\n",text);
 }
 
 // seg009:04FF
-void __pascal far show_text_with_color(const rect_type far *rect_ptr,int x_align,int y_align,const char far *text,int color) {
+void show_text_with_color(const rect_type* rect_ptr,int x_align,int y_align,const char* text,int color) {
 	//short saved_textcolor;
 	//saved_textcolor = textstate.textcolor;
 	//textstate.textcolor = color;
@@ -1613,60 +1613,60 @@ void __pascal far show_text_with_color(const rect_type far *rect_ptr,int x_align
 }
 
 // seg009:3A91
-void __pascal far set_curr_pos(int xpos,int ypos) {
+void set_curr_pos(int xpos,int ypos) {
 	// stub
 }
 
 // seg009:0C44
-void __pascal far show_dialog(const char *text) {
+void show_dialog(const char *text) {
 	// stub
 	puts(text);
 }
 
 // seg009:053C
-int __pascal far input_str(const rect_type far *rect,char *buffer,int max_length,const char *initial,int has_initial,int arg_4,int color,int bgcolor) {
+int input_str(const rect_type* rect,char* buffer,int max_length,const char* initial,int has_initial,int arg_4,int color,int bgcolor) {
 	// stub
 	strncpy(buffer, "dummy input text", max_length);
 	return strlen(buffer);
 }
 
-int __pascal far showmessage(char far *text,int arg_4,void far *arg_0) {
+int showmessage(char* text,int arg_4,void *arg_0) {
 	// stub
 	puts(text);
 	return 0;
 }
 
-void __pascal far init_copyprot_dialog() {
+void init_copyprot_dialog() {
 	// stub
 }
 
-void __pascal far draw_dialog_frame(dialog_type *dialog) {
+void draw_dialog_frame(dialog_type *dialog) {
 	// stub
 }
 
-void __pascal far add_dialog_rect(dialog_type *dialog) {
+void add_dialog_rect(dialog_type *dialog) {
 	// stub
 }
 
-void __pascal far dialog_method_2_frame(dialog_type *dialog) {
+void dialog_method_2_frame(dialog_type *dialog) {
 	// stub
 }
 
 #endif // USE_TEXT
 
 // seg009:37E8
-void __pascal far draw_rect(const rect_type far *rect,int color) {
+void draw_rect(const rect_type* rect,int color) {
 	method_5_rect(rect, blitters_0_no_transp, color);
 }
 
 // seg009:3985
-surface_type far *__pascal rect_sthg(surface_type *surface,const rect_type far *rect) {
+surface_type *rect_sthg(surface_type* surface,const rect_type* rect) {
 	// stub
 	return surface;
 }
 
 // seg009:39CE
-rect_type far *__pascal shrink2_rect(rect_type far *target_rect,const rect_type far *source_rect,int delta_x,int delta_y) {
+rect_type *shrink2_rect(rect_type* target_rect,const rect_type* source_rect,int delta_x,int delta_y) {
 	target_rect->top    = source_rect->top    + delta_y;
 	target_rect->left   = source_rect->left   + delta_x;
 	target_rect->bottom = source_rect->bottom - delta_y;
@@ -1675,7 +1675,7 @@ rect_type far *__pascal shrink2_rect(rect_type far *target_rect,const rect_type 
 }
 
 // seg009:3BBA
-void __pascal far restore_peel(peel_type* peel_ptr) {
+void restore_peel(peel_type* peel_ptr) {
 	//printf("restoring peel at (x=%d, y=%d)\n", peel_ptr.rect.left, peel_ptr.rect.top); // debug
 	method_6_blit_img_to_scr(peel_ptr->peel, peel_ptr->rect.left, peel_ptr->rect.top, /*0x10*/0);
 	free_peel(peel_ptr);
@@ -1683,7 +1683,7 @@ void __pascal far restore_peel(peel_type* peel_ptr) {
 }
 
 // seg009:3BE9
-peel_type* __pascal far read_peel_from_screen(const rect_type far *rect) {
+peel_type* read_peel_from_screen(const rect_type* rect) {
 	// stub
 	peel_type* result = calloc(1, sizeof(peel_type));
 	//memset(&result, 0, sizeof(result));
@@ -1705,7 +1705,7 @@ peel_type* __pascal far read_peel_from_screen(const rect_type far *rect) {
 }
 
 // seg009:3D95
-int __pascal far intersect_rect(rect_type far *output,const rect_type far *input1,const rect_type far *input2) {
+int intersect_rect(rect_type* output,const rect_type* input1,const rect_type* input2) {
 	short left = MAX(input1->left, input2->left);
 	short right = MIN(input1->right, input2->right);
 	if (left < right) {
@@ -1724,7 +1724,7 @@ int __pascal far intersect_rect(rect_type far *output,const rect_type far *input
 }
 
 // seg009:4063
-rect_type far * __pascal far union_rect(rect_type far *output,const rect_type far *input1,const rect_type far *input2) {
+rect_type* union_rect(rect_type* output,const rect_type* input1,const rect_type* input2) {
 	short top = MIN(input1->top, input2->top);
 	short left = MIN(input1->left, input2->left);
 	short bottom = MAX(input1->bottom, input2->bottom);
@@ -1753,7 +1753,7 @@ int speaker_note_index;
 // Tracks how long the last (partially played) speaker note has been playing (for the audio callback).
 int current_speaker_note_samples_already_emitted;
 
-void __pascal far speaker_sound_stop(void) {
+void speaker_sound_stop(void) {
 	if (!speaker_playing) return;
 	SDL_LockAudio();
 	speaker_playing = 0;
@@ -1809,7 +1809,7 @@ void stop_ogg(void) {
 }
 
 // seg009:7214
-void __pascal far stop_sounds() {
+void stop_sounds() {
 	// stub
 	stop_digi();
 	stop_midi();
@@ -1892,7 +1892,7 @@ void speaker_callback(void *userdata, Uint8 *stream, int len) {
 }
 
 // seg009:7640
-void __pascal far play_speaker_sound(sound_buffer_type far *buffer) {
+void play_speaker_sound(sound_buffer_type* buffer) {
 	speaker_sound_stop();
 	stop_sounds();
 	current_speaker_sound = &buffer->speaker;
@@ -2282,7 +2282,7 @@ sound_buffer_type* convert_digi_sound(sound_buffer_type* digi_buffer) {
 }
 
 // seg009:74F0
-void __pascal far play_digi_sound(sound_buffer_type far *buffer) {
+void play_digi_sound(sound_buffer_type* buffer) {
 	//if (!is_sound_on) return;
 	init_digi();
 	if (digi_unavailable) return;
@@ -2302,7 +2302,7 @@ void __pascal far play_digi_sound(sound_buffer_type far *buffer) {
 	SDL_PauseAudio(0);
 }
 
-void free_sound(sound_buffer_type far *buffer) {
+void free_sound(sound_buffer_type* buffer) {
 	if (buffer == NULL) return;
 	if (buffer->type == sound_ogg) {
 		stb_vorbis_close(buffer->ogg.decoder);
@@ -2312,7 +2312,7 @@ void free_sound(sound_buffer_type far *buffer) {
 }
 
 // seg009:7220
-void __pascal far play_sound_from_buffer(sound_buffer_type far *buffer) {
+void play_sound_from_buffer(sound_buffer_type* buffer) {
 
 #ifdef USE_REPLAY
 	if (replaying && skipping_replay) return;
@@ -2351,14 +2351,14 @@ void turn_music_on_off(byte new_state) {
 }
 
 // seg009:7273
-void __pascal far turn_sound_on_off(byte new_state) {
+void turn_sound_on_off(byte new_state) {
 	// stub
 	is_sound_on = new_state;
 	//if (!is_sound_on) stop_sounds();
 }
 
 // seg009:7299
-int __pascal far check_sound_playing() {
+int check_sound_playing() {
 	return speaker_playing || digi_playing || midi_playing || ogg_playing;
 }
 
@@ -2435,7 +2435,7 @@ void init_scaling(void) {
 }
 
 // seg009:38ED
-void __pascal far set_gr_mode(byte grmode) {
+void set_gr_mode(byte grmode) {
 #ifdef SDL_HINT_WINDOWS_DISABLE_THREAD_NAMING
 	SDL_SetHint(SDL_HINT_WINDOWS_DISABLE_THREAD_NAMING, "1");
 #endif
@@ -2671,7 +2671,7 @@ void update_screen() {
 }
 
 // seg009:9289
-void __pascal far set_pal_arr(int start,int count,const rgb_type far *array) {
+void set_pal_arr(int start,int count,const rgb_type* array) {
 	// stub
 	int i;
 	for (i = 0; i < count; ++i) {
@@ -2686,7 +2686,7 @@ void __pascal far set_pal_arr(int start,int count,const rgb_type far *array) {
 rgb_type palette[256];
 
 // seg009:92DF
-void __pascal far set_pal(int index,int red,int green,int blue) {
+void set_pal(int index,int red,int green,int blue) {
 	// stub
 	//palette[index] = ((red&0x3F)<<2)|((green&0x3F)<<2<<8)|((blue&0x3F)<<2<<16);
 	palette[index].r = red;
@@ -2695,13 +2695,13 @@ void __pascal far set_pal(int index,int red,int green,int blue) {
 }
 
 // seg009:969C
-int __pascal far add_palette_bits(byte n_colors) {
+int add_palette_bits(byte n_colors) {
 	// stub
 	return 0;
 }
 
 // seg009:9C36
-int __pascal far find_first_pal_row(int which_rows_mask) {
+int find_first_pal_row(int which_rows_mask) {
 	word which_row = 0;
 	word row_mask = 1;
 	do {
@@ -2715,7 +2715,7 @@ int __pascal far find_first_pal_row(int which_rows_mask) {
 }
 
 // seg009:9C6C
-int __pascal far get_text_color(int cga_color,int low_half,int high_half_mask) {
+int get_text_color(int cga_color,int low_half,int high_half_mask) {
 	if (graphics_mode == gmCga || graphics_mode == gmHgaHerc) {
 		return cga_color;
 	} else if (graphics_mode == gmMcgaVga && high_half_mask != 0) {
@@ -2806,7 +2806,7 @@ void load_from_opendats_metadata(int resource_id, const char* extension, FILE** 
 }
 
 // seg009:9F34
-void __pascal far close_dat(dat_type far *pointer) {
+void close_dat(dat_type* pointer) {
 	dat_type** prev = &dat_chain_ptr;
 	dat_type* curr = dat_chain_ptr;
 	while (curr != NULL) {
@@ -2824,7 +2824,7 @@ void __pascal far close_dat(dat_type far *pointer) {
 }
 
 // seg009:9F80
-void far *__pascal load_from_opendats_alloc(int resource, const char* extension, data_location* out_result, int* out_size) {
+void *load_from_opendats_alloc(int resource, const char* extension, data_location* out_result, int* out_size) {
 	// stub
 	//printf("id = %d\n",resource);
 	dat_type* pointer;
@@ -2851,7 +2851,7 @@ void far *__pascal load_from_opendats_alloc(int resource, const char* extension,
 }
 
 // seg009:A172
-int __pascal far load_from_opendats_to_area(int resource,void far *area,int length, const char* extension) {
+int load_from_opendats_to_area(int resource,void* area,int length, const char* extension) {
 	// stub
 	//return 0;
 	dat_type* pointer;
@@ -2881,7 +2881,7 @@ void rect_to_sdlrect(const rect_type* rect, SDL_Rect* sdlrect) {
 	sdlrect->h = rect->bottom - rect->top;
 }
 
-void __pascal far method_1_blit_rect(surface_type near *target_surface,surface_type near *source_surface,const rect_type far *target_rect, const rect_type far *source_rect,int blit) {
+void method_1_blit_rect(surface_type* target_surface,surface_type* source_surface,const rect_type* target_rect, const rect_type* source_rect,int blit) {
 	SDL_Rect src_rect;
 	rect_to_sdlrect(source_rect, &src_rect);
 	SDL_Rect dest_rect;
@@ -2906,7 +2906,7 @@ void __pascal far method_1_blit_rect(surface_type near *target_surface,surface_t
 	}
 }
 
-image_type far * __pascal far method_3_blit_mono(image_type far *image,int xpos,int ypos,int blitter,byte color) {
+image_type* method_3_blit_mono(image_type* image,int xpos,int ypos,int blitter,byte color) {
 	int w = image->w;
 	int h = image->h;
 	if (SDL_SetColorKey(image, SDL_TRUE, 0) != 0) {
@@ -2991,7 +2991,7 @@ int safe_SDL_FillRect(SDL_Surface* dst, const SDL_Rect* rect, Uint32 color) {
 }
 // End of workaround.
 
-const rect_type far * __pascal far method_5_rect(const rect_type far *rect,int blit,byte color) {
+const rect_type* method_5_rect(const rect_type* rect,int blit,byte color) {
 	SDL_Rect dest_rect;
 	rect_to_sdlrect(rect, &dest_rect);
 	rgb_type palette_color = palette[color];
@@ -3149,7 +3149,7 @@ void draw_colored_torch(int color, SDL_Surface* image, int xpos, int ypos) {
 }
 #endif
 
-image_type far * __pascal far method_6_blit_img_to_scr(image_type far *image,int xpos,int ypos,int blit) {
+image_type* method_6_blit_img_to_scr(image_type* image,int xpos,int ypos,int blit) {
 	if (image == NULL) {
 		printf("method_6_blit_img_to_scr: image == NULL\n");
 		//quit(1);
@@ -3255,7 +3255,7 @@ void set_timer_length(int timer_index, int length) {
 	recalculate_feather_fall_timer(previous_ticks_per_second, ticks_per_second);
 }
 
-void __pascal start_timer(int timer_index, int length) {
+void start_timer(int timer_index, int length) {
 #ifdef USE_REPLAY
 	if (replaying && skipping_replay) return;
 #endif
@@ -3620,7 +3620,7 @@ void idle() {
 	update_screen();
 }
 
-void __pascal do_simple_wait(int timer_index) {
+void do_simple_wait(int timer_index) {
 #ifdef USE_REPLAY
 	if ((replaying && skipping_replay) || is_validate_mode) return;
 #endif
@@ -3632,7 +3632,7 @@ void __pascal do_simple_wait(int timer_index) {
 }
 
 word word_1D63A = 1;
-int __pascal do_wait(int timer_index) {
+int do_wait(int timer_index) {
 #ifdef USE_REPLAY
 	if ((replaying && skipping_replay) || is_validate_mode) return 0;
 #endif
@@ -3650,7 +3650,7 @@ int __pascal do_wait(int timer_index) {
 SDL_TimerID global_timer = NULL;
 #endif
 // seg009:78E9
-void __pascal far init_timer(int frequency) {
+void init_timer(int frequency) {
 	perf_frequency = SDL_GetPerformanceFrequency();
 #ifndef USE_COMPAT_TIMER
 	fps = frequency;
@@ -3672,19 +3672,19 @@ void __pascal far init_timer(int frequency) {
 }
 
 // seg009:35F6
-void __pascal far set_clip_rect(const rect_type far *rect) {
+void set_clip_rect(const rect_type* rect) {
 	SDL_Rect clip_rect;
 	rect_to_sdlrect(rect, &clip_rect);
 	SDL_SetClipRect(current_target_surface, &clip_rect);
 }
 
 // seg009:365C
-void __pascal far reset_clip_rect() {
+void reset_clip_rect() {
 	SDL_SetClipRect(current_target_surface, NULL);
 }
 
 // seg009:1983
-void __pascal far set_bg_attr(int vga_pal_index,int hc_pal_index) {
+void set_bg_attr(int vga_pal_index,int hc_pal_index) {
 	// stub
 #ifdef USE_FLASH
 	//palette[vga_pal_index] = vga_palette[hc_pal_index];
@@ -3748,7 +3748,7 @@ void __pascal far set_bg_attr(int vga_pal_index,int hc_pal_index) {
 }
 
 // seg009:07EB
-rect_type far *__pascal offset4_rect_add(rect_type far *dest,const rect_type far *source,int d_left,int d_top,int d_right,int d_bottom) {
+rect_type* offset4_rect_add(rect_type* dest,const rect_type* source,int d_left,int d_top,int d_right,int d_bottom) {
 	*dest = *source;
 	dest->left += d_left;
 	dest->top += d_top;
@@ -3758,7 +3758,7 @@ rect_type far *__pascal offset4_rect_add(rect_type far *dest,const rect_type far
 }
 
 // seg009:3AA5
-rect_type far *__pascal offset2_rect(rect_type far *dest,const rect_type far *source,int delta_x,int delta_y) {
+rect_type* offset2_rect(rect_type* dest,const rect_type *source,int delta_x,int delta_y) {
 	dest->top    = source->top    + delta_y;
 	dest->left   = source->left   + delta_x;
 	dest->bottom = source->bottom + delta_y;
@@ -3768,8 +3768,8 @@ rect_type far *__pascal offset2_rect(rect_type far *dest,const rect_type far *so
 
 #ifdef USE_FADE
 // seg009:19EF
-void __pascal far fade_in_2(surface_type near *source_surface,int which_rows) {
-	palette_fade_type far* palette_buffer;
+void fade_in_2(surface_type* source_surface,int which_rows) {
+	palette_fade_type* palette_buffer;
 	if (graphics_mode == gmMcgaVga) {
 		palette_buffer = make_pal_buffer_fadein(source_surface, which_rows, 2);
 		while (fade_in_frame(palette_buffer) == 0) {
@@ -3783,21 +3783,21 @@ void __pascal far fade_in_2(surface_type near *source_surface,int which_rows) {
 }
 
 // seg009:1A51
-palette_fade_type far *__pascal make_pal_buffer_fadein(surface_type *source_surface,int which_rows,int wait_time) {
-	palette_fade_type far* palette_buffer;
+palette_fade_type* make_pal_buffer_fadein(surface_type* source_surface,int which_rows,int wait_time) {
+	palette_fade_type* palette_buffer;
 	word curr_row;
 	word curr_row_mask;
-	palette_buffer = (palette_fade_type*) malloc_far(sizeof(palette_fade_type));
+	palette_buffer = (palette_fade_type*) malloc(sizeof(palette_fade_type));
 	palette_buffer->which_rows = which_rows;
 	palette_buffer->wait_time = wait_time;
 	palette_buffer->fade_pos = 0x40;
 	palette_buffer->proc_restore_free = &pal_restore_free_fadein;
 	palette_buffer->proc_fade_frame = &fade_in_frame;
 	read_palette_256(palette_buffer->original_pal);
-	memcpy_far(palette_buffer->faded_pal, palette_buffer->original_pal, sizeof(palette_buffer->faded_pal));
+	memcpy(palette_buffer->faded_pal, palette_buffer->original_pal, sizeof(palette_buffer->faded_pal));
 	for (curr_row = 0, curr_row_mask = 1; curr_row < 0x10; ++curr_row, curr_row_mask<<=1) {
 		if (which_rows & curr_row_mask) {
-			memset_far(palette_buffer->faded_pal + (curr_row<<4), 0, sizeof(rgb_type[0x10]));
+			memset(palette_buffer->faded_pal + (curr_row<<4), 0, sizeof(rgb_type[0x10]));
 			set_pal_arr(curr_row<<4, 0x10, NULL);
 		}
 	}
@@ -3808,15 +3808,15 @@ palette_fade_type far *__pascal make_pal_buffer_fadein(surface_type *source_surf
 }
 
 // seg009:1B64
-void __pascal far pal_restore_free_fadein(palette_fade_type far *palette_buffer) {
+void pal_restore_free_fadein(palette_fade_type* palette_buffer) {
 	set_pal_256(palette_buffer->original_pal);
-	free_far(palette_buffer);
+	free(palette_buffer);
 	// for RGB
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, &screen_rect, &screen_rect, 0);
 }
 
 // seg009:1B88
-int __pascal far fade_in_frame(palette_fade_type far *palette_buffer) {
+int fade_in_frame(palette_fade_type* palette_buffer) {
 	rgb_type* faded_pal_ptr;
 	word start;
 	word column;
@@ -3887,8 +3887,8 @@ int __pascal far fade_in_frame(palette_fade_type far *palette_buffer) {
 }
 
 // seg009:1CC9
-void __pascal far fade_out_2(int rows) {
-	palette_fade_type far *palette_buffer;
+void fade_out_2(int rows) {
+	palette_fade_type* palette_buffer;
 	if (graphics_mode == gmMcgaVga) {
 		palette_buffer = make_pal_buffer_fadeout(rows, 2);
 		while (fade_out_frame(palette_buffer) == 0) {
@@ -3902,36 +3902,36 @@ void __pascal far fade_out_2(int rows) {
 }
 
 // seg009:1D28
-palette_fade_type far *__pascal make_pal_buffer_fadeout(int which_rows,int wait_time) {
-	palette_fade_type far *palette_buffer;
-	palette_buffer = (palette_fade_type*) malloc_far(sizeof(palette_fade_type));
+palette_fade_type* make_pal_buffer_fadeout(int which_rows,int wait_time) {
+	palette_fade_type* palette_buffer;
+	palette_buffer = (palette_fade_type*) malloc(sizeof(palette_fade_type));
 	palette_buffer->which_rows = which_rows;
 	palette_buffer->wait_time = wait_time;
 	palette_buffer->fade_pos = 00; // modified
 	palette_buffer->proc_restore_free = &pal_restore_free_fadeout;
 	palette_buffer->proc_fade_frame = &fade_out_frame;
 	read_palette_256(palette_buffer->original_pal);
-	memcpy_far(palette_buffer->faded_pal, palette_buffer->original_pal, sizeof(palette_buffer->faded_pal));
+	memcpy(palette_buffer->faded_pal, palette_buffer->original_pal, sizeof(palette_buffer->faded_pal));
 	// for RGB
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, &screen_rect, &screen_rect, 0);
 	return palette_buffer;
 }
 
 // seg009:1DAF
-void __pascal far pal_restore_free_fadeout(palette_fade_type far *palette_buffer) {
+void pal_restore_free_fadeout(palette_fade_type* palette_buffer) {
 	surface_type* surface;
 	surface = current_target_surface;
 	current_target_surface = onscreen_surface_;
 	draw_rect(&screen_rect, 0);
 	current_target_surface = surface;
 	set_pal_256(palette_buffer->original_pal);
-	free_far(palette_buffer);
+	free(palette_buffer);
 	// for RGB
 	method_5_rect(&screen_rect, 0, 0);
 }
 
 // seg009:1DF7
-int __pascal far fade_out_frame(palette_fade_type far *palette_buffer) {
+int fade_out_frame(palette_fade_type* palette_buffer) {
 	rgb_type* faded_pal_ptr;
 	word start;
 	word column;
@@ -4002,14 +4002,14 @@ int __pascal far fade_out_frame(palette_fade_type far *palette_buffer) {
 }
 
 // seg009:1F28
-void __pascal far read_palette_256(rgb_type far *target) {
+void read_palette_256(rgb_type* target) {
 	for (int i = 0; i < 256; ++i) {
 		target[i] = palette[i];
 	}
 }
 
 // seg009:1F5E
-void __pascal far set_pal_256(rgb_type far *source) {
+void set_pal_256(rgb_type* source) {
 	for (int i = 0; i < 256; ++i) {
 		palette[i] = source[i];
 	}

@@ -21,7 +21,7 @@ The authors of this program may be contacted at https://forum.princed.org
 #include "common.h"
 
 // seg007:0000
-void __pascal far process_trobs() {
+void process_trobs() {
 	word index;
 	word new_index;
 	word need_delete = 0;
@@ -45,7 +45,7 @@ void __pascal far process_trobs() {
 }
 
 // seg007:00AF
-void __pascal far animate_tile() {
+void animate_tile() {
 	get_room_address(trob.room);
 	switch (get_curr_tile(trob.tilepos)) {
 		case tiles_19_torch:
@@ -88,7 +88,7 @@ void __pascal far animate_tile() {
 }
 
 // seg007:0166
-short __pascal far is_trob_in_drawn_room() {
+short is_trob_in_drawn_room() {
 	if (trob.room != drawn_room) {
 		trob.type = -1;
 		return 0;
@@ -98,17 +98,17 @@ short __pascal far is_trob_in_drawn_room() {
 }
 
 // seg007:017E
-void __pascal far set_redraw_anim_right() {
+void set_redraw_anim_right() {
 	set_redraw_anim(get_trob_right_pos_in_drawn_room(), 1);
 }
 
 // seg007:018C
-void __pascal far set_redraw_anim_curr() {
+void set_redraw_anim_curr() {
 	set_redraw_anim(get_trob_pos_in_drawn_room(), 1);
 }
 
 // seg007:019A
-void __pascal far redraw_at_trob() {
+void redraw_at_trob() {
 	redraw_height = 63;
 	word tilepos = get_trob_pos_in_drawn_room();
 	set_redraw_full(tilepos, 1);
@@ -116,25 +116,25 @@ void __pascal far redraw_at_trob() {
 }
 
 // seg007:01C5
-void __pascal far redraw_21h() {
+void redraw_21h() {
 	redraw_height = 0x21;
 	redraw_tile_height();
 }
 
 // seg007:01D0
-void __pascal far redraw_11h() {
+void redraw_11h() {
 	redraw_height = 0x11;
 	redraw_tile_height();
 }
 
 // seg007:01DB
-void __pascal far redraw_20h() {
+void redraw_20h() {
 	redraw_height = 0x20;
 	redraw_tile_height();
 }
 
 // seg007:01E6
-void __pascal far draw_trob() {
+void draw_trob() {
 	word tilepos = get_trob_right_pos_in_drawn_room();
 	set_redraw_anim(tilepos, 1);
 	set_redraw_fore(tilepos, 1);
@@ -142,7 +142,7 @@ void __pascal far draw_trob() {
 }
 
 // seg007:0218
-void __pascal far redraw_tile_height() {
+void redraw_tile_height() {
 	short tilepos = get_trob_pos_in_drawn_room();
 	set_redraw_full(tilepos, 1);
 	set_wipe(tilepos, 1);
@@ -152,7 +152,7 @@ void __pascal far redraw_tile_height() {
 }
 
 // seg007:0258
-short __pascal far get_trob_pos_in_drawn_room() {
+short get_trob_pos_in_drawn_room() {
 	short tilepos = trob.tilepos;
 	if (trob.room == room_A) {
 		if (tilepos >= 20 && tilepos < 30) {
@@ -170,7 +170,7 @@ short __pascal far get_trob_pos_in_drawn_room() {
 }
 
 // seg007:029D
-short __pascal far get_trob_right_pos_in_drawn_room() {
+short get_trob_right_pos_in_drawn_room() {
 	word tilepos = trob.tilepos;
 	if (trob.room == drawn_room) {
 		if (tilepos % 10 != 9) {
@@ -200,7 +200,7 @@ short __pascal far get_trob_right_pos_in_drawn_room() {
 }
 
 // seg007:032C
-short __pascal far get_trob_right_above_pos_in_drawn_room() {
+short get_trob_right_above_pos_in_drawn_room() {
 	word tilepos = trob.tilepos;
 	if (trob.room == drawn_room) {
 		if (tilepos % 10 != 9) {
@@ -238,7 +238,7 @@ short __pascal far get_trob_right_above_pos_in_drawn_room() {
 }
 
 // seg007:03CF
-void __pascal far animate_torch() {
+void animate_torch() {
 	//if (is_trob_in_drawn_room()) {
 	// Keep animating torches in the rightmost column of the left-side room as well, because they are visible in the current room.
 	if (trob.room == drawn_room || (trob.room == room_L && (trob.tilepos % 10) == 9) ) {
@@ -250,7 +250,7 @@ void __pascal far animate_torch() {
 }
 
 // seg007:03E9
-void __pascal far animate_potion() {
+void animate_potion() {
 	if (trob.type >= 0 && is_trob_in_drawn_room()) {
 		word type = curr_modifier & 0xF8;
 		curr_modifier = bubble_next_frame(curr_modifier & 0x07) | type;
@@ -263,7 +263,7 @@ void __pascal far animate_potion() {
 }
 
 // seg007:0425
-void __pascal far animate_sword() {
+void animate_sword() {
 	if (is_trob_in_drawn_room()) {
 		--curr_modifier;
 		if (curr_modifier == 0) {
@@ -278,7 +278,7 @@ void __pascal far animate_sword() {
 }
 
 // seg007:0448
-void __pascal far animate_chomper() {
+void animate_chomper() {
 	if (trob.type >= 0) {
 		word blood = curr_modifier & 0x80;
 		word frame = (curr_modifier & 0x7F) + 1;
@@ -307,7 +307,7 @@ void __pascal far animate_chomper() {
 }
 
 // seg007:04D3
-void __pascal far animate_spike() {
+void animate_spike() {
 	if (trob.type >= 0) {
 		// 0xFF means a disabled spike.
 		if (curr_modifier == 0xFF) return;
@@ -333,7 +333,7 @@ const byte gate_close_speeds[] = {0, 0, 0, 20, 40, 60, 80, 100, 120};
 // data:27C0
 const byte door_delta[] = {-1, 4, 4};
 // seg007:0522
-void __pascal far animate_door() {
+void animate_door() {
 /*
 Possible values of anim_type:
 0: closing
@@ -402,7 +402,7 @@ Possible values of anim_type:
 }
 
 // seg007:05E3
-void __pascal far gate_stop() {
+void gate_stop() {
 	trob.type = -1;
 	play_door_sound_if_visible(sound_7_gate_stop); // gate stop (after closing)
 }
@@ -410,7 +410,7 @@ void __pascal far gate_stop() {
 // data:27B8
 const byte leveldoor_close_speeds[] = {0, 5, 17, 99, 0};
 // seg007:05F1
-void __pascal far animate_leveldoor() {
+void animate_leveldoor() {
 /*
 Possible values of trob_type:
 0: open
@@ -463,14 +463,14 @@ Possible values of trob_type:
 }
 
 // seg007:06AD
-short __pascal far bubble_next_frame(short curr) {
+short bubble_next_frame(short curr) {
 	short next = curr + 1;
 	if (next >= 8) next = 1;
 	return next;
 }
 
 // seg007:06CD
-short __pascal far get_torch_frame(short curr) {
+short get_torch_frame(short curr) {
 	short next = prandom(255);
 	if (next != curr) {
 		if (next < 9) {
@@ -485,7 +485,7 @@ short __pascal far get_torch_frame(short curr) {
 }
 
 // seg007:070A
-void __pascal far set_redraw_anim(short tilepos, byte frames) {
+void set_redraw_anim(short tilepos, byte frames) {
 	if (tilepos < 30) {
 		if (tilepos < 0) {
 			++tilepos;
@@ -498,7 +498,7 @@ void __pascal far set_redraw_anim(short tilepos, byte frames) {
 }
 
 // seg007:0738
-void __pascal far set_redraw2(short tilepos, byte frames) {
+void set_redraw2(short tilepos, byte frames) {
 	if (tilepos < 30) {
 		if (tilepos < 0) {
 			// trying to draw a mob at a negative tilepos, in the range -1 .. -10
@@ -514,7 +514,7 @@ void __pascal far set_redraw2(short tilepos, byte frames) {
 }
 
 // seg007:0766
-void __pascal far set_redraw_floor_overlay(short tilepos, byte frames) {
+void set_redraw_floor_overlay(short tilepos, byte frames) {
 	if (tilepos < 30) {
 		if (tilepos < 0) {
 			++tilepos;
@@ -527,7 +527,7 @@ void __pascal far set_redraw_floor_overlay(short tilepos, byte frames) {
 }
 
 // seg007:0794
-void __pascal far set_redraw_full(short tilepos, byte frames) {
+void set_redraw_full(short tilepos, byte frames) {
 	if (tilepos < 30) {
 		if (tilepos < 0) {
 			++tilepos;
@@ -540,14 +540,14 @@ void __pascal far set_redraw_full(short tilepos, byte frames) {
 }
 
 // seg007:07C2
-void __pascal far set_redraw_fore(short tilepos, byte frames) {
+void set_redraw_fore(short tilepos, byte frames) {
 	if (tilepos < 30 && tilepos >= 0) {
 		redraw_frames_fore[tilepos] = frames;
 	}
 }
 
 // seg007:07DF
-void __pascal far set_wipe(short tilepos, byte frames) {
+void set_wipe(short tilepos, byte frames) {
 	if (tilepos < 30 && tilepos >= 0) {
 		if (wipe_frames[tilepos] != 0) {
 			redraw_height = MAX(wipe_heights[tilepos], redraw_height);
@@ -558,26 +558,26 @@ void __pascal far set_wipe(short tilepos, byte frames) {
 }
 
 // seg007:081E
-void __pascal far start_anim_torch(short room,short tilepos) {
+void start_anim_torch(short room,short tilepos) {
 	curr_room_modif[tilepos] = prandom(8);
 	add_trob(room, tilepos, 1);
 }
 
 // seg007:0847
-void __pascal far start_anim_potion(short room,short tilepos) {
+void start_anim_potion(short room,short tilepos) {
 	curr_room_modif[tilepos] &= 0xF8;
 	curr_room_modif[tilepos] |= prandom(6) + 1;
 	add_trob(room, tilepos, 1);
 }
 
 // seg007:087C
-void __pascal far start_anim_sword(short room,short tilepos) {
+void start_anim_sword(short room,short tilepos) {
 	curr_room_modif[tilepos] = prandom(0xFF) & 0x1F;
 	add_trob(room, tilepos, 1);
 }
 
 // seg007:08A7
-void __pascal far start_anim_chomper(short room,short tilepos, byte modifier) {
+void start_anim_chomper(short room,short tilepos, byte modifier) {
 	short old_modifier = curr_room_modif[tilepos];
 	if (old_modifier == 0 || old_modifier >= 6) {
 		curr_room_modif[tilepos] = modifier;
@@ -586,7 +586,7 @@ void __pascal far start_anim_chomper(short room,short tilepos, byte modifier) {
 }
 
 // seg007:08E3
-void __pascal far start_anim_spike(short room,short tilepos) {
+void start_anim_spike(short room,short tilepos) {
 	sbyte old_modifier = curr_room_modif[tilepos];
 	if (old_modifier <= 0) {
 		if (old_modifier == 0) {
@@ -602,7 +602,7 @@ void __pascal far start_anim_spike(short room,short tilepos) {
 }
 
 // seg007:092C
-short __pascal far trigger_gate(short room,short tilepos,short button_type) {
+short trigger_gate(short room,short tilepos,short button_type) {
 	byte modifier = curr_room_modif[tilepos];
 	if (button_type == tiles_15_opener) {
 		// If the gate is permanently open, don't to anything.
@@ -629,7 +629,7 @@ short __pascal far trigger_gate(short room,short tilepos,short button_type) {
 }
 
 // seg007:0999
-short __pascal far trigger_1(short target_type,short room,short tilepos,short button_type) {
+short trigger_1(short target_type,short room,short tilepos,short button_type) {
 	short result = -1;
 	if (target_type == tiles_4_gate) {
 		result = trigger_gate(room, tilepos, button_type);
@@ -646,7 +646,7 @@ short __pascal far trigger_1(short target_type,short room,short tilepos,short bu
 }
 
 // seg007:09E5
-void __pascal far do_trigger_list(short index,short button_type) {
+void do_trigger_list(short index,short button_type) {
 	word room;
 	word tilepos;
 	byte target_type;
@@ -666,7 +666,7 @@ void __pascal far do_trigger_list(short index,short button_type) {
 }
 
 // seg007:0A5A
-void __pascal far add_trob(byte room,byte tilepos,sbyte type) {
+void add_trob(byte room,byte tilepos,sbyte type) {
 	if (trobs_count >= TROBS_MAX) {
 		show_dialog("Trobs Overflow");
 		return /*0*/; // added
@@ -686,7 +686,7 @@ void __pascal far add_trob(byte room,byte tilepos,sbyte type) {
 }
 
 // seg007:0ACA
-short __pascal far find_trob() {
+short find_trob() {
 	for (short index = 0; index < trobs_count; ++index) {
 		if (trobs[index].tilepos == trob.tilepos &&
 			trobs[index].room == trob.room) return index;
@@ -695,49 +695,49 @@ short __pascal far find_trob() {
 }
 
 // seg007:0B0A
-void __pascal far clear_tile_wipes() {
-	memset_near(redraw_frames_full, 0, sizeof(redraw_frames_full));
-	memset_near(wipe_frames, 0, sizeof(wipe_frames));
-	memset_near(wipe_heights, 0, sizeof(wipe_heights));
-	memset_near(redraw_frames_anim, 0, sizeof(redraw_frames_anim));
-	memset_near(redraw_frames_fore, 0, sizeof(redraw_frames_fore));
-	memset_near(redraw_frames2, 0, sizeof(redraw_frames2));
-	memset_near(redraw_frames_floor_overlay, 0, sizeof(redraw_frames_floor_overlay));
-	memset_near(tile_object_redraw, 0, sizeof(tile_object_redraw));
-	memset_near(redraw_frames_above, 0, sizeof(redraw_frames_above));
+void clear_tile_wipes() {
+	memset(redraw_frames_full, 0, sizeof(redraw_frames_full));
+	memset(wipe_frames, 0, sizeof(wipe_frames));
+	memset(wipe_heights, 0, sizeof(wipe_heights));
+	memset(redraw_frames_anim, 0, sizeof(redraw_frames_anim));
+	memset(redraw_frames_fore, 0, sizeof(redraw_frames_fore));
+	memset(redraw_frames2, 0, sizeof(redraw_frames2));
+	memset(redraw_frames_floor_overlay, 0, sizeof(redraw_frames_floor_overlay));
+	memset(tile_object_redraw, 0, sizeof(tile_object_redraw));
+	memset(redraw_frames_above, 0, sizeof(redraw_frames_above));
 }
 
 // seg007:0BB6
-short __pascal far get_doorlink_timer(short index) {
+short get_doorlink_timer(short index) {
 	return doorlink2_ad[index] & 0x1F;
 }
 
 // seg007:0BCD
-short __pascal far set_doorlink_timer(short index,byte value) {
+short set_doorlink_timer(short index,byte value) {
 	doorlink2_ad[index] &= 0xE0;
 	doorlink2_ad[index] |= value & 0x1F;
 	return doorlink2_ad[index];
 }
 
 // seg007:0BF2
-short __pascal far get_doorlink_tile(short index) {
+short get_doorlink_tile(short index) {
 	return doorlink1_ad[index] & 0x1F;
 }
 
 // seg007:0C09
-short __pascal far get_doorlink_next(short index) {
+short get_doorlink_next(short index) {
 	return !(doorlink1_ad[index] & 0x80);
 }
 
 // seg007:0C26
-short __pascal far get_doorlink_room(short index) {
+short get_doorlink_room(short index) {
 	return
 		((doorlink1_ad[index] & 0x60) >> 5) +
 		((doorlink2_ad[index] & 0xE0) >> 3);
 }
 
 // seg007:0C53
-void __pascal far trigger_button(int playsound,int button_type,int modifier) {
+void trigger_button(int playsound,int button_type,int modifier) {
 	get_curr_tile(curr_tilepos);
 	if (button_type == 0) {
 		// 0 means currently selected
@@ -764,7 +764,7 @@ void __pascal far trigger_button(int playsound,int button_type,int modifier) {
 }
 
 // seg007:0CD9
-void __pascal far died_on_button() {
+void died_on_button() {
 	word button_type = get_curr_tile(curr_tilepos);
 	word modifier = curr_modifier;
 	if (curr_tile == tiles_15_opener) {
@@ -778,7 +778,7 @@ void __pascal far died_on_button() {
 }
 
 // seg007:0D3A
-void __pascal far animate_button() {
+void animate_button() {
 	word timer;
 	if (trob.type >= 0) {
 		set_doorlink_timer(curr_modifier, timer = get_doorlink_timer(curr_modifier) - 1);
@@ -790,13 +790,13 @@ void __pascal far animate_button() {
 }
 
 // seg007:0D72
-void __pascal far start_level_door(short room,short tilepos) {
+void start_level_door(short room,short tilepos) {
 	curr_room_modif[tilepos] = 43; // start fully open
 	add_trob(room, tilepos, 3);
 }
 
 // seg007:0D93
-void __pascal far animate_empty() {
+void animate_empty() {
 	trob.type = -1;
 	redraw_20h();
 }
@@ -804,7 +804,7 @@ void __pascal far animate_empty() {
 // data:2284
 const word y_loose_land[] = {2, 65, 128, 191, 254};
 // seg007:0D9D
-void __pascal far animate_loose() {
+void animate_loose() {
 	short anim_type = trob.type;
 	if (anim_type >= 0) {
 		++curr_modifier;
@@ -858,7 +858,7 @@ void __pascal far animate_loose() {
 // data:2734
 const byte loose_sound[] = {0, 1, 1, 1, 0, 1, 0, 0, 1, 0, 0, 0};
 // seg007:0E55
-void __pascal far loose_shake(int arg_0) {
+void loose_shake(int arg_0) {
 	word sound_id;
 	if (arg_0 || loose_sound[curr_modifier & 0x7F]) {
 		do {
@@ -885,14 +885,14 @@ void __pascal far loose_shake(int arg_0) {
 }
 
 // seg007:0EB8
-int __pascal far remove_loose(int room, int tilepos) {
+int remove_loose(int room, int tilepos) {
 	curr_room_tiles[tilepos] = tiles_0_empty;
 	// note: the level type is used to determine the modifier of the empty space left behind
 	return custom->tbl_level_type[current_level];
 }
 
 // seg007:0ED5
-void __pascal far make_loose_fall(byte modifier) {
+void make_loose_fall(byte modifier) {
 	// is it a "solid" loose floor?
 	if ((curr_room_tiles[curr_tilepos] & 0x20) == 0) {
 		if ((sbyte)curr_room_modif[curr_tilepos] <= 0) {
@@ -904,7 +904,7 @@ void __pascal far make_loose_fall(byte modifier) {
 }
 
 // seg007:0F13
-void __pascal far start_chompers() {
+void start_chompers() {
 	short tilepos;
 	short timing = 15;
 	if ((byte)Char.curr_row < 3) {
@@ -924,7 +924,7 @@ void __pascal far start_chompers() {
 }
 
 // seg007:0F9A
-int __pascal far next_chomper_timing(byte timing) {
+int next_chomper_timing(byte timing) {
 	// 15,12,9,6,13,10,7,14,11,8,repeat
 	timing -= 3;
 	if (timing < 6) {
@@ -934,7 +934,7 @@ int __pascal far next_chomper_timing(byte timing) {
 }
 
 // seg007:0FB4
-void __pascal far loose_make_shake() {
+void loose_make_shake() {
 	// don't shake on level 13
 	if (curr_room_modif[curr_tilepos] == 0 && current_level != /*13*/ custom->loose_tiles_level) {
 		curr_room_modif[curr_tilepos] = 0x80;
@@ -943,7 +943,7 @@ void __pascal far loose_make_shake() {
 }
 
 // seg007:0FE0
-void __pascal far do_knock(int room,int tile_row) {
+void do_knock(int room,int tile_row) {
 	for (short tile_col = 0; tile_col < 10; ++tile_col) {
 		if (get_tile(room, tile_col, tile_row) == tiles_11_loose) {
 			loose_make_shake();
@@ -952,7 +952,7 @@ void __pascal far do_knock(int room,int tile_row) {
 }
 
 // seg007:1010
-void __pascal far add_mob() {
+void add_mob() {
 	if (mobs_count >= 14) {
 		show_dialog("Mobs Overflow");
 		return /*0*/; // added
@@ -961,7 +961,7 @@ void __pascal far add_mob() {
 }
 
 // seg007:1041
-short __pascal far get_curr_tile(short tilepos) {
+short get_curr_tile(short tilepos) {
 	curr_modifier = curr_room_modif[tilepos];
 	return curr_tile = curr_room_tiles[tilepos] & 0x1F;
 }
@@ -970,7 +970,7 @@ short __pascal far get_curr_tile(short tilepos) {
 word curmob_index;
 
 // seg007:1063
-void __pascal far do_mobs() {
+void do_mobs() {
 	short n_mobs = mobs_count;
 	for (curmob_index = 0; n_mobs > curmob_index; ++curmob_index) {
 		curmob = mobs[curmob_index];
@@ -988,7 +988,7 @@ void __pascal far do_mobs() {
 }
 
 // seg007:110F
-void __pascal far move_mob() {
+void move_mob() {
 	if (curmob.type == 0) {
 		move_loose();
 	}
@@ -1002,7 +1002,7 @@ const short y_something[] = {-1, 62, 125, 188, 25};
 // data:594A
 word curr_tile_temp;
 // seg007:1126
-void __pascal far move_loose() {
+void move_loose() {
 	if (curmob.speed < 0) return;
 	if (curmob.speed < 29) curmob.speed += 3;
 	curmob.y += curmob.speed;
@@ -1035,7 +1035,7 @@ void __pascal far move_loose() {
 }
 
 // seg007:11E8
-void __pascal far loose_land() {
+void loose_land() {
 	short button_type = 0;
 	short tiletype = get_tile(curmob.room, curmob.xh >> 2, curmob.row);
 	switch (tiletype) {
@@ -1067,7 +1067,7 @@ void __pascal far loose_land() {
 }
 
 // seg007:12CB
-void __pascal far loose_fall() {
+void loose_fall() {
 	curr_room_modif[curr_tilepos] = remove_loose(curr_room, curr_tilepos);
 	curmob.speed >>= 1;
 	mobs[curmob_index] = curmob;
@@ -1079,7 +1079,7 @@ void __pascal far loose_fall() {
 }
 
 // seg007:132C
-void __pascal far redraw_at_cur_mob() {
+void redraw_at_cur_mob() {
 	if (curmob.room == drawn_room) {
 		redraw_height = 0x20;
 		set_redraw_full(curr_tilepos, 1);
@@ -1093,7 +1093,7 @@ void __pascal far redraw_at_cur_mob() {
 }
 
 // seg007:1387
-void __pascal far mob_down_a_row() {
+void mob_down_a_row() {
 	++curmob.row;
 	if (curmob.row >= 3) {
 		curmob.y -= 192;
@@ -1103,7 +1103,7 @@ void __pascal far mob_down_a_row() {
 }
 
 // seg007:13AE
-void __pascal far draw_mobs() {
+void draw_mobs() {
 	for (short index = 0; index < mobs_count; ++index) {
 		curmob = mobs[index];
 		draw_mob();
@@ -1111,7 +1111,7 @@ void __pascal far draw_mobs() {
 }
 
 // seg007:13E5
-void __pascal far draw_mob() {
+void draw_mob() {
 	short ypos = curmob.y;
 	if (curmob.room == drawn_room) {
 		if (curmob.y >= 210) return;
@@ -1142,7 +1142,7 @@ void __pascal far draw_mob() {
 }
 
 // seg007:14DE
-void __pascal far add_mob_to_objtable(int ypos) {
+void add_mob_to_objtable(int ypos) {
 	objtable_type* curr_obj;
 	word index = objtable_count++;
 	curr_obj = &objtable[index];
@@ -1159,13 +1159,13 @@ void __pascal far add_mob_to_objtable(int ypos) {
 }
 
 // seg007:153E
-void __pascal far sub_9A8E() {
+void sub_9A8E() {
 	// This function is not used.
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, &rect_top, &rect_top, 0);
 }
 
 // seg007:1556
-int __pascal far is_spike_harmful() {
+int is_spike_harmful() {
 	sbyte modifier = curr_room_modif[curr_tilepos];
 	if (modifier == 0 || modifier == -1) {
 		return 0;
@@ -1179,7 +1179,7 @@ int __pascal far is_spike_harmful() {
 }
 
 // seg007:1591
-void __pascal far check_loose_fall_on_kid() {
+void check_loose_fall_on_kid() {
 	loadkid();
 	if (Char.room == curmob.room &&
 		Char.curr_col == curmob.xh >> 2 &&
@@ -1192,7 +1192,7 @@ void __pascal far check_loose_fall_on_kid() {
 }
 
 // seg007:15D3
-void __pascal far fell_on_your_head() {
+void fell_on_your_head() {
 	short frame = Char.frame;
 	short action = Char.action;
 	// loose floors hurt you in frames 5..14 (running) only on level 13
@@ -1218,7 +1218,7 @@ void __pascal far fell_on_your_head() {
 }
 
 // seg007:1669
-void __pascal far play_door_sound_if_visible(int sound_id) {
+void play_door_sound_if_visible(int sound_id) {
 	word tilepos = trob.tilepos;
 	word gate_room = trob.room;
 	word has_sound = 0;

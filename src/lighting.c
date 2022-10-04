@@ -102,7 +102,7 @@ void redraw_lighting() {
 
 // Copy a part of the lighting overlay onto the screen.
 // Called when the screen is updated.
-void update_lighting(const rect_type far *target_rect_ptr) {
+void update_lighting(const rect_type* target_rect_ptr) {
 	if (!enable_lighting) return;
 	if (lighting_mask == NULL) return;
 	if (curr_room_tiles == NULL) return;

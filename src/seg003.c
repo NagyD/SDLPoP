@@ -24,7 +24,7 @@ The authors of this program may be contacted at https://forum.princed.org
 sbyte distance_mirror;
 
 // seg003:0000
-void __pascal far init_game(int level) {
+void init_game(int level) {
 	if(offscreen_surface) {
 		free_surface(offscreen_surface); // missing in original
 		offscreen_surface = NULL;
@@ -47,7 +47,7 @@ void __pascal far init_game(int level) {
 }
 
 // seg003:005C
-void __pascal far play_level(int level_number) {
+void play_level(int level_number) {
 	cutscene_ptr_type cutscene_func;
 #ifdef USE_COPYPROT
 	if (enable_copyprot && level_number == custom->copyprot_level) {
@@ -135,7 +135,7 @@ void __pascal far play_level(int level_number) {
 }
 
 // seg003:01A3
-void __pascal far do_startpos() {
+void do_startpos() {
 	word x;
 	// Special event: start at checkpoint
 	if (current_level == /*3*/ custom->checkpoint_level && checkpoint) {
@@ -179,7 +179,7 @@ void __pascal far do_startpos() {
 }
 
 // seg003:028A
-void __pascal far set_start_pos() {
+void set_start_pos() {
 	Char.y = y_land[Char.curr_row + 1];
 	Char.alive = -1;
 	Char.charid = charid_0_kid;
@@ -202,7 +202,7 @@ void __pascal far set_start_pos() {
 }
 
 // seg003:02E6
-void __pascal far find_start_level_door() {
+void find_start_level_door() {
 	short tilepos;
 	get_room_address(Kid.room);
 	for (tilepos = 0; tilepos < 30; ++tilepos) {
@@ -213,7 +213,7 @@ void __pascal far find_start_level_door() {
 }
 
 // seg003:0326
-void __pascal far draw_level_first() {
+void draw_level_first() {
 	next_room = Kid.room;
 	check_the_end();
 	if (custom->tbl_level_type[current_level]) {
@@ -238,7 +238,7 @@ void __pascal far draw_level_first() {
 }
 
 // seg003:037B
-void __pascal far redraw_screen(int drawing_different_room) {
+void redraw_screen(int drawing_different_room) {
 	//remove_flash();
 	if (drawing_different_room) {
 		draw_rect(&rect_top, 0);
@@ -284,7 +284,7 @@ void __pascal far redraw_screen(int drawing_different_room) {
 		}
 #endif
 		is_blind_mode = 0;
-		memset_near(table_counts, 0, sizeof(table_counts));
+		memset(table_counts, 0, sizeof(table_counts));
 		draw_moving();
 		draw_tables();
 		if (is_keyboard_mode) {
@@ -344,7 +344,7 @@ void test_timings(test_timing_state_type* state) {
 // Returns a level number:
 // - The current level if it was restarted.
 // - The next level if the level was completed.
-int __pascal far play_level_2() {
+int play_level_2() {
 	reset_timer(timer_1);
 #ifdef CHECK_TIMING
 	test_timing_state_type test_timing_state = {0};
@@ -409,7 +409,7 @@ int __pascal far play_level_2() {
 }
 
 // seg003:0576
-void __pascal far redraw_at_char() {
+void redraw_at_char() {
 	short x_top_row;
 	short tile_col;
 	short tile_row;
@@ -447,8 +447,8 @@ void __pascal far redraw_at_char() {
 }
 
 // seg003:0645
-void __pascal far redraw_at_char2() {
-	void __pascal (* redraw_func)(short, byte);
+void redraw_at_char2() {
+	void (* redraw_func)(short, byte);
 	short char_action = Char.action;
 	short char_frame = Char.frame;
 	redraw_func = &set_redraw2;
@@ -477,7 +477,7 @@ void __pascal far redraw_at_char2() {
 }
 
 // seg003:0706
-void __pascal far check_knock() {
+void check_knock() {
 	if (knock) {
 		do_knock(Char.room, Char.curr_row - (knock>0));
 		knock = 0;
@@ -485,7 +485,7 @@ void __pascal far check_knock() {
 }
 
 // seg003:0735
-void __pascal far timers() {
+void timers() {
 	if (united_with_shadow > 0) {
 		--united_with_shadow;
 		if (united_with_shadow == 0) {
@@ -571,7 +571,7 @@ void __pascal far timers() {
 }
 
 // seg003:0798
-void __pascal far check_mirror() {
+void check_mirror() {
 	if (jumped_through_mirror == -1) {
 		jump_through_mirror();
 	} else {
@@ -594,7 +594,7 @@ void __pascal far check_mirror() {
 }
 
 // seg003:080A
-void __pascal far jump_through_mirror() {
+void jump_through_mirror() {
 	loadkid();
 	load_frame();
 	check_mirror_image();
@@ -609,7 +609,7 @@ void __pascal far jump_through_mirror() {
 }
 
 // seg003:085B
-void __pascal far check_mirror_image() {
+void check_mirror_image() {
 	short xpos = x_bump[Char.curr_col + FIRST_ONSCREEN_COLUMN] + 10; // I think 10 is the offset for mirror collision within a tile
 	short distance = distance_to_edge_weight();
 	if (Char.direction >= dir_0_right) {
@@ -621,7 +621,7 @@ void __pascal far check_mirror_image() {
 }
 
 // seg003:08AA
-void __pascal far bump_into_opponent() {
+void bump_into_opponent() {
 	// This is called from play_kid_frame, so char=Kid, Opp=Guard
 	if (can_guard_see_kid >= 2 &&
 		Char.sword == sword_0_sheathed && // Kid must not be in fighting pose
@@ -660,7 +660,7 @@ void __pascal far bump_into_opponent() {
 }
 
 // seg003:0913
-void __pascal far pos_guards() {
+void pos_guards() {
 	for (short room1 = 0; room1 < ROOMCOUNT; ++room1) {
 		short guard_tile = level.guards_tile[room1];
 		if (guard_tile < 30) {
@@ -671,7 +671,7 @@ void __pascal far pos_guards() {
 }
 
 // seg003:0959
-void __pascal far check_can_guard_see_kid() {
+void check_can_guard_see_kid() {
 /*
 Possible results in can_guard_see_kid:
 0: Guard can't see Kid
@@ -744,12 +744,12 @@ Possible results in can_guard_see_kid:
 }
 
 // seg003:0A99
-byte __pascal far get_tile_at_kid(int xpos) {
+byte get_tile_at_kid(int xpos) {
 	return get_tile(Kid.room, get_tile_div_mod_m7(xpos), Kid.curr_row);
 }
 
 // seg003:0ABA
-void __pascal far do_mouse() {
+void do_mouse() {
 	loadkid();
 	Char.charid = /*charid_24_mouse*/ custom->mouse_object;
 	Char.x = /*200*/ custom->mouse_start_x;
@@ -764,7 +764,7 @@ void __pascal far do_mouse() {
 }
 
 // seg003:0AFC
-int __pascal far flash_if_hurt() {
+int flash_if_hurt() {
 	if (flash_time != 0) {
 		do_flash(flash_color);
 		return 1;
@@ -787,7 +787,7 @@ int __pascal far flash_if_hurt() {
 }
 
 // seg003:0B1A
-void __pascal far remove_flash_if_hurt() {
+void remove_flash_if_hurt() {
 	if (flash_time != 0) {
 		--flash_time;
 	} else {
