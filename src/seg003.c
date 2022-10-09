@@ -415,10 +415,12 @@ void redraw_at_char() {
 	if (Char.sword >= sword_2_drawn) {
 		// If char is holding sword, it makes redraw-area bigger.
 		if (Char.direction >= dir_0_right) {
-			if (++char_col_right > 9) char_col_right = 9;
+			++char_col_right;
+			if (char_col_right > 9) char_col_right = 9;
 			// char_col_right = MIN(char_col_right + 1, 9);
 		} else {
-			if (--char_col_left < 0) char_col_left = 0;
+			--char_col_left;
+			if (char_col_left < 0) char_col_left = 0;
 			// char_col_left = MAX(char_col_left - 1, 0);
 		}
 	}

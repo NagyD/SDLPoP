@@ -250,7 +250,7 @@ void draw_extras(void) {
 		}
 		--events_pos;
 		if (events_pos>0 && events_pos<(int)sizeof(events)) events[events_pos]='\0'; // trim trailing space
-		if (*events) {
+		if (events[0] != '\0') {
 			//printf("room %d, tile %d, events: %s\n", drawn_room, tilepos, events); // debug
 			rect_type events_rect = {y,x,y+63-3,x+32-7};
 			show_text_with_color(&events_rect, 0, 1, events, color_14_brightyellow);
@@ -486,7 +486,8 @@ void save_level_screenshot(bool want_extras) {
 
 	// Assemble a map based on room links.
 	while (queue_start < queue_end) {
-		int room = queue[queue_start++];
+		int room = queue[queue_start];
+		queue_start++;
 		byte* roomlinks = (byte*)(&level.roomlinks[room-1]);
 		for (int direction = 0; direction < 4; direction++) {
 			int other_room = roomlinks[direction];
@@ -496,7 +497,8 @@ void save_level_screenshot(bool want_extras) {
 				xpos[other_room] = other_x;
 				ypos[other_room] = other_y;
 				processed[other_room] = true;
-				queue[queue_end++] = other_room;
+				queue[queue_end] = other_room;
+				queue_end++;
 			}
 		}
 	}

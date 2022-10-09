@@ -36,7 +36,8 @@ void process_trobs() {
 		word new_index;
 		for (word index = new_index = 0; index < trobs_count; ++index) {
 			if (trobs[index].type >= 0) {
-				trobs[new_index++] = trobs[index];
+				trobs[new_index] = trobs[index];
+				new_index++;
 			}
 		}
 		trobs_count = new_index;
@@ -660,7 +661,8 @@ void do_trigger_list(short index,short button_type) {
 		if (trigger_result >= 0) {
 			add_trob(room, tilepos, trigger_result);
 		}
-		if (get_doorlink_next(index++) == 0) break;
+		if (get_doorlink_next(index) == 0) break;
+		index++;
 	}
 }
 
@@ -677,7 +679,8 @@ void add_trob(byte room,byte tilepos,sbyte type) {
 	if (found == -1) {
 		// add new
 		if (trobs_count == TROBS_MAX) return;
-		trobs[trobs_count++] = trob;
+		trobs[trobs_count] = trob;
+		trobs_count++;
 	} else {
 		// change existing
 		trobs[found].type = trob.type;
@@ -955,7 +958,8 @@ void add_mob() {
 		show_dialog("Mobs Overflow");
 		return /*0*/; // added
 	}
-	mobs[mobs_count++] = curmob;
+	mobs[mobs_count] = curmob;
+	mobs_count++;
 }
 
 // seg007:1041
@@ -979,7 +983,8 @@ void do_mobs() {
 	short new_index = 0;
 	for (short index = 0; index < mobs_count; ++index) {
 		if (mobs[index].speed != -1) {
-			mobs[new_index++] = mobs[index];
+			mobs[new_index] = mobs[index];
+			new_index++;
 		}
 	}
 	mobs_count = new_index;

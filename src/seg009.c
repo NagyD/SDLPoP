@@ -45,7 +45,7 @@ void find_exe_dir(void) {
 	snprintf_check(exe_dir, sizeof(exe_dir), "%s", g_argv[0]);
 	char* last_slash = NULL;
 	char* pos = exe_dir;
-	for (char c = *pos; c != '\0'; c = *(++pos)) {
+	for (char c = *pos; c != '\0'; ++pos, c = *pos) {
 		if (c == '/' || c == '\\') {
 			last_slash = pos;
 		}
@@ -535,20 +535,27 @@ void decompress_rle_lr(byte* destination,const byte* source,int dest_length) {
 	byte* dest_pos = destination;
 	short rem_length = dest_length;
 	while (rem_length) {
-		sbyte count = *(src_pos++);
+		sbyte count = *src_pos;
+		src_pos++;
 		if (count >= 0) { // copy
 			++count;
 			do {
-				*(dest_pos++) = *(src_pos++);
+				*dest_pos = *src_pos;
+				dest_pos++;
+				src_pos++;
 				--rem_length;
-			} while (--count && rem_length);
+				--count;
+			} while (count && rem_length);
 		} else { // repeat
-			byte al = *(src_pos++);
+			byte al = *src_pos;
+			src_pos++;
 			count = -count;
 			do {
-				*(dest_pos++) = al;
+				*dest_pos = al;
+				dest_pos++;
 				--rem_length;
-			} while (--count && rem_length);
+				--count;
+			} while (count && rem_length);
 		}
 	}
 }
@@ -562,30 +569,39 @@ void decompress_rle_ud(byte* destination,const byte* source,int dest_length,int 
 	--dest_length;
 	--width;
 	while (rem_length) {
-		sbyte count = *(src_pos++);
+		sbyte count = *src_pos;
+		src_pos++;
 		if (count >= 0) { // copy
 			++count;
 			do {
-				*(dest_pos++) = *(src_pos++);
+				*dest_pos = *src_pos;
+				dest_pos++;
+				src_pos++;
 				dest_pos += width;
-				if (--rem_height == 0) {
+				--rem_height;
+				if (rem_height == 0) {
 					dest_pos -= dest_length;
 					rem_height = height;
 				}
 				--rem_length;
-			} while (--count && rem_length);
+				--count;
+			} while (count && rem_length);
 		} else { // repeat
-			byte al = *(src_pos++);
+			byte al = *src_pos;
+			src_pos++;
 			count = -count;
 			do {
-				*(dest_pos++) = al;
+				*dest_pos = al;
+				dest_pos++;
 				dest_pos += width;
-				if (--rem_height == 0) {
+				--rem_height;
+				if (rem_height == 0) {
 					dest_pos -= dest_length;
 					rem_height = height;
 				}
 				--rem_length;
-			} while (--count && rem_length);
+				--count;
+			} while (count && rem_length);
 		}
 	}
 }
@@ -604,22 +620,33 @@ byte* decompress_lzg_lr(byte* dest,const byte* source,int dest_length) {
 	do {
 		mask >>= 1;
 		if ((mask & 0xFF00) == 0) {
-			mask = *(source_pos++) | 0xFF00;
+			mask = *source_pos | 0xFF00;
+			source_pos++;
 		}
 		if (mask & 1) {
-			*(window_pos++) = *(dest_pos++) = *(source_pos++);
+			*window_pos = *dest_pos = *source_pos;
+			window_pos++;
+			dest_pos++;
+			source_pos++;
 			if (window_pos >= window_end) window_pos = window;
 			--remaining;
 		} else {
-			word copy_info = *(source_pos++);
-			copy_info = (copy_info << 8) | *(source_pos++);
+			word copy_info = *source_pos;
+			source_pos++;
+			copy_info = (copy_info << 8) | *source_pos;
+			source_pos++;
 			byte* copy_source = window + (copy_info & 0x3FF);
 			byte copy_length = (copy_info >> 10) + 3;
 			do {
-				*(window_pos++) = *(dest_pos++) = *(copy_source++);
+				*window_pos = *dest_pos = *copy_source;
+				window_pos++;
+				dest_pos++;
+				copy_source++;
 				if (copy_source >= window_end) copy_source = window;
 				if (window_pos >= window_end) window_pos = window;
-			} while (--remaining && --copy_length);
+				--remaining;
+				--copy_length;
+			} while (remaining && copy_length);
 		}
 	} while (remaining);
 //	end:
@@ -642,32 +669,43 @@ byte* decompress_lzg_ud(byte* dest,const byte* source,int dest_length,int stride
 	do {
 		mask >>= 1;
 		if ((mask & 0xFF00) == 0) {
-			mask = *(source_pos++) | 0xFF00;
+			mask = *source_pos | 0xFF00;
+			source_pos++;
 		}
 		if (mask & 1) {
-			*(window_pos++) = *dest_pos = *(source_pos++);
+			*window_pos = *dest_pos = *source_pos;
+			window_pos++;
+			source_pos++;
 			dest_pos += stride;
-			if (--remaining == 0) {
+			--remaining;
+			if (remaining == 0) {
 				dest_pos -= dest_end;
 				remaining = height;
 			}
 			if (window_pos >= window_end) window_pos = window;
 			--dest_length;
 		} else {
-			word copy_info = *(source_pos++);
-			copy_info = (copy_info << 8) | *(source_pos++);
+			word copy_info = *source_pos;
+			source_pos++;
+			copy_info = (copy_info << 8) | *source_pos;
+			source_pos++;
 			byte* copy_source = window + (copy_info & 0x3FF);
 			byte copy_length = (copy_info >> 10) + 3;
 			do {
-				*(window_pos++) = *dest_pos = *(copy_source++);
+				*window_pos = *dest_pos = *copy_source;
+				window_pos++;
+				copy_source++;
 				dest_pos += stride;
-				if (--remaining == 0) {
+				--remaining;
+				if (remaining == 0) {
 					dest_pos -= dest_end;
 					remaining = height;
 				}
 				if (copy_source >= window_end) copy_source = window;
 				if (window_pos >= window_end) window_pos = window;
-			} while (--dest_length && --copy_length);
+				--dest_length;
+				--copy_length;
+			} while (dest_length && copy_length);
 		}
 	} while (dest_length);
 //	end:
@@ -1146,7 +1184,8 @@ int find_linebreak(const char* text,int length,int break_width,int x_align) {
 		curr_line_width += get_char_width(*text_pos);
 		if (curr_line_width <= break_width) {
 			++curr_char_pos;
-			char curr_char = *(text_pos++);
+			char curr_char = *text_pos;
+			text_pos++;
 			if (curr_char == '\n') {
 				return curr_char_pos;
 			}
@@ -1175,7 +1214,8 @@ int get_line_width(const char* text,int length) {
 	int width = 0;
 	const char* text_pos = text;
 	while (--length >= 0) {
-		width += get_char_width(*(text_pos++));
+		width += get_char_width(*text_pos);
+		text_pos++;
 	}
 	return width;
 }
@@ -1202,7 +1242,8 @@ int draw_text_line(const char* text,int length) {
 	int width = 0;
 	const char* text_pos = text;
 	while (--length >= 0) {
-		width += draw_text_character(*(text_pos++));
+		width += draw_text_character(*text_pos);
+		text_pos++;
 	}
 	//show_cursor();
 	return width;
@@ -1213,8 +1254,9 @@ int draw_cstring(const char* string) {
 	//hide_cursor();
 	int width = 0;
 	const char* text_pos = string;
-	while (*text_pos) {
-		width += draw_text_character(*(text_pos++));
+	while ('\0' != *text_pos) {
+		width += draw_text_character(*text_pos);
+		text_pos++;
 	}
 	//show_cursor();
 	return width;
@@ -1482,7 +1524,8 @@ int get_cstring_width(const char* text) {
 	int width = 0;
 	const char* text_pos = text;
 	char curr_char;
-	while (0 != (curr_char = *(text_pos++))) {
+	while ('\0' != (curr_char = *text_pos)) {
+		text_pos++;
 		width += get_char_width(curr_char);
 	}
 	return width;
@@ -1573,7 +1616,9 @@ int input_str(const rect_type* rect,char* buffer,int max_length,const char *init
 				draw_text_cursor(current_xpos, ypos, bgcolor);
 				set_curr_pos(current_xpos, ypos);
 				/*current_target_surface->*/textstate.textcolor = color;
-				current_xpos += draw_text_character(buffer[length++] = entered_char);
+				buffer[length] = entered_char;
+				length++;
+				current_xpos += draw_text_character(entered_char);
 			}
 		}
 	} while(1);

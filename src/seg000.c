@@ -921,7 +921,8 @@ void draw_game_frame() {
 				if (upside_down) {
 					flip_screen(offscreen_surface);
 				}
-				while (drects_count--) {
+				while (drects_count) {
+					drects_count--;
 					copy_screen_rect(&drects[drects_count]);
 				}
 				if (upside_down) {

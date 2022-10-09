@@ -629,8 +629,8 @@ void draw_tile_anim() {
 			break;
 		case tiles_10_potion:
 			switch((curr_modifier & 0xF8) >> 3) {
-				case 0:
-					return; //empty
+				case 0: // empty
+					return;
 				case 5: // hurt
 				case 6: // open
 					color = 9; // blue
@@ -866,7 +866,8 @@ void add_peel(int left,int right,int top,int height) {
 	rect.right = right;
 	rect.top = top;
 	rect.bottom = top + height;
-	peels_table[peels_count++] = read_peel_from_screen(&rect);
+	peels_table[peels_count] = read_peel_from_screen(&rect);
+	peels_count++;
 }
 
 // seg008:1254
@@ -1362,7 +1363,8 @@ void draw_tables() {
 // seg008:1C4E
 void restore_peels() {
 	peel_type* peel;
-	while (peels_count--) {
+	while (peels_count) {
+		peels_count--;
 		peel = peels_table[peels_count];
 		if (need_drects) {
 			add_drect(&peel->rect); // ?
@@ -1386,7 +1388,8 @@ void add_drect(rect_type *source) {
 		show_dialog("DRects Overflow");
 		return /*0*/; // added
 	}
-	drects[drects_count++] = *source;
+	drects[drects_count] = *source;
+	drects_count++;
 }
 
 // seg008:1D29
@@ -1500,7 +1503,8 @@ void draw_objtable_items_at_tile(byte tilepos) {
 		n_curr_objs = 0;
 		for (short obj_index = obj_count - 1; obj_index >= 0; --obj_index) {
 			if (objtable[obj_index].tilepos == tilepos) {
-				curr_objs[n_curr_objs++] = obj_index;
+				curr_objs[n_curr_objs] = obj_index;
+				n_curr_objs++;
 			}
 		}
 		if (n_curr_objs) {

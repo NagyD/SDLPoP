@@ -144,7 +144,8 @@ bool parse_midi(midi_raw_chunk_type* midi, parsed_midi_type* parsed_midi) {
 		midi_track_type* track = &parsed_midi->tracks[track_index];
 		byte* buffer_position = track_chunk->data;
 		for (;;) {
-			track->events = realloc(track->events, (++track->num_events) * sizeof(midi_event_type));
+			++track->num_events;
+			track->events = realloc(track->events, track->num_events * sizeof(midi_event_type));
 			midi_event_type* event = &track->events[track->num_events - 1];
 			event->delta_time = midi_read_variable_length(&buffer_position);
 			event->event_type = *buffer_position;
@@ -545,7 +546,8 @@ void midi_callback(void *userdata, Uint8 *stream, int len) {
 				while (midi_current_pos >= track->next_pause_tick) {
 					int events_left = track->num_events - track->event_index;
 					if (events_left > 0) {
-						midi_event_type* event = &track->events[track->event_index++];
+						midi_event_type* event = &track->events[track->event_index];
+						track->event_index++;
 //						print_midi_event(track_index, track->event_index-1, event);
 						process_midi_event(event);
 

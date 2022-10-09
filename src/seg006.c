@@ -569,13 +569,16 @@ int obj_dx_forward(int delta_x) {
 // seg006:0254
 void play_seq() {
 	for (;;) {
-		byte item = *(SEQTBL_0 + Char.curr_seq++);
-		switch (item) {
+		byte command = *(SEQTBL_0 + Char.curr_seq);
+		Char.curr_seq++;
+		switch (command) {
 			case SEQ_DX: // dx
-				Char.x = char_dx_forward(*(SEQTBL_0 + Char.curr_seq++));
+				Char.x = char_dx_forward(*(SEQTBL_0 + Char.curr_seq));
+				Char.curr_seq++;
 				break;
 			case SEQ_DY: // dy
-				Char.y += *(SEQTBL_0 + Char.curr_seq++);
+				Char.y += *(SEQTBL_0 + Char.curr_seq);
+				Char.curr_seq++;
 				break;
 			case SEQ_FLIP: // flip
 				Char.direction = ~Char.direction;
@@ -599,11 +602,14 @@ void play_seq() {
 				start_chompers();
 				break;
 			case SEQ_ACTION: // action
-				Char.action = *(SEQTBL_0 + Char.curr_seq++);
+				Char.action = *(SEQTBL_0 + Char.curr_seq);
+				Char.curr_seq++;
 				break;
 			case SEQ_SET_FALL: // set fall
-				Char.fall_x = *(SEQTBL_0 + Char.curr_seq++);
-				Char.fall_y = *(SEQTBL_0 + Char.curr_seq++);
+				Char.fall_x = *(SEQTBL_0 + Char.curr_seq);
+				Char.curr_seq++;
+				Char.fall_y = *(SEQTBL_0 + Char.curr_seq);
+				Char.curr_seq++;
 				break;
 			case SEQ_KNOCK_UP: // knock up
 				knock = 1;
@@ -612,7 +618,10 @@ void play_seq() {
 				knock = -1;
 				break;
 			case SEQ_SOUND: // sound
-				switch (*(SEQTBL_0 + Char.curr_seq++)) {
+			{
+				int which_sound = *(SEQTBL_0 + Char.curr_seq);
+				Char.curr_seq++;
+				switch (which_sound) {
 					case SND_SILENT: // no sound actually played, but guards still notice the kid
 						is_guard_notice = 1;
 						break;
@@ -642,6 +651,7 @@ void play_seq() {
 						break;
 				}
 				break;
+			}
 			case SEQ_END_LEVEL: // end level
 				++next_level;
 #ifdef USE_REPLAY
@@ -653,14 +663,18 @@ void play_seq() {
 #endif
 				break;
 			case SEQ_GET_ITEM: // get item
-				if (*(SEQTBL_0 + Char.curr_seq++) == 1) {
+			{
+				int which_item = *(SEQTBL_0 + Char.curr_seq);
+				Char.curr_seq++;
+				if (which_item == 1) {
 					proc_get_object();
 				}
 				break;
+			}
 			case SEQ_DIE: // nop
 				break;
 			default:
-				Char.frame = item;
+				Char.frame = command;
 				//if (Char.frame == 185) Char.frame = 185;
 				return;
 		}
@@ -1820,8 +1834,8 @@ void proc_get_object() {
 		flash_color = color_14_brightyellow;
 		flash_time = 8;
 	} else {
-		switch (--pickup_obj_type) {
-			case 0: // health
+		switch (pickup_obj_type) {
+			case 1: // health
 				if (hitp_curr != hitp_max) {
 					stop_sounds();
 					play_sound(sound_33_small_potion); // small potion
@@ -1830,24 +1844,24 @@ void proc_get_object() {
 					flash_time = 2;
 				}
 			break;
-			case 1: // life
+			case 2: // life
 				stop_sounds();
 				play_sound(sound_30_big_potion); // big potion
 				flash_color = color_4_red;
 				flash_time = 4;
 				add_life();
 			break;
-			case 2: // feather
+			case 3: // feather
 				feather_fall();
 			break;
-			case 3: // invert
+			case 4: // invert
 				toggle_upside();
 			break;
-			case 5: // open
+			case 6: // open
 				get_tile(8, 0, 0);
 				trigger_button(0, 0, -1);
 			break;
-			case 4: // hurt
+			case 5: // hurt
 				stop_sounds();
 				play_sound(sound_13_kid_hurt); // Kid hurt (by potion)
 				// Special event: blue potions on potions level take half of HP
