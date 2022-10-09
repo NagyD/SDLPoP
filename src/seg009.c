@@ -2190,8 +2190,10 @@ sound_buffer_type* load_sound(int index) {
 				// Decoding the entire file immediately would make the loading time much longer.
 				// However, we can also create the decoder now, and only use it when we are actually playing the file.
 				// (In the audio callback, we'll decode chunks of samples to the output stream, as needed).
-				stb_vorbis* decoder = stb_vorbis_open_memory(file_contents, (int)file_size, NULL, NULL);
+				int error = 0;
+				stb_vorbis* decoder = stb_vorbis_open_memory(file_contents, (int)file_size, &error, NULL);
 				if (decoder == NULL) {
+					printf("Error %d when creating decoder from file \"%s\"!\n", error, filename);
 					free(file_contents);
 					break;
 				}
