@@ -305,8 +305,7 @@ const char* check_param(const char* param) {
 		static const char params_with_one_subparam[][16] = { "mod", "validate", /*...*/ };
 
 		bool curr_arg_has_one_subparam = false;
-		int i;
-		for (i = 0; i < COUNT(params_with_one_subparam); ++i) {
+		for (int i = 0; i < COUNT(params_with_one_subparam); ++i) {
 			if (strncasecmp(curr_arg, params_with_one_subparam[i], strlen(params_with_one_subparam[i])) == 0) {
 				curr_arg_has_one_subparam = true;
 				break;
@@ -454,10 +453,7 @@ word chtab_palette_bits = 1;
 
 // seg009:104E
 chtab_type* load_sprites_from_file(int resource,int palette_bits, int quit_on_error) {
-	int i;
-	int n_images = 0;
 	//int has_palette_bits = 1;
-	chtab_type* chtab = NULL;
 	dat_shpl_type* shpl = (dat_shpl_type*) load_from_opendats_alloc(resource, "pal", NULL, NULL);
 	if (shpl == NULL) {
 		printf("Can't load sprites from resource %d.\n", resource);
@@ -488,12 +484,12 @@ chtab_type* load_sprites_from_file(int resource,int palette_bits, int quit_on_er
 		pal_ptr->row_bits = palette_bits;
 	}
 
-	n_images = shpl->n_images;
+	int n_images = shpl->n_images;
 	size_t alloc_size = sizeof(chtab_type) + sizeof(void *) * n_images;
-	chtab = (chtab_type*) malloc(alloc_size);
+	chtab_type* chtab = (chtab_type*) malloc(alloc_size);
 	memset(chtab, 0, alloc_size);
 	chtab->n_images = n_images;
-	for (i = 1; i <= n_images; i++) {
+	for (int i = 1; i <= n_images; i++) {
 		SDL_Surface* image = load_image(resource + i, pal_ptr);
 //		if (image == NULL) printf(" failed");
 		if (image != NULL) {
@@ -709,16 +705,15 @@ int calc_stride(image_data_type* image_data) {
 
 byte* conv_to_8bpp(byte* in_data, int width, int height, int stride, int depth) {
 	byte* out_data = (byte*) malloc(width * height);
-	int y, x_pixel, x_byte, pixel_in_byte;
 	int pixels_per_byte = 8 / depth;
 	int mask = (1 << depth) - 1;
-	for (y = 0; y < height; ++y) {
+	for (int y = 0; y < height; ++y) {
 		byte* in_pos = in_data + y*stride;
 		byte* out_pos = out_data + y*width;
-		for (x_pixel = x_byte = 0; x_byte < stride; ++x_byte) {
+		for (int x_pixel = 0, x_byte = 0; x_byte < stride; ++x_byte) {
 			byte v = *in_pos;
 			int shift = 8;
-			for (pixel_in_byte = 0; pixel_in_byte < pixels_per_byte && x_pixel < width; ++pixel_in_byte, ++x_pixel) {
+			for (int pixel_in_byte = 0; pixel_in_byte < pixels_per_byte && x_pixel < width; ++pixel_in_byte, ++x_pixel) {
 				shift -= depth;
 				*out_pos = (v >> shift) & mask;
 				++out_pos;
@@ -751,8 +746,7 @@ image_type* decode_image(image_data_type* image_data, dat_pal_type* palette) {
 	if (SDL_LockSurface(image) != 0) {
 		sdlperror("decode_image: SDL_LockSurface");
 	}
-	int y;
-	for (y = 0; y < height; ++y) {
+	for (int y = 0; y < height; ++y) {
 		// fill image with data
 		memcpy((byte*)image->pixels + y*image->pitch, image_8bpp + y*width, width);
 	}
@@ -760,8 +754,7 @@ image_type* decode_image(image_data_type* image_data, dat_pal_type* palette) {
 
 	free(image_8bpp); image_8bpp = NULL;
 	SDL_Color colors[16];
-	int i;
-	for (i = 0; i < 16; ++i) {
+	for (int i = 0; i < 16; ++i) {
 		colors[i].r = palette->vga[i].r << 2;
 		colors[i].g = palette->vga[i].g << 2;
 		colors[i].b = palette->vga[i].b << 2;
@@ -1091,12 +1084,11 @@ font_type load_font_from_data(/*const*/ rawfont_type* data) {
 		load_font_character_offsets(data);
 	}
 	chtab_type* chtab = malloc(sizeof(chtab_type) + sizeof(image_type*) * n_chars);
-	int chr,index;
 	// Make a dummy palette for decode_image().
 	dat_pal_type dat_pal;
 	memset(&dat_pal, 0, sizeof(dat_pal));
 	dat_pal.vga[1].r = dat_pal.vga[1].g = dat_pal.vga[1].b = 0x3F; // white
-	for (index = 0, chr = data->first_char; chr <= data->last_char; ++index, ++chr) {
+	for (int index = 0, chr = data->first_char; chr <= data->last_char; ++index, ++chr) {
 		/*const*/ image_data_type* image_data = (/*const*/ image_data_type*)((/*const*/ byte*)data + data->offsets[index]);
 		//image_data->flags=0;
 		if (image_data->height == 0) image_data->height = 1; // HACK: decode_image() returns NULL if height==0.
@@ -1278,8 +1270,7 @@ const rect_type* draw_text(const rect_type* rect_ptr,int x_align,int y_align,con
 		}
 	}
 	textstate.current_y = text_top + font->height_above_baseline;
-	int i;
-	for (i = 0; i < num_lines; ++i) {
+	for (int i = 0; i < num_lines; ++i) {
 		const char* line_pos = line_starts[i];
 		int line_length = line_lengths[i];
 		if (x_align < 0 &&
@@ -2673,8 +2664,7 @@ void update_screen() {
 // seg009:9289
 void set_pal_arr(int start,int count,const rgb_type* array) {
 	// stub
-	int i;
-	for (i = 0; i < count; ++i) {
+	for (int i = 0; i < count; ++i) {
 		if (array) {
 			set_pal(start + i, array[i].r, array[i].g, array[i].b);
 		} else {
@@ -2728,10 +2718,9 @@ int get_text_color(int cga_color,int low_half,int high_half_mask) {
 void load_from_opendats_metadata(int resource_id, const char* extension, FILE** out_fp, data_location* result, byte* checksum, int* size, dat_type** out_pointer) {
 	char image_filename[POP_MAX_PATH];
 	FILE* fp = NULL;
-	dat_type* pointer;
 	*result = data_none;
 	// Go through all open DAT files.
-	for (pointer = dat_chain_ptr; fp == NULL && pointer != NULL; pointer = pointer->next_dat) {
+	for (dat_type* pointer = dat_chain_ptr; fp == NULL && pointer != NULL; pointer = pointer->next_dat) {
 		*out_pointer = pointer;
 		if (pointer->handle != NULL) {
 			// If it's an actual DAT file:
@@ -2928,13 +2917,12 @@ image_type* method_3_blit_mono(image_type* image,int xpos,int ypos,int blitter,b
 		quit(1);
 	}
 
-	int y,x;
 	rgb_type palette_color = palette[color];
 	uint32_t rgb_color = SDL_MapRGB(colored_image->format, palette_color.r<<2, palette_color.g<<2, palette_color.b<<2) & 0xFFFFFF;
 	int stride = colored_image->pitch;
-	for (y = 0; y < h; ++y) {
+	for (int y = 0; y < h; ++y) {
 		uint32_t* pixel_ptr = (uint32_t*) ((byte*)colored_image->pixels + stride * y);
-		for (x = 0; x < w; ++x) {
+		for (int x = 0; x < w; ++x) {
 			// set RGB but leave alpha
 			*pixel_ptr = (*pixel_ptr & 0xFF000000) | rgb_color;
 			//printf("pixel x=%d, y=%d, color = 0x%8x\n", x, y, *pixel_ptr);
@@ -3088,12 +3076,11 @@ void blit_xor(SDL_Surface* target_surface, SDL_Rect* dest_rect, SDL_Surface* ima
 		quit(1);
 	}
 	int size = helper_surface->h * helper_surface->pitch;
-	int i;
 	byte *p_src = (byte*) image_24->pixels;
 	byte *p_dest = (byte*) helper_surface->pixels;
 
 	// Xor the old area with the image.
-	for (i = 0; i < size; ++i) {
+	for (int i = 0; i < size; ++i) {
 		*p_dest ^= *p_src;
 		++p_src; ++p_dest;
 	}
@@ -3125,16 +3112,15 @@ void draw_colored_torch(int color, SDL_Surface* image, int xpos, int ypos) {
 
 	int w = colored_image->w;
 	int h = colored_image->h;
-	int y,x;
 	int iRed = ((color >> 4) & 3) * 85;
 	int iGreen = ((color >> 2) & 3) * 85;
 	int iBlue = ((color >> 0) & 3) * 85;
 	uint32_t old_color = SDL_MapRGB(colored_image->format, 0xFC, 0x84, 0x00) & 0xFFFFFF; // the orange in the flame
 	uint32_t new_color = SDL_MapRGB(colored_image->format, iRed, iGreen, iBlue) & 0xFFFFFF;
 	int stride = colored_image->pitch;
-	for (y = 0; y < h; ++y) {
+	for (int y = 0; y < h; ++y) {
 		uint32_t* pixel_ptr = (uint32_t*) ((byte*)colored_image->pixels + stride * y);
-		for (x = 0; x < w; ++x) {
+		for (int x = 0; x < w; ++x) {
 			if ((*pixel_ptr & 0xFFFFFF) == old_color) {
 				// set RGB but leave alpha
 				*pixel_ptr = (*pixel_ptr & 0xFF000000) | new_color;
@@ -3569,8 +3555,7 @@ void process_events() {
 			case SDL_USEREVENT:
 				if (event.user.code == userevent_TIMER /*&& event.user.data1 == (void*)timer_index*/) {
 #ifdef USE_COMPAT_TIMER
-					int index;
-					for (index = 0; index < NUM_TIMERS; ++index) {
+					for (int index = 0; index < NUM_TIMERS; ++index) {
 						if (wait_time[index] > 0) --wait_time[index];
 					}
 #endif
@@ -3785,8 +3770,6 @@ void fade_in_2(surface_type* source_surface,int which_rows) {
 // seg009:1A51
 palette_fade_type* make_pal_buffer_fadein(surface_type* source_surface,int which_rows,int wait_time) {
 	palette_fade_type* palette_buffer;
-	word curr_row;
-	word curr_row_mask;
 	palette_buffer = (palette_fade_type*) malloc(sizeof(palette_fade_type));
 	palette_buffer->which_rows = which_rows;
 	palette_buffer->wait_time = wait_time;
@@ -3795,7 +3778,7 @@ palette_fade_type* make_pal_buffer_fadein(surface_type* source_surface,int which
 	palette_buffer->proc_fade_frame = &fade_in_frame;
 	read_palette_256(palette_buffer->original_pal);
 	memcpy(palette_buffer->faded_pal, palette_buffer->original_pal, sizeof(palette_buffer->faded_pal));
-	for (curr_row = 0, curr_row_mask = 1; curr_row < 0x10; ++curr_row, curr_row_mask<<=1) {
+	for (word curr_row = 0, curr_row_mask = 1; curr_row < 0x10; ++curr_row, curr_row_mask<<=1) {
 		if (which_rows & curr_row_mask) {
 			memset(palette_buffer->faded_pal + (curr_row<<4), 0, sizeof(rgb_type[0x10]));
 			set_pal_arr(curr_row<<4, 0x10, NULL);
@@ -3817,22 +3800,17 @@ void pal_restore_free_fadein(palette_fade_type* palette_buffer) {
 
 // seg009:1B88
 int fade_in_frame(palette_fade_type* palette_buffer) {
-	rgb_type* faded_pal_ptr;
-	word start;
-	word column;
-	rgb_type* original_pal_ptr;
-	word current_row_mask;
 //	void* var_12;
 	/**/start_timer(timer_1, palette_buffer->wait_time); // too slow?
 
 	//printf("start ticks = %u\n",SDL_GetTicks());
 	--palette_buffer->fade_pos;
-	for (start=0,current_row_mask=1; start<0x100; start+=0x10, current_row_mask<<=1) {
+	for (word start=0,current_row_mask=1; start<0x100; start+=0x10, current_row_mask<<=1) {
 		if (palette_buffer->which_rows & current_row_mask) {
 			//var_12 = palette_buffer->
-			original_pal_ptr = palette_buffer->original_pal + start;
-			faded_pal_ptr = palette_buffer->faded_pal + start;
-			for (column = 0; column<0x10; ++column) {
+			rgb_type* original_pal_ptr = palette_buffer->original_pal + start;
+			rgb_type* faded_pal_ptr = palette_buffer->faded_pal + start;
+			for (word column = 0; column<0x10; ++column) {
 				if (original_pal_ptr[column].r > palette_buffer->fade_pos) {
 					++faded_pal_ptr[column].r;
 				}
@@ -3845,7 +3823,7 @@ int fade_in_frame(palette_fade_type* palette_buffer) {
 			}
 		}
 	}
-	for (start = 0, current_row_mask = 1; start<0x100; start+=0x10, current_row_mask<<=1) {
+	for (word start = 0, current_row_mask = 1; start<0x100; start+=0x10, current_row_mask<<=1) {
 		if (palette_buffer->which_rows & current_row_mask) {
 			set_pal_arr(start, 0x10, palette_buffer->faded_pal + start);
 		}
@@ -3860,14 +3838,13 @@ int fade_in_frame(palette_fade_type* palette_buffer) {
 		sdlperror("fade_in_frame: SDL_LockSurface");
 		quit(1);
 	}
-	int y,x;
 	int on_stride = onscreen_surface_->pitch;
 	int off_stride = offscreen_surface->pitch;
 	int fade_pos = palette_buffer->fade_pos;
-	for (y = 0; y < h; ++y) {
+	for (int y = 0; y < h; ++y) {
 		byte* on_pixel_ptr = (byte*)onscreen_surface_->pixels + on_stride * y;
 		byte* off_pixel_ptr = (byte*)offscreen_surface->pixels + off_stride * y;
-		for (x = 0; x < on_stride; ++x) {
+		for (int x = 0; x < on_stride; ++x) {
 			//if (*off_pixel_ptr > palette_buffer->fade_pos) *pixel_ptr += 4;
 			int v = *off_pixel_ptr - fade_pos*4;
 			if (v<0) v=0;
@@ -3932,21 +3909,16 @@ void pal_restore_free_fadeout(palette_fade_type* palette_buffer) {
 
 // seg009:1DF7
 int fade_out_frame(palette_fade_type* palette_buffer) {
-	rgb_type* faded_pal_ptr;
-	word start;
-	word column;
-	word current_row_mask;
-	byte* curr_color_ptr;
 	word finished_fading = 1;
 	++palette_buffer->fade_pos; // modified
 	/**/start_timer(timer_1, palette_buffer->wait_time); // too slow?
-	for (start=0,current_row_mask=1; start<0x100; start+=0x10, current_row_mask<<=1) {
+	for (word start=0,current_row_mask=1; start<0x100; start+=0x10, current_row_mask<<=1) {
 		if (palette_buffer->which_rows & current_row_mask) {
 			//var_12 = palette_buffer->
 			//original_pal_ptr = palette_buffer->original_pal + start;
-			faded_pal_ptr = palette_buffer->faded_pal + start;
-			for (column = 0; column<0x10; ++column) {
-				curr_color_ptr = &faded_pal_ptr[column].r;
+			rgb_type* faded_pal_ptr = palette_buffer->faded_pal + start;
+			for (word column = 0; column<0x10; ++column) {
+				byte* curr_color_ptr = &faded_pal_ptr[column].r;
 				if (*curr_color_ptr != 0) {
 					--*curr_color_ptr;
 					finished_fading = 0;
@@ -3964,7 +3936,7 @@ int fade_out_frame(palette_fade_type* palette_buffer) {
 			}
 		}
 	}
-	for (start = 0, current_row_mask = 1; start<0x100; start+=0x10, current_row_mask<<=1) {
+	for (word start = 0, current_row_mask = 1; start<0x100; start+=0x10, current_row_mask<<=1) {
 		if (palette_buffer->which_rows & current_row_mask) {
 			set_pal_arr(start, 0x10, palette_buffer->faded_pal + start);
 		}
@@ -3979,14 +3951,13 @@ int fade_out_frame(palette_fade_type* palette_buffer) {
 		sdlperror("fade_out_frame: SDL_LockSurface");
 		quit(1);
 	}
-	int y,x;
 	int on_stride = onscreen_surface_->pitch;
 	int off_stride = offscreen_surface->pitch;
 	int fade_pos = palette_buffer->fade_pos;
-	for (y = 0; y < h; ++y) {
+	for (int y = 0; y < h; ++y) {
 		byte* on_pixel_ptr = (byte*)onscreen_surface_->pixels + on_stride * y;
 		byte* off_pixel_ptr = (byte*)offscreen_surface->pixels + off_stride * y;
-		for (x = 0; x < on_stride; ++x) {
+		for (int x = 0; x < on_stride; ++x) {
 			//if (*pixel_ptr >= 4) *pixel_ptr -= 4;
 			int v = *off_pixel_ptr - fade_pos*4;
 			if (v<0) v=0;
@@ -4019,9 +3990,8 @@ void set_pal_256(rgb_type* source) {
 void set_chtab_palette(chtab_type* chtab, byte* colors, int n_colors) {
 	if (chtab != NULL) {
 		SDL_Color* scolors = (SDL_Color*) malloc(n_colors*sizeof(SDL_Color));
-		int i;
 		//printf("scolors\n",i);
-		for (i = 0; i < n_colors; ++i) {
+		for (int i = 0; i < n_colors; ++i) {
 			//printf("i=%d\n",i);
 			scolors[i].r = *colors << 2; ++colors;
 			scolors[i].g = *colors << 2; ++colors;
@@ -4035,7 +4005,7 @@ void set_chtab_palette(chtab_type* chtab, byte* colors, int n_colors) {
 		scolors[0].a = SDL_ALPHA_TRANSPARENT;
 
 		//printf("setcolors\n",i);
-		for (i = 0; i < chtab->n_images; ++i) {
+		for (int i = 0; i < chtab->n_images; ++i) {
 			//printf("i=%d\n",i);
 			image_type* current_image = chtab->images[i];
 			if (current_image != NULL) {

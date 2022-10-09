@@ -608,8 +608,7 @@ void get_item() {
 		seqtbl_offset_char(seq_78_drink); // drink
 #ifdef USE_COPYPROT
 		if (current_level == 15) {
-			short index;
-			for (index = 0; index < 14; ++index) {
+			for (short index = 0; index < 14; ++index) {
 				// remove letter on potions level
 				if (copyprot_room[index] == curr_room &&
 					copyprot_tile[index] == curr_tilepos

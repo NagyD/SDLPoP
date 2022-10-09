@@ -319,8 +319,7 @@ static int global_ini_callback(const char *section, const char *name, const char
 				// We want to parse an rgb string with three entries like this: "255, 255, 255"
 				char* start = (char*) value;
 				char* end   = (char*) value;
-				int i;
-				for (i = 0; i < 3 && *end != '\0'; ++i) {
+				for (int i = 0; i < 3 && *end != '\0'; ++i) {
 					rgb[i] = (byte) strtol(start, &end, 0); // convert this entry into a number 0..255
 
 					while (*end == ',' || *end == ' ') {

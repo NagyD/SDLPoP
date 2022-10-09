@@ -22,11 +22,9 @@ The authors of this program may be contacted at https://forum.princed.org
 
 // seg007:0000
 void process_trobs() {
-	word index;
-	word new_index;
 	word need_delete = 0;
 	if (trobs_count == 0) return;
-	for (index = 0; index < trobs_count; ++index) {
+	for (word index = 0; index < trobs_count; ++index) {
 		trob = trobs[index];
 		animate_tile();
 		trobs[index].type = trob.type;
@@ -35,7 +33,8 @@ void process_trobs() {
 		}
 	}
 	if (need_delete) {
-		for (index = new_index = 0; index < trobs_count; ++index) {
+		word new_index;
+		for (word index = new_index = 0; index < trobs_count; ++index) {
 			if (trobs[index].type >= 0) {
 				trobs[new_index++] = trobs[index];
 			}
@@ -779,9 +778,9 @@ void died_on_button() {
 
 // seg007:0D3A
 void animate_button() {
-	word timer;
 	if (trob.type >= 0) {
-		set_doorlink_timer(curr_modifier, timer = get_doorlink_timer(curr_modifier) - 1);
+		word timer = get_doorlink_timer(curr_modifier) - 1;
+		set_doorlink_timer(curr_modifier, timer);
 		if (timer < 2) {
 			trob.type = -1;
 			redraw_11h();
@@ -905,7 +904,6 @@ void make_loose_fall(byte modifier) {
 
 // seg007:0F13
 void start_chompers() {
-	short tilepos;
 	short timing = 15;
 	if ((byte)Char.curr_row < 3) {
 		get_room_address(Char.room);

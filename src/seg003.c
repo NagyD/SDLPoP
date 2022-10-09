@@ -203,9 +203,8 @@ void set_start_pos() {
 
 // seg003:02E6
 void find_start_level_door() {
-	short tilepos;
 	get_room_address(Kid.room);
-	for (tilepos = 0; tilepos < 30; ++tilepos) {
+	for (short tilepos = 0; tilepos < 30; ++tilepos) {
 		if ((curr_room_tiles[tilepos] & 0x1F) == tiles_16_level_door_left) {
 			start_level_door(Kid.room, tilepos);
 		}
@@ -411,8 +410,6 @@ int play_level_2() {
 // seg003:0576
 void redraw_at_char() {
 	short x_top_row;
-	short tile_col;
-	short tile_row;
 	short x_col_left;
 	short x_col_right;
 	if (Char.sword >= sword_2_drawn) {
@@ -434,8 +431,8 @@ void redraw_at_char() {
 		x_col_right = char_col_right;
 		x_col_left = char_col_left;
 	}
-	for (tile_row = x_top_row; tile_row <= char_bottom_row; ++tile_row) {
-		for (tile_col = x_col_left; tile_col <= x_col_right; ++tile_col) {
+	for (short tile_row = x_top_row; tile_row <= char_bottom_row; ++tile_row) {
+		for (short tile_col = x_col_left; tile_col <= x_col_right; ++tile_col) {
 			set_redraw_fore(get_tilepos(tile_col, tile_row), 1);
 		}
 	}
@@ -448,10 +445,9 @@ void redraw_at_char() {
 
 // seg003:0645
 void redraw_at_char2() {
-	void (* redraw_func)(short, byte);
 	short char_action = Char.action;
 	short char_frame = Char.frame;
-	redraw_func = &set_redraw2;
+	void (* redraw_func)(short, byte) = &set_redraw2;
 	// frames 78..80: grab
 	if (char_frame < frame_78_jumphang || char_frame >= frame_80_jumphang) {
 		// frames 135..149: climb up

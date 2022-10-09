@@ -97,7 +97,6 @@ void pop_main() {
 	apply_seqtbl_patches();
 
 	char sprintf_temp[100];
-	int i;
 
 	init_timer(BASE_FPS);
 	parse_cmdline_sound();
@@ -124,7 +123,7 @@ void pop_main() {
 		|| recording
 		#endif
 	) {
-		for (i = 15; i >= 0; --i) {
+		for (int i = 15; i >= 0; --i) {
 			snprintf(sprintf_temp, sizeof(sprintf_temp), "%d", i);
 			if (check_param(sprintf_temp)) {
 				start_level = i;
@@ -1156,15 +1155,14 @@ void reset_level_unused_fields(bool loading_clean_level) {
 
 	// For these fields, only use the bits that are actually used, and set the rest to zero.
 	// Good for repurposing the unused bits in the future.
-	int i;
-	for (i = 0; i < level.used_rooms; ++i) {
+	for (int i = 0; i < level.used_rooms; ++i) {
 		//level.guards_dir[i]   &= 0x01; // 1 bit in use
 		level.guards_skill[i] &= 0x0F; // 4 bits in use
 	}
 
 	// In savestates, additional information may be stored (e.g. remembered guard hp) - should not reset this then!
 	if (loading_clean_level) {
-		for (i = 0; i < level.used_rooms; ++i) {
+		for (int i = 0; i < level.used_rooms; ++i) {
 			level.guards_color[i] &= 0x0F; // 4 bits in use (other 4 bits repurposed as remembered guard hp)
 		}
 	}
@@ -1371,12 +1369,11 @@ void read_joyst_control() {
 
 // seg000:10EA
 void draw_kid_hp(short curr_hp,short max_hp) {
-	short drawn_hp_index;
-	for (drawn_hp_index = curr_hp; drawn_hp_index < max_hp; ++drawn_hp_index) {
+	for (short drawn_hp_index = curr_hp; drawn_hp_index < max_hp; ++drawn_hp_index) {
 		// empty HP
 		method_6_blit_img_to_scr(get_image(id_chtab_2_kid, 217), drawn_hp_index * 7, 194, blitters_0_no_transp);
 	}
-	for (drawn_hp_index = 0; drawn_hp_index < curr_hp; ++drawn_hp_index) {
+	for (short drawn_hp_index = 0; drawn_hp_index < curr_hp; ++drawn_hp_index) {
 		// full HP
 		method_6_blit_img_to_scr(get_image(id_chtab_2_kid, 216), drawn_hp_index * 7, 194, blitters_0_no_transp);
 	}
@@ -1384,7 +1381,6 @@ void draw_kid_hp(short curr_hp,short max_hp) {
 
 // seg000:1159
 void draw_guard_hp(short curr_hp,short max_hp) {
-	short drawn_hp_index;
 	if (chtab_addrs[id_chtab_5_guard] == NULL) return;
 	short guard_charid = Guard.charid;
 	if (guard_charid != charid_4_skeleton &&
@@ -1392,10 +1388,10 @@ void draw_guard_hp(short curr_hp,short max_hp) {
 		// shadow has HP only on level 12
 		(guard_charid != charid_1_shadow || current_level == 12)
 	) {
-		for (drawn_hp_index = curr_hp; drawn_hp_index < max_hp; ++drawn_hp_index) {
+		for (short drawn_hp_index = curr_hp; drawn_hp_index < max_hp; ++drawn_hp_index) {
 			method_6_blit_img_to_scr(chtab_addrs[id_chtab_5_guard]->images[0], 314 - drawn_hp_index * 7, 194, blitters_9_black);
 		}
-		for (drawn_hp_index = 0; drawn_hp_index < curr_hp; ++drawn_hp_index) {
+		for (short drawn_hp_index = 0; drawn_hp_index < curr_hp; ++drawn_hp_index) {
 			method_6_blit_img_to_scr(chtab_addrs[id_chtab_5_guard]->images[0], 314 - drawn_hp_index * 7, 194, blitters_0_no_transp);
 		}
 	}
@@ -1629,9 +1625,8 @@ void load_chtab_from_file(int chtab_id,int resource,const char* filename,int pal
 
 // seg000:13BA
 void free_all_chtabs_from(int first) {
-	word chtab_id;
 	free_peels();
-	for (chtab_id = first; chtab_id < 10; ++chtab_id) {
+	for (word chtab_id = first; chtab_id < 10; ++chtab_id) {
 		if (chtab_addrs[chtab_id]) {
 			free_chtab(chtab_addrs[chtab_id]);
 			chtab_addrs[chtab_id] = NULL;
@@ -1641,8 +1636,7 @@ void free_all_chtabs_from(int first) {
 
 // seg009:12EF
 void load_one_optgraf(chtab_type* chtab_ptr,dat_pal_type* pal_ptr,int base_id,int min_index,int max_index) {
-	short index;
-	for (index = min_index; index <= max_index; ++index) {
+	for (short index = min_index; index <= max_index; ++index) {
 		image_type* image = load_image(base_id + index + 1, pal_ptr);
 		if (image != NULL) chtab_ptr->images[index] = image;
 	}
@@ -1797,25 +1791,20 @@ int parse_grmode() {
 
 // seg000:172C
 void gen_palace_wall_colors() {
-	word prev_color;
-	short row;
-	short subrow;
-	word color_base;
-	short column;
-	word color;
-
 	dword old_randseed = random_seed;
 	random_seed = drawn_room;
 	prandom(1); // discard
-	for (row = 0; row < 3; row++) {
-		for (subrow = 0; subrow < 4; subrow++) {
+	for (short row = 0; row < 3; row++) {
+		for (short subrow = 0; subrow < 4; subrow++) {
+			word color_base;
 			if (subrow % 2) {
 				color_base = 0x61; // 0x61..0x64 in subrow 1 and 3
 			} else {
 				color_base = 0x66; // 0x66..0x69 in subrow 0 and 2
 			}
-			prev_color = -1;
-			for (column = 0; column <= 10; ++column) {
+			word prev_color = -1;
+			for (short column = 0; column <= 10; ++column) {
+				word color;
 				do {
 					color = color_base + prandom(3);
 				} while (color == prev_color);
@@ -2138,8 +2127,7 @@ void parse_cmdline_sound() {
 // seg000:226D
 void free_optional_sounds() {
 	/* //Don't free sounds.
-	int sound_id;
-	for (sound_id = 44; sound_id < 57; ++sound_id) {
+	for (int sound_id = 44; sound_id < 57; ++sound_id) {
 		free_sound(sound_pointers[sound_id]);
 		sound_pointers[sound_id] = NULL;
 	}

@@ -1175,17 +1175,16 @@ const word original_seqtbl_offsets[] = {
 void check_seqtable_matches_original() {
 	printf("Checking that the sequence table matches the original DOS version...\n");
 	int different = 0;
-	int i;
 	const byte* seq = seqtbl;
 	const byte* original_seq = original_seqtbl;
-	for(i = 0; i < COUNT(original_seqtbl); ++i) {
+	for(int i = 0; i < COUNT(original_seqtbl); ++i) {
 		if (seq[i] != original_seq[i]) {
 			different = 1;
 			printf("Seqtbl difference at index %d (%#x; shifted offset %#x): value is %d, should be %d\n"
 			        , i, i, i + SEQTBL_BASE, seqtbl[i], original_seqtbl[i]);
 		}
 	}
-	for(i = 0; i < COUNT(original_seqtbl_offsets); ++i) {
+	for(int i = 0; i < COUNT(original_seqtbl_offsets); ++i) {
 		if (seqtbl_offsets[i] != original_seqtbl_offsets[i]) {
 			different = 1;
 			printf("Seqtbl offset difference at index %d: value is %#x, should be %#x\n"

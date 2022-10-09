@@ -367,7 +367,6 @@ void load_leftroom() {
 // seg008:0460
 void load_rowbelow() {
 	word row_below;
-	word column;
 	word room;
 	word room_left;
 	if (drawn_row == 2) {
@@ -380,7 +379,7 @@ void load_rowbelow() {
 		row_below = drawn_row + 1;
 	}
 	get_room_address(room);
-	for (column = 1; column < 10; ++column) {
+	for (word column = 1; column < 10; ++column) {
 		get_tile_to_draw(room, column - 1, row_below, &row_below_left_[column].tiletype, &row_below_left_[column].modifier, tiles_0_empty);
 	}
 	get_room_address(room_left);
@@ -937,7 +936,6 @@ void draw_back_fore(int which_table,int index) {
 SDL_Surface* hflip(SDL_Surface* input) {
 	int width = input->w;
 	int height = input->h;
-	int source_x, target_x;
 
 	// The simplest way to create a surface with same format as input:
 	SDL_Surface* output = SDL_ConvertSurface(input, input->format, 0);
@@ -954,7 +952,7 @@ SDL_Surface* hflip(SDL_Surface* input) {
 	SDL_SetColorKey(output, SDL_FALSE, 0);
 	SDL_SetSurfaceAlphaMod(input, 255);
 
-	for (source_x = 0, target_x = width-1; source_x < width; ++source_x, --target_x) {
+	for (int source_x = 0, target_x = width-1; source_x < width; ++source_x, --target_x) {
 		SDL_Rect srcrect = {source_x, 0, 1, height};
 		SDL_Rect dstrect = {target_x, 0, 1, height};
 		if (SDL_BlitSurface(input/*32*/, &srcrect, output, &dstrect) != 0) {
@@ -1134,7 +1132,6 @@ void draw_gate_fore() {
 
 // seg008:1937
 void alter_mods_allrm() {
-	word tilepos;
 
 #ifdef USE_COLORED_TORCHES
 	memset(torch_colors, 0, sizeof(torch_colors));
@@ -1147,7 +1144,7 @@ void alter_mods_allrm() {
 		get_room_address(room);
 		room_L = level.roomlinks[room-1].left;
 		room_R = level.roomlinks[room-1].right;
-		for(tilepos = 0; tilepos < 30; tilepos++) {
+		for (word tilepos = 0; tilepos < 30; tilepos++) {
 			load_alter_mod(tilepos);
 		}
 	}
@@ -1377,12 +1374,10 @@ void restore_peels() {
 
 // seg008:1C8F
 void add_drect(rect_type *source) {
-	rect_type* current_drect;
-	short index;
-	rect_type target_rect;
-	for (index = 0; index < drects_count; ++index) {
+	for (short index = 0; index < drects_count; ++index) {
+		rect_type target_rect; // Dummy output argument, we care only about whether the intersection is non-empty.
 		if (intersect_rect(&target_rect, shrink2_rect(&target_rect, source, -1, -1), &drects[index])) {
-			current_drect = &drects[index];
+			rect_type* current_drect = &drects[index];
 			union_rect(current_drect, current_drect, source);
 			return;
 		}
@@ -1500,17 +1495,17 @@ void draw_tile2() {
 // seg008:1F67
 void draw_objtable_items_at_tile(byte tilepos) {
 	//printf("draw_objtable_items_at_tile(%d)\n",tilepos); // debug
-	short obj_index;
 	short obj_count = objtable_count;
 	if (obj_count) {
-		for (obj_index = obj_count - 1, n_curr_objs = 0; obj_index >= 0; --obj_index) {
+		n_curr_objs = 0;
+		for (short obj_index = obj_count - 1; obj_index >= 0; --obj_index) {
 			if (objtable[obj_index].tilepos == tilepos) {
 				curr_objs[n_curr_objs++] = obj_index;
 			}
 		}
 		if (n_curr_objs) {
 			sort_curr_objs();
-			for (obj_index = 0; obj_index < n_curr_objs; ++obj_index) {
+			for (short obj_index = 0; obj_index < n_curr_objs; ++obj_index) {
 				draw_objtable_item(curr_objs[obj_index]);
 			}
 		}
@@ -1520,14 +1515,13 @@ void draw_objtable_items_at_tile(byte tilepos) {
 // seg008:1FDE
 void sort_curr_objs() {
 	short swapped;
-	short temp;
-	short index;
 	// bubble sort
 	short last = n_curr_objs - 1;
 	do {
-		for (swapped = index = 0; index < last; ++index) {
+		swapped = 0;
+		for (short index = 0; index < last; ++index) {
 			if (compare_curr_objs(index, index + 1)) {
-				temp = curr_objs[index];
+				short temp = curr_objs[index];
 				curr_objs[index] = curr_objs[index + 1];
 				curr_objs[index + 1] = temp;
 				swapped = 1;
