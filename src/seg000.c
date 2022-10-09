@@ -1263,7 +1263,8 @@ void check_fall_flo() {
 	if (current_level == /*13*/ custom->loose_tiles_level &&
 			(drawn_room == /*23*/ custom->loose_tiles_room_1 || drawn_room == /*16*/ custom->loose_tiles_room_2)
 	) {
-		get_room_address(curr_room = room_A);
+		curr_room = room_A;
+		get_room_address(curr_room);
 		for (curr_tilepos = /*22*/ custom->loose_tiles_first_tile;
 		     curr_tilepos <= /*27*/ custom->loose_tiles_last_tile; ++curr_tilepos) {
 			make_loose_fall(-(prandom(0xFF) & 0x0F));

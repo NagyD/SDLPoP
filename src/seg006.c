@@ -1280,13 +1280,15 @@ void in_wall() {
 
 // seg006:0B0C
 int get_tile_infrontof_char() {
-	return get_tile(Char.room, infrontx = dir_front[Char.direction + 1] + Char.curr_col, Char.curr_row);
+	infrontx = dir_front[Char.direction + 1] + Char.curr_col;
+	return get_tile(Char.room, infrontx, Char.curr_row);
 }
 
 // seg006:0B30
 int get_tile_infrontof2_char() {
 	short direction = dir_front[Char.direction + 1];
-	return get_tile(Char.room, infrontx = (direction << 1) + Char.curr_col, Char.curr_row);
+	infrontx = (direction << 1) + Char.curr_col;
+	return get_tile(Char.room, infrontx, Char.curr_row);
 }
 
 // seg006:0B66
@@ -1626,7 +1628,8 @@ int get_tile_behind_above_char() {
 
 // seg006:1049
 int get_tile_front_above_char() {
-	return get_tile(Char.room, infrontx = dir_front[Char.direction + 1] + Char.curr_col, Char.curr_row - 1);
+	infrontx = dir_front[Char.direction + 1] + Char.curr_col;
+	return get_tile(Char.room, infrontx, Char.curr_row - 1);
 }
 
 // seg006:1072
@@ -1778,8 +1781,9 @@ void clip_char() {
 					frame >= frame_137_climbing_3 && frame < frame_140_climbing_6)
 				))
 			) {
+				col = get_tile_div_mod(char_x_right_coll);
 				if (
-					(get_tile(room, col = get_tile_div_mod(char_x_right_coll), row) == tiles_20_wall ||
+					(get_tile(room, col, row) == tiles_20_wall ||
 					(curr_tile2 == tiles_13_mirror && Char.direction == dir_0_right)) &&
 					(get_tile(room, col, char_top_row) == tiles_20_wall ||
 					curr_tile2 == tiles_13_mirror) &&
