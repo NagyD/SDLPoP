@@ -49,19 +49,6 @@ The authors of this program may be contacted at https://forum.princed.org
        typedef int SDL_dummy_ ## name[(x) * 2 - 1]
 */
 
-// "far" and "near" makes sense only for 16-bit
-#define far
-#define near
-#define __pascal
-#define malloc_near malloc
-#define malloc_far  malloc
-#define free_near   free
-#define free_far    free
-#define memset_near memset
-#define memset_far  memset
-#define memcpy_near memcpy
-#define memcpy_far  memcpy
-
 typedef Uint8 byte;
 typedef Sint8 sbyte;
 typedef Uint16 word;
@@ -90,7 +77,7 @@ typedef struct tile_and_mod {
 	byte modifier;
 } tile_and_mod;
 
-typedef int __pascal far (*add_table_type)(short chtab_id, int id, sbyte xh, sbyte xl, int ybottom, int blit, byte peel);
+typedef int (*add_table_type)(short chtab_id, int id, sbyte xh, sbyte xl, int ybottom, int blit, byte peel);
 
 typedef struct back_table_type {
 	sbyte xh;
@@ -272,7 +259,7 @@ typedef struct chtab_type {
 	word chtab_palette_bits;
 	word has_palette_bits;
 	// This is a variable-size array, with n_images elements.
-	image_type* far images[];
+	image_type* images[];
 } chtab_type;
 
 typedef struct full_image_type {
@@ -459,7 +446,7 @@ typedef struct dat_type {
 	// handle and dat_table are NULL if the DAT is a directory.
 } dat_type;
 
-typedef void __pascal far (*cutscene_ptr_type)(void);
+typedef void (*cutscene_ptr_type)(void);
 
 #ifdef USE_FADE
 typedef struct palette_fade_type {
@@ -468,8 +455,8 @@ typedef struct palette_fade_type {
 	word fade_pos;
 	rgb_type original_pal[256];
 	rgb_type faded_pal[256];
-	int __pascal far (*proc_fade_frame)(struct palette_fade_type far *palette_buffer);
-	void __pascal far (*proc_restore_free)(struct palette_fade_type far *palette_buffer);
+	int (*proc_fade_frame)(struct palette_fade_type* palette_buffer);
+	void (*proc_restore_free)(struct palette_fade_type* palette_buffer);
 } palette_fade_type;
 #endif
 
@@ -1382,5 +1369,6 @@ enum
 #define FALLING_SPEED_ACCEL_FEATHER 1
 #define ROOMCOUNT 24 // Max quantity of rooms for any level
 #define SCREEN_GAMEPLAY_HEIGHT 192 // Portion of the screen space dedicated to gameplay graphics
+#define TROBS_MAX 30
 
 #endif

@@ -1433,7 +1433,7 @@ void draw_setting_explanation(setting_type* setting) {
 	show_text_with_color(&explanation_rect, 0, -1, setting->explanation, color_7_lightgray);
 }
 
-void draw_image_with_blending(image_type far* image, int xpos, int ypos) {
+void draw_image_with_blending(image_type* image, int xpos, int ypos) {
 	SDL_Rect src_rect = {0, 0, image->w, image->h};
 	SDL_Rect dest_rect = {xpos, ypos, image->w, image->h};
 	SDL_SetColorKey(image, SDL_TRUE, 0);

@@ -25,7 +25,7 @@ The authors of this program may be contacted at https://forum.princed.org
 extern const byte seqtbl[]; // the sequence table is defined in seqtbl.c
 
 // seg006:0006
-int __pascal far get_tile(int room,int col,int row) {
+int get_tile(int room,int col,int row) {
 	curr_room = room;
 	tile_col = col;
 	tile_row = row;
@@ -43,7 +43,7 @@ int __pascal far get_tile(int room,int col,int row) {
 }
 
 // seg006:005D
-int __pascal far find_room_of_tile() {
+int find_room_of_tile() {
 	again:
 #ifdef FIX_CORNER_GRAB
 	// Check tile_row < 0 first, this way the prince can grab a ledge at the bottom right corner of a room with no room below.
@@ -96,7 +96,7 @@ int __pascal far find_room_of_tile() {
 }
 
 // seg006:00EC
-int __pascal far get_tilepos(int tile_col,int tile_row) {
+int get_tilepos(int tile_col,int tile_row) {
 	if (tile_row < 0) {
 		return -(tile_col + 1);
 	} else if (tile_row >= 3 || tile_col >= 10 || tile_col < 0) {
@@ -107,20 +107,19 @@ int __pascal far get_tilepos(int tile_col,int tile_row) {
 }
 
 // seg006:0124
-int __pascal far get_tilepos_nominus(int tile_col,int tile_row) {
-	short var_2;
-	var_2 = get_tilepos(tile_col, tile_row);
-	if (var_2 < 0) return 30; else return var_2;
+int get_tilepos_nominus(int tile_col,int tile_row) {
+	short tilepos = get_tilepos(tile_col, tile_row);
+	if (tilepos < 0) return 30; else return tilepos;
 }
 
 // seg006:0144
-void __pascal far load_fram_det_col() {
+void load_fram_det_col() {
 	load_frame();
 	determine_col();
 }
 
 // seg006:014D
-void __pascal far determine_col() {
+void determine_col() {
 	Char.curr_col = get_tile_div_mod_m7(dx_weight());
 }
 
@@ -517,11 +516,9 @@ void get_frame_internal(const frame_type frame_table[], int frame, const char* f
 #define get_frame(frame_table, frame) get_frame_internal(frame_table, frame, #frame_table, COUNT(frame_table))
 
 // seg006:015A
-void __pascal far load_frame() {
-	short frame;
-	short add_frame;
-	frame = Char.frame;
-	add_frame = 0;
+void load_frame() {
+	short frame = Char.frame;
+	short add_frame = 0;
 	switch (Char.charid) {
 		case charid_0_kid:
 		case charid_24_mouse:
@@ -547,14 +544,13 @@ void __pascal far load_frame() {
 #undef get_frame
 
 // seg006:01F5
-short __pascal far dx_weight() {
-	sbyte var_2;
-	var_2 = cur_frame.dx - (cur_frame.flags & FRAME_WEIGHT_X);
-	return char_dx_forward(var_2);
+short dx_weight() {
+	sbyte offset = cur_frame.dx - (cur_frame.flags & FRAME_WEIGHT_X);
+	return char_dx_forward(offset);
 }
 
 // seg006:0213
-int __pascal far char_dx_forward(int delta_x) {
+int char_dx_forward(int delta_x) {
 	if (Char.direction < dir_0_right) {
 		delta_x = -delta_x;
 	}
@@ -562,7 +558,7 @@ int __pascal far char_dx_forward(int delta_x) {
 }
 
 // seg006:0234
-int __pascal far obj_dx_forward(int delta_x) {
+int obj_dx_forward(int delta_x) {
 	if (obj_direction < dir_0_right) {
 		delta_x = -delta_x;
 	}
@@ -571,7 +567,7 @@ int __pascal far obj_dx_forward(int delta_x) {
 }
 
 // seg006:0254
-void __pascal far play_seq() {
+void play_seq() {
 	for (;;) {
 		byte item = *(SEQTBL_0 + Char.curr_seq++);
 		switch (item) {
@@ -672,7 +668,7 @@ void __pascal far play_seq() {
 }
 
 // seg006:03DE
-int __pascal far get_tile_div_mod_m7(int xpos) {
+int get_tile_div_mod_m7(int xpos) {
 	return get_tile_div_mod(xpos - 7);
 }
 
@@ -725,7 +721,7 @@ const byte tile_mod_tbl[256] = {
 };
 
 // seg006:03F0
-int __pascal far get_tile_div_mod(int xpos) {
+int get_tile_div_mod(int xpos) {
 	// Determine tile column (xh) and the position within the tile (xl) from xpos.
 
 // DOS PoP does this:
@@ -779,56 +775,56 @@ int __pascal far get_tile_div_mod(int xpos) {
 }
 
 // seg006:0433
-int __pascal far y_to_row_mod4(int ypos) {
+int y_to_row_mod4(int ypos) {
 	return (ypos + 60) / TILE_SIZEY % 4 - 1;
 }
 
 // seg006:044F
-void __pascal far loadkid() {
+void loadkid() {
 	Char = Kid;
 }
 
 // seg006:0464
-void __pascal far savekid() {
+void savekid() {
 	Kid = Char;
 }
 
 // seg006:0479
-void __pascal far loadshad() {
+void loadshad() {
 	Char = Guard;
 }
 
 // seg006:048E
-void __pascal far saveshad() {
+void saveshad() {
 	Guard = Char;
 }
 
 // seg006:04A3
-void __pascal far loadkid_and_opp() {
+void loadkid_and_opp() {
 	loadkid();
 	Opp = Guard;
 }
 
 // seg006:04BC
-void __pascal far savekid_and_opp() {
+void savekid_and_opp() {
 	savekid();
 	Guard = Opp;
 }
 
 // seg006:04D5
-void __pascal far loadshad_and_opp() {
+void loadshad_and_opp() {
 	loadshad();
 	Opp = Kid;
 }
 
 // seg006:04EE
-void __pascal far saveshad_and_opp() {
+void saveshad_and_opp() {
 	saveshad();
 	Kid = Opp;
 }
 
 // seg006:0507
-void __pascal far reset_obj_clip() {
+void reset_obj_clip() {
 	obj_clip_left = 0;
 	obj_clip_top = 0;
 	obj_clip_right = 320;
@@ -836,7 +832,7 @@ void __pascal far reset_obj_clip() {
 }
 
 // seg006:051C
-void __pascal far x_to_xh_and_xl(int xpos, sbyte *xh_addr, sbyte *xl_addr) {
+void x_to_xh_and_xl(int xpos, sbyte* xh_addr, sbyte* xl_addr) {
 #ifdef FIX_SPRITE_XPOS
 	*xh_addr = xpos >> 3;
 	*xl_addr = xpos & 7;
@@ -852,7 +848,7 @@ void __pascal far x_to_xh_and_xl(int xpos, sbyte *xh_addr, sbyte *xl_addr) {
 }
 
 // seg006:057C
-void __pascal far fall_accel() {
+void fall_accel() {
 	if (Char.action == actions_4_in_freefall) {
 		if (is_feather_fall) {
 			Char.fall_y += FALLING_SPEED_ACCEL_FEATHER;
@@ -865,7 +861,7 @@ void __pascal far fall_accel() {
 }
 
 // seg006:05AE
-void __pascal far fall_speed() {
+void fall_speed() {
 	Char.y += Char.fall_y;
 #ifdef USE_SUPER_HIGH_JUMP
 	// Do not fall forward during super high jumps
@@ -879,11 +875,9 @@ void __pascal far fall_speed() {
 }
 
 // seg006:05CD
-void __pascal far check_action() {
-	short frame;
-	short action;
-	action = Char.action;
-	frame = Char.frame;
+void check_action() {
+	short action = Char.action;
+	short frame = Char.frame;
 #ifdef USE_JUMP_GRAB
     // Prince can grab tiles during a jump if Shift and up arrow, but not forward arrow, keys are pressed.
     if (fixes->enable_jump_grab && action == actions_1_run_jump && control_shift < 0 && check_grab_run_jump()) {
@@ -917,7 +911,7 @@ void __pascal far check_action() {
 }
 
 // seg006:0628
-int __pascal far tile_is_floor(int tiletype) {
+int tile_is_floor(int tiletype) {
 	switch (tiletype) {
 		case tiles_0_empty:
 		case tiles_9_bigpillar_top:
@@ -934,12 +928,10 @@ int __pascal far tile_is_floor(int tiletype) {
 }
 
 // seg006:0658
-void __pascal far check_spiked() {
-	short harmful;
-	short frame;
-	frame = Char.frame;
+void check_spiked() {
+	short frame = Char.frame;
 	if (get_tile(Char.room, Char.curr_col, Char.curr_row) == tiles_2_spike) {
-		harmful = is_spike_harmful();
+		short harmful = is_spike_harmful();
 		// frames 7..14: running
 		// frames 34..39: start run-jump
 		// frame 43: land from run-jump
@@ -954,9 +946,8 @@ void __pascal far check_spiked() {
 }
 
 // seg006:06BD
-int __pascal far take_hp(int count) {
-	word dead;
-	dead = 0;
+int take_hp(int count) {
+	word dead = 0;
 	if (Char.charid == charid_0_kid) {
 		if (count >= hitp_curr) {
 			hitp_delta = -hitp_curr;
@@ -976,12 +967,12 @@ int __pascal far take_hp(int count) {
 }
 
 // seg006:070D
-int __pascal far get_tile_at_char() {
+int get_tile_at_char() {
 	return get_tile(Char.room, Char.curr_col, Char.curr_row);
 }
 
 // seg006:0723
-void __pascal far set_char_collision() {
+void set_char_collision() {
 	image_type* image = get_image(obj_chtab, obj_id);
 	if (image == NULL) {
 		char_width_half = 0;
@@ -1015,7 +1006,7 @@ void __pascal far set_char_collision() {
 }
 
 // seg006:0815
-void __pascal far check_on_floor() {
+void check_on_floor() {
 	if (cur_frame.flags & FRAME_NEEDS_FLOOR) {
 #ifdef FIX_FALLING_THROUGH_FLOOR_DURING_SWORD_STRIKE
         // We do not want the Prince or a guard to fall during that frame because it looks like he is falling
@@ -1068,10 +1059,9 @@ void __pascal far check_on_floor() {
 }
 
 // seg006:08B9
-void __pascal far start_fall() {
-	short frame;
+void start_fall() {
 	word seq_id;
-	frame = Char.frame;
+	short frame = Char.frame;
 	Char.sword = sword_0_sheathed;
 	inc_curr_row();
 	start_chompers();
@@ -1147,7 +1137,7 @@ void __pascal far start_fall() {
 }
 
 // seg006:0A19
-void __pascal far check_grab() {
+void check_grab() {
 	word old_x;
 
 	#ifdef FIX_GRAB_FALLING_SPEED
@@ -1202,27 +1192,22 @@ bool check_grab_run_jump() {
     // grabbing distance:
     // running jump - about 2.5 tiles or closer
     // standing jump - just over 1 tile, enough to jump over an abyss/obstacle
-    word frame;
-    short grab_tile, grab_col;
-    short left_room, right_room, up_room;
-    bool is_jump, is_running_jump;
-    short char_room_m1;
-    frame = Char.frame;
-    is_jump = frame >= frame_22_standing_jump_7 && frame <= frame_23_standing_jump_8;
-    is_running_jump = frame >= frame_39_start_run_jump_6 && frame <= frame_41_running_jump_2;
-    char_room_m1 = Char.room - 1;
+    word frame = Char.frame;
+    bool is_jump = frame >= frame_22_standing_jump_7 && frame <= frame_23_standing_jump_8;
+    bool is_running_jump = frame >= frame_39_start_run_jump_6 && frame <= frame_41_running_jump_2;
+    short char_room_m1 = Char.room - 1;
     if (Char.action == actions_1_run_jump &&
             (is_jump || is_running_jump) &&
             control_x == 0 && control_y < 0) {
         if (can_grab_front_above()) { // can grab a ledge at a specific frame during a jump
-            grab_tile = curr_tile2;
-            grab_col = tile_col;
+            short grab_tile = curr_tile2;
+            short grab_col = tile_col;
             // Prince's and tile rooms can get out of sync at the edge of a room
             // causing teleportation.
             if (curr_room != Char.room) {
-                left_room = level.roomlinks[char_room_m1].left;
-                right_room = level.roomlinks[char_room_m1].right;
-                up_room = level.roomlinks[char_room_m1].up;
+                short left_room = level.roomlinks[char_room_m1].left;
+                short right_room = level.roomlinks[char_room_m1].right;
+                short up_room = level.roomlinks[char_room_m1].up;
                 if (curr_room == right_room) {
                     grab_col += 10;
                 } else if (curr_room == left_room) {
@@ -1260,16 +1245,15 @@ bool check_grab_run_jump() {
 #endif
 
 // seg006:0ABD
-int __pascal far can_grab_front_above() {
+int can_grab_front_above() {
 	through_tile = get_tile_above_char();
 	get_tile_front_above_char();
 	return can_grab();
 }
 
 // seg006:0ACD
-void __pascal far in_wall() {
-	short delta_x;
-	delta_x = distance_to_edge_weight();
+void in_wall() {
+	short delta_x = distance_to_edge_weight();
 	if (delta_x >= 8 || get_tile_infrontof_char() == tiles_20_wall) {
 		delta_x = 6 - delta_x;
 	} else {
@@ -1281,32 +1265,30 @@ void __pascal far in_wall() {
 }
 
 // seg006:0B0C
-int __pascal far get_tile_infrontof_char() {
+int get_tile_infrontof_char() {
 	return get_tile(Char.room, infrontx = dir_front[Char.direction + 1] + Char.curr_col, Char.curr_row);
 }
 
 // seg006:0B30
-int __pascal far get_tile_infrontof2_char() {
-	short var_2;
-	var_2 = dir_front[Char.direction + 1];
-	return get_tile(Char.room, infrontx = (var_2 << 1) + Char.curr_col, Char.curr_row);
+int get_tile_infrontof2_char() {
+	short direction = dir_front[Char.direction + 1];
+	return get_tile(Char.room, infrontx = (direction << 1) + Char.curr_col, Char.curr_row);
 }
 
 // seg006:0B66
-int __pascal far get_tile_behind_char() {
+int get_tile_behind_char() {
 	return get_tile(Char.room, dir_behind[Char.direction + 1] + Char.curr_col, Char.curr_row);
 }
 
 // seg006:0B8A
-int __pascal far distance_to_edge_weight() {
+int distance_to_edge_weight() {
 	return distance_to_edge(dx_weight());
 }
 
 // seg006:0B94
-int __pascal far distance_to_edge(int xpos) {
-	short distance;
+int distance_to_edge(int xpos) {
 	get_tile_div_mod_m7(xpos);
-	distance = obj_xl;
+	short distance = obj_xl;
 	if (Char.direction == dir_0_right) {
 		distance = TILE_RIGHTX - distance;
 	}
@@ -1314,7 +1296,7 @@ int __pascal far distance_to_edge(int xpos) {
 }
 
 // seg006:0BC4
-void __pascal far fell_out() {
+void fell_out() {
 	if (Char.alive < 0 && Char.room == 0) {
 		take_hp(100);
 		Char.alive = 0;
@@ -1324,7 +1306,7 @@ void __pascal far fell_out() {
 }
 
 // seg006:0BEE
-void __pascal far play_kid() {
+void play_kid() {
 	fell_out();
 	control_kid();
 	if (Char.alive >= 0 && is_dead()) {
@@ -1370,8 +1352,7 @@ void __pascal far play_kid() {
 }
 
 // seg006:0CD1
-void __pascal far control_kid() {
-	word key;
+void control_kid() {
 	if (Char.alive < 0 && hitp_curr == 0) {
 		Char.alive = 0;
 		// stop feather fall when kid dies
@@ -1393,7 +1374,7 @@ void __pascal far control_kid() {
 		do_demo();
 		control();
 		// The player can start a new game or load a saved game during the demo.
-		key = key_test_quit();
+		word key = key_test_quit();
 		if (key == (SDL_SCANCODE_L | WITH_CTRL)) { // Ctrl+L
 			if (load_game()) {
 				start_game();
@@ -1449,7 +1430,7 @@ const auto_move_type demo_moves[] = {
 */
 
 // seg006:0D49
-void __pascal far do_demo() {
+void do_demo() {
 	if (checkpoint) {
 		control_shift2 = release_arrows();
 		control_forward = control_x = -1;
@@ -1463,7 +1444,7 @@ void __pascal far do_demo() {
 }
 
 // seg006:0D85
-void __pascal far play_guard() {
+void play_guard() {
 	if (Char.charid == charid_24_mouse) {
 		autocontrol_opponent();
 	} else {
@@ -1485,7 +1466,7 @@ void __pascal far play_guard() {
 }
 
 // seg006:0DC0
-void __pascal far user_control() {
+void user_control() {
 	if (Char.direction >= dir_0_right) {
 		flip_control_x();
 		control();
@@ -1496,22 +1477,21 @@ void __pascal far user_control() {
 }
 
 // seg006:0DDC
-void __pascal far flip_control_x() {
-	byte temp;
+void flip_control_x() {
 	control_x = -control_x;
-	temp = control_forward;
+	byte temp = control_forward;
 	control_forward = control_backward;
 	control_backward = temp;
 }
 
 // seg006:0E00
-int __pascal far release_arrows() {
+int release_arrows() {
 	control_backward = control_forward = control_up = control_down = 0;
 	return 1;
 }
 
 // seg006:0E12
-void __pascal far save_ctrl_1() {
+void save_ctrl_1() {
 	ctrl1_forward = control_forward;
 	ctrl1_backward = control_backward;
 	ctrl1_up = control_up;
@@ -1520,7 +1500,7 @@ void __pascal far save_ctrl_1() {
 }
 
 // seg006:0E31
-void __pascal far rest_ctrl_1() {
+void rest_ctrl_1() {
 	control_forward = ctrl1_forward;
 	control_backward = ctrl1_backward;
 	control_up = ctrl1_up;
@@ -1529,12 +1509,12 @@ void __pascal far rest_ctrl_1() {
 }
 
 // seg006:0E8E
-void __pascal far clear_saved_ctrl() {
+void clear_saved_ctrl() {
 	ctrl1_forward = ctrl1_backward = ctrl1_up = ctrl1_down = ctrl1_shift2 = 0;
 }
 
 // seg006:0EAF
-void __pascal far read_user_control() {
+void read_user_control() {
 	if (control_forward >= 0) {
 		if (control_x < 0) {
 			if (control_forward == 0) {
@@ -1583,10 +1563,9 @@ void __pascal far read_user_control() {
 }
 
 // seg006:0F55
-int __pascal far can_grab() {
+int can_grab() {
 	// Can char grab curr_tile2 through through_tile?
-	byte modifier;
-	modifier = curr_room_modif[curr_tilepos];
+	byte modifier = curr_room_modif[curr_tilepos];
 	// can't grab through wall
 	if (through_tile == tiles_20_wall) return 0;
 	// can't grab through a door top if looking right
@@ -1604,7 +1583,7 @@ int __pascal far can_grab() {
 }
 
 // seg006:0FC3
-int __pascal far wall_type(byte tiletype) {
+int wall_type(byte tiletype) {
 	switch (tiletype) {
 		case tiles_4_gate:
 		case tiles_7_doortop_with_floor:
@@ -1622,22 +1601,22 @@ int __pascal far wall_type(byte tiletype) {
 }
 
 // seg006:1005
-int __pascal far get_tile_above_char() {
+int get_tile_above_char() {
 	return get_tile(Char.room, Char.curr_col, Char.curr_row - 1);
 }
 
 // seg006:1020
-int __pascal far get_tile_behind_above_char() {
+int get_tile_behind_above_char() {
 	return get_tile(Char.room, dir_behind[Char.direction + 1] + Char.curr_col, Char.curr_row - 1);
 }
 
 // seg006:1049
-int __pascal far get_tile_front_above_char() {
+int get_tile_front_above_char() {
 	return get_tile(Char.room, infrontx = dir_front[Char.direction + 1] + Char.curr_col, Char.curr_row - 1);
 }
 
 // seg006:1072
-int __pascal far back_delta_x(int delta_x) {
+int back_delta_x(int delta_x) {
 	if (Char.direction < dir_0_right) {
 		// direction = left
 		return delta_x;
@@ -1648,7 +1627,7 @@ int __pascal far back_delta_x(int delta_x) {
 }
 
 // seg006:108A
-void __pascal far do_pickup(int obj_type) {
+void do_pickup(int obj_type) {
 	pickup_obj_type = obj_type;
 	control_shift2 = 1;
 	// erase picked up item
@@ -1660,11 +1639,9 @@ void __pascal far do_pickup(int obj_type) {
 }
 
 // seg006:10E6
-void __pascal far check_press() {
-	short frame;
-	short action;
-	frame = Char.frame;
-	action = Char.action;
+void check_press() {
+	short frame = Char.frame;
+	short action = Char.action;
 	// frames 87..99: hanging
 	// frames 135..140: start climb up
 	if ((frame >= frame_87_hanging_1 && frame < 100) || (frame >= frame_135_climbing_1 && frame < frame_141_climbing_7)) {
@@ -1699,17 +1676,13 @@ void __pascal far check_press() {
 }
 
 // seg006:1199
-void __pascal far check_spike_below() {
+void check_spike_below() {
 	short not_finished;
-	short room;
-	short row;
-	short col;
-	short right_col;
-	right_col = get_tile_div_mod_m7(char_x_right);
+	short right_col = get_tile_div_mod_m7(char_x_right);
 	if (right_col < 0) return;
-	row = Char.curr_row;
-	room = Char.room;
-	for (col = get_tile_div_mod_m7(char_x_left); col <= right_col; ++col) {
+	short row = Char.curr_row;
+	short room = Char.room;
+	for (short col = get_tile_div_mod_m7(char_x_left); col <= right_col; ++col) {
 		row = Char.curr_row;
 		do {
 			not_finished = 0;
@@ -1732,18 +1705,11 @@ void __pascal far check_spike_below() {
 }
 
 // seg006:1231
-void __pascal far clip_char() {
-	short frame;
-	short room;
-	short action;
-	short col;
-	short var_A;
-	short row;
-	short var_E;
-	frame = Char.frame;
-	action = Char.action;
-	room = Char.room;
-	row = Char.curr_row;
+void clip_char() {
+	short frame = Char.frame;
+	short action = Char.action;
+	short room = Char.room;
+	short row = Char.curr_row;
 	reset_obj_clip();
 #ifdef USE_SUPER_HIGH_JUMP
 	// Clip kid during a super jump when jumping up into
@@ -1771,15 +1737,16 @@ void __pascal far clip_char() {
 				get_tile(room, char_col_right, char_top_row) == tiles_20_wall ||
 				tile_is_floor(curr_tile2)
 			) {
-				var_E = row + 1;
-				if (var_E == 1 ||
-					((var_A = y_clip[var_E]) < obj_y && var_A - 15 < char_top_y)
+				short clip_row = row + 1;
+				short clip_y = y_clip[clip_row];
+				if (clip_row == 1 ||
+					(clip_y < obj_y && clip_y - 15 < char_top_y)
 				) {
-					obj_clip_top = char_top_y = y_clip[var_E];
+					obj_clip_top = char_top_y = clip_y;
 				}
 			}
 		}
-		col = get_tile_div_mod(char_x_left_coll - 4);
+		short col = get_tile_div_mod(char_x_left_coll - 4);
 		if (get_tile(room, col + 1, row) == tiles_7_doortop_with_floor ||
 			curr_tile2 == tiles_12_doortop
 		) {
@@ -1814,18 +1781,16 @@ void __pascal far clip_char() {
 }
 
 // seg006:13E6
-void __pascal far stuck_lower() {
+void stuck_lower() {
 	if (get_tile_at_char() == tiles_5_stuck) {
 		++Char.y;
 	}
 }
 
 // seg006:13F3
-void __pascal far set_objtile_at_char() {
-	short char_frame;
-	short char_action;
-	char_frame = Char.frame;
-	char_action = Char.action;
+void set_objtile_at_char() {
+	short char_frame = Char.frame;
+	short char_action = Char.action;
 	if (char_action == actions_1_run_jump) {
 		tile_row = char_bottom_row;
 		tile_col = char_col_left;
@@ -1847,7 +1812,7 @@ void __pascal far set_objtile_at_char() {
 }
 
 // seg006:1463
-void __pascal far proc_get_object() {
+void proc_get_object() {
 	if (Char.charid != charid_0_kid || pickup_obj_type == 0) return;
 	if (pickup_obj_type == -1) {
 		have_sword = -1;
@@ -1897,14 +1862,14 @@ void __pascal far proc_get_object() {
 }
 
 // seg006:1599
-int __pascal far is_dead() {
+int is_dead() {
 	// 177: spiked, 178: chomped, 185: dead
 	// or maybe this was a switch-case?
 	return Char.frame >= frame_177_spiked && (Char.frame <= frame_178_chomped || Char.frame == frame_185_dead);
 }
 
 // seg006:15B5
-void __pascal far play_death_music() {
+void play_death_music() {
 	word sound_id;
 	if (Guard.charid == charid_1_shadow) {
 		sound_id = sound_32_shadow_music; // killed by shadow
@@ -1917,7 +1882,7 @@ void __pascal far play_death_music() {
 }
 
 // seg006:15E8
-void __pascal far on_guard_killed() {
+void on_guard_killed() {
 	if (current_level == 0) {
 		// demo level: after killing Guard, run out of room
 		checkpoint = 1;
@@ -1935,7 +1900,7 @@ void __pascal far on_guard_killed() {
 }
 
 // seg006:1634
-void __pascal far clear_char() {
+void clear_char() {
 	Char.direction = dir_56_none;
 	Char.alive = 0;
 	Char.action = 0;
@@ -1965,7 +1930,7 @@ short obj2_clip_left;
 short obj2_clip_right;
 
 // seg006:1654
-void __pascal far save_obj() {
+void save_obj() {
 	obj2_tilepos = obj_tilepos;
 	obj2_x = obj_x;
 	obj2_y = obj_y;
@@ -1979,7 +1944,7 @@ void __pascal far save_obj() {
 }
 
 // seg006:1691
-void __pascal far load_obj() {
+void load_obj() {
 	obj_tilepos = obj2_tilepos;
 	obj_x = obj2_x;
 	obj_y = obj2_y;
@@ -1993,9 +1958,8 @@ void __pascal far load_obj() {
 }
 
 // seg006:16CE
-void __pascal far draw_hurt_splash() {
-	short frame;
-	frame = Char.frame;
+void draw_hurt_splash() {
+	short frame = Char.frame;
 	if (frame != frame_178_chomped) { // chomped
 		save_obj();
 		obj_tilepos = -1;
@@ -2024,7 +1988,7 @@ void __pascal far draw_hurt_splash() {
 }
 
 // seg006:175D
-void __pascal far check_killed_shadow() {
+void check_killed_shadow() {
 	// Special event: killed the shadow
 	if (current_level == 12) {
 		if ((Char.charid | Opp.charid) == charid_1_shadow &&
@@ -2093,15 +2057,13 @@ const sword_table_type sword_tbl[] = {
 };
 
 // seg006:1798
-void __pascal far add_sword_to_objtable() {
-	short frame;
-	short sword_frame;
-	frame = Char.frame;
+void add_sword_to_objtable() {
+	short frame = Char.frame;
 	if ((frame >= frame_229_found_sword && frame < 238) || // found sword + put sword away
 		Char.sword != sword_0_sheathed ||
 		(Char.charid == charid_2_guard && Char.alive < 0)
 	) {
-		sword_frame = cur_frame.sword & 0x3F;
+		short sword_frame = cur_frame.sword & 0x3F;
 		if (sword_frame) {
 			obj_id = sword_tbl[sword_frame].id;
 			if (obj_id != 0xFF) {
@@ -2116,7 +2078,7 @@ void __pascal far add_sword_to_objtable() {
 }
 
 // seg006:1827
-void __pascal far control_guard_inactive() {
+void control_guard_inactive() {
 	if (Char.frame == frame_166_stand_inactive && control_down < 0) {
 		if (control_forward < 0) {
 			draw_sword();
@@ -2128,14 +2090,13 @@ void __pascal far control_guard_inactive() {
 }
 
 // seg006:1852
-int __pascal far char_opp_dist() {
+int char_opp_dist() {
 	// >0 if Opp is in front of char
 	// <0 if Opp is behind char
-	short distance;
 	if (Char.room != Opp.room) {
 		return 999;
 	}
-	distance = Opp.x - Char.x;
+	short distance = Opp.x - Char.x;
 	if (Char.direction < dir_0_right) {
 		distance = -distance;
 	}
@@ -2146,6 +2107,6 @@ int __pascal far char_opp_dist() {
 }
 
 // seg006:189B
-void __pascal far inc_curr_row() {
+void inc_curr_row() {
 	++Char.curr_row;
 }

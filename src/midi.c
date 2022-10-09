@@ -633,7 +633,7 @@ void init_midi() {
 	if (dathandle != NULL) close_dat(dathandle);
 }
 
-void play_midi_sound(sound_buffer_type far *buffer) {
+void play_midi_sound(sound_buffer_type* buffer) {
 	stop_midi();
 	if (buffer == NULL) return;
 	init_digi();

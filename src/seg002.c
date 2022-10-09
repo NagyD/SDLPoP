@@ -39,8 +39,8 @@ const word extrastrength[] = {0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0};
 */
 
 // seg002:0000
-void __pascal far do_init_shad(const byte *source,int seq_index) {
-	memcpy_near(&Char, source, 7);
+void do_init_shad(const byte *source,int seq_index) {
+	memcpy(&Char, source, 7);
 	seqtbl_offset_char(seq_index);
 	Char.charid = charid_1_shadow;
 	demo_time = 0;
@@ -50,7 +50,7 @@ void __pascal far do_init_shad(const byte *source,int seq_index) {
 }
 
 // seg002:0044
-void __pascal far get_guard_hp() {
+void get_guard_hp() {
 	guardhp_delta = guardhp_curr = guardhp_max = custom->extrastrength[guard_skill] + custom->tbl_guard_hp[current_level];
 }
 
@@ -65,7 +65,7 @@ const byte init_shad_12[] = {0x0F, 0x51, 0xE8, 0, 0, 0, 0, 0};
 */
 
 // seg002:0064
-void __pascal far check_shadow() {
+void check_shadow() {
 	offguard = 0;
 	if (current_level == 12) {
 		// Special event: level 12 shadow
@@ -106,15 +106,11 @@ void __pascal far check_shadow() {
 }
 
 // seg002:0112
-void __pascal far enter_guard() {
-	word room_minus_1;
-	word guard_tile;
-	word frame;
-	byte seq_hi;
+void enter_guard() {
 	// arrays are indexed 0..23 instead of 1..24
-	room_minus_1 = drawn_room - 1;
-	frame = Char.frame; // hm?
-	guard_tile = level.guards_tile[room_minus_1];
+	word room_minus_1 = drawn_room - 1;
+	word frame = Char.frame; // hm?
+	word guard_tile = level.guards_tile[room_minus_1];
 #ifndef FIX_OFFSCREEN_GUARDS_DISAPPEARING
 	if (guard_tile >= 30) return;
 #else
@@ -202,7 +198,7 @@ loc_left_guard_tile:
 	} else {
 		Char.charid = charid_2_guard;
 	}
-	seq_hi = level.guards_seq_hi[room_minus_1];
+	byte seq_hi = level.guards_seq_hi[room_minus_1];
 	if (seq_hi == 0) {
 		if (Char.charid == charid_4_skeleton) {
 			Char.sword = sword_2_drawn;
@@ -242,7 +238,7 @@ loc_left_guard_tile:
 }
 
 // seg002:0269
-void __pascal far check_guard_fallout() {
+void check_guard_fallout() {
 	if (Guard.direction == dir_56_none || Guard.y < 211) {
 		return;
 	}
@@ -274,8 +270,7 @@ void __pascal far check_guard_fallout() {
 }
 
 // seg002:02F5
-void __pascal far leave_guard() {
-	word room_minus_1;
+void leave_guard() {
 
 #ifdef USE_SUPER_HIGH_JUMP
 	// Do not leave guard during super high jumps when the room does not change.
@@ -289,7 +284,7 @@ void __pascal far leave_guard() {
 		return;
 	}
 	// arrays are indexed 0..23 instead of 1..24
-	room_minus_1 = Guard.room - 1;
+	word room_minus_1 = Guard.room - 1;
 	level.guards_tile[room_minus_1] = get_tilepos(0, Guard.curr_row);
 
 	level.guards_color[room_minus_1] = curr_guard_color & 0x0F; // restriction to 4 bits added
@@ -313,7 +308,7 @@ void __pascal far leave_guard() {
 }
 
 // seg002:039E
-void __pascal far follow_guard() {
+void follow_guard() {
 	level.guards_tile[Kid.room - 1] = 0xFF;
 	level.guards_tile[Guard.room - 1] = 0xFF;
 	loadshad();
@@ -322,10 +317,8 @@ void __pascal far follow_guard() {
 }
 
 // seg002:03C7
-void __pascal far exit_room() {
-	short leave;
-	short kid_room_m1;
-	leave = 0;
+void exit_room() {
+	short leave = 0;
 	if (exit_room_timer != 0) {
 		--exit_room_timer;
 #ifdef FIX_HANG_ON_TELEPORT
@@ -344,7 +337,7 @@ void __pascal far exit_room() {
 	next_room = Char.room;
 	if (Guard.direction == dir_56_none) return;
 	if (Guard.alive < 0 && Guard.sword == sword_2_drawn) {
-		kid_room_m1 = Kid.room - 1;
+		short kid_room_m1 = Kid.room - 1;
 		// kid_room_m1 might be 65535 (-1) when the prince fell out of the level (to room 0) while a guard was active.
 		// In this case, the indexing in the following condition crashes on Linux.
 		if ((kid_room_m1 >= 0 && kid_room_m1 <= 23) &&
@@ -389,7 +382,7 @@ void __pascal far exit_room() {
 }
 
 // seg002:0486
-int __pascal far goto_other_room(short direction) {
+int goto_other_room(short direction) {
 	//printf("goto_other_room: direction = %d, Char.room = %d\n", direction, Char.room);
 	short opposite_dir;
 	byte other_room = ((byte*)&level.roomlinks[Char.room - 1])[direction];
@@ -422,14 +415,11 @@ int __pascal far goto_other_room(short direction) {
 }
 
 // seg002:0504
-short __pascal far leave_room() {
-	short frame;
-	word action;
-	short chary;
+short leave_room() {
 	short leave_dir;
-	chary = Char.y;
-	action = Char.action;
-	frame = Char.frame;
+	short chary = Char.y;
+	word action = Char.action;
+	short frame = Char.frame;
 	if (action != actions_5_bumped &&
 		action != actions_4_in_freefall &&
 		action != actions_3_in_midair &&
@@ -513,7 +503,7 @@ short __pascal far leave_room() {
 }
 
 // seg002:0643
-void __pascal far Jaffar_exit() {
+void Jaffar_exit() {
 	if (leveldoor_open == 2) {
 		get_tile(24, 0, 0);
 		trigger_button(0, 0, -1);
@@ -521,7 +511,7 @@ void __pascal far Jaffar_exit() {
 }
 
 // seg002:0665
-void __pascal far level3_set_chkp() {
+void level3_set_chkp() {
 	// Special event: set checkpoint
 	if (current_level == /*3*/ custom->checkpoint_level && Char.room == 7 /* TODO: add a custom option */) {
 		checkpoint = 1;
@@ -530,7 +520,7 @@ void __pascal far level3_set_chkp() {
 }
 
 // seg002:0680
-void __pascal far sword_disappears() {
+void sword_disappears() {
 	// Special event: sword disappears
 	if (current_level == 12 && Char.room == 18) {
 		get_tile(15, 1, 0);
@@ -540,7 +530,7 @@ void __pascal far sword_disappears() {
 }
 
 // seg002:06AE
-void __pascal far meet_Jaffar() {
+void meet_Jaffar() {
 	// Special event: play music
 	if (current_level == 13 && leveldoor_open == 0 && Char.room == 3) {
 		play_sound(sound_29_meet_Jaffar); // meet Jaffar
@@ -550,7 +540,7 @@ void __pascal far meet_Jaffar() {
 }
 
 // seg002:06D3
-void __pascal far play_mirr_mus() {
+void play_mirr_mus() {
 	// Special event: mirror music
 	if (
 		leveldoor_open != 0 &&
@@ -565,7 +555,7 @@ void __pascal far play_mirr_mus() {
 }
 
 // seg002:0706
-void __pascal far move_0_nothing() {
+void move_0_nothing() {
 	control_shift = 0;
 	control_y = 0;
 	control_x = 0;
@@ -577,63 +567,62 @@ void __pascal far move_0_nothing() {
 }
 
 // seg002:0721
-void __pascal far move_1_forward() {
+void move_1_forward() {
 	control_x = -1;
 	control_forward = -1;
 }
 
 // seg002:072A
-void __pascal far move_2_backward() {
+void move_2_backward() {
 	control_backward = -1;
 	control_x = 1;
 }
 
 // seg002:0735
-void __pascal far move_3_up() {
+void move_3_up() {
 	control_y = -1;
 	control_up = -1;
 }
 
 // seg002:073E
-void __pascal far move_4_down() {
+void move_4_down() {
 	control_down = -1;
 	control_y = 1;
 }
 
 // seg002:0749
-void __pascal far move_up_back() {
+void move_up_back() {
 	control_up = -1;
 	move_2_backward();
 }
 
 // seg002:0753
-void __pascal far move_down_back() {
+void move_down_back() {
 	control_down = -1;
 	move_2_backward();
 }
 
 // seg002:075D
-void __pascal far move_down_forw() {
+void move_down_forw() {
 	control_down = -1;
 	move_1_forward();
 }
 
 // seg002:0767
-void __pascal far move_6_shift() {
+void move_6_shift() {
 	control_shift = -1;
 	control_shift2 = -1;
 }
 
 // seg002:0770
-void __pascal far move_7() {
+void move_7() {
 	control_shift = 0;
 }
 
 // seg002:0776
-void __pascal far autocontrol_opponent() {
-	word charid;
+void autocontrol_opponent() {
 	move_0_nothing();
-	charid = Char.charid;
+	word charid = Char.charid;
 	if (charid == charid_0_kid) {
 		autocontrol_kid();
 	} else {
@@ -655,7 +644,7 @@ void __pascal far autocontrol_opponent() {
 }
 
 // seg002:07EB
-void __pascal far autocontrol_mouse() {
+void autocontrol_mouse() {
 	if (Char.direction == dir_56_none) {
 		return;
 	}
@@ -672,7 +661,7 @@ void __pascal far autocontrol_mouse() {
 }
 
 // seg002:081D
-void __pascal far autocontrol_shadow() {
+void autocontrol_shadow() {
 	if (current_level == /*4*/ custom->mirror_level) {
 		autocontrol_shadow_level4();
 	} /*else*/
@@ -688,23 +677,23 @@ void __pascal far autocontrol_shadow() {
 }
 
 // seg002:0850
-void __pascal far autocontrol_skeleton() {
+void autocontrol_skeleton() {
 	Char.sword = sword_2_drawn;
 	autocontrol_guard();
 }
 
 // seg002:085A
-void __pascal far autocontrol_Jaffar() {
+void autocontrol_Jaffar() {
 	autocontrol_guard();
 }
 
 // seg002:085F
-void __pascal far autocontrol_kid() {
+void autocontrol_kid() {
 	autocontrol_guard();
 }
 
 // seg002:0864
-void __pascal far autocontrol_guard() {
+void autocontrol_guard() {
 	if (Char.sword < sword_2_drawn) {
 		autocontrol_guard_inactive();
 	} else {
@@ -713,10 +702,9 @@ void __pascal far autocontrol_guard() {
 }
 
 // seg002:0876
-void __pascal far autocontrol_guard_inactive() {
-	short distance;
+void autocontrol_guard_inactive() {
 	if (Kid.alive >= 0) return;
-	distance = char_opp_dist();
+	short distance = char_opp_dist();
 	if (Opp.curr_row != Char.curr_row || (word)distance < (word)-8) {
 		// If Kid made a sound ...
 		if (is_guard_notice) {
@@ -741,11 +729,8 @@ void __pascal far autocontrol_guard_inactive() {
 }
 
 // seg002:08DC
-void __pascal far autocontrol_guard_active() {
-	short opp_frame;
-	short char_frame;
-	short distance;
-	char_frame = Char.frame;
+void autocontrol_guard_active() {
+	short char_frame = Char.frame;
 	if (char_frame != frame_166_stand_inactive && char_frame >= 150 && can_guard_see_kid != 1) {
 		if (can_guard_see_kid == 0) {
 			if (droppedout != 0) {
@@ -756,8 +741,8 @@ void __pascal far autocontrol_guard_active() {
 			}
 			//return;
 		} else { // can_guard_see_kid == 2
-			opp_frame = Opp.frame;
-			distance = char_opp_dist();
+			short opp_frame = Opp.frame;
+			short distance = char_opp_dist();
 			if (distance >= 12 &&
 				// frames 102..117: falling and landing
 				opp_frame >= frame_102_start_fall_1 && opp_frame < frame_118_stand_up_from_crouch_9 &&
@@ -802,7 +787,7 @@ void __pascal far autocontrol_guard_active() {
 }
 
 // seg002:09CB
-void __pascal far autocontrol_guard_kid_far() {
+void autocontrol_guard_kid_far() {
 	if (tile_is_floor(get_tile_infrontof_char()) ||
 		tile_is_floor(get_tile_infrontof2_char())) {
 		move_1_forward();
@@ -812,10 +797,9 @@ void __pascal far autocontrol_guard_kid_far() {
 }
 
 // seg002:09F8
-void __pascal far guard_follows_kid_down() {
+void guard_follows_kid_down() {
 	// This is called from autocontrol_guard_active, so char=Guard, Opp=Kid
-	word opp_action;
-	opp_action = Opp.action;
+	word opp_action = Opp.action;
 	if (opp_action == actions_2_hang_climb || opp_action == actions_6_hang_straight) {
 		return;
 	}
@@ -843,7 +827,7 @@ void __pascal far guard_follows_kid_down() {
 }
 
 // seg002:0A93
-void __pascal far autocontrol_guard_kid_in_sight(short distance) {
+void autocontrol_guard_kid_in_sight(short distance) {
 	if (Opp.sword == sword_2_drawn) {
 		autocontrol_guard_kid_armed(distance);
 	} else if (guard_refrac == 0) {
@@ -856,7 +840,7 @@ void __pascal far autocontrol_guard_kid_in_sight(short distance) {
 }
 
 // seg002:0AC1
-void __pascal far autocontrol_guard_kid_armed(short distance) {
+void autocontrol_guard_kid_armed(short distance) {
 	if (distance < 10 || distance >= 29) {
 		guard_advance();
 	} else {
@@ -872,7 +856,7 @@ void __pascal far autocontrol_guard_kid_armed(short distance) {
 }
 
 // seg002:0AF5
-void __pascal far guard_advance() {
+void guard_advance() {
 	if (guard_skill == 0 || kid_sword_strike == 0) {
 		if (custom->advprob[guard_skill] > prandom(255)) {
 			move_1_forward();
@@ -881,9 +865,8 @@ void __pascal far guard_advance() {
 }
 
 // seg002:0B1D
-void __pascal far guard_block() {
-	word opp_frame;
-	opp_frame = Opp.frame;
+void guard_block() {
+	word opp_frame = Opp.frame;
 	if (opp_frame == frame_152_strike_2 || opp_frame == frame_153_strike_3 || opp_frame == frame_162_block_to_strike) {
 		if (justblocked != 0) {
 			if (custom->impblockprob[guard_skill] > prandom(255)) {
@@ -898,12 +881,10 @@ void __pascal far guard_block() {
 }
 
 // seg002:0B73
-void __pascal far guard_strike() {
-	word opp_frame;
-	word char_frame;
-	opp_frame = Opp.frame;
+void guard_strike() {
+	word opp_frame = Opp.frame;
 	if (opp_frame == frame_169_begin_block || opp_frame == frame_151_strike_1) return;
-	char_frame = Char.frame;
+	word char_frame = Char.frame;
 	if (char_frame == frame_161_parry || char_frame == frame_150_parry) {
 		if (custom->restrikeprob[guard_skill] > prandom(255)) {
 			move_6_shift();
@@ -916,7 +897,7 @@ void __pascal far guard_strike() {
 }
 
 // seg002:0BCD
-void __pascal far hurt_by_sword() {
+void hurt_by_sword() {
 	short distance;
 	if (Char.alive >= 0) return;
 	if (Char.sword != sword_2_drawn) {
@@ -976,7 +957,7 @@ void __pascal far hurt_by_sword() {
 }
 
 // seg002:0CD4
-void __pascal far check_sword_hurt() {
+void check_sword_hurt() {
 	if (Guard.action == actions_99_hurt) {
 		if (Kid.action == actions_99_hurt) {
 			Kid.action = actions_1_run_jump;
@@ -995,9 +976,8 @@ void __pascal far check_sword_hurt() {
 }
 
 // seg002:0D1A
-void __pascal far check_sword_hurting() {
-	short kid_frame;
-	kid_frame = Kid.frame;
+void check_sword_hurting() {
+	short kid_frame = Kid.frame;
 	// frames 217..228: go up on stairs
 	if (kid_frame != 0 && (kid_frame < frame_219_exit_stairs_3 || kid_frame >= 229)) {
 		loadshad_and_opp();
@@ -1010,7 +990,7 @@ void __pascal far check_sword_hurting() {
 }
 
 // seg002:0D56
-void __pascal far check_hurting() {
+void check_hurting() {
 	short opp_frame, char_frame, distance, min_hurt_range;
 	if (Char.sword != sword_2_drawn) return;
 	if (Char.curr_row != Opp.curr_row) return;
@@ -1054,7 +1034,7 @@ void __pascal far check_hurting() {
 }
 
 // seg002:0E1F
-void __pascal far check_skel() {
+void check_skel() {
 	// Special event: skeleton wakes
 	if (current_level == /*3*/ custom->skeleton_level &&
 		Guard.direction == dir_56_none &&
@@ -1095,18 +1075,16 @@ void __pascal far check_skel() {
 }
 
 // seg002:0F3F
-void __pascal far do_auto_moves(const auto_move_type *moves_ptr) {
-	short demoindex;
-	short curr_move;
+void do_auto_moves(const auto_move_type *moves_ptr) {
 	if (demo_time >= 0xFE) return;
 	++demo_time;
-	demoindex = demo_index;
+	short demoindex = demo_index;
 	if (moves_ptr[demoindex].time <= demo_time) {
 		++demo_index;
 	} else {
 		demoindex = demo_index - 1;
 	}
-	curr_move = moves_ptr[demoindex].move;
+	short curr_move = moves_ptr[demoindex].move;
 	switch (curr_move) {
 		case -1:
 		break;
@@ -1139,7 +1117,7 @@ void __pascal far do_auto_moves(const auto_move_type *moves_ptr) {
 }
 
 // seg002:1000
-void __pascal far autocontrol_shadow_level4() {
+void autocontrol_shadow_level4() {
 	if (Char.room == /*4*/ custom->mirror_room) {
 		if (Char.x < 80) {
 			clear_char();
@@ -1165,7 +1143,7 @@ const auto_move_type shad_drink_move[] = {
 */
 
 // seg002:101A
-void __pascal far autocontrol_shadow_level5() {
+void autocontrol_shadow_level5() {
 	if (Char.room == /*24*/ custom->shadow_steal_room) {
 		if (demo_time == 0) {
 			get_tile(/*24*/ custom->shadow_steal_room, 1, 0);
@@ -1181,7 +1159,7 @@ void __pascal far autocontrol_shadow_level5() {
 }
 
 // seg002:1064
-void __pascal far autocontrol_shadow_level6() {
+void autocontrol_shadow_level6() {
 	if (Char.room == /*1*/ custom->shadow_step_room &&
 		Kid.frame == frame_43_running_jump_4 && // a frame in run-jump
 		Kid.x < 128
@@ -1192,9 +1170,7 @@ void __pascal far autocontrol_shadow_level6() {
 }
 
 // seg002:1082
-void __pascal far autocontrol_shadow_level12() {
-	short opp_frame;
-	short xdiff;
+void autocontrol_shadow_level12() {
 	if (Char.room == 15 && shadow_initialized == 0) {
 		if (Opp.x >= 150) {
 			do_init_shad(/*&*/custom->init_shad_12, 7 /*fall*/);
@@ -1213,7 +1189,7 @@ void __pascal far autocontrol_shadow_level12() {
 		return;
 	}
 	if (Opp.sword >= sword_2_drawn || offguard == 0) {
-		xdiff = 0x7000; // bugfix/workaround
+		short xdiff = 0x7000; // bugfix/workaround
 		// This behavior matches the DOS version but not the Apple II source.
 		if (can_guard_see_kid < 2 || (xdiff = char_opp_dist()) >= 90) {
 			if (xdiff < 0) {
@@ -1244,7 +1220,7 @@ void __pascal far autocontrol_shadow_level12() {
 	}
 	if (can_guard_see_kid == 2) {
 		// If Kid runs to shadow, shadow runs to Kid.
-		opp_frame = Opp.frame;
+		short opp_frame = Opp.frame;
 		// frames 1..14: running
 		// frames 121..132: stepping
 		if ((opp_frame >= frame_3_start_run && opp_frame < frame_15_stand) ||

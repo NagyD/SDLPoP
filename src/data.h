@@ -426,7 +426,7 @@ extern word seamless;
 // data:4CBC
 extern trob_type trob;
 // data:4382
-extern trob_type trobs[30];
+extern trob_type trobs[TROBS_MAX];
 // data:431A
 extern short redraw_height;
 // data:24DA

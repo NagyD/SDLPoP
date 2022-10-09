@@ -39,8 +39,7 @@ const sbyte wall_dist_from_left[] = {0, 10, 0, -1, 0, 0};
 const sbyte wall_dist_from_right[] = {0, 0, 10, 13, 0, 0};
 
 // seg004:0004
-void __pascal far check_collisions() {
-	short column;
+void check_collisions() {
 	bump_col_left_of_wall = bump_col_right_of_wall = -1;
 	if (Char.action == actions_7_turn) return;
 	collision_row = Char.curr_row;
@@ -51,7 +50,7 @@ void __pascal far check_collisions() {
 	get_row_collision_data(collision_row    , curr_row_coll_room, curr_row_coll_flags);
 	get_row_collision_data(collision_row + 1, below_row_coll_room, below_row_coll_flags);
 	get_row_collision_data(collision_row - 1, above_row_coll_room, above_row_coll_flags);
-	for (column = 9; column >= 0; --column) {
+	for (short column = 9; column >= 0; --column) {
 		if (curr_row_coll_room[column] >= 0 &&
 			prev_coll_room[column] == curr_row_coll_room[column]
 		) {
@@ -74,10 +73,9 @@ void __pascal far check_collisions() {
 }
 
 // seg004:00DF
-void __pascal far move_coll_to_prev() {
+void move_coll_to_prev() {
 	sbyte* row_coll_room_ptr;
 	byte* row_coll_flags_ptr;
-	short column;
 	if (collision_row     == prev_collision_row ||
 		collision_row + 3 == prev_collision_row ||
 		collision_row - 3 == prev_collision_row
@@ -94,7 +92,7 @@ void __pascal far move_coll_to_prev() {
 		row_coll_room_ptr = below_row_coll_room;
 		row_coll_flags_ptr = below_row_coll_flags;
 	}
-	for (column = 0; column < 10; ++column) {
+	for (short column = 0; column < 10; ++column) {
 		prev_coll_room[column] = row_coll_room_ptr[column];
 		prev_coll_flags[column] = row_coll_flags_ptr[column];
 		below_row_coll_room[column] = -1;
@@ -110,15 +108,13 @@ void __pascal far move_coll_to_prev() {
 }
 
 // seg004:0185
-void __pascal far get_row_collision_data(short row, sbyte *row_coll_room_ptr, byte *row_coll_flags_ptr) {
+void get_row_collision_data(short row, sbyte *row_coll_room_ptr, byte *row_coll_flags_ptr) {
 	short right_wall_xpos;
 	byte curr_flags;
-	short room;
-	short column;
 	short left_wall_xpos;
-	room = Char.room;
+	short room = Char.room;
 	coll_tile_left_xpos = x_bump[left_checked_col + FIRST_ONSCREEN_COLUMN] + TILE_MIDX;
-	for (column = left_checked_col; column <= right_checked_col; ++column) {
+	for (short column = left_checked_col; column <= right_checked_col; ++column) {
 		left_wall_xpos = get_left_wall_xpos(room, column, row);
 		right_wall_xpos = get_right_wall_xpos(room, column, row);
 		// char bumps into left of wall
@@ -132,9 +128,8 @@ void __pascal far get_row_collision_data(short row, sbyte *row_coll_room_ptr, by
 }
 
 // seg004:0226
-int __pascal far get_left_wall_xpos(int room,int column,int row) {
-	short type;
-	type = wall_type(get_tile(room, column, row));
+int get_left_wall_xpos(int room,int column,int row) {
+	short type = wall_type(get_tile(room, column, row));
 	if (type) {
 		return wall_dist_from_left[type] + coll_tile_left_xpos;
 	} else {
@@ -143,9 +138,8 @@ int __pascal far get_left_wall_xpos(int room,int column,int row) {
 }
 
 // seg004:025F
-int __pascal far get_right_wall_xpos(int room,int column,int row) {
-	short type;
-	type = wall_type(get_tile(room, column, row));
+int get_right_wall_xpos(int room,int column,int row) {
+	short type = wall_type(get_tile(room, column, row));
 	if (type) {
 		return coll_tile_left_xpos - wall_dist_from_right[type] + TILE_RIGHTX;
 	} else {
@@ -154,7 +148,7 @@ int __pascal far get_right_wall_xpos(int room,int column,int row) {
 }
 
 // seg004:029D
-void __pascal far check_bumped() {
+void check_bumped() {
 	if (
 		Char.action != actions_2_hang_climb &&
 		Char.action != actions_6_hang_straight &&
@@ -183,7 +177,7 @@ void __pascal far check_bumped() {
 }
 
 // seg004:02D2
-void __pascal far check_bumped_look_left() {
+void check_bumped_look_left() {
 	if ((Char.sword == sword_2_drawn || Char.direction < dir_0_right) && // looking left
 		is_obstacle_at_col(bump_col_right_of_wall)
 	) {
@@ -202,7 +196,7 @@ void __pascal far check_bumped_look_left() {
 }
 
 // seg004:030A
-void __pascal far check_bumped_look_right() {
+void check_bumped_look_right() {
 	if ((Char.sword == sword_2_drawn || Char.direction == dir_0_right) && // looking right
 		is_obstacle_at_col(bump_col_left_of_wall)
 	) {
@@ -221,9 +215,8 @@ void __pascal far check_bumped_look_right() {
 }
 
 // seg004:0343
-int __pascal far is_obstacle_at_col(int tile_col) {
-	short tile_row;
-	tile_row = Char.curr_row;
+int is_obstacle_at_col(int tile_col) {
+	short tile_row = Char.curr_row;
 	if (tile_row < 0) {
 		tile_row += 3;
 	}
@@ -235,7 +228,7 @@ int __pascal far is_obstacle_at_col(int tile_col) {
 }
 
 // seg004:037E
-int __pascal far is_obstacle() {
+int is_obstacle() {
 	if (curr_tile2 == tiles_10_potion) {
 		return 0;
 	} else if (curr_tile2 == tiles_4_gate) {
@@ -258,7 +251,7 @@ int __pascal far is_obstacle() {
 }
 
 // seg004:0405
-int __pascal far xpos_in_drawn_room(int xpos) {
+int xpos_in_drawn_room(int xpos) {
 	if (curr_room != drawn_room) {
 		if (curr_room == room_L || curr_room == room_BL) {
 			xpos -= TILE_SIZEX * SCREEN_TILECOUNTX;
@@ -270,7 +263,7 @@ int __pascal far xpos_in_drawn_room(int xpos) {
 }
 
 // seg004:0448
-void __pascal far bumped(sbyte delta_x,sbyte push_direction) {
+void bumped(sbyte delta_x,sbyte push_direction) {
 	// frame 177: spiked
 	if (Char.alive < 0 && Char.frame != frame_177_spiked) {
 		Char.x += delta_x;
@@ -302,9 +295,8 @@ void __pascal far bumped(sbyte delta_x,sbyte push_direction) {
 }
 
 // seg004:04E4
-void __pascal far bumped_fall() {
-	short action;
-	action = Char.action;
+void bumped_fall() {
+	short action = Char.action;
 	Char.x = char_dx_forward(-4);
 	if (action == actions_4_in_freefall) {
 		Char.fall_x = 0;
@@ -316,8 +308,7 @@ void __pascal far bumped_fall() {
 }
 
 // seg004:0520
-void __pascal far bumped_floor(sbyte push_direction) {
-	short frame;
+void bumped_floor(sbyte push_direction) {
 	short seq_index;
 	if (Char.sword != sword_2_drawn && (word)(y_land[Char.curr_row + 1] - Char.y) >= (word)15) {
 		bumped_fall();
@@ -338,7 +329,7 @@ void __pascal far bumped_floor(sbyte push_direction) {
 						seq_index = seq_64_pushed_back_with_sword; // pushed back with sword
 					}
 				} else {
-					frame = Char.frame;
+					short frame = Char.frame;
 					if (frame == 24 || frame == 25 ||
 						(frame >= 40 && frame < 43) ||
 						(frame >= frame_102_start_fall_1 && frame < 107)
@@ -357,40 +348,39 @@ void __pascal far bumped_floor(sbyte push_direction) {
 }
 
 // seg004:05F1
-void __pascal far bumped_sound() {
+void bumped_sound() {
 	is_guard_notice = 1;
 	play_sound(sound_8_bumped); // touching a wall
 }
 
 // seg004:0601
-void __pascal far clear_coll_rooms() {
-	memset_near(prev_coll_room, -1, sizeof(prev_coll_room));
-	memset_near(curr_row_coll_room, -1, sizeof(curr_row_coll_room));
-	memset_near(below_row_coll_room, -1, sizeof(below_row_coll_room));
-	memset_near(above_row_coll_room, -1, sizeof(above_row_coll_room));
+void clear_coll_rooms() {
+	memset(prev_coll_room, -1, sizeof(prev_coll_room));
+	memset(curr_row_coll_room, -1, sizeof(curr_row_coll_room));
+	memset(below_row_coll_room, -1, sizeof(below_row_coll_room));
+	memset(above_row_coll_room, -1, sizeof(above_row_coll_room));
 #ifdef FIX_COLL_FLAGS
 	// workaround
-	memset_near(prev_coll_flags, 0, sizeof(prev_coll_flags));
-	memset_near(curr_row_coll_flags, 0, sizeof(curr_row_coll_flags));
-	memset_near(below_row_coll_flags, 0, sizeof(below_row_coll_flags));
-	memset_near(above_row_coll_flags, 0, sizeof(above_row_coll_flags));
+	memset(prev_coll_flags, 0, sizeof(prev_coll_flags));
+	memset(curr_row_coll_flags, 0, sizeof(curr_row_coll_flags));
+	memset(below_row_coll_flags, 0, sizeof(below_row_coll_flags));
+	memset(above_row_coll_flags, 0, sizeof(above_row_coll_flags));
 #endif
 	prev_collision_row = -1;
 }
 
 // seg004:0657
-int __pascal far can_bump_into_gate() {
+int can_bump_into_gate() {
 	return (curr_room_modif[curr_tilepos] >> 2) + 6 < char_height;
 }
 
 // seg004:067C
-int __pascal far get_edge_distance() {
+int get_edge_distance() {
 	short distance;
-	byte tiletype;
 	determine_col();
 	load_frame_to_obj();
 	set_char_collision();
-	tiletype = get_tile_at_char();
+	byte tiletype = get_tile_at_char();
 	if (wall_type(tiletype) != 0) {
 		tile_col = Char.curr_col;
 		distance = dist_from_wall_forward(tiletype);
@@ -446,11 +436,9 @@ int __pascal far get_edge_distance() {
 }
 
 // seg004:076B
-void __pascal far check_chomped_kid() {
-	short tile_col;
-	short tile_row;
-	tile_row = Char.curr_row;
-	for (tile_col = 0; tile_col < 10; ++tile_col) {
+void check_chomped_kid() {
+	short tile_row = Char.curr_row;
+	for (short tile_col = 0; tile_col < 10; ++tile_col) {
 		if (curr_row_coll_flags[tile_col] == 0xFF &&
 			get_tile(curr_row_coll_room[tile_col], tile_col, tile_row) == tiles_18_chomper &&
 			(curr_room_modif[curr_tilepos] & 0x7F) == 2 // closed chomper
@@ -461,7 +449,7 @@ void __pascal far check_chomped_kid() {
 }
 
 // seg004:07BF
-void __pascal far chomped() {
+void chomped() {
 	#ifdef FIX_SKELETON_CHOMPER_BLOOD
 	if (!(fixes->fix_skeleton_chomper_blood && Char.charid == charid_4_skeleton))
 	#endif
@@ -496,17 +484,15 @@ void __pascal far chomped() {
 }
 
 // seg004:0833
-void __pascal far check_gate_push() {
+void check_gate_push() {
 	// Closing gate pushes Kid
-	short frame;
-	short orig_col;
-	frame = Char.frame;
+	short frame = Char.frame;
 	if (Char.action == actions_7_turn ||
 		frame == frame_15_stand || // stand
 		(frame >= frame_108_fall_land_2 && frame < 111) // crouch
 	) {
 		get_tile_at_char();
-		orig_col = tile_col;
+		short orig_col = tile_col;
 		int orig_room = curr_room;
 		if ((curr_tile2 == tiles_4_gate ||
 			get_tile(curr_room, --tile_col, tile_row) == tiles_4_gate) &&
@@ -533,7 +519,7 @@ void __pascal far check_gate_push() {
 }
 
 // seg004:08C3
-void __pascal far check_guard_bumped() {
+void check_guard_bumped() {
 	if (
 		Char.action == actions_1_run_jump &&
 		Char.alive < 0 &&
@@ -571,7 +557,7 @@ void __pascal far check_guard_bumped() {
 }
 
 // seg004:0989
-void __pascal far check_chomped_guard() {
+void check_chomped_guard() {
 	get_tile_at_char();
 	if ( ! check_chomped_here()) {
 		get_tile(curr_room, ++tile_col, tile_row);
@@ -580,7 +566,7 @@ void __pascal far check_chomped_guard() {
 }
 
 // seg004:09B0
-int __pascal far check_chomped_here() {
+int check_chomped_here() {
 	if (curr_tile2 == tiles_18_chomper &&
 		(curr_room_modif[curr_tilepos] & 0x7F) == 2
 	) {
@@ -599,13 +585,12 @@ int __pascal far check_chomped_here() {
 }
 
 // seg004:0A10
-int __pascal far dist_from_wall_forward(byte tiletype) {
-	short type;
+int dist_from_wall_forward(byte tiletype) {
 	if (tiletype == tiles_4_gate && ! can_bump_into_gate()) {
 		return -1;
 	} else {
 		coll_tile_left_xpos = x_bump[tile_col + FIRST_ONSCREEN_COLUMN] + TILE_MIDX;
-		type = wall_type(tiletype);
+		short type = wall_type(tiletype);
 		if (type == 0) return -1;
 		if (Char.direction < dir_0_right) {
 			// looking left
@@ -619,9 +604,8 @@ int __pascal far dist_from_wall_forward(byte tiletype) {
 }
 
 // seg004:0A7B
-int __pascal far dist_from_wall_behind(byte tiletype) {
-	short type;
-	type = wall_type(tiletype);
+int dist_from_wall_behind(byte tiletype) {
+	short type = wall_type(tiletype);
 	if (type == 0) {
 		return 99;
 	} else {
