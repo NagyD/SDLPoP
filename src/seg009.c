@@ -399,7 +399,7 @@ dat_type* open_dat(const char* filename, int optional) {
 		pointer->handle = fp;
 		pointer->dat_table = dat_table;
 	} else if (optional == 0) {
-		// showmessage will crash if we call if before certain things are initialized!
+		// showmessage will crash if we call it before certain things are initialized!
 		// Solution: In pop_main(), I moved the first open_dat() call after init_copyprot_dialog().
 		// /*
 		// There is no DAT file, verify whether the corresponding directory exists.
