@@ -1348,6 +1348,14 @@ typedef struct directory_listing_type directory_listing_type;
 
 #define FEATHER_FALL_LENGTH 18.75
 
+// Enum used for input variables like control_up, control_forward, control_shift2, and etc
+enum
+{
+	CONTROL_RELEASED = 0,
+	CONTROL_IGNORE = 1,
+	CONTROL_HELD = -1,
+};
+
 enum
 {
 	EDGE_TYPE_CLOSER, // closer/sword/potion

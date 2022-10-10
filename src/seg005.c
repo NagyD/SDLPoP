@@ -291,7 +291,7 @@ void control() {
 		// When ducking with down+forward, give time to release the forward control (prevents unintended crouch-hops)
 		else if (fixes->enable_crouch_after_climbing && Char.curr_seq >= seqtbl_offsets[seq_50_crouch] &&
 				Char.curr_seq < seqtbl_offsets[seq_49_stand_up_from_crouch]) // while stooping
-			if (control_forward < 1) control_forward = 0;
+			if (control_forward < CONTROL_IGNORE) control_forward = CONTROL_RELEASED;
 		#endif
 
 		#ifdef FIX_MOVE_AFTER_DRINK
@@ -327,12 +327,12 @@ void control_crouched() {
 		}
 	} else {
 		need_level1_music = 0;
-		if (control_shift2 < 0 && check_get_item()) return;
-		if (control_y != 1) {
+		if (control_shift2 < CONTROL_RELEASED && check_get_item()) return;
+		if (control_y != CONTROL_IGNORE) {
 			seqtbl_offset_char(seq_49_stand_up_from_crouch); // stand up from crouch
 		} else {
-			if (control_forward < 0) {
-				control_forward = 1; // disable automatic repeat
+			if (control_forward < CONTROL_RELEASED) {
+				control_forward = CONTROL_IGNORE; // disable automatic repeat
 				seqtbl_offset_char(seq_79_crouch_hop); // crouch-hop
 			}
 		}
@@ -341,15 +341,15 @@ void control_crouched() {
 
 // seg005:0358
 void control_standing() {
-	if (control_shift2 < 0 && control_shift < 0 && check_get_item()) {
+	if (control_shift2 < CONTROL_RELEASED && control_shift < CONTROL_RELEASED && check_get_item()) {
 		return;
 	}
-	if (Char.charid != charid_0_kid && control_down < 0 && control_forward < 0) {
+	if (Char.charid != charid_0_kid && control_down < CONTROL_RELEASED && control_forward < CONTROL_RELEASED) {
 		draw_sword();
 		return;
 	} //else
 	if (have_sword) {
-		if (offguard != 0 && control_shift >= 0) goto loc_6213;
+		if (offguard != 0 && control_shift >= CONTROL_RELEASED) goto loc_6213;
 		if (can_guard_see_kid >= 2) {
 			short distance = char_opp_dist();
 			if (distance >= -10 && distance < 90) {
@@ -372,33 +372,33 @@ void control_standing() {
 			offguard = 0;
 		}
 	}
-	if (control_shift < 0) {
-		if (control_backward < 0) {
+	if (control_shift < CONTROL_RELEASED) {
+		if (control_backward < CONTROL_RELEASED) {
 			back_pressed();
-		} else if (control_up < 0) {
+		} else if (control_up < CONTROL_RELEASED) {
 			up_pressed();
-		} else if (control_down < 0) {
+		} else if (control_down < CONTROL_RELEASED) {
 			down_pressed();
-		} else if (control_x < 0 && control_forward < 0) {
+		} else if (control_x < CONTROL_RELEASED && control_forward < CONTROL_RELEASED) {
 			safe_step();
 		}
-	} else loc_6213: if (control_forward < 0) {
-		if (is_keyboard_mode && control_up < 0) {
+	} else loc_6213: if (control_forward < CONTROL_RELEASED) {
+		if (is_keyboard_mode && control_up < CONTROL_RELEASED) {
 			standing_jump();
 		} else {
 			forward_pressed();
 		}
-	} else if (control_backward < 0) {
+	} else if (control_backward < CONTROL_RELEASED) {
 		back_pressed();
-	} else if (control_up < 0) {
-		if (is_keyboard_mode && control_forward < 0) {
+	} else if (control_up < CONTROL_RELEASED) {
+		if (is_keyboard_mode && control_forward < CONTROL_RELEASED) {
 			standing_jump();
 		} else {
 			up_pressed();
 		}
-	} else if (control_down < 0) {
+	} else if (control_down < CONTROL_RELEASED) {
 		down_pressed();
-	} else if (control_x < 0) {
+	} else if (control_x < CONTROL_RELEASED) {
 		forward_pressed();
 	}
 }
@@ -419,7 +419,7 @@ void up_pressed() {
 	){
 		go_up_leveldoor();
 	} else {
-		if (control_x < 0) {
+		if (control_x < CONTROL_RELEASED) {
 			standing_jump();
 		} else {
 			check_jump_up();
@@ -429,7 +429,7 @@ void up_pressed() {
 
 // seg005:04C7
 void down_pressed() {
-	control_down = 1; // disable automatic repeat
+	control_down = CONTROL_IGNORE; // disable automatic repeat
 	if (! tile_is_floor(get_tile_infrontof_char()) &&
 		distance_to_edge_weight() < 3
 	) {
@@ -443,7 +443,7 @@ void down_pressed() {
 			get_tile_at_char();
 			if (can_grab() &&
 				#ifdef ALLOW_CROUCH_AFTER_CLIMBING
-				(!(fixes->enable_crouch_after_climbing && control_forward == -1)) &&
+				(!(fixes->enable_crouch_after_climbing && control_forward == CONTROL_HELD)) &&
 				#endif
 				(Char.direction >= dir_0_right ||
 				get_tile_at_char() != tiles_4_gate ||
@@ -469,7 +469,7 @@ void go_up_leveldoor() {
 
 // seg005:058F
 void control_turning() {
-	if (control_shift >= 0 && control_x < 0 && control_y >= 0) {
+	if (control_shift >= CONTROL_RELEASED && control_x < CONTROL_RELEASED && control_y >= CONTROL_RELEASED) {
 		seqtbl_offset_char(seq_43_start_run_after_turn); // start run and run (after turning)
 	}
 
@@ -478,14 +478,14 @@ void control_turning() {
 	// To prevent this: clear the remembered controls, so that if the stick has already moved to another/neutral position,
 	// the kid will not jump, duck, or turn again.
 	if (is_joyst_mode) {
-		if (control_up < 0 && control_y >= 0) {
-			control_up = 0;
+		if (control_up < CONTROL_RELEASED && control_y >= CONTROL_RELEASED) {
+			control_up = CONTROL_RELEASED;
 		}
-		if (control_down < 0 && control_y <= 0) {
-			control_down = 0;
+		if (control_down < CONTROL_RELEASED && control_y <= CONTROL_RELEASED) {
+			control_down = CONTROL_RELEASED;
 		}
-		if (control_backward < 0 && control_x == 0) {
-			control_backward = 0;
+		if (control_backward < CONTROL_RELEASED && control_x == CONTROL_RELEASED) {
+			control_backward = CONTROL_RELEASED;
 		}
 	}
 }
@@ -520,16 +520,16 @@ void forward_pressed() {
 	short distance;
 	distance = get_edge_distance();
 	#ifdef ALLOW_CROUCH_AFTER_CLIMBING
-	if (fixes->enable_crouch_after_climbing && control_down < 0) {
+	if (fixes->enable_crouch_after_climbing && control_down < CONTROL_RELEASED) {
 		down_pressed();
-		control_forward = 0;
+		control_forward = CONTROL_RELEASED;
 		return;
 	}
 	#endif
 
 	if (edge_type == EDGE_TYPE_EDGE && curr_tile2 != tiles_18_chomper && distance < 8) {
 		// If char is near a wall, step instead of run.
-		if (control_forward < 0) {
+		if (control_forward < CONTROL_RELEASED) {
 			safe_step();
 		}
 	} else {
@@ -539,24 +539,24 @@ void forward_pressed() {
 
 // seg005:0649
 void control_running() {
-	if (control_x == 0 && (Char.frame == frame_7_run || Char.frame == frame_11_run)) {
+	if (control_x == CONTROL_RELEASED && (Char.frame == frame_7_run || Char.frame == frame_11_run)) {
 		control_forward = release_arrows();
 		seqtbl_offset_char(seq_13_stop_run); // stop run
-	} else if (control_x > 0) {
+	} else if (control_x > CONTROL_RELEASED) {
 		control_backward = release_arrows();
 		seqtbl_offset_char(seq_6_run_turn); // run-turn
-	} else if (control_y < 0 && control_up < 0) {
+	} else if (control_y < CONTROL_RELEASED && control_up < CONTROL_RELEASED) {
 		run_jump();
-	} else if (control_down < 0) {
-		control_down = 1; // disable automatic repeat
+	} else if (control_down < CONTROL_RELEASED) {
+		control_down = CONTROL_IGNORE; // disable automatic repeat
 		seqtbl_offset_char(seq_26_crouch_while_running); // crouch while running
 	}
 }
 
 // seg005:06A8
 void safe_step() {
-	control_shift2 = 1; // disable automatic repeat
-	control_forward = 1; // disable automatic repeat
+	control_shift2 = CONTROL_IGNORE; // disable automatic repeat
+	control_forward = CONTROL_IGNORE; // disable automatic repeat
 	short distance = get_edge_distance();
 	if (distance) {
 		Char.repeat = 1;
@@ -625,21 +625,21 @@ void get_item() {
 
 // seg005:07FF
 void control_startrun() {
-	if (control_y < 0 && control_x < 0) {
+	if (control_y < CONTROL_RELEASED && control_x < CONTROL_RELEASED) {
 		standing_jump();
 	}
 }
 
 // seg005:0812
 void control_jumpup() {
-	if (control_x < 0 || control_forward < 0) {
+	if (control_x < CONTROL_RELEASED || control_forward < CONTROL_RELEASED) {
 		standing_jump();
 	}
 }
 
 // seg005:0825
 void standing_jump() {
-	control_up = control_forward = 1; // disable automatic repeat
+	control_up = control_forward = CONTROL_IGNORE; // disable automatic repeat
 	seqtbl_offset_char(seq_3_standing_jump); // standing jump
 }
 
@@ -744,12 +744,12 @@ void jump_up() {
 // seg005:0968
 void control_hanging() {
 	if (Char.alive < 0) {
-		if (grab_timer == 0 && control_y < 0) {
+		if (grab_timer == 0 && control_y < CONTROL_RELEASED) {
 			can_climb_up();
 #ifdef USE_SUPER_HIGH_JUMP
-		} else if (control_shift < 0 || (fixes->enable_super_high_jump && super_jump_fall && control_y < 0)) {
+		} else if (control_shift < CONTROL_RELEASED || (fixes->enable_super_high_jump && super_jump_fall && control_y < CONTROL_RELEASED)) {
 #else
-		} else if (control_shift < 0) {
+		} else if (control_shift < CONTROL_RELEASED) {
 #endif
 			// hanging against a wall or a doortop
 			if (Char.action != actions_6_hang_straight &&
@@ -877,7 +877,7 @@ void run_jump() {
 void back_with_sword() {
 	short frame = Char.frame;
 	if (frame == frame_158_stand_with_sword || frame == frame_170_stand_with_sword || frame == frame_171_stand_with_sword) {
-		control_backward = 1; // disable automatic repeat
+		control_backward = CONTROL_IGNORE; // disable automatic repeat
 		seqtbl_offset_char(seq_57_back_with_sword); // back with sword
 	}
 }
@@ -886,7 +886,7 @@ void back_with_sword() {
 void forward_with_sword() {
 	short frame = Char.frame;
 	if (frame == frame_158_stand_with_sword || frame == frame_170_stand_with_sword || frame == frame_171_stand_with_sword) {
-		control_forward = 1; // disable automatic repeat
+		control_forward = CONTROL_IGNORE; // disable automatic repeat
 		if (Char.charid != charid_0_kid) {
 			seqtbl_offset_char(seq_56_guard_forward_with_sword); // forward with sword (Guard)
 		} else {
@@ -901,7 +901,7 @@ void draw_sword() {
 	control_forward = control_shift2 = release_arrows();
 #ifdef FIX_UNINTENDED_SWORD_STRIKE
 	if (fixes->fix_unintended_sword_strike) {
-		ctrl1_shift2 = 1; // prevent restoring control_shift2 to -1 in rest_ctrl_1()
+		ctrl1_shift2 = CONTROL_IGNORE; // prevent restoring control_shift2 to CONTROL_HELD in rest_ctrl_1()
 	}
 #endif
 	if (Char.charid == charid_0_kid) {
@@ -957,16 +957,16 @@ void swordfight() {
 	if (frame == frame_161_parry && control_shift2 >= 0) {
 		seqtbl_offset_char(seq_57_back_with_sword); // back with sword (when parrying)
 		return;
-	} else if (control_shift2 < 0) {
+	} else if (control_shift2 < CONTROL_RELEASED) {
 		if (charid == charid_0_kid) {
 			kid_sword_strike = 15;
 		}
 		sword_strike();
-		if (control_shift2 == 1) return;
+		if (control_shift2 == CONTROL_IGNORE) return;
 	}
-	if (control_down < 0) {
+	if (control_down < CONTROL_RELEASED) {
 		if (frame == frame_158_stand_with_sword || frame == frame_170_stand_with_sword || frame == frame_171_stand_with_sword) {
-			control_down = 1; // disable automatic repeat
+			control_down = CONTROL_IGNORE; // disable automatic repeat
 			Char.sword = sword_0_sheathed;
 			if (charid == charid_0_kid) {
 				offguard = 1;
@@ -980,11 +980,11 @@ void swordfight() {
 			}
 			seqtbl_offset_char(seq_id);
 		}
-	} else if (control_up < 0) {
+	} else if (control_up < CONTROL_RELEASED) {
 		parry();
-	} else if (control_forward < 0) {
+	} else if (control_forward < CONTROL_RELEASED) {
 		forward_with_sword();
-	} else if (control_backward < 0) {
+	} else if (control_backward < CONTROL_RELEASED) {
 		back_with_sword();
 	}
 }
@@ -1010,7 +1010,7 @@ void sword_strike() {
 	} else {
 		return;
 	}
-	control_shift2 = 1; // disable automatic repeat
+	control_shift2 = CONTROL_IGNORE; // disable automatic repeat
 	seqtbl_offset_char(seq_id);
 }
 
@@ -1052,7 +1052,7 @@ void parry() {
 		if (char_frame != frame_167_blocked) return;
 		seq_id = seq_61_parry_after_strike; // parry after striking with sword
 	}
-	control_up = 1; // disable automatic repeat
+	control_up = CONTROL_IGNORE; // disable automatic repeat
 	seqtbl_offset_char(seq_id);
 	if (do_play_seq) {
 		play_seq();

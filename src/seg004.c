@@ -183,7 +183,7 @@ void check_bumped_look_left() {
 	) {
 #ifdef USE_JUMP_GRAB
         // Prince can grab a floor on top of a wall during a jump if Shift and up arrow keys are pressed.
-        if (fixes->enable_jump_grab && control_shift < 0) {
+        if (fixes->enable_jump_grab && control_shift < CONTROL_RELEASED) {
             if (check_grab_run_jump()) {
                 return;
             }
@@ -202,7 +202,7 @@ void check_bumped_look_right() {
 	) {
 #ifdef USE_JUMP_GRAB
         // Prince can grab a floor on top of a wall during a jump if Shift and up arrow keys are pressed.
-        if (fixes->enable_jump_grab && control_shift < 0) {
+        if (fixes->enable_jump_grab && control_shift < CONTROL_RELEASED) {
             if (check_grab_run_jump()) {
                 return;
             }

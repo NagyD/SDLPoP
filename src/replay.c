@@ -747,9 +747,9 @@ void do_replay_move() {
 
 		// Ignore Shift if the kid is dead: restart moves are hard-coded as a 'special move'.
 		if (rem_min != 0 && Kid.alive > 6)
-			control_shift = 0;
+			control_shift = CONTROL_RELEASED;
 		else
-			control_shift = (curr_move.shift) ? -1 : 0;
+			control_shift = (curr_move.shift) ? CONTROL_HELD : CONTROL_RELEASED;
 
 		if (curr_move.special == MOVE_RESTART_LEVEL) { // restart level
 			stop_sounds();

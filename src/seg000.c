@@ -1349,22 +1349,22 @@ void read_joyst_control() {
 	}
 
 	if (joy_left_stick_states[0] == -1 || joy_right_stick_states[0] == -1 || joy_hat_states[0] == -1)
-		control_x = -1;
+		control_x = CONTROL_HELD;
 
 	if (joy_left_stick_states[0] == 1 || joy_right_stick_states[0] == 1 || joy_hat_states[0] == 1)
-		control_x = 1;
+		control_x = CONTROL_IGNORE;
 
 	if (joy_left_stick_states[1] == -1 || joy_right_stick_states[1] == -1 || joy_hat_states[1] == -1 || joy_AY_buttons_state == -1)
-		control_y = -1;
+		control_y = CONTROL_HELD;
 
 	if (joy_left_stick_states[1] == 1 || joy_right_stick_states[1] == 1 || joy_hat_states[1] == 1 || joy_AY_buttons_state == 1)
-		control_y = 1;
+		control_y = CONTROL_IGNORE;
 
 	if (joy_X_button_state == 1 ||
 			joy_axis[SDL_CONTROLLER_AXIS_TRIGGERLEFT] > 8000 ||
 			joy_axis[SDL_CONTROLLER_AXIS_TRIGGERRIGHT] > 8000)
 	{
-		control_shift = -1;
+		control_shift = CONTROL_HELD;
 	}
 
 }
@@ -1679,9 +1679,9 @@ int do_paused() {
 	word key;
 	key = 0;
 	next_room = 0;
-	control_shift = 0;
-	control_y = 0;
-	control_x = 0;
+	control_shift = CONTROL_RELEASED;
+	control_y = CONTROL_RELEASED;
+	control_x = CONTROL_RELEASED;
 	if (is_joyst_mode) {
 		read_joyst_control();
 	} else {
@@ -1724,20 +1724,20 @@ void read_keyb_control() {
 	if (key_states[SDL_SCANCODE_UP] || key_states[SDL_SCANCODE_HOME] || key_states[SDL_SCANCODE_PAGEUP]
 	    || key_states[SDL_SCANCODE_KP_8] || key_states[SDL_SCANCODE_KP_7] || key_states[SDL_SCANCODE_KP_9]
 	) {
-		control_y = -1;
+		control_y = CONTROL_HELD;
 	} else if (key_states[SDL_SCANCODE_CLEAR] || key_states[SDL_SCANCODE_DOWN]
 	           || key_states[SDL_SCANCODE_KP_5] || key_states[SDL_SCANCODE_KP_2]
 	) {
-		control_y = 1;
+		control_y = CONTROL_IGNORE;
 	}
 	if (key_states[SDL_SCANCODE_LEFT] || key_states[SDL_SCANCODE_HOME]
 	    || key_states[SDL_SCANCODE_KP_4] || key_states[SDL_SCANCODE_KP_7]
 	) {
-		control_x = -1;
+		control_x = CONTROL_HELD;
 	} else if (key_states[SDL_SCANCODE_RIGHT] || key_states[SDL_SCANCODE_PAGEUP]
 	           || key_states[SDL_SCANCODE_KP_6] || key_states[SDL_SCANCODE_KP_9]
 	) {
-		control_x = 1;
+		control_x = CONTROL_IGNORE;
 	}
 	control_shift = -(key_states[SDL_SCANCODE_LSHIFT] || key_states[SDL_SCANCODE_RSHIFT]);
 
