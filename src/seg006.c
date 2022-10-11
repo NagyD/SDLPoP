@@ -880,7 +880,7 @@ void check_action() {
 	short frame = Char.frame;
 #ifdef USE_JUMP_GRAB
     // Prince can grab tiles during a jump if Shift and up arrow, but not forward arrow, keys are pressed.
-    if (fixes->enable_jump_grab && action == actions_1_run_jump && control_shift < CONTROL_RELEASED && check_grab_run_jump()) {
+    if (fixes->enable_jump_grab && action == actions_1_run_jump && control_shift == CONTROL_HELD && check_grab_run_jump()) {
         return;
     }
 #endif
@@ -1147,9 +1147,9 @@ void check_grab() {
 	#endif
 
 #ifdef USE_SUPER_HIGH_JUMP
-	if ((control_shift < CONTROL_RELEASED || (fixes->enable_super_high_jump && super_jump_fall && control_y < CONTROL_RELEASED)) && // press shift or up arrow to grab
+	if ((control_shift == CONTROL_HELD || (fixes->enable_super_high_jump && super_jump_fall && control_y == CONTROL_HELD)) && // press shift or up arrow to grab
 #else
-	if (control_shift < CONTROL_RELEASED && // press Shift to grab
+	if (control_shift == CONTROL_HELD && // press Shift to grab
 #endif
 		Char.fall_y < MAX_GRAB_FALLING_SPEED && // you can't grab if you're falling too fast ...
 		Char.alive < 0 && // ... or dead
@@ -1198,7 +1198,7 @@ bool check_grab_run_jump() {
     short char_room_m1 = Char.room - 1;
     if (Char.action == actions_1_run_jump &&
             (is_jump || is_running_jump) &&
-            control_x == CONTROL_RELEASED && control_y < CONTROL_RELEASED) {
+            control_x == CONTROL_RELEASED && control_y == CONTROL_HELD) {
         if (can_grab_front_above()) { // can grab a ledge at a specific frame during a jump
             short grab_tile = curr_tile2;
             short grab_col = tile_col;
@@ -1516,7 +1516,7 @@ void clear_saved_ctrl() {
 // seg006:0EAF
 void read_user_control() {
 	if (control_forward >= CONTROL_RELEASED) {
-		if (control_x < CONTROL_RELEASED) {
+		if (control_x == CONTROL_HELD) {
 			if (control_forward == CONTROL_RELEASED) {
 				control_forward = CONTROL_HELD;
 			}
@@ -1534,7 +1534,7 @@ void read_user_control() {
 		}
 	}
 	if (control_up >= CONTROL_RELEASED) {
-		if (control_y < CONTROL_RELEASED) {
+		if (control_y == CONTROL_HELD) {
 			if (control_up == CONTROL_RELEASED) {
 				control_up = CONTROL_HELD;
 			}
@@ -1552,7 +1552,7 @@ void read_user_control() {
 		}
 	}
 	if (control_shift2 >= CONTROL_RELEASED) {
-		if (control_shift < CONTROL_RELEASED) {
+		if (control_shift == CONTROL_HELD) {
 			if (control_shift2 == CONTROL_RELEASED) {
 				control_shift2 = CONTROL_HELD;
 			}
@@ -2079,8 +2079,8 @@ void add_sword_to_objtable() {
 
 // seg006:1827
 void control_guard_inactive() {
-	if (Char.frame == frame_166_stand_inactive && control_down < CONTROL_RELEASED) {
-		if (control_forward < CONTROL_RELEASED) {
+	if (Char.frame == frame_166_stand_inactive && control_down == CONTROL_HELD) {
+		if (control_forward == CONTROL_HELD) {
 			draw_sword();
 		} else {
 			control_down = CONTROL_IGNORE;
