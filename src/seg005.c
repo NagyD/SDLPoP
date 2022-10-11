@@ -291,7 +291,7 @@ void control() {
 		// When ducking with down+forward, give time to release the forward control (prevents unintended crouch-hops)
 		else if (fixes->enable_crouch_after_climbing && Char.curr_seq >= seqtbl_offsets[seq_50_crouch] &&
 				Char.curr_seq < seqtbl_offsets[seq_49_stand_up_from_crouch]) // while stooping
-			if (control_forward < CONTROL_IGNORE) control_forward = CONTROL_RELEASED;
+			if (control_forward != CONTROL_IGNORE) control_forward = CONTROL_RELEASED;
 		#endif
 
 		#ifdef FIX_MOVE_AFTER_DRINK
