@@ -575,7 +575,7 @@ void move_1_forward() {
 // seg002:072A
 void move_2_backward() {
 	control_backward = CONTROL_HELD;
-	control_x = CONTROL_IGNORE;
+	control_x = CONTROL_HELD_ALTDIRECTION;
 }
 
 // seg002:0735
@@ -587,7 +587,7 @@ void move_3_up() {
 // seg002:073E
 void move_4_down() {
 	control_down = CONTROL_HELD;
-	control_y = CONTROL_IGNORE;
+	control_y = CONTROL_HELD_ALTDIRECTION;
 }
 
 // seg002:0749

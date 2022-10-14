@@ -328,7 +328,7 @@ void control_crouched() {
 	} else {
 		need_level1_music = 0;
 		if (control_shift2 == CONTROL_HELD && check_get_item()) return;
-		if (control_y != CONTROL_IGNORE) {
+		if (control_y != CONTROL_HELD_ALTDIRECTION) {
 			seqtbl_offset_char(seq_49_stand_up_from_crouch); // stand up from crouch
 		} else {
 			if (control_forward == CONTROL_HELD) {
@@ -542,7 +542,7 @@ void control_running() {
 	if (control_x == CONTROL_RELEASED && (Char.frame == frame_7_run || Char.frame == frame_11_run)) {
 		control_forward = release_arrows();
 		seqtbl_offset_char(seq_13_stop_run); // stop run
-	} else if (control_x == CONTROL_IGNORE) {
+	} else if (control_x == CONTROL_HELD_ALTDIRECTION) {
 		control_backward = release_arrows();
 		seqtbl_offset_char(seq_6_run_turn); // run-turn
 	} else if (control_y == CONTROL_HELD && control_up == CONTROL_HELD) {

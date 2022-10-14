@@ -1354,6 +1354,7 @@ enum
 	CONTROL_RELEASED = 0,
 	CONTROL_IGNORE = 1,
 	CONTROL_HELD = -1,
+	CONTROL_HELD_ALTDIRECTION = 1, // This is for the control_x and control_y variables to define they're being held down for the opposite direction (facing backwards for control_x and downwards for control_y)
 };
 
 enum
