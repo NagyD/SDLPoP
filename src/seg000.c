@@ -255,7 +255,7 @@ int quick_process(process_func_type process_func) {
 	// level
 #ifdef USE_DEBUG_CHEATS
 	// Don't load the level if the user holds either Shift key while pressing F9.
-	if (debug_cheats_enabled && (key_states[SDL_SCANCODE_LSHIFT] || key_states[SDL_SCANCODE_RSHIFT])) {
+	if (debug_cheats_enabled && (key_states[SDL_SCANCODE_LSHIFT] & KEYSTATE_HELD || key_states[SDL_SCANCODE_RSHIFT] & KEYSTATE_HELD)) {
 		fseek(quick_fp, sizeof(level), SEEK_CUR);
 	} else
 #endif
@@ -520,8 +520,8 @@ void check_quick_op() {
 
 Uint32 temp_shift_release_callback(Uint32 interval, void *param) {
 	const Uint8* state = SDL_GetKeyboardState(NULL);
-	if (state[SDL_SCANCODE_LSHIFT]) key_states[SDL_SCANCODE_LSHIFT] = 1;
-	if (state[SDL_SCANCODE_RSHIFT]) key_states[SDL_SCANCODE_RSHIFT] = 1;
+	if (state[SDL_SCANCODE_LSHIFT] & KEYSTATE_HELD) key_states[SDL_SCANCODE_LSHIFT] |= KEYSTATE_HELD;
+	if (state[SDL_SCANCODE_RSHIFT] & KEYSTATE_HELD) key_states[SDL_SCANCODE_RSHIFT] |= KEYSTATE_HELD;
 	return 0; // causes the timer to be removed
 }
 
@@ -668,8 +668,8 @@ int process_key() {
 			if (current_level < custom->shift_L_allowed_until_level /* 4 */ || cheats_enabled) {
 				// if Shift is not released within the delay, the cutscene is skipped
 				Uint32 delay = 250;
-				key_states[SDL_SCANCODE_LSHIFT] = 0;
-				key_states[SDL_SCANCODE_RSHIFT] = 0;
+				key_states[SDL_SCANCODE_LSHIFT] &= ~KEYSTATE_HELD;
+				key_states[SDL_SCANCODE_RSHIFT] &= ~KEYSTATE_HELD;
 				SDL_TimerID timer;
 				timer = SDL_AddTimer(delay, temp_shift_release_callback, NULL);
 				if (timer == 0) {
@@ -1717,32 +1717,59 @@ int do_paused() {
 // seg000:1500
 void read_keyb_control() {
 
-	if (key_states[SDL_SCANCODE_UP] || key_states[SDL_SCANCODE_HOME] || key_states[SDL_SCANCODE_PAGEUP]
-	    || key_states[SDL_SCANCODE_KP_8] || key_states[SDL_SCANCODE_KP_7] || key_states[SDL_SCANCODE_KP_9]
+	if (key_states[SDL_SCANCODE_UP] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW) || key_states[SDL_SCANCODE_HOME] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW) || key_states[SDL_SCANCODE_PAGEUP] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW)
+	    || key_states[SDL_SCANCODE_KP_8] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW) || key_states[SDL_SCANCODE_KP_7] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW) || key_states[SDL_SCANCODE_KP_9] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW)
 	) {
 		control_y = CONTROL_HELD_UP;
-	} else if (key_states[SDL_SCANCODE_CLEAR] || key_states[SDL_SCANCODE_DOWN]
-	           || key_states[SDL_SCANCODE_KP_5] || key_states[SDL_SCANCODE_KP_2]
+	} else if (key_states[SDL_SCANCODE_CLEAR] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW) || key_states[SDL_SCANCODE_DOWN] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW)
+	           || key_states[SDL_SCANCODE_KP_5] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW) || key_states[SDL_SCANCODE_KP_2] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW)
 	) {
 		control_y = CONTROL_HELD_DOWN;
 	}
-	if (key_states[SDL_SCANCODE_LEFT] || key_states[SDL_SCANCODE_HOME]
-	    || key_states[SDL_SCANCODE_KP_4] || key_states[SDL_SCANCODE_KP_7]
+	if (key_states[SDL_SCANCODE_LEFT] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW) || key_states[SDL_SCANCODE_HOME] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW)
+	    || key_states[SDL_SCANCODE_KP_4] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW) || key_states[SDL_SCANCODE_KP_7] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW)
 	) {
 		control_x = CONTROL_HELD_LEFT;
-	} else if (key_states[SDL_SCANCODE_RIGHT] || key_states[SDL_SCANCODE_PAGEUP]
-	           || key_states[SDL_SCANCODE_KP_6] || key_states[SDL_SCANCODE_KP_9]
+	} else if (key_states[SDL_SCANCODE_RIGHT] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW) || key_states[SDL_SCANCODE_PAGEUP] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW)
+	           || key_states[SDL_SCANCODE_KP_6] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW) || key_states[SDL_SCANCODE_KP_9] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW)
 	) {
 		control_x = CONTROL_HELD_RIGHT;
 	}
-	control_shift = -(key_states[SDL_SCANCODE_LSHIFT] || key_states[SDL_SCANCODE_RSHIFT]);
+	
+	if(key_states[SDL_SCANCODE_LSHIFT] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW) || key_states[SDL_SCANCODE_RSHIFT] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW))
+		control_shift = CONTROL_HELD;
+	else
+		control_shift = CONTROL_RELEASED;
 
 	#ifdef USE_DEBUG_CHEATS
 	if (cheats_enabled && debug_cheats_enabled) {
-		if (key_states[SDL_SCANCODE_RIGHTBRACKET]) ++Char.x;
-		else if (key_states[SDL_SCANCODE_LEFTBRACKET]) --Char.x;
+		if (key_states[SDL_SCANCODE_RIGHTBRACKET] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW)) ++Char.x;
+		else if (key_states[SDL_SCANCODE_LEFTBRACKET] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW)) --Char.x;
 	}
 	#endif
+
+	key_states[SDL_SCANCODE_UP] &= ~KEYSTATE_HELD_NEW;
+	key_states[SDL_SCANCODE_HOME] &= ~KEYSTATE_HELD_NEW;
+	key_states[SDL_SCANCODE_PAGEUP] &= ~KEYSTATE_HELD_NEW;
+	key_states[SDL_SCANCODE_KP_8] &= ~KEYSTATE_HELD_NEW;
+	key_states[SDL_SCANCODE_KP_7] &= ~KEYSTATE_HELD_NEW;
+	key_states[SDL_SCANCODE_KP_9] &= ~KEYSTATE_HELD_NEW;
+	key_states[SDL_SCANCODE_CLEAR] &= ~KEYSTATE_HELD_NEW;
+	key_states[SDL_SCANCODE_DOWN] &= ~KEYSTATE_HELD_NEW;
+	key_states[SDL_SCANCODE_KP_5] &= ~KEYSTATE_HELD_NEW;
+	key_states[SDL_SCANCODE_KP_2] &= ~KEYSTATE_HELD_NEW;
+	key_states[SDL_SCANCODE_LEFT] &= ~KEYSTATE_HELD_NEW;
+	key_states[SDL_SCANCODE_HOME] &= ~KEYSTATE_HELD_NEW;
+	key_states[SDL_SCANCODE_KP_4] &= ~KEYSTATE_HELD_NEW;
+	key_states[SDL_SCANCODE_KP_7] &= ~KEYSTATE_HELD_NEW;
+	key_states[SDL_SCANCODE_RIGHT] &= ~KEYSTATE_HELD_NEW;
+	key_states[SDL_SCANCODE_PAGEUP] &= ~KEYSTATE_HELD_NEW;
+	key_states[SDL_SCANCODE_KP_6] &= ~KEYSTATE_HELD_NEW;
+	key_states[SDL_SCANCODE_KP_9] &= ~KEYSTATE_HELD_NEW;
+	key_states[SDL_SCANCODE_LSHIFT] &= ~KEYSTATE_HELD_NEW;
+	key_states[SDL_SCANCODE_RSHIFT] &= ~KEYSTATE_HELD_NEW;
+	key_states[SDL_SCANCODE_RIGHTBRACKET] &= ~KEYSTATE_HELD_NEW;
+	key_states[SDL_SCANCODE_LEFTBRACKET] &= ~KEYSTATE_HELD_NEW;
 }
 
 // seg000:156D
@@ -2326,18 +2353,18 @@ void show_splash() {
 			joy_AY_buttons_state = 0;
 			joy_X_button_state = 0;
 			joy_B_button_state = 0;
-			key_states[SDL_SCANCODE_LSHIFT] = 1; // close the splash screen using the gamepad
+			key_states[SDL_SCANCODE_LSHIFT] |= KEYSTATE_HELD; // close the splash screen using the gamepad
 		}
 		delay_ticks(1);
 
-	} while(key == 0 && !(key_states[SDL_SCANCODE_LSHIFT] || key_states[SDL_SCANCODE_RSHIFT]));
+	} while(key == 0 && !(key_states[SDL_SCANCODE_LSHIFT] & KEYSTATE_HELD || key_states[SDL_SCANCODE_RSHIFT] & KEYSTATE_HELD));
 
 	if ((key & WITH_CTRL) || (enable_quicksave && key == SDL_SCANCODE_F9) || (enable_replay && key == SDL_SCANCODE_TAB)) {
 		extern int last_key_scancode; // defined in seg009.c
 		last_key_scancode = key; // can immediately do Ctrl+L, etc from the splash screen
 	}
-	key_states[SDL_SCANCODE_LSHIFT] = 0; // don't immediately start the game if Shift was pressed!
-	key_states[SDL_SCANCODE_RSHIFT] = 0;
+	key_states[SDL_SCANCODE_LSHIFT] &= ~KEYSTATE_HELD; // don't immediately start the game if Shift was pressed!
+	key_states[SDL_SCANCODE_RSHIFT] &= ~KEYSTATE_HELD;
 #endif
 }
 

@@ -1348,6 +1348,14 @@ typedef struct directory_listing_type directory_listing_type;
 
 #define FEATHER_FALL_LENGTH 18.75
 
+// Bit-flags used for the keystate array
+enum
+{
+	KEYSTATE_HELD = (1<<0), // True if key is currently held down
+	KEYSTATE_HELD_NEW = (1<<1), // True if key was held down since since last gameplay tick
+	KEYSTATE_RELEASED_NEW = (1<<2), // True if key was let go since since last gameplay tick (TODO: Is this really necessary? We should be able to use KEYSTATE_HELD_NEW to tell if button press is a toggle since last game update)
+};
+
 // Enum used for input variables like control_up, control_forward, control_shift2, and etc
 enum
 {

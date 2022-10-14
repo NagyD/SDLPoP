@@ -3354,13 +3354,13 @@ void process_events() {
 				    scancode == SDL_SCANCODE_RETURN)
 				{
 					// Only if the Enter key was pressed down right now.
-					if (key_states[scancode] == 0) {
+					if ((key_states[scancode] & KEYSTATE_HELD) == 0) {
 						// Alt+Enter: toggle fullscreen mode
 						toggle_fullscreen();
-						key_states[scancode] = 1;
+						key_states[scancode] |= KEYSTATE_HELD | KEYSTATE_HELD_NEW;
 					}
 				} else {
-					key_states[scancode] = 1;
+					key_states[scancode] |= KEYSTATE_HELD | KEYSTATE_HELD_NEW;
 					switch (scancode) {
 						// Keys that are ignored by themselves:
 						case SDL_SCANCODE_LCTRL:
@@ -3434,7 +3434,7 @@ void process_events() {
 				}
 #endif
 
-				key_states[event.key.keysym.scancode] = 0;
+				key_states[event.key.keysym.scancode] &= ~KEYSTATE_HELD;
 #ifdef USE_MENU
 				// Prevent repeated keystrokes opening/closing the menu as long as the key is held down.
 				if (event.key.keysym.scancode == SDL_SCANCODE_BACKSPACE || event.key.keysym.scancode == SDL_SCANCODE_ESCAPE) {
