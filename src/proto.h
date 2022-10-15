@@ -646,7 +646,7 @@ int fade_out_frame(palette_fade_type* palette_buffer);
 void read_palette_256(rgb_type* target);
 void set_pal_256(rgb_type* source);
 #endif
-void set_chtab_palette(chtab_type* chtab, byte* colors, int n_colors);
+void set_chtab_palette(chtab_type* chtab, byte* colors, int n_colors, int first_color /*= 0*/);
 int has_timer_stopped(int index);
 sound_buffer_type* load_sound(int index);
 void free_sound(sound_buffer_type* buffer);

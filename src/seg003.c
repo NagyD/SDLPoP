@@ -254,7 +254,7 @@ void redraw_screen(int drawing_different_room) {
 	} else {
 		if (curr_guard_color) {
 			// Moved *before* drawings.
-			set_chtab_palette(chtab_addrs[id_chtab_5_guard], &guard_palettes[0x30 * curr_guard_color - 0x30], 0x10);
+			set_chtab_palette(chtab_addrs[id_chtab_5_guard], &guard_palettes[0x30 * curr_guard_color - 0x30], 0x10, 0);
 		}
 		need_drects = 0;
 		redraw_room();

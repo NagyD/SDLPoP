@@ -4034,7 +4034,7 @@ void set_pal_256(rgb_type* source) {
 }
 #endif // USE_FADE
 
-void set_chtab_palette(chtab_type* chtab, byte* colors, int n_colors) {
+void set_chtab_palette(chtab_type* chtab, byte* colors, int n_colors, int first_color /*= 0*/) {
 	if (chtab != NULL) {
 		SDL_Color* scolors = (SDL_Color*) malloc(n_colors*sizeof(SDL_Color));
 		//printf("scolors\n",i);
@@ -4048,8 +4048,10 @@ void set_chtab_palette(chtab_type* chtab, byte* colors, int n_colors) {
 
 		// Color 0 of the palette data is not used, it is replaced by the background color.
 		// Needed for correct alternate colors (v1.3) of level 8.
-		scolors[0].r = scolors[0].g = scolors[0].b = 0;
-		scolors[0].a = SDL_ALPHA_TRANSPARENT;
+		if (first_color == 0) {
+			scolors[0].r = scolors[0].g = scolors[0].b = 0;
+			scolors[0].a = SDL_ALPHA_TRANSPARENT;
+		}
 
 		//printf("setcolors\n",i);
 		for (int i = 0; i < chtab->n_images; ++i) {
@@ -4062,11 +4064,15 @@ void set_chtab_palette(chtab_type* chtab, byte* colors, int n_colors) {
 
 				// one of the guard images (i=25) is only a single transparent pixel
 				// this caused SDL_SetPaletteColors to fail, I think because that palette contains only 2 colors
-				if (current_palette->ncolors < n_colors_to_be_set)
-					n_colors_to_be_set = current_palette->ncolors;
-				if (SDL_SetPaletteColors(current_palette, scolors, 0, n_colors_to_be_set) != 0) {
-					sdlperror("set_chtab_palette: SDL_SetPaletteColors");
-					quit(1);
+				if (current_palette != NULL) {
+					if (current_palette->ncolors < n_colors_to_be_set)
+						n_colors_to_be_set = current_palette->ncolors;
+					if (SDL_SetPaletteColors(current_palette, scolors, first_color, n_colors_to_be_set) != 0) {
+						sdlperror("set_chtab_palette: SDL_SetPaletteColors");
+						quit(1);
+					}
+				} else {
+					printf("Tried to set palette on a non-paletted image.\n");
 				}
 			}
 		}
