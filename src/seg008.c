@@ -1553,7 +1553,8 @@ int compare_curr_objs(int index1,int index2) {
 
 // seg008:20CA
 void draw_objtable_item(int index) {
-	switch (load_obj_from_objtable(index)) {
+	int type = load_obj_from_objtable(index);
+	switch (type) {
 		case 0: // Kid
 		case 4: // mirror image
 			//printf("index = %d, obj_id = %d\n", index, obj_id); // debug
@@ -1562,9 +1563,17 @@ void draw_objtable_item(int index) {
 			if (united_with_shadow && (united_with_shadow % 2) == 0) goto shadow;
 			// fallthrough!
 		case 2: // Guard
-		case 3: // sword
+		case 3: // kid sword
+		case 13: // guard sword
 		case 5: // hurt splash
-			add_midtable(obj_chtab, obj_id + 1, obj_xh, obj_xl, obj_y, blitters_10h_transp, 1);
+		{
+			int blit = blitters_10h_transp;
+			if (type == 3) {
+				int color = color_2_green;
+				blit = blitters_40h_mono + color;
+			}
+			add_midtable(obj_chtab, obj_id + 1, obj_xh, obj_xl, obj_y, blit, 1);
+		}
 		break;
 		case 1: // shadow
 		shadow:

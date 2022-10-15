@@ -2089,7 +2089,7 @@ void add_sword_to_objtable() {
 				obj_dx_forward(sword_tbl[sword_frame].x);
 				obj_y += sword_tbl[sword_frame].y;
 				obj_chtab = id_chtab_0_sword;
-				add_objtable(3); // sword
+				add_objtable(Char.charid == charid_0_kid ? 3 : 13); // sword
 			}
 		}
 	}
