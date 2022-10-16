@@ -1711,6 +1711,12 @@ int do_paused() {
 		}
 		erase_bottom_text(1);
 	}
+
+	// As we processed input for current gameplay tick remove the bit flagging any button press as new
+	for(int i = 0; i < SDL_NUM_SCANCODES; i++) {
+		key_states[i] &= ~KEYSTATE_HELD_NEW;
+	}
+
 	return key || control_shift;
 }
 
@@ -1747,29 +1753,6 @@ void read_keyb_control() {
 		else if (key_states[SDL_SCANCODE_LEFTBRACKET] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW)) --Char.x;
 	}
 	#endif
-
-	key_states[SDL_SCANCODE_UP] &= ~KEYSTATE_HELD_NEW;
-	key_states[SDL_SCANCODE_HOME] &= ~KEYSTATE_HELD_NEW;
-	key_states[SDL_SCANCODE_PAGEUP] &= ~KEYSTATE_HELD_NEW;
-	key_states[SDL_SCANCODE_KP_8] &= ~KEYSTATE_HELD_NEW;
-	key_states[SDL_SCANCODE_KP_7] &= ~KEYSTATE_HELD_NEW;
-	key_states[SDL_SCANCODE_KP_9] &= ~KEYSTATE_HELD_NEW;
-	key_states[SDL_SCANCODE_CLEAR] &= ~KEYSTATE_HELD_NEW;
-	key_states[SDL_SCANCODE_DOWN] &= ~KEYSTATE_HELD_NEW;
-	key_states[SDL_SCANCODE_KP_5] &= ~KEYSTATE_HELD_NEW;
-	key_states[SDL_SCANCODE_KP_2] &= ~KEYSTATE_HELD_NEW;
-	key_states[SDL_SCANCODE_LEFT] &= ~KEYSTATE_HELD_NEW;
-	key_states[SDL_SCANCODE_HOME] &= ~KEYSTATE_HELD_NEW;
-	key_states[SDL_SCANCODE_KP_4] &= ~KEYSTATE_HELD_NEW;
-	key_states[SDL_SCANCODE_KP_7] &= ~KEYSTATE_HELD_NEW;
-	key_states[SDL_SCANCODE_RIGHT] &= ~KEYSTATE_HELD_NEW;
-	key_states[SDL_SCANCODE_PAGEUP] &= ~KEYSTATE_HELD_NEW;
-	key_states[SDL_SCANCODE_KP_6] &= ~KEYSTATE_HELD_NEW;
-	key_states[SDL_SCANCODE_KP_9] &= ~KEYSTATE_HELD_NEW;
-	key_states[SDL_SCANCODE_LSHIFT] &= ~KEYSTATE_HELD_NEW;
-	key_states[SDL_SCANCODE_RSHIFT] &= ~KEYSTATE_HELD_NEW;
-	key_states[SDL_SCANCODE_RIGHTBRACKET] &= ~KEYSTATE_HELD_NEW;
-	key_states[SDL_SCANCODE_LEFTBRACKET] &= ~KEYSTATE_HELD_NEW;
 }
 
 // seg000:156D
