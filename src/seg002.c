@@ -556,67 +556,67 @@ void play_mirr_mus() {
 
 // seg002:0706
 void move_0_nothing() {
-	control_shift = 0;
-	control_y = 0;
-	control_x = 0;
-	control_shift2 = 0;
-	control_down = 0;
-	control_up = 0;
-	control_backward = 0;
-	control_forward = 0;
+	control_shift = CONTROL_RELEASED;
+	control_y = CONTROL_RELEASED;
+	control_x = CONTROL_RELEASED;
+	control_shift2 = CONTROL_RELEASED;
+	control_down = CONTROL_RELEASED;
+	control_up = CONTROL_RELEASED;
+	control_backward = CONTROL_RELEASED;
+	control_forward = CONTROL_RELEASED;
 }
 
 // seg002:0721
 void move_1_forward() {
-	control_x = -1;
-	control_forward = -1;
+	control_x = CONTROL_HELD;
+	control_forward = CONTROL_HELD;
 }
 
 // seg002:072A
 void move_2_backward() {
-	control_backward = -1;
-	control_x = 1;
+	control_backward = CONTROL_HELD;
+	control_x = CONTROL_HELD_ALTDIRECTION;
 }
 
 // seg002:0735
 void move_3_up() {
-	control_y = -1;
-	control_up = -1;
+	control_y = CONTROL_HELD;
+	control_up = CONTROL_HELD;
 }
 
 // seg002:073E
 void move_4_down() {
-	control_down = -1;
-	control_y = 1;
+	control_down = CONTROL_HELD;
+	control_y = CONTROL_HELD_ALTDIRECTION;
 }
 
 // seg002:0749
 void move_up_back() {
-	control_up = -1;
+	control_up = CONTROL_HELD;
 	move_2_backward();
 }
 
 // seg002:0753
 void move_down_back() {
-	control_down = -1;
+	control_down = CONTROL_HELD;
 	move_2_backward();
 }
 
 // seg002:075D
 void move_down_forw() {
-	control_down = -1;
+	control_down = CONTROL_HELD;
 	move_1_forward();
 }
 
 // seg002:0767
 void move_6_shift() {
-	control_shift = -1;
-	control_shift2 = -1;
+	control_shift = CONTROL_HELD;
+	control_shift2 = CONTROL_HELD;
 }
 
 // seg002:0770
 void move_7() {
-	control_shift = 0;
+	control_shift = CONTROL_RELEASED;
 }
 
 // seg002:0776
