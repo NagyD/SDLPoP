@@ -328,7 +328,7 @@ void control_crouched() {
 	} else {
 		need_level1_music = 0;
 		if (control_shift2 == CONTROL_HELD && check_get_item()) return;
-		if (control_y != CONTROL_HELD_ALTDIRECTION) {
+		if (control_y != CONTROL_HELD_DOWN) {
 			seqtbl_offset_char(seq_49_stand_up_from_crouch); // stand up from crouch
 		} else {
 			if (control_forward == CONTROL_HELD) {
@@ -379,7 +379,7 @@ void control_standing() {
 			up_pressed();
 		} else if (control_down == CONTROL_HELD) {
 			down_pressed();
-		} else if (control_x == CONTROL_HELD && control_forward == CONTROL_HELD) {
+		} else if (control_x == CONTROL_HELD_FORWARD && control_forward == CONTROL_HELD) {
 			safe_step();
 		}
 	} else loc_6213: if (control_forward == CONTROL_HELD) {
@@ -398,7 +398,7 @@ void control_standing() {
 		}
 	} else if (control_down == CONTROL_HELD) {
 		down_pressed();
-	} else if (control_x == CONTROL_HELD) {
+	} else if (control_x == CONTROL_HELD_FORWARD) {
 		forward_pressed();
 	}
 }
@@ -419,7 +419,7 @@ void up_pressed() {
 	){
 		go_up_leveldoor();
 	} else {
-		if (control_x == CONTROL_HELD) {
+		if (control_x == CONTROL_HELD_FORWARD) {
 			standing_jump();
 		} else {
 			check_jump_up();
@@ -469,7 +469,7 @@ void go_up_leveldoor() {
 
 // seg005:058F
 void control_turning() {
-	if (control_shift >= CONTROL_RELEASED && control_x == CONTROL_HELD && control_y >= CONTROL_RELEASED) {
+	if (control_shift >= CONTROL_RELEASED && control_x == CONTROL_HELD_FORWARD && control_y >= CONTROL_RELEASED) {
 		seqtbl_offset_char(seq_43_start_run_after_turn); // start run and run (after turning)
 	}
 
@@ -542,10 +542,10 @@ void control_running() {
 	if (control_x == CONTROL_RELEASED && (Char.frame == frame_7_run || Char.frame == frame_11_run)) {
 		control_forward = release_arrows();
 		seqtbl_offset_char(seq_13_stop_run); // stop run
-	} else if (control_x == CONTROL_HELD_ALTDIRECTION) {
+	} else if (control_x == CONTROL_HELD_BACKWARD) {
 		control_backward = release_arrows();
 		seqtbl_offset_char(seq_6_run_turn); // run-turn
-	} else if (control_y == CONTROL_HELD && control_up == CONTROL_HELD) {
+	} else if (control_y == CONTROL_HELD_UP && control_up == CONTROL_HELD) {
 		run_jump();
 	} else if (control_down == CONTROL_HELD) {
 		control_down = CONTROL_IGNORE; // disable automatic repeat
@@ -624,14 +624,14 @@ void get_item() {
 
 // seg005:07FF
 void control_startrun() {
-	if (control_y == CONTROL_HELD && control_x == CONTROL_HELD) {
+	if (control_y == CONTROL_HELD_UP && control_x == CONTROL_HELD_FORWARD) {
 		standing_jump();
 	}
 }
 
 // seg005:0812
 void control_jumpup() {
-	if (control_x == CONTROL_HELD || control_forward == CONTROL_HELD) {
+	if (control_x == CONTROL_HELD_FORWARD || control_forward == CONTROL_HELD) {
 		standing_jump();
 	}
 }

@@ -568,26 +568,26 @@ void move_0_nothing() {
 
 // seg002:0721
 void move_1_forward() {
-	control_x = CONTROL_HELD;
+	control_x = CONTROL_HELD_FORWARD;
 	control_forward = CONTROL_HELD;
 }
 
 // seg002:072A
 void move_2_backward() {
 	control_backward = CONTROL_HELD;
-	control_x = CONTROL_HELD_ALTDIRECTION;
+	control_x = CONTROL_HELD_BACKWARD;
 }
 
 // seg002:0735
 void move_3_up() {
-	control_y = CONTROL_HELD;
+	control_y = CONTROL_HELD_UP;
 	control_up = CONTROL_HELD;
 }
 
 // seg002:073E
 void move_4_down() {
 	control_down = CONTROL_HELD;
-	control_y = CONTROL_HELD_ALTDIRECTION;
+	control_y = CONTROL_HELD_DOWN;
 }
 
 // seg002:0749

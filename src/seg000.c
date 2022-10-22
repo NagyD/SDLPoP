@@ -1349,16 +1349,16 @@ void read_joyst_control() {
 	}
 
 	if (joy_left_stick_states[0] == -1 || joy_right_stick_states[0] == -1 || joy_hat_states[0] == -1)
-		control_x = CONTROL_HELD;
+		control_x = CONTROL_HELD_LEFT;
 
 	if (joy_left_stick_states[0] == 1 || joy_right_stick_states[0] == 1 || joy_hat_states[0] == 1)
-		control_x = CONTROL_HELD_ALTDIRECTION;
+		control_x = CONTROL_HELD_RIGHT;
 
 	if (joy_left_stick_states[1] == -1 || joy_right_stick_states[1] == -1 || joy_hat_states[1] == -1 || joy_AY_buttons_state == -1)
-		control_y = CONTROL_HELD;
+		control_y = CONTROL_HELD_UP;
 
 	if (joy_left_stick_states[1] == 1 || joy_right_stick_states[1] == 1 || joy_hat_states[1] == 1 || joy_AY_buttons_state == 1)
-		control_y = CONTROL_HELD_ALTDIRECTION;
+		control_y = CONTROL_HELD_DOWN;
 
 	if (joy_X_button_state == 1 ||
 			joy_axis[SDL_CONTROLLER_AXIS_TRIGGERLEFT] > 8000 ||
@@ -1720,20 +1720,20 @@ void read_keyb_control() {
 	if (key_states[SDL_SCANCODE_UP] || key_states[SDL_SCANCODE_HOME] || key_states[SDL_SCANCODE_PAGEUP]
 	    || key_states[SDL_SCANCODE_KP_8] || key_states[SDL_SCANCODE_KP_7] || key_states[SDL_SCANCODE_KP_9]
 	) {
-		control_y = CONTROL_HELD;
+		control_y = CONTROL_HELD_UP;
 	} else if (key_states[SDL_SCANCODE_CLEAR] || key_states[SDL_SCANCODE_DOWN]
 	           || key_states[SDL_SCANCODE_KP_5] || key_states[SDL_SCANCODE_KP_2]
 	) {
-		control_y = CONTROL_HELD_ALTDIRECTION;
+		control_y = CONTROL_HELD_DOWN;
 	}
 	if (key_states[SDL_SCANCODE_LEFT] || key_states[SDL_SCANCODE_HOME]
 	    || key_states[SDL_SCANCODE_KP_4] || key_states[SDL_SCANCODE_KP_7]
 	) {
-		control_x = CONTROL_HELD;
+		control_x = CONTROL_HELD_LEFT;
 	} else if (key_states[SDL_SCANCODE_RIGHT] || key_states[SDL_SCANCODE_PAGEUP]
 	           || key_states[SDL_SCANCODE_KP_6] || key_states[SDL_SCANCODE_KP_9]
 	) {
-		control_x = CONTROL_HELD_ALTDIRECTION;
+		control_x = CONTROL_HELD_RIGHT;
 	}
 	control_shift = -(key_states[SDL_SCANCODE_LSHIFT] || key_states[SDL_SCANCODE_RSHIFT]);
 

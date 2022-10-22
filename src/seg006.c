@@ -1161,7 +1161,7 @@ void check_grab() {
 	#endif
 
 #ifdef USE_SUPER_HIGH_JUMP
-	if ((control_shift == CONTROL_HELD || (fixes->enable_super_high_jump && super_jump_fall && control_y == CONTROL_HELD)) && // press shift or up arrow to grab
+	if ((control_shift == CONTROL_HELD || (fixes->enable_super_high_jump && super_jump_fall && control_y == CONTROL_HELD_UP)) && // press shift or up arrow to grab
 #else
 	if (control_shift == CONTROL_HELD && // press Shift to grab
 #endif
@@ -1212,7 +1212,7 @@ bool check_grab_run_jump() {
     short char_room_m1 = Char.room - 1;
     if (Char.action == actions_1_run_jump &&
             (is_jump || is_running_jump) &&
-            control_x == CONTROL_RELEASED && control_y == CONTROL_HELD) {
+            control_x == CONTROL_RELEASED && control_y == CONTROL_HELD_UP) {
         if (can_grab_front_above()) { // can grab a ledge at a specific frame during a jump
             short grab_tile = curr_tile2;
             short grab_col = tile_col;
@@ -1449,7 +1449,8 @@ const auto_move_type demo_moves[] = {
 void do_demo() {
 	if (checkpoint) {
 		control_shift2 = release_arrows();
-		control_forward = control_x = CONTROL_HELD;
+		control_forward = CONTROL_HELD;
+		control_x = CONTROL_HELD_FORWARD;
 	} else if (Char.sword) {
 		guard_skill = 10;
 		autocontrol_opponent();
@@ -1532,7 +1533,7 @@ void clear_saved_ctrl() {
 // seg006:0EAF
 void read_user_control() {
 	if (control_forward >= CONTROL_RELEASED) {
-		if (control_x == CONTROL_HELD) {
+		if (control_x == CONTROL_HELD_FORWARD) {
 			if (control_forward == CONTROL_RELEASED) {
 				control_forward = CONTROL_HELD;
 			}
@@ -1541,7 +1542,7 @@ void read_user_control() {
 		}
 	}
 	if (control_backward >= CONTROL_RELEASED) {
-		if (control_x == CONTROL_HELD_ALTDIRECTION) {
+		if (control_x == CONTROL_HELD_BACKWARD) {
 			if (control_backward == CONTROL_RELEASED) {
 				control_backward = CONTROL_HELD;
 			}
@@ -1550,7 +1551,7 @@ void read_user_control() {
 		}
 	}
 	if (control_up >= CONTROL_RELEASED) {
-		if (control_y == CONTROL_HELD) {
+		if (control_y == CONTROL_HELD_UP) {
 			if (control_up == CONTROL_RELEASED) {
 				control_up = CONTROL_HELD;
 			}
@@ -1559,7 +1560,7 @@ void read_user_control() {
 		}
 	}
 	if (control_down >= CONTROL_RELEASED) {
-		if (control_y == CONTROL_HELD_ALTDIRECTION) {
+		if (control_y == CONTROL_HELD_DOWN) {
 			if (control_down == CONTROL_RELEASED) {
 				control_down = CONTROL_HELD;
 			}
