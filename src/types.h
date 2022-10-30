@@ -1363,7 +1363,6 @@ enum
 	// for control_shift, control_forward, control_backward, control_up, control_down, control_shift2:
 	CONTROL_IGNORE = 1,
 	CONTROL_HELD = -1,
-	//CONTROL_HELD_ALTDIRECTION = 1, // This is for the control_x and control_y variables to define they're being held down for the opposite direction (facing backwards for control_x and downwards for control_y)
 	// for control_x in seg000.c:
 	CONTROL_HELD_LEFT = -1,
 	CONTROL_HELD_RIGHT = 1,
