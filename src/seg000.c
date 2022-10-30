@@ -520,8 +520,8 @@ void check_quick_op() {
 
 Uint32 temp_shift_release_callback(Uint32 interval, void *param) {
 	const Uint8* state = SDL_GetKeyboardState(NULL);
-	if (state[SDL_SCANCODE_LSHIFT] & KEYSTATE_HELD) key_states[SDL_SCANCODE_LSHIFT] |= KEYSTATE_HELD;
-	if (state[SDL_SCANCODE_RSHIFT] & KEYSTATE_HELD) key_states[SDL_SCANCODE_RSHIFT] |= KEYSTATE_HELD;
+	if (state[SDL_SCANCODE_LSHIFT]) key_states[SDL_SCANCODE_LSHIFT] |= KEYSTATE_HELD;
+	if (state[SDL_SCANCODE_RSHIFT]) key_states[SDL_SCANCODE_RSHIFT] |= KEYSTATE_HELD;
 	return 0; // causes the timer to be removed
 }
 
@@ -668,8 +668,8 @@ int process_key() {
 			if (current_level < custom->shift_L_allowed_until_level /* 4 */ || cheats_enabled) {
 				// if Shift is not released within the delay, the cutscene is skipped
 				Uint32 delay = 250;
-				key_states[SDL_SCANCODE_LSHIFT] &= ~KEYSTATE_HELD;
-				key_states[SDL_SCANCODE_RSHIFT] &= ~KEYSTATE_HELD;
+				key_states[SDL_SCANCODE_LSHIFT] = 0;
+				key_states[SDL_SCANCODE_RSHIFT] = 0;
 				SDL_TimerID timer;
 				timer = SDL_AddTimer(delay, temp_shift_release_callback, NULL);
 				if (timer == 0) {
