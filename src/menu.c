@@ -1931,7 +1931,7 @@ void draw_select_level_dialog(void) {
 int need_full_menu_redraw_count;
 
 void draw_menu() {
-	escape_key_suppressed = (key_states[SDL_SCANCODE_BACKSPACE] || key_states[SDL_SCANCODE_ESCAPE]);
+	escape_key_suppressed = (key_states[SDL_SCANCODE_BACKSPACE] & KEYSTATE_HELD || key_states[SDL_SCANCODE_ESCAPE] & KEYSTATE_HELD);
 	surface_type* saved_target_surface = current_target_surface;
 	current_target_surface = overlay_surface;
 
@@ -2295,7 +2295,7 @@ void load_ingame_settings(void) {
 void menu_was_closed(void) {
 	is_paused = 0;
 	is_menu_shown = 0;
-	escape_key_suppressed = (key_states[SDL_SCANCODE_BACKSPACE] || key_states[SDL_SCANCODE_ESCAPE]);
+	escape_key_suppressed = (key_states[SDL_SCANCODE_BACKSPACE] & KEYSTATE_HELD || key_states[SDL_SCANCODE_ESCAPE] & KEYSTATE_HELD);
 	if (were_settings_changed) {
 		save_ingame_settings();
 		were_settings_changed = false;
