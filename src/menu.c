@@ -203,6 +203,7 @@ enum setting_ids {
 	SETTING_FIX_JUMPING_OVER_GUARD,
 	SETTING_FIX_DROP_2_ROOMS_CLIMBING_LOOSE_TILE,
 	SETTING_FIX_FALLING_THROUGH_FLOOR_DURING_SWORD_STRIKE,
+	SETTING_FIX_REGISTER_QUICK_INPUT,
 	SETTING_ENABLE_SUPER_HIGH_JUMP,
 	SETTING_ENABLE_JUMP_GRAB,
 	SETTING_USE_CUSTOM_OPTIONS,
@@ -603,6 +604,10 @@ setting_type gameplay_settings[] = {
 				.linked = &fixes_saved.fix_falling_through_floor_during_sword_strike, .required = &use_fixes_and_enhancements,
 				.text = "Fix dropping through floor striking",
 				.explanation = "Prince or guard can fall through the floor during a sword strike sequence."},
+		{.id = SETTING_FIX_REGISTER_QUICK_INPUT, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fixes_saved.fix_register_quick_input, .required = &use_fixes_and_enhancements,
+				.text = "Fix fast inputs",
+				.explanation = "Input is ignored if a button or key is pressed and released between game ticks."},
 };
 
 NAMES_LIST(tile_type_setting_names, {
@@ -2051,8 +2056,16 @@ int key_test_paused_menu(int key) {
 	}
 
 	if (is_joyst_mode) {
-		int joy_x = joy_hat_states[0];
-		int joy_y = joy_hat_states[1];
+		int joy_x = 0;
+		int joy_y = 0;
+		if (joy_button_states[JOYINPUT_DPAD_LEFT] & KEYSTATE_HELD)
+			joy_x = -1;
+		else if (joy_button_states[JOYINPUT_DPAD_RIGHT] & KEYSTATE_HELD)
+			joy_x = 1;
+		if (joy_button_states[JOYINPUT_DPAD_UP] & KEYSTATE_HELD)
+			joy_y = -1;
+		else if (joy_button_states[JOYINPUT_DPAD_DOWN] & KEYSTATE_HELD)
+			joy_y = 1;
 		int y_threshold = 14000;
 		int x_threshold = 26000; // Less sensitive, to prevent accidentally changing a setting.
 		if (joy_axis[SDL_CONTROLLER_AXIS_LEFTY] < -y_threshold) {
@@ -2083,14 +2096,14 @@ int key_test_paused_menu(int key) {
 			}
 		}
 
-		if (joy_AY_buttons_state == 0 && joy_B_button_state == 0) {
+		if (!(joy_button_states[JOYINPUT_A] & KEYSTATE_HELD) && !(joy_button_states[JOYINPUT_Y] & KEYSTATE_HELD) && !(joy_button_states[JOYINPUT_B] & KEYSTATE_HELD)) {
 			joy_ABXY_buttons_released = true;
 		} else if (joy_ABXY_buttons_released) {
 			joy_ABXY_buttons_released = false;
-			if (joy_AY_buttons_state == 1 /* A pressed */) {
+			if (joy_button_states[JOYINPUT_A] & KEYSTATE_HELD) {
 				key = SDL_SCANCODE_RETURN;
-				joy_AY_buttons_state = 0; // Prevent 'down' input being passed to the controls if the game is unpaused.
-			} else if (joy_B_button_state == 1) {
+				joy_button_states[JOYINPUT_A] = 0; // Prevent 'down' input being passed to the controls if the game is unpaused.
+			} else if (joy_button_states[JOYINPUT_B] & KEYSTATE_HELD) {
 				key = SDL_SCANCODE_ESCAPE;
 			}
 		}

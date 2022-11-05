@@ -1339,30 +1339,39 @@ void get_joystick_state_hor_only(int raw_x, int axis_state[2]) {
 
 // seg000:1051
 void read_joyst_control() {
-
-	if (joystick_only_horizontal) {
-		get_joystick_state_hor_only(joy_axis[SDL_CONTROLLER_AXIS_LEFTX], joy_left_stick_states);
-		get_joystick_state_hor_only(joy_axis[SDL_CONTROLLER_AXIS_RIGHTX], joy_right_stick_states);
+	int key_state;
+	int* joy_axis_ptr;
+	if (fixes->fix_register_quick_input) {
+		key_state = KEYSTATE_HELD | KEYSTATE_HELD_NEW;
+		joy_axis_ptr = joy_axis_max;
 	} else {
-		get_joystick_state(joy_axis[SDL_CONTROLLER_AXIS_LEFTX], joy_axis[SDL_CONTROLLER_AXIS_LEFTY], joy_left_stick_states);
-		get_joystick_state(joy_axis[SDL_CONTROLLER_AXIS_RIGHTX], joy_axis[SDL_CONTROLLER_AXIS_RIGHTY], joy_right_stick_states);
+		key_state = KEYSTATE_HELD;
+		joy_axis_ptr = joy_axis;
 	}
 
-	if (joy_left_stick_states[0] == -1 || joy_right_stick_states[0] == -1 || joy_hat_states[0] == -1)
+	if (joystick_only_horizontal) {
+		get_joystick_state_hor_only(joy_axis_ptr[SDL_CONTROLLER_AXIS_LEFTX], joy_left_stick_states);
+		get_joystick_state_hor_only(joy_axis_ptr[SDL_CONTROLLER_AXIS_RIGHTX], joy_right_stick_states);
+	} else {
+		get_joystick_state(joy_axis_ptr[SDL_CONTROLLER_AXIS_LEFTX], joy_axis_ptr[SDL_CONTROLLER_AXIS_LEFTY], joy_left_stick_states);
+		get_joystick_state(joy_axis_ptr[SDL_CONTROLLER_AXIS_RIGHTX], joy_axis_ptr[SDL_CONTROLLER_AXIS_RIGHTY], joy_right_stick_states);
+	}
+
+	if (joy_left_stick_states[0] == -1 || joy_right_stick_states[0] == -1 || joy_button_states[JOYINPUT_DPAD_LEFT] & key_state)
 		control_x = CONTROL_HELD_LEFT;
 
-	if (joy_left_stick_states[0] == 1 || joy_right_stick_states[0] == 1 || joy_hat_states[0] == 1)
+	if (joy_left_stick_states[0] == 1 || joy_right_stick_states[0] == 1 || joy_button_states[JOYINPUT_DPAD_RIGHT] & key_state)
 		control_x = CONTROL_HELD_RIGHT;
 
-	if (joy_left_stick_states[1] == -1 || joy_right_stick_states[1] == -1 || joy_hat_states[1] == -1 || joy_AY_buttons_state == -1)
+	if (joy_left_stick_states[1] == -1 || joy_right_stick_states[1] == -1 || joy_button_states[JOYINPUT_DPAD_UP] & key_state || joy_button_states[JOYINPUT_Y] & key_state)
 		control_y = CONTROL_HELD_UP;
 
-	if (joy_left_stick_states[1] == 1 || joy_right_stick_states[1] == 1 || joy_hat_states[1] == 1 || joy_AY_buttons_state == 1)
+	if (joy_left_stick_states[1] == 1 || joy_right_stick_states[1] == 1 || joy_button_states[JOYINPUT_DPAD_DOWN] & key_state || joy_button_states[JOYINPUT_A] & key_state)
 		control_y = CONTROL_HELD_DOWN;
 
-	if (joy_X_button_state == 1 ||
-			joy_axis[SDL_CONTROLLER_AXIS_TRIGGERLEFT] > 8000 ||
-			joy_axis[SDL_CONTROLLER_AXIS_TRIGGERRIGHT] > 8000)
+	if (joy_button_states[JOYINPUT_X] & key_state ||
+			joy_axis_ptr[SDL_CONTROLLER_AXIS_TRIGGERLEFT] > 8000 ||
+			joy_axis_ptr[SDL_CONTROLLER_AXIS_TRIGGERRIGHT] > 8000)
 	{
 		control_shift = CONTROL_HELD;
 	}
@@ -1712,9 +1721,15 @@ int do_paused() {
 		erase_bottom_text(1);
 	}
 
-	// As we processed input for current gameplay tick remove the bit flagging any button press as new
-	for(int i = 0; i < SDL_NUM_SCANCODES; i++) {
+	// As we processed input for current gameplay tick change all input to reflect their current status
+	for (int i = 0; i < SDL_NUM_SCANCODES; i++) {
 		key_states[i] &= ~KEYSTATE_HELD_NEW;
+	}
+	for (int i = 0; i < JOYINPUT_NUM; i++) {
+		joy_button_states[i] &= ~KEYSTATE_HELD_NEW;
+	}
+	for (int i = 0; i < JOY_AXIS_NUM; i++) {
+		joy_axis_max[i] = joy_axis[i];
 	}
 
 	return key || control_shift;
@@ -1722,35 +1737,41 @@ int do_paused() {
 
 // seg000:1500
 void read_keyb_control() {
+	int key_state;
+	if (fixes->fix_register_quick_input) {
+		key_state = KEYSTATE_HELD | KEYSTATE_HELD_NEW;
+	} else {
+		key_state = KEYSTATE_HELD;
+	}
 
-	if (key_states[SDL_SCANCODE_UP] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW) || key_states[SDL_SCANCODE_HOME] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW) || key_states[SDL_SCANCODE_PAGEUP] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW)
-	    || key_states[SDL_SCANCODE_KP_8] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW) || key_states[SDL_SCANCODE_KP_7] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW) || key_states[SDL_SCANCODE_KP_9] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW)
+	if (key_states[SDL_SCANCODE_UP] & key_state || key_states[SDL_SCANCODE_HOME] & key_state || key_states[SDL_SCANCODE_PAGEUP] & key_state
+	    || key_states[SDL_SCANCODE_KP_8] & key_state || key_states[SDL_SCANCODE_KP_7] & key_state || key_states[SDL_SCANCODE_KP_9] & key_state
 	) {
 		control_y = CONTROL_HELD_UP;
-	} else if (key_states[SDL_SCANCODE_CLEAR] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW) || key_states[SDL_SCANCODE_DOWN] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW)
-	           || key_states[SDL_SCANCODE_KP_5] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW) || key_states[SDL_SCANCODE_KP_2] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW)
+	} else if (key_states[SDL_SCANCODE_CLEAR] & key_state || key_states[SDL_SCANCODE_DOWN] & key_state
+	           || key_states[SDL_SCANCODE_KP_5] & key_state || key_states[SDL_SCANCODE_KP_2] & key_state
 	) {
 		control_y = CONTROL_HELD_DOWN;
 	}
-	if (key_states[SDL_SCANCODE_LEFT] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW) || key_states[SDL_SCANCODE_HOME] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW)
-	    || key_states[SDL_SCANCODE_KP_4] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW) || key_states[SDL_SCANCODE_KP_7] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW)
+	if (key_states[SDL_SCANCODE_LEFT] & key_state || key_states[SDL_SCANCODE_HOME] & key_state
+	    || key_states[SDL_SCANCODE_KP_4] & key_state || key_states[SDL_SCANCODE_KP_7] & key_state
 	) {
 		control_x = CONTROL_HELD_LEFT;
-	} else if (key_states[SDL_SCANCODE_RIGHT] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW) || key_states[SDL_SCANCODE_PAGEUP] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW)
-	           || key_states[SDL_SCANCODE_KP_6] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW) || key_states[SDL_SCANCODE_KP_9] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW)
+	} else if (key_states[SDL_SCANCODE_RIGHT] & key_state || key_states[SDL_SCANCODE_PAGEUP] & key_state
+	           || key_states[SDL_SCANCODE_KP_6] & key_state || key_states[SDL_SCANCODE_KP_9] & key_state
 	) {
 		control_x = CONTROL_HELD_RIGHT;
 	}
 	
-	if(key_states[SDL_SCANCODE_LSHIFT] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW) || key_states[SDL_SCANCODE_RSHIFT] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW))
+	if(key_states[SDL_SCANCODE_LSHIFT] & key_state || key_states[SDL_SCANCODE_RSHIFT] & key_state)
 		control_shift = CONTROL_HELD;
 	else
 		control_shift = CONTROL_RELEASED;
 
 	#ifdef USE_DEBUG_CHEATS
 	if (cheats_enabled && debug_cheats_enabled) {
-		if (key_states[SDL_SCANCODE_RIGHTBRACKET] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW)) ++Char.x;
-		else if (key_states[SDL_SCANCODE_LEFTBRACKET] & (KEYSTATE_HELD | KEYSTATE_HELD_NEW)) --Char.x;
+		if (key_states[SDL_SCANCODE_RIGHTBRACKET] & key_state) ++Char.x;
+		else if (key_states[SDL_SCANCODE_LEFTBRACKET] & key_state) --Char.x;
 	}
 	#endif
 }
@@ -2331,13 +2352,20 @@ void show_splash() {
 		idle();
 		key = key_test_quit();
 
-		if (joy_hat_states[0] != 0 || joy_X_button_state != 0 || joy_AY_buttons_state != 0 || joy_B_button_state != 0) {
-			joy_hat_states[0] = 0;
-			joy_AY_buttons_state = 0;
-			joy_X_button_state = 0;
-			joy_B_button_state = 0;
+		bool joy_input = 0;
+		for (int i = 0; i < JOYINPUT_NUM; i++) {
+			if (joy_button_states[i] & KEYSTATE_HELD) {
+				joy_input = 1;
+				break;
+			}
+		}
+		if (joy_input) {
+			for (int i = 0; i < JOYINPUT_NUM; i++) {
+				joy_button_states[i] = 0;
+			}
 			key_states[SDL_SCANCODE_LSHIFT] |= KEYSTATE_HELD; // close the splash screen using the gamepad
 		}
+		
 		delay_ticks(1);
 
 	} while(key == 0 && !(key_states[SDL_SCANCODE_LSHIFT] & KEYSTATE_HELD || key_states[SDL_SCANCODE_RSHIFT] & KEYSTATE_HELD));
