@@ -3445,6 +3445,8 @@ void process_events() {
 			case SDL_CONTROLLERAXISMOTION:
 				if (event.caxis.axis < 6) {
 					joy_axis[event.caxis.axis] = event.caxis.value;
+					if (abs(event.caxis.value) > abs(joy_axis_max[event.caxis.axis]))
+						joy_axis_max[event.caxis.axis] = event.caxis.value;
 
 #ifdef USE_AUTO_INPUT_MODE
 					if (!is_joyst_mode && (event.caxis.value >= joystick_threshold || event.caxis.value <= -joystick_threshold)) {
@@ -3537,11 +3539,11 @@ void process_events() {
 					else if (event.jaxis.axis == SDL_JOYSTICK_Y_AXIS) {
 						axis = SDL_CONTROLLER_AXIS_LEFTY;
 					}
-					if (axis != -1) {
-						joy_axis[axis] = event.jaxis.value;
-						if (abs(joy_axis[axis]) > abs(joy_axis_max[axis]))
-							joy_axis_max[axis] = joy_axis[axis];
-					}
+					if (axis == -1)
+						break;
+					joy_axis[axis] = event.jaxis.value;
+					if (abs(event.jaxis.value) > abs(joy_axis_max[axis]))
+						joy_axis_max[axis] = event.jaxis.value;
 
 					// Disregard SDL_JOYAXISMOTION events within joystick 'dead zone'
 					int joy_x = joy_axis[SDL_CONTROLLER_AXIS_LEFTX];
