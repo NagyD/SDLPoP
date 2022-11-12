@@ -634,13 +634,11 @@ extern SDL_Texture* target_texture;
 extern SDL_GameController* sdl_controller_ INIT( = 0 );
 extern SDL_Joystick* sdl_joystick_; // in case our joystick is not compatible with SDL_GameController
 extern byte using_sdl_joystick_interface;
-extern int joy_axis[6]; // hor/ver axes for left/right sticks + left and right triggers (in total 6 axes)
+extern int joy_axis[JOY_AXIS_NUM]; // hor/ver axes for left/right sticks + left and right triggers (in total 6 axes)
+extern int joy_axis_max[JOY_AXIS_NUM]; // Same as above, but stores the highest value reached between game updates
 extern int joy_left_stick_states[2]; // horizontal, vertical
 extern int joy_right_stick_states[2];
-extern int joy_hat_states[2]; // horizontal, vertical
-extern int joy_AY_buttons_state;
-extern int joy_X_button_state;
-extern int joy_B_button_state;
+extern int joy_button_states[JOYINPUT_NUM];
 extern SDL_Haptic* sdl_haptic;
 
 extern Uint64 perf_counters_per_tick;

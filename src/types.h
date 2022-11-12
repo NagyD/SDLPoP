@@ -1227,6 +1227,7 @@ typedef struct fixes_options_type {
 	byte fix_drop_2_rooms_climbing_loose_tile;
 	byte fix_falling_through_floor_during_sword_strike;
 	byte enable_jump_grab;
+	byte fix_register_quick_input;
 } fixes_options_type;
 
 #define NUM_GUARD_SKILLS 12
@@ -1348,7 +1349,24 @@ typedef struct directory_listing_type directory_listing_type;
 
 #define FEATHER_FALL_LENGTH 18.75
 
-// Bit-flags used for the keystate array
+// Types of gamepad input
+enum
+{
+	JOYINPUT_DPAD_LEFT,
+	JOYINPUT_DPAD_RIGHT,
+	JOYINPUT_DPAD_UP,
+	JOYINPUT_DPAD_DOWN,
+	JOYINPUT_A,
+	JOYINPUT_B,
+	JOYINPUT_X,
+	JOYINPUT_Y,
+	JOYINPUT_START,
+	JOYINPUT_BACK,
+
+	JOYINPUT_NUM
+};
+
+// Bit-flags used for the key_state and joy_button_states arrays
 enum
 {
 	KEYSTATE_HELD = (1<<0), // Key is currently held down
@@ -1395,6 +1413,7 @@ enum
 #define FALLING_SPEED_ACCEL_FEATHER 1
 #define ROOMCOUNT 24 // Max quantity of rooms for any level
 #define SCREEN_GAMEPLAY_HEIGHT 192 // Portion of the screen space dedicated to gameplay graphics
+#define JOY_AXIS_NUM 6 // Max quantity of analogue inputs on a gamepad/joystick
 #define TROBS_MAX 30
 
 #endif
