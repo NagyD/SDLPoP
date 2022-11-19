@@ -440,7 +440,7 @@ void __pascal far up_pressed() {
 	if (leveldoor_tilepos != -1) {
 		// We reuse pickup_obj_type for storing the identifier of the teleporter.
 		pickup_obj_type = curr_room_modif[curr_tilepos];
-		// Optional: Balconies with zero modifiers remain regular balconies.
+		// Balconies with zero modifiers remain regular balconies.
 		if (pickup_obj_type > 0)
 		{
 			source_modifier = pickup_obj_type;
@@ -453,7 +453,7 @@ void __pascal far up_pressed() {
 	}
 #endif
 
-	// Else just jump.
+	// Else just jump up.
 	{
 		if (control_x < 0) {
 			standing_jump();

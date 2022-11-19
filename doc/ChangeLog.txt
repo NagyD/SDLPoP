@@ -664,3 +664,4 @@ DONE: Show guards' HP and skills on the maps.
 FIXED: Don't complain about data files missing from the mod folder.
 DONE: Added support for teleports. See USE_TELEPORTS in config.h.
 	Each balcony (whose left half has a non-zero modifier) will behave as a teleport to another balcony with the same modifier.
+	The right half of such balconies must have modifier == 1.

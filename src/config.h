@@ -318,6 +318,7 @@ The authors of this program may be contacted at https://forum.princed.org
 
 // Turn the balconies into teleports.
 // Each balcony (whose left half has a non-zero modifier) will behave as a teleport to another balcony with the same modifier.
+// The right half of such balconies must have modifier == 1.
 #define USE_TELEPORTS
 
 
