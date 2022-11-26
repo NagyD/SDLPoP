@@ -403,8 +403,13 @@ void control_standing() {
 	}
 }
 
+int source_modifier;
+int source_room;
+int source_tilepos;
+
 // seg005:0482
 void up_pressed() {
+	// If there is an open level door nearby, enter it.
 	int leveldoor_tilepos = -1;
 	if (get_tile_at_char() == tiles_16_level_door_left) leveldoor_tilepos = curr_tilepos;
 	else if (get_tile_behind_char() == tiles_16_level_door_left) leveldoor_tilepos = curr_tilepos;
@@ -418,7 +423,35 @@ void up_pressed() {
 		)
 	){
 		go_up_leveldoor();
-	} else {
+		return;
+	}
+
+#ifdef USE_TELEPORTS
+	// If there is a teleport nearby, enter it.
+	// (A teleport is a repurposed left half balcony with a non-zero modifier.)
+	leveldoor_tilepos = -1;
+	// This detection is not perfect...
+	if (get_tile_at_char() == tiles_23_balcony_left) leveldoor_tilepos = curr_tilepos;
+	else if (get_tile_behind_char() == tiles_23_balcony_left) leveldoor_tilepos = curr_tilepos;
+	else if (get_tile_infrontof_char() == tiles_23_balcony_left) leveldoor_tilepos = curr_tilepos;
+	if (leveldoor_tilepos != -1) {
+		// We reuse pickup_obj_type for storing the identifier of the teleporter.
+		pickup_obj_type = curr_room_modif[curr_tilepos];
+		// Balconies with zero modifiers remain regular balconies.
+		if (pickup_obj_type > 0)
+		{
+			source_modifier = pickup_obj_type;
+			source_room = curr_room;
+			source_tilepos = curr_tilepos;
+			go_up_leveldoor();
+			seqtbl_offset_char(seq_teleport);
+			return;
+		}
+	}
+#endif
+
+	// Else just jump up.
+	{
 		if (control_x == CONTROL_HELD_FORWARD) {
 			standing_jump();
 		} else {
@@ -1057,3 +1090,61 @@ void parry() {
 		play_seq();
 	}
 }
+
+#ifdef USE_TELEPORTS
+void teleport() {
+	// Ideally these variables should be global and be initialized in up_pressed().
+	//int source_modifier = pickup_obj_type;
+	//int source_room = Char.room;
+	//int source_tilepos = Char.curr_row * 10 + Char.curr_col - 1;
+
+	bool found = false;
+	int dest_room, dest_tilepos;
+
+	// Find the pair of the teleport which the prince entered.
+	for (dest_room = 1; dest_room <= 24; dest_room++) {
+		// It must be in a different room.
+		//if (dest_room == source_room) continue;
+
+		get_room_address(dest_room);
+
+		for (dest_tilepos = 0; dest_tilepos < 30; dest_tilepos++) {
+			// Skip over the source teleport.
+			if (dest_room == source_room && dest_tilepos == source_tilepos) continue;
+
+			// The pair is a balcony tile with the same modifier.
+			if (get_curr_tile(dest_tilepos) == tiles_23_balcony_left && curr_modifier == source_modifier) {
+				found = true;
+				goto exit;
+			}
+		}
+	}
+	exit:
+
+	if (found) {
+		// We found a pair. Put the kid there.
+		// Based on do_startpos().
+		Char.room = dest_room;
+		Char.curr_col = dest_tilepos % 10;
+		Char.curr_row = dest_tilepos / 10;
+		Char.x = x_bump[Char.curr_col + 5] + 14 + 7; // Center on the destination teleport.
+		Char.y = y_land[Char.curr_row + 1];
+		next_room = Char.room;
+		clear_coll_rooms(); // Without this, the prince will sometimes end up at the wrong place.
+		leave_guard();
+		seqtbl_offset_char(seq_5_turn);
+		play_sound(sound_45_jump_through_mirror);
+	} else {
+		// No pair found.
+		//show_dialog("Error: This teleport has no pair.");
+		char message[80];
+		snprintf(message, sizeof(message), "Error: There is no other teleport with modifier %d.", pickup_obj_type);
+		show_dialog(message);
+		Char.x = x_bump[Char.curr_col + 5] + 14;
+		Char.y = y_land[Char.curr_row + 1];
+		seqtbl_offset_char(seq_17_soft_land);
+		play_sound(sound_0_fell_to_death);
+	}
+}
+#endif
+

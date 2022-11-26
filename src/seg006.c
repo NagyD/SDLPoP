@@ -669,6 +669,11 @@ void play_seq() {
 				if (which_item == 1) {
 					proc_get_object();
 				}
+#ifdef USE_TELEPORTS
+				if (which_item == 2) {
+					teleport();
+				}
+#endif
 				break;
 			}
 			case SEQ_DIE: // nop

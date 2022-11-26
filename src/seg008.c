@@ -415,7 +415,19 @@ void draw_tile_topright() {
 	} else if (tiletype == tiles_20_wall) {
 		add_backtable(id_chtab_7_environmentwall, 2, draw_xh, 0, draw_bottom_y, blitters_2_or, 0);
 	} else {
-		add_backtable(id_chtab_6_environment, tile_table[tiletype].topright_id, draw_xh, 0, draw_bottom_y, blitters_2_or, 0);
+		int id = tile_table[tiletype].topright_id;
+#ifdef USE_TELEPORTS
+		// Use teleport graphics:
+		// * for the left half of a balcony, if it has a non-zero modifier.
+		// * for the right half of a balcony, if it has modifier == 1.
+		if (
+			(tiletype == tiles_23_balcony_left && row_below_left_[drawn_col].modifier != 0)
+			|| (tiletype == tiles_24_balcony_right && row_below_left_[drawn_col].modifier == 1)
+		) {
+			id += 4;
+		}
+#endif
+		add_backtable(id_chtab_6_environment, id, draw_xh, 0, draw_bottom_y, blitters_2_or, 0);
 	}
 }
 
@@ -449,6 +461,16 @@ void draw_tile_right() {
 	switch (tile_left) {
 		default:
 			id = tile_table[tile_left].right_id;
+#ifdef USE_TELEPORTS
+			// Use teleport graphics:
+			// * for the left half of a balcony, if it has a non-zero modifier.
+			// * for the right half of a balcony, if it has modifier == 1.
+			if (tile_left == tiles_23_balcony_left && modifier_left != 0) {
+				id += 4;
+			} else if (tile_left == tiles_24_balcony_right && modifier_left == 1) {
+				id += 4;
+			}
+#endif
 			if (id) {
 				if (tile_left == tiles_5_stuck) {
 					blit = blitters_10h_transp;

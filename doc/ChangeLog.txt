@@ -688,3 +688,6 @@ DONE: Added an ability to grab tiles while jumping forward.
 	Details: https://github.com/NagyD/SDLPoP/pull/283
 	See the comment for enable_jump_grab in SDLPoP.ini on how to use it.
 	Fixes and enhancements must be enabled for this.
+DONE: Added support for teleports. See USE_TELEPORTS in config.h.
+	Each balcony (whose left half has a non-zero modifier) will behave as a teleport to another balcony with the same modifier.
+	The right half of such balconies must have modifier == 1.

@@ -271,6 +271,9 @@ void control_with_sword(void);
 void swordfight(void);
 void sword_strike(void);
 void parry(void);
+#ifdef USE_TELEPORTS
+void teleport();
+#endif
 
 // SEG006.C
 int get_tile(int room,int col,int row);

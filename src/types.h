@@ -1086,6 +1086,9 @@ enum seqids {
 	seq_111_princess_stand_up_PV2 = 111,
 	seq_112_princess_crouch_down_PV2 = 112,
 	seq_114_mouse_stand = 114,
+#ifdef USE_TELEPORTS
+	seq_teleport = 115,
+#endif
 };
 
 enum seqtbl_instructions {

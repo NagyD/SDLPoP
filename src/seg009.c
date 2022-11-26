@@ -2783,8 +2783,17 @@ void load_from_opendats_metadata(int resource_id, const char* extension, FILE** 
 				// found
 				*result = data_DAT;
 				*size = dat_table->entries[i].size;
+				if (strcmp(extension,"png") == 0 && *size <= 2) {
+					// Skip empty images in DATs, so we can fall back to directories.
+					// This is useful for teleport graphics for example.
+					fp = NULL;
+					*result = data_none;
+					*size = 0;
+				} else
 				if (fseek(fp, dat_table->entries[i].offset, SEEK_SET) ||
-				    fread(checksum, 1, 1, fp) != 1) {
+				    fread(checksum, 1, 1, fp) != 1
+				) {
+					printf("Cannot seek or cannot read checksum: ");
 					perror(pointer->filename);
 					fp = NULL;
 				}
@@ -2792,7 +2801,9 @@ void load_from_opendats_metadata(int resource_id, const char* extension, FILE** 
 				// not found
 				fp = NULL;
 			}
-		} else {
+		}
+		// If the image is not in the DAT then try the directory as well.
+		if (*result == data_none) {
 			// If it's a directory:
 			char filename_no_ext[POP_MAX_PATH];
 			// strip the .DAT file extension from the filename (use folders simply named TITLE, KID, VPALACE, etc.)
@@ -2825,6 +2836,7 @@ void load_from_opendats_metadata(int resource_id, const char* extension, FILE** 
 					*result = data_directory;
 					*size = (int)buf.st_size;
 				} else {
+					printf("Cannot fstat: ");
 					perror(image_filename);
 					fclose(fp);
 					fp = NULL;
