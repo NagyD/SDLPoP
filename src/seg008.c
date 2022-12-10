@@ -1940,11 +1940,14 @@ void wall_pattern(int which_part,int which_table) {
 		// I haven't traced the palace WDA
 		//[...]
 		if (which_part) {
+			// Draw solid colours for the bricks
 			add_wipetable(which_table, 8*(draw_xh)    , draw_main_y - 40, 20, 4*8, palace_wall_colors[44 * drawn_row +      drawn_col]);
 			add_wipetable(which_table, 8*(draw_xh)    , draw_main_y - 19, 21, 2*8, palace_wall_colors[44 * drawn_row + 11 + drawn_col]);
 			add_wipetable(which_table, 8*(draw_xh + 2), draw_main_y - 19, 21, 2*8, palace_wall_colors[44 * drawn_row + 12 + drawn_col]);
 			add_wipetable(which_table, 8*(draw_xh)    , draw_main_y     , 19, 1*8, palace_wall_colors[44 * drawn_row + 22 + drawn_col]);
 			add_wipetable(which_table, 8*(draw_xh + 1), draw_main_y     , 19, 3*8, palace_wall_colors[44 * drawn_row + 23 + drawn_col]);
+			
+			// Draw the dividing decals between bricks
 			ptr_add_table(id_chtab_7_environmentwall, prandom(2) +  3, draw_xh + 3, 0, draw_main_y - 53, blitters_46h_mono_6, 0);
 			ptr_add_table(id_chtab_7_environmentwall, prandom(2) +  6, draw_xh    , 0, draw_main_y - 34, blitters_46h_mono_6, 0);
 			ptr_add_table(id_chtab_7_environmentwall, prandom(2) +  9, draw_xh    , 0, draw_main_y - 13, blitters_46h_mono_6, 0);
