@@ -6,7 +6,7 @@ SDLPoP supports the tile+modifier combinations listed below, in addition to what
 
 (The headings show the value of the `fg` byte, the list items show the value of the `bg` byte.)
 
-See also: https://www.princed.org/wiki/Legacy_combos
+See also: https://www.princed.org/wiki/Legacy_combos \
 That page includes the combinations supported by the original game and also the fake tiles.
 
 *(TODO: Maybe document the original combinations in this file as well?)*
@@ -39,3 +39,12 @@ That page includes the combinations supported by the original game and also the 
 *  6 = 0x06: display empty tile (invisible wall) with modifier = 0
 * 12 = 0x0C: display a floor (invisible wall) with modifier = 1
 * 14 = 0x0E: display empty tile (invisible wall) with modifier = 1
+
+## Teleports
+(See `USE_TELEPORTS`.)
+
+### 0x17: balcony left
+* any non-zero modifier: teleport left half, takes to another balcony left with the same modifier.
+
+### 0x18: balcony right
+* 1 = 0x01: teleport right half
