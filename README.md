@@ -383,8 +383,8 @@ While recording, make a quicksave to mark your place, and press quickload to ret
 
 You need the MinGW Development Libraries of SDL2:
 
-* https://libsdl.org/download-2.0.php
-* https://libsdl.org/projects/SDL_image/
+* https://github.com/libsdl-org/SDL/releases/latest
+* https://github.com/libsdl-org/SDL_image/releases/latest
 * Download the `*-mingw.tar.gz` files.
 
 To install these, just extract the contents of the `i686-w64-mingw32` folder from each archive to:
@@ -413,8 +413,9 @@ To compile, open one of the .dev files and click the compile icon.
        set "SDL2=C:\libraries\SDL2-2.0.8"
        ```
        You can get the SDL2 library files from here:
-       https://www.libsdl.org/download-2.0.php
-       (download the Visual C++ 32/64-bit development package)
+       * https://github.com/libsdl-org/SDL/releases/latest
+       * https://github.com/libsdl-org/SDL_image/releases/latest
+       * Download the Visual C++ 32/64-bit development package, the `*-VC.zip` files.
     * (You could create a small batch file to automate the above steps on your system.)
 * Alternatively, you can also build SDLPoP using MSVC with NMake (use the makefile src/NMakefile).
 
