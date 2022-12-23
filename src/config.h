@@ -286,6 +286,15 @@ The authors of this program may be contacted at https://forum.princed.org
 // See also: https://github.com/NagyD/SDLPoP/pull/274
 #define FIX_FALLING_THROUGH_FLOOR_DURING_SWORD_STRIKE
 
+// When the player (re-)enters the currently shown room, the guard disappears from the screen.
+// This can happen when:
+// * A room is linked to itself (broken link).
+// * The player used the "show other room" cheat.
+// * A teleport and its pair are in the same room.
+// There are two fixes for this:
+//#define FIX_DISAPPEARING_GUARD_A // Inserts a black screen.
+//#define FIX_DISAPPEARING_GUARD_B // Doesn't insert a black screen.
+
 #endif // ifndef DISABLE_ALL_FIXES
 
 // Prince can jump 2 stories up in feather fall mode

@@ -335,6 +335,9 @@ void exit_room() {
 	}
 	savekid();
 	next_room = Char.room;
+#ifdef FIX_DISAPPEARING_GUARD_B
+	if (next_room == drawn_room) return;
+#endif
 	if (Guard.direction == dir_56_none) return;
 	if (Guard.alive < 0 && Guard.sword == sword_2_drawn) {
 		short kid_room_m1 = Kid.room - 1;
@@ -379,6 +382,10 @@ void exit_room() {
 	} else {
 		follow_guard();
 	}
+
+#ifdef FIX_DISAPPEARING_GUARD_A
+	if (next_room == drawn_room) drawn_room = 0;
+#endif
 }
 
 // seg002:0486

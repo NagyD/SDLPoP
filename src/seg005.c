@@ -1131,7 +1131,15 @@ void teleport() {
 		Char.y = y_land[Char.curr_row + 1];
 		next_room = Char.room;
 		clear_coll_rooms(); // Without this, the prince will sometimes end up at the wrong place.
-		leave_guard();
+#ifdef FIX_DISAPPEARING_GUARD_B
+		if (next_room != drawn_room)
+#endif
+		{
+			leave_guard();
+		}
+#ifdef FIX_DISAPPEARING_GUARD_A
+		if (next_room == drawn_room) drawn_room = 0;
+#endif
 		seqtbl_offset_char(seq_5_turn);
 		play_sound(sound_45_jump_through_mirror);
 	} else {
