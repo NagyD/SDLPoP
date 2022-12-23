@@ -1272,7 +1272,7 @@ void draw_pause_menu_item(pause_menu_item_type* item, rect_type* parent, int* y_
 		}
 
 	}
-	show_text_with_color(&text_rect, 0, -1, item->text, text_color);
+	show_text_with_color(&text_rect, halign_center, valign_top, item->text, text_color);
 	*y_offset += 13;
 
 }
@@ -1435,7 +1435,7 @@ void decrease_setting(setting_type* setting, int old_value) {
 
 
 void draw_setting_explanation(setting_type* setting) {
-	show_text_with_color(&explanation_rect, 0, -1, setting->explanation, color_7_lightgray);
+	show_text_with_color(&explanation_rect, halign_center, valign_top, setting->explanation, color_7_lightgray);
 }
 
 void draw_image_with_blending(image_type* image, int xpos, int ypos) {
@@ -1529,7 +1529,7 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 		text_color = color_7_lightgray;
 	}
 
-	show_text_with_color(&text_rect, -1, -1, setting->text, text_color);
+	show_text_with_color(&text_rect, halign_left, valign_top, setting->text, text_color);
 
 	if (setting->style == SETTING_STYLE_TOGGLE && !disabled) {
 		bool setting_enabled = true;
@@ -1567,9 +1567,9 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 
 		int OFF_color = (setting_enabled) ? unselected_color : selected_color;
 		int ON_color = (setting_enabled) ? selected_color : unselected_color;
-		show_text_with_color(&text_rect, 1, -1, "ON", ON_color);
+		show_text_with_color(&text_rect, halign_right, valign_top, "ON", ON_color);
 		text_rect.right -= 15;
-		show_text_with_color(&text_rect, 1, -1, "OFF", OFF_color);
+		show_text_with_color(&text_rect, halign_right, valign_top, "OFF", OFF_color);
 
 	} else if (setting->style == SETTING_STYLE_NUMBER && !disabled) {
 		int value = get_setting_value(setting);
@@ -1599,7 +1599,7 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 
 		value = get_setting_value(setting); // May have been updated.
 		char* value_text = print_setting_value(setting, value);
-		show_text_with_color(&text_rect, 1, -1, value_text, selected_color);
+		show_text_with_color(&text_rect, halign_right, valign_top, value_text, selected_color);
 
 		if (highlighted_setting_id == setting->id) {
 			int value_text_width = get_line_width(value_text, (int)strlen(value_text));
@@ -1654,7 +1654,7 @@ void draw_settings_area(settings_area_type* settings_area) {
 		y_offset = 15;
 		char level_text[16];
 		snprintf(level_text, sizeof(level_text), "LEVEL %d", menu_current_level);
-		show_text_with_color(&settings_area_rect, 0, -1, level_text, color_15_brightwhite);
+		show_text_with_color(&settings_area_rect, halign_center, valign_top, level_text, color_15_brightwhite);
 	}
 
 	for (int i = 0; (i < settings_area->setting_count) && (num_drawn_settings < 9); ++i) {
@@ -1849,7 +1849,7 @@ void draw_confirmation_dialog(int which_dialog, const char* text) {
 			rect_type rect;
 			shrink2_rect(&rect, &copyprot_dialog->text_rect, 2, 1);
 			rect.bottom -= 14;
-			show_text_with_color(&rect, 0, 0, text, color_15_brightwhite);
+			show_text_with_color(&rect, halign_center, valign_middle, text, color_15_brightwhite);
 			clear_kbd_buf();
 
 			rect_type* highlight_rect;
@@ -1864,8 +1864,8 @@ void draw_confirmation_dialog(int which_dialog, const char* text) {
 				cancel_text_color = color_15_brightwhite;
 			}
 			draw_rect(highlight_rect, color_8_darkgray);
-			show_text_with_color(&ok_text_rect, 0, 0, "OK", ok_text_color);
-			show_text_with_color(&cancel_text_rect, 0, 0, "Cancel", cancel_text_color);
+			show_text_with_color(&ok_text_rect, halign_center, valign_middle, "OK", ok_text_color);
+			show_text_with_color(&cancel_text_rect, halign_center, valign_middle, "Cancel", cancel_text_color);
 			update_screen();
 		}
 
@@ -1914,12 +1914,12 @@ void draw_select_level_dialog(void) {
 			rect_type rect;
 			shrink2_rect(&rect, &copyprot_dialog->text_rect, 2, 1);
 			rect.bottom -= 14;
-			show_text_with_color(&rect, 0, 0, "Customize level...", color_15_brightwhite);
+			show_text_with_color(&rect, halign_center, valign_middle, "Customize level...", color_15_brightwhite);
 			clear_kbd_buf();
 			rect_type input_rect = {104,   64,  118,  256};
 			char level_text[8];
 			snprintf(level_text, sizeof(level_text), "%d", menu_current_level);
-			show_text_with_color(&input_rect, 0, 0, level_text, color_15_brightwhite);
+			show_text_with_color(&input_rect, halign_center, valign_middle, level_text, color_15_brightwhite);
 			draw_image_with_blending(arrowhead_right_image, 175, input_rect.top + 3);
 			draw_image_with_blending(arrowhead_left_image, 145 - 3, input_rect.top + 3);
 

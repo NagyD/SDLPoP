@@ -2270,7 +2270,7 @@ void show_copyprot(int where) {
 
 // seg000:2489
 void show_loading() {
-	show_text(&screen_rect, 0, 0, "Loading. . . .");
+	show_text(&screen_rect, halign_center, valign_middle, "Loading. . . .");
 	update_screen();
 }
 
@@ -2310,7 +2310,7 @@ void show_quotes() {
 	//remove_timer(timer_0);
 	if (demo_mode && need_quotes) {
 		draw_rect(&screen_rect, 0);
-		show_text(&screen_rect, -1, 0, tbl_quotes[which_quote]);
+		show_text(&screen_rect, halign_left, valign_middle, tbl_quotes[which_quote]);
 		which_quote = !which_quote;
 		start_timer(timer_0, 0x384);
 	}
@@ -2343,8 +2343,8 @@ void show_splash() {
 	if (!enable_info_screen || start_level >= 0) return;
 	current_target_surface = onscreen_surface_;
 	draw_rect(&screen_rect, 0);
-	show_text_with_color(&splash_text_1_rect, 0, 0, splash_text_1, color_15_brightwhite);
-	show_text_with_color(&splash_text_2_rect, 0, -1, splash_text_2, color_7_lightgray);
+	show_text_with_color(&splash_text_1_rect, halign_center, valign_middle, splash_text_1, color_15_brightwhite);
+	show_text_with_color(&splash_text_2_rect, halign_center, valign_top, splash_text_2, color_7_lightgray);
 
 #ifdef USE_TEXT // Don't wait for a keypress if there is no text for the user to read.
 	int key = 0;

@@ -1399,7 +1399,7 @@ int showmessage(char* text,int arg_4,void *arg_0) {
 	//saved_font_ptr = current_target_surface->ptr_font;
 	//current_target_surface->ptr_font = ptr_font;
 	shrink2_rect(&rect, &copyprot_dialog->text_rect, 2, 1);
-	show_text_with_color(&rect, 0, 0, text, color_15_brightwhite);
+	show_text_with_color(&rect, halign_center, valign_middle, text, color_15_brightwhite);
 	//textstate.ptr_font = saved_font_ptr;
 	//current_target_surface->ptr_font = saved_font_ptr;
 	clear_kbd_buf();
@@ -2629,7 +2629,7 @@ void draw_overlay(void) {
 			rect_type timer_box_rect = {0, 0, 11, 2 + line_width};
 			rect_type timer_text_rect = {2, 2, 10, 100};
 			draw_rect_with_alpha(&timer_box_rect, color_0_black, 128);
-			show_text(&timer_text_rect, -1, -1, timer_text);
+			show_text(&timer_text_rect, halign_left, valign_top, timer_text);
 
 #ifdef USE_REPLAY
 			// During playback, display the number of ticks since start, if the timer is shown (debug cheats: T).
@@ -2644,7 +2644,7 @@ void draw_overlay(void) {
 				ticks_text_rect.bottom += 12;
 
 				draw_rect_with_alpha(&ticks_box_rect, color_0_black, 128);
-				show_text(&ticks_text_rect, -1, -1, ticks_text);
+				show_text(&ticks_text_rect, halign_left, valign_top, ticks_text);
 
 				timer_box_rect.bottom += 12;
 			}
@@ -2664,7 +2664,7 @@ void draw_overlay(void) {
 			rect_type timer_box_rect = {0, 0, 11, 2 + line_width};
 			rect_type timer_text_rect = {2, 2, 10, 100};
 			draw_rect_with_alpha(&timer_box_rect, color_0_black, 128);
-			show_text_with_color(&timer_text_rect, -1, -1, timer_text, color_10_brightgreen);
+			show_text_with_color(&timer_text_rect, halign_left, valign_top, timer_text, color_10_brightgreen);
 
 			drawn_rect = timer_box_rect; // Only need to blit this bit to the merged_surface.
 #endif

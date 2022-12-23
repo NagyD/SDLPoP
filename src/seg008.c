@@ -1858,7 +1858,7 @@ void free_peels() {
 // seg008:2644
 void display_text_bottom(const char* text) {
 	draw_rect(&rect_bottom_text, 0);
-	show_text(&rect_bottom_text, 0, 1, text);
+	show_text(&rect_bottom_text, halign_center, valign_bottom, text);
 #ifndef USE_TEXT
 	SDL_SetWindowTitle(window_, text);
 #endif

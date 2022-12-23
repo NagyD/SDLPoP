@@ -1419,4 +1419,17 @@ enum
 #define JOY_AXIS_NUM 6 // Max quantity of analogue inputs on a gamepad/joystick
 #define TROBS_MAX 30
 
+// text alignment
+enum
+{
+	// horizontal
+	halign_left = -1,
+	halign_center = 0,
+	halign_right = +1,
+	// vertical
+	valign_top = -1,
+	valign_middle = 0,
+	valign_bottom = +1,
+};
+
 #endif

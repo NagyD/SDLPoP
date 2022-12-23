@@ -130,17 +130,17 @@ void draw_extras(void) {
 		if (tile_type == tiles_11_loose) {
 			int color = color_15_brightwhite;
 			if (curr_room_tiles[tilepos] & 0x20) color = color_13_brightmagenta; // stable loose floor
-			show_text_with_color(&floor_rect, 0, -1, "~~~~", color);
+			show_text_with_color(&floor_rect, halign_center, valign_top, "~~~~", color);
 		}
 
 		// buttons
 		if (tile_type == tiles_15_opener) {
-			show_text_with_color(&floor_rect, 0, -1, "^^^^", color_10_brightgreen);
+			show_text_with_color(&floor_rect, halign_center, valign_top, "^^^^", color_10_brightgreen);
 		}
 		if (tile_type == tiles_6_closer) {
-			//show_text_with_color(&floor_rect, 0, -1, "XXXX", color_12_brightred);
+			//show_text_with_color(&floor_rect, halign_center, valign_top, "XXXX", color_12_brightred);
 			floor_rect.top -= 2;
-			show_text_with_color(&floor_rect, 0, -1, "xxxx", color_12_brightred); // Only the top half is visible, looks like an inverted "^" or a tiny "v".
+			show_text_with_color(&floor_rect, halign_center, valign_top, "xxxx", color_12_brightred); // Only the top half is visible, looks like an inverted "^" or a tiny "v".
 		}
 
 		bool is_trob_here = false;
@@ -157,7 +157,7 @@ void draw_extras(void) {
 			if (tile_type == tiles_2_spike) {
 				if (modifier >= 5) { // harmless
 					rect_type spike_rect = {y+50, x, y+60, x+32};
-					show_text_with_color(&spike_rect, 0, -1, "safe", color_10_brightgreen);
+					show_text_with_color(&spike_rect, halign_center, valign_top, "safe", color_10_brightgreen);
 				}
 			}
 
@@ -168,7 +168,7 @@ void draw_extras(void) {
 					rect_type chomper_rect = {y, x-10, y+60, x+32+10};
 					int color = color_10_brightgreen;
 					if (frame == 2) color = color_12_brightred;
-					show_text_with_color(&chomper_rect, 0, 0, "stuck", color);
+					show_text_with_color(&chomper_rect, halign_center, valign_middle, "stuck", color);
 				}
 			}
 		}
@@ -200,7 +200,7 @@ void draw_extras(void) {
 				text = temp_text;
 			}
 			rect_type pot_rect = {y+40, x, y+60, x+32};
-			show_text_with_color(&pot_rect, 0, -1, text, color);
+			show_text_with_color(&pot_rect, halign_center, valign_top, text, color);
 		}
 
 		// triggered door events
@@ -233,7 +233,7 @@ void draw_extras(void) {
 			--events_pos;
 			if (events_pos>0 && events_pos<(int)sizeof(events)) events[events_pos]='\0'; // trim trailing space
 			rect_type buttonmod_rect = {y/*+50-3*/, x, y+60-3, x+32};
-			show_text_with_color(&buttonmod_rect, 0, 1, events, color_14_brightyellow);
+			show_text_with_color(&buttonmod_rect, halign_center, valign_bottom, events, color_14_brightyellow);
 		}
 
 		// TODO: Add an option to merge events pointing to the same tile?
@@ -253,7 +253,7 @@ void draw_extras(void) {
 		if (events[0] != '\0') {
 			//printf("room %d, tile %d, events: %s\n", drawn_room, tilepos, events); // debug
 			rect_type events_rect = {y,x,y+63-3,x+32-7};
-			show_text_with_color(&events_rect, 0, 1, events, color_14_brightyellow);
+			show_text_with_color(&events_rect, halign_center, valign_bottom, events, color_14_brightyellow);
 		}
 
 #ifdef USE_TELEPORTS
@@ -261,7 +261,7 @@ void draw_extras(void) {
 			char number[4];
 			snprintf(events, sizeof(number), "%d", modifier);
 			rect_type number_rect = {y,x+32,y+63,x+64};
-			show_text_with_color(&number_rect, 0, -1, events, color_14_brightyellow);
+			show_text_with_color(&number_rect, halign_center, valign_top, events, color_14_brightyellow);
 		}
 #endif
 
@@ -399,7 +399,7 @@ void draw_extras(void) {
 
 		if (special_event) {
 			rect_type event_rect = {y,x-10,y+63,x+32+10};
-			show_text_with_color(&event_rect, 0, 0, special_event, color_14_brightyellow);
+			show_text_with_color(&event_rect, halign_center, valign_middle, special_event, color_14_brightyellow);
 		}
 
 		// Attempt to show broken room links:
@@ -417,7 +417,7 @@ void draw_extras(void) {
 					char room_num[4];
 					snprintf(room_num, sizeof(room_num), "%d", other_room);
 					method_5_rect(&text_rect, 0, color_4_red);
-					show_text_with_color(&text_rect, 0, 0, room_num, color_15_brightwhite);
+					show_text_with_color(&text_rect, halign_center, valign_middle, room_num, color_15_brightwhite);
 				}
 			}
 		}
@@ -428,7 +428,7 @@ void draw_extras(void) {
 			if (current_level == 1 || current_level == 13) start_dir ^= 0xFF; // falling/running entry
 			char* start_text = (start_dir == dir_0_right) ? "start\n->" : "start\n<-";
 			rect_type start_rect = {y,x-10,y+63,x+32+10};
-			show_text_with_color(&start_rect, 0, 0, start_text, color_14_brightyellow);
+			show_text_with_color(&start_rect, halign_center, valign_middle, start_text, color_14_brightyellow);
 		}
 
 		// guard info
@@ -445,10 +445,10 @@ void draw_extras(void) {
 			char guard_info[20];
 			/*
 			snprintf(guard_info, sizeof(guard_info), "sk: %d\nhp: %d", guard_skill, guardhp_max);
-			show_text_with_color(&event_rect, 0, 0, guard_info, color_12_brightred);
+			show_text_with_color(&event_rect, halign_center, valign_middle, guard_info, color_12_brightred);
 			*/
 			snprintf(guard_info, sizeof(guard_info), "s%d h%d", guard_skill, guardhp_max);
-			show_text_with_color(&event_rect, 0, -1, guard_info, /*color_12_brightred*/ color_14_brightyellow);
+			show_text_with_color(&event_rect, halign_center, valign_top, guard_info, /*color_12_brightred*/ color_14_brightyellow);
 			// Yellow text is more readable than red.
 		}
 
@@ -459,7 +459,7 @@ void draw_extras(void) {
 	snprintf(room_num, sizeof(room_num), "%d", drawn_room);
 	rect_type text_rect = {10, 10, 21, 30};
 	method_5_rect(&text_rect, 0, color_8_darkgray);
-	show_text_with_color(&text_rect, 0, 0, room_num, color_15_brightwhite);
+	show_text_with_color(&text_rect, halign_center, valign_middle, room_num, color_15_brightwhite);
 
 	// grid lines
 	rect_type vline = {0,0,192,1};
