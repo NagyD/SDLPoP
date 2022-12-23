@@ -1144,6 +1144,11 @@ font_type load_font_from_data(/*const*/ rawfont_type* data) {
 // Small font data (hardcoded), defined in menu.c
 extern byte hc_small_font_data[];
 
+#ifdef USE_TTF
+TTF_Font* ttf_font_main = NULL;
+TTF_Font* ttf_font_menu = NULL;
+#endif
+
 void load_font(void) {
 	// Try to load font from a file.
 	dat_type* dathandle = open_dat("font", 1);
@@ -1158,6 +1163,30 @@ void load_font(void) {
 	hc_small_font = load_font_from_data((rawfont_type*)hc_small_font_data);
 #endif
 
+#ifdef USE_TTF
+	TTF_Init();
+
+	//const char ttf_path[] = "data/FreeMono.ttf";
+	//const char ttf_path[] = "data/FreeSans.ttf";
+	//const char ttf_path[] = "data/NotoMono-Regular.ttf";
+	//const char ttf_path[] = "data/NotoSans-Regular.ttf";
+
+	ttf_font_main = TTF_OpenFont("data/NotoMono-Regular.ttf", 10);
+	if (ttf_font_main == NULL) {
+		sdlperror("load_font: Could not open TTF font");
+	}
+	TTF_SetFontHinting(ttf_font_main, TTF_HINTING_MONO);
+	//TTF_SetFontKerning(ttf_font_main, 1);
+
+	ttf_font_menu = TTF_OpenFont("data/NotoMono-Regular.ttf", 10);
+	if (ttf_font_menu == NULL) {
+		sdlperror("load_font: Could not open TTF font");
+	}
+	TTF_SetFontHinting(ttf_font_menu, TTF_HINTING_MONO);
+	//TTF_SetFontKerning(ttf_font_main, 1);
+
+	//#define SMOOTH_TTF
+#endif
 }
 
 // seg009:35C5
@@ -1354,12 +1383,77 @@ const rect_type* draw_text(const rect_type* rect_ptr,int x_align,int y_align,con
 	return rect_ptr;
 }
 
+#ifdef USE_TTF
+
+void show_text(const rect_type* rect_ptr,int x_align,int y_align,const char* text) {
+	// TODO: Store the current TTF font directly in textstate?
+	TTF_Font* ttf_font = ttf_font_main;
+	if (textstate.ptr_font == &hc_small_font) ttf_font = ttf_font_menu;
+
+	if (x_align <  0) TTF_SetFontWrappedAlign(ttf_font, TTF_WRAPPED_ALIGN_LEFT);
+	if (x_align == 0) TTF_SetFontWrappedAlign(ttf_font, TTF_WRAPPED_ALIGN_CENTER);
+	if (x_align >  0) TTF_SetFontWrappedAlign(ttf_font, TTF_WRAPPED_ALIGN_RIGHT);
+
+	rgb_type rgbcolor = palette[textstate.textcolor];
+	SDL_Color color = {.r=rgbcolor.r<<2, .g=rgbcolor.g<<2, .b=rgbcolor.b<<2, .a=SDL_ALPHA_OPAQUE};
+
+	int rect_width = rect_ptr->right - rect_ptr->left;
+	int rect_height = rect_ptr->bottom - rect_ptr->top;
+
+#ifdef SMOOTH_TTF
+	SDL_Surface* text_image = TTF_RenderUTF8_Blended_Wrapped(ttf_font, text, color, rect_width); // blurry
+#else
+	SDL_Surface* text_image = TTF_RenderUTF8_Solid_Wrapped(ttf_font, text, color, rect_width); // blocky
+#endif
+	if (text_image == NULL) {
+		sdlperror("show_text: could not render text");
+	}
+
+	int text_width = text_image->w;
+	int text_height = text_image->h;
+
+	int text_left = rect_ptr->left;
+	int text_top = rect_ptr->top;
+
+	if (y_align >= 0) {
+		if (y_align == 0) {
+			// middle
+			// The +1 is for simulating SHR + ADC/SBB.
+			text_top += (rect_height+1)/2 - (text_height+1)/2;
+		} else {
+			// bottom
+			text_top += rect_height - text_height;
+		}
+	}
+
+	if (x_align >= 0) {
+		if (x_align == 0) {
+			// center
+			text_left += rect_width/2 - text_width/2;
+		} else {
+			// right
+			text_left += rect_width - text_width;
+		}
+	}
+
+	SDL_Rect dest_rect = { .x = text_left, .y = text_top };
+	//SDL_SetSurfaceBlendMode(text_image, SDL_BLENDMODE_BLEND); // default
+	SDL_BlitSurface(text_image, NULL, current_target_surface, &dest_rect);
+
+	SDL_FreeSurface(text_image);
+	text_image = NULL;
+}
+
+#else
+
 // seg009:3E4F
 void show_text(const rect_type* rect_ptr,int x_align,int y_align,const char* text) {
 	// stub
 	//printf("show_text: %s\n",text);
 	draw_text(rect_ptr, x_align, y_align, text, (int)strlen(text));
 }
+
+#endif
 
 // seg009:04FF
 void show_text_with_color(const rect_type* rect_ptr,int x_align,int y_align, const char* text,int color) {
@@ -2994,7 +3088,7 @@ image_type* method_3_blit_mono(image_type* image,int xpos,int ypos,int blitter,b
 	SDL_Rect dest_rect = {xpos, ypos, image->w, image->h};
 
 	SDL_SetSurfaceBlendMode(colored_image, SDL_BLENDMODE_BLEND);
-	SDL_SetSurfaceBlendMode(current_target_surface, SDL_BLENDMODE_BLEND);
+	//SDL_SetSurfaceBlendMode(current_target_surface, SDL_BLENDMODE_BLEND);
 	SDL_SetSurfaceAlphaMod(colored_image, 255);
 	if (SDL_BlitSurface(colored_image, &src_rect, current_target_surface, &dest_rect) != 0) {
 		sdlperror("method_3_blit_mono: SDL_BlitSurface");
@@ -3221,18 +3315,38 @@ image_type* method_6_blit_img_to_scr(image_type* image,int xpos,int ypos,int bli
 	}
 #endif
 
-	SDL_SetSurfaceBlendMode(image, SDL_BLENDMODE_NONE);
-	SDL_SetSurfaceAlphaMod(image, 255);
+	if (0 != SDL_SetSurfaceBlendMode(image, SDL_BLENDMODE_NONE)) {
+		sdlperror("SDL_SetSurfaceBlendMode on the source (before the if)");
+	}
+	if (0 != SDL_SetSurfaceAlphaMod(image, 255)) {
+		sdlperror("SDL_SetSurfaceAlphaMod on the source (before the if)");
+	}
 
 	if (blit == blitters_0_no_transp) {
-		SDL_SetColorKey(image, SDL_FALSE, 0);
+		if (0 != SDL_SetColorKey(image, SDL_FALSE, 0)) {
+			sdlperror("SDL_SetColorKey");
+		}
+		/*if (0 != SDL_SetSurfaceBlendMode(image, SDL_BLENDMODE_NONE)) {
+			sdlperror("SDL_SetSurfaceBlendMode on the source");
+		}*/
+		/*if (0 != SDL_SetSurfaceBlendMode(current_target_surface, SDL_BLENDMODE_NONE)) {
+			sdlperror("SDL_SetSurfaceBlendMode on the target");
+		}*/
 	}
 	else {
-		SDL_SetColorKey(image, SDL_TRUE, 0);
+		if (0 != SDL_SetColorKey(image, SDL_TRUE, 0)) {
+			sdlperror("SDL_SetColorKey");
+		}
+		/*if (0 != SDL_SetSurfaceBlendMode(image, SDL_BLENDMODE_BLEND)) {
+			sdlperror("SDL_SetSurfaceBlendMode on the source");
+		}*/
+		/*if (0 != SDL_SetSurfaceBlendMode(current_target_surface, SDL_BLENDMODE_BLEND)) {
+			sdlperror("SDL_SetSurfaceBlendMode on the target");
+		}*/
 	}
 	if (SDL_BlitSurface(image, &src_rect, current_target_surface, &dest_rect) != 0) {
 		sdlperror("method_6_blit_img_to_scr: SDL_BlitSurface 2247");
-		quit(1);
+		//quit(1);
 	}
 
 	if (SDL_SetSurfaceAlphaMod(image, 0) != 0) {

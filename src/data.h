@@ -930,6 +930,8 @@ extern int g_deprecation_number;
 extern byte always_use_original_music;
 extern byte always_use_original_graphics;
 
+extern rgb_type palette[256];
+
 #undef INIT
 #undef extern
 

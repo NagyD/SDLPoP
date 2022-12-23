@@ -393,12 +393,18 @@ You need the MinGW Development Libraries of SDL2:
 
 * https://github.com/libsdl-org/SDL/releases/latest
 * https://github.com/libsdl-org/SDL_image/releases/latest
+* https://github.com/libsdl-org/SDL_ttf/releases/latest
 * Download the `*-mingw.tar.gz` files.
 
-To install these, just extract the contents of the `i686-w64-mingw32` folder from each archive to:
+To install the 32-bit libraries, extract the contents of the `i686-w64-mingw32` folder from each archive to:
 
 * on 64-bit Windows: `c:\Program Files (x86)\Dev-Cpp\MinGW64\`
 * on 32-bit Windows: `c:\Program Files\Dev-Cpp\MinGW64\`
+
+To install the 64-bit libraries, extract the contents of the `x86_64-w64-mingw32` folder from each archive to:
+
+* on 64-bit Windows: `c:\Program Files (x86)\Dev-Cpp\MinGW64\x86_64-w64-mingw32\`
+* on 32-bit Windows: `c:\Program Files\Dev-Cpp\MinGW64\x86_64-w64-mingw32\`
 
 You need to "merge" the contents of the `bin`, `include`, etc. folders in the archives into the existing folders with the same name in the `MinGW64` folder.
 
@@ -423,6 +429,7 @@ To compile, open one of the .dev files and click the compile icon.
        You can get the SDL2 library files from here:
        * https://github.com/libsdl-org/SDL/releases/latest
        * https://github.com/libsdl-org/SDL_image/releases/latest
+       * https://github.com/libsdl-org/SDL_ttf/releases/latest
        * Download the Visual C++ 32/64-bit development package, the `*-VC.zip` files.
     * (You could create a small batch file to automate the above steps on your system.)
 * Alternatively, you can also build SDLPoP using MSVC with NMake (use the makefile src/NMakefile).
@@ -454,6 +461,7 @@ Download the SDL2 and SDL2 image sources:
 
 * SDL2: https://libsdl.org/download-2.0.php
 * SDL2 image: https://libsdl.org/projects/SDL_image/
+* SDL2 TTF: https://libsdl.org/projects/SDL_ttf/
 
 Build and install these libraries according to their documentation.
 

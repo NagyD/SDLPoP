@@ -1232,6 +1232,7 @@ void draw_pause_menu_item(pause_menu_item_type* item, rect_type* parent, int* y_
 
 	rect_type text_rect = *parent;
 	text_rect.top += *y_offset;
+	text_rect.bottom = text_rect.top + 6;
 	int text_color = inactive_text_color;
 
 	rect_type selection_box = text_rect;
@@ -1272,7 +1273,7 @@ void draw_pause_menu_item(pause_menu_item_type* item, rect_type* parent, int* y_
 		}
 
 	}
-	show_text_with_color(&text_rect, halign_center, valign_top, item->text, text_color);
+	show_text_with_color(&text_rect, halign_center, valign_middle, item->text, text_color);
 	*y_offset += 13;
 
 }
@@ -1486,6 +1487,7 @@ char* print_setting_value_(setting_type* setting, int value, char* buffer, size_
 void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int inactive_text_color) {
 	rect_type text_rect = *parent;
 	text_rect.top += *y_offset;
+	text_rect.bottom = text_rect.top + 6;
 	int text_color = inactive_text_color;
 	int selected_color = color_15_brightwhite;
 	int unselected_color = color_7_lightgray;
@@ -1529,7 +1531,7 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 		text_color = color_7_lightgray;
 	}
 
-	show_text_with_color(&text_rect, halign_left, valign_top, setting->text, text_color);
+	show_text_with_color(&text_rect, halign_left, valign_middle, setting->text, text_color);
 
 	if (setting->style == SETTING_STYLE_TOGGLE && !disabled) {
 		bool setting_enabled = true;
@@ -1565,11 +1567,13 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 			}
 		}
 
+//printf("text_rect: left = %d, top = %d, right = %d, bottom = %d\n", text_rect.left, text_rect.top, text_rect.right, text_rect.bottom);
+//draw_rect_contours(&text_rect, color_4_red);
 		int OFF_color = (setting_enabled) ? unselected_color : selected_color;
 		int ON_color = (setting_enabled) ? selected_color : unselected_color;
-		show_text_with_color(&text_rect, halign_right, valign_top, "ON", ON_color);
+		show_text_with_color(&text_rect, halign_right, valign_middle, "ON", ON_color);
 		text_rect.right -= 15;
-		show_text_with_color(&text_rect, halign_right, valign_top, "OFF", OFF_color);
+		show_text_with_color(&text_rect, halign_right, valign_middle, "OFF", OFF_color);
 
 	} else if (setting->style == SETTING_STYLE_NUMBER && !disabled) {
 		int value = get_setting_value(setting);
@@ -1599,7 +1603,7 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 
 		value = get_setting_value(setting); // May have been updated.
 		char* value_text = print_setting_value(setting, value);
-		show_text_with_color(&text_rect, halign_right, valign_top, value_text, selected_color);
+		show_text_with_color(&text_rect, halign_right, valign_middle, value_text, selected_color);
 
 		if (highlighted_setting_id == setting->id) {
 			int value_text_width = get_line_width(value_text, (int)strlen(value_text));
@@ -1644,7 +1648,9 @@ void menu_scroll(int y) {
 void draw_settings_area(settings_area_type* settings_area) {
 	if (settings_area == NULL) return;
 	rect_type settings_area_rect = {0, 80, 170, 320};
+//draw_rect_contours(&settings_area_rect, color_4_red);
 	shrink2_rect(&settings_area_rect, &settings_area_rect, 20, 20);
+//draw_rect_contours(&settings_area_rect, color_4_red);
 	int y_offset = 0;
 	int num_drawn_settings = 0;
 
@@ -1654,7 +1660,7 @@ void draw_settings_area(settings_area_type* settings_area) {
 		y_offset = 15;
 		char level_text[16];
 		snprintf(level_text, sizeof(level_text), "LEVEL %d", menu_current_level);
-		show_text_with_color(&settings_area_rect, halign_center, valign_top, level_text, color_15_brightwhite);
+		show_text_with_color(&settings_area_rect, halign_center, valign_middle, level_text, color_15_brightwhite);
 	}
 
 	for (int i = 0; (i < settings_area->setting_count) && (num_drawn_settings < 9); ++i) {

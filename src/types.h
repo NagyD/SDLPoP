@@ -27,12 +27,18 @@ The authors of this program may be contacted at https://forum.princed.org
 #if !defined(_MSC_VER)
 # include <SDL2/SDL.h>
 # include <SDL2/SDL_image.h>
+#ifdef USE_TTF
+# include <SDL2/SDL_ttf.h>
+#endif
 #else
 // These headers for SDL seem to be the pkgconfig/meson standard as per the
 // latest versions. If the old ones should be used, the ifdef must be used
 // to compare versions. 
 # include <SDL.h>
 # include <SDL_image.h>
+#ifdef USE_TTF
+# include <SDL_ttf.h>
+#endif
 #endif
 
 #if SDL_BYTEORDER != SDL_LIL_ENDIAN

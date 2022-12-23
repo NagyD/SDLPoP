@@ -66,6 +66,9 @@ The authors of this program may be contacted at https://forum.princed.org
 // Enable recording/replay feature.
 #define USE_REPLAY
 
+// Use TrueType fonts instead of pixel fonts.
+#define USE_TTF
+
 #endif
 
 // Adds a way to crouch immediately after climbing up: press down and forward simultaneously.
