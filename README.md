@@ -332,10 +332,18 @@ Furthermore, SDLPoP opens up new possibilities for mod making. For example:
 * Description and download: https://forum.princed.org/viewtopic.php?f=73&t=3664
 * Alternate link: https://www.popot.org/custom_levels.php?mod=0000153
 
-Since version 1.16, there is support for fake tiles, for example walls that the prince can go through.
-The [Apoplexy level editor](https://www.popot.org/level_editors.php?editor=apoplexy) supports these additional tiles since v3.0. (Just don't overuse them, please!)
+### Additional tiles
 
-See [doc/tiles.md](doc/tiles.md) for documentation on fake tiles.
+See [doc/tiles.md](doc/tiles.md) for documentation on tiles added by SDLPoP.
+
+* Since version 1.16, SDLPoP supports fake tiles, for example walls that the prince can go through.
+The [Apoplexy level editor](https://www.popot.org/level_editors.php?editor=apoplexy) supports these additional tiles since v3.0.
+
+* Since version 1.19, SDLPoP supports colored torches.
+(Supported in Apoplexy since v3.5.)
+
+* Since version (upcoming version), SDLPoP supports teleports.
+(Supported in Apoplexy since v3.16.)
 
 ## REPLAYS
 
