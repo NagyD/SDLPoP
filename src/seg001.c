@@ -82,7 +82,7 @@ int proc_cutscene_frame(int wait_frames) {
 		do {
 			if (!disable_keys && do_paused()) {
 				stop_sounds();
-				draw_rect(&screen_rect, 0);
+				draw_rect(&screen_rect, color_0_black);
 #ifdef USE_FADE
 				if (is_global_fading) {
 					fade_palette_buffer->proc_restore_free(fade_palette_buffer);
@@ -653,7 +653,7 @@ void expired() {
 
 // seg001:0CCD
 void load_intro(int which_imgs,cutscene_ptr_type func,int free_sounds) {
-	draw_rect(&screen_rect, 0);
+	draw_rect(&screen_rect, color_0_black);
 	if (free_sounds) {
 		free_optional_sounds();
 	}
@@ -687,7 +687,7 @@ void load_intro(int which_imgs,cutscene_ptr_type func,int free_sounds) {
 	func();
 	is_cutscene = 0;
 	free_all_chtabs_from(3);
-	draw_rect(&screen_rect, 0);
+	draw_rect(&screen_rect, color_0_black);
 }
 
 typedef struct star_type {

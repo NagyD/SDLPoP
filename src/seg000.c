@@ -197,7 +197,7 @@ void start_game() {
 		first_start = 0;
 		setjmp(/*&*/setjmp_buf);
 	} else {
-		draw_rect(&screen_rect, 0);
+		draw_rect(&screen_rect, color_0_black);
 		show_quotes();
 		clear_screen_and_sounds();
 		longjmp(/*&*/setjmp_buf,-1);
@@ -445,7 +445,7 @@ int quick_load(void) {
 		}
 
 		stop_sounds();
-		draw_rect(&screen_rect, 0);
+		draw_rect(&screen_rect, color_0_black);
 		update_screen();
 		delay_ticks(5); // briefly display a black screen as a visual cue
 
@@ -558,7 +558,7 @@ int process_key() {
 			} else {
 				start_level = custom->first_level; // 1
 			}
-			draw_rect(&screen_rect, 0);
+			draw_rect(&screen_rect, color_0_black);
 #ifdef USE_FADE
 			if (is_global_fading) {
 				fade_palette_buffer->proc_restore_free(fade_palette_buffer);
@@ -800,7 +800,7 @@ int process_key() {
 			case SDL_SCANCODE_B | WITH_SHIFT: // Shift+B
 				is_blind_mode = !is_blind_mode;
 				if (is_blind_mode) {
-					draw_rect(&rect_top, 0);
+					draw_rect(&rect_top, color_0_black);
 				} else {
 					need_full_redraw = 1;
 				}
@@ -867,7 +867,7 @@ void play_frame() {
 	if (current_level == 0) {
 		// Special event: level 0 running exit
 		if (Kid.room == /*24*/ custom->demo_end_room) {
-			draw_rect(&screen_rect, 0);
+			draw_rect(&screen_rect, color_0_black);
 			start_level = -1;
 			need_quotes = 1;
 			start_game();
@@ -916,7 +916,7 @@ void draw_game_frame() {
 				draw_moving();
 				draw_tables();
 				if (is_blind_mode) {
-					draw_rect(&rect_top, 0);
+					draw_rect(&rect_top, color_0_black);
 				}
 				if (upside_down) {
 					flip_screen(offscreen_surface);
@@ -1083,7 +1083,7 @@ void load_lev_spr(int level) {
 	char filename[20];
 	dathandle = NULL;
 	current_level = next_level = level;
-	draw_rect(&screen_rect, 0);
+	draw_rect(&screen_rect, color_0_black);
 	free_optsnd_chtab();
 	snprintf(filename, sizeof(filename), "%s%s.DAT",
 		tbl_envir_gr[graphics_mode],
@@ -2309,7 +2309,7 @@ void show_quotes() {
 	//start_timer(timer_0,0);
 	//remove_timer(timer_0);
 	if (demo_mode && need_quotes) {
-		draw_rect(&screen_rect, 0);
+		draw_rect(&screen_rect, color_0_black);
 		show_text(&screen_rect, halign_left, valign_middle, tbl_quotes[which_quote]);
 		which_quote = !which_quote;
 		start_timer(timer_0, 0x384);
@@ -2342,7 +2342,7 @@ const char* splash_text_2 =
 void show_splash() {
 	if (!enable_info_screen || start_level >= 0) return;
 	current_target_surface = onscreen_surface_;
-	draw_rect(&screen_rect, 0);
+	draw_rect(&screen_rect, color_0_black);
 	show_text_with_color(&splash_text_1_rect, halign_center, valign_middle, splash_text_1, color_15_brightwhite);
 	show_text_with_color(&splash_text_2_rect, halign_center, valign_top, splash_text_2, color_7_lightgray);
 

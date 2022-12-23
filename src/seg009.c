@@ -3861,7 +3861,7 @@ palette_fade_type* make_pal_buffer_fadein(surface_type* source_surface,int which
 	}
 	//method_1_blit_rect(onscreen_surface_, source_surface, &screen_rect, &screen_rect, 0);
 	// for RGB
-	//method_5_rect(&screen_rect, 0, 0);
+	//method_5_rect(&screen_rect, 0, color_0_black);
 	return palette_buffer;
 }
 
@@ -3974,12 +3974,12 @@ void pal_restore_free_fadeout(palette_fade_type* palette_buffer) {
 	surface_type* surface;
 	surface = current_target_surface;
 	current_target_surface = onscreen_surface_;
-	draw_rect(&screen_rect, 0);
+	draw_rect(&screen_rect, color_0_black);
 	current_target_surface = surface;
 	set_pal_256(palette_buffer->original_pal);
 	free(palette_buffer);
 	// for RGB
-	method_5_rect(&screen_rect, 0, 0);
+	method_5_rect(&screen_rect, 0, color_0_black);
 }
 
 // seg009:1DF7

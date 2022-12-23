@@ -1366,7 +1366,7 @@ void draw_tables() {
 	drects_count = 0;
 	current_target_surface = offscreen_surface;
 	if (is_blind_mode) {
-		draw_rect(&rect_top, 0);
+		draw_rect(&rect_top, color_0_black);
 	}
 	restore_peels();
 	draw_wipes(0);
@@ -1857,7 +1857,7 @@ void free_peels() {
 
 // seg008:2644
 void display_text_bottom(const char* text) {
-	draw_rect(&rect_bottom_text, 0);
+	draw_rect(&rect_bottom_text, color_0_black);
 	show_text(&rect_bottom_text, halign_center, valign_bottom, text);
 #ifndef USE_TEXT
 	SDL_SetWindowTitle(window_, text);
@@ -1866,7 +1866,7 @@ void display_text_bottom(const char* text) {
 
 // seg008:266D
 void erase_bottom_text(int arg_0) {
-	draw_rect(&rect_bottom_text, 0);
+	draw_rect(&rect_bottom_text, color_0_black);
 	if (arg_0) {
 		text_time_total = 0;
 		text_time_remaining = 0;

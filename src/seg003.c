@@ -218,7 +218,7 @@ void draw_level_first() {
 	if (custom->tbl_level_type[current_level]) {
 		gen_palace_wall_colors();
 	}
-	draw_rect(&screen_rect, 0);
+	draw_rect(&screen_rect, color_0_black);
 	show_level();
 	redraw_screen(0);
 	draw_kid_hp(hitp_curr, hitp_max);
@@ -240,7 +240,7 @@ void draw_level_first() {
 void redraw_screen(int drawing_different_room) {
 	//remove_flash();
 	if (drawing_different_room) {
-		draw_rect(&rect_top, 0);
+		draw_rect(&rect_top, color_0_black);
 #ifdef USE_DARK_TRANSITION
 		// Briefly show a dark screen when changing rooms, like in the original game.
 		update_screen();
@@ -250,7 +250,7 @@ void redraw_screen(int drawing_different_room) {
 
 	different_room = 0;
 	if (is_blind_mode) {
-		draw_rect(&rect_top, 0);
+		draw_rect(&rect_top, color_0_black);
 	} else {
 		if (curr_guard_color) {
 			// Moved *before* drawings.
