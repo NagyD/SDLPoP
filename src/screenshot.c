@@ -256,6 +256,15 @@ void draw_extras(void) {
 			show_text_with_color(&events_rect, 0, 1, events, color_14_brightyellow);
 		}
 
+#ifdef USE_TELEPORTS
+		if (tile_type == tiles_23_balcony_left && modifier != 0) {
+			char number[4];
+			snprintf(events, sizeof(number), "%d", modifier);
+			rect_type number_rect = {y,x+32,y+63,x+64};
+			show_text_with_color(&number_rect, 0, -1, events, color_14_brightyellow);
+		}
+#endif
+
 		// special events
 		char* special_event = NULL;
 

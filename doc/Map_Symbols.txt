@@ -8,7 +8,7 @@ Items marked with [!] can't be found on the original levels.
 	* green "^^^^": Opener / raise button.
 	* red "vvvv": Closer / drop button.
 * Traps:
-	* green "safe": Spikes that won't hurt the prince. [!]
+	* green "safe": Spikes which won't hurt the prince. [!]
 	* green or red "stuck": Stuck chomper. [!]
 * Potions:
 	* grey "x": empty [!]
@@ -25,7 +25,9 @@ Items marked with [!] can't be found on the original levels.
 		1. what events are triggered by a button,
 		2. what events point to a tile.
 	In both cases, the same tile can have multiple numbers.
-	Case 2 shows only those events that can be triggered from the reachable rooms.
+	Case 2 shows only those events which can be triggered from the reachable rooms.
+* Teleports:
+	Each teleport has a yellow number. The teleport takes the player to the other teleport with the same number.
 * Guards:
 	yellow "s5 h4": The first number is the skill, the second is the number of hit points.
 	Guard skills are documented in default_skill_options.txt and here: https://www.popot.org/documentation.php?doc=PoP1GuardTypes
