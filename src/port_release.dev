@@ -12,7 +12,7 @@ ResourceIncludes=
 MakeIncludes=
 Compiler=-Wall -std=gnu99_@@_-O2_@@_
 CppCompiler=-Wall_@@_-O2_@@_
-Linker=-l"mingw32"_@@_-l"SDL2main"_@@_-l"SDL2.dll"_@@_-l"SDL2_image"_@@_
+Linker=-l"mingw32"_@@_-l"SDL2main"_@@_-l"SDL2.dll"_@@_-l"SDL2_image"_@@_-l"SDL2_ttf"_@@_
 IsCpp=0
 Icon=port_release.ico
 ExeOutput=
