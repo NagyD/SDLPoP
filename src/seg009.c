@@ -1166,19 +1166,19 @@ void load_font(void) {
 #ifdef USE_TTF
 	TTF_Init();
 
-	//const char ttf_path[] = "data/FreeMono.ttf";
-	//const char ttf_path[] = "data/FreeSans.ttf";
-	//const char ttf_path[] = "data/NotoMono-Regular.ttf";
-	//const char ttf_path[] = "data/NotoSans-Regular.ttf";
+	//const char ttf_path[] = "data/ttf/FreeMono.ttf";
+	//const char ttf_path[] = "data/ttf/FreeSans.ttf";
+	//const char ttf_path[] = "data/ttf/NotoMono-Regular.ttf";
+	//const char ttf_path[] = "data/ttf/NotoSans-Regular.ttf";
 
-	ttf_font_main = TTF_OpenFont("data/NotoMono-Regular.ttf", 10);
+	ttf_font_main = TTF_OpenFont("data/ttf/NotoMono-Regular.ttf", 10);
 	if (ttf_font_main == NULL) {
 		sdlperror("load_font: Could not open TTF font");
 	}
 	TTF_SetFontHinting(ttf_font_main, TTF_HINTING_MONO);
 	//TTF_SetFontKerning(ttf_font_main, 1);
 
-	ttf_font_menu = TTF_OpenFont("data/NotoMono-Regular.ttf", 10);
+	ttf_font_menu = TTF_OpenFont("data/ttf/NotoMono-Regular.ttf", 10);
 	if (ttf_font_menu == NULL) {
 		sdlperror("load_font: Could not open TTF font");
 	}
