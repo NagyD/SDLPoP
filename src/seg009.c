@@ -4088,13 +4088,17 @@ void set_chtab_palette(chtab_type* chtab, byte* colors, int n_colors) {
 				int n_colors_to_be_set = n_colors;
 				SDL_Palette* current_palette = current_image->format->palette;
 
-				// one of the guard images (i=25) is only a single transparent pixel
-				// this caused SDL_SetPaletteColors to fail, I think because that palette contains only 2 colors
-				if (current_palette->ncolors < n_colors_to_be_set)
-					n_colors_to_be_set = current_palette->ncolors;
-				if (SDL_SetPaletteColors(current_palette, scolors, 0, n_colors_to_be_set) != 0) {
-					sdlperror("set_chtab_palette: SDL_SetPaletteColors");
-					quit(1);
+				// Fix crashing with the guard graphics of Christmas of Persia.
+				if (current_palette != NULL) {
+					// one of the guard images (i=25) is only a single transparent pixel
+					// this caused SDL_SetPaletteColors to fail, I think because that palette contains only 2 colors
+					if (current_palette->ncolors < n_colors_to_be_set) {
+						n_colors_to_be_set = current_palette->ncolors;
+					}
+					if (SDL_SetPaletteColors(current_palette, scolors, 0, n_colors_to_be_set) != 0) {
+						sdlperror("set_chtab_palette: SDL_SetPaletteColors");
+						quit(1);
+					}
 				}
 			}
 		}
