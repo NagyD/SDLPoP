@@ -493,12 +493,12 @@ chtab_type* load_sprites_from_file(int resource,int palette_bits, int quit_on_er
 		SDL_Surface* image = load_image(resource + i, pal_ptr);
 //		if (image == NULL) printf(" failed");
 		if (image != NULL) {
-
+/*
 			if (SDL_SetSurfaceAlphaMod(image, 0) != 0) {
 				sdlperror("load_sprites_from_file: SDL_SetAlpha");
 				quit(1);
 			}
-
+*/
 			/*
 			if (SDL_SetColorKey(image, SDL_SRCCOLORKEY, 0) != 0) {
 				sdlperror("load_sprites_from_file: SDL_SetColorKey");
@@ -848,10 +848,12 @@ image_type* load_image(int resource_id, dat_pal_type* palette) {
 			quit(1);
 		}
 //		printf("bpp = %d\n", image->format->BitsPerPixel);
+/*
 		if (SDL_SetSurfaceAlphaMod(image, 0) != 0) { //sdl 1.2: SDL_SetAlpha removed
 			sdlperror("load_image: SDL_SetAlpha");
 			quit(1);
 		}
+*/
 //		image_type* colored_image = SDL_ConvertSurfaceFormat(image, SDL_PIXELFORMAT_ARGB8888, 0);
 //		if (!colored_image) {
 //			sdlperror("load_image: SDL_ConvertSurfaceFormat");
@@ -3222,23 +3224,40 @@ image_type* method_6_blit_img_to_scr(image_type* image,int xpos,int ypos,int bli
 #endif
 
 	SDL_SetSurfaceBlendMode(image, SDL_BLENDMODE_NONE);
+	SDL_SetColorKey(image, SDL_FALSE, 0);
 	SDL_SetSurfaceAlphaMod(image, 255);
 
+	//printf("format = %s\n", SDL_GetPixelFormatName(image->format->format));
+	// Fix the background color of teleport images on SDL_image 2.6.2, where they are loaded as RGBA.
+	// For transparency, paletted images need colorkeying, RGB(A) images need blending.
 	if (blit == blitters_0_no_transp) {
-		SDL_SetColorKey(image, SDL_FALSE, 0);
+		if (SDL_ISPIXELFORMAT_INDEXED(image->format->format)) {
+			SDL_SetColorKey(image, SDL_FALSE, 0);
+			//printf("colorkey = SDL_FALSE\n");
+		} else {
+			SDL_SetSurfaceBlendMode(image, SDL_BLENDMODE_NONE);
+			//printf("SDL_BLENDMODE_NONE\n");
+		}
 	}
 	else {
-		SDL_SetColorKey(image, SDL_TRUE, 0);
+		if (SDL_ISPIXELFORMAT_INDEXED(image->format->format)) {
+			SDL_SetColorKey(image, SDL_TRUE, 0);
+			//printf("colorkey = SDL_TRUE\n");
+		} else {
+			SDL_SetSurfaceBlendMode(image, SDL_BLENDMODE_BLEND);
+			//printf("SDL_BLENDMODE_BLEND\n");
+		}
 	}
 	if (SDL_BlitSurface(image, &src_rect, current_target_surface, &dest_rect) != 0) {
 		sdlperror("method_6_blit_img_to_scr: SDL_BlitSurface 2247");
-		quit(1);
+		//quit(1);
 	}
-
+/*
 	if (SDL_SetSurfaceAlphaMod(image, 0) != 0) {
 		sdlperror("method_6_blit_img_to_scr: SDL_SetAlpha");
 		quit(1);
 	}
+*/
 	return image;
 }
 
