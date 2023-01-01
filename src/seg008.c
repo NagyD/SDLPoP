@@ -1858,7 +1858,8 @@ void free_peels() {
 // seg008:2644
 void display_text_bottom(const char* text) {
 	draw_rect(&rect_bottom_text, color_0_black);
-	show_text(&rect_bottom_text, halign_center, valign_bottom, text);
+	// PressStart2P needs valign_top, other fonts need valign_bottom.
+	show_text(&rect_bottom_text, halign_center, status_valign, text);
 #ifndef USE_TEXT
 	SDL_SetWindowTitle(window_, text);
 #endif

@@ -1171,16 +1171,18 @@ void load_font(void) {
 	//const char ttf_path[] = "data/ttf/NotoMono-Regular.ttf";
 	//const char ttf_path[] = "data/ttf/NotoSans-Regular.ttf";
 
-	ttf_font_main = TTF_OpenFont("data/ttf/NotoMono-Regular.ttf", 10);
+	//ttf_font_main = TTF_OpenFont(locate_file("data/ttf/NotoMono-Regular.ttf"), 10);
+	ttf_font_main = TTF_OpenFont(locate_file("data/ttf/PressStart2P-Regular.ttf"), 8);
+	status_valign = valign_top; // PressStart2P needs valign_top, other fonts need valign_bottom.
 	if (ttf_font_main == NULL) {
-		sdlperror("load_font: Could not open TTF font");
+		sdlperror("load_font: Could not open main TTF font");
 	}
 	TTF_SetFontHinting(ttf_font_main, TTF_HINTING_MONO);
 	//TTF_SetFontKerning(ttf_font_main, 1);
 
-	ttf_font_menu = TTF_OpenFont("data/ttf/NotoMono-Regular.ttf", 10);
+	ttf_font_menu = TTF_OpenFont(locate_file("data/ttf/NotoMono-Regular.ttf"), 10);
 	if (ttf_font_menu == NULL) {
-		sdlperror("load_font: Could not open TTF font");
+		sdlperror("load_font: Could not open menu TTF font");
 	}
 	TTF_SetFontHinting(ttf_font_menu, TTF_HINTING_MONO);
 	//TTF_SetFontKerning(ttf_font_main, 1);
@@ -1407,6 +1409,7 @@ void show_text(const rect_type* rect_ptr,int x_align,int y_align,const char* tex
 #endif
 	if (text_image == NULL) {
 		sdlperror("show_text: could not render text");
+		return;
 	}
 
 	int text_width = text_image->w;

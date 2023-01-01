@@ -932,6 +932,8 @@ extern byte always_use_original_graphics;
 
 extern rgb_type palette[256];
 
+extern int status_valign INIT(= valign_bottom);
+
 #undef INIT
 #undef extern
 
