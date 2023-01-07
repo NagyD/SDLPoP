@@ -582,7 +582,7 @@ setting_type gameplay_settings[] = {
 				.explanation = "You can enter closed exit doors after you met the shadow or Jaffar died, or after you opened one of multiple exits."},
 		{.id = SETTING_FIX_QUICKSAVE_DURING_FEATHER, .style = SETTING_STYLE_TOGGLE,
 				.linked = &fixes_saved.fix_quicksave_during_feather, .required = &use_fixes_and_enhancements,
-				.text = "Fix quick save in feather mode",
+				.text = "Fix quicksave in feather mode",
 				.explanation = "You cannot save game while floating in feather mode."},
 		{.id = SETTING_FIX_CAPED_PRINCE_SLIDING_THROUGH_GATE, .style = SETTING_STYLE_TOGGLE,
 				.linked = &fixes_saved.fix_caped_prince_sliding_through_gate, .required = &use_fixes_and_enhancements,
