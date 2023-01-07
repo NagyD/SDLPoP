@@ -84,8 +84,8 @@ pause_menu_item_type pause_menu_items[] = {
 		// TODO: Add a cheats menu, where you can choose a cheat from a list?
 		/*{.id = PAUSE_MENU_CHEATS,        .text = "CHEATS", .required = &cheats_enabled},*/
 #ifdef USE_QUICKSAVE // TODO: If quicksave is disabled, show regular save/load instead?
-		{.id = PAUSE_MENU_SAVE_GAME,     .text = "QUICKSAVE"},
-		{.id = PAUSE_MENU_LOAD_GAME,     .text = "QUICKLOAD"},
+		{.id = PAUSE_MENU_SAVE_GAME,     .text = "QUICKSAVE (F6)"},
+		{.id = PAUSE_MENU_LOAD_GAME,     .text = "QUICKLOAD (F9)"},
 #endif
 		{.id = PAUSE_MENU_RESTART_LEVEL, .text = "RESTART LEVEL"},
 		{.id = PAUSE_MENU_SETTINGS,      .text = "SETTINGS"},
