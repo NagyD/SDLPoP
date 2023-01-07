@@ -578,7 +578,7 @@ void save_level_screenshot(bool want_extras) {
 	int image_width = map_width*320;
 	int image_height = map_height*189+3+8;
 
-	SDL_Surface* map_surface = SDL_CreateRGBSurface(0, image_width, image_height, 32, 0xFF, 0xFF<<8, 0xFF<<16, 0xFF<<24);
+	SDL_Surface* map_surface = SDL_CreateRGBSurface(0, image_width, image_height, 32, 0xFF, 0xFF<<8, 0xFF<<16, 0xFFu<<24);
 	if (map_surface == NULL) {
 		sdlperror("SDL_CreateRGBSurface (map_surface)");
 		//exit(1);

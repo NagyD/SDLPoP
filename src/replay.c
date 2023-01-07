@@ -209,7 +209,12 @@ void list_replay_files(void) {
 		if (num_replay_files > max_replay_files) {
 			// too many files, expand the memory available for replay_list
 			max_replay_files += 128;
-			replay_list = realloc( replay_list, max_replay_files * sizeof( replay_info_type ) );
+			void* new_replay_list = realloc( replay_list, max_replay_files * sizeof( replay_info_type ) );
+			if (new_replay_list == NULL) {
+				printf("list_replay_files: realloc failed!");
+				quit(1);
+			}
+			replay_list = new_replay_list;
 		}
 		replay_info_type* replay_info = &replay_list[num_replay_files - 1]; // current replay file
 		memset( replay_info, 0, sizeof( replay_info_type ) );

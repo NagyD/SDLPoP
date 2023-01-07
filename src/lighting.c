@@ -39,7 +39,7 @@ void init_lighting() {
 		return;
 	}
 
-	screen_overlay = SDL_CreateRGBSurface(0, 320, 192, 32, 0xFF << 0, 0xFF << 8, 0xFF << 16, 0xFF << 24);
+	screen_overlay = SDL_CreateRGBSurface(0, 320, 192, 32, 0xFF << 0, 0xFF << 8, 0xFF << 16, 0xFFu << 24);
 	if (screen_overlay == NULL) {
 		sdlperror("SDL_CreateRGBSurface (screen_overlay)");
 		enable_lighting = 0;

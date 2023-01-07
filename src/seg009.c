@@ -918,7 +918,7 @@ surface_type* make_offscreen_buffer(const rect_type* rect) {
 	// Bit order matches onscreen buffer, good for fading.
 	return SDL_CreateRGBSurface(0, rect->right, rect->bottom, 24, 0xFF, 0xFF<<8, 0xFF<<16, 0); //RGB888 (little endian)
 #else
-	return SDL_CreateRGBSurface(0, rect->right, rect->bottom, 32, 0xFF, 0xFF<<8, 0xFF<<16, 0xFF<<24);
+	return SDL_CreateRGBSurface(0, rect->right, rect->bottom, 32, 0xFF, 0xFF<<8, 0xFF<<16, 0xFFu<<24);
 #endif
 	//return surface;
 }
@@ -1730,7 +1730,7 @@ peel_type* read_peel_from_screen(const rect_type* rect) {
 	SDL_Surface* peel_surface = SDL_CreateRGBSurface(0, rect->right - rect->left, rect->bottom - rect->top,
 	                                                 24, 0xFF, 0xFF<<8, 0xFF<<16, 0);
 #else
-	SDL_Surface* peel_surface = SDL_CreateRGBSurface(0, rect->right - rect->left, rect->bottom - rect->top, 32, 0xFF, 0xFF<<8, 0xFF<<16, 0xFF<<24);
+	SDL_Surface* peel_surface = SDL_CreateRGBSurface(0, rect->right - rect->left, rect->bottom - rect->top, 32, 0xFF, 0xFF<<8, 0xFF<<16, 0xFFu<<24);
 #endif
 	if (peel_surface == NULL) {
 		sdlperror("read_peel_from_screen: SDL_CreateRGBSurface");
@@ -2432,7 +2432,7 @@ void window_resized() {
 void init_overlay(void) {
 	static bool initialized = false;
 	if (!initialized) {
-		overlay_surface = SDL_CreateRGBSurface(0, 320, 200, 32, 0xFF, 0xFF << 8, 0xFF << 16, 0xFF << 24) ;
+		overlay_surface = SDL_CreateRGBSurface(0, 320, 200, 32, 0xFF, 0xFF << 8, 0xFF << 16, 0xFFu << 24) ;
 		merged_surface = SDL_CreateRGBSurface(0, 320, 200, 24, 0xFF, 0xFF << 8, 0xFF << 16, 0) ;
 		initialized = true;
 	}

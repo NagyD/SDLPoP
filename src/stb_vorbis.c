@@ -595,7 +595,7 @@ enum STBVorbisError
    #define NULL 0
    #define malloc(s)   0
    #define free(s)     ((void) 0)
-   #define realloc(s)  0
+   #define realloc(p,s)  0
 #endif // STB_VORBIS_NO_CRT
 
 #include <limits.h>

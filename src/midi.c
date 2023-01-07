@@ -145,7 +145,13 @@ bool parse_midi(midi_raw_chunk_type* midi, parsed_midi_type* parsed_midi) {
 		byte* buffer_position = track_chunk->data;
 		for (;;) {
 			++track->num_events;
-			track->events = realloc(track->events, track->num_events * sizeof(midi_event_type));
+			void* new_track_events = realloc(track->events, track->num_events * sizeof(midi_event_type));
+			if (new_track_events == NULL) {
+				printf("parse_midi: realloc failed!");
+				quit(1);
+			}
+			track->events = new_track_events;
+
 			midi_event_type* event = &track->events[track->num_events - 1];
 			event->delta_time = midi_read_variable_length(&buffer_position);
 			event->event_type = *buffer_position;

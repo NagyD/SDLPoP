@@ -2067,28 +2067,27 @@ void save_game() {
 	word success = 0;
 	char custom_save_path[POP_MAX_PATH];
 	const char* save_path = get_save_path(custom_save_path, sizeof(custom_save_path));
+
 	FILE* handle = fopen(save_path, "wb");
-	if (handle == NULL) goto loc_1DB8;
-	if (fwrite(&rem_min, 1, 2, handle) == 2) goto loc_1DC9;
-	loc_1D9B:
-	fclose(handle);
-	if (!success) {
-		remove(save_path);
+	if (handle != NULL) {
+		if (fwrite(&rem_min, 1, 2, handle) != 2) goto error;
+		if (fwrite(&rem_tick, 1, 2, handle) != 2) goto error;
+		if (fwrite(&current_level, 1, 2, handle) != 2) goto error;
+		if (fwrite(&hitp_beg_lev, 1, 2, handle) != 2) goto error;
+		success = 1;
+		error:
+		fclose(handle);
+		if (!success) {
+			remove(save_path);
+		}
 	}
-	loc_1DB8:
-	if (!success) goto loc_1E18;
-	display_text_bottom("GAME SAVED");
-	goto loc_1E2E;
-	loc_1DC9:
-	if (fwrite(&rem_tick, 1, 2, handle) != 2) goto loc_1D9B;
-	if (fwrite(&current_level, 1, 2, handle) != 2) goto loc_1D9B;
-	if (fwrite(&hitp_beg_lev, 1, 2, handle) != 2) goto loc_1D9B;
-	success = 1;
-	goto loc_1D9B;
-	loc_1E18:
-	display_text_bottom("UNABLE TO SAVE GAME");
-	//play_sound_from_buffer(&sound_cant_save);
-	loc_1E2E:
+
+	if (success) {
+		display_text_bottom("GAME SAVED");
+	} else {
+		display_text_bottom("UNABLE TO SAVE GAME");
+		//play_sound_from_buffer(&sound_cant_save);
+	}
 	text_time_remaining = 24;
 }
 
@@ -2097,25 +2096,24 @@ short load_game() {
 	word success = 0;
 	char custom_save_path[POP_MAX_PATH];
 	const char* save_path = get_save_path(custom_save_path, sizeof(custom_save_path));
+
 	FILE* handle = fopen(save_path, "rb");
-	if (handle == NULL) goto loc_1E99;
-	if (fread(&rem_min, 1, 2, handle) == 2) goto loc_1E9E;
-	loc_1E8E:
-	fclose(handle);
-	loc_1E99:
-	return success;
-	loc_1E9E:
-	if (fread(&rem_tick, 1, 2, handle) != 2) goto loc_1E8E;
-	if (fread(&start_level, 1, 2, handle) != 2) goto loc_1E8E;
-	if (fread(&hitp_beg_lev, 1, 2, handle) != 2) goto loc_1E8E;
+	if (handle != NULL) {
+		if (fread(&rem_min, 1, 2, handle) != 2) goto error;
+		if (fread(&rem_tick, 1, 2, handle) != 2) goto error;
+		if (fread(&start_level, 1, 2, handle) != 2) goto error;
+		if (fread(&hitp_beg_lev, 1, 2, handle) != 2) goto error;
 #ifdef USE_COPYPROT
-	if (enable_copyprot && custom->copyprot_level > 0) {
-		custom->copyprot_level = start_level;
-	}
+		if (enable_copyprot && custom->copyprot_level > 0) {
+			custom->copyprot_level = start_level;
+		}
 #endif
-	success = 1;
-	dont_reset_time = 1;
-	goto loc_1E8E;
+		success = 1;
+		dont_reset_time = 1;
+		error:
+		fclose(handle);
+	}
+	return success;
 }
 
 // seg000:1F02
