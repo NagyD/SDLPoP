@@ -669,7 +669,8 @@ void load_dos_exe_modifications(const char* folder_name) {
 		process(&custom_saved.mirror_level, 1, {0x08dc7, 0x0a477, 0x09274, 0x099b4, 0x08d30, 0x09e60});
 		process(&custom_saved.mirror_room, 1, {0x08dcb, 0x0a47b, 0x09278, 0x099b8, 0x08d34, 0x09e64});
 		if (read_ok) {
-			byte opcode;
+			// If opcode is not initialized, I get a warning, but only with -O2: "'opcode' may be used uninitialized". Huh?
+			byte opcode = 0;
 			process(&opcode, 1, {0x08dcb+2, 0x0a47b+2, 0x09278+2, 0x099b8+2, 0x08d34+2, 0x09e64+2});
 			if (opcode == 0x50) {
 				// 0xA47A: B8 XX 00 50 50 where XX is room *and* column!
