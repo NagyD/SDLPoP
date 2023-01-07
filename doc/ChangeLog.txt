@@ -648,9 +648,9 @@ DONE: Allow guard skill customizations in SDLPoP.ini.
 DONE: Made FIX_DOORTOP_DISABLING_GUARD configurable.
 
 
-(no release date yet)
+2023 January 7
 =================
-(upcoming version)
+(version 1.23)
 
 DONE: Adjust SDL2 headers search path in CMake or macOS builds
 FIXED: Don't hardcode level 13 for the loose floor events.

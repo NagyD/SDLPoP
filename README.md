@@ -179,7 +179,7 @@ You can also use the numeric keypad.
 
 If SDLPoP does not work correctly with your gamepad, it might help if you download gamecontrollerdb.txt and configure SDLPoP to use it. See `SDLPoP.ini` for details.
 
-Since (upcoming version) SDLPoP now detects controllers plugged in while the game is already running. (hotplug)
+Since version 1.23 SDLPoP now detects controllers plugged in while the game is already running. (hotplug)
 
 #### Controlling the game
 
@@ -342,7 +342,7 @@ The [Apoplexy level editor](https://www.popot.org/level_editors.php?editor=apopl
 * Since version 1.19, SDLPoP supports colored torches.
 (Supported in Apoplexy since v3.5.)
 
-* Since version (upcoming version), SDLPoP supports teleports.
+* Since version 1.23, SDLPoP supports teleports.
 (Supported in Apoplexy since v3.16.)
 
 ## REPLAYS

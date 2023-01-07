@@ -33,7 +33,7 @@ Items marked with [!] can't be found on the original levels.
 	Guard skills are documented in default_skill_options.txt and here: https://www.popot.org/documentation.php?doc=PoP1GuardTypes
 * Special events: (in yellow)
 	You can find more information about them here: https://www.popot.org/documentation.php?doc=PoP1SpecialEvents
-	Note: Since (upcoming version), SDLPoP recognizes if certain events were placed elsewhere by a mod.
+	Note: Since version 1.23, SDLPoP recognizes if certain events were placed elsewhere by a mod.
 		This works only with events whose place can be customized.
 	* level 0:
 		* "exit": Complete the level by entering this room.
