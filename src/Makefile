@@ -10,7 +10,7 @@ BIN = ../prince
 OS      := $(shell uname)
 
 CPPFLAGS += -Wall -D_GNU_SOURCE=1
-CFLAGS += -std=gnu99 -O2
+CFLAGS += -std=c99 -O2
 
 LIBS := $(shell pkg-config --libs sdl2 SDL2_image)
 CFLAGS += $(shell pkg-config --cflags sdl2 SDL2_image)

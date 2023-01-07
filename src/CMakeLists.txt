@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 project(SDLPoP)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -std=gnu99")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -std=c99")
 
 # have CMake output binaries to the directory that contains the source files
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${SDLPoP_SOURCE_DIR}/..")

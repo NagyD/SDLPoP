@@ -10,7 +10,7 @@ Libs=
 PrivateResource=port_debug_private.rc
 ResourceIncludes=
 MakeIncludes=
-Compiler=-Wall -std=gnu99_@@_-Wextra_@@_-Wno-unused-parameter_@@_
+Compiler=-Wall -std=c99_@@_-Wextra_@@_-Wno-unused-parameter_@@_
 CppCompiler=-Wall_@@_
 Linker=-l"mingw32"_@@_-l"SDL2main"_@@_-l"SDL2.dll"_@@_-l"SDL2_image"_@@_
 IsCpp=0
