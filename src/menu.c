@@ -1218,6 +1218,7 @@ void pause_menu_clicked(pause_menu_item_type* item) {
 			break;
 		case SETTINGS_MENU_BACK:
 			reset_paused_menu();
+			hovering_pause_menu_item = PAUSE_MENU_SETTINGS;
 			break;
 	}
 	clear_menu_controls(); // prevent "click-through" because the screen changes
@@ -1971,6 +1972,7 @@ void draw_menu() {
 					leave_settings_subsection();
 				} else {
 					reset_paused_menu(); // Go back to the top level pause menu.
+					hovering_pause_menu_item = PAUSE_MENU_SETTINGS;
 				}
 			} else {
 				break; // Close the menu.
