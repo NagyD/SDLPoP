@@ -21,7 +21,7 @@ The authors of this program may be contacted at https://forum.princed.org
 #include "common.h"
 #include <setjmp.h>
 #include <math.h>
-
+#include <SDL_filesystem.h>
 // data:461E
 dat_type * dathandle;
 
