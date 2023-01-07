@@ -368,6 +368,11 @@ char quick_control[] = "........";
 
 const char* get_quick_path(char* custom_path_buffer, size_t max_len) {
 	if (!use_custom_levelset) {
+#ifdef __APPLE__
+        char* macos_quick_path = SDL_GetBasePath();
+        snprintf_check(custom_path_buffer, max_len, "%s/%s", macos_quick_path, quick_file /*QUICKSAVE.SAV*/ );
+        return custom_path_buffer;
+#endif
 		return quick_file;
 	}
 	// if playing a custom levelset, try to use the mod folder
