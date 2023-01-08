@@ -1,0 +1,107 @@
+cmake_minimum_required(VERSION 3.16)
+project(SDLPoP)
+
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -std=gnu99")
+
+set(CMAKE_OSX_DEPLOYMENT_TARGET "13.1")
+set (CMAKE_OSX_ARCHITECTURES "x86_64")
+# have CMake output binaries to the directory that contains the source files
+if(NOT CMAKE_RUNTIME_OUTPUT_DIRECTORY)
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BUILD_TYPE}")
+endif()
+
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+        set(OE_BUILD_TYPE_DEFINE "OE_DEBUG")
+endif()
+        
+if (CMAKE_BUILD_TYPE STREQUAL "Release")
+        set(OE_BUILD_TYPE_DEFINE "OE_RELEASE")
+endif()
+
+if (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+        set(OE_BUILD_TYPE_DEFINE "OE_DEBUG")
+endif()
+
+if (CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
+        set(OE_BUILD_TYPE_DEFINE "OE_RELEASE")
+endif()
+
+
+find_package(SDL2 REQUIRED)
+find_package(SDL2_image REQUIRED)
+include_directories(${SDL2_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})
+
+set(SOURCE_FILES
+        main.c
+        common.h
+        config.h
+        data.c
+        data.h
+        proto.h
+        types.h
+        seg000.c
+        seg001.c
+        seg002.c
+        seg003.c
+        seg004.c
+        seg005.c
+        seg006.c
+        seg007.c
+        seg008.c
+        seg009.c
+        seqtbl.c
+        options.c
+        midi.c opl3.c opl3.h
+        replay.c
+        lighting.c
+        screenshot.c
+        menu.c
+        stb_vorbis.c
+        icon.rc
+        )
+
+# macOS-specific:
+# By default, a normal binary executable will be created.
+# If you want an Application Bundle instead, pass CREATE_BUNDLE to CMake like so: -DCREATE_BUNDLE=1
+
+# NOTE: Currently, the SDL2 2.26.2 and SDL2_image 2.6.2 frameworks are not being correctly included/linked in the bundle!
+#       As long as this isn't fixed, these bundles will only work if SDL2 and SDL2_image are installed.
+set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED "NO")
+set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "")
+set (SDLPoP_VERSION "1.22")
+set (MACOSX_BUNDLE_INFO_STRING          ${PROJECT_NAME})
+set (MACOSX_BUNDLE_ICON_FILE            "icon.icns")
+set_source_files_properties(${MACOSX_BUNDLE_ICON_FILE} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+set (MACOSX_BUNDLE_GUI_IDENTIFIER       "org.princed.SDLPoP")
+set (MACOSX_BUNDLE_LONG_VERSION_STRING  ${SDLPoP_VERSION})
+set (MACOSX_BUNDLE_BUNDLE_NAME          "SDLPoP")
+set (MACOSX_BUNDLE_SHORT_VERSION_STRING ${SDLPoP_VERSION})
+set (MACOSX_BUNDLE_BUNDLE_VERSION       ${SDLPoP_VERSION})
+set (MACOSX_BUNDLE_COPYRIGHT            "GNU General Public Licence, v3")
+set (CMAKE_MACOSX_RPATH TRUE)
+set(CMAKE_XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/../Frameworks")
+add_executable(prince MACOSX_BUNDLE ${SOURCE_FILES} ${MACOSX_BUNDLE_ICON_FILE})
+target_compile_definitions(prince
+    PUBLIC
+      $<$<CONFIG:Debug>:OE_DEBUG>
+      $<$<CONFIG:RelWithDebInfo>:OE_DEBUG>
+      $<$<CONFIG:Release>:OE_RELEASE>
+      $<$<CONFIG:MinSizeRel>:OE_RELEASE>
+)
+add_custom_command(TARGET prince POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/../data $<CONFIG>/prince.app/Contents/MacOS/data)
+add_custom_command(TARGET prince POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/../doc $<CONFIG>/prince.app/Contents/MacOS/doc)
+add_custom_command(TARGET prince POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+        ${CMAKE_SOURCE_DIR}/../SDLPoP.ini $<CONFIG>/prince.app/Contents/MacOS/SDLPoP.ini)
+        
+target_link_libraries(prince ${SDL2_LIBRARIES} SDL2_image::SDL2_image)
+set_target_properties(prince PROPERTIES 
+          XCODE_LINK_BUILD_PHASE_MODE KNOWN_LOCATION
+          XCODE_EMBED_FRAMEWORKS_REMOVE_HEADERS_ON_COPY ON
+          XCODE_EMBED_FRAMEWORKS_CODE_SIGN_ON_COPY ON
+          XCODE_EMBED_FRAMEWORKS "/Library/Frameworks/SDL2.framework;/Library/Frameworks/SDL2_image.framework")
