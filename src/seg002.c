@@ -271,15 +271,6 @@ void check_guard_fallout() {
 
 // seg002:02F5
 void leave_guard() {
-
-#ifdef USE_SUPER_HIGH_JUMP
-	// Do not leave guard during super high jumps when the room does not change.
-	// Kid's "y" coordinate keeps him in the lower room visually (in timers()).
-	if (fixes->enable_super_high_jump && super_jump_fall && drawn_room == next_room)	 {
-		return;
-	}
-#endif
-
 	if (Guard.direction == dir_56_none || Guard.charid == charid_1_shadow || Guard.charid == charid_24_mouse) {
 		return;
 	}
@@ -337,6 +328,13 @@ void exit_room() {
 	next_room = Char.room;
 #ifdef FIX_DISAPPEARING_GUARD_B
 	if (next_room == drawn_room) return;
+#endif
+#ifdef USE_SUPER_HIGH_JUMP
+	// Do not change the room during super high jumps from row 1.
+	// Kid's "y" coordinate keeps him in the room below (in timers()).
+	if (fixes->enable_super_high_jump && super_jump_fall && next_room == drawn_room) {
+		return;
+	}
 #endif
 	if (Guard.direction == dir_56_none) return;
 	if (Guard.alive < 0 && Guard.sword == sword_2_drawn) {
