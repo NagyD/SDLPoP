@@ -964,7 +964,7 @@ void key_press_while_replaying(int* key_ptr) {
 		default:
 			// cannot manually do most stuff during a replay, so cancel the pressed key...
 			*key_ptr = 1; // don't set to zero (we would be unable to unpause a replay because all keys are ignored)
-			              // (1 is not in use as a scancode, see https://wiki.libsdl.org/SDLScancodeLookup)
+			              // (1 is not in use as a scancode, see http://web.archive.org/web/20200925005918/http://wiki.libsdl.org/SDLScancodeLookup)
 			break;
 		// ...but these are allowable actions:
 		case SDL_SCANCODE_ESCAPE:               // pause

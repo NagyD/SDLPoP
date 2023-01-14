@@ -2202,7 +2202,7 @@ void process_ingame_settings_mod_managed(SDL_RWops* rw, rw_process_func_type pro
 #undef process
 
 // CRC-32 implementation adapted from:
-// http://www.hackersdelight.org/hdcodetxt/crc.c.txt
+// https://web.archive.org/web/20190108202303/http://www.hackersdelight.org/hdcodetxt/crc.c.txt
 unsigned int crc32c(unsigned char *message, size_t size) {
 	int i, j;
 	unsigned int byte, crc, mask;
