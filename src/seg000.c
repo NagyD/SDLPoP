@@ -38,7 +38,7 @@ void pop_main() {
 	}
 
 	if (check_param("--help") || check_param("-h") || check_param("-?")) {
-		printf ("See doc/Readme.txt\n");
+		printf ("See README.md\n");
 		exit(0);
 	}
 
@@ -2330,7 +2330,7 @@ const char* splash_text_2 =
 		"Edit SDLPoP.ini to customize SDLPoP.\n"
 		"Mods also work with SDLPoP.\n"
 		"\n"
-		"For more information, read doc/Readme.txt.\n"
+		"For more information, read README.md.\n"
 		"Questions? Visit https://forum.princed.org\n"
 		"\n"
 		"Press any key to continue...";
