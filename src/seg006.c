@@ -1736,7 +1736,7 @@ void clip_char() {
 	reset_obj_clip();
 #ifdef USE_SUPER_HIGH_JUMP
 	// Clip kid during a super jump when jumping up into
-	// a trapestry with lattice
+	// a tapestry with lattice
 	if (fixes->enable_super_high_jump &&
 		 (frame == frame_79_jumphang || frame == frame_106_fall)) {
 		int top_left_tile = get_tile(room, char_col_left - 1, y_to_row_mod4(char_top_y + 10));
