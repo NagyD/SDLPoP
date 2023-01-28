@@ -202,7 +202,7 @@ loc_left_guard_tile:
 	if (seq_hi == 0) {
 		if (Char.charid == charid_4_skeleton) {
 			Char.sword = sword_2_drawn;
-			seqtbl_offset_char(seq_63_guard_stand_active); // stand active (when entering room) (skeleton)
+			seqtbl_offset_char(seq_63_guard_active_after_fall); // stand active (when entering room) (skeleton)
 		} else {
 			Char.sword = sword_0_sheathed;
 			seqtbl_offset_char(seq_77_guard_stand_inactive); // stand inactive (when entering room)

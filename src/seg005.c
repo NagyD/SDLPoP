@@ -176,7 +176,7 @@ void land() {
 				loc_5EFD:
 				if (Char.charid >= charid_2_guard || Char.sword == sword_2_drawn) {
 					Char.sword = sword_2_drawn;
-					seq_id = seq_63_guard_stand_active; // stand active after landing
+					seq_id = seq_63_guard_active_after_fall; // stand active after landing
 				} else {
 					seq_id = seq_17_soft_land; // crouch (soft land)
 				}

@@ -1044,7 +1044,7 @@ enum seqids {
 	seq_60_turn_with_sword = 60,
 	seq_61_parry_after_strike = 61,
 	seq_62_parry = 62,
-	seq_63_guard_stand_active = 63,
+	seq_63_guard_active_after_fall = 63,
 	seq_64_pushed_back_with_sword = 64,
 	seq_65_bump_forward_with_sword = 65,
 	seq_66_strike_after_parry = 66,
