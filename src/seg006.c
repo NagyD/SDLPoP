@@ -1178,7 +1178,7 @@ void check_grab() {
 		old_x = Char.x;
 #ifdef USE_SUPER_HIGH_JUMP
 // delta_x makes grabbing easier
-#define SUPER_HIGH_JUMP_DELTA_X (Char.direction == dir_FF_left ? 3 : 5)
+#define SUPER_HIGH_JUMP_DELTA_X (Char.direction == dir_FF_left ? 3 : 4)
 		Char.x = char_dx_forward(-8 + (fixes->enable_super_high_jump && super_jump_fall ? SUPER_HIGH_JUMP_DELTA_X : 0));
 #else
 		Char.x = char_dx_forward(-8);
