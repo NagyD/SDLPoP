@@ -254,6 +254,13 @@ void animate_potion() {
 	if (trob.type >= 0 && is_trob_in_drawn_room()) {
 		word type = curr_modifier & 0xF8;
 		curr_modifier = bubble_next_frame(curr_modifier & 0x07) | type;
+#ifdef USE_COPYPROT
+		// the fix below does not display letters on the copy protection level
+		if (current_level == 15) {
+			set_redraw_anim_curr();
+			return;
+		}
+#endif
 #ifdef FIX_LOOSE_NEXT_TO_POTION
 		redraw_at_trob();
 #else
