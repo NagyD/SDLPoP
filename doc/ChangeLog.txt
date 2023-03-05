@@ -731,3 +731,11 @@ FIXED: Fixed some compiler and cppcheck warnings.
 DONE: Keep disappearing guard logic for super high jump consistent with the stand-alone option.
 	Details: https://github.com/NagyD/SDLPoP/pull/298
 DONE: Updated doc/mod.ini based on SDLPoP.ini.
+
+
+(no release date yet)
+=================
+(upcoming version)
+
+FIXED: Letters above potions not showing up on the copy protection level.
+	Details: https://github.com/NagyD/SDLPoP/pull/299
