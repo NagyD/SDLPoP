@@ -648,7 +648,7 @@ DONE: Allow guard skill customizations in SDLPoP.ini.
 DONE: Made FIX_DOORTOP_DISABLING_GUARD configurable.
 
 
-2023 January 7
+2023 February 11
 =================
 (version 1.23)
 
@@ -728,3 +728,6 @@ DONE: Added a rounded border around the icon.
 FIXED: Select "SETTINGS" in the pause menu, if coming back from the settings menu.
 DONE: Show the hotkeys for quicksave/load in the menu (instead of the splash screen). Mention the menu on the splash screen.
 FIXED: Fixed some compiler and cppcheck warnings.
+DONE: Keep disappearing guard logic for super high jump consistent with the stand-alone option.
+	Details: https://github.com/NagyD/SDLPoP/pull/298
+DONE: Updated doc/mod.ini based on SDLPoP.ini.
