@@ -806,7 +806,7 @@ int add_backtable(short chtab_id, int id, sbyte xh, sbyte xl, int ybottom, int b
 	if (image == NULL) {
 		return 0;
 	}
-	backtable_item->y = ybottom - image->h/*height*/ + 1;
+	backtable_item->y = ybottom - logical_height(image) + 1;
 	backtable_item->blit = blit;
 	if (draw_mode) {
 		draw_back_fore(0, index);
@@ -832,7 +832,7 @@ int add_foretable(short chtab_id, int id, sbyte xh, sbyte xl, int ybottom, int b
 	if (image == NULL) {
 		return 0;
 	}
-	foretable_item->y = ybottom - image->h/*height*/ + 1;
+	foretable_item->y = ybottom - logical_height(image) + 1;
 	foretable_item->blit = blit;
 	if (draw_mode) {
 		draw_back_fore(1, index);
@@ -860,7 +860,7 @@ int add_midtable(short chtab_id, int id, sbyte xh, sbyte xl, int ybottom, int bl
 	if (image == NULL) {
 		return 0;
 	}
-	midtable_item->y = ybottom - image->h/*height*/ + 1;
+	midtable_item->y = ybottom - logical_height(image) + 1;
 	if (obj_direction == dir_0_right && chtab_flip_clip[chtab_id] != 0) {
 		blit += 0x80;
 	}
@@ -1020,14 +1020,15 @@ void draw_mid(int index) {
 		}
 	}
 	if (blit_flip) {
-		xpos -= image->w/*width*/;
+		xpos -= logical_width(image);
 		// for this version:
 		need_free_image = 1;
 		image = hflip(image);
 	}
 
 	if (midtable_entry->peel) {
-		add_peel(round_xpos_to_byte(xpos, 0), round_xpos_to_byte(image->w/*width*/ + xpos, 1), ypos, image->h/*height*/);
+		// Round up in case the actual with is odd.
+		add_peel(round_xpos_to_byte(xpos, 0), round_xpos_to_byte(logical_width(image) + xpos, 1) + 1, ypos, logical_height(image) + 1);
 	}
 	//printf("Midtable: drawing (chtab %d, image %d) at (x=%d, y=%d)\n",chtab_id,image_id,xpos,ypos); // debug
 	draw_image(image, mask, xpos, ypos, blit);
@@ -1069,9 +1070,9 @@ void draw_image(image_type* image,image_type* mask,int xpos,int ypos,int blit) {
 	}
 	if (need_drects) {
 		rect.left = rect.right = xpos;
-		rect.right += image->w/*width*/;
+		rect.right += logical_width(image);
 		rect.top = rect.bottom = ypos;
-		rect.bottom += image->h/*height*/;
+		rect.bottom += logical_height(image);
 		add_drect(&rect);
 	}
 }

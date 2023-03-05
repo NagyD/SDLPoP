@@ -317,6 +317,9 @@ The authors of this program may be contacted at https://forum.princed.org
 // "T" : display remaining time in minutes, seconds and ticks
 #define USE_DEBUG_CHEATS
 
+// Set the scale factor (1 or 2).
+#define SCALE 2
+
 
 
 // Darken those parts of the screen which are not near a torch.

@@ -1440,6 +1440,8 @@ void draw_setting_explanation(setting_type* setting) {
 }
 
 void draw_image_with_blending(image_type* image, int xpos, int ypos) {
+	xpos *= SCALE;
+	ypos *= SCALE;
 	SDL_Rect src_rect = {0, 0, image->w, image->h};
 	SDL_Rect dest_rect = {xpos, ypos, image->w, image->h};
 	SDL_SetColorKey(image, SDL_TRUE, 0);

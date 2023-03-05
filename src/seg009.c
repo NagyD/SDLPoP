@@ -333,6 +333,12 @@ int pop_wait(int timer_index,int time) {
 	return do_wait(timer_index);
 }
 
+#if SCALE == 1
+const char data_dir[] = "data";
+#else
+const char data_dir[] = "data_2x";
+#endif
+
 static FILE* open_dat_from_root_or_data_dir(const char* filename) {
 	FILE* fp = NULL;
 	fp = fopen(filename, "rb");
@@ -340,11 +346,11 @@ static FILE* open_dat_from_root_or_data_dir(const char* filename) {
 	// if failed, try if the DAT file can be opened in the data/ directory, instead of the main folder
 	if (fp == NULL) {
 		char data_path[POP_MAX_PATH];
-		snprintf_check(data_path, sizeof(data_path), "data/%s", filename);
+		snprintf_check(data_path, sizeof(data_path), "%s/%s", data_dir, filename);
 
 		if (!file_exists(data_path)) {
 			find_exe_dir();
-			snprintf_check(data_path, sizeof(data_path), "%s/data/%s", exe_dir, filename);
+			snprintf_check(data_path, sizeof(data_path), "%s/%s/%s", exe_dir, data_dir, filename);
 		}
 
 		// verify that this is a regular file and not a directory (otherwise, don't open)
@@ -411,7 +417,7 @@ dat_type* open_dat(const char* filename, int optional) {
 			filename_no_ext[len-4] = '\0'; // terminate, so ".DAT" is deleted from the filename
 		}
 		char foldername[POP_MAX_PATH];
-		snprintf_check(foldername,sizeof(foldername),"data/%s",filename_no_ext);
+		snprintf_check(foldername, sizeof(foldername), "%s/%s", data_dir, filename_no_ext);
 		const char* data_path = locate_file(foldername);
 		struct stat path_stat;
 		int result = stat(data_path, &path_stat);
@@ -914,11 +920,13 @@ int set_joy_mode() {
 // seg009:178B
 surface_type* make_offscreen_buffer(const rect_type* rect) {
 	// stub
+	SDL_Rect sdl_rect;
+	rect_to_sdlrect(rect, &sdl_rect);
 #ifndef USE_ALPHA
 	// Bit order matches onscreen buffer, good for fading.
-	return SDL_CreateRGBSurface(0, rect->right, rect->bottom, 24, 0xFF, 0xFF<<8, 0xFF<<16, 0); //RGB888 (little endian)
+    return SDL_CreateRGBSurface(0, sdl_rect.w, sdl_rect.h, 24, 0xFF, 0xFF<<8, 0xFF<<16, 0); //RGB888 (little endian)
 #else
-	return SDL_CreateRGBSurface(0, rect->right, rect->bottom, 32, 0xFF, 0xFF<<8, 0xFF<<16, 0xFFu<<24);
+	return SDL_CreateRGBSurface(0, sdl_rect.w, sdl_rect.h, 32, 0xFF, 0xFF<<8, 0xFF<<16, 0xFF<<24);
 #endif
 	//return surface;
 }
@@ -976,6 +984,17 @@ void flip_screen(surface_type* surface) {
 	} else {
 		// ...
 	}
+}
+
+// Get the size of the image in units that are valid on a 320*200 screen.
+// Round up for use with peels.
+
+int logical_width(image_type* image) {
+	return (image->w /*+ (SCALE-1)*/) / SCALE;
+}
+
+int logical_height(image_type* image) {
+	return (image->h /*+ (SCALE-1)*/) / SCALE;
 }
 
 #ifndef USE_FADE
@@ -1169,7 +1188,7 @@ int get_char_width(byte character) {
 	if (character <= font->last_char && character >= font->first_char) {
 		image_type* image = font->chtab->images[character - font->first_char];
 		if (image != NULL) {
-			width += image->w; //char_ptrs[character - font->first_char]->width;
+			width += logical_width(image);
 			if (width) width += font->space_between_chars;
 		}
 	}
@@ -1231,7 +1250,7 @@ int draw_text_character(byte character) {
 		image_type* image = font->chtab->images[character - font->first_char]; //char_ptrs[character - font->first_char];
 		if (image != NULL) {
 			method_3_blit_mono(image, textstate.current_x, textstate.current_y - font->height_above_baseline, textstate.textblit, textstate.textcolor);
-			width = font->space_between_chars + image->w;
+			width = font->space_between_chars + logical_width(image);
 		}
 	}
 	textstate.current_x += width;
@@ -1726,12 +1745,16 @@ peel_type* read_peel_from_screen(const rect_type* rect) {
 	peel_type* result = calloc(1, sizeof(peel_type));
 	//memset(&result, 0, sizeof(result));
 	result->rect = *rect;
+
+	SDL_Rect sdl_rect;
+	rect_to_sdlrect(rect, &sdl_rect);
 #ifndef USE_ALPHA
-	SDL_Surface* peel_surface = SDL_CreateRGBSurface(0, rect->right - rect->left, rect->bottom - rect->top,
-	                                                 24, 0xFF, 0xFF<<8, 0xFF<<16, 0);
+	SDL_Surface* peel_surface = SDL_CreateRGBSurface(0, sdl_rect.w, sdl_rect.h,
+                                                     24, 0xFF, 0xFF<<8, 0xFF<<16, 0);
 #else
-	SDL_Surface* peel_surface = SDL_CreateRGBSurface(0, rect->right - rect->left, rect->bottom - rect->top, 32, 0xFF, 0xFF<<8, 0xFF<<16, 0xFFu<<24);
+	SDL_Surface* peel_surface = SDL_CreateRGBSurface(0, sdl_rect.w, sdl_rect.h, 32, 0xFF, 0xFF<<8, 0xFF<<16, 0xFF<<24);
 #endif
+
 	if (peel_surface == NULL) {
 		sdlperror("read_peel_from_screen: SDL_CreateRGBSurface");
 		quit(1);
@@ -2407,7 +2430,7 @@ void apply_aspect_ratio() {
 	if (use_correct_aspect_ratio) {
 		SDL_RenderSetLogicalSize(renderer_, 320 * 5, 200 * 6); // 4:3
 	} else {
-		SDL_RenderSetLogicalSize(renderer_, 320, 200); // 16:10
+		SDL_RenderSetLogicalSize(renderer_, 320 * SCALE, 200 * SCALE); // 16:10
 	}
 	window_resized();
 }
@@ -2432,8 +2455,8 @@ void window_resized() {
 void init_overlay(void) {
 	static bool initialized = false;
 	if (!initialized) {
-		overlay_surface = SDL_CreateRGBSurface(0, 320, 200, 32, 0xFF, 0xFF << 8, 0xFF << 16, 0xFFu << 24) ;
-		merged_surface = SDL_CreateRGBSurface(0, 320, 200, 24, 0xFF, 0xFF << 8, 0xFF << 16, 0) ;
+		overlay_surface = SDL_CreateRGBSurface(0, 320 * SCALE, 200 * SCALE, 32, 0xFF, 0xFF << 8, 0xFF << 16, 0xFFu << 24) ;
+		merged_surface = SDL_CreateRGBSurface(0, 320 * SCALE, 200 * SCALE, 24, 0xFF, 0xFF << 8, 0xFF << 16, 0) ;
 		initialized = true;
 	}
 }
@@ -2445,23 +2468,23 @@ void init_scaling(void) {
 	if (renderer_ == NULL) return;
 
 	if (texture_sharp == NULL) {
-		texture_sharp = SDL_CreateTexture(renderer_, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, 320, 200);
+		texture_sharp = SDL_CreateTexture(renderer_, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, 320 * SCALE, 200 * SCALE);
 	}
 	if (scaling_type == 1) {
 		if (!is_renderer_targettexture_supported && onscreen_surface_2x == NULL) {
-			onscreen_surface_2x = SDL_CreateRGBSurface(0, 320*2, 200*2, 24, 0xFF, 0xFF << 8, 0xFF << 16, 0) ;
+			onscreen_surface_2x = SDL_CreateRGBSurface(0, 320*2 * SCALE, 200*2 * SCALE, 24, 0xFF, 0xFF << 8, 0xFF << 16, 0) ;
 		}
 		if (texture_fuzzy == NULL) {
 			SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
 			int access = is_renderer_targettexture_supported ? SDL_TEXTUREACCESS_TARGET : SDL_TEXTUREACCESS_STREAMING;
-			texture_fuzzy = SDL_CreateTexture(renderer_, SDL_PIXELFORMAT_RGB24, access, 320*2, 200*2);
+			texture_fuzzy = SDL_CreateTexture(renderer_, SDL_PIXELFORMAT_RGB24, access, 320*2 * SCALE, 200*2 * SCALE);
 			SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
 		}
 		target_texture = texture_fuzzy;
 	} else if (scaling_type == 2) {
 		if (texture_blurry == NULL) {
 			SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
-			texture_blurry = SDL_CreateTexture(renderer_, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, 320, 200);
+			texture_blurry = SDL_CreateTexture(renderer_, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, 320 * SCALE, 200 * SCALE);
 			SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
 		}
 		target_texture = texture_blurry;
@@ -2562,7 +2585,7 @@ void set_gr_mode(byte grmode) {
 	 * subsequently displayed.
 	 * The function handling the screen updates is update_screen()
 	 * */
-	onscreen_surface_ = SDL_CreateRGBSurface(0, 320, 200, 24, 0xFF, 0xFF << 8, 0xFF << 16, 0);
+	onscreen_surface_ = SDL_CreateRGBSurface(0, 320 * SCALE, 200 * SCALE, 24, 0xFF, 0xFF << 8, 0xFF << 16, 0);
 	if (onscreen_surface_ == NULL) {
 		sdlperror("set_gr_mode: SDL_CreateRGBSurface");
 		quit(1);
@@ -2814,7 +2837,7 @@ void load_from_opendats_metadata(int resource_id, const char* extension, FILE** 
 			if (len >= 5 && filename_no_ext[len-4] == '.') {
 				filename_no_ext[len-4] = '\0'; // terminate, so ".DAT" is deleted from the filename
 			}
-			snprintf_check(image_filename,sizeof(image_filename),"data/%s/res%d.%s",filename_no_ext, resource_id, extension);
+			snprintf_check(image_filename, sizeof(image_filename),"%s/%s/res%d.%s", data_dir, filename_no_ext, resource_id, extension);
 			if (!use_custom_levelset) {
 				//printf("loading (binary) %s",image_filename);
 				fp = fopen(locate_file(image_filename), "rb");
@@ -2929,6 +2952,10 @@ void rect_to_sdlrect(const rect_type* rect, SDL_Rect* sdlrect) {
 	sdlrect->y = rect->top;
 	sdlrect->w = rect->right - rect->left;
 	sdlrect->h = rect->bottom - rect->top;
+	sdlrect->x *= SCALE;
+	sdlrect->y *= SCALE;
+	sdlrect->w *= SCALE;
+	sdlrect->h *= SCALE;
 }
 
 void method_1_blit_rect(surface_type* target_surface,surface_type* source_surface,const rect_type* target_rect, const rect_type* source_rect,int blit) {
@@ -2993,7 +3020,7 @@ image_type* method_3_blit_mono(image_type* image,int xpos,int ypos,int blitter,b
 	SDL_UnlockSurface(colored_image);
 
 	SDL_Rect src_rect = {0, 0, image->w, image->h};
-	SDL_Rect dest_rect = {xpos, ypos, image->w, image->h};
+	SDL_Rect dest_rect = {xpos * SCALE, ypos * SCALE, image->w, image->h};
 
 	SDL_SetSurfaceBlendMode(colored_image, SDL_BLENDMODE_BLEND);
 	SDL_SetSurfaceBlendMode(current_target_surface, SDL_BLENDMODE_BLEND);
@@ -3209,7 +3236,7 @@ image_type* method_6_blit_img_to_scr(image_type* image,int xpos,int ypos,int bli
 	}
 
 	SDL_Rect src_rect = {0, 0, image->w, image->h};
-	SDL_Rect dest_rect = {xpos, ypos, image->w, image->h};
+	SDL_Rect dest_rect = {xpos * SCALE, ypos * SCALE, image->w, image->h};
 
 	if (blit == blitters_3_xor) {
 		blit_xor(current_target_surface, &dest_rect, image, &src_rect);
@@ -3226,6 +3253,11 @@ image_type* method_6_blit_img_to_scr(image_type* image,int xpos,int ypos,int bli
 	SDL_SetSurfaceBlendMode(image, SDL_BLENDMODE_NONE);
 	SDL_SetColorKey(image, SDL_FALSE, 0);
 	SDL_SetSurfaceAlphaMod(image, 255);
+
+#if SCALE != 1
+	// Most Mac images must be drawn with transparency...
+	blit = blitters_10h_transp;
+#endif
 
 	//printf("format = %s\n", SDL_GetPixelFormatName(image->format->format));
 	// Fix the background color of teleport images on SDL_image 2.6.2, where they are loaded as RGBA.
