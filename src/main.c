@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2019  Dávid Nagy
+Copyright (C) 2013-2021  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,6 +19,13 @@ The authors of this program may be contacted at https://forum.princed.org
 */
 
 #include "common.h"
+
+
+#ifdef __amigaos4__
+static const char version[] = "\0$VER: SDLPoP " SDLPOP_VERSION " (" __AMIGADATE__ ")";
+static const char stack[] = "$STACK:200000";
+#endif
+
 
 int main(int argc, char *argv[])
 {

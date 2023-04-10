@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2019  Dávid Nagy
+Copyright (C) 2013-2023  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -39,7 +39,11 @@ void init_lighting() {
 		return;
 	}
 
+#ifdef __amigaos4__
+	screen_overlay = SDL_CreateRGBSurface(0, 320, 192, 32, Rmsk, Gmsk, Bmsk, Amsk);
+#else
 	screen_overlay = SDL_CreateRGBSurface(0, 320, 192, 32, 0xFF << 0, 0xFF << 8, 0xFF << 16, 0xFF << 24);
+#endif
 	if (screen_overlay == NULL) {
 		sdlperror("SDL_CreateRGBSurface (screen_overlay)");
 		enable_lighting = 0;
@@ -102,7 +106,7 @@ void redraw_lighting() {
 
 // Copy a part of the lighting overlay onto the screen.
 // Called when the screen is updated.
-void update_lighting(const rect_type far *target_rect_ptr) {
+void update_lighting(const rect_type* target_rect_ptr) {
 	if (!enable_lighting) return;
 	if (lighting_mask == NULL) return;
 	if (curr_room_tiles == NULL) return;
