@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2019  Dávid Nagy
+Copyright (C) 2013-2023  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -47,7 +47,7 @@ extern int digi_unavailable; // seg009.c
 static opl3_chip opl_chip;
 static void* instruments_data;
 static instrument_type* instruments;
-static dword num_instruments;
+static int num_instruments;
 static byte voice_note[MAX_OPL_VOICES];
 static int voice_instrument[MAX_OPL_VOICES];
 static int voice_channel[MAX_OPL_VOICES];
@@ -56,7 +56,7 @@ static int last_used_voice;
 static int num_midi_tracks;
 static parsed_midi_type parsed_midi;
 static midi_track_type* midi_tracks;
-static uint64_t midi_current_pos; // in MIDI ticks
+static int64_t midi_current_pos; // in MIDI ticks
 static float midi_current_pos_fract_part; // partial ticks after the decimal point
 static int ticks_to_next_pause; // in MIDI ticks
 static dword us_per_beat;
@@ -144,7 +144,14 @@ bool parse_midi(midi_raw_chunk_type* midi, parsed_midi_type* parsed_midi) {
 		midi_track_type* track = &parsed_midi->tracks[track_index];
 		byte* buffer_position = track_chunk->data;
 		for (;;) {
-			track->events = realloc(track->events, (++track->num_events) * sizeof(midi_event_type));
+			++track->num_events;
+			void* new_track_events = realloc(track->events, track->num_events * sizeof(midi_event_type));
+			if (new_track_events == NULL) {
+				printf("parse_midi: realloc failed!");
+				quit(1);
+			}
+			track->events = new_track_events;
+
 			midi_event_type* event = &track->events[track->num_events - 1];
 			event->delta_time = midi_read_variable_length(&buffer_position);
 			event->event_type = *buffer_position;
@@ -383,7 +390,7 @@ static void midi_note_off(midi_event_type* event) {
 }
 
 static instrument_type* get_instrument(int id) {
-	if (id < num_instruments) {
+	if (id >= 0 && id < num_instruments) {
 		return &instruments[id];
 	} else {
 		return &instruments[0];
@@ -474,6 +481,7 @@ static void process_midi_event(midi_event_type* event) {
 					midi_semitones_higher = data[5]; // Make all notes higher by this amount.
 				}
 			}
+			break;
 		case 0xFF: // Meta event
 			switch(event->meta.type) {
 				default: break;
@@ -510,12 +518,12 @@ void midi_callback(void *userdata, Uint8 *stream, int len) {
 			int64_t us_to_next_pause = ticks_to_next_pause * us_per_beat / ticks_per_beat;
 			int64_t us_needed = frames_needed * ONE_SECOND_IN_US / mixing_freq;
 			int64_t advance_us = MIN(us_to_next_pause, us_needed);
-			int available_frames = ((advance_us * mixing_freq) + ONE_SECOND_IN_US - 1) / ONE_SECOND_IN_US; // round up.
+			int available_frames = (int)(((advance_us * mixing_freq) + ONE_SECOND_IN_US - 1) / ONE_SECOND_IN_US); // round up.
 			int advance_frames = MIN(available_frames, frames_needed);
 			advance_us = advance_frames * ONE_SECOND_IN_US / mixing_freq; // recalculate, in case the rounding up increased this.
 			short* temp_buffer = malloc(advance_frames * 4);
 			OPL3_GenerateStream(&opl_chip, temp_buffer, advance_frames);
-			if (enable_music) {
+			if (is_sound_on && enable_music) {
 				for (int sample = 0; sample < advance_frames * 2; ++sample) {
 					((short*)stream)[sample] += temp_buffer[sample];
 				}
@@ -544,7 +552,8 @@ void midi_callback(void *userdata, Uint8 *stream, int len) {
 				while (midi_current_pos >= track->next_pause_tick) {
 					int events_left = track->num_events - track->event_index;
 					if (events_left > 0) {
-						midi_event_type* event = &track->events[track->event_index++];
+						midi_event_type* event = &track->events[track->event_index];
+						track->event_index++;
 //						print_midi_event(track_index, track->event_index-1, event);
 						process_midi_event(event);
 
@@ -573,7 +582,7 @@ void midi_callback(void *userdata, Uint8 *stream, int len) {
 				return;
 			} else {
 				// Need to delay (let the OPL chip do its work) until one of the tracks needs to process a MIDI event again.
-				uint64_t first_next_pause_tick = INT64_MAX;
+				int64_t first_next_pause_tick = INT64_MAX;
 				for (int i = 0; i < num_midi_tracks; ++i) {
 					midi_track_type* track = &midi_tracks[i];
 					if (track->event_index >= track->num_events || midi_current_pos >= track->next_pause_tick) continue;
@@ -583,7 +592,7 @@ void midi_callback(void *userdata, Uint8 *stream, int len) {
 					printf("MIDI: Couldn't figure out how long to delay (this is a bug)\n");
 					quit(1);
 				}
-				ticks_to_next_pause = first_next_pause_tick - midi_current_pos;
+				ticks_to_next_pause = (int)(first_next_pause_tick - midi_current_pos);
 				if (ticks_to_next_pause < 0) {
 					printf("Tried to delay a negative amount of time (this is a bug)\n"); // This should never happen?
 					quit(1);
@@ -605,7 +614,7 @@ void stop_midi() {
 	SDL_UnlockAudio();
 }
 
-void free_midi_resources() {
+void free_midi_resources(void) {
 	free(instruments_data);
 }
 
@@ -622,7 +631,7 @@ void init_midi() {
 		printf("Missing MIDI instruments data (resource 1)\n");
 	} else {
 		num_instruments = *(byte*)instruments_data;
-		if (size == 1 + num_instruments*sizeof(instrument_type)) {
+		if (size == 1 + num_instruments*(int)sizeof(instrument_type)) {
 			instruments = (instrument_type*) ((byte*)instruments_data+1);
 		} else {
 			printf("MIDI instruments data (resource 1) is not the expected size\n");
@@ -632,7 +641,8 @@ void init_midi() {
 	if (dathandle != NULL) close_dat(dathandle);
 }
 
-void play_midi_sound(sound_buffer_type far *buffer) {
+void play_midi_sound(sound_buffer_type* buffer) {
+	stop_midi();
 	if (buffer == NULL) return;
 	init_digi();
 	if (digi_unavailable) return;

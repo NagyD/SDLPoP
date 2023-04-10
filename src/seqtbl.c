@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2019  Dávid Nagy
+Copyright (C) 2013-2023  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -27,13 +27,13 @@ The authors of this program may be contacted at https://forum.princed.org
 #define DW(data_word) (data_word) & 0x00FF, (((data_word) & 0xFF00) >> 8)
 
 // Shorter notation for the sequence table instructions
-#define act(action) SEQ_ACTION, action
+#define act(action) SEQ_ACTION, (action)
 #define jmp(dest) SEQ_JMP, DW(dest)
 #define jmp_if_feather(dest) SEQ_JMP_IF_FEATHER, DW(dest)
-#define dx(amount) SEQ_DX, (byte) amount
-#define dy(amount) SEQ_DY, (byte) amount
-#define snd(sound) SEQ_SOUND, sound
-#define set_fall(x, y) SEQ_SET_FALL, (byte) x, (byte) y
+#define dx(amount) SEQ_DX, (byte) (amount)
+#define dy(amount) SEQ_DY, (byte) (amount)
+#define snd(sound) SEQ_SOUND, (sound)
+#define set_fall(x, y) SEQ_SET_FALL, (byte) (x), (byte) (y)
 
 // This splits the byte array into labeled "sections" that are packed tightly next to each other
 // However, it only seems to work correctly in the Debug configuration...
@@ -196,37 +196,45 @@ The authors of this program may be contacted at https://forum.princed.org
 #define Mleave              4  + Mraise             //SEQTBL_BASE + 2285  // 0x225B
 #define Mclimb              19 + Mleave             //SEQTBL_BASE + 2304  // 0x226E
 #define Mclimb_loop         2  + Mclimb             //SEQTBL_BASE + 2306  // 0x2270
+#ifdef USE_TELEPORTS
+#define teleport            4  + Mclimb_loop
+#define teleport_loop       41 + teleport
+#endif
+// TODO: What are we going to do if we add yet another sequence, and we want to allow compiling with that sequence but without teleports?
 
 const word seqtbl_offsets[] = {
-        0x0000,         startrun,       stand,          standjump,
-        runjump,        turn,           runturn,        stepfall,
-        jumphangMed,    hang,           climbup,        hangdrop,
-        freefall,       runstop,        jumpup,         fallhang,
-        jumpbackhang,   softland,       jumpfall,       stepfall2,
-        medland,        rjumpfall,      hardland,       hangfall,
-        jumphangLong,   hangstraight,   rdiveroll,      sdiveroll,
-        highjump,       step1,          step2,          step3,
-        step4,          step5,          step6,          step7,
-        step8,          step9,          step10,         step11,
-        step12,         step13,         step14,         turnrun,
-        testfoot,       bumpfall,       hardbump,       bump,
-        superhijump,    standup,        stoop,          impale,
-        crush,          deadfall,       halve,          engarde,
-        advance,        retreat,        strike,         flee,
-        turnengarde,    striketoblock,  readyblock,     landengarde,
-        bumpengfwd,     bumpengback,    blocktostrike,  strikeadv,
-        climbdown,      blockedstrike,  climbstairs,    dropdead,
-        stepback,       climbfail,      stabbed,        faststrike,
-        strikeret,      alertstand,     drinkpotion,    crawl,
-        alertturn,      fightfall,      efightfall,     efightfallfwd,
-        running,        stabkill,       fastadvance,    goalertstand,
-        arise,          turndraw,       guardengarde,   pickupsword,
-        resheathe,      fastsheathe,    Pstand,         Vstand,
-        Vwalk,          Vstop,          Palert,         Pstepback,
-        Vexit,          Mclimb,         Vraise,         Plie,
-        patchfall,      Mscurry,        Mstop,          Mleave,
-        Pembrace,       Pwaiting,       Pstroke,        Prise,
-        Pcrouch,        Pslump,         Mraise
+	0x0000,         startrun,       stand,          standjump,
+	runjump,        turn,           runturn,        stepfall,
+	jumphangMed,    hang,           climbup,        hangdrop,
+	freefall,       runstop,        jumpup,         fallhang,
+	jumpbackhang,   softland,       jumpfall,       stepfall2,
+	medland,        rjumpfall,      hardland,       hangfall,
+	jumphangLong,   hangstraight,   rdiveroll,      sdiveroll,
+	highjump,       step1,          step2,          step3,
+	step4,          step5,          step6,          step7,
+	step8,          step9,          step10,         step11,
+	step12,         step13,         step14,         turnrun,
+	testfoot,       bumpfall,       hardbump,       bump,
+	superhijump,    standup,        stoop,          impale,
+	crush,          deadfall,       halve,          engarde,
+	advance,        retreat,        strike,         flee,
+	turnengarde,    striketoblock,  readyblock,     landengarde,
+	bumpengfwd,     bumpengback,    blocktostrike,  strikeadv,
+	climbdown,      blockedstrike,  climbstairs,    dropdead,
+	stepback,       climbfail,      stabbed,        faststrike,
+	strikeret,      alertstand,     drinkpotion,    crawl,
+	alertturn,      fightfall,      efightfall,     efightfallfwd,
+	running,        stabkill,       fastadvance,    goalertstand,
+	arise,          turndraw,       guardengarde,   pickupsword,
+	resheathe,      fastsheathe,    Pstand,         Vstand,
+	Vwalk,          Vstop,          Palert,         Pstepback,
+	Vexit,          Mclimb,         Vraise,         Plie,
+	patchfall,      Mscurry,        Mstop,          Mleave,
+	Pembrace,       Pwaiting,       Pstroke,        Prise,
+	Pcrouch,        Pslump,         Mraise,
+#ifdef USE_TELEPORTS
+	teleport,
+#endif
 };
 
 // data:196E
@@ -637,7 +645,7 @@ byte seqtbl[] = {
 	dy(2), frame_79_jumphang,
 	dy(4), jmp(hangdrop), // goto "hangdrop"
 
-	LABEL(superhijump) // superhijump (when weightless)
+	LABEL(superhijump) // superhijump (when weightless) - this sequence is not being used in PoP1
 	frame_67_start_jump_up_1, frame_68_start_jump_up_2, frame_69_start_jump_up_3, frame_70_jumphang,
 	frame_71_jumphang, frame_72_jumphang, frame_73_jumphang, frame_74_jumphang,
 	frame_75_jumphang, frame_76_jumphang,
@@ -645,11 +653,19 @@ byte seqtbl[] = {
 	dy(-3), frame_78_jumphang,
 	dy(-4), frame_79_jumphang,
 	dy(-10), frame_79_jumphang,
+#ifdef USE_SUPER_HIGH_JUMP // prevents kid from jumping too high into the ceiling
+	dy(-8), frame_79_jumphang,
+	dy(-6), frame_79_jumphang,
+	dy(-5), frame_79_jumphang,
+	dy(-4), frame_79_jumphang,
+	dy(-4), frame_79_jumphang,
+#else
 	dy(-9), frame_79_jumphang,
 	dy(-8), frame_79_jumphang,
 	dy(-7), frame_79_jumphang,
 	dy(-6), frame_79_jumphang,
 	dy(-5), frame_79_jumphang,
+#endif
 	dy(-4), frame_79_jumphang,
 	dy(-3), frame_79_jumphang,
 	dy(-2), frame_79_jumphang,
@@ -773,7 +789,7 @@ byte seqtbl[] = {
 	dx(3), frame_124_stepping_4,
 	dx(4), frame_125_stepping_5,
 	dx(3), frame_126_stepping_6,
-	dx(-)2, frame_128_stepping_8,
+	dx(-2), frame_128_stepping_8,
 	frame_129_stepping_9, frame_130_stepping_10, frame_131_stepping_11, frame_132_stepping_12,
 	jmp(stand), // goto "stand"
 
@@ -1130,8 +1146,31 @@ byte seqtbl[] = {
 
 	LABEL(Mclimb) // Mouse: climb
 	frame_186_mouse_1, frame_186_mouse_1, /* ":loop" */ LABEL(Mclimb_loop) frame_188_mouse_stand,
-	jmp(Mclimb_loop) // goto ":loop"
+	jmp(Mclimb_loop), // goto ":loop"
 
+#ifdef USE_TELEPORTS
+	// Based on climbstairs.
+	LABEL(teleport)
+	act(actions_5_bumped),
+	dx(-5), dy(-1), snd(SND_FOOTSTEP), frame_217_exit_stairs_1,
+	frame_218_exit_stairs_2, frame_219_exit_stairs_3,
+	dx(1), frame_220_exit_stairs_4,
+	dx(-4), dy(-3), snd(SND_FOOTSTEP), frame_221_exit_stairs_5,
+	//dx(-4), dy(-2), frame_222_exit_stairs_6,
+	//dx(-2), dy(-3), frame_223_exit_stairs_7,
+	//dx(-3), dy(-8), /*snd(SND_LEVEL),*/ snd(SND_FOOTSTEP), frame_224_exit_stairs_8,
+	//dx(-1), dy(-1), frame_225_exit_stairs_9,
+	//dx(-3), dy(-4), frame_226_exit_stairs_10,
+	//dx(-1), dy(-5), snd(SND_FOOTSTEP), frame_227_exit_stairs_11,
+	//dx(-2), dy(-1), frame_228_exit_stairs_12,
+	frame_0,
+	snd(SND_FOOTSTEP), frame_0, frame_0, frame_0,
+	snd(SND_FOOTSTEP), frame_0, frame_0, frame_0,
+	snd(SND_FOOTSTEP), frame_0, frame_0, frame_0,
+	snd(SND_FOOTSTEP), /*SEQ_END_LEVEL,*/ SEQ_GET_ITEM, 2, // get_item 2 triggers the teleport effect, like in SNES PoP.
+	/* ":loop" */ LABEL(teleport_loop) frame_0,
+	jmp(teleport_loop), // goto ":loop"
+#endif
 };
 
 void apply_seqtbl_patches() {
@@ -1167,17 +1206,16 @@ const word original_seqtbl_offsets[] = {
 void check_seqtable_matches_original() {
 	printf("Checking that the sequence table matches the original DOS version...\n");
 	int different = 0;
-	int i;
 	const byte* seq = seqtbl;
 	const byte* original_seq = original_seqtbl;
-	for(i = 0; i < COUNT(original_seqtbl); ++i) {
+	for(int i = 0; i < COUNT(original_seqtbl); ++i) {
 		if (seq[i] != original_seq[i]) {
 			different = 1;
 			printf("Seqtbl difference at index %d (%#x; shifted offset %#x): value is %d, should be %d\n"
 			        , i, i, i + SEQTBL_BASE, seqtbl[i], original_seqtbl[i]);
 		}
 	}
-	for(i = 0; i < COUNT(original_seqtbl_offsets); ++i) {
+	for(int i = 0; i < COUNT(original_seqtbl_offsets); ++i) {
 		if (seqtbl_offsets[i] != original_seqtbl_offsets[i]) {
 			different = 1;
 			printf("Seqtbl offset difference at index %d: value is %#x, should be %#x\n"

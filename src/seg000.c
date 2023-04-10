@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2019  Dávid Nagy
+Copyright (C) 2013-2023  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -20,7 +20,11 @@ The authors of this program may be contacted at https://forum.princed.org
 
 #include "common.h"
 #include <setjmp.h>
+#define _USE_MATH_DEFINES
 #include <math.h>
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 // data:461E
 dat_type * dathandle;
@@ -28,17 +32,17 @@ dat_type * dathandle;
 // data:4C08
 word need_redraw_because_flipped;
 
-void fix_sound_priorities();
+void fix_sound_priorities(void);
 
 // seg000:0000
-void far pop_main() {
+void pop_main() {
 	if (check_param("--version") || check_param("-v")) {
 		printf ("SDLPoP v%s\n", SDLPOP_VERSION);
 		exit(0);
 	}
 
 	if (check_param("--help") || check_param("-h") || check_param("-?")) {
-		printf ("See doc/Readme.txt\n");
+		printf ("See README.md\n");
 		exit(0);
 	}
 
@@ -62,6 +66,7 @@ void far pop_main() {
 #ifdef USE_MENU
 	load_ingame_settings();
 #endif
+	if (check_param("mute")) is_sound_on = 0;
 	turn_sound_on_off((is_sound_on != 0) * 15); // Turn off sound/music if those options were set.
 
 #ifdef USE_REPLAY
@@ -80,6 +85,12 @@ void far pop_main() {
 	}
 #endif
 
+	// Initialize everything before load_mod_options() so it can show an error dialog if needed.
+	/*video_mode =*/ parse_grmode();
+	current_target_surface = rect_sthg(onscreen_surface_, &screen_rect);
+	set_hc_pal();
+	init_copyprot_dialog();
+
 	load_mod_options();
 
 	// CusPop option
@@ -90,18 +101,10 @@ void far pop_main() {
 	apply_seqtbl_patches();
 
 	char sprintf_temp[100];
-	int i;
 
-	dathandle = open_dat("PRINCE.DAT", 0);
-
-	/*video_mode =*/ parse_grmode();
-
-	init_timer(60);
+	init_timer(BASE_FPS);
 	parse_cmdline_sound();
 
-	set_hc_pal();
-
-	current_target_surface = rect_sthg(onscreen_surface_, &screen_rect);
 	show_loading();
 	set_joy_mode();
 	cheats_enabled = check_param("megahit") != NULL;
@@ -112,17 +115,19 @@ void far pop_main() {
 	draw_mode = check_param("draw") != NULL && cheats_enabled;
 	demo_mode = check_param("demo") != NULL;
 
-	init_copyprot_dialog();
 #ifdef USE_REPLAY
 	init_record_replay();
 #endif
+
+	// I moved this after init_copyprot_dialog(), so open_dat() can show an error dialog if needed.
+	dathandle = open_dat("PRINCE.DAT", 'G');
 
 	if (cheats_enabled
 		#ifdef USE_REPLAY
 		|| recording
 		#endif
 	) {
-		for (i = 15; i >= 0; --i) {
+		for (int i = 15; i >= 0; --i) {
 			snprintf(sprintf_temp, sizeof(sprintf_temp), "%d", i);
 			if (check_param(sprintf_temp)) {
 				start_level = i;
@@ -130,6 +135,9 @@ void far pop_main() {
 			}
 		}
 	}
+
+	play_demo_level = (check_param("playdemo") != NULL);
+
 #ifdef USE_SCREENSHOT
 	init_screenshot();
 #endif
@@ -144,7 +152,7 @@ void far pop_main() {
 byte* level_var_palettes;
 
 // seg000:024F
-void __pascal far init_game_main() {
+void init_game_main() {
 	doorlink1_ad = /*&*/level.doorlinks1;
 	doorlink2_ad = /*&*/level.doorlinks2;
 	prandom(1);
@@ -152,9 +160,9 @@ void __pascal far init_game_main() {
 		// Guard palettes
 		guard_palettes = (byte*) load_from_opendats_alloc(10, "bin", NULL, NULL);
 		// (blood, hurt flash) #E00030 = red
-		set_pal(12, 0x38, 0x00, 0x0C, 1);
+		set_pal(12, 0x38, 0x00, 0x0C);
 		// (palace wall pattern) #C09850 = light brown
-		set_pal( 6, 0x30, 0x26, 0x14, 0);
+		set_pal( 6, 0x30, 0x26, 0x14);
 
 		// Level color variations (1.3)
 		level_var_palettes = load_from_opendats_alloc(20, "bin", NULL, NULL);
@@ -180,10 +188,9 @@ word first_start = 1;
 // data:4C38
 jmp_buf setjmp_buf;
 // seg000:0358
-void __pascal far start_game() {
+void start_game() {
 #ifdef USE_COPYPROT
 	word which_entry;
-	word pos;
 	word entry_used[40];
 	byte letts_used[26];
 #endif
@@ -194,7 +201,7 @@ void __pascal far start_game() {
 		first_start = 0;
 		setjmp(/*&*/setjmp_buf);
 	} else {
-		draw_rect(&screen_rect, 0);
+		draw_rect(&screen_rect, color_0_black);
 		show_quotes();
 		clear_screen_and_sounds();
 		longjmp(/*&*/setjmp_buf,-1);
@@ -205,7 +212,7 @@ void __pascal far start_game() {
 	copyprot_plac = prandom(13);
 	memset(&entry_used, 0, sizeof(entry_used));
 	memset(&letts_used, 0, sizeof(letts_used));
-	for (pos = 0; pos < 14; ++pos) {
+	for (word pos = 0; pos < 14; ++pos) {
 		do {
 			if (pos == copyprot_plac) {
 				which_entry = copyprot_idx = prandom(39);
@@ -250,7 +257,15 @@ int quick_process(process_func_type process_func) {
 	int ok = 1;
 #define process(x) ok = ok && process_func(&(x), sizeof(x))
 	// level
-	process(level);
+#ifdef USE_DEBUG_CHEATS
+	// Don't load the level if the user holds either Shift key while pressing F9.
+	if (debug_cheats_enabled && (key_states[SDL_SCANCODE_LSHIFT] & KEYSTATE_HELD || key_states[SDL_SCANCODE_RSHIFT] & KEYSTATE_HELD)) {
+		fseek(quick_fp, sizeof(level), SEEK_CUR);
+	} else
+#endif
+	{
+		process(level);
+	}
 	process(checkpoint);
 	process(upside_down);
 	process(drawn_room);
@@ -331,6 +346,22 @@ int quick_process(process_func_type process_func) {
 	process(ctrl1_up);
 	process(ctrl1_down);
 	process(ctrl1_shift2);
+	// replay recording state
+#ifdef USE_REPLAY
+	process(curr_tick);
+#endif
+#ifdef USE_COLORED_TORCHES
+	process(torch_colors);
+#endif
+#ifdef USE_SUPER_HIGH_JUMP
+	process(super_jump_fall);
+	process(super_jump_timer);
+	process(super_jump_room);
+	process(super_jump_col);
+	process(super_jump_row);
+#endif
+	process(is_guard_notice);
+	process(can_guard_see_kid);
 #undef process
 	return ok;
 }
@@ -348,7 +379,7 @@ const char* get_quick_path(char* custom_path_buffer, size_t max_len) {
 	return custom_path_buffer;
 }
 
-int quick_save() {
+int quick_save(void) {
 	int ok = 0;
 	char custom_quick_path[POP_MAX_PATH];
 	const char* path = get_quick_path(custom_quick_path, sizeof(custom_quick_path));
@@ -370,17 +401,31 @@ void restore_room_after_quick_load() {
 	curr_guard_color = temp1;
 	next_level = temp2;
 
+	// feather fall can only get restored if the fix enabled
+	if (!fixes->fix_quicksave_during_feather && is_feather_fall > 0) {
+		is_feather_fall = 0;
+		stop_sounds();
+	}
+
 	//need_full_redraw = 1;
 	different_room = 1;
-	next_room = drawn_room;
+	// Show the room where the prince is, even if the player moved the view away from it (with the H,J,U,N keys).
+	next_room = drawn_room = Kid.room;
 	load_room_links();
 	//draw_level_first();
 	//gen_palace_wall_colors();
-	is_guard_notice = 0; // prevent guard turning around immediately
+	//is_guard_notice = 0; // prevent guard turning around immediately
 	draw_game_frame(); // for falling
 	//redraw_screen(1); // for room_L
 
 	hitp_delta = guardhp_delta = 1; // force HP redraw
+	// Don't draw guard HP if a previously viewed room (with the H,J,U,N keys) had a guard but the current room doesn't have one.
+	if (Guard.room != drawn_room) {
+		// Like in clear_char().
+		Guard.direction = dir_56_none;
+		guardhp_curr = 0;
+	}
+
 	draw_hp();
 	loadkid_and_opp();
 	// Get rid of "press button" message if kid was dead before quickload.
@@ -389,7 +434,7 @@ void restore_room_after_quick_load() {
 	exit_room_timer = 0;
 }
 
-int quick_load() {
+int quick_load(void) {
 	int ok = 0;
 	char custom_quick_path[POP_MAX_PATH];
 	const char* path = get_quick_path(custom_quick_path, sizeof(custom_quick_path));
@@ -404,7 +449,7 @@ int quick_load() {
 		}
 
 		stop_sounds();
-		draw_rect(&screen_rect, 0);
+		draw_rect(&screen_rect, color_0_black);
 		update_screen();
 		delay_ticks(5); // briefly display a black screen as a visual cue
 
@@ -446,7 +491,7 @@ int quick_load() {
 void check_quick_op() {
 	if (!enable_quicksave) return;
 	if (need_quick_save) {
-		if (!is_feather_fall && quick_save()) {
+		if ((!is_feather_fall || fixes->fix_quicksave_during_feather) && quick_save()) {
 			display_text_bottom("QUICKSAVE");
 		} else {
 			display_text_bottom("NO QUICKSAVE");
@@ -456,11 +501,13 @@ void check_quick_op() {
 		text_time_remaining = 24;
 	}
 	if (need_quick_load) {
+/*
 #ifdef USE_REPLAY
 		if (recording) {
 			stop_recording(); // quickloading would mess up the replay!
 		}
 #endif
+*/
 		if (quick_load()) {
 			display_text_bottom("QUICKLOAD");
 		} else {
@@ -477,19 +524,17 @@ void check_quick_op() {
 
 Uint32 temp_shift_release_callback(Uint32 interval, void *param) {
 	const Uint8* state = SDL_GetKeyboardState(NULL);
-	if (state[SDL_SCANCODE_LSHIFT]) key_states[SDL_SCANCODE_LSHIFT] = 1;
-	if (state[SDL_SCANCODE_RSHIFT]) key_states[SDL_SCANCODE_RSHIFT] = 1;
+	if (state[SDL_SCANCODE_LSHIFT]) key_states[SDL_SCANCODE_LSHIFT] |= KEYSTATE_HELD | KEYSTATE_HELD_NEW;
+	if (state[SDL_SCANCODE_RSHIFT]) key_states[SDL_SCANCODE_RSHIFT] |= KEYSTATE_HELD | KEYSTATE_HELD_NEW;
 	return 0; // causes the timer to be removed
 }
 
 // seg000:04CD
-int __pascal far process_key() {
+int process_key() {
 	char sprintf_temp[80];
-	int key;
 	const char* answer_text = NULL;
-	word need_show_text;
-	need_show_text = 0;
-	key = key_test_quit();
+	word need_show_text = 0;
+	int key = key_test_quit();
 
 #ifdef USE_MENU
 	if (is_paused && is_menu_shown) {
@@ -512,12 +557,12 @@ int __pascal far process_key() {
 				start_recording();
 			} else
 			#endif
-			if (key == (SDL_SCANCODE_L | WITH_CTRL)) { // ctrl-L
+			if (key == (SDL_SCANCODE_L | WITH_CTRL)) { // Ctrl+L
 				if (!load_game()) return 0;
 			} else {
 				start_level = custom->first_level; // 1
 			}
-			draw_rect(&screen_rect, 0);
+			draw_rect(&screen_rect, color_0_black);
 #ifdef USE_FADE
 			if (is_global_fading) {
 				fade_palette_buffer->proc_restore_free(fade_palette_buffer);
@@ -527,9 +572,9 @@ int __pascal far process_key() {
 			start_game();
 		}
 	}
-	// If the Kid died, enter or shift will restart the level.
+	// If the Kid died, Enter or Shift will restart the level.
 	if (rem_min != 0 && Kid.alive > 6 && (control_shift || key == SDL_SCANCODE_RETURN)) {
-		key = SDL_SCANCODE_A | WITH_CTRL; // ctrl-a
+		key = SDL_SCANCODE_A | WITH_CTRL; // Ctrl+A
 	}
 #ifdef USE_REPLAY
 	if (recording) key_press_while_recording(&key);
@@ -539,7 +584,7 @@ int __pascal far process_key() {
 	if (is_keyboard_mode) clear_kbd_buf();
 
 	switch(key) {
-		case SDL_SCANCODE_ESCAPE: // esc
+		case SDL_SCANCODE_ESCAPE: // Esc
 		case SDL_SCANCODE_ESCAPE | WITH_SHIFT: // allow pause while grabbing
 			is_paused = 1;
 #ifdef USE_MENU
@@ -554,23 +599,23 @@ int __pascal far process_key() {
 			}
 #endif
 		break;
-		case SDL_SCANCODE_SPACE: // space
+		case SDL_SCANCODE_SPACE: // Space
 			is_show_time = 1;
 		break;
-		case SDL_SCANCODE_A | WITH_CTRL: // ctrl-a
+		case SDL_SCANCODE_A | WITH_CTRL: // Ctrl+A
 			if (current_level != 15) {
 				stop_sounds();
 				is_restart_level = 1;
 			}
 		break;
-		case SDL_SCANCODE_G | WITH_CTRL: // ctrl-g
+		case SDL_SCANCODE_G | WITH_CTRL: // Ctrl+G
 			// CusPoP: first and last level where saving is allowed
 //			if (current_level > 2 && current_level < 14) { // original
 			if (current_level >= custom->saving_allowed_first_level && current_level <= custom->saving_allowed_last_level) {
 				save_game();
 			}
 		break;
-		case SDL_SCANCODE_J | WITH_CTRL: // ctrl-j
+		case SDL_SCANCODE_J | WITH_CTRL: // Ctrl+J
 			if ((sound_flags & sfDigi) && sound_mode == smTandy) {
 				answer_text = "JOYSTICK UNAVAILABLE";
 			} else {
@@ -582,20 +627,20 @@ int __pascal far process_key() {
 			}
 			need_show_text = 1;
 		break;
-		case SDL_SCANCODE_K | WITH_CTRL: // ctrl-k
+		case SDL_SCANCODE_K | WITH_CTRL: // Ctrl+K
 			answer_text = "KEYBOARD MODE";
 			is_joyst_mode = 0;
 			is_keyboard_mode = 1;
 			need_show_text = 1;
 		break;
-		case SDL_SCANCODE_R | WITH_CTRL: // ctrl-r
+		case SDL_SCANCODE_R | WITH_CTRL: // Ctrl+R
 			start_level = -1;
 #ifdef USE_MENU
 			if (is_menu_shown) menu_was_closed(); // Do necessary cleanup.
 #endif
 			start_game();
 		break;
-		case SDL_SCANCODE_S | WITH_CTRL: // ctrl-s
+		case SDL_SCANCODE_S | WITH_CTRL: // Ctrl+S
 			turn_sound_on_off((!is_sound_on) * 15);
 			answer_text = "SOUND OFF";
 			if (is_sound_on) {
@@ -604,13 +649,13 @@ int __pascal far process_key() {
 			//
 			need_show_text = 1;
 		break;
-		case SDL_SCANCODE_V | WITH_CTRL: // ctrl-v
+		case SDL_SCANCODE_V | WITH_CTRL: // Ctrl+V
 			//answer_text = "PRINCE OF PERSIA  V1.0";
 			snprintf(sprintf_temp, sizeof(sprintf_temp), "SDLPoP v%s\n", SDLPOP_VERSION);
 			answer_text = sprintf_temp;
 			need_show_text = 1;
 		break;
-		case SDL_SCANCODE_C | WITH_CTRL: // ctrl-c
+		case SDL_SCANCODE_C | WITH_CTRL: // Ctrl+C
 		{
 			SDL_version verc, verl;
 			SDL_VERSION (&verc);
@@ -623,16 +668,16 @@ int __pascal far process_key() {
 			need_show_text = 1;
 		}
 		break;
-		case SDL_SCANCODE_L | WITH_SHIFT: // shift-l
+		case SDL_SCANCODE_L | WITH_SHIFT: // Shift+L
 			if (current_level < custom->shift_L_allowed_until_level /* 4 */ || cheats_enabled) {
-				// if shift is not released within the delay, the cutscene is skipped
+				// if Shift is not released within the delay, the cutscene is skipped
 				Uint32 delay = 250;
 				key_states[SDL_SCANCODE_LSHIFT] = 0;
 				key_states[SDL_SCANCODE_RSHIFT] = 0;
 				SDL_TimerID timer;
 				timer = SDL_AddTimer(delay, temp_shift_release_callback, NULL);
 				if (timer == 0) {
-					sdlperror("SDL_AddTimer");
+					sdlperror("process_key: SDL_AddTimer");
 					quit(1);
 				}
 				if (current_level == 14) {
@@ -685,13 +730,12 @@ int __pascal far process_key() {
 				answer_text = /*&*/sprintf_temp;
 				need_show_text = 1;
 			break;
-			case SDL_SCANCODE_C | WITH_SHIFT: // shift-c
+			case SDL_SCANCODE_C | WITH_SHIFT: // Shift+C
 				snprintf(sprintf_temp, sizeof(sprintf_temp), "AL%d AR%d BL%d BR%d", room_AL, room_AR, room_BL, room_BR);
 				answer_text = /*&*/sprintf_temp;
 				need_show_text = 1;
 			break;
-			case SDL_SCANCODE_MINUS:
-			case SDL_SCANCODE_KP_MINUS:		// '-' --> subtract time cheat
+			case SDL_SCANCODE_KP_MINUS: // '-' --> subtract time cheat
 				if (rem_min > 1) --rem_min;
 
 #ifdef ALLOW_INFINITE_TIME
@@ -703,8 +747,7 @@ int __pascal far process_key() {
 				text_time_remaining = 0;
 				is_show_time = 1;
 			break;
-			case SDL_SCANCODE_EQUALS | WITH_SHIFT: // '+'
-			case SDL_SCANCODE_KP_PLUS:	   // '+' --> add time cheat
+			case SDL_SCANCODE_KP_PLUS: // '+' --> add time cheat
 
 #ifdef ALLOW_INFINITE_TIME
 				if (rem_min < 0) { // if negative/infinite, time runs 'forward'
@@ -727,13 +770,15 @@ int __pascal far process_key() {
 				}
 			break;
 			case SDL_SCANCODE_K: // K --> kill guard cheat
-				guardhp_delta = -guardhp_curr;
-				Guard.alive = 0;
+				if (Guard.charid != charid_4_skeleton) {
+					guardhp_delta = -guardhp_curr;
+					Guard.alive = 0;
+				}
 			break;
-			case SDL_SCANCODE_I | WITH_SHIFT: // shift+I --> invert cheat
+			case SDL_SCANCODE_I | WITH_SHIFT: // Shift+I --> invert cheat
 				toggle_upside();
 			break;
-			case SDL_SCANCODE_W | WITH_SHIFT: // shift+W --> feather fall cheat
+			case SDL_SCANCODE_W | WITH_SHIFT: // Shift+W --> feather fall cheat
 				feather_fall();
 			break;
 			case SDL_SCANCODE_H: // H --> view room to the left
@@ -752,15 +797,19 @@ int __pascal far process_key() {
 				draw_guard_hp(0, 10);
 				next_room = room_B;
 			break;
-			case SDL_SCANCODE_B | WITH_SHIFT: // shift-b
+			case SDL_SCANCODE_B | WITH_CTRL: // Ctrl+B --> Go back to the room where the prince is. (Undo H,J,U,N.)
+				draw_guard_hp(0, 10);
+				next_room = Kid.room;
+			break;
+			case SDL_SCANCODE_B | WITH_SHIFT: // Shift+B
 				is_blind_mode = !is_blind_mode;
 				if (is_blind_mode) {
-					draw_rect(&rect_top, 0);
+					draw_rect(&rect_top, color_0_black);
 				} else {
 					need_full_redraw = 1;
 				}
 			break;
-			case SDL_SCANCODE_S | WITH_SHIFT: // shift-s
+			case SDL_SCANCODE_S | WITH_SHIFT: // Shift+S
 				if (hitp_curr != hitp_max) {
 					play_sound(sound_33_small_potion); // small potion (cheat)
 					hitp_delta = 1;
@@ -768,7 +817,7 @@ int __pascal far process_key() {
 					flash_time = 2;
 				}
 			break;
-			case SDL_SCANCODE_T | WITH_SHIFT: // shift-t
+			case SDL_SCANCODE_T | WITH_SHIFT: // Shift+T
 				play_sound(sound_30_big_potion); // big potion (cheat)
 				flash_color = 4; // red
 				flash_time = 4;
@@ -777,6 +826,13 @@ int __pascal far process_key() {
 			#ifdef USE_DEBUG_CHEATS
 			case SDL_SCANCODE_T:
 				is_timer_displayed = 1 - is_timer_displayed; // toggle
+			break;
+			case SDL_SCANCODE_F:
+				if (fixes->fix_quicksave_during_feather) {
+					is_feather_timer_displayed = 1 - is_feather_timer_displayed; // toggle
+				} else {
+					is_feather_timer_displayed = 0;
+				}
 			break;
 			#endif
 		}
@@ -791,7 +847,11 @@ int __pascal far process_key() {
 }
 
 // seg000:08EB
-void __pascal far play_frame() {
+void play_frame() {
+	// play feather fall music if there is more than 1 second of feather fall left
+	if (fixes->fix_quicksave_during_feather && is_feather_fall >= 10 && !check_sound_playing()) {
+		play_sound(sound_39_low_weight);
+	}
 	do_mobs();
 	process_trobs();
 	check_skel();
@@ -811,7 +871,7 @@ void __pascal far play_frame() {
 	if (current_level == 0) {
 		// Special event: level 0 running exit
 		if (Kid.room == /*24*/ custom->demo_end_room) {
-			draw_rect(&screen_rect, 0);
+			draw_rect(&screen_rect, color_0_black);
 			start_level = -1;
 			need_quotes = 1;
 			start_game();
@@ -840,8 +900,7 @@ void __pascal far play_frame() {
 }
 
 // seg000:09B6
-void __pascal far draw_game_frame() {
-	short var_2;
+void draw_game_frame() {
 	if (need_full_redraw) {
 		redraw_screen(0);
 		need_full_redraw = 0;
@@ -857,16 +916,17 @@ void __pascal far draw_game_frame() {
 				need_redraw_because_flipped = 0;
 				redraw_screen(0);
 			} else {
-				memset_near(&table_counts, 0, sizeof(table_counts));
+				memset(&table_counts, 0, sizeof(table_counts));
 				draw_moving();
 				draw_tables();
 				if (is_blind_mode) {
-					draw_rect(&rect_top, 0);
+					draw_rect(&rect_top, color_0_black);
 				}
 				if (upside_down) {
 					flip_screen(offscreen_surface);
 				}
-				while (drects_count--) {
+				while (drects_count) {
+					drects_count--;
 					copy_screen_rect(&drects[drects_count]);
 				}
 				if (upside_down) {
@@ -905,11 +965,11 @@ void __pascal far draw_game_frame() {
 			if (text_time_total == 288 && text_time_remaining < 72) {
 				// 288: press button to continue
 				// Blink the message:
-				var_2 = text_time_remaining % 12;
-				if (var_2 > 3) {
+				short blink_frame = text_time_remaining % 12;
+				if (blink_frame > 3) {
 					erase_bottom_text(0);
 				} else {
-					if (var_2 == 3) {
+					if (blink_frame == 3) {
 						display_text_bottom("Press Button to Continue");
 						play_sound_from_buffer(sound_pointers[sound_38_blink]); // press button blink
 					}
@@ -920,9 +980,8 @@ void __pascal far draw_game_frame() {
 }
 
 // seg000:0B12
-void __pascal far anim_tile_modif() {
-	word tilepos;
-	for (tilepos = 0; tilepos < 30; ++tilepos) {
+void anim_tile_modif() {
+	for (word tilepos = 0; tilepos < 30; ++tilepos) {
 		switch (get_curr_tile(tilepos)) {
 			case tiles_10_potion:
 				start_anim_potion(drawn_room, tilepos);
@@ -949,13 +1008,12 @@ void __pascal far anim_tile_modif() {
 }
 
 // seg000:0B72
-void __pascal far load_sounds(int first,int last) {
+void load_sounds(int first,int last) {
 	dat_type* ibm_dat = NULL;
 	dat_type* digi1_dat = NULL;
 //	dat_type* digi2_dat = NULL;
 	dat_type* digi3_dat = NULL;
 	dat_type* midi_dat = NULL;
-	short current;
 	ibm_dat = open_dat("IBM_SND1.DAT", 0);
 	if (sound_flags & sfDigi) {
 		digi1_dat = open_dat("DIGISND1.DAT", 0);
@@ -968,7 +1026,7 @@ void __pascal far load_sounds(int first,int last) {
 
 	load_sound_names();
 
-	for (current = first; current <= last; ++current) {
+	for (short current = first; current <= last; ++current) {
 		if (sound_pointers[current] != NULL) continue;
 		/*if (demo_mode) {
 			sound_pointers[current] = decompress_sound((sound_buffer_type*) load_from_opendats_alloc(current + 10000));
@@ -988,12 +1046,11 @@ void __pascal far load_sounds(int first,int last) {
 }
 
 // seg000:0C5E
-void __pascal far load_opt_sounds(int first,int last) {
+void load_opt_sounds(int first,int last) {
 	// stub
 	dat_type* ibm_dat = NULL;
 	dat_type* digi_dat = NULL;
 	dat_type* midi_dat = NULL;
-	short current;
 	ibm_dat = open_dat("IBM_SND2.DAT", 0);
 	if (sound_flags & sfDigi) {
 		digi_dat = open_dat("DIGISND2.DAT", 0);
@@ -1001,7 +1058,7 @@ void __pascal far load_opt_sounds(int first,int last) {
 	if (sound_flags & sfMidi) {
 		midi_dat = open_dat("MIDISND2.DAT", 0);
 	}
-	for (current = first; current <= last; ++current) {
+	for (short current = first; current <= last; ++current) {
 		//We don't free sounds, so load only once.
 		if (sound_pointers[current] != NULL) continue;
 		/*if (demo_mode) {
@@ -1024,13 +1081,13 @@ const char*const tbl_envir_gr[] = {"", "C", "C", "E", "E", "V"};
 // data:03D0
 const char*const tbl_envir_ki[] = {"DUNGEON", "PALACE"};
 // seg000:0D20
-void __pascal far load_lev_spr(int level) {
+void load_lev_spr(int level) {
 	dat_type* dathandle;
 	short guardtype;
 	char filename[20];
 	dathandle = NULL;
 	current_level = next_level = level;
-	draw_rect(&screen_rect, 0);
+	draw_rect(&screen_rect, color_0_black);
 	free_optsnd_chtab();
 	snprintf(filename, sizeof(filename), "%s%s.DAT",
 		tbl_envir_gr[graphics_mode],
@@ -1041,7 +1098,7 @@ void __pascal far load_lev_spr(int level) {
 	guardtype = custom->tbl_guard_type[current_level];
 	if (guardtype != -1) {
 		if (guardtype == 0) {
-			dathandle = open_dat(custom->tbl_level_type[current_level] ? "GUARD1.DAT" : "GUARD2.DAT", 0);
+			dathandle = open_dat(custom->tbl_level_type[current_level] ? "GUARD1.DAT" : "GUARD2.DAT", 'G');
 		}
 		load_chtab_from_file(id_chtab_5_guard, 750, tbl_guard_dat[guardtype], 1<<8);
 		if (dathandle) {
@@ -1057,8 +1114,8 @@ void __pascal far load_lev_spr(int level) {
 		if (level_color != 0) {
 			byte* env_pal = level_var_palettes + 0x30*(level_color-1);
 			byte* wall_pal = env_pal + 0x30 * custom->tbl_level_type[current_level];
-			set_pal_arr(0x50, 0x10, (rgb_type*)env_pal, 1);
-			set_pal_arr(0x60, 0x10, (rgb_type*)wall_pal, 1);
+			set_pal_arr(0x50, 0x10, (rgb_type*)env_pal);
+			set_pal_arr(0x60, 0x10, (rgb_type*)wall_pal);
 			set_chtab_palette(chtab_addrs[id_chtab_6_environment], env_pal, 0x10);
 			set_chtab_palette(chtab_addrs[id_chtab_7_environmentwall], wall_pal, 0x10);
 		}
@@ -1079,9 +1136,8 @@ void __pascal far load_lev_spr(int level) {
 }
 
 // seg000:0E6C
-void __pascal far load_level() {
-	dat_type* dathandle;
-	dathandle = open_dat("LEVELS.DAT", 0);
+void load_level() {
+	dat_type* dathandle = open_dat("LEVELS.DAT", 0);
 	load_from_opendats_to_area(current_level + 2000, &level, sizeof(level), "bin");
 	close_dat(dathandle);
 
@@ -1092,23 +1148,26 @@ void __pascal far load_level() {
 void reset_level_unused_fields(bool loading_clean_level) {
 	// Entirely unused fields in the level format: reset to zero for now
 	// They can be repurposed to add new stuff to the level format in the future
+	// WIP: https://www.popot.org/documentation/documents/multiplayer.txt
 	memset(level.roomxs, 0, sizeof(level.roomxs));
 	memset(level.roomys, 0, sizeof(level.roomys));
 	memset(level.fill_1, 0, sizeof(level.fill_1));
 	memset(level.fill_2, 0, sizeof(level.fill_2));
 	memset(level.fill_3, 0, sizeof(level.fill_3));
 
+	// level.used_rooms is 25 on some levels. Limit it to the actual number of rooms.
+	if (level.used_rooms > ROOMCOUNT) level.used_rooms = ROOMCOUNT;
+
 	// For these fields, only use the bits that are actually used, and set the rest to zero.
 	// Good for repurposing the unused bits in the future.
-	int i;
-	for (i = 0; i < level.used_rooms; ++i) {
+	for (int i = 0; i < level.used_rooms; ++i) {
 		//level.guards_dir[i]   &= 0x01; // 1 bit in use
 		level.guards_skill[i] &= 0x0F; // 4 bits in use
 	}
 
 	// In savestates, additional information may be stored (e.g. remembered guard hp) - should not reset this then!
 	if (loading_clean_level) {
-		for (i = 0; i < level.used_rooms; ++i) {
+		for (int i = 0; i < level.used_rooms; ++i) {
 			level.guards_color[i] &= 0x0F; // 4 bits in use (other 4 bits repurposed as remembered guard hp)
 		}
 	}
@@ -1117,7 +1176,7 @@ void reset_level_unused_fields(bool loading_clean_level) {
 
 // seg000:0EA8
 // returns 1 if level is restarted, 0 otherwise
-int __pascal far play_kid_frame() {
+int play_kid_frame() {
 	loadkid_and_opp();
 	load_fram_det_col();
 	check_killed_shadow();
@@ -1154,7 +1213,7 @@ int __pascal far play_kid_frame() {
 }
 
 // seg000:0F48
-void __pascal far play_guard_frame() {
+void play_guard_frame() {
 	if (Guard.direction != dir_56_none) {
 		loadshad_and_opp();
 		load_fram_det_col();
@@ -1181,7 +1240,7 @@ void __pascal far play_guard_frame() {
 }
 
 // seg000:0FBD
-void __pascal far check_the_end() {
+void check_the_end() {
 	if (next_room != 0 && next_room != drawn_room) {
 		drawn_room = next_room;
 		load_room_links();
@@ -1203,12 +1262,13 @@ void __pascal far check_the_end() {
 }
 
 // seg000:1009
-void __pascal far check_fall_flo() {
+void check_fall_flo() {
 	// Special event: falling floors
 	if (current_level == /*13*/ custom->loose_tiles_level &&
 			(drawn_room == /*23*/ custom->loose_tiles_room_1 || drawn_room == /*16*/ custom->loose_tiles_room_2)
 	) {
-		get_room_address(curr_room = room_A);
+		curr_room = room_A;
+		get_room_address(curr_room);
 		for (curr_tilepos = /*22*/ custom->loose_tiles_first_tile;
 		     curr_tilepos <= /*27*/ custom->loose_tiles_last_tile; ++curr_tilepos) {
 			make_loose_fall(-(prandom(0xFF) & 0x0F));
@@ -1282,72 +1342,78 @@ void get_joystick_state_hor_only(int raw_x, int axis_state[2]) {
 }
 
 // seg000:1051
-void __pascal far read_joyst_control() {
-
-	if (joystick_only_horizontal) {
-		get_joystick_state_hor_only(joy_axis[SDL_CONTROLLER_AXIS_LEFTX], joy_left_stick_states);
-		get_joystick_state_hor_only(joy_axis[SDL_CONTROLLER_AXIS_RIGHTX], joy_right_stick_states);
+void read_joyst_control() {
+	int key_state;
+	int* joy_axis_ptr;
+	if (fixes->fix_register_quick_input) {
+		key_state = KEYSTATE_HELD | KEYSTATE_HELD_NEW;
+		joy_axis_ptr = joy_axis_max;
 	} else {
-		get_joystick_state(joy_axis[SDL_CONTROLLER_AXIS_LEFTX], joy_axis[SDL_CONTROLLER_AXIS_LEFTY], joy_left_stick_states);
-		get_joystick_state(joy_axis[SDL_CONTROLLER_AXIS_RIGHTX], joy_axis[SDL_CONTROLLER_AXIS_RIGHTY], joy_right_stick_states);
+		key_state = KEYSTATE_HELD;
+		joy_axis_ptr = joy_axis;
 	}
 
-	if (joy_left_stick_states[0] == -1 || joy_right_stick_states[0] == -1 || joy_hat_states[0] == -1)
-		control_x = -1;
+	if (joystick_only_horizontal) {
+		get_joystick_state_hor_only(joy_axis_ptr[SDL_CONTROLLER_AXIS_LEFTX], joy_left_stick_states);
+		get_joystick_state_hor_only(joy_axis_ptr[SDL_CONTROLLER_AXIS_RIGHTX], joy_right_stick_states);
+	} else {
+		get_joystick_state(joy_axis_ptr[SDL_CONTROLLER_AXIS_LEFTX], joy_axis_ptr[SDL_CONTROLLER_AXIS_LEFTY], joy_left_stick_states);
+		get_joystick_state(joy_axis_ptr[SDL_CONTROLLER_AXIS_RIGHTX], joy_axis_ptr[SDL_CONTROLLER_AXIS_RIGHTY], joy_right_stick_states);
+	}
 
-	if (joy_left_stick_states[0] == 1 || joy_right_stick_states[0] == 1 || joy_hat_states[0] == 1)
-		control_x = 1;
+	if (joy_left_stick_states[0] == -1 || joy_right_stick_states[0] == -1 || joy_button_states[JOYINPUT_DPAD_LEFT] & key_state)
+		control_x = CONTROL_HELD_LEFT;
 
-	if (joy_left_stick_states[1] == -1 || joy_right_stick_states[1] == -1 || joy_hat_states[1] == -1 || joy_AY_buttons_state == -1)
-		control_y = -1;
+	if (joy_left_stick_states[0] == 1 || joy_right_stick_states[0] == 1 || joy_button_states[JOYINPUT_DPAD_RIGHT] & key_state)
+		control_x = CONTROL_HELD_RIGHT;
 
-	if (joy_left_stick_states[1] == 1 || joy_right_stick_states[1] == 1 || joy_hat_states[1] == 1 || joy_AY_buttons_state == 1)
-		control_y = 1;
+	if (joy_left_stick_states[1] == -1 || joy_right_stick_states[1] == -1 || joy_button_states[JOYINPUT_DPAD_UP] & key_state || joy_button_states[JOYINPUT_Y] & key_state)
+		control_y = CONTROL_HELD_UP;
 
-	if (joy_X_button_state == 1 ||
-			joy_axis[SDL_CONTROLLER_AXIS_TRIGGERLEFT] > 8000 ||
-			joy_axis[SDL_CONTROLLER_AXIS_TRIGGERRIGHT] > 8000)
+	if (joy_left_stick_states[1] == 1 || joy_right_stick_states[1] == 1 || joy_button_states[JOYINPUT_DPAD_DOWN] & key_state || joy_button_states[JOYINPUT_A] & key_state)
+		control_y = CONTROL_HELD_DOWN;
+
+	if (joy_button_states[JOYINPUT_X] & key_state ||
+			joy_axis_ptr[SDL_CONTROLLER_AXIS_TRIGGERLEFT] > 8000 ||
+			joy_axis_ptr[SDL_CONTROLLER_AXIS_TRIGGERRIGHT] > 8000)
 	{
-		control_shift = -1;
+		control_shift = CONTROL_HELD;
 	}
 
 }
 
 // seg000:10EA
-void __pascal far draw_kid_hp(short curr_hp,short max_hp) {
-	short drawn_hp_index;
-	for (drawn_hp_index = curr_hp; drawn_hp_index < max_hp; ++drawn_hp_index) {
+void draw_kid_hp(short curr_hp,short max_hp) {
+	for (short drawn_hp_index = curr_hp; drawn_hp_index < max_hp; ++drawn_hp_index) {
 		// empty HP
 		method_6_blit_img_to_scr(get_image(id_chtab_2_kid, 217), drawn_hp_index * 7, 194, blitters_0_no_transp);
 	}
-	for (drawn_hp_index = 0; drawn_hp_index < curr_hp; ++drawn_hp_index) {
+	for (short drawn_hp_index = 0; drawn_hp_index < curr_hp; ++drawn_hp_index) {
 		// full HP
 		method_6_blit_img_to_scr(get_image(id_chtab_2_kid, 216), drawn_hp_index * 7, 194, blitters_0_no_transp);
 	}
 }
 
 // seg000:1159
-void __pascal far draw_guard_hp(short curr_hp,short max_hp) {
-	short drawn_hp_index;
-	short guard_charid;
+void draw_guard_hp(short curr_hp,short max_hp) {
 	if (chtab_addrs[id_chtab_5_guard] == NULL) return;
-	guard_charid = Guard.charid;
+	short guard_charid = Guard.charid;
 	if (guard_charid != charid_4_skeleton &&
 		guard_charid != charid_24_mouse &&
 		// shadow has HP only on level 12
 		(guard_charid != charid_1_shadow || current_level == 12)
 	) {
-		for (drawn_hp_index = curr_hp; drawn_hp_index < max_hp; ++drawn_hp_index) {
+		for (short drawn_hp_index = curr_hp; drawn_hp_index < max_hp; ++drawn_hp_index) {
 			method_6_blit_img_to_scr(chtab_addrs[id_chtab_5_guard]->images[0], 314 - drawn_hp_index * 7, 194, blitters_9_black);
 		}
-		for (drawn_hp_index = 0; drawn_hp_index < curr_hp; ++drawn_hp_index) {
+		for (short drawn_hp_index = 0; drawn_hp_index < curr_hp; ++drawn_hp_index) {
 			method_6_blit_img_to_scr(chtab_addrs[id_chtab_5_guard]->images[0], 314 - drawn_hp_index * 7, 194, blitters_0_no_transp);
 		}
 	}
 }
 
 // seg000:11EC
-void __pascal far add_life() {
+void add_life() {
 	short hpmax = hitp_max;
 	++hpmax;
 	// CusPop: set maximum number of hitpoints (max_hitp_allowed, default = 10)
@@ -1358,12 +1424,12 @@ void __pascal far add_life() {
 }
 
 // seg000:1200
-void __pascal far set_health_life() {
+void set_health_life() {
 	hitp_delta = hitp_max - hitp_curr;
 }
 
 // seg000:120B
-void __pascal far draw_hp() {
+void draw_hp() {
 	if (hitp_delta) {
 		draw_kid_hp(hitp_curr, hitp_max);
 	}
@@ -1388,7 +1454,7 @@ void __pascal far draw_hp() {
 }
 
 // seg000:127B
-void __pascal far do_delta_hp() {
+void do_delta_hp() {
 	// level 12: if the shadow is hurt, Kid is also hurt
 	if (Opp.charid == charid_1_shadow &&
 		current_level == 12 &&
@@ -1533,7 +1599,7 @@ void fix_sound_priorities() {
 }
 
 // seg000:12C5
-void __pascal far play_sound(int sound_id) {
+void play_sound(int sound_id) {
 	//printf("Would play sound %d\n", sound_id);
 	if (next_sound < 0 || sound_prio_table[sound_id] <= sound_prio_table[next_sound]) {
 		if (NULL == sound_pointers[sound_id]) return;
@@ -1544,7 +1610,7 @@ void __pascal far play_sound(int sound_id) {
 }
 
 // seg000:1304
-void __pascal far play_next_sound() {
+void play_next_sound() {
 	if (next_sound >= 0) {
 		if (!check_sound_playing() ||
 			(sound_interruptible[current_sound] != 0 && sound_prio_table[next_sound] <= sound_prio_table[current_sound])
@@ -1557,27 +1623,25 @@ void __pascal far play_next_sound() {
 }
 
 // seg000:1353
-void __pascal far check_sword_vs_sword() {
+void check_sword_vs_sword() {
 	if (Kid.frame == 167 || Guard.frame == 167) {
 		play_sound(sound_10_sword_vs_sword); // sword vs. sword
 	}
 }
 
 // seg000:136A
-void __pascal far load_chtab_from_file(int chtab_id,int resource,const char near *filename,int palette_bits) {
+void load_chtab_from_file(int chtab_id,int resource,const char* filename,int palette_bits) {
 	//printf("Loading chtab %d, id %d from %s\n",chtab_id,resource,filename);
-	dat_type* dathandle;
 	if (chtab_addrs[chtab_id] != NULL) return;
-	dathandle = open_dat(filename, 0);
+	dat_type* dathandle = open_dat(filename, 'G');
 	chtab_addrs[chtab_id] = load_sprites_from_file(resource, palette_bits, 1);
 	close_dat(dathandle);
 }
 
 // seg000:13BA
-void __pascal far free_all_chtabs_from(int first) {
-	word chtab_id;
+void free_all_chtabs_from(int first) {
 	free_peels();
-	for (chtab_id = first; chtab_id < 10; ++chtab_id) {
+	for (word chtab_id = first; chtab_id < 10; ++chtab_id) {
 		if (chtab_addrs[chtab_id]) {
 			free_chtab(chtab_addrs[chtab_id]);
 			chtab_addrs[chtab_id] = NULL;
@@ -1586,9 +1650,8 @@ void __pascal far free_all_chtabs_from(int first) {
 }
 
 // seg009:12EF
-void __pascal far load_one_optgraf(chtab_type* chtab_ptr,dat_pal_type far *pal_ptr,int base_id,int min_index,int max_index) {
-	short index;
-	for (index = min_index; index <= max_index; ++index) {
+void load_one_optgraf(chtab_type* chtab_ptr,dat_pal_type* pal_ptr,int base_id,int min_index,int max_index) {
+	for (short index = min_index; index <= max_index; ++index) {
 		image_type* image = load_image(base_id + index + 1, pal_ptr);
 		if (image != NULL) chtab_ptr->images[index] = image;
 	}
@@ -1597,16 +1660,14 @@ void __pascal far load_one_optgraf(chtab_type* chtab_ptr,dat_pal_type far *pal_p
 byte optgraf_min[] = {0x01, 0x1E, 0x4B, 0x4E, 0x56, 0x65, 0x7F, 0x0A};
 byte optgraf_max[] = {0x09, 0x1F, 0x4D, 0x53, 0x5B, 0x7B, 0x8F, 0x0D};
 // seg000:13FC
-void __pascal far load_more_opt_graf(const char *filename) {
+void load_more_opt_graf(const char* filename) {
 	// stub
-	dat_type* dathandle;
 	dat_shpl_type area;
-	short graf_index;
-	dathandle = NULL;
-	for (graf_index = 0; graf_index < 8; ++graf_index) {
+	dat_type* dathandle = NULL;
+	for (short graf_index = 0; graf_index < 8; ++graf_index) {
 		/*if (...) */ {
 			if (dathandle == NULL) {
-				dathandle = open_dat(filename, 0);
+				dathandle = open_dat(filename, 'G');
 				load_from_opendats_to_area(200, &area, sizeof(area), "pal");
 				area.palette.row_bits = 0x20;
 			}
@@ -1619,7 +1680,7 @@ void __pascal far load_more_opt_graf(const char *filename) {
 }
 
 // seg000:148D
-int __pascal far do_paused() {
+int do_paused() {
 #ifdef USE_REPLAY
 	if (replaying && skipping_replay) return 0;
 #endif
@@ -1627,9 +1688,9 @@ int __pascal far do_paused() {
 	word key;
 	key = 0;
 	next_room = 0;
-	control_shift = 0;
-	control_y = 0;
-	control_x = 0;
+	control_shift = CONTROL_RELEASED;
+	control_y = CONTROL_RELEASED;
+	control_x = CONTROL_RELEASED;
 	if (is_joyst_mode) {
 		read_joyst_control();
 	} else {
@@ -1640,6 +1701,12 @@ int __pascal far do_paused() {
 		is_paused = 0; // fix being able to pause the game during the ending sequence
 	}
 	if (is_paused) {
+		// feather fall gets interrupted by pause
+		if (fixes->fix_quicksave_during_feather &&
+				is_feather_fall > 0 &&
+				check_sound_playing()) {
+			stop_sounds();
+		}
 		display_text_bottom("GAME PAUSED");
 #ifdef USE_MENU
 		if (enable_pause_menu || is_menu_shown) {
@@ -1657,49 +1724,71 @@ int __pascal far do_paused() {
 		}
 		erase_bottom_text(1);
 	}
+
+	// As we processed input for current gameplay tick change all input to reflect their current status
+	for (int i = 0; i < SDL_NUM_SCANCODES; i++) {
+		key_states[i] &= ~KEYSTATE_HELD_NEW;
+	}
+	for (int i = 0; i < JOYINPUT_NUM; i++) {
+		joy_button_states[i] &= ~KEYSTATE_HELD_NEW;
+	}
+	for (int i = 0; i < JOY_AXIS_NUM; i++) {
+		joy_axis_max[i] = joy_axis[i];
+	}
+
 	return key || control_shift;
 }
 
 // seg000:1500
-void __pascal far read_keyb_control() {
+void read_keyb_control() {
+	int key_state;
+	if (fixes->fix_register_quick_input) {
+		key_state = KEYSTATE_HELD | KEYSTATE_HELD_NEW;
+	} else {
+		key_state = KEYSTATE_HELD;
+	}
 
-	if (key_states[SDL_SCANCODE_UP] || key_states[SDL_SCANCODE_HOME] || key_states[SDL_SCANCODE_PAGEUP]
-	    || key_states[SDL_SCANCODE_KP_8] || key_states[SDL_SCANCODE_KP_7] || key_states[SDL_SCANCODE_KP_9]
+	if (key_states[SDL_SCANCODE_UP] & key_state || key_states[SDL_SCANCODE_HOME] & key_state || key_states[SDL_SCANCODE_PAGEUP] & key_state
+	    || key_states[SDL_SCANCODE_KP_8] & key_state || key_states[SDL_SCANCODE_KP_7] & key_state || key_states[SDL_SCANCODE_KP_9] & key_state
 	) {
-		control_y = -1;
-	} else if (key_states[SDL_SCANCODE_CLEAR] || key_states[SDL_SCANCODE_DOWN]
-	           || key_states[SDL_SCANCODE_KP_5] || key_states[SDL_SCANCODE_KP_2]
+		control_y = CONTROL_HELD_UP;
+	} else if (key_states[SDL_SCANCODE_CLEAR] & key_state || key_states[SDL_SCANCODE_DOWN] & key_state
+	           || key_states[SDL_SCANCODE_KP_5] & key_state || key_states[SDL_SCANCODE_KP_2] & key_state
 	) {
-		control_y = 1;
+		control_y = CONTROL_HELD_DOWN;
 	}
-	if (key_states[SDL_SCANCODE_LEFT] || key_states[SDL_SCANCODE_HOME]
-	    || key_states[SDL_SCANCODE_KP_4] || key_states[SDL_SCANCODE_KP_7]
+	if (key_states[SDL_SCANCODE_LEFT] & key_state || key_states[SDL_SCANCODE_HOME] & key_state
+	    || key_states[SDL_SCANCODE_KP_4] & key_state || key_states[SDL_SCANCODE_KP_7] & key_state
 	) {
-		control_x = -1;
-	} else if (key_states[SDL_SCANCODE_RIGHT] || key_states[SDL_SCANCODE_PAGEUP]
-	           || key_states[SDL_SCANCODE_KP_6] || key_states[SDL_SCANCODE_KP_9]
+		control_x = CONTROL_HELD_LEFT;
+	} else if (key_states[SDL_SCANCODE_RIGHT] & key_state || key_states[SDL_SCANCODE_PAGEUP] & key_state
+	           || key_states[SDL_SCANCODE_KP_6] & key_state || key_states[SDL_SCANCODE_KP_9] & key_state
 	) {
-		control_x = 1;
+		control_x = CONTROL_HELD_RIGHT;
 	}
-	control_shift = -(key_states[SDL_SCANCODE_LSHIFT] || key_states[SDL_SCANCODE_RSHIFT]);
+	
+	if(key_states[SDL_SCANCODE_LSHIFT] & key_state || key_states[SDL_SCANCODE_RSHIFT] & key_state)
+		control_shift = CONTROL_HELD;
+	else
+		control_shift = CONTROL_RELEASED;
 
 	#ifdef USE_DEBUG_CHEATS
 	if (cheats_enabled && debug_cheats_enabled) {
-		if (key_states[SDL_SCANCODE_RIGHTBRACKET]) ++Char.x;
-		else if (key_states[SDL_SCANCODE_LEFTBRACKET]) --Char.x;
+		if (key_states[SDL_SCANCODE_RIGHTBRACKET] & key_state) ++Char.x;
+		else if (key_states[SDL_SCANCODE_LEFTBRACKET] & key_state) --Char.x;
 	}
 	#endif
 }
 
 // seg000:156D
-void __pascal far copy_screen_rect(const rect_type far *source_rect_ptr) {
-	const rect_type* far target_rect_ptr;
+void copy_screen_rect(const rect_type* source_rect_ptr) {
+	const rect_type* target_rect_ptr;
 	rect_type target_rect;
 	if (upside_down) {
 		target_rect_ptr = &target_rect;
 		/**target_rect_ptr*/target_rect = *source_rect_ptr;
-		/*target_rect_ptr->*/target_rect.top = 192 - source_rect_ptr->bottom;
-		/*target_rect_ptr->*/target_rect.bottom = 192 - source_rect_ptr->top;
+		/*target_rect_ptr->*/target_rect.top = SCREEN_GAMEPLAY_HEIGHT - source_rect_ptr->bottom;
+		/*target_rect_ptr->*/target_rect.bottom = SCREEN_GAMEPLAY_HEIGHT - source_rect_ptr->top;
 	} else {
 		target_rect_ptr = source_rect_ptr;
 	}
@@ -1710,14 +1799,20 @@ void __pascal far copy_screen_rect(const rect_type far *source_rect_ptr) {
 }
 
 // seg000:15E9
-void __pascal far toggle_upside() {
+void toggle_upside() {
 	upside_down = ~ upside_down;
 	need_redraw_because_flipped = 1;
 }
 
 // seg000:15F8
-void __pascal far feather_fall() {
-	is_feather_fall = 1;
+void feather_fall() {
+	//printf("slow fall started at: rem_min = %d, rem_tick = %d\n", rem_min, rem_tick);
+	if (fixes->fix_quicksave_during_feather) {
+		// feather fall is treated as a timer
+		is_feather_fall = FEATHER_FALL_LENGTH * get_ticks_per_sec(timer_1);
+	} else {
+		is_feather_fall = 1;
+	}
 	flash_color = 2; // green
 	flash_time = 3;
 	stop_sounds();
@@ -1725,34 +1820,28 @@ void __pascal far feather_fall() {
 }
 
 // seg000:1618
-int __pascal far parse_grmode() {
+int parse_grmode() {
 	// stub
 	set_gr_mode(gmMcgaVga);
 	return gmMcgaVga;
 }
 
 // seg000:172C
-void __pascal far gen_palace_wall_colors() {
-	dword old_randseed;
-	word prev_color;
-	short row;
-	short subrow;
-	word color_base;
-	short column;
-	word color;
-
-	old_randseed = random_seed;
+void gen_palace_wall_colors() {
+	dword old_randseed = random_seed;
 	random_seed = drawn_room;
 	prandom(1); // discard
-	for (row = 0; row < 3; row++) {
-		for (subrow = 0; subrow < 4; subrow++) {
+	for (short row = 0; row < 3; row++) {
+		for (short subrow = 0; subrow < 4; subrow++) {
+			word color_base;
 			if (subrow % 2) {
 				color_base = 0x61; // 0x61..0x64 in subrow 1 and 3
 			} else {
 				color_base = 0x66; // 0x66..0x69 in subrow 0 and 2
 			}
-			prev_color = -1;
-			for (column = 0; column <= 10; ++column) {
+			word prev_color = -1;
+			for (short column = 0; column <= 10; ++column) {
+				word color;
 				do {
 					color = color_base + prandom(3);
 				} while (color == prev_color);
@@ -1769,7 +1858,7 @@ void __pascal far gen_palace_wall_colors() {
 const rect_type rect_titles = {106,24,195,296};
 
 // seg000:17E6
-void __pascal far show_title() {
+void show_title() {
 	load_opt_sounds(sound_50_story_2_princess, sound_55_story_1_absence); // main theme, story, princess door
 	dont_reset_time = 0;
 	if(offscreen_surface) free_surface(offscreen_surface); // missing in original
@@ -1796,7 +1885,7 @@ void __pascal far show_title() {
 	start_timer(timer_0, 0x41);
 	method_1_blit_rect(onscreen_surface_, offscreen_surface, &rect_titles, &rect_titles, blitters_0_no_transp);
 	draw_full_image(TITLE_MAIN);
-	draw_full_image(TITLE_MECHNER);
+	draw_full_image(TITLE_GAME);
 	do_wait(timer_0);
 
 	start_timer(timer_0, 0x10E);
@@ -1871,8 +1960,7 @@ void __pascal far show_title() {
 Uint64 last_transition_counter;
 
 // seg000:1BB3
-void __pascal far transition_ltr() {
-	short position;
+void transition_ltr() {
 	rect_type rect;
 	rect.top = 0;
 	rect.bottom = 200;
@@ -1881,10 +1969,14 @@ void __pascal far transition_ltr() {
 	// Estimated transition fps based on the speed of the transition on an Apple IIe.
 	// See: https://www.youtube.com/watch?v=7m7j2VuWhQ0
 	int transition_fps = 120;
+#ifdef USE_FAST_FORWARD
+	extern int audio_speed;
+	transition_fps *= audio_speed;
+#endif
 	Uint64 counters_per_frame = perf_frequency / transition_fps;
 	last_transition_counter = SDL_GetPerformanceCounter();
 	int overshoot = 0;
-	for (position = 0; position < 320; position += 2) {
+	for (short position = 0; position < 320; position += 2) {
 		method_1_blit_rect(onscreen_surface_, offscreen_surface, &rect, &rect, 0);
 		rect.left += 2;
 		rect.right += 2;
@@ -1911,7 +2003,7 @@ void __pascal far transition_ltr() {
 }
 
 // seg000:1C0F
-void __pascal far release_title_images() {
+void release_title_images() {
 	if (chtab_title50) {
 		free_chtab(chtab_title50);
 		chtab_title50 = NULL;
@@ -1923,17 +2015,16 @@ void __pascal far release_title_images() {
 }
 
 // seg000:1C3A
-void __pascal far draw_full_image(enum full_image_id id) {
+void draw_full_image(enum full_image_id id) {
 	image_type* decoded_image;
 	image_type* mask = NULL;
-	int xpos, ypos, blit;
 
 	if (id >= MAX_FULL_IMAGES) return;
 	if (NULL == *full_image[id].chtab) return;
 	decoded_image = (*full_image[id].chtab)->images[full_image[id].id];
-	blit = full_image[id].blitter;
-	xpos = full_image[id].xpos;
-	ypos = full_image[id].ypos;
+	int blit = full_image[id].blitter;
+	int xpos = full_image[id].xpos;
+	int ypos = full_image[id].ypos;
 
 	switch (blit) {
 	case blitters_white:
@@ -1950,7 +2041,7 @@ void __pascal far draw_full_image(enum full_image_id id) {
 		}
 		draw_image_transp(decoded_image, mask, xpos, ypos);
 		if (graphics_mode == gmCga || graphics_mode == gmHgaHerc) {
-			free_far(mask);
+			free(mask);
 		}
 		break;
 	case blitters_0_no_transp:
@@ -1960,7 +2051,7 @@ void __pascal far draw_full_image(enum full_image_id id) {
 }
 
 // seg000:1D2C
-void __pascal far load_kid_sprite() {
+void load_kid_sprite() {
 	load_chtab_from_file(id_chtab_2_kid, 400, "KID.DAT", 1<<7);
 }
 
@@ -1976,69 +2067,61 @@ const char* get_save_path(char* custom_path_buffer, size_t max_len) {
 }
 
 // seg000:1D45
-void __pascal far save_game() {
-	word success;
-	int handle;
-	success = 0;
+void save_game() {
+	word success = 0;
 	char custom_save_path[POP_MAX_PATH];
 	const char* save_path = get_save_path(custom_save_path, sizeof(custom_save_path));
-	// no O_TRUNC
-	handle = open(save_path, O_WRONLY | O_CREAT | O_BINARY, 0600);
-	if (handle == -1) goto loc_1DB8;
-	if (write(handle, &rem_min, 2) == 2) goto loc_1DC9;
-	loc_1D9B:
-	close(handle);
-	if (!success) {
-		unlink(save_path);
+
+	FILE* handle = fopen(save_path, "wb");
+	if (handle != NULL) {
+		if (fwrite(&rem_min, 1, 2, handle) != 2) goto error;
+		if (fwrite(&rem_tick, 1, 2, handle) != 2) goto error;
+		if (fwrite(&current_level, 1, 2, handle) != 2) goto error;
+		if (fwrite(&hitp_beg_lev, 1, 2, handle) != 2) goto error;
+		success = 1;
+		error:
+		fclose(handle);
+		if (!success) {
+			remove(save_path);
+		}
 	}
-	loc_1DB8:
-	if (!success) goto loc_1E18;
-	display_text_bottom("GAME SAVED");
-	goto loc_1E2E;
-	loc_1DC9:
-	if (write(handle, &rem_tick, 2) != 2) goto loc_1D9B;
-	if (write(handle, &current_level, 2) != 2) goto loc_1D9B;
-	if (write(handle, &hitp_beg_lev, 2) != 2) goto loc_1D9B;
-	success = 1;
-	goto loc_1D9B;
-	loc_1E18:
-	display_text_bottom("UNABLE TO SAVE GAME");
-	//play_sound_from_buffer(&sound_cant_save);
-	loc_1E2E:
+
+	if (success) {
+		display_text_bottom("GAME SAVED");
+	} else {
+		display_text_bottom("UNABLE TO SAVE GAME");
+		//play_sound_from_buffer(&sound_cant_save);
+	}
 	text_time_remaining = 24;
 }
 
 // seg000:1E38
-short __pascal far load_game() {
-	int handle;
-	word success;
-	success = 0;
+short load_game() {
+	word success = 0;
 	char custom_save_path[POP_MAX_PATH];
 	const char* save_path = get_save_path(custom_save_path, sizeof(custom_save_path));
-	handle = open(save_path, O_RDONLY | O_BINARY);
-	if (handle == -1) goto loc_1E99;
-	if (read(handle, &rem_min, 2) == 2) goto loc_1E9E;
-	loc_1E8E:
-	close(handle);
-	loc_1E99:
-	return success;
-	loc_1E9E:
-	if (read(handle, &rem_tick, 2) != 2) goto loc_1E8E;
-	if (read(handle, &start_level, 2) != 2) goto loc_1E8E;
-	if (read(handle, &hitp_beg_lev, 2) != 2) goto loc_1E8E;
+
+	FILE* handle = fopen(save_path, "rb");
+	if (handle != NULL) {
+		if (fread(&rem_min, 1, 2, handle) != 2) goto error;
+		if (fread(&rem_tick, 1, 2, handle) != 2) goto error;
+		if (fread(&start_level, 1, 2, handle) != 2) goto error;
+		if (fread(&hitp_beg_lev, 1, 2, handle) != 2) goto error;
 #ifdef USE_COPYPROT
-	if (enable_copyprot && custom->copyprot_level > 0) {
-		custom->copyprot_level = start_level;
-	}
+		if (enable_copyprot && custom->copyprot_level > 0) {
+			custom->copyprot_level = start_level;
+		}
 #endif
-	success = 1;
-	dont_reset_time = 1;
-	goto loc_1E8E;
+		success = 1;
+		dont_reset_time = 1;
+		error:
+		fclose(handle);
+	}
+	return success;
 }
 
 // seg000:1F02
-void __pascal far clear_screen_and_sounds() {
-	short index;
+void clear_screen_and_sounds() {
 	stop_sounds();
 	current_target_surface = rect_sthg(onscreen_surface_, &screen_rect);
 
@@ -2046,7 +2129,7 @@ void __pascal far clear_screen_and_sounds() {
 	is_ending_sequence = false; // added
 	peels_count = 0;
 	// should these be freed?
-	for (index = 2; index < 10; ++index) {
+	for (short index = 2; index < 10; ++index) {
 		if (chtab_addrs[index]) {
 			// Original code does not free these?
 			free_chtab(chtab_addrs[index]);
@@ -2064,7 +2147,7 @@ void __pascal far clear_screen_and_sounds() {
 }
 
 // seg000:1F7B
-void __pascal far parse_cmdline_sound() {
+void parse_cmdline_sound() {
 	// stub
 	if (check_param("stdsnd")) {
 		// Use PC Speaker sounds and music.
@@ -2077,10 +2160,9 @@ void __pascal far parse_cmdline_sound() {
 }
 
 // seg000:226D
-void __pascal far free_optional_sounds() {
+void free_optional_sounds() {
 	/* //Don't free sounds.
-	int sound_id;
-	for (sound_id = 44; sound_id < 57; ++sound_id) {
+	for (int sound_id = 44; sound_id < 57; ++sound_id) {
 		free_sound(sound_pointers[sound_id]);
 		sound_pointers[sound_id] = NULL;
 	}
@@ -2096,15 +2178,19 @@ void free_all_sounds() {
 }
 
 void load_all_sounds() {
-	if (!use_custom_levelset) {
+	if (!use_custom_levelset || always_use_original_music) {
 		load_sounds(0, 43);
 		load_opt_sounds(43, 56); //added
 	} else {
-		// First load any sounds included in the mod folder...
-		skip_normal_data_files = true;
-		load_sounds(0, 43);
-		load_opt_sounds(43, 56);
-		skip_normal_data_files = false;
+		// Put it here instead to use data/ for all music and sounds, not just for those in data/music/.
+		//if (!always_use_original_music)
+		{
+			// First load any sounds included in the mod folder...
+			skip_normal_data_files = true;
+			load_sounds(0, 43);
+			load_opt_sounds(43, 56);
+			skip_normal_data_files = false;
+		}
 		// ... then load any missing sounds from SDLPoP's own resources.
 		skip_mod_data_files = true;
 		load_sounds(0, 43);
@@ -2114,15 +2200,14 @@ void load_all_sounds() {
 }
 
 // seg000:22BB
-void __pascal far free_optsnd_chtab() {
+void free_optsnd_chtab() {
 	free_optional_sounds();
 	free_all_chtabs_from(id_chtab_3_princessinstory);
 }
 
 // seg000:22C8
-void __pascal far load_title_images(int bgcolor) {
-	dat_type* dathandle;
-	dathandle = open_dat("TITLE.DAT", 0);
+void load_title_images(int bgcolor) {
+	dat_type* dathandle = open_dat("TITLE.DAT", 'G');
 	chtab_title40 = load_sprites_from_file(40, 1<<11, 1);
 	chtab_title50 = load_sprites_from_file(50, 1<<12, 1);
 	close_dat(dathandle);
@@ -2131,14 +2216,14 @@ void __pascal far load_title_images(int bgcolor) {
 		SDL_Color color;
 		if (bgcolor) {
 			// RGB(4,0,18h) = #100060 = dark blue
-			set_pal((find_first_pal_row(1<<11) << 4) + 14, 0x04, 0x00, 0x18, 1);
+			set_pal((find_first_pal_row(1<<11) << 4) + 14, 0x04, 0x00, 0x18);
 			color.r = 0x10;
 			color.g = 0x00;
 			color.b = 0x60;
 			color.a = 0xFF;
 		} else {
 			// RGB(20h,0,0) = #800000 = dark red
-			set_pal((find_first_pal_row(1<<11) << 4) + 14, 0x20, 0x00, 0x00, 1);
+			set_pal((find_first_pal_row(1<<11) << 4) + 14, 0x20, 0x00, 0x00);
 			color.r = 0x80;
 			color.g = 0x00;
 			color.b = 0x00;
@@ -2162,7 +2247,7 @@ const word copyprot_page[] = {5, 3, 7, 3, 3, 4, 1, 5,12, 5,11,10, 1, 2, 8, 8, 2,
 #endif
 
 // seg000:23F4
-void __pascal far show_copyprot(int where) {
+void show_copyprot(int where) {
 #ifdef USE_COPYPROT
 	char sprintf_temp[140];
 	if (current_level != 15) return;
@@ -2186,8 +2271,8 @@ void __pascal far show_copyprot(int where) {
 }
 
 // seg000:2489
-void __pascal far show_loading() {
-	show_text(&screen_rect, 0, 0, "Loading. . . .");
+void show_loading() {
+	show_text(&screen_rect, halign_center, valign_middle, "Loading. . . .");
 	update_screen();
 }
 
@@ -2222,12 +2307,12 @@ char const * const tbl_quotes[2] = {
 };
 
 // seg000:249D
-void __pascal far show_quotes() {
+void show_quotes() {
 	//start_timer(timer_0,0);
 	//remove_timer(timer_0);
 	if (demo_mode && need_quotes) {
-		draw_rect(&screen_rect, 0);
-		show_text(&screen_rect, -1, 0, tbl_quotes[which_quote]);
+		draw_rect(&screen_rect, color_0_black);
+		show_text(&screen_rect, halign_left, valign_middle, tbl_quotes[which_quote]);
 		which_quote = !which_quote;
 		start_timer(timer_0, 0x384);
 	}
@@ -2239,7 +2324,7 @@ const rect_type splash_text_2_rect = {50, 0, 200, 320};
 
 const char* splash_text_1 = "SDLPoP " SDLPOP_VERSION;
 const char* splash_text_2 =
-		"To quick save/load, press F6/F9 in-game.\n"
+		"In-game, Esc opens a settings/quicksave menu.\n"
 		"\n"
 #ifdef USE_REPLAY
 		"To record replays, press Ctrl+Tab in-game.\n"
@@ -2249,7 +2334,7 @@ const char* splash_text_2 =
 		"Edit SDLPoP.ini to customize SDLPoP.\n"
 		"Mods also work with SDLPoP.\n"
 		"\n"
-		"For more information, read doc/Readme.txt.\n"
+		"For more information, read README.md.\n"
 		"Questions? Visit https://forum.princed.org\n"
 		"\n"
 		"Press any key to continue...";
@@ -2257,30 +2342,40 @@ const char* splash_text_2 =
 void show_splash() {
 	if (!enable_info_screen || start_level >= 0) return;
 	current_target_surface = onscreen_surface_;
-	draw_rect(&screen_rect, 0);
-	show_text_with_color(&splash_text_1_rect, 0, 0, splash_text_1, color_15_brightwhite);
-	show_text_with_color(&splash_text_2_rect, 0, -1, splash_text_2, color_7_lightgray);
+	draw_rect(&screen_rect, color_0_black);
+	show_text_with_color(&splash_text_1_rect, halign_center, valign_middle, splash_text_1, color_15_brightwhite);
+	show_text_with_color(&splash_text_2_rect, halign_center, valign_top, splash_text_2, color_7_lightgray);
 
+#ifdef USE_TEXT // Don't wait for a keypress if there is no text for the user to read.
 	int key = 0;
 	do {
 		idle();
 		key = key_test_quit();
 
-		if (joy_hat_states[0] != 0 || joy_X_button_state != 0 || joy_AY_buttons_state != 0 || joy_B_button_state != 0) {
-			joy_hat_states[0] = 0;
-			joy_AY_buttons_state = 0;
-			joy_X_button_state = 0;
-			joy_B_button_state = 0;
-			key_states[SDL_SCANCODE_LSHIFT] = 1; // close the splash screen using the gamepad
+		bool joy_input = 0;
+		for (int i = 0; i < JOYINPUT_NUM; i++) {
+			if (joy_button_states[i] & KEYSTATE_HELD) {
+				joy_input = 1;
+				break;
+			}
 		}
+		if (joy_input) {
+			for (int i = 0; i < JOYINPUT_NUM; i++) {
+				joy_button_states[i] = 0;
+			}
+			key_states[SDL_SCANCODE_LSHIFT] |= KEYSTATE_HELD; // close the splash screen using the gamepad
+		}
+		
 		delay_ticks(1);
 
-	} while(key == 0 && !(key_states[SDL_SCANCODE_LSHIFT] || key_states[SDL_SCANCODE_RSHIFT]));
+	} while(key == 0 && !(key_states[SDL_SCANCODE_LSHIFT] & KEYSTATE_HELD || key_states[SDL_SCANCODE_RSHIFT] & KEYSTATE_HELD));
 
 	if ((key & WITH_CTRL) || (enable_quicksave && key == SDL_SCANCODE_F9) || (enable_replay && key == SDL_SCANCODE_TAB)) {
 		extern int last_key_scancode; // defined in seg009.c
 		last_key_scancode = key; // can immediately do Ctrl+L, etc from the splash screen
 	}
-	key_states[SDL_SCANCODE_LSHIFT] = 0; // don't immediately start the game if shift was pressed!
-	key_states[SDL_SCANCODE_RSHIFT] = 0;
+	key_states[SDL_SCANCODE_LSHIFT] &= ~KEYSTATE_HELD; // don't immediately start the game if Shift was pressed!
+	key_states[SDL_SCANCODE_RSHIFT] &= ~KEYSTATE_HELD;
+#endif
 }
+
