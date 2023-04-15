@@ -408,7 +408,7 @@ FIXED: Made compatible with 64-bit.
 	To be extra sure, I also added some compile time asserts about the sizes of all types that are used in the DAT files.
 --- 2014-08-10
 FIXED: If color 0 of a palette was not black, then it was not transparent.
-	For example, in Lost In The Forest ( http://www.popot.org/custom_levels.php?mod=0000082 ).
+	For example, in Lost In The Forest ( https://www.popot.org/custom_levels.php?mod=0000082 ).
 FIXED: PNGs with alpha channel are drawn properly.
 --- 2014-08-23
 FIXED: make_loose_fall():

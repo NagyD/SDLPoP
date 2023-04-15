@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2021  Dávid Nagy
+Copyright (C) 2013-2023  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -106,7 +106,7 @@ void redraw_lighting() {
 
 // Copy a part of the lighting overlay onto the screen.
 // Called when the screen is updated.
-void update_lighting(const rect_type far *target_rect_ptr) {
+void update_lighting(const rect_type* target_rect_ptr) {
 	if (!enable_lighting) return;
 	if (lighting_mask == NULL) return;
 	if (curr_room_tiles == NULL) return;

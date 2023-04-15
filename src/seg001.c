@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2020  Dávid Nagy
+Copyright (C) 2013-2023  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -62,7 +62,7 @@ rect_type hof_rects[MAX_HOF_COUNT] = {
 };
 
 // seg001:0004
-int __pascal far proc_cutscene_frame(int wait_frames) {
+int proc_cutscene_frame(int wait_frames) {
 	cutscene_wait_frames = wait_frames;
 	reset_timer(timer_0);
 	do {
@@ -82,7 +82,7 @@ int __pascal far proc_cutscene_frame(int wait_frames) {
 		do {
 			if (!disable_keys && do_paused()) {
 				stop_sounds();
-				draw_rect(&screen_rect, 0);
+				draw_rect(&screen_rect, color_0_black);
 #ifdef USE_FADE
 				if (is_global_fading) {
 					fade_palette_buffer->proc_restore_free(fade_palette_buffer);
@@ -106,23 +106,25 @@ int __pascal far proc_cutscene_frame(int wait_frames) {
 			idle();
 #endif
 		} while(!has_timer_stopped(timer_0)); // busy waiting?
-	} while(--cutscene_wait_frames);
+		--cutscene_wait_frames;
+	} while(cutscene_wait_frames);
 	return 0;
 }
 
 // seg001:00DD
-void __pascal far play_both_seq() {
+void play_both_seq() {
 	play_kid_seq();
 	play_opp_seq();
 }
 
 // seg001:00E6
-void __pascal far draw_proom_drects() {
+void draw_proom_drects() {
 	draw_princess_room_bg();
 #ifdef USE_FADE
 	if (!is_global_fading) {
 #endif
-	while (drects_count--) {
+	while (drects_count) {
+		drects_count--;
 		copy_screen_rect(&drects[drects_count]);
 	}
 #ifdef USE_FADE
@@ -135,7 +137,7 @@ void __pascal far draw_proom_drects() {
 }
 
 // seg001:0128
-void __pascal far play_kid_seq() {
+void play_kid_seq() {
 	loadkid();
 	if (Char.frame) {
 		play_seq();
@@ -144,7 +146,7 @@ void __pascal far play_kid_seq() {
 }
 
 // seg001:013F
-void __pascal far play_opp_seq() {
+void play_opp_seq() {
 	loadshad_and_opp();
 	if (Char.frame) {
 		play_seq();
@@ -153,8 +155,8 @@ void __pascal far play_opp_seq() {
 }
 
 // seg001:0156
-void __pascal far draw_princess_room_bg() {
-	memset_near(table_counts, 0, sizeof(table_counts));
+void draw_princess_room_bg() {
+	memset(table_counts, 0, sizeof(table_counts));
 	loadkid();
 	if (Char.frame) {
 		load_frame_to_obj();
@@ -175,21 +177,21 @@ void __pascal far draw_princess_room_bg() {
 }
 
 // seg001:01E0
-void __pascal far seqtbl_offset_shad_char(int seq_index) {
+void seqtbl_offset_shad_char(int seq_index) {
 	loadshad();
 	seqtbl_offset_char(seq_index);
 	saveshad();
 }
 
 // seg001:01F9
-void __pascal far seqtbl_offset_kid_char(int seq_index) {
+void seqtbl_offset_kid_char(int seq_index) {
 	loadkid();
 	seqtbl_offset_char(seq_index);
 	savekid();
 }
 
 // seg001:0212
-void __pascal far init_mouse_cu8() {
+void init_mouse_cu8() {
 	init_mouse_go();
 	Char.x = 144;
 	seqtbl_offset_char(seq_106_mouse); // mouse
@@ -197,7 +199,7 @@ void __pascal far init_mouse_cu8() {
 }
 
 // seg001:022A
-void __pascal far init_mouse_go() {
+void init_mouse_go() {
 	Char.charid = charid_24_mouse;
 	Char.x = 199;
 	Char.y = 167;
@@ -207,7 +209,7 @@ void __pascal far init_mouse_go() {
 }
 
 // seg001:024D
-void __pascal far princess_crouching() {
+void princess_crouching() {
 	init_princess();
 	Char.x = 131;
 	Char.y = 169;
@@ -216,7 +218,7 @@ void __pascal far princess_crouching() {
 }
 
 // seg001:026A
-void __pascal far princess_stand() {
+void princess_stand() {
 	init_princess_right();
 	Char.x = 144;
 	Char.y = 169;
@@ -225,13 +227,13 @@ void __pascal far princess_stand() {
 }
 
 // seg001:0287
-void __pascal far init_princess_x156() {
+void init_princess_x156() {
 	init_princess();
 	Char.x = 156;
 }
 
 // seg001:0291
-void __pascal far princess_lying() {
+void princess_lying() {
 	init_princess();
 	Char.x = 92;
 	Char.y = 162;
@@ -240,13 +242,13 @@ void __pascal far princess_lying() {
 }
 
 // seg001:02AE
-void __pascal far init_princess_right() {
+void init_princess_right() {
 	init_princess();
 	Char.direction = dir_0_right;
 }
 
 // seg001:02B8
-void __pascal far init_ending_princess() {
+void init_ending_princess() {
 	init_princess();
 	Char.x = 136;
 	Char.y = 164;
@@ -255,14 +257,14 @@ void __pascal far init_ending_princess() {
 }
 
 // seg001:02D5
-void __pascal far init_mouse_1() {
+void init_mouse_1() {
 	init_mouse_go();
 	Char.x -= 2;
 	Char.y = 164;
 }
 
 // seg001:02E4
-void __pascal far init_princess() {
+void init_princess() {
 	Char.charid = charid_5_princess;
 	Char.x = 120;
 	Char.y = 166;
@@ -272,7 +274,7 @@ void __pascal far init_princess() {
 }
 
 // seg001:0307
-void __pascal far init_vizier() {
+void init_vizier() {
 	Char.charid = charid_6_vizier;
 	Char.x = 198;
 	Char.y = 166;
@@ -282,7 +284,7 @@ void __pascal far init_vizier() {
 }
 
 // seg001:032A
-void __pascal far init_ending_kid() {
+void init_ending_kid() {
 	Char.charid = charid_0_kid;
 	Char.x = 198;
 	Char.y = 164;
@@ -292,7 +294,7 @@ void __pascal far init_ending_kid() {
 }
 
 // seg001:034D
-void __pascal far cutscene_8() {
+void cutscene_8() {
 	play_sound(sound_35_cutscene_8_9); // cutscene 8, 9
 	set_hourglass_state(hourglass_frame());
 	init_mouse_cu8();
@@ -310,7 +312,7 @@ void __pascal far cutscene_8() {
 }
 
 // seg001:03B7
-void __pascal far cutscene_9() {
+void cutscene_9() {
 	play_sound(sound_35_cutscene_8_9); // cutscene 8, 9
 	set_hourglass_state(hourglass_frame());
 	princess_stand();
@@ -327,7 +329,7 @@ void __pascal far cutscene_9() {
 }
 
 // seg001:041C
-void __pascal far end_sequence_anim() {
+void end_sequence_anim() {
 	disable_keys = 1;
 	if (!is_sound_on) {
 		turn_sound_on_off(0x0F);
@@ -358,7 +360,7 @@ void __pascal far end_sequence_anim() {
 }
 
 // seg001:04D3
-void __pascal far time_expired() {
+void time_expired() {
 	disable_keys = 1;
 	set_hourglass_state(7);
 	hourglass_sandflow = -1;
@@ -375,11 +377,10 @@ void __pascal far time_expired() {
 }
 
 // seg001:0525
-void __pascal far cutscene_12() {
-	short var_2;
-	var_2 = hourglass_frame();
-	if (var_2 >= 6) {
-		set_hourglass_state(var_2);
+void cutscene_12() {
+	short frame_num = hourglass_frame();
+	if (frame_num >= 6) {
+		set_hourglass_state(frame_num);
 		init_princess_x156();
 		saveshad();
 		play_sound(sound_40_cutscene_12_short_time); // cutscene 12 short time
@@ -394,7 +395,7 @@ void __pascal far cutscene_12() {
 }
 
 // seg001:0584
-void __pascal far cutscene_4() {
+void cutscene_4() {
 	play_sound(sound_27_cutscene_2_4_6_12); // cutscene 2, 4, 6, 12
 	set_hourglass_state(hourglass_frame());
 	princess_lying();
@@ -405,7 +406,7 @@ void __pascal far cutscene_4() {
 }
 
 // seg001:05B8
-void __pascal far cutscene_2_6() {
+void cutscene_2_6() {
 	play_sound(sound_27_cutscene_2_4_6_12); // cutscene 2, 4, 6, 12
 	set_hourglass_state(hourglass_frame());
 	init_princess_right();
@@ -416,7 +417,7 @@ void __pascal far cutscene_2_6() {
 }
 
 // seg001:05EC
-void __pascal far pv_scene() {
+void pv_scene() {
 	init_princess();
 	saveshad();
 	if (fade_in_1()) return;
@@ -473,7 +474,7 @@ void __pascal far pv_scene() {
 }
 
 // seg001:07C7
-void __pascal far set_hourglass_state(int state) {
+void set_hourglass_state(int state) {
 	hourglass_sandflow = 0;
 	hourglass_state = state;
 }
@@ -482,7 +483,7 @@ void __pascal far set_hourglass_state(int state) {
 short time_bound[] = {6, 17, 33, 65};
 
 // seg001:07DA
-int __pascal far hourglass_frame() {
+int hourglass_frame() {
 	short bound_index;
 	for (bound_index = 0; bound_index < 4; ++bound_index) {
 		if (time_bound[bound_index] > rem_min) {
@@ -500,9 +501,8 @@ short princess_torch_pos_xl[] = {5, 3};
 short princess_torch_frame[] = {1, 6};
 
 // seg001:0808
-void __pascal far princess_room_torch() {
-	short which;
-	for (which = 2; which--; ) {
+void princess_room_torch() {
+	for (short which = 2; which--; ) {
 		which_torch = !which_torch;
 		princess_torch_frame[which_torch] = get_torch_frame(princess_torch_frame[which_torch]);
 		add_backtable(id_chtab_1_flameswordpotion, princess_torch_frame[which_torch] + 1, princess_torch_pos_xh[which_torch], princess_torch_pos_xl[which_torch], 116, 0, 0);
@@ -510,7 +510,7 @@ void __pascal far princess_room_torch() {
 }
 
 // seg001:0863
-void __pascal far draw_hourglass() {
+void draw_hourglass() {
 	if (hourglass_sandflow >= 0) {
 		hourglass_sandflow = (hourglass_sandflow + 1) % 3;
 		if (hourglass_state >= 7) return;
@@ -522,13 +522,13 @@ void __pascal far draw_hourglass() {
 }
 
 // seg001:08CA
-void __pascal far reset_cutscene() {
+void reset_cutscene() {
 	Guard.frame = 0;
 	Kid.frame = 0;
 	which_torch = 0;
 	disable_keys = 0;
 	hourglass_state = 0;
-	// memset_near(byte_1ED6E, 0, 8); // not used elsewhere
+	// memset(byte_1ED6E, 0, 8); // not used elsewhere
 	hourglass_sandflow = -1;
 	cutscene_frame_time = 6;
 	clear_tile_wipes();
@@ -536,7 +536,7 @@ void __pascal far reset_cutscene() {
 }
 
 // seg001:0908
-void __pascal far do_flash(short color) {
+void do_flash(short color) {
 	// stub
 	if (color) {
 		if (graphics_mode == gmMcgaVga) {
@@ -558,7 +558,7 @@ void delay_ticks(Uint32 ticks) {
 }
 
 // seg001:0981
-void __pascal far remove_flash() {
+void remove_flash() {
 	// stub
 	if (graphics_mode == gmMcgaVga) {
 		set_bg_attr(0, 0);
@@ -568,15 +568,12 @@ void __pascal far remove_flash() {
 }
 
 // seg001:09D7
-void __pascal far end_sequence() {
-	peel_type* peel;
-	short bgcolor;
-	short color;
+void end_sequence() {
 	rect_type rect;
 	short hof_index;
 	short i;
-	color = 0;
-	bgcolor = 15;
+	short color = 0;
+	short bgcolor = 15;
 	load_intro(1, &end_sequence_anim, 1);
 	clear_screen_and_sounds();
 	is_ending_sequence = true; // added (fix being able to pause the game during the end sequence)
@@ -614,7 +611,7 @@ void __pascal far end_sequence() {
 		draw_full_image(HOF_POP);
 		show_hof();
 		offset4_rect_add(&rect, &hof_rects[hof_index], -4, -1, -40, -1);
-		peel = read_peel_from_screen(&rect);
+		peel_type* peel = read_peel_from_screen(&rect);
 		if (graphics_mode == gmMcgaVga) {
 			color = 0xBE;
 			bgcolor = 0xB7;
@@ -642,7 +639,7 @@ void __pascal far end_sequence() {
 }
 
 // seg001:0C94
-void __pascal far expired() {
+void expired() {
 	if (!demo_mode) {
 		if(offscreen_surface) free_surface(offscreen_surface); // missing in original
 		offscreen_surface = NULL;
@@ -655,9 +652,8 @@ void __pascal far expired() {
 }
 
 // seg001:0CCD
-void __pascal far load_intro(int which_imgs,cutscene_ptr_type func,int free_sounds) {
-	short current_star;
-	draw_rect(&screen_rect, 0);
+void load_intro(int which_imgs,cutscene_ptr_type func,int free_sounds) {
+	draw_rect(&screen_rect, color_0_black);
 	if (free_sounds) {
 		free_optional_sounds();
 	}
@@ -676,7 +672,7 @@ void __pascal far load_intro(int which_imgs,cutscene_ptr_type func,int free_soun
 	load_chtab_from_file(id_chtab_3_princessinstory, 800, "PV.DAT", 1<<9);
 	load_chtab_from_file(id_chtab_4_jaffarinstory_princessincutscenes,
 	                     50*which_imgs + 850, "PV.DAT", 1<<10);
-	for (current_star = 0; current_star < N_STARS; ++current_star) {
+	for (short current_star = 0; current_star < N_STARS; ++current_star) {
 		draw_star(current_star, 0);
 	}
 	current_target_surface = onscreen_surface_;
@@ -691,7 +687,7 @@ void __pascal far load_intro(int which_imgs,cutscene_ptr_type func,int free_soun
 	func();
 	is_cutscene = 0;
 	free_all_chtabs_from(3);
-	draw_rect(&screen_rect, 0);
+	draw_rect(&screen_rect, color_0_black);
 }
 
 typedef struct star_type {
@@ -712,7 +708,7 @@ star_type stars[N_STARS] = {
 const byte star_colors[N_STAR_COLORS] = {8, 7, 15, 15, 7};
 
 // seg001:0E1C
-void __pascal far draw_star(int which_star,int mark_dirty) {
+void draw_star(int which_star,int mark_dirty) {
 	// The stars in the window of the princess's room.
 	rect_type rect;
 	short star_color;
@@ -732,11 +728,10 @@ void __pascal far draw_star(int which_star,int mark_dirty) {
 }
 
 // seg001:0E94
-void __pascal far show_hof() {
+void show_hof() {
 	// Hall of Fame
-	short index;
 	char time_text[12];
-	for (index = 0; index < hof_count; ++index) {
+	for (short index = 0; index < hof_count; ++index) {
 
 #ifdef ALLOW_INFINITE_TIME
 		int minutes, seconds;
@@ -771,11 +766,10 @@ const char* get_hof_path(char* custom_path_buffer, size_t max_len) {
 }
 
 // seg001:0F17
-void __pascal far hof_write() {
-	FILE* handle;
+void hof_write() {
 	char custom_hof_path[POP_MAX_PATH];
 	const char* hof_path = get_hof_path(custom_hof_path, sizeof(custom_hof_path));
-	handle = fopen(hof_path, "wb");
+	FILE* handle = fopen(hof_path, "wb");
 	if (handle == NULL ||
 		fwrite(&hof_count, 1, 2, handle) != 2 ||
 		fwrite(&hof, 1, sizeof(hof), handle) != sizeof(hof))
@@ -785,12 +779,11 @@ void __pascal far hof_write() {
 }
 
 // seg001:0F6C
-void __pascal far hof_read() {
-	FILE* handle;
+void hof_read() {
 	hof_count = 0;
 	char custom_hof_path[POP_MAX_PATH];
 	const char* hof_path = get_hof_path(custom_hof_path, sizeof(custom_hof_path));
-	handle = fopen(hof_path, "rb");
+	FILE* handle = fopen(hof_path, "rb");
 	if (handle == NULL)
 		return;
 	if (fread(&hof_count, 1, 2, handle) != 2 ||
@@ -802,12 +795,10 @@ void __pascal far hof_read() {
 }
 
 // seg001:0FC3
-void __pascal far show_hof_text(rect_type far *rect,int x_align,int y_align, const char *text) {
-	short shadow_color;
-	short text_color;
+void show_hof_text(rect_type* rect,int x_align,int y_align, const char* text) {
 	rect_type rect2;
-	text_color = 15;
-	shadow_color = 0;
+	short text_color = 15;
+	short shadow_color = 0;
 	if (graphics_mode == gmMcgaVga) {
 		text_color = 0xB7;
 	}
@@ -817,7 +808,7 @@ void __pascal far show_hof_text(rect_type far *rect,int x_align,int y_align, con
 }
 
 // seg001:1029
-int __pascal far fade_in_1() {
+int fade_in_1() {
 #ifdef USE_FADE
 //	sbyte index;
 	word interrupted;
@@ -845,7 +836,7 @@ int __pascal far fade_in_1() {
 }
 
 // seg001:112D
-int __pascal far fade_out_1() {
+int fade_out_1() {
 #ifdef USE_FADE
 	word interrupted;
 	if (graphics_mode == gmMcgaVga) {

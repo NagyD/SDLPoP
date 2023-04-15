@@ -15,16 +15,13 @@ OS := $(shell uname)
 
 ifeq ($(strip $(OS)),AmigaOS)
 	AMIGADATE = $(shell c:date LFORMAT %d.%m.%Y)
-	CXXINC = -ISDK:Local/newlib/include/SDL2
 else
 	AMIGADATE = $(shell date +"%-d.%-m.%Y")
-	CXXINC = -I/usr/local/amiga/ppc-amigaos/SDK/local/common/include/SDL2
 endif
 
-#LIBS = -use-dynld -lSDL2_image -lz -lm -ltiff -lwebp -lpng16 -ljpeg -lvorbisfile -lvorbis -lSDL2 -athread=native -lpthread
 LIBS = -lSDL2_image -ltiff -lwebp -lpng -ljpeg -lz -lm -lvorbisfile -lvorbis -lSDL2 -lpthread
-#INCS = -gstabs -ISDK:Local/newlib/include/SDL2 -D__AMIGADATE__=\"`c:date LFORMAT %d.%m.%Y`\" -D__USE_INLINE__
-INCS = -gstabs $(CXXINC) -D__AMIGADATE__=\"$(AMIGADATE)\" -D__USE_INLINE__
+#LIBS = -lSDL2_image -ltiff -lwebp -lpng -ljpeg -lz -lm -lvorbisfile -lvorbis -lSDL2 -lpthread -athread=native -use-dynld
+INCS = -gstabs -ISDK:Local/newlib/include/SDL2 -D__AMIGADATE__=\"$(AMIGADATE)\" -D__USE_INLINE__
 CFLAGS += $(INCS) -Wall -std=gnu99
 
 

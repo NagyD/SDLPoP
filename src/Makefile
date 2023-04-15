@@ -9,14 +9,16 @@ BIN = ../prince
 
 OS      := $(shell uname)
 
+CPPFLAGS += -Wall -D_GNU_SOURCE=1
+CFLAGS += -std=gnu99 -O2
+
 ifeq ($(OS),Darwin)
 LIBS := $(shell sdl2-config --libs) -lSDL2_image
-INCS := -I/opt/local/include
-CFLAGS += $(INCS) -Wall -std=gnu99 -D_GNU_SOURCE=1 -D_THREAD_SAFE -DOSX -O2
+CFLAGS += -I/opt/local/include
+CPPFLAGS += -D_THREAD_SAFE -DOSX
 else
 LIBS := $(shell pkg-config --libs   sdl2 SDL2_image)
-INCS := $(shell pkg-config --cflags sdl2 SDL2_image)
-CFLAGS += $(INCS) -Wall -std=gnu99 -O2
+CFLAGS += $(shell pkg-config --cflags sdl2 SDL2_image)
 endif
 
 all: $(BIN)
@@ -34,7 +36,7 @@ $(BIN): $(OBJ)
 	$(CC) $(LDFLAGS) $(OBJ) -o $@ $(LIBS) -lm
 
 %.o: %.c $(HFILES)
-	$(CC) $(CFLAGS) $(LDFLAGS) -c $<
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -c $<
 
 .PHONY: all clean
 

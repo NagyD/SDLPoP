@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2021  Dávid Nagy
+Copyright (C) 2013-2023  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -82,7 +82,8 @@ typedef struct replay_info_type {
 
 #define REPLAY_HEADER_ERROR_MESSAGE_MAX 512
 
-#define fread_check(dst, size, elements, fp)	do {		\
+#define fread_check(dst, size, elements, fp)	\
+	do {		\
 		size_t __count;					\
 		__count = fread(dst, size, elements, fp);	\
 		if (__count != (elements)) {			\
@@ -90,8 +91,8 @@ typedef struct replay_info_type {
 				snprintf_check(error_message, REPLAY_HEADER_ERROR_MESSAGE_MAX,\
 					       #dst " missing -- not a valid replay file!");\
 			}					\
-                return 0; /* incompatible file */		\
-                }						\
+			return 0; /* incompatible file */		\
+		}						\
 	} while (0)
 
 int read_replay_header(replay_header_type* header, FILE* fp, char* error_message) {
@@ -189,7 +190,7 @@ static int compare_replay_creation_time(const void* a, const void* b) {
 	return (int) difftime( ((replay_info_type*)b)->creation_time, ((replay_info_type*)a)->creation_time );
 }
 
-void list_replay_files() {
+void list_replay_files(void) {
 
 	if (replay_list == NULL) {
 		// need to allocate enough memory to store info about all replay files in the directory
@@ -208,7 +209,12 @@ void list_replay_files() {
 		if (num_replay_files > max_replay_files) {
 			// too many files, expand the memory available for replay_list
 			max_replay_files += 128;
-			replay_list = realloc( replay_list, max_replay_files * sizeof( replay_info_type ) );
+			void* new_replay_list = realloc( replay_list, max_replay_files * sizeof( replay_info_type ) );
+			if (new_replay_list == NULL) {
+				printf("list_replay_files: realloc failed!");
+				quit(1);
+			}
+			replay_list = new_replay_list;
 		}
 		replay_info_type* replay_info = &replay_list[num_replay_files - 1]; // current replay file
 		memset( replay_info, 0, sizeof( replay_info_type ) );
@@ -254,11 +260,11 @@ byte open_replay_file(const char *filename) {
 	}
 }
 
-void change_working_dir_to_sdlpop_root() {
+void change_working_dir_to_sdlpop_root(void) {
 	char* exe_path = g_argv[0];
 	// strip away everything after the last slash or backslash in the path
 	int len;
-	for (len = strlen(exe_path); len > 0; --len) {
+	for (len = (int)strlen(exe_path); len > 0; --len) {
 		if (exe_path[len] == '\\' || exe_path[len] == '/') {
 			break;
 		}
@@ -331,6 +337,8 @@ void options_process_enhancements(SDL_RWops* rw, rw_process_func_type process_fu
 	process(fixes_options_replay.enable_crouch_after_climbing);
 	process(fixes_options_replay.enable_freeze_time_during_end_music);
 	process(fixes_options_replay.enable_remember_guard_hp);
+	process(fixes_options_replay.enable_super_high_jump);
+	process(fixes_options_replay.enable_jump_grab);
 }
 
 void options_process_fixes(SDL_RWops* rw, rw_process_func_type process_func) {
@@ -369,6 +377,9 @@ void options_process_fixes(SDL_RWops* rw, rw_process_func_type process_func) {
 	process(fixes_options_replay.fix_quicksave_during_feather);
 	process(fixes_options_replay.fix_caped_prince_sliding_through_gate);
 	process(fixes_options_replay.fix_doortop_disabling_guard);
+	process(fixes_options_replay.fix_jumping_over_guard);
+	process(fixes_options_replay.fix_drop_2_rooms_climbing_loose_tile);
+	process(fixes_options_replay.fix_falling_through_floor_during_sword_strike);
 }
 
 void options_process_custom_general(SDL_RWops* rw, rw_process_func_type process_func) {
@@ -442,6 +453,10 @@ void options_process_custom_general(SDL_RWops* rw, rw_process_func_type process_
 	process(custom->win_level);
 	process(custom->win_room);
 	process(custom->loose_floor_delay);
+	process(custom->shadow_steal_level);
+	process(custom->shadow_steal_room);
+	process(custom->shadow_step_level);
+	process(custom->shadow_step_room);
 }
 
 void options_process_custom_per_level(SDL_RWops* rw, rw_process_func_type process_func) {
@@ -475,7 +490,7 @@ replay_options_section_type replay_options_sections[] = {
 
 // output the current options to a memory buffer (e.g. to remember them before a replay is loaded)
 size_t save_options_to_buffer(void* options_buffer, size_t max_size, process_options_section_func_type* process_section_func) {
-	SDL_RWops* rw = SDL_RWFromMem(options_buffer, max_size);
+	SDL_RWops* rw = SDL_RWFromMem(options_buffer, (int)max_size);
 	process_section_func(rw, process_rw_write);
 	Sint64 section_size = SDL_RWtell(rw);
 	if (section_size < 0) section_size = 0;
@@ -485,7 +500,7 @@ size_t save_options_to_buffer(void* options_buffer, size_t max_size, process_opt
 
 // restore the options from a memory buffer (e.g. reapply the original options after a replay is finished)
 void load_options_from_buffer(void* options_buffer, size_t options_size, process_options_section_func_type* process_section_func) {
-	SDL_RWops* rw = SDL_RWFromMem(options_buffer, options_size);
+	SDL_RWops* rw = SDL_RWFromMem(options_buffer, (int)options_size);
 	process_section_func(rw, process_rw_read);
 	SDL_RWclose(rw);
 }
@@ -528,7 +543,7 @@ int process_load_from_buffer(void* data, size_t data_size) {
 	return 1;
 }
 
-int savestate_to_buffer() {
+int savestate_to_buffer(void) {
 	int ok = 0;
 	if (savestate_buffer == NULL)
 		savestate_buffer = malloc(MAX_SAVESTATE_SIZE);
@@ -541,7 +556,7 @@ int savestate_to_buffer() {
 	return ok;
 }
 
-void reload_resources() {
+void reload_resources(void) {
 	// the replay's levelset might use different sounds, so we need to free and reload sounds
 	free_all_sounds();
 	load_all_sounds();
@@ -549,7 +564,7 @@ void reload_resources() {
 	// chtabs 3 and higher will be freed/reloaded in load_lev_spr() (called by restore_room_after_quick_load())
 	// However, chtabs 0-2 are usually not freed at all (they are loaded only once, in init_game_main())
 	// So we should reload them manually (PRINCE.DAT and KID.DAT may still have been modified after all!)
-	dat_type* dat = open_dat("PRINCE.DAT", 0);
+	dat_type* dat = open_dat("PRINCE.DAT", 'G');
 	// PRINCE.DAT: sword
 	chtab_addrs[id_chtab_0_sword] = load_sprites_from_file(700, 1<<2, 1);
 	// PRINCE.DAT: flame, sword on floor, potion
@@ -616,7 +631,7 @@ void stop_recording() {
 	text_time_remaining = 24;
 }
 
-void apply_replay_options() {
+void apply_replay_options(void) {
 	// store the current options, so they can be restored later
 	for (int i = 0; i < COUNT(replay_options_sections); ++i) {
 		save_options_to_buffer(replay_options_sections[i].stored_data, POP_MAX_OPTIONS_SIZE, replay_options_sections[i].section_func);
@@ -639,7 +654,7 @@ void apply_replay_options() {
 	reload_resources();
 }
 
-void restore_normal_options() {
+void restore_normal_options(void) {
 	// apply the stored options
 	for (int i = 0; i < COUNT(replay_options_sections); ++i) {
 		load_options_from_buffer(replay_options_sections[i].stored_data, POP_MAX_OPTIONS_SIZE, replay_options_sections[i].section_func);
@@ -737,9 +752,9 @@ void do_replay_move() {
 
 		// Ignore Shift if the kid is dead: restart moves are hard-coded as a 'special move'.
 		if (rem_min != 0 && Kid.alive > 6)
-			control_shift = 0;
+			control_shift = CONTROL_RELEASED;
 		else
-			control_shift = (curr_move.shift) ? -1 : 0;
+			control_shift = (curr_move.shift) ? CONTROL_HELD : CONTROL_RELEASED;
 
 		if (curr_move.special == MOVE_RESTART_LEVEL) { // restart level
 			stop_sounds();
@@ -765,7 +780,7 @@ int save_recorded_replay_dialog() {
 	method_1_blit_rect(offscreen_surface, onscreen_surface_, &copyprot_dialog->peel_rect, &copyprot_dialog->peel_rect, 0);
 	draw_dialog_frame(copyprot_dialog);
 	shrink2_rect(&rect, &copyprot_dialog->text_rect, 2, 1);
-	show_text_with_color(&rect, 0, 0, "Save replay\nenter the filename...\n\n", color_15_brightwhite);
+	show_text_with_color(&rect, halign_center, valign_middle, "Save replay\nenter the filename...\n\n", color_15_brightwhite);
 	clear_kbd_buf();
 
 	rect_type text_rect;
@@ -798,7 +813,7 @@ int save_recorded_replay_dialog() {
 
 	// NOTE: We currently overwrite the replay file if it exists already. Maybe warn / ask for confirmation??
 
- return save_recorded_replay(full_filename);
+	return save_recorded_replay(full_filename);
 }
 
 int save_recorded_replay(const char* full_filename)
@@ -812,19 +827,23 @@ int save_recorded_replay(const char* full_filename)
 		Sint64 seconds = time(NULL);
 		fwrite(&seconds, sizeof(seconds), 1, replay_fp);
 		// levelset_name
-		putc(strnlen(levelset_name, UINT8_MAX), replay_fp); // length of the levelset name (is zero for original levels)
+		putc((int)strnlen(levelset_name, UINT8_MAX), replay_fp); // length of the levelset name (is zero for original levels)
 		fputs(levelset_name, replay_fp);
 		// implementation name
-		putc(strnlen(implementation_name, UINT8_MAX), replay_fp);
+		putc((int)strnlen(implementation_name, UINT8_MAX), replay_fp);
 		fputs(implementation_name, replay_fp);
 		// embed a savestate into the replay
 		fwrite(&savestate_size, sizeof(savestate_size), 1, replay_fp);
 		fwrite(savestate_buffer, savestate_size, 1, replay_fp);
 
+		// Save the current options (not the defaults) into the replay!
+		fixes_options_replay = fixes_saved;
+		//custom = &custom_saved;
+
 		// save the options, organized per section
 		byte temp_options[POP_MAX_OPTIONS_SIZE];
 		for (int i = 0; i < COUNT(replay_options_sections); ++i) {
-			dword section_size = save_options_to_buffer(temp_options, sizeof(temp_options), replay_options_sections[i].section_func);
+			dword section_size = (dword)save_options_to_buffer(temp_options, sizeof(temp_options), replay_options_sections[i].section_func);
 			fwrite(&section_size, sizeof(section_size), 1, replay_fp);
 			fwrite(temp_options, section_size, 1, replay_fp);
 		}
@@ -842,7 +861,7 @@ int save_recorded_replay(const char* full_filename)
 	return 1;
 }
 
-byte open_next_replay_file() {
+byte open_next_replay_file(void) {
 	if (next_replay_number > num_replay_files-1) {
 		return 0; // reached the last replay file, return to title screen
 	}
@@ -945,7 +964,7 @@ void key_press_while_replaying(int* key_ptr) {
 		default:
 			// cannot manually do most stuff during a replay, so cancel the pressed key...
 			*key_ptr = 1; // don't set to zero (we would be unable to unpause a replay because all keys are ignored)
-			              // (1 is not in use as a scancode, see https://wiki.libsdl.org/SDLScancodeLookup)
+			              // (1 is not in use as a scancode, see http://web.archive.org/web/20200925005918/http://wiki.libsdl.org/SDLScancodeLookup)
 			break;
 		// ...but these are allowable actions:
 		case SDL_SCANCODE_ESCAPE:               // pause

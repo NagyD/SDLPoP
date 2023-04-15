@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2021  Dávid Nagy
+Copyright (C) 2013-2023  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -82,6 +82,7 @@ int ini_load(const char *filename,
 	return 0;
 }
 
+NAMES_LIST(use_hardware_acceleration_names, {"false", "true", "default"}); // this is needed because use_hardware_acceleration is not a bool!
 NAMES_LIST(level_type_names, {"dungeon", "palace"});
 //NAMES_LIST(guard_type_names, {"guard", "fat", "skel", "vizier", "shadow"});
 // NAMES_LIST must start from 0, so I need KEY_VALUE_LIST if I want to assign a name to -1.
@@ -179,7 +180,7 @@ static int global_ini_callback(const char *section, const char *name, const char
 #endif
 		if (strcasecmp(name, "mods_folder") == 0) {
 			if (value[0] != '\0' && strcasecmp(value, "default") != 0) {
-				strcpy(mods_folder, locate_file(value));
+				snprintf_check(mods_folder, sizeof(mods_folder), "%s", locate_file(value));
 			}
 			return 1;
 		}
@@ -192,6 +193,7 @@ static int global_ini_callback(const char *section, const char *name, const char
 		process_boolean("start_fullscreen", &start_fullscreen);
 		process_word("pop_window_width", &pop_window_width, NULL);
 		process_word("pop_window_height", &pop_window_height, NULL);
+		process_byte("use_hardware_acceleration", &use_hardware_acceleration, &use_hardware_acceleration_names_list);
 		process_boolean("use_correct_aspect_ratio", &use_correct_aspect_ratio);
 		process_boolean("use_integer_scaling", &use_integer_scaling);
 		process_byte("scaling_type", &scaling_type, &scaling_type_names_list);
@@ -209,9 +211,12 @@ static int global_ini_callback(const char *section, const char *name, const char
 			return 1;
 		}
 
+		process_boolean("always_use_original_music", &always_use_original_music);
+		process_boolean("always_use_original_graphics", &always_use_original_graphics);
+
 		if (strcasecmp(name, "gamecontrollerdb_file") == 0) {
 			if (value[0] != '\0') {
-				strcpy(gamecontrollerdb_file, locate_file(value));
+				snprintf_check(gamecontrollerdb_file, sizeof(gamecontrollerdb_file), "%s", locate_file(value));
 			}
 			return 1;
 		}
@@ -226,7 +231,7 @@ static int global_ini_callback(const char *section, const char *name, const char
 
 		if (strcasecmp(name, "replays_folder") == 0) {
 			if (value[0] != '\0' && strcasecmp(value, "default") != 0) {
-				strcpy(replays_folder, locate_file(value));
+				snprintf_check(replays_folder, sizeof(replays_folder), "%s", locate_file(value));
 			}
 			return 1;
 		}
@@ -281,6 +286,12 @@ static int global_ini_callback(const char *section, const char *name, const char
 		process_boolean("fix_quicksave_during_feather", &fixes_saved.fix_quicksave_during_feather);
 		process_boolean("fix_caped_prince_sliding_through_gate", &fixes_saved.fix_caped_prince_sliding_through_gate);
 		process_boolean("fix_doortop_disabling_guard", &fixes_saved.fix_doortop_disabling_guard);
+		process_boolean("enable_super_high_jump", &fixes_saved.enable_super_high_jump);
+		process_boolean("fix_jumping_over_guard", &fixes_saved.fix_jumping_over_guard);
+		process_boolean("fix_drop_2_rooms_climbing_loose_tile", &fixes_saved.fix_drop_2_rooms_climbing_loose_tile);
+		process_boolean("fix_falling_through_floor_during_sword_strike", &fixes_saved.fix_falling_through_floor_during_sword_strike);
+		process_boolean("enable_jump_grab", &fixes_saved.enable_jump_grab);
+		process_boolean("fix_register_quick_input", &fixes_saved.fix_register_quick_input);
 	}
 
 	if (check_ini_section("CustomGameplay")) {
@@ -313,8 +324,7 @@ static int global_ini_callback(const char *section, const char *name, const char
 				// We want to parse an rgb string with three entries like this: "255, 255, 255"
 				char* start = (char*) value;
 				char* end   = (char*) value;
-				int i;
-				for (i = 0; i < 3 && *end != '\0'; ++i) {
+				for (int i = 0; i < 3 && *end != '\0'; ++i) {
 					rgb[i] = (byte) strtol(start, &end, 0); // convert this entry into a number 0..255
 
 					while (*end == ',' || *end == ' ') {
@@ -363,6 +373,12 @@ static int global_ini_callback(const char *section, const char *name, const char
 		process_byte("mirror_row", &custom_saved.mirror_row, &row_names_list);
 		process_byte("mirror_tile", &custom_saved.mirror_tile, &tile_type_names_list);
 		process_boolean("show_mirror_image", &custom_saved.show_mirror_image);
+
+		process_byte("shadow_steal_level", &custom_saved.shadow_steal_level, &never_is_16_list);
+		process_byte("shadow_steal_room", &custom_saved.shadow_steal_room, NULL);
+		process_byte("shadow_step_level", &custom_saved.shadow_step_level, &never_is_16_list);
+		process_byte("shadow_step_room", &custom_saved.shadow_step_room, NULL);
+
 		process_word("falling_exit_level", &custom_saved.falling_exit_level, &never_is_16_list);
 		process_byte("falling_exit_room", &custom_saved.falling_exit_room, NULL);
 		process_word("falling_entry_level", &custom_saved.falling_entry_level, &never_is_16_list);
@@ -458,6 +474,7 @@ void set_options_to_default() {
 	enable_text = 1;
 	enable_info_screen = 1;
 	start_fullscreen = 0;
+	use_hardware_acceleration = 2;
 	use_correct_aspect_ratio = 0;
 	use_integer_scaling = 0;
 	scaling_type = 0;
@@ -529,23 +546,23 @@ int identify_dos_exe_version(int filesize) {
 
 void load_dos_exe_modifications(const char* folder_name) {
 	char filename[POP_MAX_PATH];
-	snprintf(filename, sizeof(filename), "%s/%s", folder_name, "PRINCE.EXE");
+	snprintf_check(filename, sizeof(filename), "%s/%s", folder_name, "PRINCE.EXE");
 	FILE* fp = fopen(filename, "rb");
 
 	int dos_version = -1;
 	struct stat info;
 	if (fp != NULL && fstat(fileno(fp), &info) == 0 && info.st_size > 0) {
-		dos_version = identify_dos_exe_version(info.st_size);
+		dos_version = identify_dos_exe_version((int)info.st_size);
 	} else {
 		// PRINCE.EXE not found, try to search for other .EXE files in the same folder.
 		directory_listing_type* directory_listing = create_directory_listing_and_find_first_file(folder_name, "exe");
 		if (directory_listing != NULL) {
 			do {
 				char* current_filename = get_current_filename_from_directory_listing(directory_listing);
-				snprintf(filename, sizeof(filename), "%s/%s", folder_name, current_filename);
+				snprintf_check(filename, sizeof(filename), "%s/%s", folder_name, current_filename);
 				fp = fopen(filename, "rb");
 				if (fp != NULL && fstat(fileno(fp), &info) == 0 && info.st_size > 0) {
-					dos_version = identify_dos_exe_version(info.st_size);
+					dos_version = identify_dos_exe_version((int)info.st_size);
 					if (dos_version >= 0) {
 						break; // We found a DOS executable with the right size!
 					}
@@ -575,7 +592,7 @@ void load_dos_exe_modifications(const char* folder_name) {
 		do { \
 			static const int offsets[6] = __VA_ARGS__; \
 			int offset = offsets[dos_version]; \
-			read_ok = read_exe_bytes(x, nbytes, exe_memory, offset, info.st_size); \
+			read_ok = read_exe_bytes(x, nbytes, exe_memory, offset, (int)info.st_size); \
 		} while(0)
 
 		// Offsets and comparisons are derived from princehack.xml
@@ -600,7 +617,11 @@ void load_dos_exe_modifications(const char* folder_name) {
 		process(&custom_saved.drawn_tile_left_level_edge, 1, {0x0a26b, 0x0b91b, -1, -1, -1, -1});
 		process(&custom_saved.level_edge_hit_tile, 1, {0x06f02, 0x085b2, -1, -1, -1, -1});
 		process(temp_bytes, 2, {0x9111, 0xA7C1, 0x95BE, 0x9CFE, 0x907A, 0xA1AA}); // allow triggering any tile
-		if (read_ok) custom_saved.allow_triggering_any_tile = (temp_bytes[0] == 0x75 && temp_bytes[1] == 0x13);
+		if (read_ok) {
+			custom_saved.allow_triggering_any_tile = 
+				(temp_bytes[0] == 0x75 && temp_bytes[1] == 0x13) ||
+				(temp_bytes[0] == 0x90 && temp_bytes[1] == 0x90); // used in Micro Palace
+		}
 		process(temp_bytes, 1, {0x0a7bb, 0x0be6b, 0x0ac67, 0x0b3a7, 0x0a723, 0x0b853}); // enable WDA in palace
 		if (read_ok) custom_saved.enable_wda_in_palace = (temp_bytes[0] != 116);
 		process(&custom_saved.tbl_level_type, 16, {0x1acea, 0x1c842, 0x1b9ae, 0x1c5c6, 0x17d4c, 0x18f3c});
@@ -651,20 +672,38 @@ void load_dos_exe_modifications(const char* folder_name) {
 		process(&custom_saved.skeleton_reappear_dir, 1, {0x03b43, 0x051f3, -1, -1, -1, -1});
 		process(&custom_saved.mirror_level, 1, {0x08dc7, 0x0a477, 0x09274, 0x099b4, 0x08d30, 0x09e60});
 		process(&custom_saved.mirror_room, 1, {0x08dcb, 0x0a47b, 0x09278, 0x099b8, 0x08d34, 0x09e64});
-		if (read_ok) custom_saved.mirror_column = custom_saved.mirror_room;
+		if (read_ok) {
+			// If opcode is not initialized, I get a warning, but only with -O2: "'opcode' may be used uninitialized". Huh?
+			byte opcode = 0;
+			process(&opcode, 1, {0x08dcb+2, 0x0a47b+2, 0x09278+2, 0x099b8+2, 0x08d34+2, 0x09e64+2});
+			if (opcode == 0x50) {
+				// 0xA47A: B8 XX 00 50 50 where XX is room *and* column!
+				custom_saved.mirror_column = custom_saved.mirror_room;
+			} else if (opcode == 0x6A) {
+				// 0xA47A: 68 RR 00 6A CC where RR is the room, CC is the column
+				process(&custom_saved.mirror_column, 1, {0x08dcb+3, 0x0a47b+3, 0x09278+3, 0x099b8+3, 0x08d34+3, 0x09e64+3});
+			}
+		}
 		process(&temp_word, 2, {0x08dcf, 0x0a47f, 0x0927c, 0x099bc, 0x08d38, 0x09e68}); // mirror row
 		if (read_ok) {
-			if (temp_word == 49195) {
+			if (temp_word == 0xC02B) { // 2B C0 = sub ax,ax
 				custom_saved.mirror_row = 0;
-			} else if (temp_word == 432) {
+			} else if (temp_word == 0x01B0) { // B0 01 = mov al,1
 				custom_saved.mirror_row = 1;
-			} else if (temp_word == 688) {
+			} else if (temp_word == 0x02B0) { // B0 02 = mov al,2
 				custom_saved.mirror_row = 2;
 			}
 		}
 		process(&custom_saved.mirror_tile, 1, {0x08de3, 0x0a493, 0x09290, 0x099d0, 0x08d4c, 0x09e7c});
 		process(temp_bytes, 1, {0x051a2, 0x06852, 0x05636, 0x05d76, 0x050f2, 0x06222});
 		if (read_ok) custom_saved.show_mirror_image = (temp_bytes[0] != 0xEB);
+
+		process(&custom_saved.shadow_steal_level, 1, {-1, 0x5017, -1, -1, -1, -1});
+		process(&custom_saved.shadow_steal_room, 1, {-1, 0x5021, -1, -1, -1, -1});
+
+		process(&custom_saved.shadow_step_level, 1, {-1, 0x4FE7, -1, -1, -1, -1});
+		process(&custom_saved.shadow_step_room, 1, {-1, 0x4FF1, -1, -1, -1, -1});
+
 		process(&custom_saved.falling_exit_level, 1, {0x03eb2, 0x05562, -1, -1, -1, -1});
 		process(&custom_saved.falling_exit_room, 1, {0x03eb9, 0x05569, -1, -1, -1, -1});
 		process(&custom_saved.falling_entry_level, 1, {0x04cbd, 0x0636d, -1, -1, -1, -1});
@@ -778,11 +817,11 @@ void load_mod_options() {
 }
 
 int process_rw_write(SDL_RWops* rw, void* data, size_t data_size) {
-	return SDL_RWwrite(rw, data, data_size, 1);
+	return (int)SDL_RWwrite(rw, data, data_size, 1);
 }
 
 int process_rw_read(SDL_RWops* rw, void* data, size_t data_size) {
-	return SDL_RWread(rw, data, data_size, 1);
+	return (int)SDL_RWread(rw, data, data_size, 1);
 	// if this returns 0, most likely the end of the stream has been reached
 }
 

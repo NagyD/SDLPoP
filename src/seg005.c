@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2021  Dávid Nagy
+Copyright (C) 2013-2023  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,17 +24,17 @@ The authors of this program may be contacted at https://forum.princed.org
 extern const word seqtbl_offsets[];
 
 // seg005:000A
-void __pascal far seqtbl_offset_char(short seq_index) {
+void seqtbl_offset_char(short seq_index) {
 	Char.curr_seq = seqtbl_offsets[seq_index];
 }
 
 // seg005:001D
-void __pascal far seqtbl_offset_opp(int seq_index) {
+void seqtbl_offset_opp(int seq_index) {
 	Opp.curr_seq = seqtbl_offsets[seq_index];
 }
 
 // seg005:0030
-void __pascal far do_fall() {
+void do_fall() {
 	if (is_screaming == 0 && Char.fall_y >= 31) {
 		play_sound(sound_1_falling); // falling
 		is_screaming = 1;
@@ -111,9 +111,16 @@ void __pascal far do_fall() {
 }
 
 // seg005:0090
-void __pascal far land() {
+void land() {
 	word seq_id;
 	is_screaming = 0;
+
+	#ifdef USE_SUPER_HIGH_JUMP
+	if (fixes->enable_super_high_jump) {
+		super_jump_fall = 0;
+	}
+	#endif
+
 	Char.y = y_land[Char.curr_row + 1];
 	if (get_tile_at_char() != tiles_2_spike) {
 
@@ -169,7 +176,7 @@ void __pascal far land() {
 				loc_5EFD:
 				if (Char.charid >= charid_2_guard || Char.sword == sword_2_drawn) {
 					Char.sword = sword_2_drawn;
-					seq_id = seq_63_guard_stand_active; // stand active after landing
+					seq_id = seq_63_guard_active_after_fall; // stand active after landing
 				} else {
 					seq_id = seq_17_soft_land; // crouch (soft land)
 				}
@@ -210,7 +217,7 @@ void __pascal far land() {
 }
 
 // seg005:01B7
-void __pascal far spiked() {
+void spiked() {
 	// If someone falls into spikes, those spikes become harmless (to others).
 	curr_room_modif[curr_tilepos] = 0xFF;
 	Char.y = y_land[Char.curr_row + 1];
@@ -226,10 +233,10 @@ void __pascal far spiked() {
 				spike_col -= 10;
 			}
 		}
-		Char.x = x_bump[spike_col + 5] + 10;
+		Char.x = x_bump[spike_col + FIRST_ONSCREEN_COLUMN] + 10;
 	} else {
 	#endif
-		Char.x = x_bump[tile_col + 5] + 10;
+		Char.x = x_bump[tile_col + FIRST_ONSCREEN_COLUMN] + 10;
 	#ifdef FIX_OFFSCREEN_GUARDS_DISAPPEARING
 	}
 	#endif
@@ -242,10 +249,8 @@ void __pascal far spiked() {
 }
 
 // seg005:0213
-void __pascal far control() {
-	short char_frame;
-	short char_action;
-	char_frame = Char.frame;
+void control() {
+	short char_frame = Char.frame;
 	if (Char.alive >= 0) {
 		if (char_frame == frame_15_stand || // stand
 			char_frame == frame_166_stand_inactive || // stand
@@ -255,7 +260,7 @@ void __pascal far control() {
 			seqtbl_offset_char(seq_71_dying); // dying (not stabbed)
 		}
 	} else {
-		char_action = Char.action;
+		short char_action = Char.action;
 		if (char_action == actions_5_bumped ||
 			char_action == actions_4_in_freefall
 		) {
@@ -286,7 +291,7 @@ void __pascal far control() {
 		// When ducking with down+forward, give time to release the forward control (prevents unintended crouch-hops)
 		else if (fixes->enable_crouch_after_climbing && Char.curr_seq >= seqtbl_offsets[seq_50_crouch] &&
 				Char.curr_seq < seqtbl_offsets[seq_49_stand_up_from_crouch]) // while stooping
-			if (control_forward < 1) control_forward = 0;
+			if (control_forward != CONTROL_IGNORE) control_forward = CONTROL_RELEASED;
 		#endif
 
 		#ifdef FIX_MOVE_AFTER_DRINK
@@ -305,7 +310,7 @@ void __pascal far control() {
 }
 
 // seg005:02EB
-void __pascal far control_crouched() {
+void control_crouched() {
 	if (need_level1_music != 0 && current_level == /*1*/ custom->intro_music_level) {
 		// Special event: music when crouching
 		if (! check_sound_playing()) {
@@ -322,12 +327,12 @@ void __pascal far control_crouched() {
 		}
 	} else {
 		need_level1_music = 0;
-		if (control_shift2 < 0 && check_get_item()) return;
-		if (control_y != 1) {
+		if (control_shift2 == CONTROL_HELD && check_get_item()) return;
+		if (control_y != CONTROL_HELD_DOWN) {
 			seqtbl_offset_char(seq_49_stand_up_from_crouch); // stand up from crouch
 		} else {
-			if (control_forward < 0) {
-				control_forward = 1; // disable automatic repeat
+			if (control_forward == CONTROL_HELD) {
+				control_forward = CONTROL_IGNORE; // disable automatic repeat
 				seqtbl_offset_char(seq_79_crouch_hop); // crouch-hop
 			}
 		}
@@ -335,22 +340,21 @@ void __pascal far control_crouched() {
 }
 
 // seg005:0358
-void __pascal far control_standing() {
-	short var_2;
-	if (control_shift2 < 0 && control_shift < 0 && check_get_item()) {
+void control_standing() {
+	if (control_shift2 == CONTROL_HELD && control_shift == CONTROL_HELD && check_get_item()) {
 		return;
 	}
-	if (Char.charid != charid_0_kid && control_down < 0 && control_forward < 0) {
+	if (Char.charid != charid_0_kid && control_down == CONTROL_HELD && control_forward == CONTROL_HELD) {
 		draw_sword();
 		return;
 	} //else
 	if (have_sword) {
-		if (offguard != 0 && control_shift >= 0) goto loc_6213;
+		if (offguard != 0 && control_shift >= CONTROL_RELEASED) goto loc_6213;
 		if (can_guard_see_kid >= 2) {
-			var_2 = char_opp_dist();
-			if (var_2 >= -10 && var_2 < 90) {
+			short distance = char_opp_dist();
+			if (distance >= -10 && distance < 90) {
 				holding_sword = 1;
-				if ((word)var_2 < (word)-6) {
+				if ((word)distance < (word)-6) {
 					if (Opp.charid == charid_1_shadow &&
 						(Opp.action == actions_3_in_midair || (Opp.frame >= frame_107_fall_land_1 && Opp.frame < 118))
 					) {
@@ -368,39 +372,44 @@ void __pascal far control_standing() {
 			offguard = 0;
 		}
 	}
-	if (control_shift < 0) {
-		if (control_backward < 0) {
+	if (control_shift == CONTROL_HELD) {
+		if (control_backward == CONTROL_HELD) {
 			back_pressed();
-		} else if (control_up < 0) {
+		} else if (control_up == CONTROL_HELD) {
 			up_pressed();
-		} else if (control_down < 0) {
+		} else if (control_down == CONTROL_HELD) {
 			down_pressed();
-		} else if (control_x < 0 && control_forward < 0) {
+		} else if (control_x == CONTROL_HELD_FORWARD && control_forward == CONTROL_HELD) {
 			safe_step();
 		}
-	} else loc_6213: if (control_forward < 0) {
-		if (is_keyboard_mode && control_up < 0) {
+	} else loc_6213: if (control_forward == CONTROL_HELD) {
+		if (is_keyboard_mode && control_up == CONTROL_HELD) {
 			standing_jump();
 		} else {
 			forward_pressed();
 		}
-	} else if (control_backward < 0) {
+	} else if (control_backward == CONTROL_HELD) {
 		back_pressed();
-	} else if (control_up < 0) {
-		if (is_keyboard_mode && control_forward < 0) {
+	} else if (control_up == CONTROL_HELD) {
+		if (is_keyboard_mode && control_forward == CONTROL_HELD) {
 			standing_jump();
 		} else {
 			up_pressed();
 		}
-	} else if (control_down < 0) {
+	} else if (control_down == CONTROL_HELD) {
 		down_pressed();
-	} else if (control_x < 0) {
+	} else if (control_x == CONTROL_HELD_FORWARD) {
 		forward_pressed();
 	}
 }
 
+int source_modifier;
+int source_room;
+int source_tilepos;
+
 // seg005:0482
-void __pascal far up_pressed() {
+void up_pressed() {
+	// If there is an open level door nearby, enter it.
 	int leveldoor_tilepos = -1;
 	if (get_tile_at_char() == tiles_16_level_door_left) leveldoor_tilepos = curr_tilepos;
 	else if (get_tile_behind_char() == tiles_16_level_door_left) leveldoor_tilepos = curr_tilepos;
@@ -414,8 +423,36 @@ void __pascal far up_pressed() {
 		)
 	){
 		go_up_leveldoor();
-	} else {
-		if (control_x < 0) {
+		return;
+	}
+
+#ifdef USE_TELEPORTS
+	// If there is a teleport nearby, enter it.
+	// (A teleport is a repurposed left half balcony with a non-zero modifier.)
+	leveldoor_tilepos = -1;
+	// This detection is not perfect...
+	if (get_tile_at_char() == tiles_23_balcony_left) leveldoor_tilepos = curr_tilepos;
+	else if (get_tile_behind_char() == tiles_23_balcony_left) leveldoor_tilepos = curr_tilepos;
+	else if (get_tile_infrontof_char() == tiles_23_balcony_left) leveldoor_tilepos = curr_tilepos;
+	if (leveldoor_tilepos != -1) {
+		// We reuse pickup_obj_type for storing the identifier of the teleporter.
+		pickup_obj_type = curr_room_modif[curr_tilepos];
+		// Balconies with zero modifiers remain regular balconies.
+		if (pickup_obj_type > 0)
+		{
+			source_modifier = pickup_obj_type;
+			source_room = curr_room;
+			source_tilepos = curr_tilepos;
+			go_up_leveldoor();
+			seqtbl_offset_char(seq_teleport);
+			return;
+		}
+	}
+#endif
+
+	// Else just jump up.
+	{
+		if (control_x == CONTROL_HELD_FORWARD) {
 			standing_jump();
 		} else {
 			check_jump_up();
@@ -424,8 +461,8 @@ void __pascal far up_pressed() {
 }
 
 // seg005:04C7
-void __pascal far down_pressed() {
-	control_down = 1; // disable automatic repeat
+void down_pressed() {
+	control_down = CONTROL_IGNORE; // disable automatic repeat
 	if (! tile_is_floor(get_tile_infrontof_char()) &&
 		distance_to_edge_weight() < 3
 	) {
@@ -439,7 +476,7 @@ void __pascal far down_pressed() {
 			get_tile_at_char();
 			if (can_grab() &&
 				#ifdef ALLOW_CROUCH_AFTER_CLIMBING
-				(!(fixes->enable_crouch_after_climbing && control_forward == -1)) &&
+				(!(fixes->enable_crouch_after_climbing && control_forward == CONTROL_HELD)) &&
 				#endif
 				(Char.direction >= dir_0_right ||
 				get_tile_at_char() != tiles_4_gate ||
@@ -457,15 +494,15 @@ void __pascal far down_pressed() {
 }
 
 // seg005:0574
-void __pascal far go_up_leveldoor() {
-	Char.x = x_bump[tile_col + 5] + 10;
+void go_up_leveldoor() {
+	Char.x = x_bump[tile_col + FIRST_ONSCREEN_COLUMN] + 10;
 	Char.direction = dir_FF_left; // right
 	seqtbl_offset_char(seq_70_go_up_on_level_door); // go up on level door
 }
 
 // seg005:058F
-void __pascal far control_turning() {
-	if (control_shift >= 0 && control_x < 0 && control_y >= 0) {
+void control_turning() {
+	if (control_shift >= CONTROL_RELEASED && control_x == CONTROL_HELD_FORWARD && control_y >= CONTROL_RELEASED) {
 		seqtbl_offset_char(seq_43_start_run_after_turn); // start run and run (after turning)
 	}
 
@@ -474,26 +511,26 @@ void __pascal far control_turning() {
 	// To prevent this: clear the remembered controls, so that if the stick has already moved to another/neutral position,
 	// the kid will not jump, duck, or turn again.
 	if (is_joyst_mode) {
-		if (control_up < 0 && control_y >= 0) {
-			control_up = 0;
+		if (control_up == CONTROL_HELD && control_y >= CONTROL_RELEASED) {
+			control_up = CONTROL_RELEASED;
 		}
-		if (control_down < 0 && control_y <= 0) {
-			control_down = 0;
+		if (control_down == CONTROL_HELD && control_y <= CONTROL_RELEASED) {
+			control_down = CONTROL_RELEASED;
 		}
-		if (control_backward < 0 && control_x == 0) {
-			control_backward = 0;
+		if (control_backward == CONTROL_HELD && control_x == CONTROL_RELEASED) {
+			control_backward = CONTROL_RELEASED;
 		}
 	}
 }
 
 // seg005:05AD
-void __pascal far crouch() {
+void crouch() {
 	seqtbl_offset_char(seq_50_crouch); // crouch
 	control_down = release_arrows();
 }
 
 // seg005:05BE
-void __pascal far back_pressed() {
+void back_pressed() {
 	word seq_id;
 	control_backward = release_arrows();
 	// After turn, Kid will draw sword if ...
@@ -512,20 +549,20 @@ void __pascal far back_pressed() {
 }
 
 // seg005:060F
-void __pascal far forward_pressed() {
+void forward_pressed() {
 	short distance;
 	distance = get_edge_distance();
 	#ifdef ALLOW_CROUCH_AFTER_CLIMBING
-	if (fixes->enable_crouch_after_climbing && control_down < 0) {
+	if (fixes->enable_crouch_after_climbing && control_down == CONTROL_HELD) {
 		down_pressed();
-		control_forward = 0;
+		control_forward = CONTROL_RELEASED;
 		return;
 	}
 	#endif
 
-	if (edge_type == 1 && curr_tile2 != tiles_18_chomper && distance < 8) {
+	if (edge_type == EDGE_TYPE_EDGE && curr_tile2 != tiles_18_chomper && distance < 8) {
 		// If char is near a wall, step instead of run.
-		if (control_forward < 0) {
+		if (control_forward == CONTROL_HELD) {
 			safe_step();
 		}
 	} else {
@@ -534,31 +571,30 @@ void __pascal far forward_pressed() {
 }
 
 // seg005:0649
-void __pascal far control_running() {
-	if (control_x == 0 && (Char.frame == frame_7_run || Char.frame == frame_11_run)) {
+void control_running() {
+	if (control_x == CONTROL_RELEASED && (Char.frame == frame_7_run || Char.frame == frame_11_run)) {
 		control_forward = release_arrows();
 		seqtbl_offset_char(seq_13_stop_run); // stop run
-	} else if (control_x > 0) {
+	} else if (control_x == CONTROL_HELD_BACKWARD) {
 		control_backward = release_arrows();
 		seqtbl_offset_char(seq_6_run_turn); // run-turn
-	} else if (control_y < 0 && control_up < 0) {
+	} else if (control_y == CONTROL_HELD_UP && control_up == CONTROL_HELD) {
 		run_jump();
-	} else if (control_down < 0) {
-		control_down = 1; // disable automatic repeat
+	} else if (control_down == CONTROL_HELD) {
+		control_down = CONTROL_IGNORE; // disable automatic repeat
 		seqtbl_offset_char(seq_26_crouch_while_running); // crouch while running
 	}
 }
 
 // seg005:06A8
-void __pascal far safe_step() {
-	short distance;
-	control_shift2 = 1; // disable automatic repeat
-	control_forward = 1; // disable automatic repeat
-	distance = get_edge_distance();
+void safe_step() {
+	control_shift2 = CONTROL_IGNORE; // disable automatic repeat
+	control_forward = CONTROL_IGNORE; // disable automatic repeat
+	short distance = get_edge_distance();
 	if (distance) {
 		Char.repeat = 1;
 		seqtbl_offset_char(distance + 28); // 29..42: safe step to edge
-	} else if (edge_type != 1 && Char.repeat != 0) {
+	} else if (edge_type != EDGE_TYPE_EDGE && Char.repeat != 0) {
 		Char.repeat = 0;
 		seqtbl_offset_char(seq_44_step_on_edge); // step on edge
 	} else {
@@ -567,7 +603,7 @@ void __pascal far safe_step() {
 }
 
 // seg005:06F0
-int __pascal far check_get_item() {
+int check_get_item() {
 	if (get_tile_at_char() == tiles_10_potion ||
 		curr_tile2 == tiles_22_sword
 	) {
@@ -587,11 +623,10 @@ int __pascal far check_get_item() {
 }
 
 // seg005:073E
-void __pascal far get_item() {
-	short distance;
+void get_item() {
 	if (Char.frame != frame_109_crouch) { // crouching
-		distance = get_edge_distance();
-		if (edge_type != 2) {
+		short distance = get_edge_distance();
+		if (edge_type != EDGE_TYPE_FLOOR) {
 			Char.x = char_dx_forward(distance);
 		}
 		if (Char.direction >= dir_0_right) {
@@ -606,8 +641,7 @@ void __pascal far get_item() {
 		seqtbl_offset_char(seq_78_drink); // drink
 #ifdef USE_COPYPROT
 		if (current_level == 15) {
-			short index;
-			for (index = 0; index < 14; ++index) {
+			for (short index = 0; index < 14; ++index) {
 				// remove letter on potions level
 				if (copyprot_room[index] == curr_room &&
 					copyprot_tile[index] == curr_tilepos
@@ -622,27 +656,27 @@ void __pascal far get_item() {
 }
 
 // seg005:07FF
-void __pascal far control_startrun() {
-	if (control_y < 0 && control_x < 0) {
+void control_startrun() {
+	if (control_y == CONTROL_HELD_UP && control_x == CONTROL_HELD_FORWARD) {
 		standing_jump();
 	}
 }
 
 // seg005:0812
-void __pascal far control_jumpup() {
-	if (control_x < 0 || control_forward < 0) {
+void control_jumpup() {
+	if (control_x == CONTROL_HELD_FORWARD || control_forward == CONTROL_HELD) {
 		standing_jump();
 	}
 }
 
 // seg005:0825
-void __pascal far standing_jump() {
-	control_up = control_forward = 1; // disable automatic repeat
+void standing_jump() {
+	control_up = control_forward = CONTROL_IGNORE; // disable automatic repeat
 	seqtbl_offset_char(seq_3_standing_jump); // standing jump
 }
 
 // seg005:0836
-void __pascal far check_jump_up() {
+void check_jump_up() {
 	control_up = release_arrows();
 	through_tile = get_tile_above_char();
 	get_tile_front_above_char();
@@ -660,9 +694,8 @@ void __pascal far check_jump_up() {
 }
 
 // seg005:087B
-void __pascal far jump_up_or_grab() {
-	short distance;
-	distance = distance_to_edge_weight();
+void jump_up_or_grab() {
+	short distance = distance_to_edge_weight();
 	if (distance < 6) {
 		jump_up();
 	} else if (! tile_is_floor(get_tile_behind_char())) {
@@ -670,48 +703,86 @@ void __pascal far jump_up_or_grab() {
 		grab_up_no_floor_behind();
 	} else {
 		// There is floor behind char, go back a bit.
-		Char.x = char_dx_forward(distance - 14);
+		Char.x = char_dx_forward(distance - TILE_SIZEX);
 		load_fram_det_col();
 		grab_up_with_floor_behind();
 	}
 }
 
 // seg005:08C7
-void __pascal far grab_up_no_floor_behind() {
+void grab_up_no_floor_behind() {
 	get_tile_above_char();
 	Char.x = char_dx_forward(distance_to_edge_weight() - 10);
 	seqtbl_offset_char(seq_16_jump_up_and_grab); // jump up and grab (no floor behind)
 }
 
 // seg005:08E6
-void __pascal far jump_up() {
-	short distance;
+void jump_up() {
+	word delta_x;
 	control_up = release_arrows();
-	distance = get_edge_distance();
-	if (distance < 4 && edge_type == 1) {
+	short distance = get_edge_distance();
+	if (distance < 4 && edge_type == EDGE_TYPE_EDGE) {
 		Char.x = char_dx_forward(distance - 3);
 	}
 	#ifdef FIX_JUMP_DISTANCE_AT_EDGE
 	// When climbing up two floors, turning around and jumping upward, the kid falls down.
 	// This fix makes the workaround of Trick 25 unnecessary.
-	if (fixes->fix_jump_distance_at_edge && distance == 3 && edge_type == 0) {
+	if (fixes->fix_jump_distance_at_edge && distance == 3 && edge_type == EDGE_TYPE_CLOSER) {
 		Char.x = char_dx_forward(-1);
 	}
 	#endif
+	#ifdef USE_SUPER_HIGH_JUMP
+	// kid should be able to grab 2 tiles above from an edge of a floor tile
+	if (is_feather_fall && !tile_is_floor(get_tile_above_char()) && curr_tile2 != tiles_20_wall) {
+		delta_x = Char.direction == dir_FF_left ? 1 : 3;
+	} else {
+		delta_x = 0;
+	}
+	int char_col = get_tile_div_mod(back_delta_x(delta_x) + dx_weight() - 6);
+	get_tile(Char.room, char_col, Char.curr_row - 1);
+	if (curr_tile2 != tiles_20_wall && !tile_is_floor(curr_tile2)) {
+		if (fixes->enable_super_high_jump && is_feather_fall) { // super high jump can only happen in feather mode
+			if (curr_room == 0 && Char.curr_row == 0) { // there is no room above
+				seqtbl_offset_char(seq_14_jump_up_into_ceiling);
+			} else {
+				get_tile(Char.room, char_col, Char.curr_row - 2); // the target top tile
+				bool is_top_floor = tile_is_floor(curr_tile2) || curr_tile2 == tiles_20_wall;
+				if (is_top_floor && curr_tile2 == tiles_11_loose && (curr_room_tiles[curr_tilepos] & 0x20) == 0) {
+					is_top_floor = false; // a regular loose floor above should not be treated as a floor
+				}
+				// kid should jump slightly higher if the top tile is not a floor
+				super_jump_timer = is_top_floor ? 22 : 24;
+				super_jump_room = curr_room;
+				super_jump_col = tile_col;
+				super_jump_row = tile_row;
+				seqtbl_offset_char(seq_48_super_high_jump); // jump up 2 rows with nothing above
+			}
+		} else {
+			seqtbl_offset_char(seq_28_jump_up_with_nothing_above); // jump up with nothing above
+		}
+	} else {
+		seqtbl_offset_char(seq_14_jump_up_into_ceiling); // jump up with wall or floor above
+	}
+	#else
 	get_tile(Char.room, get_tile_div_mod(back_delta_x(0) + dx_weight() - 6), Char.curr_row - 1);
 	if (curr_tile2 != tiles_20_wall && ! tile_is_floor(curr_tile2)) {
 		seqtbl_offset_char(seq_28_jump_up_with_nothing_above); // jump up with nothing above
 	} else {
 		seqtbl_offset_char(seq_14_jump_up_into_ceiling); // jump up with wall or floor above
 	}
+	#endif
 }
 
 // seg005:0968
-void __pascal far control_hanging() {
+void control_hanging() {
 	if (Char.alive < 0) {
-		if (grab_timer == 0 && control_y < 0) {
+		if (grab_timer == 0 && control_y == CONTROL_HELD) {
 			can_climb_up();
-		} else if (control_shift < 0) {
+#ifdef USE_SUPER_HIGH_JUMP
+		} else if (control_shift == CONTROL_HELD || (fixes->enable_super_high_jump && super_jump_fall && control_y == CONTROL_HELD)) {
+#else
+		} else if (control_shift == CONTROL_HELD) {
+#endif
 			// hanging against a wall or a doortop
 			if (Char.action != actions_6_hang_straight &&
 				(get_tile_at_char() == tiles_20_wall ||
@@ -738,10 +809,14 @@ void __pascal far control_hanging() {
 }
 
 // seg005:09DF
-void __pascal far can_climb_up() {
-	short seq_id;
-	seq_id = seq_10_climb_up; // climb up
+void can_climb_up() {
+	short seq_id = seq_10_climb_up; // climb up
 	control_up = control_shift2 = release_arrows();
+#ifdef USE_SUPER_HIGH_JUMP
+	if (fixes->enable_super_high_jump) {
+		super_jump_fall = 0;
+	}
+#endif
 	get_tile_above_char();
 	if (((curr_tile2 == tiles_13_mirror || curr_tile2 == tiles_18_chomper) &&
 		Char.direction == dir_0_right) ||
@@ -754,8 +829,13 @@ void __pascal far can_climb_up() {
 }
 
 // seg005:0A46
-void __pascal far hang_fall() {
+void hang_fall() {
 	control_down = release_arrows();
+#ifdef USE_SUPER_HIGH_JUMP
+	if (fixes->enable_super_high_jump) {
+		super_jump_fall = 0;
+	}
+#endif
 	if (! tile_is_floor(get_tile_behind_char()) &&
 		! tile_is_floor(get_tile_at_char())
 	) {
@@ -774,9 +854,8 @@ void __pascal far hang_fall() {
 }
 
 // seg005:0AA8
-void __pascal far grab_up_with_floor_behind() {
-	short distance;
-	distance = distance_to_edge_weight();
+void grab_up_with_floor_behind() {
+	short distance = distance_to_edge_weight();
 
 	// The global variable edge_type (which we need!) gets set as a side effect of get_edge_distance()
 	short edge_distance = get_edge_distance();
@@ -786,8 +865,8 @@ void __pascal far grab_up_with_floor_behind() {
 	// When climbing to a higher floor, the game unnecessarily checks how far away the edge below is;
 	// This contributes to sometimes "teleporting" considerable distances when climbing from firm ground
 	#define JUMP_STRAIGHT_CONDITION (fixes->fix_edge_distance_check_when_climbing)						\
-									? (distance < 4 && edge_type != 1)									\
-									: (distance < 4 && edge_distance < 4 && edge_type != 1)
+									? (distance < 4 && edge_type != EDGE_TYPE_EDGE)									\
+									: (distance < 4 && edge_distance < 4 && edge_type != EDGE_TYPE_EDGE)
 	#else
 	#define JUMP_STRAIGHT_CONDITION distance < 4 && edge_distance < 4 && edge_type != 1
 	#endif
@@ -802,25 +881,22 @@ void __pascal far grab_up_with_floor_behind() {
 }
 
 // seg005:0AF7
-void __pascal far run_jump() {
-	short var_2;
-	short xpos;
-	short col;
-	short var_8;
+void run_jump() {
+	short pos_adjustment;
 	if (Char.frame >= frame_7_run) {
 		// Align Kid to edge of floor.
-		xpos = char_dx_forward(4);
-		col = get_tile_div_mod_m7(xpos);
-		for (var_2 = 0; var_2 < 2; ++var_2) {
+		short xpos = char_dx_forward(4);
+		short col = get_tile_div_mod_m7(xpos);
+		for (short tiles_forward = 0; tiles_forward < 2; ++tiles_forward) { // Iterate through current tile and the next two tiles looking for a tile the player should jump from
 			col += dir_front[Char.direction + 1];
 			get_tile(Char.room, col, Char.curr_row);
 			if (curr_tile2 == tiles_2_spike || ! tile_is_floor(curr_tile2)) {
-				var_8 = distance_to_edge(xpos) + 14 * var_2 - 14;
-				if ((word)var_8 < (word)-8 || var_8 >= 2) {
-					if (var_8 < 128) return;
-					var_8 = -3;
+				pos_adjustment = distance_to_edge(xpos) + TILE_SIZEX * tiles_forward - TILE_SIZEX;
+				if ((word)pos_adjustment < (word)-8 || pos_adjustment >= 2) {
+					if (pos_adjustment < 128) return;
+					pos_adjustment = -3;
 				}
-				Char.x = char_dx_forward(var_8 + 4);
+				Char.x = char_dx_forward(pos_adjustment + 4);
 				break;
 			}
 		}
@@ -830,21 +906,19 @@ void __pascal far run_jump() {
 }
 
 // sseg005:0BB5
-void __pascal far back_with_sword() {
-	short frame;
-	frame = Char.frame;
+void back_with_sword() {
+	short frame = Char.frame;
 	if (frame == frame_158_stand_with_sword || frame == frame_170_stand_with_sword || frame == frame_171_stand_with_sword) {
-		control_backward = 1; // disable automatic repeat
+		control_backward = CONTROL_IGNORE; // disable automatic repeat
 		seqtbl_offset_char(seq_57_back_with_sword); // back with sword
 	}
 }
 
 // seg005:0BE3
-void __pascal far forward_with_sword() {
-	short frame;
-	frame = Char.frame;
+void forward_with_sword() {
+	short frame = Char.frame;
 	if (frame == frame_158_stand_with_sword || frame == frame_170_stand_with_sword || frame == frame_171_stand_with_sword) {
-		control_forward = 1; // disable automatic repeat
+		control_forward = CONTROL_IGNORE; // disable automatic repeat
 		if (Char.charid != charid_0_kid) {
 			seqtbl_offset_char(seq_56_guard_forward_with_sword); // forward with sword (Guard)
 		} else {
@@ -854,13 +928,12 @@ void __pascal far forward_with_sword() {
 }
 
 // seg005:0C1D
-void __pascal far draw_sword() {
-	word seq_id;
-	seq_id = seq_55_draw_sword; // draw sword
+void draw_sword() {
+	word seq_id = seq_55_draw_sword; // draw sword
 	control_forward = control_shift2 = release_arrows();
 #ifdef FIX_UNINTENDED_SWORD_STRIKE
 	if (fixes->fix_unintended_sword_strike) {
-		ctrl1_shift2 = 1; // prevent restoring control_shift2 to -1 in rest_ctrl_1()
+		ctrl1_shift2 = CONTROL_IGNORE; // prevent restoring control_shift2 to CONTROL_HELD in rest_ctrl_1()
 	}
 #endif
 	if (Char.charid == charid_0_kid) {
@@ -874,11 +947,10 @@ void __pascal far draw_sword() {
 }
 
 // seg005:0C67
-void __pascal far control_with_sword() {
-	short distance;
+void control_with_sword() {
 	if (Char.action < actions_2_hang_climb) {
 		if (get_tile_at_char() == tiles_11_loose || can_guard_see_kid >= 2) {
-			distance = char_opp_dist();
+			short distance = char_opp_dist();
 			if ((word)distance < (word)90) {
 				swordfight();
 				return;
@@ -909,26 +981,24 @@ void __pascal far control_with_sword() {
 }
 
 // seg005:0CDB
-void __pascal far swordfight() {
-	short frame;
+void swordfight() {
 	short seq_id;
-	short charid;
-	frame = Char.frame;
-	charid = Char.charid;
+	short frame = Char.frame;
+	short charid = Char.charid;
 	// frame 161: parry
 	if (frame == frame_161_parry && control_shift2 >= 0) {
 		seqtbl_offset_char(seq_57_back_with_sword); // back with sword (when parrying)
 		return;
-	} else if (control_shift2 < 0) {
+	} else if (control_shift2 == CONTROL_HELD) {
 		if (charid == charid_0_kid) {
 			kid_sword_strike = 15;
 		}
 		sword_strike();
-		if (control_shift2 == 1) return;
+		if (control_shift2 == CONTROL_IGNORE) return;
 	}
-	if (control_down < 0) {
+	if (control_down == CONTROL_HELD) {
 		if (frame == frame_158_stand_with_sword || frame == frame_170_stand_with_sword || frame == frame_171_stand_with_sword) {
-			control_down = 1; // disable automatic repeat
+			control_down = CONTROL_IGNORE; // disable automatic repeat
 			Char.sword = sword_0_sheathed;
 			if (charid == charid_0_kid) {
 				offguard = 1;
@@ -942,17 +1012,17 @@ void __pascal far swordfight() {
 			}
 			seqtbl_offset_char(seq_id);
 		}
-	} else if (control_up < 0) {
+	} else if (control_up == CONTROL_HELD) {
 		parry();
-	} else if (control_forward < 0) {
+	} else if (control_forward == CONTROL_HELD) {
 		forward_with_sword();
-	} else if (control_backward < 0) {
+	} else if (control_backward == CONTROL_HELD) {
 		back_with_sword();
 	}
 }
 
 // seg005:0DB0
-void __pascal far sword_strike() {
+void sword_strike() {
 	short frame;
 	short seq_id;
 	frame = Char.frame;
@@ -972,22 +1042,17 @@ void __pascal far sword_strike() {
 	} else {
 		return;
 	}
-	control_shift2 = 1; // disable automatic repeat
+	control_shift2 = CONTROL_IGNORE; // disable automatic repeat
 	seqtbl_offset_char(seq_id);
 }
 
 // seg005:0E0F
-void __pascal far parry() {
-	short opp_frame;
-	short char_frame;
-	short var_6;
-	short seq_id;
-	short char_charid;
-	char_frame = Char.frame;
-	opp_frame = Opp.frame;
-	char_charid = Char.charid;
-	seq_id = seq_62_parry; // defend (parry) with sword
-	var_6 = 0;
+void parry() {
+	short char_frame = Char.frame;
+	short opp_frame = Opp.frame;
+	short char_charid = Char.charid;
+	short seq_id = seq_62_parry; // defend (parry) with sword
+	short do_play_seq = 0;
 	if (
 		char_frame == frame_158_stand_with_sword || // stand with sword
 		char_frame == frame_170_stand_with_sword || // stand with sword
@@ -1005,7 +1070,7 @@ void __pascal far parry() {
 				opp_frame != frame_162_block_to_strike
 			) {
 				if (opp_frame == frame_153_strike_3) { // strike
-					var_6 = 1;
+					do_play_seq = 1;
 				} else
 				if (char_charid != charid_0_kid) {
 					back_with_sword();
@@ -1019,9 +1084,75 @@ void __pascal far parry() {
 		if (char_frame != frame_167_blocked) return;
 		seq_id = seq_61_parry_after_strike; // parry after striking with sword
 	}
-	control_up = 1; // disable automatic repeat
+	control_up = CONTROL_IGNORE; // disable automatic repeat
 	seqtbl_offset_char(seq_id);
-	if (var_6) {
+	if (do_play_seq) {
 		play_seq();
 	}
 }
+
+#ifdef USE_TELEPORTS
+void teleport() {
+	// Ideally these variables should be global and be initialized in up_pressed().
+	//int source_modifier = pickup_obj_type;
+	//int source_room = Char.room;
+	//int source_tilepos = Char.curr_row * 10 + Char.curr_col - 1;
+
+	bool found = false;
+	int dest_room, dest_tilepos;
+
+	// Find the pair of the teleport which the prince entered.
+	for (dest_room = 1; dest_room <= 24; dest_room++) {
+		// It must be in a different room.
+		//if (dest_room == source_room) continue;
+
+		get_room_address(dest_room);
+
+		for (dest_tilepos = 0; dest_tilepos < 30; dest_tilepos++) {
+			// Skip over the source teleport.
+			if (dest_room == source_room && dest_tilepos == source_tilepos) continue;
+
+			// The pair is a balcony tile with the same modifier.
+			if (get_curr_tile(dest_tilepos) == tiles_23_balcony_left && curr_modifier == source_modifier) {
+				found = true;
+				goto exit;
+			}
+		}
+	}
+	exit:
+
+	if (found) {
+		// We found a pair. Put the kid there.
+		// Based on do_startpos().
+		Char.room = dest_room;
+		Char.curr_col = dest_tilepos % 10;
+		Char.curr_row = dest_tilepos / 10;
+		Char.x = x_bump[Char.curr_col + 5] + 14 + 7; // Center on the destination teleport.
+		Char.y = y_land[Char.curr_row + 1];
+		next_room = Char.room;
+		clear_coll_rooms(); // Without this, the prince will sometimes end up at the wrong place.
+#ifdef FIX_DISAPPEARING_GUARD_B
+		if (next_room != drawn_room)
+#endif
+		{
+			leave_guard();
+		}
+#ifdef FIX_DISAPPEARING_GUARD_A
+		if (next_room == drawn_room) drawn_room = 0;
+#endif
+		seqtbl_offset_char(seq_5_turn);
+		play_sound(sound_45_jump_through_mirror);
+	} else {
+		// No pair found.
+		//show_dialog("Error: This teleport has no pair.");
+		char message[80];
+		snprintf(message, sizeof(message), "Error: There is no other teleport with modifier %d.", pickup_obj_type);
+		show_dialog(message);
+		Char.x = x_bump[Char.curr_col + 5] + 14;
+		Char.y = y_land[Char.curr_row + 1];
+		seqtbl_offset_char(seq_17_soft_land);
+		play_sound(sound_0_fell_to_death);
+	}
+}
+#endif
+
