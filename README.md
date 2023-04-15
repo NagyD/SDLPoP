@@ -152,6 +152,11 @@ See their contents for license information.
 * `mute` -- Start the game with sound off. (You can still enable sound with Ctrl+S.)
 * `playdemo` -- Make the demo level playable. You may want to use it together with options which start the demo level immediately, such as `megahit 0 playdemo` or `record 0 playdemo`.
 
+### Environment variables
+
+* `SDLPOP_SAVE_PATH` -- If set, all save (SAV) and hall-of-fame (HOF) files will be created in the directory it points to.
+	* Hall-of-Fame and saved game files of mods will be placed in a subdirectory named after the mod.
+
 ### Which keys can I use?
 
 #### Controlling the kid

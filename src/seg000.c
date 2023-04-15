@@ -2370,6 +2370,29 @@ void show_splash() {
 }
 
 const char* get_writable_file_path(char* custom_path_buffer, size_t max_len, const char* file_name) {
+	// If the SDLPOP_SAVE_PATH environment variable is set, put all saves into the directory it points to.
+	const char* save_path = getenv("SDLPOP_SAVE_PATH");
+	if (save_path != NULL && save_path[0] != '\0') {
+#if defined WIN32 || _WIN32 || WIN64 || _WIN64
+		mkdir (save_path);
+#else
+		mkdir (save_path, 0700);
+#endif
+		if (use_custom_levelset) {
+			// First create the directory...
+			snprintf_check(custom_path_buffer, max_len, "%s/%s", save_path, levelset_name);
+#if defined WIN32 || _WIN32 || WIN64 || _WIN64
+			mkdir (custom_path_buffer);
+#else
+			mkdir (custom_path_buffer, 0700);
+#endif
+			snprintf_check(custom_path_buffer, max_len, "%s/%s/%s", save_path, levelset_name, file_name);
+		} else {
+			snprintf_check(custom_path_buffer, max_len, "%s/%s", save_path, file_name);
+		}
+		return custom_path_buffer;
+	}
+
 	if (!use_custom_levelset) {
 		return file_name;
 	}
