@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2021  Dávid Nagy
+Copyright (C) 2013-2023  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ The authors of this program may be contacted at https://forum.princed.org
 sbyte distance_mirror;
 
 // seg003:0000
-void __pascal far init_game(int level) {
+void init_game(int level) {
 	if(offscreen_surface) {
 		free_surface(offscreen_surface); // missing in original
 		offscreen_surface = NULL;
@@ -47,7 +47,7 @@ void __pascal far init_game(int level) {
 }
 
 // seg003:005C
-void __pascal far play_level(int level_number) {
+void play_level(int level_number) {
 	cutscene_ptr_type cutscene_func;
 #ifdef USE_COPYPROT
 	if (enable_copyprot && level_number == custom->copyprot_level) {
@@ -135,7 +135,7 @@ void __pascal far play_level(int level_number) {
 }
 
 // seg003:01A3
-void __pascal far do_startpos() {
+void do_startpos() {
 	word x;
 	// Special event: start at checkpoint
 	if (current_level == /*3*/ custom->checkpoint_level && checkpoint) {
@@ -150,9 +150,9 @@ void __pascal far do_startpos() {
 	}
 	next_room = Char.room = level.start_room;
 	x = level.start_pos;
-	Char.curr_col = x % 10;
-	Char.curr_row = x / 10;
-	Char.x = x_bump[Char.curr_col + 5] + 14;
+	Char.curr_col = x % SCREEN_TILECOUNTX;
+	Char.curr_row = x / SCREEN_TILECOUNTX;
+	Char.x = x_bump[Char.curr_col + FIRST_ONSCREEN_COLUMN] + TILE_SIZEX;
 	// Start in the opposite direction (and turn into the correct one).
 	Char.direction = ~ level.start_dir;
 	if (seamless == 0) {
@@ -179,7 +179,7 @@ void __pascal far do_startpos() {
 }
 
 // seg003:028A
-void __pascal far set_start_pos() {
+void set_start_pos() {
 	Char.y = y_land[Char.curr_row + 1];
 	Char.alive = -1;
 	Char.charid = charid_0_kid;
@@ -202,10 +202,9 @@ void __pascal far set_start_pos() {
 }
 
 // seg003:02E6
-void __pascal far find_start_level_door() {
-	short tilepos;
+void find_start_level_door() {
 	get_room_address(Kid.room);
-	for (tilepos = 0; tilepos < 30; ++tilepos) {
+	for (short tilepos = 0; tilepos < 30; ++tilepos) {
 		if ((curr_room_tiles[tilepos] & 0x1F) == tiles_16_level_door_left) {
 			start_level_door(Kid.room, tilepos);
 		}
@@ -213,13 +212,13 @@ void __pascal far find_start_level_door() {
 }
 
 // seg003:0326
-void __pascal far draw_level_first() {
+void draw_level_first() {
 	next_room = Kid.room;
 	check_the_end();
 	if (custom->tbl_level_type[current_level]) {
 		gen_palace_wall_colors();
 	}
-	draw_rect(&screen_rect, 0);
+	draw_rect(&screen_rect, color_0_black);
 	show_level();
 	redraw_screen(0);
 	draw_kid_hp(hitp_curr, hitp_max);
@@ -238,15 +237,20 @@ void __pascal far draw_level_first() {
 }
 
 // seg003:037B
-void __pascal far redraw_screen(int drawing_different_room) {
+void redraw_screen(int drawing_different_room) {
 	//remove_flash();
 	if (drawing_different_room) {
-		draw_rect(&rect_top, 0);
+		draw_rect(&rect_top, color_0_black);
+#ifdef USE_DARK_TRANSITION
+		// Briefly show a dark screen when changing rooms, like in the original game.
+		update_screen();
+		SDL_Delay(100);
+#endif
 	}
 
 	different_room = 0;
 	if (is_blind_mode) {
-		draw_rect(&rect_top, 0);
+		draw_rect(&rect_top, color_0_black);
 	} else {
 		if (curr_guard_color) {
 			// Moved *before* drawings.
@@ -269,18 +273,17 @@ void __pascal far redraw_screen(int drawing_different_room) {
 		if (current_level == 15) {
 			// letters on potions level
 			current_target_surface = offscreen_surface;
-			short var_2;
-			for (var_2 = 0; var_2 < 14; ++var_2) {
-				if (copyprot_room[var_2] == drawn_room) {
-					set_curr_pos((copyprot_tile[var_2] % 10 << 5) + 24, copyprot_tile[var_2] / 10 * 63 + 38);
-					draw_text_character(copyprot_letter[cplevel_entr[var_2]]);
+			for (short i = 0; i < 14; ++i) {
+				if (copyprot_room[i] == drawn_room) {
+					set_curr_pos((copyprot_tile[i] % 10 << 5) + 24, copyprot_tile[i] / 10 * 63 + 38);
+					draw_text_character(copyprot_letter[cplevel_entr[i]]);
 				}
 			}
 			current_target_surface = onscreen_surface_;
 		}
 #endif
 		is_blind_mode = 0;
-		memset_near(table_counts, 0, sizeof(table_counts));
+		memset(table_counts, 0, sizeof(table_counts));
 		draw_moving();
 		draw_tables();
 		if (is_keyboard_mode) {
@@ -340,7 +343,7 @@ void test_timings(test_timing_state_type* state) {
 // Returns a level number:
 // - The current level if it was restarted.
 // - The next level if the level was completed.
-int __pascal far play_level_2() {
+int play_level_2() {
 	reset_timer(timer_1);
 #ifdef CHECK_TIMING
 	test_timing_state_type test_timing_state = {0};
@@ -405,19 +408,19 @@ int __pascal far play_level_2() {
 }
 
 // seg003:0576
-void __pascal far redraw_at_char() {
+void redraw_at_char() {
 	short x_top_row;
-	short tile_col;
-	short tile_row;
 	short x_col_left;
 	short x_col_right;
 	if (Char.sword >= sword_2_drawn) {
 		// If char is holding sword, it makes redraw-area bigger.
 		if (Char.direction >= dir_0_right) {
-			if (++char_col_right > 9) char_col_right = 9;
+			++char_col_right;
+			if (char_col_right > 9) char_col_right = 9;
 			// char_col_right = MIN(char_col_right + 1, 9);
 		} else {
-			if (--char_col_left < 0) char_col_left = 0;
+			--char_col_left;
+			if (char_col_left < 0) char_col_left = 0;
 			// char_col_left = MAX(char_col_left - 1, 0);
 		}
 	}
@@ -430,8 +433,8 @@ void __pascal far redraw_at_char() {
 		x_col_right = char_col_right;
 		x_col_left = char_col_left;
 	}
-	for (tile_row = x_top_row; tile_row <= char_bottom_row; ++tile_row) {
-		for (tile_col = x_col_left; tile_col <= x_col_right; ++tile_col) {
+	for (short tile_row = x_top_row; tile_row <= char_bottom_row; ++tile_row) {
+		for (short tile_col = x_col_left; tile_col <= x_col_right; ++tile_col) {
 			set_redraw_fore(get_tilepos(tile_col, tile_row), 1);
 		}
 	}
@@ -443,13 +446,10 @@ void __pascal far redraw_at_char() {
 }
 
 // seg003:0645
-void __pascal far redraw_at_char2() {
-	short char_action;
-	short char_frame;
-	void __pascal (* redraw_func)(short, byte);
-	char_action = Char.action;
-	char_frame = Char.frame;
-	redraw_func = &set_redraw2;
+void redraw_at_char2() {
+	short char_action = Char.action;
+	short char_frame = Char.frame;
+	void (* redraw_func)(short, byte) = &set_redraw2;
 	// frames 78..80: grab
 	if (char_frame < frame_78_jumphang || char_frame >= frame_80_jumphang) {
 		// frames 135..149: climb up
@@ -475,7 +475,7 @@ void __pascal far redraw_at_char2() {
 }
 
 // seg003:0706
-void __pascal far check_knock() {
+void check_knock() {
 	if (knock) {
 		do_knock(Char.room, Char.curr_row - (knock>0));
 		knock = 0;
@@ -483,7 +483,7 @@ void __pascal far check_knock() {
 }
 
 // seg003:0735
-void __pascal far timers() {
+void timers() {
 	if (united_with_shadow > 0) {
 		--united_with_shadow;
 		if (united_with_shadow == 0) {
@@ -504,7 +504,6 @@ void __pascal far timers() {
 				if (check_sound_playing()) {
 					stop_sounds();
 				}
-
 				//printf("slow fall ended at: rem_min = %d, rem_tick = %d\n", rem_min, rem_tick);
 				//printf("length = %d ticks\n", is_feather_fall);
 	#ifdef USE_REPLAY
@@ -534,11 +533,43 @@ void __pascal far timers() {
 			do_mouse();
 		}
 	}
+#ifdef USE_SUPER_HIGH_JUMP
+	if (fixes->enable_super_high_jump && super_jump_timer > 0) {
+		--super_jump_timer;
+		if (super_jump_timer == 0 && Kid.frame == frame_79_jumphang) {
+		    if (get_tile(super_jump_room, super_jump_col, super_jump_row) == tiles_11_loose &&
+		            (curr_room_tiles[curr_tilepos] & 0x20) == 0) {
+		        make_loose_fall(1); // knocks the true loose tile above
+		        do_knock(super_jump_room, super_jump_row); // shakes the rest of loose tiles
+		    } else if (curr_tile2 == tiles_20_wall || tile_is_floor(curr_tile2)) {
+		        if (super_jump_row < 2) {
+		            Kid.curr_row = super_jump_row + 1;
+		            Kid.y = y_land[super_jump_row + 2] + 10;
+		        }
+		        do_knock(super_jump_room, super_jump_row); // shakes loose tiles in the row
+		    } else if (!tile_is_floor(curr_tile2)) {
+		        if (super_jump_row == 2) {
+		            Kid.room = level.roomlinks[Kid.room - 1].up;
+		        }
+		        if (Kid.room != 0) { // there is a room above
+					// positions kid for grabbing
+		            Kid.curr_row = super_jump_row + 1;
+		            Kid.y = y_land[super_jump_row + 2] - 10;
+		            Kid.fall_x = 0;
+		            Kid.fall_y = 0;
+		            super_jump_fall = 1;
+		            // gives kid an ability to grab the above front tile
+		            seqtbl_offset_kid_char(seq_19_fall);
+		            play_seq();
+		        }
+		    }
+		}
+	}
+#endif
 }
 
 // seg003:0798
-void __pascal far check_mirror() {
-	word clip_top;
+void check_mirror() {
 	if (jumped_through_mirror == -1) {
 		jump_through_mirror();
 	} else {
@@ -549,7 +580,7 @@ void __pascal far check_mirror() {
 			if (distance_mirror >= 0 && custom->show_mirror_image && Char.room == drawn_room) {
 				load_frame_to_obj();
 				reset_obj_clip();
-				clip_top = y_clip[Char.curr_row + 1];
+				word clip_top = y_clip[Char.curr_row + 1];
 				if (clip_top < obj_y) {
 					obj_clip_top = clip_top;
 					obj_clip_left = (Char.curr_col << 5) + 9;
@@ -561,7 +592,7 @@ void __pascal far check_mirror() {
 }
 
 // seg003:080A
-void __pascal far jump_through_mirror() {
+void jump_through_mirror() {
 	loadkid();
 	load_frame();
 	check_mirror_image();
@@ -576,13 +607,11 @@ void __pascal far jump_through_mirror() {
 }
 
 // seg003:085B
-void __pascal far check_mirror_image() {
-	short distance;
-	short xpos;
-	xpos = x_bump[Char.curr_col + 5] + 10;
-	distance = distance_to_edge_weight();
+void check_mirror_image() {
+	short xpos = x_bump[Char.curr_col + FIRST_ONSCREEN_COLUMN] + 10; // I think 10 is the offset for mirror collision within a tile
+	short distance = distance_to_edge_weight();
 	if (Char.direction >= dir_0_right) {
-		distance = (~distance) + 14;
+		distance = (~distance) + TILE_SIZEX;
 	}
 	distance_mirror = distance - 2;
 	Char.x = (xpos << 1) - Char.x;
@@ -590,16 +619,15 @@ void __pascal far check_mirror_image() {
 }
 
 // seg003:08AA
-void __pascal far bump_into_opponent() {
+void bump_into_opponent() {
 	// This is called from play_kid_frame, so char=Kid, Opp=Guard
-	short distance;
 	if (can_guard_see_kid >= 2 &&
 		Char.sword == sword_0_sheathed && // Kid must not be in fighting pose
 		Opp.sword != sword_0_sheathed && // but Guard must
 		Opp.action < 2 &&
 		Char.direction != Opp.direction // must be facing toward each other
 	) {
-		distance = char_opp_dist();
+		short distance = char_opp_dist();
 		if (ABS(distance) <= 15) {
 
 			#ifdef FIX_PAINLESS_FALL_ON_GUARD
@@ -608,6 +636,15 @@ void __pascal far bump_into_opponent() {
 				else if (Char.fall_y >= 22) { // medium land
 					take_hp(1);
 					play_sound(sound_16_medium_land);
+				}
+			}
+			#endif
+
+			#ifdef FIX_JUMPING_OVER_GUARD
+			if (fixes->fix_jumping_over_guard) {
+				if ((Char.direction == dir_0_right && Char.x > Opp.x) ||
+				        (Char.direction == dir_FF_left && Char.x < Opp.x)) {
+					Char.x = Opp.x;
 				}
 			}
 			#endif
@@ -621,31 +658,25 @@ void __pascal far bump_into_opponent() {
 }
 
 // seg003:0913
-void __pascal far pos_guards() {
-	short guard_tile;
-	short room1;
-	for (room1 = 0; room1 < 24; ++room1) {
-		guard_tile = level.guards_tile[room1];
+void pos_guards() {
+	for (short room1 = 0; room1 < ROOMCOUNT; ++room1) {
+		short guard_tile = level.guards_tile[room1];
 		if (guard_tile < 30) {
-			level.guards_x[room1] = x_bump[guard_tile % 10 + 5] + 14;
+			level.guards_x[room1] = x_bump[(guard_tile % 10) + FIRST_ONSCREEN_COLUMN] + TILE_SIZEX;
 			level.guards_seq_hi[room1] = 0;
 		}
 	}
 }
 
 // seg003:0959
-void __pascal far check_can_guard_see_kid() {
+void check_can_guard_see_kid() {
 /*
 Possible results in can_guard_see_kid:
 0: Guard can't see Kid
 1: Guard can see Kid, but won't come
 2: Guard can see Kid, and will come
 */
-	short kid_frame;
-	short left_pos;
-	short temp;
-	short right_pos;
-	kid_frame = Kid.frame;
+	short kid_frame = Kid.frame;
 	if (Guard.charid == charid_24_mouse) {
 		// If the prince is fighting a guard, and the player does a quickload to a state where the prince is near the mouse, the prince would draw the sword.
 		// The following line prevents this.
@@ -658,24 +689,24 @@ Possible results in can_guard_see_kid:
 		Guard.direction != dir_56_none && Kid.alive < 0 && Guard.alive < 0 && Kid.room == Guard.room && Kid.curr_row == Guard.curr_row
 	) {
 		can_guard_see_kid = 2;
-		left_pos = x_bump[Kid.curr_col + 5] + 7;
+		short left_pos = x_bump[Kid.curr_col + FIRST_ONSCREEN_COLUMN] + TILE_MIDX;
 #ifdef FIX_DOORTOP_DISABLING_GUARD
 		if (fixes->fix_doortop_disabling_guard) {
 			// When the kid is hanging on the right side of a doortop, Kid.curr_col points at the doortop tile and a guard on the left side will see the prince.
 			// This fixes that.
-			if (Kid.action == actions_2_hang_climb || Kid.action == actions_6_hang_straight) left_pos += 14;
+			if (Kid.action == actions_2_hang_climb || Kid.action == actions_6_hang_straight) left_pos += TILE_SIZEX;
 		}
 #endif
 		//printf("Kid.curr_col = %d, Kid.action = %d\n", Kid.curr_col, Kid.action);
-		right_pos = x_bump[Guard.curr_col + 5] + 7;
+		short right_pos = x_bump[Guard.curr_col + FIRST_ONSCREEN_COLUMN] + TILE_MIDX;
 		if (left_pos > right_pos) {
-			temp = left_pos;
+			short temp = left_pos;
 			left_pos = right_pos;
 			right_pos = temp;
 		}
 		// A chomper is on the left side of a tile, so it doesn't count.
 		if (get_tile_at_kid(left_pos) == tiles_18_chomper) {
-			left_pos += 14;
+			left_pos += TILE_SIZEX;
 		}
 		// A gate is on the right side of a tile, so it doesn't count.
 		if (get_tile_at_kid(right_pos) == tiles_4_gate
@@ -683,7 +714,7 @@ Possible results in can_guard_see_kid:
 			|| (fixes->fix_doortop_disabling_guard && (get_tile_at_kid(right_pos) == tiles_7_doortop_with_floor || get_tile_at_kid(right_pos) == tiles_12_doortop))
 #endif
 		) {
-			right_pos -= 14;
+			right_pos -= TILE_SIZEX;
 		}
 		if (right_pos >= left_pos) {
 			while (left_pos <= right_pos) {
@@ -702,7 +733,7 @@ Possible results in can_guard_see_kid:
 				) {
 					can_guard_see_kid = 1;
 				}
-				left_pos += 14;
+				left_pos += TILE_SIZEX;
 			}
 		}
 	} else {
@@ -711,12 +742,12 @@ Possible results in can_guard_see_kid:
 }
 
 // seg003:0A99
-byte __pascal far get_tile_at_kid(int xpos) {
+byte get_tile_at_kid(int xpos) {
 	return get_tile(Kid.room, get_tile_div_mod_m7(xpos), Kid.curr_row);
 }
 
 // seg003:0ABA
-void __pascal far do_mouse() {
+void do_mouse() {
 	loadkid();
 	Char.charid = /*charid_24_mouse*/ custom->mouse_object;
 	Char.x = /*200*/ custom->mouse_start_x;
@@ -731,7 +762,7 @@ void __pascal far do_mouse() {
 }
 
 // seg003:0AFC
-int __pascal far flash_if_hurt() {
+int flash_if_hurt() {
 	if (flash_time != 0) {
 		do_flash(flash_color);
 		return 1;
@@ -754,7 +785,7 @@ int __pascal far flash_if_hurt() {
 }
 
 // seg003:0B1A
-void __pascal far remove_flash_if_hurt() {
+void remove_flash_if_hurt() {
 	if (flash_time != 0) {
 		--flash_time;
 	} else {

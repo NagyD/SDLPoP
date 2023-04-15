@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2021  Dávid Nagy
+Copyright (C) 2013-2023  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ The authors of this program may be contacted at https://forum.princed.org
 #define POP_MAX_PATH 256
 #define POP_MAX_OPTIONS_SIZE 256
 
-#define SDLPOP_VERSION "1.22"
+#define SDLPOP_VERSION "1.23"
 #define WINDOW_TITLE "Prince of Persia (SDLPoP) v" SDLPOP_VERSION
 
 // Enable or disable the SDL hardware accelerated renderer backend
@@ -256,7 +256,56 @@ The authors of this program may be contacted at https://forum.princed.org
 // Technical explanation: https://forum.princed.org/viewtopic.php?p=16408#p16408 (the second half of the post)
 #define FIX_LEVEL_14_RESTARTING
 
+// If a sprite's xpos is negative and divisible by 8, it will appear shifted 8 pixels to the left.
+// Testcase: doc/replays-testcases/Original level 12 xpos glitch.p1r
+// Explanation: https://forum.princed.org/viewtopic.php?p=33336#p33336
+#define FIX_SPRITE_XPOS
+
+// On the original level 5, if you leave the room while the shadow is drinking the potion, the shadow runs to the right.
+// He will eventually fall into the wall, at this point a black rectangle appears on the wall.
+// It's also related to the raise button next to the wall. The rectangle won't appear without that button.
+// Testcase: doc/replays-testcases/Original level 5 shadow into wall.p1r
+// See also: https://github.com/NagyD/SDLPoP/issues/254
+#define FIX_BLACK_RECT
+// TODO: Also fix the shadow not turning around and/or falling into the wall? Or would that break mods?
+
+// The prince can jump over a guard with a properly timed running jump.
+// His character's x coordinate ends up in the column behind the guard which causes the bump sequence
+// not to work correctly.
+#define FIX_JUMPING_OVER_GUARD
+
+// The prince can fall down 2 rooms while climbing a loose tile located in the room above. (Trick 153)
+// It happens when the player hangs on the loose tile holding Shift for a second before climbing up.
+// The fix ensures the tile does not start to fall until the climbing sequence changes prince's current row.
+// Testcase: doc/replays-testcases/trick_153.p1r
+// See also: https://github.com/NagyD/SDLPoP/pull/272
+#define FIX_DROP_2_ROOMS_CLIMBING_LOOSE_TILE
+
+// The prince or a guard can fall through a floor during a sword strike even though there is a floor tile in front of him.
+// A strike sequence consists of 4 important frames, 151-154. Frame 153 is different from the other 3 because has a flag
+// that it "needs a floor". The problem is strike frames a pretty wide so the character's tile is not calculated correctly
+// causing him to visually fall through the floor.
+// This fix prevents falling during that frame treating it like it does not require a floor.
+// Testcase: doc/replays-testcases/Falling through floor (PR274).p1r
+// See also: https://github.com/NagyD/SDLPoP/pull/274
+#define FIX_FALLING_THROUGH_FLOOR_DURING_SWORD_STRIKE
+
+// When the player (re-)enters the currently shown room, the guard disappears from the screen.
+// This can happen when:
+// * A room is linked to itself (broken link).
+// * The player used the "show other room" cheat.
+// * A teleport and its pair are in the same room.
+// There are two fixes for this:
+//#define FIX_DISAPPEARING_GUARD_A // Inserts a black screen.
+//#define FIX_DISAPPEARING_GUARD_B // Doesn't insert a black screen.
+
 #endif // ifndef DISABLE_ALL_FIXES
+
+// Prince can jump 2 stories up in feather fall mode
+#define USE_SUPER_HIGH_JUMP
+
+// Prince can grab tiles on the row above from a standing or a running jump
+#define USE_JUMP_GRAB
 
 // Debug features:
 
@@ -307,6 +356,14 @@ The authors of this program may be contacted at https://forum.princed.org
 // Mute the sound during fast forward.
 //#define FAST_FORWARD_MUTE
 
+// Briefly show a dark screen when changing rooms, like in the original game.
+#define USE_DARK_TRANSITION
+
+// Turn the balconies into teleports.
+// Each balcony (whose left half has a non-zero modifier) will behave as a teleport to another balcony with the same modifier.
+// The right half of such balconies must have modifier == 1.
+#define USE_TELEPORTS
+
 
 // Default SDL_Joystick button values
 #define SDL_JOYSTICK_BUTTON_Y 2
@@ -316,15 +373,15 @@ The authors of this program may be contacted at https://forum.princed.org
 
 
 #ifdef __amigaos4__
-	#define Rmsk  0x00ff0000
-	#define Gmsk  0x0000ff00
-	#define Bmsk  0x000000ff
-	#define Amsk  0xff000000
+  #define Rmsk 0x00ff0000
+  #define Gmsk 0x0000ff00
+  #define Bmsk 0x000000ff
+  #define Amsk 0xff000000
 #else
-	#define Rmsk  0x000000ff
-	#define Gmsk  0x0000ff00
-	#define Bmsk  0x00ff0000
-	#define Amsk  0xff000000
+  #define Rmsk 0x000000ff
+  #define Gmsk 0x0000ff00
+  #define Bmsk 0x00ff0000
+  #define Amsk 0xff000000
 #endif
 
 

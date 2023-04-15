@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2021  Dávid Nagy
+Copyright (C) 2013-2023  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -308,6 +308,13 @@ extern chtab_type* chtab_title50;
 // data:405E
 extern short hof_count;
 
+#ifdef USE_SUPER_HIGH_JUMP
+extern byte super_jump_timer INIT(=0);
+extern byte super_jump_fall INIT(=0);
+extern byte super_jump_room;
+extern sbyte super_jump_col;
+extern sbyte super_jump_row;
+#endif
 
 // data:009A
 extern word demo_mode INIT(= 0);
@@ -419,7 +426,7 @@ extern word seamless;
 // data:4CBC
 extern trob_type trob;
 // data:4382
-extern trob_type trobs[30];
+extern trob_type trobs[TROBS_MAX];
 // data:431A
 extern short redraw_height;
 // data:24DA
@@ -494,12 +501,15 @@ extern mob_type mobs[14];
 // data:4332
 extern short tile_col;
 // data:229C
+// List of every floor position for the 3 rows on screen (and also the row above the screen and the row below the screen)
+// These positions correspond to the standing position of characters on a floor
 extern const short y_land[] INIT(= {-8, 55, 118, 181, 244});
 // data:5888
 extern word curr_guard_color;
 // data:288C
 extern byte key_states[SDL_NUM_SCANCODES];
 // data:24A6
+// List of the left-most position of every tile on the screen (and the 5 tiles to the left off-screen, and the 5 tiles to the right off-screen)
 extern const byte x_bump[] INIT(= {-12, 2, 16, 30, 44, 58, 72, 86, 100, 114, 128, 142, 156, 170, 184, 198, 212, 226, 240, 254});
 // data:42F4
 extern word is_screaming;
@@ -624,13 +634,11 @@ extern SDL_Texture* target_texture;
 extern SDL_GameController* sdl_controller_ INIT( = 0 );
 extern SDL_Joystick* sdl_joystick_; // in case our joystick is not compatible with SDL_GameController
 extern byte using_sdl_joystick_interface;
-extern int joy_axis[6]; // hor/ver axes for left/right sticks + left and right triggers (in total 6 axes)
+extern int joy_axis[JOY_AXIS_NUM]; // hor/ver axes for left/right sticks + left and right triggers (in total 6 axes)
+extern int joy_axis_max[JOY_AXIS_NUM]; // Same as above, but stores the highest value reached between game updates
 extern int joy_left_stick_states[2]; // horizontal, vertical
 extern int joy_right_stick_states[2];
-extern int joy_hat_states[2]; // horizontal, vertical
-extern int joy_AY_buttons_state;
-extern int joy_X_button_state;
-extern int joy_B_button_state;
+extern int joy_button_states[JOYINPUT_NUM];
 extern SDL_Haptic* sdl_haptic;
 
 extern Uint64 perf_counters_per_tick;
@@ -725,6 +733,7 @@ extern char gamecontrollerdb_file[POP_MAX_PATH] INIT(= "");
 extern byte enable_quicksave INIT(= 1);
 extern byte enable_quicksave_penalty INIT(= 1);
 extern byte enable_replay INIT(= 1);
+extern byte use_hardware_acceleration INIT(= 2);
 extern byte use_correct_aspect_ratio INIT(= 0);
 extern byte use_integer_scaling INIT(= 0);
 extern byte scaling_type INIT(= 0);
@@ -746,14 +755,14 @@ extern custom_options_type custom_defaults INIT(= {
 		.saving_allowed_last_level = 13,
 		.start_upside_down = 0,
 		.start_in_blind_mode = 0,
-        // data:009E
-        .copyprot_level = 2,
+		// data:009E
+		.copyprot_level = 2,
 		.drawn_tile_top_level_edge = tiles_1_floor,
 		.drawn_tile_left_level_edge = tiles_20_wall,
 		.level_edge_hit_tile = tiles_20_wall,
 		.allow_triggering_any_tile = 0,
 		.enable_wda_in_palace = 0,
-        .vga_palette = VGA_PALETTE_DEFAULT,
+		.vga_palette = VGA_PALETTE_DEFAULT,
 		.first_level = 1,
 		.skip_title = 0,
 		.shift_L_allowed_until_level = 4,
@@ -788,6 +797,12 @@ extern custom_options_type custom_defaults INIT(= {
 		.mirror_row = 0,
 		.mirror_tile = tiles_13_mirror,
 		.show_mirror_image = 1,
+
+		.shadow_steal_level = 5,
+		.shadow_steal_room = 24,
+		.shadow_step_level = 6,
+		.shadow_step_room = 1,
+
 		.falling_exit_level = 6,
 		.falling_exit_room = 1,
 		.falling_entry_level = 7,
@@ -813,9 +828,9 @@ extern custom_options_type custom_defaults INIT(= {
 		// data:02B2
 		.tbl_level_type = {0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 0},
 		// 1.3
-        .tbl_level_color = {0, 0, 0, 1, 0, 0, 0, 1, 2, 2, 0, 0, 3, 3, 4, 0},
+		.tbl_level_color = {0, 0, 0, 1, 0, 0, 0, 1, 2, 2, 0, 0, 3, 3, 4, 0},
 		// data:03D4
-        .tbl_guard_type = {0, 0, 0, 2, 0, 0, 1, 0, 0, 0, 0, 0, 4, 3, -1, -1},
+		.tbl_guard_type = {0, 0, 0, 2, 0, 0, 1, 0, 0, 0, 0, 0, 4, 3, -1, -1},
 		// data:0EDA
 		.tbl_guard_hp = {4, 3, 3, 3, 3, 4, 5, 4, 4, 5, 5, 5, 4, 6, 0, 0},
 		.tbl_cutscenes_by_index = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15},
@@ -911,6 +926,16 @@ extern int play_demo_level;
 #ifdef USE_REPLAY
 extern int g_deprecation_number;
 #endif
+extern char mods_folder[POP_MAX_PATH] INIT(= "mods");
+
+extern int play_demo_level;
+
+#ifdef USE_REPLAY
+extern int g_deprecation_number;
+#endif
+
+extern byte always_use_original_music;
+extern byte always_use_original_graphics;
 
 #undef INIT
 #undef extern

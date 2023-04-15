@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2021  Dávid Nagy
+Copyright (C) 2013-2023  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ image_type* arrowhead_down_image;
 image_type* arrowhead_left_image;
 image_type* arrowhead_right_image;
 
-void load_arrowhead_images() {
+void load_arrowhead_images(void) {
 	// Make a dummy palette for decode_image().
 	dat_pal_type dat_pal;
 	memset(&dat_pal, 0, sizeof(dat_pal));
@@ -84,8 +84,8 @@ pause_menu_item_type pause_menu_items[] = {
 		// TODO: Add a cheats menu, where you can choose a cheat from a list?
 		/*{.id = PAUSE_MENU_CHEATS,        .text = "CHEATS", .required = &cheats_enabled},*/
 #ifdef USE_QUICKSAVE // TODO: If quicksave is disabled, show regular save/load instead?
-		{.id = PAUSE_MENU_SAVE_GAME,     .text = "QUICKSAVE"},
-		{.id = PAUSE_MENU_LOAD_GAME,     .text = "QUICKLOAD"},
+		{.id = PAUSE_MENU_SAVE_GAME,     .text = "QUICKSAVE (F6)"},
+		{.id = PAUSE_MENU_LOAD_GAME,     .text = "QUICKLOAD (F9)"},
 #endif
 		{.id = PAUSE_MENU_RESTART_LEVEL, .text = "RESTART LEVEL"},
 		{.id = PAUSE_MENU_SETTINGS,      .text = "SETTINGS"},
@@ -149,6 +149,7 @@ enum setting_ids {
 	SETTING_JOYSTICK_THRESHOLD,
 	SETTING_JOYSTICK_ONLY_HORIZONTAL,
 	SETTING_FULLSCREEN,
+	SETTING_USE_HARDWARE_ACCELERATION,
 	SETTING_USE_CORRECT_ASPECT_RATIO,
 	SETTING_USE_INTEGER_SCALING,
 	SETTING_SCALING_TYPE,
@@ -199,6 +200,12 @@ enum setting_ids {
 	SETTING_FIX_QUICKSAVE_DURING_FEATHER,
 	SETTING_FIX_CAPED_PRINCE_SLIDING_THROUGH_GATE,
 	SETTING_FIX_DOORTOP_DISABLING_GUARD,
+	SETTING_FIX_JUMPING_OVER_GUARD,
+	SETTING_FIX_DROP_2_ROOMS_CLIMBING_LOOSE_TILE,
+	SETTING_FIX_FALLING_THROUGH_FLOOR_DURING_SWORD_STRIKE,
+	SETTING_FIX_REGISTER_QUICK_INPUT,
+	SETTING_ENABLE_SUPER_HIGH_JUMP,
+	SETTING_ENABLE_JUMP_GRAB,
 	SETTING_USE_CUSTOM_OPTIONS,
 	SETTING_START_MINUTES_LEFT,
 	SETTING_START_TICKS_LEFT,
@@ -248,6 +255,12 @@ enum setting_ids {
 	SETTING_MIRROR_ROW,
 	SETTING_MIRROR_TILE,
 	SETTING_SHOW_MIRROR_IMAGE,
+
+	SETTING_SHADOW_STEAL_LEVEL,
+	SETTING_SHADOW_STEAL_ROOM,
+	SETTING_SHADOW_STEP_LEVEL,
+	SETTING_SHADOW_STEP_ROOM,
+
 	SETTING_FALLING_EXIT_LEVEL,
 	SETTING_FALLING_EXIT_ROOM,
 	SETTING_FALLING_ENTRY_LEVEL,
@@ -326,6 +339,7 @@ setting_type general_settings[] = {
 				.text = "Restore defaults...", .explanation = "Revert all settings to the default state."},
 };
 
+NAMES_LIST(use_hardware_acceleration_setting_names, {"OFF", "ON", "AUTO",});
 NAMES_LIST(scaling_type_setting_names, {"Sharp", "Fuzzy", "Blurry",});
 
 int integer_scaling_possible =
@@ -340,6 +354,13 @@ setting_type visuals_settings[] = {
 		{.id = SETTING_FULLSCREEN, .style = SETTING_STYLE_TOGGLE, .linked = &start_fullscreen,
 				.text = "Start fullscreen",
 				.explanation = "Start the game in fullscreen mode.\nYou can also toggle fullscreen by pressing Alt+Enter."},
+		{.id = SETTING_USE_HARDWARE_ACCELERATION, .style = SETTING_STYLE_NUMBER, .number_type = SETTING_BYTE, .max = 2,
+				.linked = &use_hardware_acceleration, .names_list = &use_hardware_acceleration_setting_names_list,
+				.text = "Use hardware acceleration",
+				.explanation = "Auto - Use hardware acceleration, if available.\n"
+				               "On - Force hardware acceleration.\n"
+				               "Off - Disable hardware acceleration.\n"
+				               "Note: This requires a restart."},
 		{.id = SETTING_USE_CORRECT_ASPECT_RATIO, .style = SETTING_STYLE_TOGGLE, .linked = &use_correct_aspect_ratio,
 				.text = "Use 4:3 aspect ratio",
 				.explanation = "Render the game in the originally intended 4:3 aspect ratio."
@@ -418,6 +439,15 @@ setting_type gameplay_settings[] = {
 				.linked = &fixes_saved.enable_remember_guard_hp, .required = &use_fixes_and_enhancements,
 				.text = "Remember guard hitpoints",
 				.explanation = "Enable guard hitpoints not resetting to their default (maximum) value when re-entering the room."},
+		{.id = SETTING_ENABLE_SUPER_HIGH_JUMP, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fixes_saved.enable_super_high_jump, .required = &use_fixes_and_enhancements,
+				.text = "Enable super high jump",
+				.explanation = "Prince in feather mode (after drinking a green potion) can jump 2 stories high."},
+		{.id = SETTING_ENABLE_JUMP_GRAB, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fixes_saved.enable_jump_grab, .required = &use_fixes_and_enhancements,
+				.text = "Enable jump grab",
+				.explanation = "Prince can grab tiles on the floor above while jumping. "
+                               "Hold Shift and up arrow, but not the forward arrow key."},
 		{.id = SETTING_FIX_GATE_SOUNDS, .style = SETTING_STYLE_TOGGLE,
 				.linked = &fixes_saved.fix_gate_sounds, .required = &use_fixes_and_enhancements,
 				.text = "Fix gate sounds bug",
@@ -552,7 +582,7 @@ setting_type gameplay_settings[] = {
 				.explanation = "You can enter closed exit doors after you met the shadow or Jaffar died, or after you opened one of multiple exits."},
 		{.id = SETTING_FIX_QUICKSAVE_DURING_FEATHER, .style = SETTING_STYLE_TOGGLE,
 				.linked = &fixes_saved.fix_quicksave_during_feather, .required = &use_fixes_and_enhancements,
-				.text = "Fix quick save in feather mode",
+				.text = "Fix quicksave in feather mode",
 				.explanation = "You cannot save game while floating in feather mode."},
 		{.id = SETTING_FIX_CAPED_PRINCE_SLIDING_THROUGH_GATE, .style = SETTING_STYLE_TOGGLE,
 				.linked = &fixes_saved.fix_caped_prince_sliding_through_gate, .required = &use_fixes_and_enhancements,
@@ -562,6 +592,22 @@ setting_type gameplay_settings[] = {
 				.linked = &fixes_saved.fix_doortop_disabling_guard, .required = &use_fixes_and_enhancements,
 				.text = "Fix door top disabling guard",
 				.explanation = "Guards become inactive if they are standing on a door top (with floor), or if the prince is standing on a door top."},
+		{.id = SETTING_FIX_JUMPING_OVER_GUARD, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fixes_saved.fix_jumping_over_guard, .required = &use_fixes_and_enhancements,
+				.text = "Fix jumping over guard",
+				.explanation = "Prince can jump over guards with a properly timed running jump."},
+		{.id = SETTING_FIX_DROP_2_ROOMS_CLIMBING_LOOSE_TILE, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fixes_saved.fix_drop_2_rooms_climbing_loose_tile, .required = &use_fixes_and_enhancements,
+				.text = "Fix dropping 2 rooms with loose tile",
+				.explanation = "Prince can fall 2 rooms down while climbing a loose tile in a room above. (Trick 153)"},
+		{.id = SETTING_FIX_FALLING_THROUGH_FLOOR_DURING_SWORD_STRIKE, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fixes_saved.fix_falling_through_floor_during_sword_strike, .required = &use_fixes_and_enhancements,
+				.text = "Fix dropping through floor striking",
+				.explanation = "Prince or guard can fall through the floor during a sword strike sequence."},
+		{.id = SETTING_FIX_REGISTER_QUICK_INPUT, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fixes_saved.fix_register_quick_input, .required = &use_fixes_and_enhancements,
+				.text = "Fix fast inputs",
+				.explanation = "Input is ignored if a button or key is pressed and released between game ticks."},
 };
 
 NAMES_LIST(tile_type_setting_names, {
@@ -788,6 +834,24 @@ setting_type mods_settings[] = {
 				.linked = &custom_saved.show_mirror_image, .number_type = SETTING_BYTE,
 				.text = "Show mirror image",
 				.explanation = "Show the kid's mirror image in the mirror.\n(default = true)"},
+
+		{.id = SETTING_SHADOW_STEAL_LEVEL, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.shadow_steal_level, .number_type = SETTING_BYTE, .max = 16, .names_list = &never_is_16_list,
+				.text = "Shadow steal level",
+				.explanation = "Level where the shadow steals a potion.\n(default = 5)"},
+		{.id = SETTING_SHADOW_STEAL_ROOM, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.shadow_steal_room, .number_type = SETTING_BYTE, .min = 1, .max = 24,
+				.text = "Shadow steal room",
+				.explanation = "Room where the shadow steals a potion.\n(default = 24)"},
+		{.id = SETTING_SHADOW_STEP_LEVEL, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.shadow_step_level, .number_type = SETTING_BYTE, .max = 16, .names_list = &never_is_16_list,
+				.text = "Shadow step level",
+				.explanation = "Level where the shadow steps on a button.\n(default = 6)"},
+		{.id = SETTING_SHADOW_STEP_ROOM, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
+				.linked = &custom_saved.shadow_step_room, .number_type = SETTING_BYTE, .min = 1, .max = 24,
+				.text = "Shadow step room",
+				.explanation = "Room where the shadow steps on a button.\n(default = 1)"},
+
 		{.id = SETTING_FALLING_EXIT_LEVEL, .style = SETTING_STYLE_NUMBER, .required = &use_custom_options,
 				.linked = &custom_saved.falling_exit_level, .number_type = SETTING_WORD, .max = 16, .names_list = &never_is_16_list,
 				.text = "Falling exit level",
@@ -1013,7 +1077,7 @@ bool is_mouse_over_rect(rect_type* rect) {
 }
 
 // Maps the cursor position into a coordinate between (0,0) and (320,200) and sets mouse_x, mouse_y and mouse_moved.
-void read_mouse_state() {
+void read_mouse_state(void) {
 	float scale_x, scale_y;
 	SDL_RenderGetScale(renderer_, &scale_x, &scale_y);
 	int logical_width, logical_height;
@@ -1092,7 +1156,7 @@ void enter_settings_subsection(int settings_menu_id) {
 	}
 }
 
-void leave_settings_subsection() {
+void leave_settings_subsection(void) {
 	if (active_settings_subsection == SETTINGS_MENU_LEVEL_CUSTOMIZATION) {
 		enter_settings_subsection(SETTINGS_MENU_MODS);
 	} else {
@@ -1104,7 +1168,7 @@ void leave_settings_subsection() {
 	}
 }
 
-void reset_paused_menu() {
+void reset_paused_menu(void) {
 	drawn_menu = 0;
 	controlled_area = 0;
 	hovering_pause_menu_item = PAUSE_MENU_RESUME;
@@ -1154,6 +1218,7 @@ void pause_menu_clicked(pause_menu_item_type* item) {
 			break;
 		case SETTINGS_MENU_BACK:
 			reset_paused_menu();
+			hovering_pause_menu_item = PAUSE_MENU_SETTINGS;
 			break;
 	}
 	clear_menu_controls(); // prevent "click-through" because the screen changes
@@ -1208,12 +1273,12 @@ void draw_pause_menu_item(pause_menu_item_type* item, rect_type* parent, int* y_
 		}
 
 	}
-	show_text_with_color(&text_rect, 0, -1, item->text, text_color);
+	show_text_with_color(&text_rect, halign_center, valign_top, item->text, text_color);
 	*y_offset += 13;
 
 }
 
-void draw_pause_menu() {
+void draw_pause_menu(void) {
 	pause_menu_alpha = 120;
 	draw_rect_with_alpha(&screen_rect, color_0_black, pause_menu_alpha);
 	draw_rect_with_alpha(&rect_bottom_text, color_0_black, 0); // Transparent so that the text "GAME PAUSED" is visible.
@@ -1371,10 +1436,10 @@ void decrease_setting(setting_type* setting, int old_value) {
 
 
 void draw_setting_explanation(setting_type* setting) {
-	show_text_with_color(&explanation_rect, 0, -1, setting->explanation, color_7_lightgray);
+	show_text_with_color(&explanation_rect, halign_center, valign_top, setting->explanation, color_7_lightgray);
 }
 
-void draw_image_with_blending(image_type far* image, int xpos, int ypos) {
+void draw_image_with_blending(image_type* image, int xpos, int ypos) {
 	SDL_Rect src_rect = {0, 0, image->w, image->h};
 	SDL_Rect dest_rect = {xpos, ypos, image->w, image->h};
 	SDL_SetColorKey(image, SDL_TRUE, 0);
@@ -1465,7 +1530,7 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 		text_color = color_7_lightgray;
 	}
 
-	show_text_with_color(&text_rect, -1, -1, setting->text, text_color);
+	show_text_with_color(&text_rect, halign_left, valign_top, setting->text, text_color);
 
 	if (setting->style == SETTING_STYLE_TOGGLE && !disabled) {
 		bool setting_enabled = true;
@@ -1503,9 +1568,9 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 
 		int OFF_color = (setting_enabled) ? unselected_color : selected_color;
 		int ON_color = (setting_enabled) ? selected_color : unselected_color;
-		show_text_with_color(&text_rect, 1, -1, "ON", ON_color);
+		show_text_with_color(&text_rect, halign_right, valign_top, "ON", ON_color);
 		text_rect.right -= 15;
-		show_text_with_color(&text_rect, 1, -1, "OFF", OFF_color);
+		show_text_with_color(&text_rect, halign_right, valign_top, "OFF", OFF_color);
 
 	} else if (setting->style == SETTING_STYLE_NUMBER && !disabled) {
 		int value = get_setting_value(setting);
@@ -1517,7 +1582,7 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 					increase_setting(setting, value);
 				} else {
 					char* value_text = print_setting_value(setting, value);
-					int value_text_width = get_line_width(value_text, strlen(value_text));
+					int value_text_width = get_line_width(value_text, (int)strlen(value_text));
 					rect_type left_hitbox = right_hitbox;
 					left_hitbox.left -= (value_text_width + 10);
 					left_hitbox.right -= (value_text_width + 5);
@@ -1535,10 +1600,10 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 
 		value = get_setting_value(setting); // May have been updated.
 		char* value_text = print_setting_value(setting, value);
-		show_text_with_color(&text_rect, 1, -1, value_text, selected_color);
+		show_text_with_color(&text_rect, halign_right, valign_top, value_text, selected_color);
 
 		if (highlighted_setting_id == setting->id) {
-			int value_text_width = get_line_width(value_text, strlen(value_text));
+			int value_text_width = get_line_width(value_text, (int)strlen(value_text));
 			draw_image_with_blending(arrowhead_right_image, text_rect.right + 2, text_rect.top);
 			draw_image_with_blending(arrowhead_left_image, text_rect.right - value_text_width - 6, text_rect.top);
 		}
@@ -1590,7 +1655,7 @@ void draw_settings_area(settings_area_type* settings_area) {
 		y_offset = 15;
 		char level_text[16];
 		snprintf(level_text, sizeof(level_text), "LEVEL %d", menu_current_level);
-		show_text_with_color(&settings_area_rect, 0, -1, level_text, color_15_brightwhite);
+		show_text_with_color(&settings_area_rect, halign_center, valign_top, level_text, color_15_brightwhite);
 	}
 
 	for (int i = 0; (i < settings_area->setting_count) && (num_drawn_settings < 9); ++i) {
@@ -1626,7 +1691,7 @@ void draw_settings_area(settings_area_type* settings_area) {
 	}
 }
 
-void draw_settings_menu() {
+void draw_settings_menu(void) {
 	settings_area_type* settings_area = get_settings_area(active_settings_subsection);
 	pause_menu_alpha = (settings_area == NULL) ? 220 : 255;
 	draw_rect_with_alpha(&screen_rect, color_0_black, pause_menu_alpha);
@@ -1785,7 +1850,7 @@ void draw_confirmation_dialog(int which_dialog, const char* text) {
 			rect_type rect;
 			shrink2_rect(&rect, &copyprot_dialog->text_rect, 2, 1);
 			rect.bottom -= 14;
-			show_text_with_color(&rect, 0, 0, text, color_15_brightwhite);
+			show_text_with_color(&rect, halign_center, valign_middle, text, color_15_brightwhite);
 			clear_kbd_buf();
 
 			rect_type* highlight_rect;
@@ -1800,8 +1865,8 @@ void draw_confirmation_dialog(int which_dialog, const char* text) {
 				cancel_text_color = color_15_brightwhite;
 			}
 			draw_rect(highlight_rect, color_8_darkgray);
-			show_text_with_color(&ok_text_rect, 0, 0, "OK", ok_text_color);
-			show_text_with_color(&cancel_text_rect, 0, 0, "Cancel", cancel_text_color);
+			show_text_with_color(&ok_text_rect, halign_center, valign_middle, "OK", ok_text_color);
+			show_text_with_color(&cancel_text_rect, halign_center, valign_middle, "Cancel", cancel_text_color);
 			update_screen();
 		}
 
@@ -1812,7 +1877,7 @@ void draw_confirmation_dialog(int which_dialog, const char* text) {
 	clear_menu_controls();
 }
 
-void draw_select_level_dialog() {
+void draw_select_level_dialog(void) {
 	clear_menu_controls();
 	int old_edited_level_number = -1;
 	for (;;) {
@@ -1850,12 +1915,12 @@ void draw_select_level_dialog() {
 			rect_type rect;
 			shrink2_rect(&rect, &copyprot_dialog->text_rect, 2, 1);
 			rect.bottom -= 14;
-			show_text_with_color(&rect, 0, 0, "Customize level...", color_15_brightwhite);
+			show_text_with_color(&rect, halign_center, valign_middle, "Customize level...", color_15_brightwhite);
 			clear_kbd_buf();
 			rect_type input_rect = {104,   64,  118,  256};
 			char level_text[8];
 			snprintf(level_text, sizeof(level_text), "%d", menu_current_level);
-			show_text_with_color(&input_rect, 0, 0, level_text, color_15_brightwhite);
+			show_text_with_color(&input_rect, halign_center, valign_middle, level_text, color_15_brightwhite);
 			draw_image_with_blending(arrowhead_right_image, 175, input_rect.top + 3);
 			draw_image_with_blending(arrowhead_left_image, 145 - 3, input_rect.top + 3);
 
@@ -1872,7 +1937,7 @@ void draw_select_level_dialog() {
 int need_full_menu_redraw_count;
 
 void draw_menu() {
-	escape_key_suppressed = (key_states[SDL_SCANCODE_BACKSPACE] || key_states[SDL_SCANCODE_ESCAPE]);
+	escape_key_suppressed = (key_states[SDL_SCANCODE_BACKSPACE] & KEYSTATE_HELD || key_states[SDL_SCANCODE_ESCAPE] & KEYSTATE_HELD);
 	surface_type* saved_target_surface = current_target_surface;
 	current_target_surface = overlay_surface;
 
@@ -1907,6 +1972,7 @@ void draw_menu() {
 					leave_settings_subsection();
 				} else {
 					reset_paused_menu(); // Go back to the top level pause menu.
+					hovering_pause_menu_item = PAUSE_MENU_SETTINGS;
 				}
 			} else {
 				break; // Close the menu.
@@ -1992,8 +2058,16 @@ int key_test_paused_menu(int key) {
 	}
 
 	if (is_joyst_mode) {
-		int joy_x = joy_hat_states[0];
-		int joy_y = joy_hat_states[1];
+		int joy_x = 0;
+		int joy_y = 0;
+		if (joy_button_states[JOYINPUT_DPAD_LEFT] & KEYSTATE_HELD)
+			joy_x = -1;
+		else if (joy_button_states[JOYINPUT_DPAD_RIGHT] & KEYSTATE_HELD)
+			joy_x = 1;
+		if (joy_button_states[JOYINPUT_DPAD_UP] & KEYSTATE_HELD)
+			joy_y = -1;
+		else if (joy_button_states[JOYINPUT_DPAD_DOWN] & KEYSTATE_HELD)
+			joy_y = 1;
 		int y_threshold = 14000;
 		int x_threshold = 26000; // Less sensitive, to prevent accidentally changing a setting.
 		if (joy_axis[SDL_CONTROLLER_AXIS_LEFTY] < -y_threshold) {
@@ -2024,14 +2098,14 @@ int key_test_paused_menu(int key) {
 			}
 		}
 
-		if (joy_AY_buttons_state == 0 && joy_B_button_state == 0) {
+		if (!(joy_button_states[JOYINPUT_A] & KEYSTATE_HELD) && !(joy_button_states[JOYINPUT_Y] & KEYSTATE_HELD) && !(joy_button_states[JOYINPUT_B] & KEYSTATE_HELD)) {
 			joy_ABXY_buttons_released = true;
 		} else if (joy_ABXY_buttons_released) {
 			joy_ABXY_buttons_released = false;
-			if (joy_AY_buttons_state == 1 /* A pressed */) {
+			if (joy_button_states[JOYINPUT_A] & KEYSTATE_HELD) {
 				key = SDL_SCANCODE_RETURN;
-				joy_AY_buttons_state = 0; // Prevent 'down' input being passed to the controls if the game is unpaused.
-			} else if (joy_B_button_state == 1) {
+				joy_button_states[JOYINPUT_A] = 0; // Prevent 'down' input being passed to the controls if the game is unpaused.
+			} else if (joy_button_states[JOYINPUT_B] & KEYSTATE_HELD) {
 				key = SDL_SCANCODE_ESCAPE;
 			}
 		}
@@ -2105,6 +2179,7 @@ void process_ingame_settings_user_managed(SDL_RWops* rw, rw_process_func_type pr
 	process(joystick_only_horizontal);
 	process(enable_replay);
 	process(start_fullscreen);
+	process(use_hardware_acceleration);
 	process(use_correct_aspect_ratio);
 	process(use_integer_scaling);
 	process(scaling_type);
@@ -2127,7 +2202,7 @@ void process_ingame_settings_mod_managed(SDL_RWops* rw, rw_process_func_type pro
 #undef process
 
 // CRC-32 implementation adapted from:
-// http://www.hackersdelight.org/hdcodetxt/crc.c.txt
+// https://web.archive.org/web/20190108202303/http://www.hackersdelight.org/hdcodetxt/crc.c.txt
 unsigned int crc32c(unsigned char *message, size_t size) {
 	int i, j;
 	unsigned int byte, crc, mask;
@@ -2148,7 +2223,8 @@ unsigned int crc32c(unsigned char *message, size_t size) {
 	/* Through with table setup, now calculate the CRC. */
 	i = 0;
 	crc = 0xFFFFFFFF;
-	while ((byte = message[i]), size--) {
+	while (size--) {
+		byte = message[i];
 		crc = (crc >> 8) ^ table[(crc ^ byte) & 0xFF];
 		i = i + 1;
 	}
@@ -2157,7 +2233,7 @@ unsigned int crc32c(unsigned char *message, size_t size) {
 
 dword exe_crc = 0;
 
-void calculate_exe_crc() {
+void calculate_exe_crc(void) {
 	if (exe_crc == 0) {
 		// Get the CRC32 fingerprint of the executable.
 		FILE* exe_file = fopen(g_argv[0], "rb");
@@ -2180,7 +2256,7 @@ void calculate_exe_crc() {
 	}
 }
 
-void save_ingame_settings() {
+void save_ingame_settings(void) {
 	SDL_RWops* rw = SDL_RWFromFile(locate_file("SDLPoP.cfg"), "wb");
 	if (rw != NULL) {
 		calculate_exe_crc();
@@ -2194,7 +2270,7 @@ void save_ingame_settings() {
 	}
 }
 
-void load_ingame_settings() {
+void load_ingame_settings(void) {
 	// We want the SDLPoP.cfg file (in-game menu settings) to override the SDLPoP.ini file,
 	// but ONLY if the .ini file wasn't modified since the last time the .cfg file was saved!
 	struct stat st_ini, st_cfg;
@@ -2231,10 +2307,10 @@ void load_ingame_settings() {
 	}
 }
 
-void menu_was_closed() {
+void menu_was_closed(void) {
 	is_paused = 0;
 	is_menu_shown = 0;
-	escape_key_suppressed = (key_states[SDL_SCANCODE_BACKSPACE] || key_states[SDL_SCANCODE_ESCAPE]);
+	escape_key_suppressed = (key_states[SDL_SCANCODE_BACKSPACE] & KEYSTATE_HELD || key_states[SDL_SCANCODE_ESCAPE] & KEYSTATE_HELD);
 	if (were_settings_changed) {
 		save_ingame_settings();
 		were_settings_changed = false;

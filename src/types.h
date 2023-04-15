@@ -1,6 +1,6 @@
 /*
 SDLPoP, a port/conversion of the DOS game Prince of Persia.
-Copyright (C) 2013-2021  Dávid Nagy
+Copyright (C) 2013-2023  Dávid Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,16 +24,16 @@ The authors of this program may be contacted at https://forum.princed.org
 #define STB_VORBIS_HEADER_ONLY
 #include "stb_vorbis.c"
 
-//#if !defined(_MSC_VER)
-//# include <SDL2/SDL.h>
-//# include <SDL2/SDL_image.h>
-//#else
+#if !defined(_MSC_VER)
+# include <SDL2/SDL.h>
+# include <SDL2/SDL_image.h>
+#else
 // These headers for SDL seem to be the pkgconfig/meson standard as per the
 // latest versions. If the old ones should be used, the ifdef must be used
 // to compare versions. 
 # include <SDL.h>
 # include <SDL_image.h>
-//#endif
+#endif
 
 #if SDL_BYTEORDER != SDL_LIL_ENDIAN
 //#error This program is not (yet) prepared for big endian CPUs, please contact the author.
@@ -48,19 +48,6 @@ The authors of this program may be contacted at https://forum.princed.org
 #define SDL_COMPILE_TIME_ASSERT(name, x)               \
        typedef int SDL_dummy_ ## name[(x) * 2 - 1]
 */
-
-// "far" and "near" makes sense only for 16-bit
-#define far
-#define near
-#define __pascal
-#define malloc_near malloc
-#define malloc_far  malloc
-#define free_near   free
-#define free_far    free
-#define memset_near memset
-#define memset_far  memset
-#define memcpy_near memcpy
-#define memcpy_far  memcpy
 
 typedef Uint8 byte;
 typedef Sint8 sbyte;
@@ -90,7 +77,7 @@ typedef struct tile_and_mod {
 	byte modifier;
 } tile_and_mod;
 
-typedef int __pascal far (*add_table_type)(short chtab_id, int id, sbyte xh, sbyte xl, int ybottom, int blit, byte peel);
+typedef int (*add_table_type)(short chtab_id, int id, sbyte xh, sbyte xl, int ybottom, int blit, byte peel);
 
 typedef struct back_table_type {
 	sbyte xh;
@@ -250,6 +237,14 @@ typedef struct level_type {
 	byte fill_3[18];
 } level_type;
 SDL_COMPILE_TIME_ASSERT(level_size, sizeof(level_type) == 2305);
+
+// Unused fields are cleared in reset_level_unused_fields().
+
+// On the original levels, roomxs[] and roomys[] contain the x/y coordinates of the rooms. They were used by Mechner's level editor.
+
+// fill_2[] is used by RoomShaker: If you place a Debug Start in RoomShaker,
+// the start_* fields will contain the location of the Debug Start, and fill_2[] will contain the location of the Player Start.
+
 #pragma pack(pop)
 
 typedef SDL_Surface surface_type;
@@ -264,7 +259,7 @@ typedef struct chtab_type {
 	word chtab_palette_bits;
 	word has_palette_bits;
 	// This is a variable-size array, with n_images elements.
-	image_type* far images[];
+	image_type* images[];
 } chtab_type;
 
 typedef struct full_image_type {
@@ -301,7 +296,7 @@ typedef struct char_type {
 	sbyte curr_row;
 	byte action;
 	sbyte fall_x;
-	sbyte fall_y;
+	sbyte fall_y; //Falling speed, but also used to check falling distance (less than 22 = one row, less than 33 = two rows)
 	byte room;
 	byte repeat;
 	byte charid;
@@ -451,7 +446,7 @@ typedef struct dat_type {
 	// handle and dat_table are NULL if the DAT is a directory.
 } dat_type;
 
-typedef void __pascal far (*cutscene_ptr_type)();
+typedef void (*cutscene_ptr_type)(void);
 
 #ifdef USE_FADE
 typedef struct palette_fade_type {
@@ -460,8 +455,8 @@ typedef struct palette_fade_type {
 	word fade_pos;
 	rgb_type original_pal[256];
 	rgb_type faded_pal[256];
-	int __pascal far (*proc_fade_frame)(struct palette_fade_type far *palette_buffer);
-	void __pascal far (*proc_restore_free)(struct palette_fade_type far *palette_buffer);
+	int (*proc_fade_frame)(struct palette_fade_type* palette_buffer);
+	void (*proc_restore_free)(struct palette_fade_type* palette_buffer);
 } palette_fade_type;
 #endif
 
@@ -510,20 +505,23 @@ typedef enum data_location {
 } data_location;
 
 enum sound_type {
-    sound_speaker = 0,
-    sound_digi = 1,
-    sound_midi = 2,
-    sound_chunk = 3,
-    sound_music = 4,
-    sound_ogg = 5,
+	sound_speaker = 0,
+	sound_digi = 1,
+	sound_midi = 2,
+	sound_chunk = 3,
+	sound_music = 4,
+	sound_ogg = 5,
 	sound_digi_converted = 6,
 };
+
 #pragma pack(push,1)
+
 typedef struct note_type {
 	word frequency; // 0x00 or 0x01 = rest, 0x12 = end
 	byte length;
 } note_type;
 SDL_COMPILE_TIME_ASSERT(note_type, sizeof(note_type) == 3);
+
 typedef struct speaker_type { // IBM
 	word tempo;
 	note_type notes[];
@@ -561,14 +559,13 @@ typedef struct midi_type {
 		} header;
 		byte data[0];
 	};
-
 } midi_type;
 
 typedef struct ogg_type {
-    //byte sample_size; // =16
-    int total_length;
-    byte* file_contents;
-    stb_vorbis* decoder;
+	//byte sample_size; // =16
+	int total_length;
+	byte* file_contents;
+	stb_vorbis* decoder;
 } ogg_type;
 
 typedef struct converted_audio_type {
@@ -583,7 +580,7 @@ typedef struct sound_buffer_type {
 		digi_type digi;
 		digi_new_type digi_new;
 		midi_type midi;
-        ogg_type ogg;
+		ogg_type ogg;
 		converted_audio_type converted;
 	};
 } sound_buffer_type;
@@ -601,8 +598,9 @@ typedef struct midi_raw_chunk_type {
 		} header;
 		byte data[0];
 	};
-
 } midi_raw_chunk_type;
+
+#pragma pack(pop)
 
 typedef struct midi_event_type {
 	dword delta_time;
@@ -641,6 +639,7 @@ typedef struct parsed_midi_type {
 } parsed_midi_type;
 
 #pragma pack(push, 1)
+
 typedef struct operator_type {
 	byte mul;
 	byte ksl_tl;
@@ -648,6 +647,7 @@ typedef struct operator_type {
 	byte s_r;
 	byte waveform;
 } operator_type;
+SDL_COMPILE_TIME_ASSERT(operator_type, sizeof(operator_type) == 5);
 
 typedef struct instrument_type {
 	byte blocknum_low;
@@ -657,6 +657,8 @@ typedef struct instrument_type {
 	byte percussion;
 	byte unknown[2];
 } instrument_type;
+SDL_COMPILE_TIME_ASSERT(instrument_type, sizeof(instrument_type) == 16);
+
 #pragma pack(pop)
 
 struct dialog_type; // (declaration only)
@@ -679,8 +681,6 @@ typedef struct dialog_type {
 	word has_peel;
 	peel_type* peel;
 } dialog_type;
-
-#pragma pack(pop)
 
 enum soundids {
 	sound_0_fell_to_death = 0,
@@ -992,6 +992,7 @@ enum seqids {
 	seq_6_run_turn = 6,
 	seq_7_fall = 7,
 	seq_8_jump_up_and_grab_straight = 8,
+	seq_9_grab_while_jumping = 9,
 	seq_10_climb_up = 10,
 	seq_11_release_ledge_and_land = 11,
 	seq_13_stop_run = 13,
@@ -1028,6 +1029,9 @@ enum seqids {
 	seq_45_bumpfall = 45,
 	seq_46_hardbump = 46,
 	seq_47_bump = 47,
+#ifdef USE_SUPER_HIGH_JUMP
+	seq_48_super_high_jump = 48,
+#endif
 	seq_49_stand_up_from_crouch = 49,
 	seq_50_crouch = 50,
 	seq_51_spiked = 51,
@@ -1040,7 +1044,7 @@ enum seqids {
 	seq_60_turn_with_sword = 60,
 	seq_61_parry_after_strike = 61,
 	seq_62_parry = 62,
-	seq_63_guard_stand_active = 63,
+	seq_63_guard_active_after_fall = 63,
 	seq_64_pushed_back_with_sword = 64,
 	seq_65_bump_forward_with_sword = 65,
 	seq_66_strike_after_parry = 66,
@@ -1082,6 +1086,9 @@ enum seqids {
 	seq_111_princess_stand_up_PV2 = 111,
 	seq_112_princess_crouch_down_PV2 = 112,
 	seq_114_mouse_stand = 114,
+#ifdef USE_TELEPORTS
+	seq_teleport = 115,
+#endif
 };
 
 enum seqtbl_instructions {
@@ -1218,6 +1225,12 @@ typedef struct fixes_options_type {
 	byte fix_quicksave_during_feather;
 	byte fix_caped_prince_sliding_through_gate;
 	byte fix_doortop_disabling_guard;
+	byte enable_super_high_jump;
+	byte fix_jumping_over_guard;
+	byte fix_drop_2_rooms_climbing_loose_tile;
+	byte fix_falling_through_floor_during_sword_strike;
+	byte enable_jump_grab;
+	byte fix_register_quick_input;
 } fixes_options_type;
 
 #define NUM_GUARD_SKILLS 12
@@ -1272,6 +1285,12 @@ typedef struct custom_options_type {
 	byte mirror_row;
 	byte mirror_tile;
 	byte show_mirror_image;
+
+	byte shadow_steal_level;
+	byte shadow_steal_room;
+	byte shadow_step_level;
+	byte shadow_step_room;
+
 	word falling_exit_level;
 	byte falling_exit_room;
 	word falling_entry_level;
@@ -1332,5 +1351,85 @@ typedef struct directory_listing_type directory_listing_type;
 #define BASE_FPS 60
 
 #define FEATHER_FALL_LENGTH 18.75
+
+// Types of gamepad input
+enum
+{
+	JOYINPUT_DPAD_LEFT,
+	JOYINPUT_DPAD_RIGHT,
+	JOYINPUT_DPAD_UP,
+	JOYINPUT_DPAD_DOWN,
+	JOYINPUT_A,
+	JOYINPUT_B,
+	JOYINPUT_X,
+	JOYINPUT_Y,
+	JOYINPUT_START,
+	JOYINPUT_BACK,
+
+	JOYINPUT_NUM
+};
+
+// Bit-flags used for the key_state and joy_button_states arrays
+enum
+{
+	KEYSTATE_HELD = (1<<0), // Key is currently held down
+	KEYSTATE_HELD_NEW = (1<<1), // Key has been pressed since last gameplay update
+};
+
+// Enum used for input variables like control_up, control_forward, control_shift2, and etc
+enum
+{
+	// for all control_* variables:
+	CONTROL_RELEASED = 0,
+	// for control_shift, control_forward, control_backward, control_up, control_down, control_shift2:
+	CONTROL_IGNORE = 1,
+	CONTROL_HELD = -1,
+	// for control_x in seg000.c:
+	CONTROL_HELD_LEFT = -1,
+	CONTROL_HELD_RIGHT = 1,
+	// for control_x elsewhere:
+	CONTROL_HELD_FORWARD = -1,
+	CONTROL_HELD_BACKWARD = 1,
+	// for control_y:
+	CONTROL_HELD_UP = -1,
+	CONTROL_HELD_DOWN = 1,
+};
+
+enum
+{
+	EDGE_TYPE_CLOSER, // closer/sword/potion
+	EDGE_TYPE_EDGE, // edge
+	EDGE_TYPE_FLOOR, // floor (nothing near char)
+};
+
+#define TILE_SIZEX 14 // Horizontal size of tile in the internal coordinate system (a tile is 32 pixels wide in screen space)
+#define TILE_MIDX 7 // Middle horizontal point of a tile
+#define TILE_RIGHTX 13 // Right-most point of a tile
+#define TILE_SIZEY 63 // Vertical size of a tile (this also matches the pixel height of tiles in screen space)
+#define SCREENSPACE_X 58 // Position of the left-most pixel in screenspace in the internal coordinate system
+#define SCREEN_TILECOUNTX 10 // Quantity of columns of tiles visible in a room
+#define SCREEN_TILECOUNTY 3 // Quantity of rows of tiles visible in a room
+#define FIRST_ONSCREEN_COLUMN 5 // Used for referencing the first column visible in screen space in the x_bump array
+#define FALLING_SPEED_MAX 33
+#define FALLING_SPEED_ACCEL 3
+#define FALLING_SPEED_MAX_FEATHER 4
+#define FALLING_SPEED_ACCEL_FEATHER 1
+#define ROOMCOUNT 24 // Max quantity of rooms for any level
+#define SCREEN_GAMEPLAY_HEIGHT 192 // Portion of the screen space dedicated to gameplay graphics
+#define JOY_AXIS_NUM 6 // Max quantity of analogue inputs on a gamepad/joystick
+#define TROBS_MAX 30
+
+// text alignment
+enum
+{
+	// horizontal
+	halign_left = -1,
+	halign_center = 0,
+	halign_right = +1,
+	// vertical
+	valign_top = -1,
+	valign_middle = 0,
+	valign_bottom = +1,
+};
 
 #endif

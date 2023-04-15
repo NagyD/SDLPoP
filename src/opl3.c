@@ -1090,8 +1090,7 @@ static void OPL3_GenerateRhythm2(opl3_chip *chip)
 void OPL3_Generate(opl3_chip *chip, Bit16s *buf)
 {
     Bit8u ii;
-    Bit8u jj;
-    Bit16s accm;
+    Bit32s mixed;
 
     buf[1] = OPL3_ClipSample(chip->mixbuff[1]);
 
@@ -1121,16 +1120,15 @@ void OPL3_Generate(opl3_chip *chip, Bit16s *buf)
         OPL3_SlotGenerate(&chip->slot[14]);
     }
 
-    chip->mixbuff[0] = 0;
+    mixed = 0;
     for (ii = 0; ii < 18; ii++)
     {
-        accm = 0;
-        for (jj = 0; jj < 4; jj++)
-        {
-            accm += *chip->channel[ii].out[jj];
-        }
-        chip->mixbuff[0] += (Bit16s)(accm & chip->channel[ii].cha);
+        const opl3_channel *chan = &chip->channel[ii];
+        Bit16s * const *chanout = chan->out;
+        const Bit16s accm = *chanout[0] + *chanout[1] + *chanout[2] + *chanout[3];
+        mixed += (Bit16s)(accm & chan->cha);
     }
+    chip->mixbuff[0] = mixed;
 
     for (ii = 15; ii < 18; ii++)
     {
@@ -1160,16 +1158,16 @@ void OPL3_Generate(opl3_chip *chip, Bit16s *buf)
         OPL3_SlotGenerate(&chip->slot[ii]);
     }
 
-    chip->mixbuff[1] = 0;
+    mixed = 0;
     for (ii = 0; ii < 18; ii++)
     {
-        accm = 0;
-        for (jj = 0; jj < 4; jj++)
-        {
-            accm += *chip->channel[ii].out[jj];
-        }
-        chip->mixbuff[1] += (Bit16s)(accm & chip->channel[ii].chb);
+        const opl3_channel *chan = &chip->channel[ii];
+        Bit16s * const *chanout = chan->out;
+        const Bit16s accm = *chanout[0] + *chanout[1] + *chanout[2] + *chanout[3];
+        mixed += (Bit16s)(accm & chan->chb);
     }
+
+    chip->mixbuff[1] = mixed;
 
     for (ii = 33; ii < 36; ii++)
     {
