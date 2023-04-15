@@ -42,10 +42,6 @@ void sdlperror(const char* header) {
 	//quit(1);
 }
 
-#ifdef __amigaos4__
-#include <workbench/startup.h>
-#include <proto/dos.h>
-#endif
 char exe_dir[POP_MAX_PATH] = ".";
 bool found_exe_dir = false;
 
