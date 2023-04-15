@@ -2326,7 +2326,6 @@ const char* splash_text_1 = "SDLPoP " SDLPOP_VERSION;
 const char* splash_text_2 =
 		"In-game, Esc opens a settings/quicksave menu.\n"
 		"\n"
-#endif
 #ifdef USE_REPLAY
 		"To record replays, press Ctrl+Tab in-game.\n"
 		"To view replays, press Tab on the title screen.\n"
