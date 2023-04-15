@@ -371,12 +371,7 @@ const char quick_version[] = "V1.16b4 ";
 char quick_control[] = "........";
 
 const char* get_quick_path(char* custom_path_buffer, size_t max_len) {
-	if (!use_custom_levelset) {
-		return quick_file;
-	}
-	// if playing a custom levelset, try to use the mod folder
-	snprintf_check(custom_path_buffer, max_len, "%s/%s", mod_data_path, quick_file /*QUICKSAVE.SAV*/ );
-	return custom_path_buffer;
+	return get_writable_file_path(custom_path_buffer, max_len, quick_file /*QUICKSAVE.SAV*/ );
 }
 
 int quick_save(void) {
@@ -2058,12 +2053,7 @@ void load_kid_sprite() {
 const char* save_file = "PRINCE.SAV";
 
 const char* get_save_path(char* custom_path_buffer, size_t max_len) {
-	if (!use_custom_levelset) {
-		return save_file;
-	}
-	// if playing a custom levelset, try to use the mod folder
-	snprintf_check(custom_path_buffer, max_len, "%s/%s", mod_data_path, save_file /*PRINCE.SAV*/ );
-	return custom_path_buffer;
+	return get_writable_file_path(custom_path_buffer, max_len, save_file /*PRINCE.SAV*/ );
 }
 
 // seg000:1D45
@@ -2377,5 +2367,14 @@ void show_splash() {
 	key_states[SDL_SCANCODE_LSHIFT] &= ~KEYSTATE_HELD; // don't immediately start the game if Shift was pressed!
 	key_states[SDL_SCANCODE_RSHIFT] &= ~KEYSTATE_HELD;
 #endif
+}
+
+const char* get_writable_file_path(char* custom_path_buffer, size_t max_len, const char* file_name) {
+	if (!use_custom_levelset) {
+		return file_name;
+	}
+	// if playing a custom levelset, try to use the mod folder
+	snprintf_check(custom_path_buffer, max_len, "%s/%s", mod_data_path, file_name);
+	return custom_path_buffer;
 }
 

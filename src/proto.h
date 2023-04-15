@@ -78,6 +78,7 @@ void show_splash(void);
 void check_quick_op(void);
 void restore_room_after_quick_load(void);
 #endif // USE_QUICKSAVE
+const char* get_writable_file_path(char* custom_path_buffer, size_t max_len, const char* file_name);
 
 // SEG001.C
 int proc_cutscene_frame(int wait_frames);

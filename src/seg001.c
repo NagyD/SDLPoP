@@ -757,12 +757,7 @@ void show_hof() {
 static const char* hof_file = "PRINCE.HOF";
 
 const char* get_hof_path(char* custom_path_buffer, size_t max_len) {
-	if (!use_custom_levelset) {
-		return hof_file;
-	}
-	// if playing a custom levelset, try to use the mod folder
-	snprintf_check(custom_path_buffer, max_len, "%s/%s", mod_data_path, hof_file /*PRINCE.HOF*/ );
-	return custom_path_buffer;
+	return get_writable_file_path(custom_path_buffer, max_len, hof_file /*PRINCE.HOF*/ );
 }
 
 // seg001:0F17
