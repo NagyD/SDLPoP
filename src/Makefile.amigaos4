@@ -1,0 +1,41 @@
+# Project: SDLPoP (AmigaOS4)
+
+BIN = prince
+
+CC = ppc-amigaos-gcc
+STRIP = ppc-amigaos-strip
+RM = rm -f
+
+HFILES = common.h config.h data.h proto.h types.h
+OBJ = main.o data.o seg000.o seg001.o seg002.o seg003.o seg004.o seg005.o seg006.o \
+seg007.o seg008.o seg009.o seqtbl.o replay.o options.o lighting.o screenshot.o menu.o \
+midi.o opl3.o stb_vorbis.o
+
+OS := $(shell uname)
+
+ifeq ($(strip $(OS)),AmigaOS)
+	AMIGADATE = $(shell c:date LFORMAT %d.%m.%Y)
+else
+	AMIGADATE = $(shell date +"%-d.%-m.%Y")
+endif
+
+LIBS = -lSDL2_image -ltiff -lwebp -lpng -ljpeg -lz -lm -lvorbisfile -lvorbis -lSDL2 -lpthread
+#LIBS = -lSDL2_image -ltiff -lwebp -lpng -ljpeg -lz -lm -lvorbisfile -lvorbis -lSDL2 -lpthread -athread=native -use-dynld
+INCS = -gstabs -ISDK:Local/newlib/include/SDL2 -D__AMIGADATE__=\"$(AMIGADATE)\" -D__USE_INLINE__
+CFLAGS += $(INCS) -Wall -std=gnu99
+
+
+all: $(BIN).debug
+
+clean:
+	$(RM) $(OBJ) $(BIN) $(BIN).debug
+
+$(BIN).debug: $(OBJ)
+	$(CC) $(LDFLAGS) $(OBJ) -o $@ $(LIBS)
+	$(STRIP) $(BIN).debug -o $(BIN)
+
+%.o: %.c $(HFILES)
+	$(CC) $(CFLAGS) $(LDFLAGS) -c $<
+
+.PHONY: all clean
+

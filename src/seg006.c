@@ -591,7 +591,7 @@ void play_seq() {
 				}
 				// fallthrough!
 			case SEQ_JMP: // jump
-				Char.curr_seq = *(const word*)(SEQTBL_0 + Char.curr_seq);
+				Char.curr_seq = SDL_SwapLE16(*(const word*)(SEQTBL_0 + Char.curr_seq));
 				break;
 			case SEQ_UP: // up
 				--Char.curr_row;

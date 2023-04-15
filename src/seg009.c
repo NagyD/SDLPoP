@@ -29,6 +29,11 @@ The authors of this program may be contacted at https://forum.princed.org
 #include "dirent.h"
 #endif
 
+#ifdef __amigaos4__
+#include <workbench/startup.h>
+#include <proto/dos.h>
+#endif
+
 // Most functions in this file are different from those in the original game.
 
 void sdlperror(const char* header) {
@@ -37,11 +42,24 @@ void sdlperror(const char* header) {
 	//quit(1);
 }
 
+#ifdef __amigaos4__
+#include <workbench/startup.h>
+#include <proto/dos.h>
+#endif
 char exe_dir[POP_MAX_PATH] = ".";
 bool found_exe_dir = false;
 
 void find_exe_dir(void) {
 	if (found_exe_dir) return;
+#ifdef __amigaos4__
+	if(g_argc == 0) { // from Workbench
+		struct WBStartup *WBenchMsg = (struct WBStartup *)g_argv;
+		NameFromLock( WBenchMsg->sm_ArgList->wa_Lock, exe_dir, sizeof(exe_dir) );
+	}
+	else { // from Shell/CLI
+		NameFromLock( GetProgramDir(), exe_dir, sizeof(exe_dir) );
+	}
+#else
 	snprintf_check(exe_dir, sizeof(exe_dir), "%s", g_argv[0]);
 	char* last_slash = NULL;
 	char* pos = exe_dir;
@@ -53,6 +71,7 @@ void find_exe_dir(void) {
 	if (last_slash != NULL) {
 		*last_slash = '\0';
 	}
+#endif
 	found_exe_dir = true;
 }
 
@@ -391,10 +410,10 @@ dat_type* open_dat(const char* filename, int optional) {
 	if (fp != NULL) {
 		if (fread(&dat_header, 6, 1, fp) != 1)
 			goto failed;
-		dat_table = (dat_table_type*) malloc(dat_header.table_size);
+		dat_table = (dat_table_type*) malloc(SDL_SwapLE16(dat_header.table_size));
 		if (dat_table == NULL ||
-		    fseek(fp, dat_header.table_offset, SEEK_SET) ||
-		    fread(dat_table, dat_header.table_size, 1, fp) != 1)
+		    fseek(fp, SDL_SwapLE32(dat_header.table_offset), SEEK_SET) ||
+		    fread(dat_table, SDL_SwapLE16(dat_header.table_size), 1, fp) != 1)
 			goto failed;
 		pointer->handle = fp;
 		pointer->dat_table = dat_table;
@@ -723,20 +742,20 @@ void decompr_img(byte* dest,const image_data_type* source,int decomp_size,int cm
 			decompress_rle_lr(dest, source->data, decomp_size);
 		break;
 		case 2: // RLE up-to-down
-			decompress_rle_ud(dest, source->data, decomp_size, stride, source->height);
+			decompress_rle_ud(dest, source->data, decomp_size, stride, SDL_SwapLE16(source->height));
 		break;
 		case 3: // LZG left-to-right
 			decompress_lzg_lr(dest, source->data, decomp_size);
 		break;
 		case 4: // LZG up-to-down
-			decompress_lzg_ud(dest, source->data, decomp_size, stride, source->height);
+			decompress_lzg_ud(dest, source->data, decomp_size, stride, SDL_SwapLE16(source->height));
 		break;
 	}
 }
 
 int calc_stride(image_data_type* image_data) {
-	int width = image_data->width;
-	int flags = image_data->flags;
+	int width = SDL_SwapLE16(image_data->width);
+	int flags = SDL_SwapLE16(image_data->flags);
 	int depth = ((flags >> 12) & 7) + 1;
 	return (depth * width + 7) / 8;
 }
@@ -763,10 +782,10 @@ byte* conv_to_8bpp(byte* in_data, int width, int height, int stride, int depth) 
 }
 
 image_type* decode_image(image_data_type* image_data, dat_pal_type* palette) {
-	int height = image_data->height;
+	int height = SDL_SwapLE16(image_data->height);
 	if (height == 0) return NULL;
-	int width = image_data->width;
-	int flags = image_data->flags;
+	int width = SDL_SwapLE16(image_data->width);
+	int flags = SDL_SwapLE16(image_data->flags);
 	int depth = ((flags >> 12) & 7) + 1;
 	int cmeth = (flags >> 8) & 0x0F;
 	int stride = calc_stride(image_data);
@@ -916,9 +935,17 @@ surface_type* make_offscreen_buffer(const rect_type* rect) {
 	// stub
 #ifndef USE_ALPHA
 	// Bit order matches onscreen buffer, good for fading.
+	#ifdef __amigaos4__
+	return SDL_CreateRGBSurface(0, rect->right, rect->bottom, 24, Rmsk, Gmsk, Bmsk, 0);
+	#else
 	return SDL_CreateRGBSurface(0, rect->right, rect->bottom, 24, 0xFF, 0xFF<<8, 0xFF<<16, 0); //RGB888 (little endian)
+	#endif
 #else
+	#ifdef __amigaos4__
+	return SDL_CreateRGBSurface(0, rect->right, rect->bottom, 32, Rmsk, Gmsk, Bmsk, Amsk);
+	#else
 	return SDL_CreateRGBSurface(0, rect->right, rect->bottom, 32, 0xFF, 0xFF<<8, 0xFF<<16, 0xFFu<<24);
+	#endif
 #endif
 	//return surface;
 }
@@ -1103,9 +1130,9 @@ static void load_font_character_offsets(rawfont_type* data) {
 	int n_chars = data->last_char - data->first_char + 1;
 	byte* pos = (byte*) &data->offsets[n_chars];
 	for (int index = 0; index < n_chars; ++index) {
-		data->offsets[index] = (word) (pos - (byte*) data);
+		data->offsets[index] = SDL_SwapLE16(pos - (byte*) data);
 		image_data_type* image_data = (image_data_type*) pos;
-		int image_bytes = image_data->height * calc_stride(image_data);
+		int image_bytes = SDL_SwapLE16(image_data->height) * calc_stride(image_data);
 		pos = (byte*) &image_data->data + image_bytes;
 	}
 }
@@ -1114,13 +1141,13 @@ font_type load_font_from_data(/*const*/ rawfont_type* data) {
 	font_type font;
 	font.first_char = data->first_char;
 	font.last_char = data->last_char;
-	font.height_above_baseline = data->height_above_baseline;
-	font.height_below_baseline = data->height_below_baseline;
-	font.space_between_lines = data->space_between_lines;
-	font.space_between_chars = data->space_between_chars;
+	font.height_above_baseline = SDL_SwapLE16(data->height_above_baseline);
+	font.height_below_baseline = SDL_SwapLE16(data->height_below_baseline);
+	font.space_between_lines = SDL_SwapLE16(data->space_between_lines);
+	font.space_between_chars = SDL_SwapLE16(data->space_between_chars);
 	int n_chars = font.last_char - font.first_char + 1;
 	// Allow loading a font even if the offsets for each character image were not supplied in the raw data.
-	if (data->offsets[0] == 0) {
+	if (SDL_SwapLE16(data->offsets[0]) == 0) {
 		load_font_character_offsets(data);
 	}
 	chtab_type* chtab = malloc(sizeof(chtab_type) + sizeof(image_type*) * n_chars);
@@ -1129,7 +1156,7 @@ font_type load_font_from_data(/*const*/ rawfont_type* data) {
 	memset(&dat_pal, 0, sizeof(dat_pal));
 	dat_pal.vga[1].r = dat_pal.vga[1].g = dat_pal.vga[1].b = 0x3F; // white
 	for (int index = 0, chr = data->first_char; chr <= data->last_char; ++index, ++chr) {
-		/*const*/ image_data_type* image_data = (/*const*/ image_data_type*)((/*const*/ byte*)data + data->offsets[index]);
+		/*const*/ image_data_type* image_data = (/*const*/ image_data_type*)((/*const*/ byte*)data + SDL_SwapLE16(data->offsets[index]));
 		//image_data->flags=0;
 		if (image_data->height == 0) image_data->height = 1; // HACK: decode_image() returns NULL if height==0.
 		image_type* image;
@@ -1727,10 +1754,19 @@ peel_type* read_peel_from_screen(const rect_type* rect) {
 	//memset(&result, 0, sizeof(result));
 	result->rect = *rect;
 #ifndef USE_ALPHA
+	#ifdef __amigaos4__
+	SDL_Surface* peel_surface = SDL_CreateRGBSurface(0, rect->right - rect->left, rect->bottom - rect->top,
+	                                                 24, Rmsk, Gmsk, Bmsk, 0);
+	#else
 	SDL_Surface* peel_surface = SDL_CreateRGBSurface(0, rect->right - rect->left, rect->bottom - rect->top,
 	                                                 24, 0xFF, 0xFF<<8, 0xFF<<16, 0);
+	#endif
 #else
+	#ifdef __amigaos4__
+	SDL_Surface* peel_surface = SDL_CreateRGBSurface(0, rect->right - rect->left, rect->bottom - rect->top, 32, Rmsk, Gmsk, Bmsk, Amsk);
+	#else
 	SDL_Surface* peel_surface = SDL_CreateRGBSurface(0, rect->right - rect->left, rect->bottom - rect->top, 32, 0xFF, 0xFF<<8, 0xFF<<16, 0xFFu<<24);
+	#endif
 #endif
 	if (peel_surface == NULL) {
 		sdlperror("read_peel_from_screen: SDL_CreateRGBSurface");
@@ -1891,12 +1927,12 @@ void speaker_callback(void *userdata, Uint8 *stream, int len) {
 	int samples_requested = len / bytes_per_sample;
 
 	if (current_speaker_sound == NULL) return;
-	word tempo = current_speaker_sound->tempo;
+	word tempo = SDL_SwapLE16(current_speaker_sound->tempo);
 
 	int total_samples_left = samples_requested;
 	while (total_samples_left > 0) {
 		note_type* note = current_speaker_sound->notes + speaker_note_index;
-		if (note->frequency == 0x12 /*end*/) {
+		if (SDL_SwapLE16(note->frequency) == 0x12 /*end*/) {
 			speaker_playing = 0;
 			current_speaker_sound = NULL;
 			speaker_note_index = 0;
@@ -1912,10 +1948,10 @@ void speaker_callback(void *userdata, Uint8 *stream, int len) {
 		int note_samples_to_emit = MIN(note_length_in_samples - current_speaker_note_samples_already_emitted, total_samples_left);
 		total_samples_left -= note_samples_to_emit;
 		size_t copy_len = (size_t)note_samples_to_emit * bytes_per_sample;
-		if (note->frequency <= 0x01 /*rest*/) {
+		if (SDL_SwapLE16(note->frequency) <= 0x01 /*rest*/) {
 			memset(stream, digi_audiospec->silence, copy_len);
 		} else {
-			generate_square_wave(stream, (float)note->frequency, note_samples_to_emit);
+			generate_square_wave(stream, (float)SDL_SwapLE16(note->frequency), note_samples_to_emit);
 		}
 		stream += copy_len;
 
@@ -2260,15 +2296,15 @@ bool determine_wave_version(sound_buffer_type *buffer, waveinfo_type* waveinfo) 
 
 	switch (version) {
 		case 1: // 1.0 and 1.1
-			waveinfo->sample_rate = buffer->digi.sample_rate;
+			waveinfo->sample_rate = SDL_SwapLE16(buffer->digi.sample_rate);
 			waveinfo->sample_size = buffer->digi.sample_size;
-			waveinfo->sample_count = buffer->digi.sample_count;
+			waveinfo->sample_count = SDL_SwapLE16(buffer->digi.sample_count);
 			waveinfo->samples = buffer->digi.samples;
 			return true;
 		case 2: // 1.3 and 1.4 (and PoP2)
-			waveinfo->sample_rate = buffer->digi_new.sample_rate;
+			waveinfo->sample_rate = SDL_SwapLE16(buffer->digi_new.sample_rate);
 			waveinfo->sample_size = buffer->digi_new.sample_size;
-			waveinfo->sample_count = buffer->digi_new.sample_count;
+			waveinfo->sample_count = SDL_SwapLE16(buffer->digi_new.sample_count);
 			waveinfo->samples = buffer->digi_new.samples;
 			return true;
 		case 3: // ambiguous
@@ -2432,8 +2468,13 @@ void window_resized() {
 void init_overlay(void) {
 	static bool initialized = false;
 	if (!initialized) {
+#ifdef __amigaos4__
+		overlay_surface = SDL_CreateRGBSurface(0, 320, 200, 32, Rmsk, Gmsk, Bmsk, Amsk);
+		merged_surface = SDL_CreateRGBSurface(0, 320, 200, 24, Rmsk, Gmsk, Bmsk, 0);
+#else
 		overlay_surface = SDL_CreateRGBSurface(0, 320, 200, 32, 0xFF, 0xFF << 8, 0xFF << 16, 0xFFu << 24) ;
 		merged_surface = SDL_CreateRGBSurface(0, 320, 200, 24, 0xFF, 0xFF << 8, 0xFF << 16, 0) ;
+#endif
 		initialized = true;
 	}
 }
@@ -2449,7 +2490,11 @@ void init_scaling(void) {
 	}
 	if (scaling_type == 1) {
 		if (!is_renderer_targettexture_supported && onscreen_surface_2x == NULL) {
+#ifdef __amigaos4__
+		overlay_surface = SDL_CreateRGBSurface(0, 320*2, 200*2, 24, Rmsk, Gmsk, Bmsk, 0);
+#else
 			onscreen_surface_2x = SDL_CreateRGBSurface(0, 320*2, 200*2, 24, 0xFF, 0xFF << 8, 0xFF << 16, 0) ;
+#endif
 		}
 		if (texture_fuzzy == NULL) {
 			SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
@@ -2562,7 +2607,11 @@ void set_gr_mode(byte grmode) {
 	 * subsequently displayed.
 	 * The function handling the screen updates is update_screen()
 	 * */
+#ifdef __amigaos4__
+	onscreen_surface_ = SDL_CreateRGBSurface(0, 320, 200, 24, Rmsk, Gmsk, Bmsk, 0);
+#else
 	onscreen_surface_ = SDL_CreateRGBSurface(0, 320, 200, 24, 0xFF, 0xFF << 8, 0xFF << 16, 0);
+#endif
 	if (onscreen_surface_ == NULL) {
 		sdlperror("set_gr_mode: SDL_CreateRGBSurface");
 		quit(1);
@@ -2776,15 +2825,15 @@ void load_from_opendats_metadata(int resource_id, const char* extension, FILE** 
 			fp = pointer->handle;
 			dat_table_type* dat_table = pointer->dat_table;
 			int i;
-			for (i = 0; i < dat_table->res_count; ++i) {
-				if (dat_table->entries[i].id == resource_id) {
+			for (i = 0; i < SDL_SwapLE16(dat_table->res_count); ++i) {
+				if (SDL_SwapLE16(dat_table->entries[i].id) == resource_id) {
 					break;
 				}
 			}
-			if (i < dat_table->res_count) {
+			if (i < SDL_SwapLE16(dat_table->res_count)) {
 				// found
 				*result = data_DAT;
-				*size = dat_table->entries[i].size;
+				*size = SDL_SwapLE16(dat_table->entries[i].size);
 				if (strcmp(extension,"png") == 0 && *size <= 2) {
 					// Skip empty images in DATs, so we can fall back to directories.
 					// This is useful for teleport graphics for example.
@@ -2792,7 +2841,7 @@ void load_from_opendats_metadata(int resource_id, const char* extension, FILE** 
 					*result = data_none;
 					*size = 0;
 				} else
-				if (fseek(fp, dat_table->entries[i].offset, SEEK_SET) ||
+				if (fseek(fp, SDL_SwapLE32(dat_table->entries[i].offset), SEEK_SET) ||
 				    fread(checksum, 1, 1, fp) != 1
 				) {
 					printf("Cannot seek or cannot read checksum: ");
@@ -3111,7 +3160,11 @@ void blit_xor(SDL_Surface* target_surface, SDL_Rect* dest_rect, SDL_Surface* ima
 		printf("blit_xor: dest_rect and src_rect have different sizes\n");
 		quit(1);
 	}
+#ifdef __amigaos4__
+	SDL_Surface* helper_surface = SDL_CreateRGBSurface(0, dest_rect->w, dest_rect->h, 24, Rmsk, Gmsk, Bmsk, 0);
+#else
 	SDL_Surface* helper_surface = SDL_CreateRGBSurface(0, dest_rect->w, dest_rect->h, 24, 0xFF, 0xFF<<8, 0xFF<<16, 0);
+#endif
 	if (helper_surface == NULL) {
 		sdlperror("blit_xor: SDL_CreateRGBSurface");
 		quit(1);
@@ -3628,6 +3681,16 @@ void process_events() {
 			}
 */
 				switch (event.window.event) {
+#ifdef __amigaos4__
+					case SDL_WINDOWEVENT_MINIMIZED: /* pause game */
+						if (!is_menu_shown) {
+							last_key_scancode = SDL_SCANCODE_BACKSPACE;
+						}
+						break;
+					case SDL_WINDOWEVENT_RESTORED: /* show "game paused/menu" */
+						update_screen();
+						break;
+#endif
 					case SDL_WINDOWEVENT_SIZE_CHANGED:
 						window_resized();
 						// fallthrough!

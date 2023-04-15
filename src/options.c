@@ -20,7 +20,11 @@ The authors of this program may be contacted at https://forum.princed.org
 
 #include "common.h"
 #include <ctype.h>
-#include <inttypes.h>
+#ifdef __amigaos4__
+	#define strtoimax(a,b,c) strtoll(a,b,c)
+#else
+	#include <inttypes.h>
+#endif
 
 
 void turn_fixes_and_enhancements_on_off(byte new_state) {

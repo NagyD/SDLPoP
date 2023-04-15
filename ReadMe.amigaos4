@@ -1,0 +1,50 @@
+AMIGAOS4 (see main/master doc/ChangeLog.txt file)
+********
+(2020.06.06)
+-Added Makefile.amigaos4 to build PoP executable.
+-Added in config.h (#ifdef __amigaos4__) to show correct colors in game
+ (somekind of RGB shifting issue).
+-Updated seg009.c and lighting.c (SDL_CreateRGBSurface) to use new config.h
+ __amigaos4__ defines.
+-Updated option.c to use "#define strtoimax(a,b,c) strtoll(a,b,c)".
+-Added "pause game" on iconification.
+-Added AmigaOS version string and cookie stack [main.c].
+-Added icon(s) (THX to samo79).
+-Updated to SDLPoP 1.20 (big-endian branch was 1.19).
+-Added gamecontrollerdb.txt file mappings (gamepad support database) [seg009.c].
+-Fixed saving/loading SDLPoP.cfg from PoP drawer [seg009.c].
+(2020.08.22)
+-Updated to SDLPoP 1.21: common.h. config.h data.h lighting.c menu.c types.h options.c
+                         replay.c screenshot.c seg000.c seg001.c seg002.c seg003.c
+                         seg006.c seg009.c
+-Removed amigaos4 code to load gamecontrollerdb.txt [seg009.c], implemented in master branch.
+(2021.07.10)
+-Updated to SDLPoP 1.22: common.h. config.h data.c lighting.c menu.c midi.c options.c
+                         proto.h replay.c screenshot.c seg000.c seg002.c seg003.c seg004.c
+                         seg005.c seg006.c seg007.c seg008.c seg009.c types.h
+-Compiled with "old" stb_vorbis.c (v1.14) as latest (v1.20) makes audio crawl.
+
+
+Thanks to (in no special order):
+NagyD for SDLPoP port "big-endian" branch (https://github.com/NagyD/SDLPoP/tree/big-endian).
+BeWorld for its morphos port, so I knew SDLPoP existed.
+Capehill et all for SDL2 AmigaOS4 port.
+salass00, kas1e, samo79, guillaume (code and tips).
+os4coding.net
+
+
+HOW TO USE/LOAD CUSTOM LEVELS
+*****************************
+In this link you can find lot of custom levels for Prince of Persia:
+https://www.popot.org/custom_levels.php
+
+Just unpack inside mods/ drawer AND if it has a <FILENAME>.EXE, remove it.
+Then in SDLPoP.ini change "levelset = original" with "levelset = _custom_level_drawername_"
+
+
+AUDIO IS SLOW/AWFULL
+********************
+Use ogg/flac music files from here: (38 MB)
+	https://www.popot.org/get_the_games/various/PoP1_DOS_music.zip
+It's the last link here: https://www.popot.org/get_the_games.php?game=1
+Copy the OGG files to the data/music folder.

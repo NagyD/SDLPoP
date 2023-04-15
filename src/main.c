@@ -20,6 +20,13 @@ The authors of this program may be contacted at https://forum.princed.org
 
 #include "common.h"
 
+
+#ifdef __amigaos4__
+static const char version[] = "\0$VER: SDLPoP " SDLPOP_VERSION " (" __AMIGADATE__ ")";
+static const char stack[] = "$STACK:200000";
+#endif
+
+
 int main(int argc, char *argv[])
 {
 	g_argc = argc;
