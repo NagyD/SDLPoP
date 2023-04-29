@@ -115,6 +115,25 @@ const char* find_first_file_match(char* dst, int size, char* format, const char*
 	return (const char*) dst;
 }
 
+const char* locate_save_file_(const char* filename, char* dst, int size) {
+	find_exe_dir();
+#if defined WIN32 || _WIN32 || WIN64 || _WIN64
+	snprintf_check(dst, size, "%s/%s", exe_dir, filename);
+#else
+	find_home_dir();
+	find_share_dir();
+	char* dirs[3] = {home_dir, share_dir, exe_dir};
+	for (int i = 0; i < 3; i++) {
+		struct stat path_stat;
+		int result = stat(dirs[i], &path_stat);
+		if (result == 0 && S_ISDIR(path_stat.st_mode) && access(dirs[i], W_OK) == 0) {
+			snprintf_check(dst, size, "%s/%s", dirs[i], filename);
+			break;
+		}
+	}
+#endif
+	return (const char*) dst;
+}
 const char* locate_file_(const char* filename, char* path_buffer, int buffer_size) {
 	if(file_exists(filename)) {
 		return filename;

@@ -2257,7 +2257,7 @@ void calculate_exe_crc(void) {
 }
 
 void save_ingame_settings(void) {
-	SDL_RWops* rw = SDL_RWFromFile(locate_file("SDLPoP.cfg"), "wb");
+	SDL_RWops* rw = SDL_RWFromFile(locate_save_file("SDLPoP.cfg"), "wb");
 	if (rw != NULL) {
 		calculate_exe_crc();
 		SDL_RWwrite(rw, &exe_crc, sizeof(exe_crc), 1);
