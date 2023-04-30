@@ -44,6 +44,12 @@ void sdlperror(const char* header) {
 
 char exe_dir[POP_MAX_PATH] = ".";
 bool found_exe_dir = false;
+#if ! defined WIN32 || _WIN32 || WIN64 || _WIN64
+char home_dir[POP_MAX_PATH];
+bool found_home_dir = false;
+char share_dir[POP_MAX_PATH];
+bool found_share_dir = false;
+#endif
 
 void find_exe_dir(void) {
 	if (found_exe_dir) return;
@@ -71,19 +77,70 @@ void find_exe_dir(void) {
 	found_exe_dir = true;
 }
 
+#if ! defined WIN32 || _WIN32 || WIN64 || _WIN64
+void find_home_dir(void) {
+	if (found_home_dir) return;
+	const char* home_path = getenv("HOME");
+	snprintf_check(home_dir, POP_MAX_PATH - 1, "%s/.%s", home_path, POP_DIR_NAME);
+	if(file_exists(home_dir))
+		found_home_dir = true;
+}
+
+void find_share_dir(void) {
+	if (found_share_dir) return;
+	snprintf_check(share_dir, POP_MAX_PATH - 1, "%s/%s", SHARE_PATH, POP_DIR_NAME);
+	if(file_exists(share_dir))
+		found_share_dir = true;
+}
+#endif
+
 bool file_exists(const char* filename) {
 	return (access(filename, F_OK) != -1);
 }
 
+const char* find_first_file_match(char* dst, int size, char* format, const char* filename) {
+	find_exe_dir();
+#if defined WIN32 || _WIN32 || WIN64 || _WIN64
+	snprintf_check(dst, size, format, exe_dir, filename);
+#else
+	find_home_dir();
+	find_share_dir();
+	char* dirs[3] = {home_dir, share_dir, exe_dir};
+	for (int i = 0; i < 3; i++) {
+		snprintf_check(dst, size, format, dirs[i], filename);
+		if(file_exists(dst))
+			break;
+	}
+#endif
+	return (const char*) dst;
+}
+
+const char* locate_save_file_(const char* filename, char* dst, int size) {
+	find_exe_dir();
+#if defined WIN32 || _WIN32 || WIN64 || _WIN64
+	snprintf_check(dst, size, "%s/%s", exe_dir, filename);
+#else
+	find_home_dir();
+	find_share_dir();
+	char* dirs[3] = {home_dir, share_dir, exe_dir};
+	for (int i = 0; i < 3; i++) {
+		struct stat path_stat;
+		int result = stat(dirs[i], &path_stat);
+		if (result == 0 && S_ISDIR(path_stat.st_mode) && access(dirs[i], W_OK) == 0) {
+			snprintf_check(dst, size, "%s/%s", dirs[i], filename);
+			break;
+		}
+	}
+#endif
+	return (const char*) dst;
+}
 const char* locate_file_(const char* filename, char* path_buffer, int buffer_size) {
 	if(file_exists(filename)) {
 		return filename;
 	} else {
 		// If failed, it may be that SDLPoP is being run from the wrong different working directory.
 		// We can try to rescue the situation by loading from the directory of the executable.
-		find_exe_dir();
-		snprintf_check(path_buffer, buffer_size, "%s/%s", exe_dir, filename);
-		return (const char*) path_buffer;
+		return find_first_file_match(path_buffer, buffer_size, "%s/%s", filename);
 	}
 }
 
@@ -358,8 +415,7 @@ static FILE* open_dat_from_root_or_data_dir(const char* filename) {
 		snprintf_check(data_path, sizeof(data_path), "data/%s", filename);
 
 		if (!file_exists(data_path)) {
-			find_exe_dir();
-			snprintf_check(data_path, sizeof(data_path), "%s/data/%s", exe_dir, filename);
+			find_first_file_match(data_path, sizeof(data_path), "%s/data/%s", filename);
 		}
 
 		// verify that this is a regular file and not a directory (otherwise, don't open)
