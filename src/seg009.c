@@ -44,7 +44,7 @@ void sdlperror(const char* header) {
 
 char exe_dir[POP_MAX_PATH] = ".";
 bool found_exe_dir = false;
-#if ! defined WIN32 || _WIN32 || WIN64 || _WIN64
+#if ! (defined WIN32 || _WIN32 || WIN64 || _WIN64)
 char home_dir[POP_MAX_PATH];
 bool found_home_dir = false;
 char share_dir[POP_MAX_PATH];
@@ -77,7 +77,7 @@ void find_exe_dir(void) {
 	found_exe_dir = true;
 }
 
-#if ! defined WIN32 || _WIN32 || WIN64 || _WIN64
+#if ! (defined WIN32 || _WIN32 || WIN64 || _WIN64)
 void find_home_dir(void) {
 	if (found_home_dir) return;
 	const char* home_path = getenv("HOME");
