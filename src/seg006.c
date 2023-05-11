@@ -20,6 +20,8 @@ The authors of this program may be contacted at https://forum.princed.org
 
 #include "common.h"
 
+#include "Localization/legacy_ingame_texts.h"
+
 #define SEQTBL_BASE 0x196E
 #define SEQTBL_0 (seqtbl - SEQTBL_BASE)
 extern const byte seqtbl[]; // the sequence table is defined in seqtbl.c
@@ -1362,7 +1364,9 @@ void play_kid() {
 					current_level != 15 // no message if died on potions level
 				) {
 					text_time_remaining = text_time_total = 288;
-					display_text_bottom("Press Button to Continue");
+					char sprintf_temp[40];
+					str_pressbutton(pop_language, sprintf_temp, sizeof(sprintf_temp));
+					display_text_bottom(sprintf_temp);
 				} else {
 					text_time_remaining = text_time_total = 36;
 				}

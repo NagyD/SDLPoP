@@ -22,6 +22,9 @@ The authors of this program may be contacted at https://forum.princed.org
 #include <time.h>
 #include <errno.h>
 
+#include "Localization/legacy_ingame_texts.h"
+#include "Localization/non_ascii_code.h"
+
 #ifdef _WIN32
 #include <windows.h>
 #include <wchar.h>
@@ -1262,11 +1265,14 @@ int find_linebreak(const char* text,int length,int break_width,int x_align) {
 	short curr_line_width = 0; // in pixels
 	const char* text_pos = text;
 	while (curr_char_pos < length) {
-		curr_line_width += get_char_width(*text_pos);
+		int nb_bytes = 1;
+		byte curr_char_code = get_non_ascii_code(&(*text_pos), &nb_bytes);
+
+		curr_line_width += get_char_width(curr_char_code);
 		if (curr_line_width <= break_width) {
-			++curr_char_pos;
+			curr_char_pos+=nb_bytes;
 			char curr_char = *text_pos;
-			text_pos++;
+			text_pos+=nb_bytes;
 			if (curr_char == '\n') {
 				return curr_char_pos;
 			}
@@ -1323,8 +1329,10 @@ int draw_text_line(const char* text,int length) {
 	int width = 0;
 	const char* text_pos = text;
 	while (--length >= 0) {
-		width += draw_text_character(*text_pos);
-		text_pos++;
+		int nb_bytes = 1;
+		byte curr_char_code = get_non_ascii_code(&(*text_pos), &nb_bytes);
+		width += draw_text_character(curr_char_code);
+		text_pos += nb_bytes;
 	}
 	//show_cursor();
 	return width;
@@ -1587,7 +1595,7 @@ void dialog_method_2_frame(dialog_type* dialog) {
 // seg009:0C44
 void show_dialog(const char* text) {
 	char string[256];
-	snprintf(string, sizeof(string), "%s\n\nPress any key to continue.", text);
+	str_dialog(pop_language, string, sizeof(string), text);
 	showmessage(string, 1, &key_test_quit);
 }
 
@@ -2915,7 +2923,11 @@ void load_from_opendats_metadata(int resource_id, const char* extension, FILE** 
 			if (len >= 5 && filename_no_ext[len-4] == '.') {
 				filename_no_ext[len-4] = '\0'; // terminate, so ".DAT" is deleted from the filename
 			}
-			snprintf_check(image_filename,sizeof(image_filename),"data/%s/res%d.%s",filename_no_ext, resource_id, extension);
+
+			select_language_img(pop_language,
+								image_filename, sizeof(image_filename),
+								filename_no_ext, resource_id, extension);
+
 			if (!use_custom_levelset) {
 				//printf("loading (binary) %s",image_filename);
 				fp = fopen(locate_file(image_filename), "rb");

@@ -19,6 +19,8 @@ The authors of this program may be contacted at https://forum.princed.org
 */
 
 #include "common.h"
+#include "Localization/legacy_ingame_texts.h"
+
 #include <setjmp.h>
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -965,7 +967,9 @@ void draw_game_frame() {
 					erase_bottom_text(0);
 				} else {
 					if (blink_frame == 3) {
-						display_text_bottom("Press Button to Continue");
+						char sprintf_temp[40];
+						str_pressbutton(pop_language, sprintf_temp, sizeof(sprintf_temp));
+						display_text_bottom(sprintf_temp);
 						play_sound_from_buffer(sound_pointers[sound_38_blink]); // press button blink
 					}
 				}
@@ -1702,7 +1706,9 @@ int do_paused() {
 				check_sound_playing()) {
 			stop_sounds();
 		}
-		display_text_bottom("GAME PAUSED");
+		char sprintf_temp[40];
+		str_pause(pop_language, sprintf_temp, sizeof(sprintf_temp));
+		display_text_bottom(sprintf_temp);
 #ifdef USE_MENU
 		if (enable_pause_menu || is_menu_shown) {
 			draw_menu();
@@ -2076,10 +2082,13 @@ void save_game() {
 		}
 	}
 
+	char sprintf_temp[40];
 	if (success) {
-		display_text_bottom("GAME SAVED");
+		str_save(pop_language, sprintf_temp, sizeof(sprintf_temp));
+		display_text_bottom(sprintf_temp);
 	} else {
-		display_text_bottom("UNABLE TO SAVE GAME");
+		str_unable_save(pop_language, sprintf_temp, sizeof(sprintf_temp));
+		display_text_bottom(sprintf_temp);
 		//play_sound_from_buffer(&sound_cant_save);
 	}
 	text_time_remaining = 24;
@@ -2246,15 +2255,12 @@ void show_copyprot(int where) {
 		text_time_total = 1188;
 		text_time_remaining = 1188;
 		is_show_time = 0;
-		snprintf(sprintf_temp, sizeof(sprintf_temp),
-			"WORD %d LINE %d PAGE %d",
-			copyprot_word[copyprot_idx], copyprot_line[copyprot_idx], copyprot_page[copyprot_idx]);
+		str_copy_protection_bottom(pop_language, sprintf_temp, sizeof(sprintf_temp),
+								   copyprot_word[copyprot_idx], copyprot_line[copyprot_idx], copyprot_page[copyprot_idx]);
 		display_text_bottom(sprintf_temp);
 	} else {
-		snprintf(sprintf_temp, sizeof(sprintf_temp),
-			"Drink potion matching the first letter of Word %d on Line %d\n"
-			"of Page %d of the manual.",
-			copyprot_word[copyprot_idx], copyprot_line[copyprot_idx], copyprot_page[copyprot_idx]);
+		str_copy_protection_dialog(pop_language, sprintf_temp, sizeof(sprintf_temp),
+								   copyprot_word[copyprot_idx], copyprot_line[copyprot_idx], copyprot_page[copyprot_idx]);
 		show_dialog(sprintf_temp);
 	}
 #endif
@@ -2262,7 +2268,9 @@ void show_copyprot(int where) {
 
 // seg000:2489
 void show_loading() {
-	show_text(&screen_rect, halign_center, valign_middle, "Loading. . . .");
+	char sprintf_temp[140];
+	str_loading(pop_language, sprintf_temp, sizeof(sprintf_temp));
+	show_text(&screen_rect, halign_center, valign_middle, sprintf_temp);
 	update_screen();
 }
 

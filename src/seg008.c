@@ -19,6 +19,7 @@ The authors of this program may be contacted at https://forum.princed.org
 */
 
 #include "common.h"
+#include "Localization/legacy_ingame_texts.h"
 
 // data:27E0
 add_table_type ptr_add_table = add_backtable;
@@ -1786,13 +1787,13 @@ void show_time() {
 			if (rem_min == 1) {
 				rem_sec = (rem_tick + 1) / 12;
 				if (rem_sec == 1) {
-					strncpy(sprintf_temp, "1 SECOND LEFT", sizeof(sprintf_temp));
+					str_one_second_left(pop_language, sprintf_temp, sizeof(sprintf_temp));
 					text_time_remaining = text_time_total = 12;
 				} else {
-					snprintf(sprintf_temp, sizeof(sprintf_temp), "%d SECONDS LEFT", rem_sec);
+					str_seconds_left(pop_language, sprintf_temp, sizeof(sprintf_temp), rem_sec);
 				}
 			} else {
-				snprintf(sprintf_temp, sizeof(sprintf_temp), "%d MINUTES LEFT", rem_min);
+				str_minutes_left(pop_language, sprintf_temp, sizeof(sprintf_temp), rem_min);
 			}
 			display_text_bottom(sprintf_temp);
 		} else {
@@ -1815,8 +1816,8 @@ void show_time() {
 
 			else if (rem_min == 0) // may also be negative, don't report "expired" in that case!
 #endif
-
-			display_text_bottom("TIME HAS EXPIRED!");
+			str_time_expired(pop_language, sprintf_temp, sizeof(sprintf_temp));
+			display_text_bottom(sprintf_temp);
 		}
 		is_show_time = 0;
 	}
@@ -1834,7 +1835,7 @@ void show_level() {
 			disp_level = /*12*/ custom->level_13_level_number;
 		}
 		text_time_remaining = text_time_total = 24;
-		snprintf(sprintf_temp, sizeof(sprintf_temp), "LEVEL %d", disp_level);
+		str_level(pop_language, sprintf_temp, sizeof(sprintf_temp), disp_level);
 		display_text_bottom(sprintf_temp);
 		is_show_time = 1;
 	}
