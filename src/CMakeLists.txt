@@ -51,6 +51,10 @@ if (WIN32)
     link_directories(${SDL2}/${SDL2_ARCH}/lib)
 endif()
 
+if (UNIX)
+    add_definitions(-D_GNU_SOURCE=1)
+endif()
+
 set(SOURCE_FILES
         main.c
         common.h
