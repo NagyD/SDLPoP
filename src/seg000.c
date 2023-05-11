@@ -2382,9 +2382,11 @@ const char* get_writable_file_path(char* custom_path_buffer, size_t max_len, con
 		snprintf_check(save_path, max_len, "%s", custom_save_path);
 	else if (home_path != NULL && home_path[0] != '\0')
 		snprintf_check(save_path, max_len, "%s/.%s", home_path, POP_DIR_NAME);
+	else // save_path might not be initialized
+		save_path[0] = '\0';
 #endif
 
-	if (save_path != NULL && save_path[0] != '\0') {
+	if (save_path[0] != '\0') {
 #if defined WIN32 || _WIN32 || WIN64 || _WIN64
 		mkdir (save_path);
 #else
