@@ -694,7 +694,7 @@ extern float next_sound_distance_loss;
 extern bool current_sound_is_positional;
 extern float current_sound_dir_x;
 extern float current_sound_distance_loss;
-room_offset_type room_offsets[24];
+extern room_offset_type room_offsets[24];
 
 extern int last_key_scancode;
 #ifdef USE_TEXT
