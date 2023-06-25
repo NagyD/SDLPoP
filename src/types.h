@@ -682,6 +682,13 @@ typedef struct dialog_type {
 	peel_type* peel;
 } dialog_type;
 
+typedef struct room_offset_type {
+	sbyte dx;
+	sbyte dy;
+	byte distance;
+	bool visited; // For Dijkstra's algorithm
+} room_offset_type;
+
 enum soundids {
 	sound_0_fell_to_death = 0,
 	sound_1_falling = 1,

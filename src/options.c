@@ -186,6 +186,7 @@ static int global_ini_callback(const char *section, const char *name, const char
 		}
 		process_boolean("enable_copyprot", &enable_copyprot);
 		process_boolean("enable_music", &enable_music);
+		process_boolean("enable_positional_audio", &enable_positional_audio);
 		process_boolean("enable_fade", &enable_fade);
 		process_boolean("enable_flash", &enable_flash);
 		process_boolean("enable_text", &enable_text);
@@ -469,6 +470,7 @@ void set_options_to_default() {
 #endif
 	enable_copyprot = 0;
 	enable_music = 1;
+	enable_positional_audio = 0;
 	enable_fade = 1;
 	enable_flash = 1;
 	enable_text = 1;

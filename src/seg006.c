@@ -626,14 +626,17 @@ void play_seq() {
 						is_guard_notice = 1;
 						break;
 					case SND_FOOTSTEP: // feet
+						set_sound_pos(Char.room, Char.curr_col, Char.curr_row);
 						play_sound(sound_23_footstep); // footstep
 						is_guard_notice = 1;
 						break;
 					case SND_BUMP: // bump
+						set_sound_pos(Char.room, Char.curr_col, Char.curr_row);
 						play_sound(sound_8_bumped); // touching a wall
 						is_guard_notice = 1;
 						break;
 					case SND_DRINK: // drink
+						set_sound_pos(Char.room, Char.curr_col, Char.curr_row);
 						play_sound(sound_18_drink); // drink
 						break;
 					case SND_LEVEL: // level
@@ -1197,6 +1200,7 @@ void check_grab() {
 			seqtbl_offset_char(seq_15_grab_ledge_midair); // grab a ledge (after falling)
 			play_seq();
 			grab_timer = 12;
+			set_sound_pos(Char.room, Char.curr_col, Char.curr_row);
 			play_sound(sound_9_grab); // grab
 			is_screaming = 0;
 #ifdef FIX_CHOMPERS_NOT_STARTING
@@ -1873,6 +1877,7 @@ void proc_get_object() {
 			break;
 			case 5: // hurt
 				stop_sounds();
+				set_sound_pos(Char.room, Char.curr_col, Char.curr_row);
 				play_sound(sound_13_kid_hurt); // Kid hurt (by potion)
 				// Special event: blue potions on potions level take half of HP
 				if (current_level == 15) {

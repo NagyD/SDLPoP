@@ -427,6 +427,7 @@ void restore_room_after_quick_load() {
 	text_time_total = text_time_remaining = 0;
 	//next_sound = current_sound = -1;
 	exit_room_timer = 0;
+	find_all_rooms_from(drawn_room);
 }
 
 int quick_load(void) {
@@ -1234,6 +1235,68 @@ void play_guard_frame() {
 	}
 }
 
+void dijkstra_visit_room(byte room) {
+	if (!(room > 0 && room <= 24)) return;
+	room_offset_type* current_node = &room_offsets[room - 1];
+	current_node->visited = 1;
+
+	byte next_distance = current_node->distance + 1;
+	sbyte curr_offset_x = current_node->dx;
+	sbyte curr_offset_y = current_node->dy;
+	link_type links = level.roomlinks[room-1];
+	room_offset_type* left =  (links.left > 0 && links.left <= 24)   ? &room_offsets[links.left-1] : NULL;
+	room_offset_type* right = (links.right > 0 && links.right <= 24) ? &room_offsets[links.right-1] : NULL;
+	room_offset_type* up =    (links.up > 0 && links.up <= 24)       ? &room_offsets[links.up-1] : NULL;
+	room_offset_type* down =  (links.down > 0 && links.down <= 24)   ? &room_offsets[links.down-1] : NULL;
+	if (left != NULL && next_distance < left->distance) {
+		left->distance = next_distance;
+		left->dx = curr_offset_x - 1;
+		left->dy = curr_offset_y;
+	}
+	if (right != NULL && next_distance < right->distance) {
+		right->distance = next_distance;
+		right->dx = curr_offset_x + 1;
+		right->dy = curr_offset_y;
+	}
+	if (up != NULL && next_distance < up->distance) {
+		up->distance = next_distance;
+		up->dx = curr_offset_x;
+		up->dy = curr_offset_y - 1;
+	}
+	if (down != NULL && next_distance < down->distance) {
+		down->distance = next_distance;
+		down->dx = curr_offset_x;
+		down->dy = curr_offset_y + 1;
+	}
+}
+
+// Find where all reachable rooms are located relative to the current room, using Dijkstra's algorithm.
+// https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
+void find_all_rooms_from(byte starting_room) {
+	memset(room_offsets, 0, sizeof(room_offsets));
+	for (int i = 0; i < COUNT(room_offsets); ++i) {
+		room_offsets[i].distance = 255;
+	}
+	room_offsets[starting_room-1].distance = 0; // The starting node is at distance=0 by definition.
+	room_offsets[starting_room-1].visited = false;
+
+	int current_node = drawn_room;
+	for (int i = 1; i <= 24; ++i) {
+		dijkstra_visit_room(current_node);
+		// Find the unvisited node with the lowest distance to the starting node, and repeat.
+		current_node = 0;
+		int closest_distance = 255;
+		for (int j = 1; j <= 24; ++j) {
+			room_offset_type* node = &room_offsets[j-1];
+			if (!node->visited && node->distance < closest_distance) {
+				closest_distance = node->distance;
+				current_node = j;
+			}
+		}
+		if (current_node > 0) continue; else break; // All nodes visited.
+	}
+}
+
 // seg000:0FBD
 void check_the_end() {
 	if (next_room != 0 && next_room != drawn_room) {
@@ -1253,6 +1316,7 @@ void check_the_end() {
 		start_chompers();
 		check_fall_flo();
 		check_shadow();
+		find_all_rooms_from(drawn_room);
 	}
 }
 
@@ -1599,8 +1663,48 @@ void play_sound(int sound_id) {
 	if (next_sound < 0 || sound_prio_table[sound_id] <= sound_prio_table[next_sound]) {
 		if (NULL == sound_pointers[sound_id]) return;
 		if (sound_pcspeaker_exists[sound_id] != 0 || sound_pointers[sound_id]->type != sound_speaker) {
+			if (enable_positional_audio && want_positional_sound) {
+				// Don't interrupt the previous sound if this one is further away
+				if (!(sound_id == next_sound && want_sound_distance_loss < next_sound_distance_loss)) {
+					next_sound_is_positional = want_positional_sound;
+					next_sound_dir_x = want_sound_dir_x;
+					next_sound_distance_loss = want_sound_distance_loss;
+				}
+			}
 			next_sound = sound_id;
 		}
+	}
+	want_positional_sound = false;
+}
+
+void set_sound_pos(int room, int col, int row) {
+	if (!enable_positional_audio) return;
+	want_positional_sound = false;
+	want_sound_distance_loss = 1.0f;
+	want_sound_dir_x = 0.0f;
+	if (!(room > 0 && room <= 24)) return;
+	room_offset_type room_offset = room_offsets[room-1];
+	if (room_offset.visited) {
+		want_positional_sound = true;
+		// Calculate the position of the sound within the room
+		int tile_x = col * 32 + 16;
+		int tile_y = 3 + row * 63;
+		int sound_x = tile_x - (320 / 2); // offset in pixels from the center of the room
+		int sound_y = tile_y - (192 / 2);
+		// Place the sound in the other room
+		sound_x += room_offset.dx * 320;
+		sound_y += room_offset.dy * 189;
+		// The listener is placed at some distance along the z-axis (away from the screen)
+		float distance_z = 3.0f * 320.0f; // could be tweaked
+		float distance_x = (float) ABS(sound_x);
+		float distance_y = (float) ABS(sound_y);
+		float sound_distance = sqrtf(distance_x * distance_x + distance_y * distance_y + distance_z * distance_z);
+		want_sound_distance_loss = 1.0f / MAX(1.0f, log2f(sound_distance / distance_z) * 8.0f); // could be tweaked
+		float angle_in_xy_plane = atan2f((float) sound_y, (float) sound_x);
+		float angle_with_z_axis = asinf(distance_z / sound_distance);
+
+		want_sound_dir_x = cosf(angle_in_xy_plane);
+		want_sound_dir_x *= cosf(angle_with_z_axis);
 	}
 }
 
@@ -1610,6 +1714,11 @@ void play_next_sound() {
 		if (!check_sound_playing() ||
 			(sound_interruptible[current_sound] != 0 && sound_prio_table[next_sound] <= sound_prio_table[current_sound])
 		) {
+			if (enable_positional_audio) {
+				current_sound_is_positional = next_sound_is_positional;
+				current_sound_dir_x = next_sound_dir_x;
+				current_sound_distance_loss = next_sound_distance_loss;
+			}
 			current_sound = next_sound;
 			play_sound_from_buffer(sound_pointers[current_sound]);
 		}

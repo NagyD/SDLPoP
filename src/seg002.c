@@ -957,6 +957,7 @@ void hurt_by_sword() {
 		Char.fall_y = 0;
 	}
 	// sound 13: Kid hurt (by sword), sound 12: Guard hurt (by sword)
+	set_sound_pos(Char.room, Char.curr_col, Char.curr_row);
 	play_sound(Char.charid == charid_0_kid ? sound_13_kid_hurt : sound_12_guard_hurt);
 	play_seq();
 }
@@ -1034,6 +1035,7 @@ void check_hurting() {
 	// frame 154: poking
 	// frame 161: parrying
 	if (Char.frame == frame_154_poking && Opp.frame != frame_161_parry && Opp.action != actions_99_hurt) {
+		set_sound_pos(Char.room, Char.curr_col, Char.curr_row);
 		play_sound(sound_11_sword_moving); // sword moving
 	}
 }
@@ -1066,6 +1068,7 @@ void check_skel() {
 			Char.direction = dir_FF_left;
 			seqtbl_offset_char(seq_88_skel_wake_up); // skel wake up
 			play_seq();
+			set_sound_pos(Char.room, Char.curr_col, Char.curr_row);
 			play_sound(sound_44_skel_alive); // skel alive
 			guard_skill = /*2*/ custom->skeleton_skill;
 			Char.alive = -1;
