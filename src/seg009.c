@@ -183,8 +183,12 @@ int access_UTF8(const char* filename_UTF8, int mode) {
 
 int stat_UTF8(const char *filename_UTF8, struct stat *_Stat) {
 	WCHAR* filename_UTF16 = WIN_UTF8ToString(filename_UTF8);
-	// There is a _wstat() function as well, but it expects the second argument to be a different type than stat().
+#ifdef _MSC_VER
 	int result = _wstat(filename_UTF16, _Stat);
+#else
+	// There is a _wstat() function on Dev-C++ as well, but it expects the second argument to be a different type than stat().
+	int result = wstat(filename_UTF16, _Stat);
+#endif
 	SDL_free(filename_UTF16);
 	return result;
 }
@@ -2601,7 +2605,7 @@ void set_gr_mode(byte grmode) {
 #if _WIN32
 	// Tell Windows that the application is DPI aware, to prevent unwanted bitmap stretching.
 	// SetProcessDPIAware() is only available on Windows Vista and later, so we need to load it dynamically.
-	typedef BOOL (WINAPI *dpiaware)(SetProcessDPIAware);
+	typedef BOOL (WINAPI *dpiaware)(void);
 	HMODULE user32dll = LoadLibraryA("User32.dll");
 	if (user32dll) {
 		dpiaware SetProcessDPIAware = (dpiaware)GetProcAddress(user32dll, "SetProcessDPIAware");
