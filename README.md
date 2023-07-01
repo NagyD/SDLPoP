@@ -429,6 +429,8 @@ To compile, open one of the .dev files and click the compile icon.
        * https://github.com/libsdl-org/SDL/releases/latest
        * https://github.com/libsdl-org/SDL_image/releases/latest
        * Download the Visual C++ 32/64-bit development package, the `*-VC.zip` files.
+       * Copy SDL2_image folder contents into SDL2 folder so that their dlls and header files are placed at the same place, referenced by `SDL2` environmental variable for the compiler.
+       Add `SDL2` and `SDL2_image` dll folder to `PATH` for built executable to find them.
     * (You could create a small batch file to automate the above steps on your system.)
 * Alternatively, you can also build SDLPoP using MSVC with NMake (use the makefile src/NMakefile).
 
