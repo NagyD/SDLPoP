@@ -1705,6 +1705,7 @@ void set_sound_pos(int room, int col, int row) {
 
 		want_sound_dir_x = cosf(angle_in_xy_plane);
 		want_sound_dir_x *= cosf(angle_with_z_axis);
+		want_sound_dir_x *= 10;
 	}
 }
 
