@@ -1048,7 +1048,7 @@ void move_loose() {
 			mob_down_a_row();
 			return;
 		}
-		set_sound_pos(curmob.room, curmob.row, curmob.xh >> 2);
+		set_sound_pos(curmob.room, curmob.xh >> 2, curmob.row);
 		play_sound(sound_2_tile_crashing); // tile crashing
 		do_knock(curmob.room, curmob.row);
 		curmob.y = y_something[curmob.row + 1];
