@@ -741,3 +741,4 @@ FIXED: Letters above potions not showing up on the copy protection level.
 	Details: https://github.com/NagyD/SDLPoP/pull/299
 DONE: If the SDLPOP_SAVE_PATH environment variable is set, put all saves into the directory it points to.
 	Details: https://github.com/NagyD/SDLPoP/issues/301
+DONE: Added positional audio. If it is enabled, you will hear sounds from the appropriate direction. Works best with headphones.
