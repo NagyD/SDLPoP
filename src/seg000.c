@@ -384,6 +384,8 @@ int quick_save(void) {
 		ok = quick_process(process_save);
 		fclose(quick_fp);
 		quick_fp = NULL;
+	} else {
+		perror("quick_save: fopen");
 	}
 	return ok;
 }
@@ -479,6 +481,8 @@ int quick_load(void) {
 
 		}
 		#endif
+	} else {
+		perror("quick_load: fopen");
 	}
 	return ok;
 }
@@ -2070,10 +2074,15 @@ void save_game() {
 		if (fwrite(&hitp_beg_lev, 1, 2, handle) != 2) goto error;
 		success = 1;
 		error:
+		if (!success) {
+			perror("save_game: fwrite");
+		}
 		fclose(handle);
 		if (!success) {
 			remove(save_path);
 		}
+	} else {
+		perror("save_game: fopen");
 	}
 
 	if (success) {
@@ -2105,7 +2114,12 @@ short load_game() {
 		success = 1;
 		dont_reset_time = 1;
 		error:
+		if (!success) {
+			perror("load_game: fread");
+		}
 		fclose(handle);
+	} else {
+		perror("load_game: fopen");
 	}
 	return success;
 }
