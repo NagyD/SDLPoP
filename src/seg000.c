@@ -386,6 +386,7 @@ int quick_save(void) {
 		quick_fp = NULL;
 	} else {
 		perror("quick_save: fopen");
+		printf("Tried to open for writing: %s\n", path);
 	}
 	return ok;
 }
@@ -483,6 +484,7 @@ int quick_load(void) {
 		#endif
 	} else {
 		perror("quick_load: fopen");
+		printf("Tried to open for reading: %s\n", path);
 	}
 	return ok;
 }
@@ -2075,7 +2077,7 @@ void save_game() {
 		success = 1;
 		error:
 		if (!success) {
-			perror("save_game: fwrite");
+			printf("save_game: fwrite: Can not write to: %s\n", save_path);
 		}
 		fclose(handle);
 		if (!success) {
@@ -2083,6 +2085,7 @@ void save_game() {
 		}
 	} else {
 		perror("save_game: fopen");
+		printf("Tried to open for writing: %s\n", save_path);
 	}
 
 	if (success) {
@@ -2115,11 +2118,12 @@ short load_game() {
 		dont_reset_time = 1;
 		error:
 		if (!success) {
-			perror("load_game: fread");
+			printf("load_game: fread: Can not read from: %s\n", save_path);
 		}
 		fclose(handle);
 	} else {
 		perror("load_game: fopen");
+		printf("Tried to open for reading: %s\n", save_path);
 	}
 	return success;
 }
