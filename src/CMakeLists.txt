@@ -51,6 +51,10 @@ if (WIN32)
     link_directories(${SDL2}/${SDL2_ARCH}/lib)
 endif()
 
+if (UNIX)
+    add_definitions(-D_GNU_SOURCE=1)
+endif()
+
 set(SOURCE_FILES
         main.c
         common.h
@@ -59,6 +63,12 @@ set(SOURCE_FILES
         data.h
         proto.h
         types.h
+        Localization/legacy_ingame_texts.h
+        Localization/language.h
+        Localization/non_ascii_code.h
+        Localization/legacy_ingame_texts.c
+        Localization/language.c
+        Localization/non_ascii_code.c
         seg000.c
         seg001.c
         seg002.c
