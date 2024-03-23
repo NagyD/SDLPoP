@@ -1231,6 +1231,7 @@ typedef struct fixes_options_type {
 	byte fix_falling_through_floor_during_sword_strike;
 	byte enable_jump_grab;
 	byte fix_register_quick_input;
+	byte fix_turn_running_near_wall;
 } fixes_options_type;
 
 #define NUM_GUARD_SKILLS 12
@@ -1398,8 +1399,8 @@ enum
 enum
 {
 	EDGE_TYPE_CLOSER, // closer/sword/potion
-	EDGE_TYPE_EDGE, // edge
-	EDGE_TYPE_FLOOR, // floor (nothing near char)
+	EDGE_TYPE_WALL,   // wall/gate/tapestry/mirror/chomper
+	EDGE_TYPE_FLOOR,  // floor (nothing near char)
 };
 
 #define TILE_SIZEX 14 // Horizontal size of tile in the internal coordinate system (a tile is 32 pixels wide in screen space)

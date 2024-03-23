@@ -204,6 +204,7 @@ enum setting_ids {
 	SETTING_FIX_DROP_2_ROOMS_CLIMBING_LOOSE_TILE,
 	SETTING_FIX_FALLING_THROUGH_FLOOR_DURING_SWORD_STRIKE,
 	SETTING_FIX_REGISTER_QUICK_INPUT,
+	SETTING_FIX_TURN_RUNNING_NEAR_WALL,
 	SETTING_ENABLE_SUPER_HIGH_JUMP,
 	SETTING_ENABLE_JUMP_GRAB,
 	SETTING_USE_CUSTOM_OPTIONS,
@@ -608,6 +609,10 @@ setting_type gameplay_settings[] = {
 				.linked = &fixes_saved.fix_register_quick_input, .required = &use_fixes_and_enhancements,
 				.text = "Fix fast inputs",
 				.explanation = "Input is ignored if a button or key is pressed and released between game ticks."},
+		{.id = SETTING_FIX_TURN_RUNNING_NEAR_WALL, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fixes_saved.fix_turn_running_near_wall, .required = &use_fixes_and_enhancements,
+				.text = "Fix run turning near wall",
+				.explanation = "Ensures Prince safe steps near a wall/gate when facing in an opposite direction."},
 };
 
 NAMES_LIST(tile_type_setting_names, {
