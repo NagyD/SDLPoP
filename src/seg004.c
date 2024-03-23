@@ -387,7 +387,7 @@ int get_edge_distance() {
 		if (distance >= 0) {
 			loc_59DD:
 			if (distance <= TILE_RIGHTX) {
-				edge_type = EDGE_TYPE_EDGE;
+				edge_type = EDGE_TYPE_WALL;
 			} else {
 				edge_type = EDGE_TYPE_FLOOR;
 				distance = 11;

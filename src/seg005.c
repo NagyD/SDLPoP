@@ -503,7 +503,21 @@ void go_up_leveldoor() {
 // seg005:058F
 void control_turning() {
 	if (control_shift >= CONTROL_RELEASED && control_x == CONTROL_HELD_FORWARD && control_y >= CONTROL_RELEASED) {
+#ifdef FIX_TURN_RUN_NEAR_WALL
+		if (fixes->fix_turn_running_near_wall) {
+			int distance = get_edge_distance();
+			// the same logic as the safe-step condition in the forward_pressed() method
+			if (edge_type == EDGE_TYPE_WALL && curr_tile2 != tiles_18_chomper && distance < 8) {
+				control_forward = CONTROL_HELD; // ensures the value is not CONTROL_IGNORE since control_x == CONTROL_HELD_FORWARD
+			} else {
+				seqtbl_offset_char(seq_43_start_run_after_turn);
+			}
+		} else {
+			seqtbl_offset_char(seq_43_start_run_after_turn);
+		}
+#else
 		seqtbl_offset_char(seq_43_start_run_after_turn); // start run and run (after turning)
+#endif
 	}
 
 	// Added:
@@ -560,7 +574,7 @@ void forward_pressed() {
 	}
 	#endif
 
-	if (edge_type == EDGE_TYPE_EDGE && curr_tile2 != tiles_18_chomper && distance < 8) {
+	if (edge_type == EDGE_TYPE_WALL && curr_tile2 != tiles_18_chomper && distance < 8) {
 		// If char is near a wall, step instead of run.
 		if (control_forward == CONTROL_HELD) {
 			safe_step();
@@ -594,7 +608,7 @@ void safe_step() {
 	if (distance) {
 		Char.repeat = 1;
 		seqtbl_offset_char(distance + 28); // 29..42: safe step to edge
-	} else if (edge_type != EDGE_TYPE_EDGE && Char.repeat != 0) {
+	} else if (edge_type != EDGE_TYPE_WALL && Char.repeat != 0) {
 		Char.repeat = 0;
 		seqtbl_offset_char(seq_44_step_on_edge); // step on edge
 	} else {
@@ -721,7 +735,7 @@ void jump_up() {
 	word delta_x;
 	control_up = release_arrows();
 	short distance = get_edge_distance();
-	if (distance < 4 && edge_type == EDGE_TYPE_EDGE) {
+	if (distance < 4 && edge_type == EDGE_TYPE_WALL) {
 		Char.x = char_dx_forward(distance - 3);
 	}
 	#ifdef FIX_JUMP_DISTANCE_AT_EDGE
@@ -865,8 +879,8 @@ void grab_up_with_floor_behind() {
 	// When climbing to a higher floor, the game unnecessarily checks how far away the edge below is;
 	// This contributes to sometimes "teleporting" considerable distances when climbing from firm ground
 	#define JUMP_STRAIGHT_CONDITION (fixes->fix_edge_distance_check_when_climbing)						\
-									? (distance < 4 && edge_type != EDGE_TYPE_EDGE)									\
-									: (distance < 4 && edge_distance < 4 && edge_type != EDGE_TYPE_EDGE)
+									? (distance < 4 && edge_type != EDGE_TYPE_WALL)									\
+									: (distance < 4 && edge_distance < 4 && edge_type != EDGE_TYPE_WALL)
 	#else
 	#define JUMP_STRAIGHT_CONDITION distance < 4 && edge_distance < 4 && edge_type != 1
 	#endif

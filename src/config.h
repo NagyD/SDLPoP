@@ -291,6 +291,11 @@ The authors of this program may be contacted at https://forum.princed.org
 // See also: https://github.com/NagyD/SDLPoP/pull/274
 #define FIX_FALLING_THROUGH_FLOOR_DURING_SWORD_STRIKE
 
+// Prince can start running when he is standing really close to a wall/gate/tapestry but facing in a different direction.
+// He can either press buttons through gates or falling back when facing right against a closed gate when there is an abiss behind.
+// This fix ensures the logic that makes Prince safe-stepping instead of running is also working when he is facing in the opposite direction.
+#define FIX_TURN_RUN_NEAR_WALL
+
 // When the player (re-)enters the currently shown room, the guard disappears from the screen.
 // This can happen when:
 // * A room is linked to itself (broken link).
