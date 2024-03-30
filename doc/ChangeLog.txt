@@ -741,3 +741,5 @@ FIXED: Letters above potions not showing up on the copy protection level.
 	Details: https://github.com/NagyD/SDLPoP/pull/299
 DONE: If the SDLPOP_SAVE_PATH environment variable is set, put all saves into the directory it points to.
 	Details: https://github.com/NagyD/SDLPoP/issues/301
+FIXED: Added a configurable fix for the turn-run bug that causes trick 1 and trick 2 to work.
+	Details: See FIX_TURN_RUN_NEAR_WALL in config.h and https://github.com/NagyD/SDLPoP/pull/312
