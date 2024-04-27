@@ -165,11 +165,19 @@ See their contents for license information.
 * Right: turn or run right
 * Up: jump or climb up
 * Down: crouch or climb down
+* Down+Left/Right: hop
 * Shift: pick up things
 * Shift+Left/Right: careful step
 * Home or Up+Left: jump left
 * Page Up or Up+Right: jump right
+* Up while running: running jump
 * Shift while falling: grab onto ledge
+
+Sword fight:
+* Left/Right: walk (advance or retreat)
+* Shift: strike (attack)
+* Up: block (defend)
+* Down: put sword away; press Shift to draw your sword again.
 
 You can also use the numeric keypad.
 
