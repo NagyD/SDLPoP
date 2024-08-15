@@ -570,7 +570,7 @@ typedef struct ogg_type {
 
 typedef struct converted_audio_type {
 	int length;
-	short samples[];
+	short * samples; //FIXME: crash in PSP when using flexible arrays (??)
 } converted_audio_type;
 
 typedef struct sound_buffer_type {

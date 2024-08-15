@@ -2389,7 +2389,9 @@ sound_buffer_type* convert_digi_sound(sound_buffer_type* digi_buffer) {
 	converted_buffer->converted.length = expanded_length;
 
 	byte* source = waveinfo.samples;
-	short* dest = converted_buffer->converted.samples;
+	//short* dest = converted_buffer->converted.samples;
+	short* dest = malloc(sizeof(short) * converted_buffer->converted.length);
+        converted_buffer->converted.samples = dest;
 
 	for (int i = 0; i < expanded_frames; ++i) {
 		float src_frame_float = i * freq_ratio;
