@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 project(SDLPoP)
 
+find_package(SDL2 REQUIRED)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -std=c99")
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror=implicit-function-declaration")
@@ -120,5 +121,31 @@ if(WIN32)
 elseif(APPLE)
     target_link_libraries(prince SDL2main SDL2 SDL2_image m)
 else() # Linux, *BSD, etc.
-    target_link_libraries(prince SDL2 SDL2_image m)
+    if(PSP)
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3")
+    	target_include_directories(prince PRIVATE ${SDL2_INCLUDE_DIRS} ${PSPDEV}/psp/include)
+    	target_link_libraries(prince PRIVATE
+    	${SDL2_LIBRARIES}
+    	z
+    	jpeg
+    	SDL2main
+    	SDL2
+    	SDL2_image
+    	vorbis
+    	vorbisfile
+    	ogg
+    	modplug
+    	png
+    	m
+    )
+    create_pbp_file(
+        TARGET prince
+        ICON_PATH ${CMAKE_SOURCE_DIR}/iconPSP.png
+        BACKGROUND_PATH NULL
+        PREVIEW_PATH NULL
+        TITLE prince
+    )
+    else()
+    	target_link_libraries(prince SDL2 SDL2_image m)
+    endif()
 endif()

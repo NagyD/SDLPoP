@@ -3371,14 +3371,14 @@ image_type* method_6_blit_img_to_scr(image_type* image,int xpos,int ypos,int bli
 }
 
 #ifndef USE_COMPAT_TIMER
-int fps = 60;
-float milliseconds_per_tick = (1000.0f / 60.0f);
+int fps = BASE_FPS;
+float milliseconds_per_tick = (1000.0f / (BASE_FPS*1.0f));
 Uint64 timer_last_counter[NUM_TIMERS];
 #endif
 int wait_time[NUM_TIMERS];
 
 
-#ifdef USE_COMPAT_TIMER
+//#if  defined(USE_COMPAT_TIMER) || defined(__PSP__)
 Uint32 timer_callback(Uint32 interval, void *param) {
 	SDL_Event event;
 	memset(&event, 0, sizeof(event));
@@ -3388,7 +3388,7 @@ Uint32 timer_callback(Uint32 interval, void *param) {
 	SDL_PushEvent(&event);
 	return interval;
 }
-#endif
+//#endif
 
 void reset_timer(int timer_index) {
 #ifndef USE_COMPAT_TIMER
@@ -3845,7 +3845,7 @@ int do_wait(int timer_index) {
 }
 
 #ifdef USE_COMPAT_TIMER
-SDL_TimerID global_timer = NULL;
+SDL_TimerID global_timer = 0;
 #endif
 // seg009:78E9
 void init_timer(int frequency) {
@@ -3856,12 +3856,12 @@ void init_timer(int frequency) {
 	perf_counters_per_tick = perf_frequency / fps;
 	milliseconds_per_counter = 1000.0f / perf_frequency;
 #else
+	global_timer = SDL_AddTimer(1000/frequency, timer_callback, NULL);
 	if (global_timer != 0) {
 		if (!SDL_RemoveTimer(global_timer)) {
 			sdlperror("init_timer: SDL_RemoveTimer");
 		}
 	}
-	global_timer = SDL_AddTimer(1000/frequency, timer_callback, NULL);
 	if (global_timer == 0) {
 		sdlperror("init_timer: SDL_AddTimer");
 		quit(1);
@@ -4251,6 +4251,7 @@ int has_timer_stopped(int timer_index) {
 #ifdef USE_REPLAY
 	if ((replaying && skipping_replay) || is_validate_mode) return true;
 #endif
+	//PSP: overshoot always too big, 333mhz mandatory to read input!
 	Uint64 current_counter = SDL_GetPerformanceCounter();
 	int ticks_elapsed = (int)((current_counter / perf_counters_per_tick) - (timer_last_counter[timer_index] / perf_counters_per_tick));
 	int overshoot = ticks_elapsed - wait_time[timer_index];

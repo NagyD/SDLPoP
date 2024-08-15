@@ -498,7 +498,9 @@ void set_options_to_default() {
 
 void load_global_options() {
 	set_options_to_default();
+	#ifndef __PSP__ //FIXME: ini_process_word crashes at "first_level"
 	ini_load(locate_file("SDLPoP.ini"), global_ini_callback); // global configuration
+	#endif
 	load_dos_exe_modifications("."); // read PRINCE.EXE in the current working directory
 }
 
