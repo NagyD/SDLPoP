@@ -123,21 +123,14 @@ elseif(APPLE)
 else() # Linux, *BSD, etc.
     if(PSP)
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3")
-    	target_include_directories(prince PRIVATE ${SDL2_INCLUDE_DIRS} ${PSPDEV}/psp/include)
-    	target_link_libraries(prince PRIVATE
-    	${SDL2_LIBRARIES}
-    	z
-    	jpeg
-    	SDL2main
-    	SDL2
-    	SDL2_image
-    	vorbis
-    	vorbisfile
-    	ogg
-    	modplug
-    	png
-    	m
-    )
+include(FindPkgConfig)
+pkg_search_module(SDL2 REQUIRED sdl2)
+
+target_include_directories(target PRIVATE ${SDL2_INCLUDE_DIRS})
+
+target_link_libraries(target PRIVATE
+    ${SDL2_LIBRARIES}
+)
     create_pbp_file(
         TARGET prince
         ICON_PATH ${CMAKE_SOURCE_DIR}/iconPSP.png
