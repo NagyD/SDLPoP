@@ -38,4 +38,4 @@ catch the exceptions and set breakpoints too.
 ## Credits
 - SDLPoP and others (Github)
 - PSPDEV and others (toolchain)
-- striga (fixing compilation for PSP)
+- striga, sharkwouter (fixing compilation for PSP)
