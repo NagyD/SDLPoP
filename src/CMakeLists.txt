@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 project(SDLPoP)
 
-find_package(SDL2 REQUIRED)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -std=c99")
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror=implicit-function-declaration")
