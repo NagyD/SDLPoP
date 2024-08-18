@@ -29,7 +29,7 @@ catch the exceptions and set breakpoints too.
 
 ## Changes
 - INI loading was disabled due to a bug that crashed the psp. Sane defaults were
-  provided instead.
+  provided instead (FIXED).
 - PSP has to run at full speed (333mhz) in order for the game to work.
 - "iconPSP.png" was provided.
 - Music was replaced for ogg ones (use the smaller ones!), 

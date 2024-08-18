@@ -1185,7 +1185,10 @@ names_list_type listname##_list = {.type=0, .names = {&listname, COUNT(listname)
 #define KEY_VALUE_LIST(listname, ...) const key_value_type listname[] = __VA_ARGS__; \
 names_list_type listname##_list = {.type=1, .kv_pairs= {(key_value_type*)&listname, COUNT(listname)}}
 
+//misaligned data == CRASH!! on PSP
+#ifndef __PSP__
 #pragma pack(push,1)
+#endif
 typedef struct fixes_options_type {
 	byte enable_crouch_after_climbing;
 	byte enable_freeze_time_during_end_music;
@@ -1345,7 +1348,9 @@ typedef struct custom_options_type {
 	byte chomper_speed;
 
 } custom_options_type;
+#ifndef __PSP__
 #pragma pack(pop)
+#endif
 
 typedef struct directory_listing_type directory_listing_type;
 
