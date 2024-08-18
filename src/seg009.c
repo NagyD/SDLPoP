@@ -3380,7 +3380,7 @@ Uint64 timer_last_counter[NUM_TIMERS];
 int wait_time[NUM_TIMERS];
 
 
-//#if  defined(USE_COMPAT_TIMER) || defined(__PSP__)
+#ifdef USE_COMPAT_TIMER
 Uint32 timer_callback(Uint32 interval, void *param) {
 	SDL_Event event;
 	memset(&event, 0, sizeof(event));
@@ -3390,7 +3390,7 @@ Uint32 timer_callback(Uint32 interval, void *param) {
 	SDL_PushEvent(&event);
 	return interval;
 }
-//#endif
+#endif
 
 void reset_timer(int timer_index) {
 #ifndef USE_COMPAT_TIMER

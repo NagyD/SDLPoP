@@ -1349,11 +1349,7 @@ typedef struct custom_options_type {
 
 typedef struct directory_listing_type directory_listing_type;
 
-#ifdef __PSP__ //for testing, PSP only reads input at 333mhz with 60 FPS 
 #define BASE_FPS 60
-#else
-#define BASE_FPS 60
-#endif
 
 #define FEATHER_FALL_LENGTH 18.75
 
