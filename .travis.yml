@@ -1,0 +1,38 @@
+language: cpp
+compiler: gcc
+sudo: require
+dist: xenial
+
+install:
+  - sudo apt-get update
+  - sudo apt-get -y install libsdl2-image-dev
+
+script:
+  - cd src/
+  - cmake . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr
+  - make -j$(nproc)
+  - mkdir -p appdir/usr/share/applications ; cp ../sdlpop.desktop appdir/usr/share/applications
+  - mkdir -p appdir/usr/share/icons/hicolor/256x256/apps ; cp ../sdlpop.png appdir/usr/share/icons/hicolor/256x256/apps/
+  - mkdir -p appdir/usr/bin ; cp ../prince appdir/usr/bin/sdlpop
+  - |
+    cat > appdir/AppRun <<\EOF
+    #!/bin/bash
+    HERE="$(dirname "$(readlink -f "${0}")")"
+    cd "${HERE}/usr/bin/"
+    exec "${HERE}/usr/bin/sdlpop" "$@"
+    EOF
+  - chmod +x appdir/AppRun
+  - cp -r ../data ../mods ./appdir/usr/bin/
+  - make DESTDIR=appdir -j$(nproc) install ; find appdir/
+  - wget -c -nv "https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage"
+  - chmod a+x linuxdeployqt-continuous-x86_64.AppImage
+  - ./linuxdeployqt-continuous-x86_64.AppImage appdir/usr/share/applications/*.desktop -appimage
+
+after_success:
+  - wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh
+  - bash upload.sh SDLPoP*.AppImage*
+  
+branches:
+  except:
+    - # Do not build tags that we create when we upload to GitHub Releases
+    - /^(?i:continuous)/
