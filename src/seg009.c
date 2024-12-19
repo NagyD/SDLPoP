@@ -991,17 +991,9 @@ surface_type* make_offscreen_buffer(const rect_type* rect) {
 	// stub
 #ifndef USE_ALPHA
 	// Bit order matches onscreen buffer, good for fading.
-	#ifdef __amigaos4__
 	return SDL_CreateRGBSurface(0, rect->right, rect->bottom, 24, Rmsk, Gmsk, Bmsk, 0);
-	#else
-	return SDL_CreateRGBSurface(0, rect->right, rect->bottom, 24, 0xFF, 0xFF<<8, 0xFF<<16, 0); //RGB888 (little endian)
-	#endif
 #else
-	#ifdef __amigaos4__
 	return SDL_CreateRGBSurface(0, rect->right, rect->bottom, 32, Rmsk, Gmsk, Bmsk, Amsk);
-	#else
-	return SDL_CreateRGBSurface(0, rect->right, rect->bottom, 32, 0xFF, 0xFF<<8, 0xFF<<16, 0xFFu<<24);
-	#endif
 #endif
 	//return surface;
 }
@@ -2524,13 +2516,8 @@ void window_resized() {
 void init_overlay(void) {
 	static bool initialized = false;
 	if (!initialized) {
-#ifdef __amigaos4__
 		overlay_surface = SDL_CreateRGBSurface(0, 320, 200, 32, Rmsk, Gmsk, Bmsk, Amsk);
 		merged_surface = SDL_CreateRGBSurface(0, 320, 200, 24, Rmsk, Gmsk, Bmsk, 0);
-#else
-		overlay_surface = SDL_CreateRGBSurface(0, 320, 200, 32, 0xFF, 0xFF << 8, 0xFF << 16, 0xFFu << 24) ;
-		merged_surface = SDL_CreateRGBSurface(0, 320, 200, 24, 0xFF, 0xFF << 8, 0xFF << 16, 0) ;
-#endif
 		initialized = true;
 	}
 }
@@ -2549,7 +2536,7 @@ void init_scaling(void) {
 #ifdef __amigaos4__
 		overlay_surface = SDL_CreateRGBSurface(0, 320*2, 200*2, 24, Rmsk, Gmsk, Bmsk, 0);
 #else
-			onscreen_surface_2x = SDL_CreateRGBSurface(0, 320*2, 200*2, 24, 0xFF, 0xFF << 8, 0xFF << 16, 0) ;
+			onscreen_surface_2x = SDL_CreateRGBSurface(0, 320*2, 200*2, 24, Rmsk, Gmsk, Bmsk, 0) ;
 #endif
 		}
 		if (texture_fuzzy == NULL) {
@@ -2663,11 +2650,7 @@ void set_gr_mode(byte grmode) {
 	 * subsequently displayed.
 	 * The function handling the screen updates is update_screen()
 	 * */
-#ifdef __amigaos4__
 	onscreen_surface_ = SDL_CreateRGBSurface(0, 320, 200, 24, Rmsk, Gmsk, Bmsk, 0);
-#else
-	onscreen_surface_ = SDL_CreateRGBSurface(0, 320, 200, 24, 0xFF, 0xFF << 8, 0xFF << 16, 0);
-#endif
 	if (onscreen_surface_ == NULL) {
 		sdlperror("set_gr_mode: SDL_CreateRGBSurface");
 		quit(1);
@@ -3216,11 +3199,7 @@ void blit_xor(SDL_Surface* target_surface, SDL_Rect* dest_rect, SDL_Surface* ima
 		printf("blit_xor: dest_rect and src_rect have different sizes\n");
 		quit(1);
 	}
-#ifdef __amigaos4__
 	SDL_Surface* helper_surface = SDL_CreateRGBSurface(0, dest_rect->w, dest_rect->h, 24, Rmsk, Gmsk, Bmsk, 0);
-#else
-	SDL_Surface* helper_surface = SDL_CreateRGBSurface(0, dest_rect->w, dest_rect->h, 24, 0xFF, 0xFF<<8, 0xFF<<16, 0);
-#endif
 	if (helper_surface == NULL) {
 		sdlperror("blit_xor: SDL_CreateRGBSurface");
 		quit(1);
