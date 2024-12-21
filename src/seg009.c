@@ -1802,19 +1802,10 @@ peel_type* read_peel_from_screen(const rect_type* rect) {
 	//memset(&result, 0, sizeof(result));
 	result->rect = *rect;
 #ifndef USE_ALPHA
-	#ifdef __amigaos4__
 	SDL_Surface* peel_surface = SDL_CreateRGBSurface(0, rect->right - rect->left, rect->bottom - rect->top,
 	                                                 24, Rmsk, Gmsk, Bmsk, 0);
-	#else
-	SDL_Surface* peel_surface = SDL_CreateRGBSurface(0, rect->right - rect->left, rect->bottom - rect->top,
-	                                                 24, 0xFF, 0xFF<<8, 0xFF<<16, 0);
-	#endif
 #else
-	#ifdef __amigaos4__
 	SDL_Surface* peel_surface = SDL_CreateRGBSurface(0, rect->right - rect->left, rect->bottom - rect->top, 32, Rmsk, Gmsk, Bmsk, Amsk);
-	#else
-	SDL_Surface* peel_surface = SDL_CreateRGBSurface(0, rect->right - rect->left, rect->bottom - rect->top, 32, 0xFF, 0xFF<<8, 0xFF<<16, 0xFFu<<24);
-	#endif
 #endif
 	if (peel_surface == NULL) {
 		sdlperror("read_peel_from_screen: SDL_CreateRGBSurface");
@@ -2534,9 +2525,9 @@ void init_scaling(void) {
 	if (scaling_type == 1) {
 		if (!is_renderer_targettexture_supported && onscreen_surface_2x == NULL) {
 #ifdef __amigaos4__
-		overlay_surface = SDL_CreateRGBSurface(0, 320*2, 200*2, 24, Rmsk, Gmsk, Bmsk, 0);
+			overlay_surface = SDL_CreateRGBSurface(0, 320*2, 200*2, 24, Rmsk, Gmsk, Bmsk, 0);
 #else
-			onscreen_surface_2x = SDL_CreateRGBSurface(0, 320*2, 200*2, 24, Rmsk, Gmsk, Bmsk, 0) ;
+			onscreen_surface_2x = SDL_CreateRGBSurface(0, 320*2, 200*2, 24, Rmsk, Gmsk, Bmsk, 0);
 #endif
 		}
 		if (texture_fuzzy == NULL) {
@@ -3205,7 +3196,7 @@ void blit_xor(SDL_Surface* target_surface, SDL_Rect* dest_rect, SDL_Surface* ima
 		quit(1);
 	}
 	SDL_Surface* image_24 = SDL_ConvertSurface(image, helper_surface->format, 0);
-	//SDL_CreateRGBSurface(0, src_rect->w, src_rect->h, 24, 0xFF, 0xFF<<8, 0xFF<<16, 0);
+	//SDL_CreateRGBSurface(0, src_rect->w, src_rect->h, 24, Rmsk, Gmsk, Bmsk, 0);
 	if (image_24 == NULL) {
 		sdlperror("blit_xor: SDL_CreateRGBSurface");
 		quit(1);
