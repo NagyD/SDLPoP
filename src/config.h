@@ -378,7 +378,7 @@ The authors of this program may be contacted at https://forum.princed.org
 #define SDL_JOYSTICK_Y_AXIS 1
 
 
-#ifdef __amigaos4__
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
   #define Rmsk 0x00ff0000
   #define Gmsk 0x0000ff00
   #define Bmsk 0x000000ff
