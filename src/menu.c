@@ -287,6 +287,7 @@ enum setting_ids {
 	SETTING_BASE_SPEED,
 	SETTING_FIGHT_SPEED,
 	SETTING_CHOMPER_SPEED,
+	SETTING_NO_MOUSE_IN_ENDING,
 	SETTING_LEVEL_SETTINGS,
 	SETTING_LEVEL_TYPE,
 	SETTING_LEVEL_COLOR,
@@ -960,6 +961,10 @@ setting_type mods_settings[] = {
 				.linked = &custom_saved.chomper_speed, .number_type = SETTING_BYTE, .min = 0, .max = 127,
 				.text = "Chomper speed",
 				.explanation = "Chomper speed (length of the animation cycle in frames). Smaller is faster.\n(default = 15)"},
+		{.id = SETTING_NO_MOUSE_IN_ENDING, .style = SETTING_STYLE_TOGGLE, .required = &use_custom_options,
+				.linked = &custom_saved.no_mouse_in_ending, .number_type = SETTING_BYTE,
+				.text = "No mouse in ending",
+				.explanation = "Skip the mouse in the ending scene.\n(default = false)"},
 };
 
 NAMES_LIST(level_type_setting_names, { "Dungeon", "Palace", });

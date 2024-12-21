@@ -858,6 +858,8 @@ extern custom_options_type custom_defaults INIT(= {
 		.base_speed = 5,
 		.fight_speed = 6,
 		.chomper_speed = 15,
+
+		.no_mouse_in_ending = 0,
 });
 extern custom_options_type* custom INIT(= &custom_defaults);
 

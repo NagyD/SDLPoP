@@ -347,11 +347,13 @@ void end_sequence_anim() {
 	if (proc_cutscene_frame(2)) return;
 	Kid.frame = 0;
 	if (proc_cutscene_frame(39)) return;
-	init_mouse_1();
-	savekid();
-	if (proc_cutscene_frame(9)) return;
-	seqtbl_offset_kid_char(seq_101_mouse_stands_up); // mouse stands up
-	if (proc_cutscene_frame(41)) return;
+	if (!custom->no_mouse_in_ending) {
+		init_mouse_1();
+		savekid();
+		if (proc_cutscene_frame(9)) return;
+		seqtbl_offset_kid_char(seq_101_mouse_stands_up); // mouse stands up
+		if (proc_cutscene_frame(41)) return;
+	}
 	fade_out_1();
 	while (check_sound_playing()) {
 		idle();

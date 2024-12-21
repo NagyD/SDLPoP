@@ -1356,6 +1356,7 @@ typedef struct custom_options_type {
 	byte fight_speed;
 	byte chomper_speed;
 
+	byte no_mouse_in_ending;
 } custom_options_type;
 #pragma pack(pop)
 
