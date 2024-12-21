@@ -378,17 +378,6 @@ The authors of this program may be contacted at https://forum.princed.org
 #define SDL_JOYSTICK_Y_AXIS 1
 
 
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-  #define Rmsk 0x00ff0000
-  #define Gmsk 0x0000ff00
-  #define Bmsk 0x000000ff
-  #define Amsk 0xff000000
-#else
-  #define Rmsk 0x000000ff
-  #define Gmsk 0x0000ff00
-  #define Bmsk 0x00ff0000
-  #define Amsk 0xff000000
-#endif
 
 
 #endif

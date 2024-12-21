@@ -39,6 +39,18 @@ The authors of this program may be contacted at https://forum.princed.org
 //#error This program is not (yet) prepared for big endian CPUs, please contact the author.
 #endif
 
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+  #define Rmsk 0x00ff0000
+  #define Gmsk 0x0000ff00
+  #define Bmsk 0x000000ff
+  #define Amsk 0xff000000
+#else
+  #define Rmsk 0x000000ff
+  #define Gmsk 0x0000ff00
+  #define Bmsk 0x00ff0000
+  #define Amsk 0xff000000
+#endif
+
 // This macro is from SDL_types.h / SDL_stdinc.h .
 // It used to be #undefined at the end of that file, but since some time in 2006 it's kept available.
 // And SDL's definition changed in SDL 2.0.6, which caused a warning at this redefinition.
