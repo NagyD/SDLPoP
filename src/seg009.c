@@ -1206,7 +1206,7 @@ font_type load_font_from_data(/*const*/ rawfont_type* data) {
 	for (int index = 0, chr = data->first_char; chr <= data->last_char; ++index, ++chr) {
 		/*const*/ image_data_type* image_data = (/*const*/ image_data_type*)((/*const*/ byte*)data + SDL_SwapLE16(data->offsets[index]));
 		//image_data->flags=0;
-		if (image_data->height == 0) image_data->height = 1; // HACK: decode_image() returns NULL if height==0.
+		if (image_data->height == SDL_SwapLE16(0)) image_data->height = SDL_SwapLE16(1); // HACK: decode_image() returns NULL if height==0.
 		image_type* image;
 		chtab->images[index] = image = decode_image(image_data, &dat_pal);
 		if (SDL_SetColorKey(image, SDL_TRUE, 0) != 0) {

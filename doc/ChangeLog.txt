@@ -746,3 +746,4 @@ FIXED: Added a configurable fix for the turn-run bug that causes trick 1 and tri
 DONE: Added a modding option to skip the mouse in the ending scene.
 	This is used in Christmas of Persia.
 	Details: https://forum.princed.org/viewtopic.php?p=34897#p34897
+FIXED: Fixed the font glitch on big-endian platforms.
