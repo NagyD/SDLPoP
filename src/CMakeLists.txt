@@ -119,6 +119,22 @@ if(WIN32)
     target_link_libraries(prince mingw32 SDL2main SDL2 SDL2_image)
 elseif(APPLE)
     target_link_libraries(prince SDL2main SDL2 SDL2_image m)
-else() # Linux, *BSD, etc.
-    target_link_libraries(prince SDL2 SDL2_image m)
+elseif(PSP) # Linux, *BSD, etc.
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3")
+	include(FindPkgConfig)
+	pkg_search_module(SDL2 REQUIRED sdl2)
+	pkg_search_module(SDL2IMAGE REQUIRED SDL2_image)
+	target_include_directories(prince PRIVATE ${SDL2_INCLUDE_DIRS})
+	target_link_libraries(prince PRIVATE
+	${SDL2_LIBRARIES} ${SDL2IMAGE_LIBRARIES}
+	)
+	create_pbp_file(
+		TARGET prince
+		ICON_PATH ${CMAKE_SOURCE_DIR}/iconPSP.png
+		BACKGROUND_PATH NULL
+		PREVIEW_PATH NULL
+		TITLE prince
+	)
+else()
+    	target_link_libraries(prince SDL2 SDL2_image m)
 endif()

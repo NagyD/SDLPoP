@@ -26,9 +26,15 @@ static const char version[] = "\0$VER: SDLPoP " SDLPOP_VERSION " (" __AMIGADATE_
 static const char stack[] = "$STACK:200000";
 #endif
 
+#ifdef __PSP__
+#include <psppower.h>
+#endif
 
 int main(int argc, char *argv[])
 {
+	#ifdef __PSP__
+	scePowerSetClockFrequency(333,333,166);
+	#endif
 	g_argc = argc;
 	g_argv = argv;
 	pop_main();
