@@ -3568,6 +3568,11 @@ void process_events() {
 				break;
 			case SDL_CONTROLLERDEVICEADDED:
 				SDL_GameControllerOpen(event.cdevice.which);
+				if (gamecontrollerdb_file[0] != '\0') {
+					SDL_GameControllerAddMappingsFromFile(gamecontrollerdb_file);
+				}
+				is_joyst_mode = 1;
+				using_sdl_joystick_interface = 0;
 				break;
 			case SDL_CONTROLLERDEVICEREMOVED:
 				if (sdl_controller_ == SDL_GameControllerFromInstanceID(event.cdevice.which)) {
