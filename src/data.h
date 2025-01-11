@@ -21,6 +21,8 @@ The authors of this program may be contacted at https://forum.princed.org
 #ifndef DATA_H
 #define DATA_H
 
+#include "Localization/language.h"
+
 #ifdef BODY
 // If included from data.c: definitions (without extern and with initialization).
 #define INIT(...) __VA_ARGS__
@@ -214,7 +216,7 @@ extern word is_blind_mode;
 // data:0F86
 extern const rect_type rect_top INIT(= {0, 0, 192, 320});
 // data:0F96
-extern const rect_type rect_bottom_text INIT(= {193, 70, 202, 250});
+extern const rect_type rect_bottom_text INIT(= {193, 69, 202, 257});	// Original values : {193, 70, 202, 250}
 
 // data:4CB2
 extern word leveldoor_right;
@@ -710,6 +712,7 @@ extern byte is_validate_mode;
 extern dword curr_tick INIT(= 0);
 #endif // USE_REPLAY
 
+extern enum localization pop_language INIT(= 0);
 extern byte start_fullscreen INIT(= 0);
 extern word pop_window_width INIT(= 640);
 extern word pop_window_height INIT(= 400);
