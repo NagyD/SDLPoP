@@ -1,0 +1,35 @@
+name: Check new version
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'src/config.h'
+
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Check version
+        id: config
+        run: |
+          VERSION=$(awk '/SDLPOP_VERSION/ {print $3}' src/config.h | head -n1 | tr -d '"')
+          echo "Version: $VERSION"
+          echo "::set-output name=version::$VERSION"
+      - uses: mukunku/tag-exists-action@v1.0.0
+        id: checkTag
+        with:
+          tag: v${{ steps.config.outputs.version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Tag new version
+        if: ${{ steps.checkTag.outputs.exists != 'true' }}
+        uses: tvdias/github-tagger@v0.0.2
+        with:
+          # NOTE: May need PAT Token instead of Github Token.
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          tag: v${{ steps.config.outputs.version }}
+
