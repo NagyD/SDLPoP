@@ -1,5 +1,6 @@
 Things to do before a new release:
 
+* Go through the commits since the previous release, and make sure that all substantial changes are documented in ChangeLog.txt .
 * Replace "(upcoming)" with the release date and the version number in ChangeLog.txt .
 * Replace "(upcoming)" (if any) with the version number in README.md .
 * Update the version number in config.h and CMakeLists.txt .

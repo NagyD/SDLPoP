@@ -739,11 +739,30 @@ DONE: Updated doc/mod.ini based on SDLPoP.ini.
 
 FIXED: Letters above potions not showing up on the copy protection level.
 	Details: https://github.com/NagyD/SDLPoP/pull/299
+DONE: Support big-endian platforms, such as Amiga OS 4.
+	Details: https://github.com/NagyD/SDLPoP/issues/300
 DONE: If the SDLPOP_SAVE_PATH environment variable is set, put all saves into the directory it points to.
 	Details: https://github.com/NagyD/SDLPoP/issues/301
+DONE: Enabled home directory and /usr/share as file data locations.
+	Details: https://github.com/NagyD/SDLPoP/pull/303
+FIXED: Fix compilation error for MSVC on Windows.
+	Details: https://github.com/NagyD/SDLPoP/pull/305
+DONE: If we can't save or load game, display on the console the error received from fopen(), and the name of the file which we can't open.
 FIXED: Added a configurable fix for the turn-run bug that causes trick 1 and trick 2 to work.
 	Details: See FIX_TURN_RUN_NEAR_WALL in config.h and https://github.com/NagyD/SDLPoP/pull/312
+FIXED: Documented the controls for sword fight.
+	Details: https://github.com/NagyD/SDLPoP/issues/314
+FIXED: Fixed crash due to implicit declaration of strdup().
+	Details:
+	https://github.com/NagyD/SDLPoP/issues/313
+	https://github.com/NagyD/SDLPoP/issues/315
+	https://github.com/NagyD/SDLPoP/pull/316
+FIXED: Fixed RGB<->BGR mismatch on big endian architectures.
+	Details: https://github.com/NagyD/SDLPoP/pull/320
 DONE: Added a modding option to skip the mouse in the ending scene.
 	This is used in Christmas of Persia.
 	Details: https://forum.princed.org/viewtopic.php?p=34897#p34897
 FIXED: Fixed the font glitch on big-endian platforms.
+	Details: https://github.com/NagyD/SDLPoP/pull/321
+DONE: Read controller DB file when a controller is added.
+	Details: https://github.com/NagyD/SDLPoP/pull/321
