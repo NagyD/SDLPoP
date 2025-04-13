@@ -30,7 +30,7 @@ The authors of this program may be contacted at https://forum.princed.org
 #define POP_MAX_PATH 256
 #define POP_MAX_OPTIONS_SIZE 256
 
-#define SDLPOP_VERSION "1.23"
+#define SDLPOP_VERSION "1.24 RC"
 #define WINDOW_TITLE "Prince of Persia (SDLPoP) v" SDLPOP_VERSION
 
 #if ! (defined WIN32 || _WIN32 || WIN64 || _WIN64)

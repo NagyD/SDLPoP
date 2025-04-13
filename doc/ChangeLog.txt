@@ -733,9 +733,9 @@ DONE: Keep disappearing guard logic for super high jump consistent with the stan
 DONE: Updated doc/mod.ini based on SDLPoP.ini.
 
 
-(no release date yet)
+2025 April 13
 =================
-(upcoming version)
+(version 1.24 RC)
 
 FIXED: Letters above potions not showing up on the copy protection level.
 	Details: https://github.com/NagyD/SDLPoP/pull/299
