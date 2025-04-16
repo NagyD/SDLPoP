@@ -18,6 +18,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 The authors of this program may be contacted at https://forum.princed.org
 */
 
+#ifndef PROTO_H
+#define PROTO_H
+
+#include "common.h"
+
 // SEG000.C
 void pop_main(void);
 void init_game_main(void);
@@ -727,3 +732,5 @@ void stop_midi(void);
 void init_midi(void);
 void midi_callback(void *userdata, Uint8 *stream, int len);
 void play_midi_sound(sound_buffer_type* buffer);
+
+#endif
