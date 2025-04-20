@@ -733,7 +733,7 @@ DONE: Keep disappearing guard logic for super high jump consistent with the stan
 DONE: Updated doc/mod.ini based on SDLPoP.ini.
 
 
-2025 April 13
+2025 April 20
 =================
 (version 1.24 RC)
 
@@ -762,7 +762,9 @@ FIXED: Fixed RGB<->BGR mismatch on big endian architectures.
 DONE: Added a modding option to skip the mouse in the ending scene.
 	This is used in Christmas of Persia.
 	Details: https://forum.princed.org/viewtopic.php?p=34897#p34897
-FIXED: Fixed the font glitch on big-endian platforms.
+FIXED: Fixed the font glitch on big-endian platforms. (e.g. Wii)
 	Details: https://github.com/NagyD/SDLPoP/pull/321
 DONE: Read controller DB file when a controller is added.
 	Details: https://github.com/NagyD/SDLPoP/pull/321
+FIXED: Avoid misaligned memory access on platforms where it causes a crash. (e.g. PSP)
+	Details: https://github.com/NagyD/SDLPoP/pull/319
