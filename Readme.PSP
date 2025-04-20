@@ -1,0 +1,41 @@
+# How to compile and run
+Install latest PSPDEV toolchain, then go to src and run these commands:
+
+```
+mkdir build
+cd build
+psp-cmake ..
+make
+```
+
+Then move the `EBOOT.PBP` file into a dir with the data/ files (WITH MUSIC!),
+then finally load it into your PSP.
+
+## How to debug
+Clean your dirs and run `psp-cmake .. -DBUILD_PRX=1` instead, then use
+the debugging guide at PSPDEV's site.
+
+The process is like this:
+
+- Start `usbhostfs_pc` in a terminal at the prince.prx dir
+- Start PSPLINK in your PSP, connected with a usb cable.
+- Run `pspsh` in another terminal at the same prev. dir
+- Run the command `debug ./prince.prx` inside pspsh
+- In yet another terminal, run `psp-gdb ./prince -q`, then `target remote :10001`
+- Start debugging as usual.
+
+You can skip the psp-gdb step, since PSPLINK lets you run the prx as is and 
+catch the exceptions and set breakpoints too.
+
+## Changes
+- INI loading was disabled due to a bug that crashed the psp. Sane defaults were
+  provided instead (FIXED).
+- PSP has to run at full speed (333mhz) in order for the game to work.
+- "iconPSP.png" was provided.
+- Music was replaced for ogg ones (use the smaller ones!), 
+  so make sure to grab them into data/music (see README.md)
+
+## Credits
+- SDLPoP and others (Github)
+- PSPDEV and others (toolchain)
+- striga, sharkwouter (fixing compilation for PSP)

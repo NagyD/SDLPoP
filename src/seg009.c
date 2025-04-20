@@ -2372,7 +2372,9 @@ sound_buffer_type* convert_digi_sound(sound_buffer_type* digi_buffer) {
 	converted_buffer->converted.length = expanded_length;
 
 	byte* source = waveinfo.samples;
-	short* dest = converted_buffer->converted.samples;
+	//short* dest = converted_buffer->converted.samples;
+	short* dest = malloc(sizeof(short) * converted_buffer->converted.length);
+        converted_buffer->converted.samples = dest;
 
 	for (int i = 0; i < expanded_frames; ++i) {
 		float src_frame_float = i * freq_ratio;
@@ -3341,8 +3343,8 @@ image_type* method_6_blit_img_to_scr(image_type* image,int xpos,int ypos,int bli
 }
 
 #ifndef USE_COMPAT_TIMER
-int fps = 60;
-float milliseconds_per_tick = (1000.0f / 60.0f);
+int fps = BASE_FPS;
+float milliseconds_per_tick = (1000.0f / (BASE_FPS*1.0f));
 Uint64 timer_last_counter[NUM_TIMERS];
 #endif
 int wait_time[NUM_TIMERS];
@@ -3820,7 +3822,7 @@ int do_wait(int timer_index) {
 }
 
 #ifdef USE_COMPAT_TIMER
-SDL_TimerID global_timer = NULL;
+SDL_TimerID global_timer = 0;
 #endif
 // seg009:78E9
 void init_timer(int frequency) {
@@ -3831,12 +3833,12 @@ void init_timer(int frequency) {
 	perf_counters_per_tick = perf_frequency / fps;
 	milliseconds_per_counter = 1000.0f / perf_frequency;
 #else
+	global_timer = SDL_AddTimer(1000/frequency, timer_callback, NULL);
 	if (global_timer != 0) {
 		if (!SDL_RemoveTimer(global_timer)) {
 			sdlperror("init_timer: SDL_RemoveTimer");
 		}
 	}
-	global_timer = SDL_AddTimer(1000/frequency, timer_callback, NULL);
 	if (global_timer == 0) {
 		sdlperror("init_timer: SDL_AddTimer");
 		quit(1);
@@ -4226,6 +4228,7 @@ int has_timer_stopped(int timer_index) {
 #ifdef USE_REPLAY
 	if ((replaying && skipping_replay) || is_validate_mode) return true;
 #endif
+	//PSP: overshoot always too big, 333mhz mandatory to read input!
 	Uint64 current_counter = SDL_GetPerformanceCounter();
 	int ticks_elapsed = (int)((current_counter / perf_counters_per_tick) - (timer_last_counter[timer_index] / perf_counters_per_tick));
 	int overshoot = ticks_elapsed - wait_time[timer_index];
