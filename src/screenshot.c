@@ -489,7 +489,7 @@ void save_level_screenshot(bool want_extras) {
 	}
 	xpos[drawn_room] = 0;
 	ypos[drawn_room] = 0;
-	int queue[NUMBER_OF_ROOMS] = {drawn_room}; // We start mapping from the current room.
+	int queue[NUMBER_OF_ROOMS+1] = {drawn_room}; // We start mapping from the current room.
 	int queue_start = 0;
 	int queue_end = 1;
 
