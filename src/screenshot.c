@@ -490,7 +490,7 @@ void save_level_screenshot(bool want_extras) {
 	xpos[drawn_room] = 0;
 	ypos[drawn_room] = 0;
 	// Mark the current room as processed so we don't add it later again.
-	// Otherwise the queue will contain NUMBER_OF_ROOMS+1 items, overflowing the array.
+	// Otherwise, if the level has NUMBER_OF_ROOMS rooms, the queue will eventually contain NUMBER_OF_ROOMS+1 items, overflowing the array.
 	processed[drawn_room] = true;
 	int queue[NUMBER_OF_ROOMS] = {drawn_room}; // We start mapping from the current room.
 	int queue_start = 0;
