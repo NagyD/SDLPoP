@@ -489,6 +489,9 @@ void save_level_screenshot(bool want_extras) {
 	}
 	xpos[drawn_room] = 0;
 	ypos[drawn_room] = 0;
+	// Mark the current room as processed so we don't add it later again.
+	// Otherwise the queue will contain NUMBER_OF_ROOMS+1 items, overflowing the array.
+	processed[drawn_room] = true;
 	int queue[NUMBER_OF_ROOMS] = {drawn_room}; // We start mapping from the current room.
 	int queue_start = 0;
 	int queue_end = 1;
@@ -506,6 +509,8 @@ void save_level_screenshot(bool want_extras) {
 				xpos[other_room] = other_x;
 				ypos[other_room] = other_y;
 				processed[other_room] = true;
+				printf("Adding room %d to map.\n", other_room);
+				if (queue_end >= NUMBER_OF_ROOMS) { printf("Queue overflow!\n"); break; }
 				queue[queue_end] = other_room;
 				queue_end++;
 			}
