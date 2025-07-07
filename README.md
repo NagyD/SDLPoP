@@ -181,6 +181,8 @@ Sword fight:
 
 You can also use the numeric keypad.
 
+The keyboard controls can be redefined in the pause menu.
+
 #### Gamepad equivalents
 
 * D-Pad: arrows

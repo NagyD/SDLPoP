@@ -530,6 +530,8 @@ Uint32 temp_shift_release_callback(Uint32 interval, void *param) {
 	return 0; // causes the timer to be removed
 }
 
+void redefine_keys();
+
 // seg000:04CD
 int process_key() {
 	char sprintf_temp[80];
@@ -543,6 +545,11 @@ int process_key() {
 		if (key == 0) return 0;
 	}
 #endif
+
+	// remap
+	if (key == key_enter) key = SDL_SCANCODE_RETURN; else
+	if (key == key_esc) key = SDL_SCANCODE_ESCAPE; else
+	/*nothing*/;
 
 	if (start_level < 0) {
 		if (key || control_shift) {
@@ -634,6 +641,11 @@ int process_key() {
 			is_keyboard_mode = 1;
 			need_show_text = 1;
 		break;
+		/*
+		case SDL_SCANCODE_K | WITH_CTRL | WITH_SHIFT: // ctrl-shift-k
+			redefine_keys();
+		break;
+		*/
 		case SDL_SCANCODE_R | WITH_CTRL: // Ctrl+R
 			start_level = -1;
 #ifdef USE_MENU
@@ -1740,6 +1752,16 @@ int do_paused() {
 	return key || control_shift;
 }
 
+/*
+int key_left = 0;
+int key_right = 0;
+int key_up = 0;
+int key_down = 0;
+int key_jump_left = 0;
+int key_jump_right = 0;
+int key_action = 0;
+*/
+
 // seg000:1500
 void read_keyb_control() {
 	int key_state;
@@ -1751,24 +1773,28 @@ void read_keyb_control() {
 
 	if (key_states[SDL_SCANCODE_UP] & key_state || key_states[SDL_SCANCODE_HOME] & key_state || key_states[SDL_SCANCODE_PAGEUP] & key_state
 	    || key_states[SDL_SCANCODE_KP_8] & key_state || key_states[SDL_SCANCODE_KP_7] & key_state || key_states[SDL_SCANCODE_KP_9] & key_state
+	    || key_states[key_up] & key_state || key_states[key_jump_left] & key_state || key_states[key_jump_right] & key_state
 	) {
 		control_y = CONTROL_HELD_UP;
 	} else if (key_states[SDL_SCANCODE_CLEAR] & key_state || key_states[SDL_SCANCODE_DOWN] & key_state
 	           || key_states[SDL_SCANCODE_KP_5] & key_state || key_states[SDL_SCANCODE_KP_2] & key_state
+	           || key_states[key_down] & key_state
 	) {
 		control_y = CONTROL_HELD_DOWN;
 	}
 	if (key_states[SDL_SCANCODE_LEFT] & key_state || key_states[SDL_SCANCODE_HOME] & key_state
 	    || key_states[SDL_SCANCODE_KP_4] & key_state || key_states[SDL_SCANCODE_KP_7] & key_state
+	    || key_states[key_left] & key_state || key_states[key_jump_left] & key_state
 	) {
 		control_x = CONTROL_HELD_LEFT;
 	} else if (key_states[SDL_SCANCODE_RIGHT] & key_state || key_states[SDL_SCANCODE_PAGEUP] & key_state
 	           || key_states[SDL_SCANCODE_KP_6] & key_state || key_states[SDL_SCANCODE_KP_9] & key_state
+	           || key_states[key_right] & key_state || key_states[key_jump_right] & key_state
 	) {
 		control_x = CONTROL_HELD_RIGHT;
 	}
 	
-	if(key_states[SDL_SCANCODE_LSHIFT] & key_state || key_states[SDL_SCANCODE_RSHIFT] & key_state)
+	if(key_states[SDL_SCANCODE_LSHIFT] & key_state || key_states[SDL_SCANCODE_RSHIFT] & key_state || key_states[key_action] & key_state)
 		control_shift = CONTROL_HELD;
 	else
 		control_shift = CONTROL_RELEASED;
@@ -1779,6 +1805,53 @@ void read_keyb_control() {
 		else if (key_states[SDL_SCANCODE_LEFTBRACKET] & key_state) --Char.x;
 	}
 	#endif
+}
+
+// We need a version of showmessage() which can detect modifier keys as well, in case someone wants to configure such a key for controls.
+int __pascal far showmessage_any_key(char far *text,int arg_4,void far *arg_0) {
+	word key;
+	rect_type rect;
+	method_1_blit_rect(offscreen_surface, onscreen_surface_, &copyprot_dialog->peel_rect, &copyprot_dialog->peel_rect, 0);
+	draw_dialog_frame(copyprot_dialog);
+	shrink2_rect(&rect, &copyprot_dialog->text_rect, 2, 1);
+	show_text_with_color(&rect, 0, 0, text, color_15_brightwhite);
+	clear_kbd_buf();
+	last_any_key_scancode = 0; // Don't leak the Enter keypress (which opened the dialog) into the dialog.
+	do {
+		idle();
+		clear_kbd_buf(); // Don't leak the pressed key into the menu.
+		key = last_any_key_scancode; // Press any key to continue...
+		last_any_key_scancode = 0;
+	} while(key == 0);
+	need_full_redraw = 1; // lazy: instead of neatly restoring only the relevant part, just redraw the whole screen
+	return key;
+}
+
+void redefine_key(const char* name, int* key) {
+	char message[256];
+	snprintf(message, sizeof(message), "Redefining keys:\nPress key for \"%s\".\nOr press Esc to cancel.", name);
+
+	// Use the regular big font for the dialog instead of the small menu font.
+	font_type* saved_font = textstate.ptr_font;
+	textstate.ptr_font = &hc_font;
+
+	int new_key = showmessage_any_key(message, 1, &key_test_quit);
+
+	// Switch back to the menu font.
+	textstate.ptr_font = saved_font;
+
+	if (new_key == SDL_SCANCODE_ESCAPE) return;
+	*key = new_key;
+}
+
+void redefine_keys() {
+	redefine_key("left", &key_left);
+	redefine_key("right", &key_right);
+	redefine_key("up", &key_up);
+	redefine_key("down", &key_down);
+	redefine_key("jump left", &key_jump_left);
+	redefine_key("jump right", &key_jump_right);
+	redefine_key("action", &key_action);
 }
 
 // seg000:156D

@@ -79,6 +79,7 @@ void check_quick_op(void);
 void restore_room_after_quick_load(void);
 #endif // USE_QUICKSAVE
 const char* get_writable_file_path(char* custom_path_buffer, size_t max_len, const char* file_name);
+void redefine_key(const char* name, int* key);
 
 // SEG001.C
 int proc_cutscene_frame(int wait_frames);
@@ -633,6 +634,7 @@ void do_simple_wait(int timer_index);
 void process_events(void);
 void idle(void);
 void init_copyprot_dialog(void);
+int showmessage(char far *text,int arg_4,void far *arg_0);
 dialog_type* make_dialog_info(dialog_settings_type* settings, rect_type* dialog_rect,
                                             rect_type* text_rect, peel_type* dialog_peel);
 void calc_dialog_peel_rect(dialog_type* dialog);

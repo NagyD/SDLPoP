@@ -3472,6 +3472,7 @@ void process_events() {
 						key_states[scancode] |= KEYSTATE_HELD | KEYSTATE_HELD_NEW;
 					}
 				} else {
+					last_any_key_scancode = scancode; // for showmessage_any_key
 					key_states[scancode] |= KEYSTATE_HELD | KEYSTATE_HELD_NEW;
 					switch (scancode) {
 						// Keys that are ignored by themselves:
