@@ -1808,7 +1808,7 @@ void read_keyb_control() {
 }
 
 // We need a version of showmessage() which can detect modifier keys as well, in case someone wants to configure such a key for controls.
-int __pascal far showmessage_any_key(char far *text,int arg_4,void far *arg_0) {
+int showmessage_any_key(char *text,int arg_4,void *arg_0) {
 	word key;
 	rect_type rect;
 	method_1_blit_rect(offscreen_surface, onscreen_surface_, &copyprot_dialog->peel_rect, &copyprot_dialog->peel_rect, 0);

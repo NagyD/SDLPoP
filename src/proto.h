@@ -634,7 +634,7 @@ void do_simple_wait(int timer_index);
 void process_events(void);
 void idle(void);
 void init_copyprot_dialog(void);
-int showmessage(char far *text,int arg_4,void far *arg_0);
+int showmessage(char *text,int arg_4,void *arg_0);
 dialog_type* make_dialog_info(dialog_settings_type* settings, rect_type* dialog_rect,
                                             rect_type* text_rect, peel_type* dialog_peel);
 void calc_dialog_peel_rect(dialog_type* dialog);
