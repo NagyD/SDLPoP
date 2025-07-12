@@ -768,4 +768,9 @@ DONE: Read controller DB file when a controller is added.
 	Details: https://github.com/NagyD/SDLPoP/pull/321
 FIXED: Avoid misaligned memory access on platforms where it causes a crash. (e.g. PSP)
 	Details: https://github.com/NagyD/SDLPoP/pull/319
+
+(no release date yet)
+=================
+(upcoming version 1.24)
+
 DONE: You can redefine keyboard controls in the pause menu. (They are not saved on quit yet.)
