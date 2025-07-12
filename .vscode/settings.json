@@ -1,0 +1,7 @@
+{
+    "cmake.sourceDirectory": "${workspaceFolder}/src",
+    "C_Cpp.intelliSenseEngine": "Tag Parser",
+    "files.associations": {
+        "*.h": "c",
+    },
+}

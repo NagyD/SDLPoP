@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8...3.22)
 project(SDLPoP)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -std=c99")
@@ -14,13 +14,21 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${SDLPoP_SOURCE_DIR}/..")
 
 #set(SDL2 "C:/work/libraries/SDL2-2.0.8")
 
-# On macOS, if you used Homebrew to install SDL2, the location may be something like this:
+# On macOS, use homebrew to install SDL2: `brew install sdl2 sdl2_image`.
+# Or, alternatively, set the library path via -DSDL2=... or uncomment the line below.
 
 #set(SDL2 "/usr/local/Cellar/sdl2/2.0.5")
 
 if (NOT(WIN32) AND (DEFINED SDL2))
     include_directories(${SDL2}/include/SDL2)
     link_directories(${SDL2}/lib)
+elseif (DEFINED ENV{HOMEBREW_PREFIX})
+    if (EXISTS $ENV{HOMEBREW_PREFIX}/include/SDL2)
+        include_directories($ENV{HOMEBREW_PREFIX}/include/SDL2)
+        link_directories($ENV{HOMEBREW_PREFIX}/lib)
+    else()
+        message(FATAL_ERROR, "sdl2 not found; Run `brew install sdl2 sdl2_image`")
+    endif()
 endif()
 
 if (WIN32)
