@@ -346,6 +346,8 @@ int quick_process(process_func_type process_func) {
 	process(ctrl1_up);
 	process(ctrl1_down);
 	process(ctrl1_shift2);
+ // For proper emulation of the overflow glitch
+ process(exit_room_timer);
 	// replay recording state
 #ifdef USE_REPLAY
 	process(curr_tick);
@@ -429,7 +431,7 @@ void restore_room_after_quick_load() {
 	// Get rid of "press button" message if kid was dead before quickload.
 	text_time_total = text_time_remaining = 0;
 	//next_sound = current_sound = -1;
-	exit_room_timer = 0;
+ //exit_room_timer = 0; // This prevents the overflow glitch from happening
 }
 
 int quick_load(void) {
@@ -1266,6 +1268,7 @@ void check_the_end() {
 			end_sequence();
 		}
 		different_room = 1;
+		exit_room_timer = 2; // Added to remember exit room timer
 		loadkid();
 		anim_tile_modif();
 		start_chompers();
