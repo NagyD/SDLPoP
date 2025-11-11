@@ -208,33 +208,51 @@ void set_start_pos() {
 }
 
 // Multiplayer: Initialize players facing each other for 1v1 mode
+// NOTE: This function does NOT spawn enemies - it only sets up existing Guards
 void init_multiplayer_mode() {
-	// Ensure Guard is active
-	Guard.charid = charid_2_guard;
+	// Only set up if Guard is already active - DO NOT spawn new enemies
+	// Guard.direction == 0x56 (dir_56_none) means Guard is inactive
+	if (Guard.direction == 0x56) {
+		// No Guard active - don't spawn one, just return
+		// Multiplayer will work when a Guard appears naturally in the level
+		return;
+	}
+	
+	// Guard is already active - just ensure it's set up for multiplayer
 	Guard.alive = -1;
 	Guard.room = Kid.room;
 	
-	// Position Guard to face Kid (place Guard a few tiles to the right of Kid)
-	Guard.curr_col = Kid.curr_col + 3; // 3 tiles to the right
-	if (Guard.curr_col >= SCREEN_TILECOUNTX) {
-		Guard.curr_col = SCREEN_TILECOUNTX - 1; // Keep within screen bounds
+	// Only reposition if Guard is not in the same room as Kid
+	if (Guard.room != Kid.room) {
+		Guard.room = Kid.room;
+		// Position Guard to face Kid (place Guard a few tiles to the right of Kid)
+		Guard.curr_col = Kid.curr_col + 3; // 3 tiles to the right
+		if (Guard.curr_col >= SCREEN_TILECOUNTX) {
+			Guard.curr_col = SCREEN_TILECOUNTX - 1; // Keep within screen bounds
+		}
+		Guard.curr_row = Kid.curr_row;
+		
+		// Calculate Guard's x position
+		Guard.x = x_bump[Guard.curr_col + FIRST_ONSCREEN_COLUMN] + TILE_SIZEX;
+		Guard.y = y_land[Guard.curr_row + 1];
+		
+		// Make Guard face left (toward Kid)
+		Guard.direction = dir_FF_left;
 	}
-	Guard.curr_row = Kid.curr_row;
 	
-	// Calculate Guard's x position
-	Guard.x = x_bump[Guard.curr_col + FIRST_ONSCREEN_COLUMN] + TILE_SIZEX;
-	Guard.y = y_land[Guard.curr_row + 1];
-	
-	// Make Guard face left (toward Kid)
-	Guard.direction = dir_FF_left;
-	
-	// Give both characters swords
-	Kid.sword = sword_2_drawn;
-	Guard.sword = sword_2_drawn;
+	// Give both characters swords if they don't have them
+	if (Kid.sword != sword_2_drawn) {
+		Kid.sword = sword_2_drawn;
+	}
+	if (Guard.sword != sword_2_drawn) {
+		Guard.sword = sword_2_drawn;
+	}
 	
 	// Set Guard's HP (same as Kid's max HP for fair fight)
 	guardhp_max = hitp_max;
-	guardhp_curr = guardhp_max;
+	if (guardhp_curr == 0) {
+		guardhp_curr = guardhp_max;
+	}
 	
 	// Initialize Guard's state
 	Guard.fall_x = 0;
@@ -259,9 +277,11 @@ void init_multiplayer_mode() {
 	}
 	savekid();
 	
-	// Make Kid face right (toward Guard)
-	Kid.direction = dir_0_right;
-	savekid();
+	// Make Kid face right (toward Guard) if they're in the same room
+	if (Kid.room == Guard.room) {
+		Kid.direction = dir_0_right;
+		savekid();
+	}
 }
 
 // seg003:02E6

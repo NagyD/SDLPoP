@@ -985,9 +985,18 @@ void draw_sword() {
 // seg005:0C67
 void control_with_sword() {
 	if (Char.action < actions_2_hang_climb) {
-		// Multiplayer: In multiplayer mode, always allow movement controls for Guard
+		// Multiplayer: In multiplayer mode, allow movement controls for Guard but also auto-turn
 		extern word is_multiplayer_mode;
 		if (is_multiplayer_mode && Char.charid >= charid_2_guard) {
+			// In multiplayer, check distance and auto-turn if needed (like Player 1 does)
+			short distance = char_opp_dist();
+			if (distance < 0) {
+				// Opponent is behind - turn to face them
+				if ((word)distance < (word)-4) {
+					seqtbl_offset_char(seq_60_turn_with_sword); // turn with sword (after switching places)
+					return;
+				}
+			}
 			// In multiplayer, Guard can move freely - go directly to swordfight() which handles movement
 			swordfight();
 			return;
