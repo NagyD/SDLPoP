@@ -1068,8 +1068,20 @@ void swordfight() {
 	} else if (control_up == CONTROL_HELD) {
 		parry();
 	} else if (control_forward == CONTROL_HELD) {
+		// Multiplayer: For Player 2, set to IGNORE immediately to prevent repeat
+		extern word is_multiplayer_mode;
+		if (is_multiplayer_mode && charid >= charid_2_guard) {
+			control_forward = CONTROL_IGNORE; // Prevent continuous movement
+			control_forward_p2 = CONTROL_IGNORE;
+		}
 		forward_with_sword();
 	} else if (control_backward == CONTROL_HELD) {
+		// Multiplayer: For Player 2, set to IGNORE immediately to prevent repeat
+		extern word is_multiplayer_mode;
+		if (is_multiplayer_mode && charid >= charid_2_guard) {
+			control_backward = CONTROL_IGNORE; // Prevent continuous movement
+			control_backward_p2 = CONTROL_IGNORE;
+		}
 		back_with_sword();
 	}
 }

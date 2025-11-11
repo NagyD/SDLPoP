@@ -1630,20 +1630,67 @@ void read_user_control_p2() {
 	}
 	
 	// Process Player 2 controls - set directly based on input
+	// For single-step movement: Only trigger on NEW key presses (not held keys)
+	// Save previous state to detect transitions
+	static sbyte prev_forward_p2 = CONTROL_RELEASED;
+	static sbyte prev_backward_p2 = CONTROL_RELEASED;
+	
 	// Initialize to CONTROL_RELEASED first
-	control_forward_p2 = CONTROL_RELEASED;
-	control_backward_p2 = CONTROL_RELEASED;
 	control_up_p2 = CONTROL_RELEASED;
 	control_down_p2 = CONTROL_RELEASED;
 	control_shift2_p2 = CONTROL_RELEASED;
 	
-	// Set to CONTROL_HELD if corresponding input is active
+	// For forward/backward: Only set to HELD if transitioning from RELEASED (new press)
+	// This prevents continuous movement when key is held
 	if (effective_x_p2 == CONTROL_HELD_FORWARD) {
-		control_forward_p2 = CONTROL_HELD;
+		// Check if this is a new press (previous was RELEASED and current is not IGNORE)
+		if (prev_forward_p2 == CONTROL_RELEASED && control_forward_p2 != CONTROL_IGNORE) {
+			// New press - trigger movement
+			control_forward_p2 = CONTROL_HELD;
+		} else if (control_forward_p2 == CONTROL_IGNORE) {
+			// Movement in progress - keep IGNORE (don't change it)
+		} else {
+			// Key held but already processed - keep RELEASED to prevent repeat
+			control_forward_p2 = CONTROL_RELEASED;
+		}
+	} else {
+		// Key not pressed
+		if (control_forward_p2 == CONTROL_IGNORE) {
+			// Movement was in progress, now key released - reset to RELEASED
+			control_forward_p2 = CONTROL_RELEASED;
+		} else {
+			// Already RELEASED - keep it
+			control_forward_p2 = CONTROL_RELEASED;
+		}
 	}
+	// Update previous state for next frame
+	prev_forward_p2 = control_forward_p2;
+	
 	if (effective_x_p2 == CONTROL_HELD_BACKWARD) {
-		control_backward_p2 = CONTROL_HELD;
+		// Check if this is a new press (previous was RELEASED and current is not IGNORE)
+		if (prev_backward_p2 == CONTROL_RELEASED && control_backward_p2 != CONTROL_IGNORE) {
+			// New press - trigger movement
+			control_backward_p2 = CONTROL_HELD;
+		} else if (control_backward_p2 == CONTROL_IGNORE) {
+			// Movement in progress - keep IGNORE (don't change it)
+		} else {
+			// Key held but already processed - keep RELEASED to prevent repeat
+			control_backward_p2 = CONTROL_RELEASED;
+		}
+	} else {
+		// Key not pressed
+		if (control_backward_p2 == CONTROL_IGNORE) {
+			// Movement was in progress, now key released - reset to RELEASED
+			control_backward_p2 = CONTROL_RELEASED;
+		} else {
+			// Already RELEASED - keep it
+			control_backward_p2 = CONTROL_RELEASED;
+		}
 	}
+	// Update previous state for next frame
+	prev_backward_p2 = control_backward_p2;
+	
+	// For up/down/action: Always set based on input (no single-step mode)
 	if (control_y_p2 == CONTROL_HELD_UP) {
 		control_up_p2 = CONTROL_HELD;
 	}
