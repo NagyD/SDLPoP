@@ -422,7 +422,7 @@ setting_type gameplay_settings[] = {
 				.text = "Multiplayer 1v1 mode",
 				.explanation = "Enable 1v1 multiplayer mode.\n"
 						"Player 1 (Kid): Arrow keys + Shift\n"
-						"Player 2 (Guard): WASD + Space\n"
+						"Player 2 (Guard): WASD + X\n"
 						"Both players start facing each other with swords drawn.\n"
 						"NOTE: Requires restarting the game to take effect."},
 		{.id = SETTING_ENABLE_CHEATS, .style = SETTING_STYLE_TOGGLE, .linked = &cheats_enabled,

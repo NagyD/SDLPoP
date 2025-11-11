@@ -966,14 +966,14 @@ extern int key_down       INIT(= SDL_SCANCODE_DOWN);
 extern int key_jump_left  INIT(= SDL_SCANCODE_HOME);
 extern int key_jump_right INIT(= SDL_SCANCODE_PAGEUP);
 extern int key_action     INIT(= SDL_SCANCODE_RSHIFT);
-// Multiplayer: Player 2 controls (default: WASD + Space)
+// Multiplayer: Player 2 controls (default: WASD + F)
 extern int key_left_p2    INIT(= SDL_SCANCODE_A);
 extern int key_right_p2   INIT(= SDL_SCANCODE_D);
 extern int key_up_p2      INIT(= SDL_SCANCODE_W);
 extern int key_down_p2    INIT(= SDL_SCANCODE_S);
 extern int key_jump_left_p2  INIT(= SDL_SCANCODE_Q);
 extern int key_jump_right_p2 INIT(= SDL_SCANCODE_E);
-extern int key_action_p2     INIT(= SDL_SCANCODE_SPACE);
+extern int key_action_p2     INIT(= SDL_SCANCODE_X);
 // menus
 extern int key_enter      INIT(= SDL_SCANCODE_RETURN);
 extern int key_esc        INIT(= SDL_SCANCODE_ESCAPE);

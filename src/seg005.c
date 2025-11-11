@@ -344,6 +344,17 @@ void control_standing() {
 	if (control_shift2 == CONTROL_HELD && control_shift == CONTROL_HELD && check_get_item()) {
 		return;
 	}
+	// Multiplayer: For Player 2, allow drawing sword with attack button when sheathed
+	// Check raw input directly (like down+forward does) to bypass state management issues
+	extern word is_multiplayer_mode;
+	extern sbyte control_shift_p2;
+	if (is_multiplayer_mode && Char.charid >= charid_2_guard && Char.sword == sword_0_sheathed) {
+		// Check both the processed state and raw input to ensure it works
+		if (control_shift == CONTROL_HELD || control_shift2 == CONTROL_HELD || control_shift_p2 == CONTROL_HELD) {
+			draw_sword();
+			return;
+		}
+	}
 	if (Char.charid != charid_0_kid && control_down == CONTROL_HELD && control_forward == CONTROL_HELD) {
 		draw_sword();
 		return;
@@ -1053,6 +1064,15 @@ void swordfight() {
 		if (frame == frame_158_stand_with_sword || frame == frame_170_stand_with_sword || frame == frame_171_stand_with_sword) {
 			control_down = CONTROL_IGNORE; // disable automatic repeat
 			Char.sword = sword_0_sheathed;
+			// Multiplayer: For Player 2, reset attack state when sheathing sword
+			// This allows re-entering attack stance after sheathing
+			extern word is_multiplayer_mode;
+			extern sbyte control_shift2_p2;
+			if (is_multiplayer_mode && charid >= charid_2_guard) {
+				control_shift2_p2 = CONTROL_RELEASED; // Reset attack state to allow re-entering attack stance
+				// Also reset control_shift2 to ensure it's cleared
+				control_shift2 = CONTROL_RELEASED;
+			}
 			if (charid == charid_0_kid) {
 				offguard = 1;
 				guard_refrac = 9;

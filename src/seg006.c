@@ -1638,7 +1638,11 @@ void read_user_control_p2() {
 	// Initialize to CONTROL_RELEASED first
 	control_up_p2 = CONTROL_RELEASED;
 	control_down_p2 = CONTROL_RELEASED;
-	control_shift2_p2 = CONTROL_RELEASED;
+	// Don't reset control_shift2_p2 here if sword is sheathed - let the special handling manage it
+	extern word is_multiplayer_mode;
+	if (!(is_multiplayer_mode && Char.charid >= charid_2_guard && Char.sword == sword_0_sheathed)) {
+		control_shift2_p2 = CONTROL_RELEASED;
+	}
 	
 	// For forward/backward: Only set to HELD if transitioning from RELEASED (new press)
 	// This prevents continuous movement when key is held
@@ -1690,15 +1694,56 @@ void read_user_control_p2() {
 	// Update previous state for next frame
 	prev_backward_p2 = control_backward_p2;
 	
-	// For up/down/action: Always set based on input (no single-step mode)
+	// For up/down: Always set based on input (no single-step mode)
 	if (control_y_p2 == CONTROL_HELD_UP) {
 		control_up_p2 = CONTROL_HELD;
 	}
 	if (control_y_p2 == CONTROL_HELD_DOWN) {
 		control_down_p2 = CONTROL_HELD;
 	}
-	if (control_shift_p2 == CONTROL_HELD) {
-		control_shift2_p2 = CONTROL_HELD;
+	
+	// For action/attack: Single-step mode (same as forward/backward)
+	static sbyte prev_shift2_p2 = CONTROL_RELEASED;
+	extern word is_multiplayer_mode;
+	// Multiplayer: Special handling when sword is sheathed - allow attack button to draw sword
+	if (is_multiplayer_mode && Char.charid >= charid_2_guard && Char.sword == sword_0_sheathed) {
+		// When sword is sheathed, reset state and allow attack button to work
+		prev_shift2_p2 = CONTROL_RELEASED;
+		if (control_shift_p2 == CONTROL_HELD) {
+			// Attack button pressed while sword is sheathed - directly set to HELD to draw sword
+			control_shift2_p2 = CONTROL_HELD;
+			// Also ensure control_shift_p2 stays HELD so control_shift gets set correctly
+		} else {
+			// Attack button not pressed - keep RELEASED
+			control_shift2_p2 = CONTROL_RELEASED;
+		}
+		// Update previous state for next frame
+		prev_shift2_p2 = control_shift2_p2;
+	} else {
+		// Normal attack logic when sword is drawn or not multiplayer
+		if (control_shift_p2 == CONTROL_HELD) {
+			// Check if this is a new press (previous was RELEASED and current is not IGNORE)
+			if (prev_shift2_p2 == CONTROL_RELEASED && control_shift2_p2 != CONTROL_IGNORE) {
+				// New press - trigger attack
+				control_shift2_p2 = CONTROL_HELD;
+			} else if (control_shift2_p2 == CONTROL_IGNORE) {
+				// Attack in progress - keep IGNORE (don't change it)
+			} else {
+				// Key held but already processed - keep RELEASED to prevent repeat
+				control_shift2_p2 = CONTROL_RELEASED;
+			}
+		} else {
+			// Key not pressed
+			if (control_shift2_p2 == CONTROL_IGNORE) {
+				// Attack was in progress, now key released - reset to RELEASED
+				control_shift2_p2 = CONTROL_RELEASED;
+			} else {
+				// Already RELEASED - keep it
+				control_shift2_p2 = CONTROL_RELEASED;
+			}
+		}
+		// Update previous state for next frame
+		prev_shift2_p2 = control_shift2_p2;
 	}
 }
 
@@ -1753,7 +1798,15 @@ void user_control_p2() {
 	control_backward = control_backward_p2;
 	control_up = control_up_p2;
 	control_down = control_down_p2;
-	control_shift2 = control_shift2_p2;
+	// IMPORTANT: For attack, preserve IGNORE state (same as forward/backward)
+	// Only set if not IGNORE, or if currently RELEASED
+	// Multiplayer: When sword is sheathed and attack button is pressed, ensure control_shift2 is set
+	if (is_multiplayer_mode && Char.charid >= charid_2_guard && Char.sword == sword_0_sheathed && control_shift2_p2 == CONTROL_HELD) {
+		control_shift2 = CONTROL_HELD; // Force set when sword is sheathed and attack pressed
+		control_shift = CONTROL_HELD; // Also set control_shift to ensure the check in control_standing() works
+	} else if (control_shift2_p2 != CONTROL_IGNORE || control_shift2 == CONTROL_RELEASED) {
+		control_shift2 = control_shift2_p2;
+	}
 	
 	// Apply control to Guard (Char should already be set to Guard)
 	// Note: We don't need to flip_control_x() here because we already converted control_x
@@ -2289,6 +2342,16 @@ void add_sword_to_objtable() {
 
 // seg006:1827
 void control_guard_inactive() {
+	// Multiplayer: Allow attack button to draw sword when sheathed
+	extern word is_multiplayer_mode;
+	extern sbyte control_shift_p2;
+	if (is_multiplayer_mode && Char.charid >= charid_2_guard && Char.sword == sword_0_sheathed) {
+		// Check attack button (same as down+forward check)
+		if (control_shift == CONTROL_HELD || control_shift2 == CONTROL_HELD || control_shift_p2 == CONTROL_HELD) {
+			draw_sword();
+			return;
+		}
+	}
 	if (Char.frame == frame_166_stand_inactive && control_down == CONTROL_HELD) {
 		if (control_forward == CONTROL_HELD) {
 			draw_sword();

@@ -2,9 +2,11 @@
 setlocal
 cd /d %~dp0
 
-set SDL2=..\SDL2-2.30.0
-set SDL2INC=%SDL2%\include
-set SDL2LIB=%SDL2%\lib\x64
+if [%SDL2%]==[] (
+  set SDL2=C:\msys64\mingw64
+)
+set SDL2INC=%SDL2%\include\SDL2
+set SDL2LIB=%SDL2%\lib
 set CPPFLAGS=-I"%SDL2INC%"
 
 set PATH=C:\msys64\mingw64\bin;%PATH%
@@ -78,7 +80,7 @@ if errorlevel 1 goto error
 
 echo.
 echo Linking...
-gcc -mwindows main.o data.o seg000.o seg001.o seg002.o seg003.o seg004.o seg005.o seg006.o seg007.o seg008.o seg009.o seqtbl.o replay.o options.o lighting.o screenshot.o menu.o midi.o opl3.o stb_vorbis.o -L"%SDL2LIB%" -lSDL2main -lSDL2 -lSDL2_image -lm -o ..\prince.exe
+gcc -mwindows main.o data.o seg000.o seg001.o seg002.o seg003.o seg004.o seg005.o seg006.o seg007.o seg008.o seg009.o seqtbl.o replay.o options.o lighting.o screenshot.o menu.o midi.o opl3.o stb_vorbis.o -L"%SDL2LIB%" -Wl,--whole-archive -lSDL2main -Wl,--no-whole-archive -lSDL2 -lSDL2_image -lm -o ..\prince.exe
 if errorlevel 1 goto error
 
 echo.
