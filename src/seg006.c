@@ -1489,8 +1489,20 @@ void play_guard() {
 			clear_char();
 		}
 		loc_7A65:
-		autocontrol_opponent();
-		control();
+		// Multiplayer: Use Player 2 input instead of AI if in multiplayer mode
+		if (is_multiplayer_mode) {
+			// Char is already set to Guard by loadshad_and_opp() in play_guard_frame()
+			// Disable AI control by clearing autocontrol variables
+			can_guard_see_kid = 0; // Disable AI seeing Kid
+			// Read Player 2 input and apply it
+			read_user_control_p2();
+			user_control_p2();
+			// Save Char back to Guard (in case user_control_p2 modified it)
+			Guard = Char;
+		} else {
+			autocontrol_opponent();
+			control();
+		}
 	}
 }
 
@@ -1589,6 +1601,126 @@ void read_user_control() {
 			control_shift2 = CONTROL_RELEASED;
 		}
 	}
+}
+
+// Multiplayer: Player 2 version of read_user_control
+void read_user_control_p2() {
+	// Read keyboard and joystick input for Player 2 first
+	read_keyb_control_p2();
+	read_joyst_control_p2();
+	
+	// Convert control_x_p2 (LEFT/RIGHT) to forward/backward based on Guard's direction
+	// This is similar to how flip_control_x() works, but we need to do it for Player 2
+	// Use Char.direction since Char is set to Guard in play_guard_frame() before this is called
+	sbyte effective_x_p2 = control_x_p2;
+	if (Char.direction >= dir_0_right) {
+		// Guard facing right: right = forward, left = backward
+		if (control_x_p2 == CONTROL_HELD_RIGHT) {
+			effective_x_p2 = CONTROL_HELD_FORWARD;
+		} else if (control_x_p2 == CONTROL_HELD_LEFT) {
+			effective_x_p2 = CONTROL_HELD_BACKWARD;
+		}
+	} else {
+		// Guard facing left: left = forward, right = backward
+		if (control_x_p2 == CONTROL_HELD_LEFT) {
+			effective_x_p2 = CONTROL_HELD_FORWARD;
+		} else if (control_x_p2 == CONTROL_HELD_RIGHT) {
+			effective_x_p2 = CONTROL_HELD_BACKWARD;
+		}
+	}
+	
+	// Process Player 2 controls - set directly based on input
+	// Initialize to CONTROL_RELEASED first
+	control_forward_p2 = CONTROL_RELEASED;
+	control_backward_p2 = CONTROL_RELEASED;
+	control_up_p2 = CONTROL_RELEASED;
+	control_down_p2 = CONTROL_RELEASED;
+	control_shift2_p2 = CONTROL_RELEASED;
+	
+	// Set to CONTROL_HELD if corresponding input is active
+	if (effective_x_p2 == CONTROL_HELD_FORWARD) {
+		control_forward_p2 = CONTROL_HELD;
+	}
+	if (effective_x_p2 == CONTROL_HELD_BACKWARD) {
+		control_backward_p2 = CONTROL_HELD;
+	}
+	if (control_y_p2 == CONTROL_HELD_UP) {
+		control_up_p2 = CONTROL_HELD;
+	}
+	if (control_y_p2 == CONTROL_HELD_DOWN) {
+		control_down_p2 = CONTROL_HELD;
+	}
+	if (control_shift_p2 == CONTROL_HELD) {
+		control_shift2_p2 = CONTROL_HELD;
+	}
+}
+
+// Multiplayer: Apply Player 2 input to Guard character
+void user_control_p2() {
+	// IMPORTANT: Save Player 1's control state BEFORE swapping
+	// This ensures Player 1's controls are preserved and not affecting Guard
+	sbyte temp_x = control_x;
+	sbyte temp_y = control_y;
+	sbyte temp_shift = control_shift;
+	sbyte temp_forward = control_forward;
+	sbyte temp_backward = control_backward;
+	sbyte temp_up = control_up;
+	sbyte temp_down = control_down;
+	sbyte temp_shift2 = control_shift2;
+	
+	// Convert control_x_p2 (LEFT/RIGHT) to FORWARD/BACKWARD for control() function
+	// This is the same conversion we did in read_user_control_p2()
+	sbyte control_x_effective = control_x_p2;
+	if (Char.direction >= dir_0_right) {
+		// Guard facing right: right = forward, left = backward
+		if (control_x_p2 == CONTROL_HELD_RIGHT) {
+			control_x_effective = CONTROL_HELD_FORWARD;
+		} else if (control_x_p2 == CONTROL_HELD_LEFT) {
+			control_x_effective = CONTROL_HELD_BACKWARD;
+		}
+	} else {
+		// Guard facing left: left = forward, right = backward
+		if (control_x_p2 == CONTROL_HELD_LEFT) {
+			control_x_effective = CONTROL_HELD_FORWARD;
+		} else if (control_x_p2 == CONTROL_HELD_RIGHT) {
+			control_x_effective = CONTROL_HELD_BACKWARD;
+		}
+	}
+	
+	// IMPORTANT: Clear Player 1's controls first, then set Player 2 controls
+	// This ensures Player 1's input doesn't leak into Guard control
+	control_x = CONTROL_RELEASED;
+	control_y = CONTROL_RELEASED;
+	control_shift = CONTROL_RELEASED;
+	control_forward = CONTROL_RELEASED;
+	control_backward = CONTROL_RELEASED;
+	control_up = CONTROL_RELEASED;
+	control_down = CONTROL_RELEASED;
+	control_shift2 = CONTROL_RELEASED;
+	
+	// Now set Player 2 controls as active
+	control_x = control_x_effective; // Use converted FORWARD/BACKWARD value
+	control_y = control_y_p2;
+	control_shift = control_shift_p2;
+	control_forward = control_forward_p2;
+	control_backward = control_backward_p2;
+	control_up = control_up_p2;
+	control_down = control_down_p2;
+	control_shift2 = control_shift2_p2;
+	
+	// Apply control to Guard (Char should already be set to Guard)
+	// Note: We don't need to flip_control_x() here because we already converted control_x
+	control();
+	
+	// Restore Player 1 controls exactly as they were
+	control_x = temp_x;
+	control_y = temp_y;
+	control_shift = temp_shift;
+	control_forward = temp_forward;
+	control_backward = temp_backward;
+	control_up = temp_up;
+	control_down = temp_down;
+	control_shift2 = temp_shift2;
 }
 
 // seg006:0F55

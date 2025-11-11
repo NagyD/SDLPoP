@@ -102,7 +102,13 @@ void play_level(int level_number) {
 		Guard.charid = charid_2_guard;
 		Guard.direction = dir_56_none;
 		do_startpos();
+		
 		have_sword = /*(level_number != 1)*/ (level_number == 0 || level_number >= custom->have_sword_from_level);
+		
+		// Multiplayer: Initialize multiplayer mode if enabled (after have_sword is set)
+		if (is_multiplayer_mode) {
+			init_multiplayer_mode();
+		}
 		find_start_level_door();
 		// busy waiting?
 		while (check_sound_playing() && !do_paused()) idle();
@@ -198,6 +204,63 @@ void set_start_pos() {
 		// level 7, room 17: show room below
 		goto_other_room(3);
 	}
+	savekid();
+}
+
+// Multiplayer: Initialize players facing each other for 1v1 mode
+void init_multiplayer_mode() {
+	// Ensure Guard is active
+	Guard.charid = charid_2_guard;
+	Guard.alive = -1;
+	Guard.room = Kid.room;
+	
+	// Position Guard to face Kid (place Guard a few tiles to the right of Kid)
+	Guard.curr_col = Kid.curr_col + 3; // 3 tiles to the right
+	if (Guard.curr_col >= SCREEN_TILECOUNTX) {
+		Guard.curr_col = SCREEN_TILECOUNTX - 1; // Keep within screen bounds
+	}
+	Guard.curr_row = Kid.curr_row;
+	
+	// Calculate Guard's x position
+	Guard.x = x_bump[Guard.curr_col + FIRST_ONSCREEN_COLUMN] + TILE_SIZEX;
+	Guard.y = y_land[Guard.curr_row + 1];
+	
+	// Make Guard face left (toward Kid)
+	Guard.direction = dir_FF_left;
+	
+	// Give both characters swords
+	Kid.sword = sword_2_drawn;
+	Guard.sword = sword_2_drawn;
+	
+	// Set Guard's HP (same as Kid's max HP for fair fight)
+	guardhp_max = hitp_max;
+	guardhp_curr = guardhp_max;
+	
+	// Initialize Guard's state
+	Guard.fall_x = 0;
+	Guard.fall_y = 0;
+	Guard.action = actions_1_run_jump;
+	Guard.repeat = 0;
+	
+	// Load Guard sprite data and set to stand with sword pose
+	loadshad();
+	Char = Guard; // Set Char to Guard temporarily
+	seqtbl_offset_char(seq_90_en_garde); // stand active (en garde)
+	play_seq(); // Play sequence to set frame
+	Guard = Char; // Restore Guard from Char
+	saveshad();
+	
+	// Also ensure Kid has sword drawn and is in correct pose
+	loadkid();
+	Char = Kid;
+	if (Kid.sword == sword_2_drawn) {
+		seqtbl_offset_char(seq_55_draw_sword); // draw sword (will set to stand with sword)
+		play_seq();
+	}
+	savekid();
+	
+	// Make Kid face right (toward Guard)
+	Kid.direction = dir_0_right;
 	savekid();
 }
 

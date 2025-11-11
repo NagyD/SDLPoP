@@ -922,7 +922,18 @@ void run_jump() {
 // sseg005:0BB5
 void back_with_sword() {
 	short frame = Char.frame;
-	if (frame == frame_158_stand_with_sword || frame == frame_170_stand_with_sword || frame == frame_171_stand_with_sword) {
+	// Multiplayer: In multiplayer mode, allow movement from any frame for Guard
+	extern word is_multiplayer_mode;
+	int can_move = (frame == frame_158_stand_with_sword || frame == frame_170_stand_with_sword || frame == frame_171_stand_with_sword);
+	if (is_multiplayer_mode && Char.charid >= charid_2_guard) {
+		// In multiplayer, allow movement from any frame (stand, walk, or other)
+		// This ensures Player 2 can always control the Guard
+		can_move = 1; // Always allow movement in multiplayer
+	} else {
+		// Normal mode: only allow from stand frames
+		can_move = can_move || (frame == frame_165_walk_with_sword || frame == frame_157_walk_with_sword);
+	}
+	if (can_move) {
 		control_backward = CONTROL_IGNORE; // disable automatic repeat
 		seqtbl_offset_char(seq_57_back_with_sword); // back with sword
 	}
@@ -931,7 +942,18 @@ void back_with_sword() {
 // seg005:0BE3
 void forward_with_sword() {
 	short frame = Char.frame;
-	if (frame == frame_158_stand_with_sword || frame == frame_170_stand_with_sword || frame == frame_171_stand_with_sword) {
+	// Multiplayer: In multiplayer mode, allow movement from any frame for Guard
+	extern word is_multiplayer_mode;
+	int can_move = (frame == frame_158_stand_with_sword || frame == frame_170_stand_with_sword || frame == frame_171_stand_with_sword);
+	if (is_multiplayer_mode && Char.charid >= charid_2_guard) {
+		// In multiplayer, allow movement from any frame (stand, walk, or other)
+		// This ensures Player 2 can always control the Guard
+		can_move = 1; // Always allow movement in multiplayer
+	} else {
+		// Normal mode: only allow from stand frames
+		can_move = can_move || (frame == frame_165_walk_with_sword || frame == frame_157_walk_with_sword);
+	}
+	if (can_move) {
 		control_forward = CONTROL_IGNORE; // disable automatic repeat
 		if (Char.charid != charid_0_kid) {
 			seqtbl_offset_char(seq_56_guard_forward_with_sword); // forward with sword (Guard)
@@ -963,6 +985,14 @@ void draw_sword() {
 // seg005:0C67
 void control_with_sword() {
 	if (Char.action < actions_2_hang_climb) {
+		// Multiplayer: In multiplayer mode, always allow movement controls for Guard
+		extern word is_multiplayer_mode;
+		if (is_multiplayer_mode && Char.charid >= charid_2_guard) {
+			// In multiplayer, Guard can move freely - go directly to swordfight() which handles movement
+			swordfight();
+			return;
+		}
+		
 		if (get_tile_at_char() == tiles_11_loose || can_guard_see_kid >= 2) {
 			short distance = char_opp_dist();
 			if ((word)distance < (word)90) {
