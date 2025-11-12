@@ -1638,10 +1638,13 @@ void read_user_control_p2() {
 	// Initialize to CONTROL_RELEASED first
 	control_up_p2 = CONTROL_RELEASED;
 	control_down_p2 = CONTROL_RELEASED;
-	// Don't reset control_shift2_p2 here if sword is sheathed - let the special handling manage it
+	// Don't reset control_shift2_p2 here if it's IGNORE (attack in progress) or sword is sheathed
 	extern word is_multiplayer_mode;
 	if (!(is_multiplayer_mode && Char.charid >= charid_2_guard && Char.sword == sword_0_sheathed)) {
-		control_shift2_p2 = CONTROL_RELEASED;
+		// Only reset if not IGNORE (preserve IGNORE state during attack animation)
+		if (control_shift2_p2 != CONTROL_IGNORE) {
+			control_shift2_p2 = CONTROL_RELEASED;
+		}
 	}
 	
 	// For forward/backward: Only set to HELD if transitioning from RELEASED (new press)
@@ -1735,28 +1738,33 @@ void read_user_control_p2() {
 	} else {
 		// Normal attack logic when sword is drawn or not multiplayer
 		if (control_shift_p2 == CONTROL_HELD) {
-			// Check if this is a new press (previous was RELEASED and current is not IGNORE)
-			if (prev_shift2_p2 == CONTROL_RELEASED && control_shift2_p2 != CONTROL_IGNORE) {
+			// If already IGNORE, keep it IGNORE (attack animation in progress)
+			if (control_shift2_p2 == CONTROL_IGNORE) {
+				// Attack in progress - keep IGNORE (don't change it)
+				// Keep prev_shift2_p2 as IGNORE to prevent re-triggering while key is held
+				prev_shift2_p2 = CONTROL_IGNORE;
+			} else if (prev_shift2_p2 == CONTROL_RELEASED) {
 				// New press - trigger attack
 				control_shift2_p2 = CONTROL_HELD;
-			} else if (control_shift2_p2 == CONTROL_IGNORE) {
-				// Attack in progress - keep IGNORE (don't change it)
+				prev_shift2_p2 = control_shift2_p2;
 			} else {
 				// Key held but already processed - keep RELEASED to prevent repeat
 				control_shift2_p2 = CONTROL_RELEASED;
+				prev_shift2_p2 = control_shift2_p2;
 			}
 		} else {
 			// Key not pressed
 			if (control_shift2_p2 == CONTROL_IGNORE) {
 				// Attack was in progress, now key released - reset to RELEASED
 				control_shift2_p2 = CONTROL_RELEASED;
+				prev_shift2_p2 = control_shift2_p2;
 			} else {
 				// Already RELEASED - keep it
 				control_shift2_p2 = CONTROL_RELEASED;
+				prev_shift2_p2 = control_shift2_p2;
 			}
 		}
-		// Update previous state for next frame
-		prev_shift2_p2 = control_shift2_p2;
+		// Note: prev_shift2_p2 is already updated in each branch above
 	}
 }
 
@@ -1794,6 +1802,8 @@ void user_control_p2() {
 	
 	// IMPORTANT: Clear Player 1's controls first, then set Player 2 controls
 	// This ensures Player 1's input doesn't leak into Guard control
+	// BUT: Preserve IGNORE state for attack (control_shift2) to prevent repeat
+	sbyte saved_shift2 = control_shift2; // Save IGNORE state if present
 	control_x = CONTROL_RELEASED;
 	control_y = CONTROL_RELEASED;
 	control_shift = CONTROL_RELEASED;
@@ -1802,6 +1812,10 @@ void user_control_p2() {
 	control_up = CONTROL_RELEASED;
 	control_down = CONTROL_RELEASED;
 	control_shift2 = CONTROL_RELEASED;
+	// Restore IGNORE state if it was set (from previous frame's sword_strike)
+	if (saved_shift2 == CONTROL_IGNORE) {
+		control_shift2 = CONTROL_IGNORE;
+	}
 	
 	// Now set Player 2 controls as active
 	control_x = control_x_effective; // Use converted FORWARD/BACKWARD value
@@ -1812,12 +1826,13 @@ void user_control_p2() {
 	control_up = control_up_p2;
 	control_down = control_down_p2;
 	// IMPORTANT: For attack, preserve IGNORE state (same as forward/backward)
-	// If control_shift2 is already IGNORE (set by sword_strike() or draw_sword()), keep it
-	// Otherwise, map from control_shift2_p2
-	if (control_shift2 == CONTROL_IGNORE) {
-		// Already IGNORE - keep it and also set control_shift2_p2 to IGNORE to stay in sync
+	// Priority: IGNORE state must be preserved to prevent repeat attacks
+	if (control_shift2 == CONTROL_IGNORE || control_shift2_p2 == CONTROL_IGNORE) {
+		// Either is IGNORE - set both to IGNORE to prevent repeat
+		control_shift2 = CONTROL_IGNORE;
 		control_shift2_p2 = CONTROL_IGNORE;
-	} else if (control_shift2_p2 != CONTROL_IGNORE || control_shift2 == CONTROL_RELEASED) {
+	} else {
+		// Neither is IGNORE - map from control_shift2_p2
 		control_shift2 = control_shift2_p2;
 	}
 	// IMPORTANT: For up (parry), preserve IGNORE state (same as attack)
