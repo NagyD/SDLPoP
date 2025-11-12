@@ -1635,9 +1635,14 @@ void read_user_control_p2() {
 	static sbyte prev_forward_p2 = CONTROL_RELEASED;
 	static sbyte prev_backward_p2 = CONTROL_RELEASED;
 	
-	// Initialize to CONTROL_RELEASED first
-	control_up_p2 = CONTROL_RELEASED;
-	control_down_p2 = CONTROL_RELEASED;
+	// Initialize to CONTROL_RELEASED first, but preserve IGNORE state
+	// Only reset if not IGNORE (preserve IGNORE state during animations)
+	if (control_up_p2 != CONTROL_IGNORE) {
+		control_up_p2 = CONTROL_RELEASED;
+	}
+	if (control_down_p2 != CONTROL_IGNORE) {
+		control_down_p2 = CONTROL_RELEASED;
+	}
 	// Don't reset control_shift2_p2 here if it's IGNORE (attack in progress) or sword is sheathed
 	extern word is_multiplayer_mode;
 	if (!(is_multiplayer_mode && Char.charid >= charid_2_guard && Char.sword == sword_0_sheathed)) {
@@ -1697,12 +1702,64 @@ void read_user_control_p2() {
 	// Update previous state for next frame
 	prev_backward_p2 = control_backward_p2;
 	
-	// For up/down: Always set based on input (no single-step mode)
+	// For up/down: Single-step mode (same as forward/backward/attack)
+	static sbyte prev_up_p2 = CONTROL_RELEASED;
+	static sbyte prev_down_p2 = CONTROL_RELEASED;
+	
+	// For up (parry/block): Single-step mode
 	if (control_y_p2 == CONTROL_HELD_UP) {
-		control_up_p2 = CONTROL_HELD;
+		// If already IGNORE, keep it IGNORE (parry animation in progress)
+		if (control_up_p2 == CONTROL_IGNORE) {
+			// Parry in progress - keep IGNORE (don't change it)
+			prev_up_p2 = CONTROL_IGNORE;
+		} else if (prev_up_p2 == CONTROL_RELEASED && control_up_p2 != CONTROL_IGNORE) {
+			// New press - trigger parry
+			control_up_p2 = CONTROL_HELD;
+			prev_up_p2 = control_up_p2;
+		} else {
+			// Key held but already processed - keep RELEASED to prevent repeat
+			control_up_p2 = CONTROL_RELEASED;
+			prev_up_p2 = control_up_p2;
+		}
+	} else {
+		// Key not pressed
+		if (control_up_p2 == CONTROL_IGNORE) {
+			// Parry was in progress, now key released - reset to RELEASED
+			control_up_p2 = CONTROL_RELEASED;
+			prev_up_p2 = control_up_p2;
+		} else {
+			// Already RELEASED - keep it
+			control_up_p2 = CONTROL_RELEASED;
+			prev_up_p2 = control_up_p2;
+		}
 	}
+	
+	// For down (sheath sword): Single-step mode
 	if (control_y_p2 == CONTROL_HELD_DOWN) {
-		control_down_p2 = CONTROL_HELD;
+		// If already IGNORE, keep it IGNORE (sheath animation in progress)
+		if (control_down_p2 == CONTROL_IGNORE) {
+			// Sheath in progress - keep IGNORE (don't change it)
+			prev_down_p2 = CONTROL_IGNORE;
+		} else if (prev_down_p2 == CONTROL_RELEASED && control_down_p2 != CONTROL_IGNORE) {
+			// New press - trigger sheath
+			control_down_p2 = CONTROL_HELD;
+			prev_down_p2 = control_down_p2;
+		} else {
+			// Key held but already processed - keep RELEASED to prevent repeat
+			control_down_p2 = CONTROL_RELEASED;
+			prev_down_p2 = control_down_p2;
+		}
+	} else {
+		// Key not pressed
+		if (control_down_p2 == CONTROL_IGNORE) {
+			// Sheath was in progress, now key released - reset to RELEASED
+			control_down_p2 = CONTROL_RELEASED;
+			prev_down_p2 = control_down_p2;
+		} else {
+			// Already RELEASED - keep it
+			control_down_p2 = CONTROL_RELEASED;
+			prev_down_p2 = control_down_p2;
+		}
 	}
 	
 	// For action/attack: Single-step mode (same as forward/backward)
@@ -1802,7 +1859,9 @@ void user_control_p2() {
 	
 	// IMPORTANT: Clear Player 1's controls first, then set Player 2 controls
 	// This ensures Player 1's input doesn't leak into Guard control
-	// BUT: Preserve IGNORE state for attack (control_shift2) to prevent repeat
+	// BUT: Preserve IGNORE state for up/down/attack to prevent repeat
+	sbyte saved_up = control_up; // Save IGNORE state if present
+	sbyte saved_down = control_down; // Save IGNORE state if present
 	sbyte saved_shift2 = control_shift2; // Save IGNORE state if present
 	control_x = CONTROL_RELEASED;
 	control_y = CONTROL_RELEASED;
@@ -1812,7 +1871,13 @@ void user_control_p2() {
 	control_up = CONTROL_RELEASED;
 	control_down = CONTROL_RELEASED;
 	control_shift2 = CONTROL_RELEASED;
-	// Restore IGNORE state if it was set (from previous frame's sword_strike)
+	// Restore IGNORE state if it was set (from previous frame's parry/sheath/strike)
+	if (saved_up == CONTROL_IGNORE) {
+		control_up = CONTROL_IGNORE;
+	}
+	if (saved_down == CONTROL_IGNORE) {
+		control_down = CONTROL_IGNORE;
+	}
 	if (saved_shift2 == CONTROL_IGNORE) {
 		control_shift2 = CONTROL_IGNORE;
 	}
@@ -1823,8 +1888,24 @@ void user_control_p2() {
 	control_shift = control_shift_p2;
 	control_forward = control_forward_p2;
 	control_backward = control_backward_p2;
-	control_up = control_up_p2;
-	control_down = control_down_p2;
+	// IMPORTANT: For up (parry) and down (sheath), preserve IGNORE state (same as attack)
+	// Priority: IGNORE state must be preserved to prevent repeat
+	if (control_up == CONTROL_IGNORE || control_up_p2 == CONTROL_IGNORE) {
+		// Either is IGNORE - set both to IGNORE to prevent repeat
+		control_up = CONTROL_IGNORE;
+		control_up_p2 = CONTROL_IGNORE;
+	} else {
+		// Neither is IGNORE - map from control_up_p2
+		control_up = control_up_p2;
+	}
+	if (control_down == CONTROL_IGNORE || control_down_p2 == CONTROL_IGNORE) {
+		// Either is IGNORE - set both to IGNORE to prevent repeat
+		control_down = CONTROL_IGNORE;
+		control_down_p2 = CONTROL_IGNORE;
+	} else {
+		// Neither is IGNORE - map from control_down_p2
+		control_down = control_down_p2;
+	}
 	// IMPORTANT: For attack, preserve IGNORE state (same as forward/backward)
 	// Priority: IGNORE state must be preserved to prevent repeat attacks
 	if (control_shift2 == CONTROL_IGNORE || control_shift2_p2 == CONTROL_IGNORE) {
@@ -1834,11 +1915,6 @@ void user_control_p2() {
 	} else {
 		// Neither is IGNORE - map from control_shift2_p2
 		control_shift2 = control_shift2_p2;
-	}
-	// IMPORTANT: For up (parry), preserve IGNORE state (same as attack)
-	// If control_up is already IGNORE (set by parry()), keep it and sync control_up_p2
-	if (control_up == CONTROL_IGNORE) {
-		control_up_p2 = CONTROL_IGNORE;
 	}
 	
 	// Apply control to Guard (Char should already be set to Guard)

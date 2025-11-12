@@ -1069,6 +1069,12 @@ void swordfight() {
 	if (control_down == CONTROL_HELD) {
 		if (frame == frame_158_stand_with_sword || frame == frame_170_stand_with_sword || frame == frame_171_stand_with_sword) {
 			control_down = CONTROL_IGNORE; // disable automatic repeat
+			// Multiplayer: Also set control_down_p2 to IGNORE to prevent repeat
+			extern word is_multiplayer_mode;
+			extern sbyte control_down_p2;
+			if (is_multiplayer_mode && charid >= charid_2_guard) {
+				control_down_p2 = CONTROL_IGNORE; // Prevent repeat for Player 2
+			}
 			Char.sword = sword_0_sheathed;
 			// Multiplayer: For Player 2, reset attack state when sheathing sword
 			// This allows re-entering attack stance after sheathing
