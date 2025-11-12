@@ -978,6 +978,12 @@ void forward_with_sword() {
 void draw_sword() {
 	word seq_id = seq_55_draw_sword; // draw sword
 	control_forward = control_shift2 = release_arrows();
+	// Multiplayer: Also set control_shift2_p2 to IGNORE to prevent repeat
+	extern word is_multiplayer_mode;
+	extern sbyte control_shift2_p2;
+	if (is_multiplayer_mode && Char.charid >= charid_2_guard) {
+		control_shift2_p2 = CONTROL_IGNORE; // Prevent repeat for Player 2
+	}
 #ifdef FIX_UNINTENDED_SWORD_STRIKE
 	if (fixes->fix_unintended_sword_strike) {
 		ctrl1_shift2 = CONTROL_IGNORE; // prevent restoring control_shift2 to CONTROL_HELD in rest_ctrl_1()
@@ -1128,6 +1134,12 @@ void sword_strike() {
 		return;
 	}
 	control_shift2 = CONTROL_IGNORE; // disable automatic repeat
+	// Multiplayer: Also set control_shift2_p2 to IGNORE to prevent repeat
+	extern word is_multiplayer_mode;
+	extern sbyte control_shift2_p2;
+	if (is_multiplayer_mode && Char.charid >= charid_2_guard) {
+		control_shift2_p2 = CONTROL_IGNORE; // Prevent repeat for Player 2
+	}
 	seqtbl_offset_char(seq_id);
 }
 
@@ -1145,7 +1157,9 @@ void parry() {
 		char_frame == frame_168_back || // back?
 		char_frame == frame_165_walk_with_sword // walk with sword
 	) {
-		if (char_opp_dist() >= 32 && char_charid != charid_0_kid) {
+		// Multiplayer: Allow parry for Player 2 even when opponent is far away
+		extern word is_multiplayer_mode;
+		if (char_opp_dist() >= 32 && char_charid != charid_0_kid && !(is_multiplayer_mode && char_charid >= charid_2_guard)) {
 			back_with_sword();
 			return;
 		} else if (char_charid == charid_0_kid) {
@@ -1163,13 +1177,24 @@ void parry() {
 				}
 			}
 		} else {
-			if (opp_frame != frame_152_strike_2) return;
+			// Multiplayer: Allow parry for Player 2 even if opponent is not striking
+			if (is_multiplayer_mode && char_charid >= charid_2_guard) {
+				// Allow parry for Player 2 - don't check opponent frame
+			} else if (opp_frame != frame_152_strike_2) {
+				return;
+			}
 		}
 	} else {
 		if (char_frame != frame_167_blocked) return;
 		seq_id = seq_61_parry_after_strike; // parry after striking with sword
 	}
 	control_up = CONTROL_IGNORE; // disable automatic repeat
+	// Multiplayer: Also set control_up_p2 to IGNORE to prevent repeat
+	extern word is_multiplayer_mode;
+	extern sbyte control_up_p2;
+	if (is_multiplayer_mode && Char.charid >= charid_2_guard) {
+		control_up_p2 = CONTROL_IGNORE; // Prevent repeat for Player 2
+	}
 	seqtbl_offset_char(seq_id);
 	if (do_play_seq) {
 		play_seq();
