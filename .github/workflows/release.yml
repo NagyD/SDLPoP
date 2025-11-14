@@ -151,7 +151,7 @@ jobs:
         retention-days: 30
 
   build-windows:
-    name: Build Windows
+    name: Build Windows x86_64
     runs-on: windows-latest
     
     steps:
@@ -297,31 +297,346 @@ jobs:
         path: SDLPoP-*.zip
         retention-days: 30
 
+  build-windows-32:
+    name: Build Windows x86 (32-bit)
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Install MSYS2 and dependencies
+      uses: msys2/setup-msys2@v2
+      with:
+        update: true
+        install: >-
+          mingw-w64-i686-gcc
+          mingw-w64-i686-SDL2
+          mingw-w64-i686-SDL2_image
+          make
+          zip
+    
+    - name: Build SDLPoP (32-bit)
+      shell: msys2 {0}
+      working-directory: src
+      run: |
+        export SDL2=/mingw32
+        export SDL2INC=/mingw32/include/SDL2
+        export SDL2LIB=/mingw32/lib
+        export PATH=/mingw32/bin:$PATH
+        
+        # Compile all source files (32-bit)
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c main.c -o main.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c data.c -o data.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c seg000.c -o seg000.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c seg001.c -o seg001.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c seg002.c -o seg002.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c seg003.c -o seg003.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c seg004.c -o seg004.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c seg005.c -o seg005.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c seg006.c -o seg006.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c seg007.c -o seg007.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c seg008.c -o seg008.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c seg009.c -o seg009.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c seqtbl.c -o seqtbl.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c replay.c -o replay.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c options.c -o options.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c lighting.c -o lighting.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c screenshot.c -o screenshot.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c menu.c -o menu.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c midi.c -o midi.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c opl3.c -o opl3.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c stb_vorbis.c -o stb_vorbis.o
+        
+        # Link (32-bit)
+        gcc -mwindows main.o data.o seg000.o seg001.o seg002.o seg003.o seg004.o seg005.o seg006.o seg007.o seg008.o seg009.o seqtbl.o replay.o options.o lighting.o screenshot.o menu.o midi.o opl3.o stb_vorbis.o -L"$SDL2LIB" -Wl,--whole-archive -lSDL2main -Wl,--no-whole-archive -lSDL2 -lSDL2_image -lm -o ../prince.exe
+    
+    - name: Verify build output (32-bit)
+      shell: msys2 {0}
+      run: |
+        if [ ! -f prince.exe ]; then
+          echo "Error: prince.exe not found in root directory"
+          echo "Contents of root directory:"
+          ls -la
+          echo "Contents of src directory:"
+          ls -la src/
+          exit 1
+        fi
+        echo "✓ Build successful: prince.exe found"
+        file prince.exe
+        ls -lh prince.exe
+    
+    - name: Create release package (32-bit)
+      shell: msys2 {0}
+      working-directory: .
+      run: |
+        version="${{ github.ref_name }}"
+        version=${version#v}  # Remove 'v' prefix if present
+        zipName="SDLPoP-${version}-Windows-x86.zip"
+        
+        # Create release directory
+        mkdir -p release
+        
+        # Verify and copy executable
+        if [ ! -f prince.exe ]; then
+          echo "Error: prince.exe not found"
+          exit 1
+        fi
+        cp prince.exe release/
+        echo "✓ Copied prince.exe"
+        
+        # Verify and copy DLLs from MSYS2 installation (32-bit)
+        if [ ! -f /mingw32/bin/SDL2.dll ]; then
+          echo "Error: SDL2.dll not found at /mingw32/bin/SDL2.dll"
+          echo "Searching for SDL2.dll..."
+          find /mingw32 -name "SDL2.dll" 2>/dev/null || true
+          exit 1
+        fi
+        if [ ! -f /mingw32/bin/SDL2_image.dll ]; then
+          echo "Error: SDL2_image.dll not found at /mingw32/bin/SDL2_image.dll"
+          echo "Searching for SDL2_image.dll..."
+          find /mingw32 -name "SDL2_image.dll" 2>/dev/null || true
+          exit 1
+        fi
+        cp /mingw32/bin/SDL2.dll release/
+        cp /mingw32/bin/SDL2_image.dll release/
+        echo "✓ Copied SDL2 DLLs (32-bit)"
+        
+        # Verify and copy data directory
+        if [ ! -d data ]; then
+          echo "Error: data directory not found"
+          exit 1
+        fi
+        cp -r data release/
+        echo "✓ Copied data directory"
+        
+        # Copy config file (optional)
+        if [ -f SDLPoP.ini ]; then
+          cp SDLPoP.ini release/
+          echo "✓ Copied SDLPoP.ini"
+        else
+          echo "# SDLPoP Configuration" > release/SDLPoP.ini
+          echo "✓ Created default SDLPoP.ini"
+        fi
+        
+        # Copy README (optional)
+        if [ -f doc/Readme.txt ]; then
+          cp doc/Readme.txt release/README.txt
+          echo "✓ Copied README.txt"
+        fi
+        
+        # Create zip using zip command
+        cd release
+        zip -r "../$zipName" . -q
+        cd ..
+        
+        if [ ! -f "$zipName" ]; then
+          echo "Error: Failed to create zip file"
+          exit 1
+        fi
+        
+        echo "✓ Created $zipName"
+        ls -lh "$zipName"
+    
+    - name: Upload Windows 32-bit zip artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: SDLPoP-Windows-x86
+        path: SDLPoP-*-Windows-x86.zip
+        retention-days: 30
+
+  build-linux-arm64:
+    name: Build Linux ARM64
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install dependencies and cross-compiler
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          build-essential \
+          gcc-aarch64-linux-gnu \
+          g++-aarch64-linux-gnu \
+          libsdl2-dev:arm64 \
+          libsdl2-image-dev:arm64 \
+          pkg-config-aarch64-linux-gnu \
+          wget \
+          file \
+          fuse
+    
+    - name: Build SDLPoP (ARM64)
+      working-directory: src
+      run: |
+        # Set up cross-compilation paths
+        export CC=aarch64-linux-gnu-gcc
+        export PKG_CONFIG=aarch64-linux-gnu-pkg-config
+        export SDL2_CFLAGS=$(aarch64-linux-gnu-pkg-config --cflags sdl2 SDL2_image)
+        export SDL2_LIBS=$(aarch64-linux-gnu-pkg-config --libs sdl2 SDL2_image)
+        
+        # Compile all source files (ARM64)
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c main.c -o main.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c data.c -o data.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c seg000.c -o seg000.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c seg001.c -o seg001.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c seg002.c -o seg002.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c seg003.c -o seg003.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c seg004.c -o seg004.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c seg005.c -o seg005.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c seg006.c -o seg006.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c seg007.c -o seg007.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c seg008.c -o seg008.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c seg009.c -o seg009.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c seqtbl.c -o seqtbl.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c replay.c -o replay.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c options.c -o options.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c lighting.c -o lighting.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c screenshot.c -o screenshot.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c menu.c -o menu.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c midi.c -o midi.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c opl3.c -o opl3.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c stb_vorbis.c -o stb_vorbis.o
+        
+        # Link (ARM64)
+        $CC main.o data.o seg000.o seg001.o seg002.o seg003.o seg004.o seg005.o seg006.o seg007.o seg008.o seg009.o seqtbl.o replay.o options.o lighting.o screenshot.o menu.o midi.o opl3.o stb_vorbis.o $SDL2_LIBS -lm -o ../prince
+    
+    - name: Verify build output (ARM64)
+      run: |
+        if [ ! -f prince ]; then
+          echo "Error: prince binary not found in root directory"
+          echo "Contents of root directory:"
+          ls -la
+          echo "Contents of src directory:"
+          ls -la src/
+          exit 1
+        fi
+        echo "✓ Build successful: prince binary found"
+        file prince
+        # Verify it's ARM64
+        if ! file prince | grep -q "ARM aarch64"; then
+          echo "Warning: Binary might not be ARM64"
+        fi
+    
+    - name: Download linuxdeploy for ARM64
+      run: |
+        # Note: linuxdeploy may not have ARM64 AppImage, so we'll create a tarball instead
+        echo "Creating ARM64 tarball package"
+    
+    - name: Create ARM64 package
+      run: |
+        version="${{ github.ref_name }}"
+        version=${version#v}  # Remove 'v' prefix if present
+        packageName="SDLPoP-${version}-Linux-ARM64.tar.gz"
+        
+        # Create package directory
+        mkdir -p package/usr/bin
+        mkdir -p package/usr/share/applications
+        mkdir -p package/usr/share/icons/hicolor/256x256/apps
+        
+        # Copy binary
+        if [ ! -f prince ]; then
+          echo "Error: prince binary not found"
+          exit 1
+        fi
+        cp prince package/usr/bin/
+        chmod +x package/usr/bin/prince
+        
+        # Copy data directory
+        if [ ! -d data ]; then
+          echo "Error: data directory not found"
+          exit 1
+        fi
+        cp -r data package/usr/bin/
+        
+        # Copy config file (optional)
+        if [ -f SDLPoP.ini ]; then
+          cp SDLPoP.ini package/usr/bin/
+        else
+          echo "# SDLPoP Configuration" > package/usr/bin/SDLPoP.ini
+        fi
+        
+        # Copy README (optional)
+        if [ -f doc/Readme.txt ]; then
+          cp doc/Readme.txt package/usr/bin/README.txt
+        else
+          echo "SDLPoP" > package/usr/bin/README.txt
+        fi
+        
+        # Create desktop file
+        cat > package/usr/share/applications/sdlpop.desktop << 'EOF'
+        [Desktop Entry]
+        Type=Application
+        Name=SDLPoP
+        Comment=Prince of Persia port
+        Exec=prince
+        Icon=sdlpop
+        Categories=Game;
+        EOF
+        
+        # Copy icon (if exists)
+        if [ -f data/icon.png ]; then
+          cp data/icon.png package/usr/share/icons/hicolor/256x256/apps/sdlpop.png
+        fi
+        
+        # Create tarball
+        tar -czf "$packageName" -C package .
+        
+        if [ ! -f "$packageName" ]; then
+          echo "Error: Failed to create tarball"
+          exit 1
+        fi
+        
+        echo "✓ Created $packageName"
+        ls -lh "$packageName"
+    
+    - name: Upload ARM64 artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: SDLPoP-Linux-ARM64
+        path: SDLPoP-*-Linux-ARM64.tar.gz
+        retention-days: 30
+
   create-release:
     name: Create GitHub Release
-    needs: [build-linux, build-windows]
+    needs: [build-linux, build-windows, build-windows-32, build-linux-arm64]
     runs-on: ubuntu-latest
     if: github.event_name == 'release' || startsWith(github.ref, 'refs/tags/')
     
     steps:
-    - name: Download Linux artifact
+    - name: Download Linux x86_64 artifact
       uses: actions/download-artifact@v4
       with:
         name: SDLPoP-Linux-AppImage
-        path: artifacts/linux
+        path: artifacts/linux-x86_64
     
-    - name: Download Windows artifact
+    - name: Download Windows x86_64 artifact
       uses: actions/download-artifact@v4
       with:
         name: SDLPoP-Windows-x86_64
-        path: artifacts/windows
+        path: artifacts/windows-x86_64
+    
+    - name: Download Windows x86 artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: SDLPoP-Windows-x86
+        path: artifacts/windows-x86
+    
+    - name: Download Linux ARM64 artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: SDLPoP-Linux-ARM64
+        path: artifacts/linux-arm64
     
     - name: Upload to Release
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          artifacts/linux/*
-          artifacts/windows/*
+          artifacts/linux-x86_64/*
+          artifacts/windows-x86_64/*
+          artifacts/windows-x86/*
+          artifacts/linux-arm64/*
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
