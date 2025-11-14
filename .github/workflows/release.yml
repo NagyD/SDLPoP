@@ -1,0 +1,215 @@
+name: Build Release
+
+on:
+  release:
+    types: [published, created]
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-linux:
+    name: Build Linux AppImage
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          build-essential \
+          libsdl2-dev \
+          libsdl2-image-dev \
+          wget \
+          file \
+          fuse
+    
+    - name: Build SDLPoP
+      working-directory: src
+      run: |
+        make clean
+        make all
+    
+    - name: Download linuxdeploy
+      run: |
+        wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+        chmod +x linuxdeploy-x86_64.AppImage
+    
+    - name: Create AppDir structure
+      run: |
+        mkdir -p AppDir/usr/bin
+        mkdir -p AppDir/usr/share/applications
+        mkdir -p AppDir/usr/share/icons/hicolor/256x256/apps
+        cp prince AppDir/usr/bin/
+        cp -r ../data AppDir/usr/bin/
+        cp ../SDLPoP.ini AppDir/usr/bin/ 2>/dev/null || echo "# SDLPoP Configuration" > AppDir/usr/bin/SDLPoP.ini
+        cp ../doc/Readme.txt AppDir/usr/bin/README.txt 2>/dev/null || echo "SDLPoP" > AppDir/usr/bin/README.txt
+    
+    - name: Create desktop file
+      run: |
+        cat > AppDir/usr/share/applications/sdlpop.desktop << 'EOF'
+        [Desktop Entry]
+        Type=Application
+        Name=SDLPoP
+        Comment=Prince of Persia port
+        Exec=prince
+        Icon=sdlpop
+        Categories=Game;
+        EOF
+    
+    - name: Copy icon (if exists)
+      run: |
+        if [ -f data/icon.png ]; then
+          cp data/icon.png AppDir/usr/share/icons/hicolor/256x256/apps/sdlpop.png
+        fi
+    
+    - name: Create AppImage
+      env:
+        VERSION: ${{ github.ref_name }}
+      run: |
+        export VERSION=${VERSION#v}  # Remove 'v' prefix if present
+        export ARCH=x86_64
+        ./linuxdeploy-x86_64.AppImage \
+          --appdir AppDir \
+          --executable AppDir/usr/bin/prince \
+          --desktop-file AppDir/usr/share/applications/sdlpop.desktop \
+          --icon-file AppDir/usr/share/icons/hicolor/256x256/apps/sdlpop.png \
+          --output appimage
+        mv SDLPoP-*.AppImage SDLPoP-${VERSION}-x86_64.AppImage || mv *.AppImage SDLPoP-${VERSION}-x86_64.AppImage
+    
+    - name: Upload AppImage artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: SDLPoP-Linux-AppImage
+        path: src/SDLPoP-*.AppImage
+        retention-days: 30
+
+  build-windows:
+    name: Build Windows
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Install MSYS2 and dependencies
+      uses: msys2/setup-msys2@v2
+      with:
+        update: true
+        install: >-
+          mingw-w64-x86_64-gcc
+          mingw-w64-x86_64-SDL2
+          mingw-w64-x86_64-SDL2_image
+          make
+    
+    - name: Build SDLPoP
+      shell: msys2 {0}
+      working-directory: src
+      run: |
+        export SDL2=/mingw64
+        export SDL2INC=/mingw64/include/SDL2
+        export SDL2LIB=/mingw64/lib
+        export PATH=/mingw64/bin:$PATH
+        
+        # Compile all source files
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c main.c -o main.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c data.c -o data.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c seg000.c -o seg000.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c seg001.c -o seg001.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c seg002.c -o seg002.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c seg003.c -o seg003.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c seg004.c -o seg004.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c seg005.c -o seg005.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c seg006.c -o seg006.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c seg007.c -o seg007.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c seg008.c -o seg008.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c seg009.c -o seg009.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c seqtbl.c -o seqtbl.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c replay.c -o replay.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c options.c -o options.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c lighting.c -o lighting.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c screenshot.c -o screenshot.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c menu.c -o menu.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c midi.c -o midi.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c opl3.c -o opl3.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c stb_vorbis.c -o stb_vorbis.o
+        
+        # Link
+        gcc -mwindows main.o data.o seg000.o seg001.o seg002.o seg003.o seg004.o seg005.o seg006.o seg007.o seg008.o seg009.o seqtbl.o replay.o options.o lighting.o screenshot.o menu.o midi.o opl3.o stb_vorbis.o -L"$SDL2LIB" -Wl,--whole-archive -lSDL2main -Wl,--no-whole-archive -lSDL2 -lSDL2_image -lm -o ../prince.exe
+    
+    - name: Create release package
+      shell: powershell
+      working-directory: .
+      run: |
+        $version = "${{ github.ref_name }}"
+        $version = $version -replace '^v', ''  # Remove 'v' prefix if present
+        $zipName = "SDLPoP-$version-Windows-x86_64.zip"
+        
+        # Create release directory
+        New-Item -ItemType Directory -Force -Path "release" | Out-Null
+        
+        # Copy executable
+        Copy-Item "prince.exe" -Destination "release/"
+        
+        # Copy DLLs
+        Copy-Item "/mingw64/bin/SDL2.dll" -Destination "release/"
+        Copy-Item "/mingw64/bin/SDL2_image.dll" -Destination "release/"
+        
+        # Copy data directory
+        Copy-Item "data" -Destination "release/data" -Recurse
+        
+        # Copy config file if exists
+        if (Test-Path "SDLPoP.ini") {
+          Copy-Item "SDLPoP.ini" -Destination "release/"
+        } else {
+          "# SDLPoP Configuration" | Out-File -FilePath "release/SDLPoP.ini" -Encoding utf8
+        }
+        
+        # Copy README
+        if (Test-Path "doc/Readme.txt") {
+          Copy-Item "doc/Readme.txt" -Destination "release/README.txt"
+        }
+        
+        # Create zip
+        Compress-Archive -Path "release/*" -DestinationPath $zipName -Force
+        
+        Write-Host "Created $zipName"
+    
+    - name: Upload Windows zip artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: SDLPoP-Windows-x86_64
+        path: SDLPoP-*.zip
+        retention-days: 30
+
+  create-release:
+    name: Create GitHub Release
+    needs: [build-linux, build-windows]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release' || startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+    - name: Download Linux artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: SDLPoP-Linux-AppImage
+        path: artifacts/linux
+    
+    - name: Download Windows artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: SDLPoP-Windows-x86_64
+        path: artifacts/windows
+    
+    - name: Upload to Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          artifacts/linux/*
+          artifacts/windows/*
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
