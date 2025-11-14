@@ -118,7 +118,30 @@ jobs:
           --desktop-file AppDir/usr/share/applications/sdlpop.desktop \
           --icon-file AppDir/usr/share/icons/hicolor/256x256/apps/sdlpop.png \
           --output appimage
-        mv SDLPoP-*.AppImage SDLPoP-${VERSION}-x86_64.AppImage || mv *.AppImage SDLPoP-${VERSION}-x86_64.AppImage
+        
+        # Find the created AppImage and rename if needed
+        APPIMAGE=$(ls SDLPoP-*.AppImage 2>/dev/null | head -n 1)
+        TARGET_NAME="SDLPoP-${VERSION}-x86_64.AppImage"
+        
+        if [ -z "$APPIMAGE" ]; then
+          echo "Error: No AppImage file found"
+          exit 1
+        fi
+        
+        if [ "$APPIMAGE" != "$TARGET_NAME" ]; then
+          echo "Renaming $APPIMAGE to $TARGET_NAME"
+          mv "$APPIMAGE" "$TARGET_NAME"
+        else
+          echo "AppImage already has correct name: $TARGET_NAME"
+        fi
+        
+        # Verify the final file exists
+        if [ ! -f "$TARGET_NAME" ]; then
+          echo "Error: Final AppImage file not found: $TARGET_NAME"
+          exit 1
+        fi
+        echo "✓ Created $TARGET_NAME"
+        ls -lh "$TARGET_NAME"
     
     - name: Upload AppImage artifact
       uses: actions/upload-artifact@v4
@@ -253,9 +276,9 @@ jobs:
           echo "✓ Copied README.txt"
         fi
         
-        # Create zip using PowerShell (better compression on Windows)
+        # Create zip using zip command (avoids PowerShell nesting issues)
         cd release
-        powershell.exe -Command "Compress-Archive -Path * -DestinationPath ../$zipName -Force"
+        zip -r "../$zipName" . -q
         cd ..
         
         if [ ! -f "$zipName" ]; then
