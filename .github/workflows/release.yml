@@ -523,8 +523,10 @@ jobs:
         cd SDL2-2.30.0
         export CC=aarch64-linux-gnu-gcc
         export CXX=aarch64-linux-gnu-g++
-        export PKG_CONFIG_PATH=/usr/aarch64-linux-gnu/lib/pkgconfig
-        ./configure --host=aarch64-linux-gnu --prefix=/usr/aarch64-linux-gnu --disable-shared --enable-static --disable-pkg-config
+        # Unset PKG_CONFIG to prevent it from trying to find packages
+        unset PKG_CONFIG
+        unset PKG_CONFIG_PATH
+        ./configure --host=aarch64-linux-gnu --prefix=/usr/aarch64-linux-gnu --disable-shared --enable-static --without-x --disable-video-x11
         make -j$(nproc)
         sudo make install
         
@@ -534,10 +536,12 @@ jobs:
         cd SDL2_image-2.8.2
         export CC=aarch64-linux-gnu-gcc
         export CXX=aarch64-linux-gnu-g++
-        export PKG_CONFIG_PATH=/usr/aarch64-linux-gnu/lib/pkgconfig
+        # Unset PKG_CONFIG to prevent it from trying to find packages
+        unset PKG_CONFIG
+        unset PKG_CONFIG_PATH
         export SDL2_CFLAGS="-I/usr/aarch64-linux-gnu/include/SDL2"
         export SDL2_LIBS="-L/usr/aarch64-linux-gnu/lib -lSDL2"
-        ./configure --host=aarch64-linux-gnu --prefix=/usr/aarch64-linux-gnu --with-sdl-prefix=/usr/aarch64-linux-gnu --disable-shared --enable-static --disable-pkg-config
+        ./configure --host=aarch64-linux-gnu --prefix=/usr/aarch64-linux-gnu --with-sdl-prefix=/usr/aarch64-linux-gnu --disable-shared --enable-static --without-x --disable-png-shared --disable-jpg-shared --disable-tif-shared --disable-webp-shared
         make -j$(nproc)
         sudo make install
     
