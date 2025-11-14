@@ -33,6 +33,19 @@ jobs:
         make clean
         make all
     
+    - name: Verify build output
+      run: |
+        if [ ! -f prince ]; then
+          echo "Error: prince binary not found in root directory"
+          echo "Contents of root directory:"
+          ls -la
+          echo "Contents of src directory:"
+          ls -la src/
+          exit 1
+        fi
+        echo "✓ Build successful: prince binary found"
+        file prince
+    
     - name: Download linuxdeploy
       run: |
         wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
@@ -43,10 +56,37 @@ jobs:
         mkdir -p AppDir/usr/bin
         mkdir -p AppDir/usr/share/applications
         mkdir -p AppDir/usr/share/icons/hicolor/256x256/apps
-        cp src/prince AppDir/usr/bin/
+        
+        # Copy binary (Makefile outputs to ../prince, which is root)
+        if [ ! -f prince ]; then
+          echo "Error: prince binary not found"
+          exit 1
+        fi
+        cp prince AppDir/usr/bin/
+        chmod +x AppDir/usr/bin/prince
+        
+        # Copy data directory
+        if [ ! -d data ]; then
+          echo "Error: data directory not found"
+          exit 1
+        fi
         cp -r data AppDir/usr/bin/
-        cp SDLPoP.ini AppDir/usr/bin/ 2>/dev/null || echo "# SDLPoP Configuration" > AppDir/usr/bin/SDLPoP.ini
-        cp doc/Readme.txt AppDir/usr/bin/README.txt 2>/dev/null || echo "SDLPoP" > AppDir/usr/bin/README.txt
+        
+        # Copy config file (optional)
+        if [ -f SDLPoP.ini ]; then
+          cp SDLPoP.ini AppDir/usr/bin/
+        else
+          echo "# SDLPoP Configuration" > AppDir/usr/bin/SDLPoP.ini
+        fi
+        
+        # Copy README (optional)
+        if [ -f doc/Readme.txt ]; then
+          cp doc/Readme.txt AppDir/usr/bin/README.txt
+        else
+          echo "SDLPoP" > AppDir/usr/bin/README.txt
+        fi
+        
+        echo "✓ AppDir structure created successfully"
     
     - name: Create desktop file
       run: |
@@ -140,6 +180,20 @@ jobs:
         # Link
         gcc -mwindows main.o data.o seg000.o seg001.o seg002.o seg003.o seg004.o seg005.o seg006.o seg007.o seg008.o seg009.o seqtbl.o replay.o options.o lighting.o screenshot.o menu.o midi.o opl3.o stb_vorbis.o -L"$SDL2LIB" -Wl,--whole-archive -lSDL2main -Wl,--no-whole-archive -lSDL2 -lSDL2_image -lm -o ../prince.exe
     
+    - name: Verify build output
+      shell: msys2 {0}
+      run: |
+        if [ ! -f prince.exe ]; then
+          echo "Error: prince.exe not found in root directory"
+          echo "Contents of root directory:"
+          ls -la
+          echo "Contents of src directory:"
+          ls -la src/
+          exit 1
+        fi
+        echo "✓ Build successful: prince.exe found"
+        ls -lh prince.exe
+    
     - name: Create release package
       shell: msys2 {0}
       working-directory: .
@@ -151,26 +205,52 @@ jobs:
         # Create release directory
         mkdir -p release
         
-        # Copy executable
+        # Verify and copy executable
+        if [ ! -f prince.exe ]; then
+          echo "Error: prince.exe not found"
+          exit 1
+        fi
         cp prince.exe release/
+        echo "✓ Copied prince.exe"
         
-        # Copy DLLs from MSYS2 installation
+        # Verify and copy DLLs from MSYS2 installation
+        if [ ! -f /mingw64/bin/SDL2.dll ]; then
+          echo "Error: SDL2.dll not found at /mingw64/bin/SDL2.dll"
+          echo "Searching for SDL2.dll..."
+          find /mingw64 -name "SDL2.dll" 2>/dev/null || true
+          exit 1
+        fi
+        if [ ! -f /mingw64/bin/SDL2_image.dll ]; then
+          echo "Error: SDL2_image.dll not found at /mingw64/bin/SDL2_image.dll"
+          echo "Searching for SDL2_image.dll..."
+          find /mingw64 -name "SDL2_image.dll" 2>/dev/null || true
+          exit 1
+        fi
         cp /mingw64/bin/SDL2.dll release/
         cp /mingw64/bin/SDL2_image.dll release/
+        echo "✓ Copied SDL2 DLLs"
         
-        # Copy data directory
+        # Verify and copy data directory
+        if [ ! -d data ]; then
+          echo "Error: data directory not found"
+          exit 1
+        fi
         cp -r data release/
+        echo "✓ Copied data directory"
         
-        # Copy config file if exists
+        # Copy config file (optional)
         if [ -f SDLPoP.ini ]; then
           cp SDLPoP.ini release/
+          echo "✓ Copied SDLPoP.ini"
         else
           echo "# SDLPoP Configuration" > release/SDLPoP.ini
+          echo "✓ Created default SDLPoP.ini"
         fi
         
-        # Copy README
+        # Copy README (optional)
         if [ -f doc/Readme.txt ]; then
           cp doc/Readme.txt release/README.txt
+          echo "✓ Copied README.txt"
         fi
         
         # Create zip using PowerShell (better compression on Windows)
@@ -178,7 +258,13 @@ jobs:
         powershell.exe -Command "Compress-Archive -Path * -DestinationPath ../$zipName -Force"
         cd ..
         
-        echo "Created $zipName"
+        if [ ! -f "$zipName" ]; then
+          echo "Error: Failed to create zip file"
+          exit 1
+        fi
+        
+        echo "✓ Created $zipName"
+        ls -lh "$zipName"
     
     - name: Upload Windows zip artifact
       uses: actions/upload-artifact@v4
