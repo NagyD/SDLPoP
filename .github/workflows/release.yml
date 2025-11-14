@@ -2,7 +2,7 @@ name: Build Release
 
 on:
   release:
-    types: [published, created]
+    types: [published]
   push:
     tags:
       - 'v*'
@@ -43,10 +43,10 @@ jobs:
         mkdir -p AppDir/usr/bin
         mkdir -p AppDir/usr/share/applications
         mkdir -p AppDir/usr/share/icons/hicolor/256x256/apps
-        cp prince AppDir/usr/bin/
-        cp -r ../data AppDir/usr/bin/
-        cp ../SDLPoP.ini AppDir/usr/bin/ 2>/dev/null || echo "# SDLPoP Configuration" > AppDir/usr/bin/SDLPoP.ini
-        cp ../doc/Readme.txt AppDir/usr/bin/README.txt 2>/dev/null || echo "SDLPoP" > AppDir/usr/bin/README.txt
+        cp src/prince AppDir/usr/bin/
+        cp -r data AppDir/usr/bin/
+        cp SDLPoP.ini AppDir/usr/bin/ 2>/dev/null || echo "# SDLPoP Configuration" > AppDir/usr/bin/SDLPoP.ini
+        cp doc/Readme.txt AppDir/usr/bin/README.txt 2>/dev/null || echo "SDLPoP" > AppDir/usr/bin/README.txt
     
     - name: Create desktop file
       run: |
@@ -84,7 +84,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: SDLPoP-Linux-AppImage
-        path: src/SDLPoP-*.AppImage
+        path: SDLPoP-*.AppImage
         retention-days: 30
 
   build-windows:
