@@ -326,6 +326,7 @@ jobs:
     - name: Install build dependencies for SDL2_image
       shell: msys2 {0}
       run: |
+        # Try to install build dependencies, but don't fail if some are missing
         pacman -S --noconfirm --needed \
           mingw-w64-i686-autotools \
           mingw-w64-i686-libpng \
@@ -334,7 +335,8 @@ jobs:
           mingw-w64-i686-libwebp \
           wget \
           tar \
-          make || echo "Some packages may not be available"
+          make 2>&1 | grep -v "target not found" || true
+        echo "Build dependencies installation completed"
     
     - name: Build SDL2_image from source (32-bit)
       shell: msys2 {0}
@@ -505,7 +507,12 @@ jobs:
           pkg-config \
           wget \
           file \
-          fuse
+          fuse \
+          autoconf \
+          automake \
+          libtool \
+          cmake \
+          ninja-build
     
     - name: Build SDL2 from source for ARM64
       run: |
@@ -514,7 +521,10 @@ jobs:
         wget -q https://github.com/libsdl-org/SDL/releases/download/release-2.30.0/SDL2-2.30.0.tar.gz
         tar -xzf SDL2-2.30.0.tar.gz
         cd SDL2-2.30.0
-        ./configure --host=aarch64-linux-gnu --prefix=/usr/aarch64-linux-gnu --disable-shared --enable-static
+        export CC=aarch64-linux-gnu-gcc
+        export CXX=aarch64-linux-gnu-g++
+        export PKG_CONFIG_PATH=/usr/aarch64-linux-gnu/lib/pkgconfig
+        ./configure --host=aarch64-linux-gnu --prefix=/usr/aarch64-linux-gnu --disable-shared --enable-static --disable-pkg-config
         make -j$(nproc)
         sudo make install
         
@@ -522,7 +532,12 @@ jobs:
         wget -q https://github.com/libsdl-org/SDL_image/releases/download/release-2.8.2/SDL2_image-2.8.2.tar.gz
         tar -xzf SDL2_image-2.8.2.tar.gz
         cd SDL2_image-2.8.2
-        ./configure --host=aarch64-linux-gnu --prefix=/usr/aarch64-linux-gnu --with-sdl-prefix=/usr/aarch64-linux-gnu --disable-shared --enable-static
+        export CC=aarch64-linux-gnu-gcc
+        export CXX=aarch64-linux-gnu-g++
+        export PKG_CONFIG_PATH=/usr/aarch64-linux-gnu/lib/pkgconfig
+        export SDL2_CFLAGS="-I/usr/aarch64-linux-gnu/include/SDL2"
+        export SDL2_LIBS="-L/usr/aarch64-linux-gnu/lib -lSDL2"
+        ./configure --host=aarch64-linux-gnu --prefix=/usr/aarch64-linux-gnu --with-sdl-prefix=/usr/aarch64-linux-gnu --disable-shared --enable-static --disable-pkg-config
         make -j$(nproc)
         sudo make install
     
