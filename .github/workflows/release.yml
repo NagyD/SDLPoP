@@ -51,6 +51,11 @@ jobs:
         wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
         chmod +x linuxdeploy-x86_64.AppImage
     
+    - name: Download linuxdeploy SDL2 plugin
+      run: |
+        wget -q https://github.com/linuxdeploy/linuxdeploy-plugin-sdl2/releases/download/continuous/linuxdeploy-plugin-sdl2-x86_64.AppImage
+        chmod +x linuxdeploy-plugin-sdl2-x86_64.AppImage
+    
     - name: Create AppDir structure
       run: |
         mkdir -p AppDir/usr/bin
@@ -117,6 +122,7 @@ jobs:
           --executable AppDir/usr/bin/prince \
           --desktop-file AppDir/usr/share/applications/sdlpop.desktop \
           --icon-file AppDir/usr/share/icons/hicolor/256x256/apps/sdlpop.png \
+          --plugin sdl2 \
           --output appimage
         
         # Find the created AppImage and rename if needed
@@ -142,6 +148,15 @@ jobs:
         fi
         echo "✓ Created $TARGET_NAME"
         ls -lh "$TARGET_NAME"
+        
+        # Verify that SDL2 libraries are bundled
+        echo "Verifying bundled libraries..."
+        ./"$TARGET_NAME" --appimage-extract 2>/dev/null || true
+        if [ -d "squashfs-root" ]; then
+          echo "Checking for SDL2 libraries in AppImage..."
+          find squashfs-root/usr/lib -name "*SDL2*" -type f 2>/dev/null | head -10 || echo "Note: Libraries may be in different location"
+          rm -rf squashfs-root
+        fi
     
     - name: Upload AppImage artifact
       uses: actions/upload-artifact@v4
