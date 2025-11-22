@@ -24,6 +24,7 @@ jobs:
           libsdl2-dev \
           libsdl2-image-dev \
           wget \
+          curl \
           file \
           fuse
     
@@ -53,8 +54,25 @@ jobs:
     
     - name: Download linuxdeploy SDL2 plugin
       run: |
-        wget -q https://github.com/linuxdeploy/linuxdeploy-plugin-sdl2/releases/download/continuous/linuxdeploy-plugin-sdl2-x86_64.AppImage
-        chmod +x linuxdeploy-plugin-sdl2-x86_64.AppImage
+        # Try to download the plugin with curl (better redirect handling)
+        # If it fails, we'll use linuxdeploy's built-in SDL2 detection
+        if curl -L -f -o linuxdeploy-plugin-sdl2-x86_64.AppImage https://github.com/linuxdeploy/linuxdeploy-plugin-sdl2/releases/download/continuous/linuxdeploy-plugin-sdl2-x86_64.AppImage; then
+          chmod +x linuxdeploy-plugin-sdl2-x86_64.AppImage
+          echo "✓ SDL2 plugin downloaded successfully"
+          echo "PLUGIN_AVAILABLE=true" >> $GITHUB_ENV
+        else
+          echo "⚠ SDL2 plugin not available at continuous release"
+          echo "⚠ Trying alternative: latest release..."
+          # Try latest release instead of continuous
+          if curl -L -f -o linuxdeploy-plugin-sdl2-x86_64.AppImage https://github.com/linuxdeploy/linuxdeploy-plugin-sdl2/releases/latest/download/linuxdeploy-plugin-sdl2-x86_64.AppImage; then
+            chmod +x linuxdeploy-plugin-sdl2-x86_64.AppImage
+            echo "✓ SDL2 plugin downloaded from latest release"
+            echo "PLUGIN_AVAILABLE=true" >> $GITHUB_ENV
+          else
+            echo "⚠ SDL2 plugin not available, linuxdeploy will use built-in SDL2 detection"
+            echo "PLUGIN_AVAILABLE=false" >> $GITHUB_ENV
+          fi
+        fi
     
     - name: Create AppDir structure
       run: |
@@ -117,13 +135,33 @@ jobs:
       run: |
         export VERSION=${VERSION#v}  # Remove 'v' prefix if present
         export ARCH=x86_64
-        ./linuxdeploy-x86_64.AppImage \
+        
+        # Build linuxdeploy command
+        LINUXDEPLOY_CMD="./linuxdeploy-x86_64.AppImage \
           --appdir AppDir \
           --executable AppDir/usr/bin/prince \
           --desktop-file AppDir/usr/share/applications/sdlpop.desktop \
-          --icon-file AppDir/usr/share/icons/hicolor/256x256/apps/sdlpop.png \
-          --plugin sdl2 \
-          --output appimage
+          --icon-file AppDir/usr/share/icons/hicolor/256x256/apps/sdlpop.png"
+        
+        # Add plugin flag only if plugin is available
+        if [ "$PLUGIN_AVAILABLE" = "true" ] && [ -f linuxdeploy-plugin-sdl2-x86_64.AppImage ]; then
+          LINUXDEPLOY_CMD="$LINUXDEPLOY_CMD --plugin sdl2"
+          echo "Using SDL2 plugin"
+        else
+          echo "Using linuxdeploy built-in SDL2 detection"
+          # Manually copy SDL2 libraries if plugin is not available
+          if [ -f /usr/lib/x86_64-linux-gnu/libSDL2.so ]; then
+            mkdir -p AppDir/usr/lib
+            cp /usr/lib/x86_64-linux-gnu/libSDL2*.so* AppDir/usr/lib/ 2>/dev/null || true
+            cp /usr/lib/x86_64-linux-gnu/libSDL2_image*.so* AppDir/usr/lib/ 2>/dev/null || true
+            echo "Copied SDL2 libraries manually"
+          fi
+        fi
+        
+        LINUXDEPLOY_CMD="$LINUXDEPLOY_CMD --output appimage"
+        
+        # Execute linuxdeploy
+        eval $LINUXDEPLOY_CMD
         
         # Find the created AppImage and rename if needed
         APPIMAGE=$(ls SDLPoP-*.AppImage 2>/dev/null | head -n 1)
