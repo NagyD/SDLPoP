@@ -344,6 +344,17 @@ void control_standing() {
 	if (control_shift2 == CONTROL_HELD && control_shift == CONTROL_HELD && check_get_item()) {
 		return;
 	}
+	// Multiplayer: For Player 2, allow drawing sword with attack button when sheathed
+	// Check raw input directly (like down+forward does) to bypass state management issues
+	extern word is_multiplayer_mode;
+	extern sbyte control_shift_p2;
+	if (is_multiplayer_mode && Char.charid >= charid_2_guard && Char.sword == sword_0_sheathed) {
+		// Check both the processed state and raw input to ensure it works
+		if (control_shift == CONTROL_HELD || control_shift2 == CONTROL_HELD || control_shift_p2 == CONTROL_HELD) {
+			draw_sword();
+			return;
+		}
+	}
 	if (Char.charid != charid_0_kid && control_down == CONTROL_HELD && control_forward == CONTROL_HELD) {
 		draw_sword();
 		return;
@@ -922,7 +933,18 @@ void run_jump() {
 // sseg005:0BB5
 void back_with_sword() {
 	short frame = Char.frame;
-	if (frame == frame_158_stand_with_sword || frame == frame_170_stand_with_sword || frame == frame_171_stand_with_sword) {
+	// Multiplayer: In multiplayer mode, allow movement from any frame for Guard
+	extern word is_multiplayer_mode;
+	int can_move = (frame == frame_158_stand_with_sword || frame == frame_170_stand_with_sword || frame == frame_171_stand_with_sword);
+	if (is_multiplayer_mode && Char.charid >= charid_2_guard) {
+		// In multiplayer, allow movement from any frame (stand, walk, or other)
+		// This ensures Player 2 can always control the Guard
+		can_move = 1; // Always allow movement in multiplayer
+	} else {
+		// Normal mode: only allow from stand frames
+		can_move = can_move || (frame == frame_165_walk_with_sword || frame == frame_157_walk_with_sword);
+	}
+	if (can_move) {
 		control_backward = CONTROL_IGNORE; // disable automatic repeat
 		seqtbl_offset_char(seq_57_back_with_sword); // back with sword
 	}
@@ -931,7 +953,18 @@ void back_with_sword() {
 // seg005:0BE3
 void forward_with_sword() {
 	short frame = Char.frame;
-	if (frame == frame_158_stand_with_sword || frame == frame_170_stand_with_sword || frame == frame_171_stand_with_sword) {
+	// Multiplayer: In multiplayer mode, allow movement from any frame for Guard
+	extern word is_multiplayer_mode;
+	int can_move = (frame == frame_158_stand_with_sword || frame == frame_170_stand_with_sword || frame == frame_171_stand_with_sword);
+	if (is_multiplayer_mode && Char.charid >= charid_2_guard) {
+		// In multiplayer, allow movement from any frame (stand, walk, or other)
+		// This ensures Player 2 can always control the Guard
+		can_move = 1; // Always allow movement in multiplayer
+	} else {
+		// Normal mode: only allow from stand frames
+		can_move = can_move || (frame == frame_165_walk_with_sword || frame == frame_157_walk_with_sword);
+	}
+	if (can_move) {
 		control_forward = CONTROL_IGNORE; // disable automatic repeat
 		if (Char.charid != charid_0_kid) {
 			seqtbl_offset_char(seq_56_guard_forward_with_sword); // forward with sword (Guard)
@@ -945,6 +978,12 @@ void forward_with_sword() {
 void draw_sword() {
 	word seq_id = seq_55_draw_sword; // draw sword
 	control_forward = control_shift2 = release_arrows();
+	// Multiplayer: Also set control_shift2_p2 to IGNORE to prevent repeat
+	extern word is_multiplayer_mode;
+	extern sbyte control_shift2_p2;
+	if (is_multiplayer_mode && Char.charid >= charid_2_guard) {
+		control_shift2_p2 = CONTROL_IGNORE; // Prevent repeat for Player 2
+	}
 #ifdef FIX_UNINTENDED_SWORD_STRIKE
 	if (fixes->fix_unintended_sword_strike) {
 		ctrl1_shift2 = CONTROL_IGNORE; // prevent restoring control_shift2 to CONTROL_HELD in rest_ctrl_1()
@@ -963,6 +1002,23 @@ void draw_sword() {
 // seg005:0C67
 void control_with_sword() {
 	if (Char.action < actions_2_hang_climb) {
+		// Multiplayer: In multiplayer mode, allow movement controls for Guard but also auto-turn
+		extern word is_multiplayer_mode;
+		if (is_multiplayer_mode && Char.charid >= charid_2_guard) {
+			// In multiplayer, check distance and auto-turn if needed (like Player 1 does)
+			short distance = char_opp_dist();
+			if (distance < 0) {
+				// Opponent is behind - turn to face them
+				if ((word)distance < (word)-4) {
+					seqtbl_offset_char(seq_60_turn_with_sword); // turn with sword (after switching places)
+					return;
+				}
+			}
+			// In multiplayer, Guard can move freely - go directly to swordfight() which handles movement
+			swordfight();
+			return;
+		}
+		
 		if (get_tile_at_char() == tiles_11_loose || can_guard_see_kid >= 2) {
 			short distance = char_opp_dist();
 			if ((word)distance < (word)90) {
@@ -1013,7 +1069,22 @@ void swordfight() {
 	if (control_down == CONTROL_HELD) {
 		if (frame == frame_158_stand_with_sword || frame == frame_170_stand_with_sword || frame == frame_171_stand_with_sword) {
 			control_down = CONTROL_IGNORE; // disable automatic repeat
+			// Multiplayer: Also set control_down_p2 to IGNORE to prevent repeat
+			extern word is_multiplayer_mode;
+			extern sbyte control_down_p2;
+			if (is_multiplayer_mode && charid >= charid_2_guard) {
+				control_down_p2 = CONTROL_IGNORE; // Prevent repeat for Player 2
+			}
 			Char.sword = sword_0_sheathed;
+			// Multiplayer: For Player 2, reset attack state when sheathing sword
+			// This allows re-entering attack stance after sheathing
+			extern word is_multiplayer_mode;
+			extern sbyte control_shift2_p2;
+			if (is_multiplayer_mode && charid >= charid_2_guard) {
+				control_shift2_p2 = CONTROL_RELEASED; // Reset attack state to allow re-entering attack stance
+				// Also reset control_shift2 to ensure it's cleared
+				control_shift2 = CONTROL_RELEASED;
+			}
 			if (charid == charid_0_kid) {
 				offguard = 1;
 				guard_refrac = 9;
@@ -1029,8 +1100,20 @@ void swordfight() {
 	} else if (control_up == CONTROL_HELD) {
 		parry();
 	} else if (control_forward == CONTROL_HELD) {
+		// Multiplayer: For Player 2, set to IGNORE immediately to prevent repeat
+		extern word is_multiplayer_mode;
+		if (is_multiplayer_mode && charid >= charid_2_guard) {
+			control_forward = CONTROL_IGNORE; // Prevent continuous movement
+			control_forward_p2 = CONTROL_IGNORE;
+		}
 		forward_with_sword();
 	} else if (control_backward == CONTROL_HELD) {
+		// Multiplayer: For Player 2, set to IGNORE immediately to prevent repeat
+		extern word is_multiplayer_mode;
+		if (is_multiplayer_mode && charid >= charid_2_guard) {
+			control_backward = CONTROL_IGNORE; // Prevent continuous movement
+			control_backward_p2 = CONTROL_IGNORE;
+		}
 		back_with_sword();
 	}
 }
@@ -1057,6 +1140,12 @@ void sword_strike() {
 		return;
 	}
 	control_shift2 = CONTROL_IGNORE; // disable automatic repeat
+	// Multiplayer: Also set control_shift2_p2 to IGNORE to prevent repeat
+	extern word is_multiplayer_mode;
+	extern sbyte control_shift2_p2;
+	if (is_multiplayer_mode && Char.charid >= charid_2_guard) {
+		control_shift2_p2 = CONTROL_IGNORE; // Prevent repeat for Player 2
+	}
 	seqtbl_offset_char(seq_id);
 }
 
@@ -1074,7 +1163,9 @@ void parry() {
 		char_frame == frame_168_back || // back?
 		char_frame == frame_165_walk_with_sword // walk with sword
 	) {
-		if (char_opp_dist() >= 32 && char_charid != charid_0_kid) {
+		// Multiplayer: Allow parry for Player 2 even when opponent is far away
+		extern word is_multiplayer_mode;
+		if (char_opp_dist() >= 32 && char_charid != charid_0_kid && !(is_multiplayer_mode && char_charid >= charid_2_guard)) {
 			back_with_sword();
 			return;
 		} else if (char_charid == charid_0_kid) {
@@ -1092,13 +1183,24 @@ void parry() {
 				}
 			}
 		} else {
-			if (opp_frame != frame_152_strike_2) return;
+			// Multiplayer: Allow parry for Player 2 even if opponent is not striking
+			if (is_multiplayer_mode && char_charid >= charid_2_guard) {
+				// Allow parry for Player 2 - don't check opponent frame
+			} else if (opp_frame != frame_152_strike_2) {
+				return;
+			}
 		}
 	} else {
 		if (char_frame != frame_167_blocked) return;
 		seq_id = seq_61_parry_after_strike; // parry after striking with sword
 	}
 	control_up = CONTROL_IGNORE; // disable automatic repeat
+	// Multiplayer: Also set control_up_p2 to IGNORE to prevent repeat
+	extern word is_multiplayer_mode;
+	extern sbyte control_up_p2;
+	if (is_multiplayer_mode && Char.charid >= charid_2_guard) {
+		control_up_p2 = CONTROL_IGNORE; // Prevent repeat for Player 2
+	}
 	seqtbl_offset_char(seq_id);
 	if (do_play_seq) {
 		play_seq();

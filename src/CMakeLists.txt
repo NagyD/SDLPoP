@@ -1,18 +1,33 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.5)
 project(SDLPoP)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -std=c99")
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror=implicit-function-declaration")
 
+# Add optimization flags for release builds
+if (NOT (CMAKE_BUILD_TYPE STREQUAL "Debug"))
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -ffast-math -funroll-loops")
+    # Additional optimizations
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fomit-frame-pointer")
+    # Link-time optimization for better performance (optional, may not work with all toolchains)
+    # Check if compiler supports LTO before enabling
+    include(CheckCCompilerFlag)
+    check_c_compiler_flag("-flto" COMPILER_SUPPORTS_LTO)
+    if(COMPILER_SUPPORTS_LTO)
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -flto")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -flto")
+    endif()
+endif()
+
 # have CMake output binaries to the directory that contains the source files
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${SDLPoP_SOURCE_DIR}/..")
 
 # SDLPoP requires the SDL2 and SDL2_image development libraries.
-# You can pass the SDL2 location to CMake like so: -DSDL2="C:/work/libraries/SDL2-2.0.8"
+# You can pass the SDL2 location to CMake like so: -DSDL2="C:/work/libraries/SDL2-2.30.0"
 # Or alternatively, specify the SDL2 location below:
 
-#set(SDL2 "C:/work/libraries/SDL2-2.0.8")
+#set(SDL2 "C:/work/libraries/SDL2-2.30.0")
 
 # On macOS, if you used Homebrew to install SDL2, the location may be something like this:
 
@@ -39,18 +54,38 @@ if (WIN32)
     # If the location of SDL2 is not specified, we will try to guess it.
     if (NOT(DEFINED SDL2))
         cmake_policy(SET CMP0015 NEW) # suppress warning about relative paths
-        set(SDL2 "../../SDL2-2.0.8")
-    endif()
-
-    # Automatically detect whether we need the x86 or x64 version of the SDL2 library.
-    if (CMAKE_SIZEOF_VOID_P EQUAL 8)
-        set(SDL2_ARCH "x86_64-w64-mingw32")
+        # Try MSYS2 installation first (common on Windows)
+        if(EXISTS "C:/msys64/mingw64")
+            set(SDL2 "C:/msys64/mingw64")
+            set(USE_MSYS2_SDL2 TRUE)
+        elseif(EXISTS "../../SDL2-2.30.0")
+            set(SDL2 "../../SDL2-2.30.0")
+            set(USE_MSYS2_SDL2 FALSE)
+        else()
+            message(FATAL_ERROR "SDL2 not found. Please install SDL2 via MSYS2 (pacman -S mingw-w64-x86_64-SDL2 mingw-w64-x86_64-SDL2_image) or set SDL2 variable.")
+        endif()
     else()
-        set(SDL2_ARCH "i686-w64-mingw32")
+        set(USE_MSYS2_SDL2 FALSE)
     endif()
 
-    include_directories(${SDL2}/${SDL2_ARCH}/include)
-    link_directories(${SDL2}/${SDL2_ARCH}/lib)
+    if(USE_MSYS2_SDL2)
+        # MSYS2 installation - headers are in include/SDL2 subdirectory
+        include_directories(${SDL2}/include)
+        include_directories(${SDL2}/include/SDL2)
+        link_directories(${SDL2}/lib)
+    else()
+        # SDL2 development package - use architecture-specific paths
+        # Automatically detect whether we need the x86 or x64 version of the SDL2 library.
+        if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+            set(SDL2_ARCH "x86_64-w64-mingw32")
+        else()
+            set(SDL2_ARCH "i686-w64-mingw32")
+        endif()
+
+        include_directories(${SDL2}/${SDL2_ARCH}/include)
+        include_directories(${SDL2}/${SDL2_ARCH}/include/SDL2)
+        link_directories(${SDL2}/${SDL2_ARCH}/lib)
+    endif()
 endif()
 
 set(SOURCE_FILES

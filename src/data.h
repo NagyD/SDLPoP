@@ -248,6 +248,16 @@ extern sbyte control_y;
 // data:4612
 extern sbyte control_x;
 
+// Multiplayer: Player 2 control variables
+extern sbyte control_shift_p2;
+extern sbyte control_y_p2;
+extern sbyte control_x_p2;
+extern sbyte control_shift2_p2;
+extern sbyte control_forward_p2;
+extern sbyte control_backward_p2;
+extern sbyte control_up_p2;
+extern sbyte control_down_p2;
+
 #ifdef USE_FADE
 // data:4CCA
 extern word is_global_fading;
@@ -258,6 +268,8 @@ extern palette_fade_type* fade_palette_buffer;
 extern char_type Kid;
 // data:295C
 extern word is_keyboard_mode INIT(= 0);
+// Multiplayer mode flag
+extern word is_multiplayer_mode INIT(= 0);
 // data:4E8A
 extern word is_paused;
 // data:42D0
@@ -632,8 +644,11 @@ extern SDL_Texture* texture_blurry;
 extern SDL_Texture* target_texture;
 
 extern SDL_GameController* sdl_controller_ INIT( = 0 );
+extern SDL_GameController* sdl_controller_p2_; // Player 2 controller for multiplayer
 extern SDL_Joystick* sdl_joystick_; // in case our joystick is not compatible with SDL_GameController
+extern SDL_Joystick* sdl_joystick_p2_; // Player 2 joystick for multiplayer
 extern byte using_sdl_joystick_interface;
+extern byte using_sdl_joystick_interface_p2; // Player 2 joystick interface flag
 extern int joy_axis[JOY_AXIS_NUM]; // hor/ver axes for left/right sticks + left and right triggers (in total 6 axes)
 extern int joy_axis_max[JOY_AXIS_NUM]; // Same as above, but stores the highest value reached between game updates
 extern int joy_left_stick_states[2]; // horizontal, vertical
@@ -951,6 +966,14 @@ extern int key_down       INIT(= SDL_SCANCODE_DOWN);
 extern int key_jump_left  INIT(= SDL_SCANCODE_HOME);
 extern int key_jump_right INIT(= SDL_SCANCODE_PAGEUP);
 extern int key_action     INIT(= SDL_SCANCODE_RSHIFT);
+// Multiplayer: Player 2 controls (default: WASD + F)
+extern int key_left_p2    INIT(= SDL_SCANCODE_A);
+extern int key_right_p2   INIT(= SDL_SCANCODE_D);
+extern int key_up_p2      INIT(= SDL_SCANCODE_W);
+extern int key_down_p2    INIT(= SDL_SCANCODE_S);
+extern int key_jump_left_p2  INIT(= SDL_SCANCODE_Q);
+extern int key_jump_right_p2 INIT(= SDL_SCANCODE_E);
+extern int key_action_p2     INIT(= SDL_SCANCODE_X);
 // menus
 extern int key_enter      INIT(= SDL_SCANCODE_RETURN);
 extern int key_esc        INIT(= SDL_SCANCODE_ESCAPE);

@@ -561,8 +561,11 @@ chtab_type* load_sprites_from_file(int resource,int palette_bits, int quit_on_er
 
 	int n_images = shpl->n_images;
 	size_t alloc_size = sizeof(chtab_type) + sizeof(void *) * n_images;
-	chtab_type* chtab = (chtab_type*) malloc(alloc_size);
-	memset(chtab, 0, alloc_size);
+	chtab_type* chtab = (chtab_type*) calloc(1, alloc_size); // Use calloc instead of malloc+memset
+	if (chtab == NULL) {
+		if (quit_on_error) quit(1);
+		return NULL;
+	}
 	chtab->n_images = n_images;
 	for (int i = 1; i <= n_images; i++) {
 		SDL_Surface* image = load_image(resource + i, pal_ptr);
@@ -683,9 +686,8 @@ void decompress_rle_ud(byte* destination,const byte* source,int dest_length,int 
 
 // seg009:90FA
 byte* decompress_lzg_lr(byte* dest,const byte* source,int dest_length) {
-	byte* window = (byte*) malloc(0x400);
-	if (window == NULL) return NULL;
-	memset(window, 0, 0x400);
+	// Use stack allocation for small window buffer (1024 bytes) to reduce heap fragmentation
+	byte window[0x400] = {0};
 	byte* window_pos = window + 0x400 - 0x42; // bx
 	short remaining = dest_length; // cx
 	byte* window_end = window + 0x400; // dx
@@ -725,15 +727,13 @@ byte* decompress_lzg_lr(byte* dest,const byte* source,int dest_length) {
 		}
 	} while (remaining);
 //	end:
-	free(window);
 	return dest;
 }
 
 // seg009:91AD
 byte* decompress_lzg_ud(byte* dest,const byte* source,int dest_length,int stride,int height) {
-	byte* window = (byte*) malloc(0x400);
-	if (window == NULL) return NULL;
-	memset(window, 0, 0x400);
+	// Use stack allocation for small window buffer (1024 bytes) to reduce heap fragmentation
+	byte window[0x400] = {0};
 	byte* window_pos = window + 0x400 - 0x42; // bx
 	short remaining = height; // cx
 	byte* window_end = window + 0x400; // dx
@@ -784,7 +784,6 @@ byte* decompress_lzg_ud(byte* dest,const byte* source,int dest_length,int stride
 		}
 	} while (dest_length);
 //	end:
-	free(window);
 	return dest;
 }
 
@@ -846,8 +845,8 @@ image_type* decode_image(image_data_type* image_data, dat_pal_type* palette) {
 	int cmeth = (flags >> 8) & 0x0F;
 	int stride = calc_stride(image_data);
 	int dest_size = stride * height;
-	byte* dest = (byte*) malloc(dest_size);
-	memset(dest, 0, dest_size);
+	byte* dest = (byte*) calloc(1, dest_size); // Use calloc instead of malloc+memset for better performance
+	if (dest == NULL) return NULL;
 	decompr_img(dest, image_data, dest_size, cmeth, stride);
 	byte* image_8bpp = conv_to_8bpp(dest, width, height, stride, depth);
 	free(dest); dest = NULL;
@@ -983,6 +982,29 @@ int set_joy_mode() {
 	}
 
 	is_keyboard_mode = !is_joyst_mode;
+	
+	// Multiplayer: Initialize Player 2 controller if available
+	sdl_controller_p2_ = NULL;
+	sdl_joystick_p2_ = NULL;
+	using_sdl_joystick_interface_p2 = 0;
+	if (SDL_NumJoysticks() >= 2) {
+		if (SDL_IsGameController(1)) {
+			sdl_controller_p2_ = SDL_GameControllerOpen(1);
+			if (sdl_controller_p2_ == NULL) {
+				// Try joystick interface as fallback
+				sdl_joystick_p2_ = SDL_JoystickOpen(1);
+				if (sdl_joystick_p2_ != NULL) {
+					using_sdl_joystick_interface_p2 = 1;
+				}
+			}
+		} else {
+			sdl_joystick_p2_ = SDL_JoystickOpen(1);
+			if (sdl_joystick_p2_ != NULL) {
+				using_sdl_joystick_interface_p2 = 1;
+			}
+		}
+	}
+	
 	return is_joyst_mode;
 }
 
@@ -1021,7 +1043,16 @@ void set_hc_pal() {
 
 // seg009:2446
 void flip_not_ega(byte* memory,int height,int stride) {
-	byte* row_buffer = (byte*) malloc(stride);
+	// Use stack allocation for row buffer if stride is reasonable (typically <= 320 for 320x200 screen)
+	// For larger strides, fall back to heap allocation
+	byte stack_buffer[320];
+	byte* row_buffer;
+	if (stride <= (int)sizeof(stack_buffer)) {
+		row_buffer = stack_buffer;
+	} else {
+		row_buffer = (byte*) malloc(stride);
+		if (row_buffer == NULL) return; // Early return on allocation failure
+	}
 	byte* top_ptr;
 	byte* bottom_ptr;
 	bottom_ptr = top_ptr = memory;
@@ -1035,7 +1066,9 @@ void flip_not_ega(byte* memory,int height,int stride) {
 		bottom_ptr -= stride;
 		--rem_rows;
 	} while (rem_rows);
-	free(row_buffer);
+	if (row_buffer != stack_buffer) {
+		free(row_buffer);
+	}
 }
 
 // seg009:19B1
