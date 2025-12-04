@@ -1,0 +1,3 @@
+[submodule "SDL_GameControllerDB"]
+	path = src
+	url = https://github.com/mdqinc/SDL_GameControllerDB
