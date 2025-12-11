@@ -801,6 +801,16 @@ int save_recorded_replay_dialog() {
 		return 0;  // Escape was pressed -> discard the replay
 	}
 
+	// Получаем домашнюю директорию текущего пользователя для replays
+	const char *home_dir = getenv("HOME");
+	if (home_dir == NULL) {
+		home_dir = ".";  // fallback на текущую директорию
+	}
+
+	// Создаём путь к папке replays внутри prince
+	char replays_folder[POP_MAX_PATH];
+	snprintf_check(replays_folder, sizeof(replays_folder), "%s/prince/replays", home_dir);
+
 	char full_filename[POP_MAX_PATH] = "";
 	snprintf_check(full_filename, sizeof(full_filename), "%s/%s.p1r", replays_folder, input_filename);
 
@@ -808,7 +818,11 @@ int save_recorded_replay_dialog() {
 #if defined WIN32 || _WIN32 || WIN64 || _WIN64
 	mkdir (replays_folder);
 #else
-	mkdir (replays_folder, 0700);
+	// Создаём промежуточные папки если их нет
+	char prince_dir[POP_MAX_PATH];
+	snprintf_check(prince_dir, sizeof(prince_dir), "%s/prince", home_dir);
+	mkdir(prince_dir, 0700);  // Создаём папку prince
+	mkdir(replays_folder, 0700);  // Создаём папку replays
 #endif
 
 	// NOTE: We currently overwrite the replay file if it exists already. Maybe warn / ask for confirmation??

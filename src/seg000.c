@@ -2388,46 +2388,36 @@ void show_splash() {
 }
 
 const char* get_writable_file_path(char* custom_path_buffer, size_t max_len, const char* file_name) {
-	// If the SDLPOP_SAVE_PATH environment variable is set, put all saves into the directory it points to.
-	// Otherwise, save to the home directory
+    // Используем домашнюю папку текущего пользователя Linux
+    const char* home_path = getenv("HOME");
+    if (home_path == NULL || home_path[0] == '\0') {
+        // Если HOME не установлен, используем текущую директорию
+        home_path = ".";
+    }
+
+    // Путь для сохранений: домашняя_папка/prince
+    char save_path[POP_MAX_PATH];
+    snprintf_check(save_path, max_len, "%s/prince", home_path);
+
+    // Создаем директорию, если она не существует
 #if defined WIN32 || _WIN32 || WIN64 || _WIN64
-	const char* save_path = getenv("SDLPOP_SAVE_PATH");
+    mkdir(save_path);
 #else
-	char save_path[POP_MAX_PATH];
-	const char* custom_save_path = getenv("SDLPOP_SAVE_PATH");
-	const char* home_path = getenv("HOME");
-	if (custom_save_path != NULL && custom_save_path[0] != '\0')
-		snprintf_check(save_path, max_len, "%s", custom_save_path);
-	else if (home_path != NULL && home_path[0] != '\0')
-		snprintf_check(save_path, max_len, "%s/.%s", home_path, POP_DIR_NAME);
+    mkdir(save_path, 0700);
 #endif
 
-	if (save_path != NULL && save_path[0] != '\0') {
+    if (use_custom_levelset) {
+        // Сначала создаем поддиректорию для набора уровней...
+        snprintf_check(custom_path_buffer, max_len, "%s/%s", save_path, levelset_name);
 #if defined WIN32 || _WIN32 || WIN64 || _WIN64
-		mkdir (save_path);
+        mkdir(custom_path_buffer);
 #else
-		mkdir (save_path, 0700);
+        mkdir(custom_path_buffer, 0700);
 #endif
-		if (use_custom_levelset) {
-			// First create the directory...
-			snprintf_check(custom_path_buffer, max_len, "%s/%s", save_path, levelset_name);
-#if defined WIN32 || _WIN32 || WIN64 || _WIN64
-			mkdir (custom_path_buffer);
-#else
-			mkdir (custom_path_buffer, 0700);
-#endif
-			snprintf_check(custom_path_buffer, max_len, "%s/%s/%s", save_path, levelset_name, file_name);
-		} else {
-			snprintf_check(custom_path_buffer, max_len, "%s/%s", save_path, file_name);
-		}
-		return custom_path_buffer;
-	}
-
-	if (!use_custom_levelset) {
-		return file_name;
-	}
-	// if playing a custom levelset, try to use the mod folder
-	snprintf_check(custom_path_buffer, max_len, "%s/%s", mod_data_path, file_name);
-	return custom_path_buffer;
+        snprintf_check(custom_path_buffer, max_len, "%s/%s/%s", save_path, levelset_name, file_name);
+    } else {
+        snprintf_check(custom_path_buffer, max_len, "%s/%s", save_path, file_name);
+    }
+    return custom_path_buffer;
 }
 
