@@ -82,9 +82,7 @@ set(SOURCE_FILES
         icon.rc
         )
 
-if (NOT(APPLE AND CREATE_BUNDLE))
-    add_executable(prince ${SOURCE_FILES})
-else()
+if(APPLE AND CREATE_BUNDLE)
 
     # macOS-specific:
     # By default, a normal binary executable will be created.
@@ -113,12 +111,20 @@ else()
     add_custom_command(TARGET prince POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy
             ${CMAKE_SOURCE_DIR}/../SDLPoP.ini ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/prince.app/Contents/MacOS/SDLPoP.ini)
+elseif(PS2)
+    add_executable(prince.elf ${SOURCE_FILES})
+else()
+    add_executable(prince ${SOURCE_FILES})
 endif()
 
 if(WIN32)
     target_link_libraries(prince mingw32 SDL2main SDL2 SDL2_image)
 elseif(APPLE)
     target_link_libraries(prince SDL2main SDL2 SDL2_image m)
+elseif(PS2)
+	target_link_libraries(prince.elf PRIVATE SDL2main SDL2 SDL2_image SDL2_mixer 
+    atomic ogg vorbis modplug mikmod stdc++ m debug c
+    gskit dmakit dma xmp ps2_drivers patches config draw)
 elseif(PSP) # Linux, *BSD, etc.
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3")
 	include(FindPkgConfig)
