@@ -305,6 +305,11 @@ The authors of this program may be contacted at https://forum.princed.org
 //#define FIX_DISAPPEARING_GUARD_A // Inserts a black screen.
 //#define FIX_DISAPPEARING_GUARD_B // Doesn't insert a black screen.
 
+// Feather fall should not affect guards, because only the prince can drink the feather fall potion.
+// See also: https://github.com/NagyD/SDLPoP/issues/337
+// At least one mod requires this fix to be turned off: https://www.popot.org/custom_levels.php?mod=0000111 (level 2)
+#define FIX_FEATHER_FALL_AFFECTS_GUARDS
+
 #endif // ifndef DISABLE_ALL_FIXES
 
 // Prince can jump 2 stories up in feather fall mode

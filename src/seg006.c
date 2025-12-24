@@ -876,7 +876,12 @@ void x_to_xh_and_xl(int xpos, sbyte* xh_addr, sbyte* xl_addr) {
 // seg006:057C
 void fall_accel() {
 	if (Char.action == actions_4_in_freefall) {
-		if (is_feather_fall) {
+		if (is_feather_fall
+#ifdef FIX_FEATHER_FALL_AFFECTS_GUARDS
+			// Only the prince should be affected if the fix is on.
+			&& (!fixes->fix_feather_fall_affects_guards || Char.charid == charid_0_kid)
+#endif
+		) {
 			Char.fall_y += FALLING_SPEED_ACCEL_FEATHER;
 			if (Char.fall_y > FALLING_SPEED_MAX_FEATHER) Char.fall_y = FALLING_SPEED_MAX_FEATHER;
 		} else {

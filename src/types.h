@@ -1247,6 +1247,7 @@ typedef struct fixes_options_type {
 	byte enable_jump_grab;
 	byte fix_register_quick_input;
 	byte fix_turn_running_near_wall;
+	byte fix_feather_fall_affects_guards;
 } fixes_options_type;
 
 #define NUM_GUARD_SKILLS 12
