@@ -926,6 +926,12 @@ void check_action() {
 				frame >= frame_110_stand_up_from_crouch_1 && frame <= frame_119_stand_up_from_crouch_10)
 			#endif
 
+			#ifdef FIX_DEAD_FLOATING_IN_AIR
+			// action == actions_5_bumped if the prince is lying dead.
+			|| (fixes->fix_dead_floating_in_air &&
+				frame >= frame_177_spiked && frame <= frame_185_dead)
+			#endif
+
 				) {
 			check_on_floor();
 		}

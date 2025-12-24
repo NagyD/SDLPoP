@@ -210,6 +210,7 @@ enum setting_ids {
 	SETTING_FIX_TURN_RUNNING_NEAR_WALL,
 	SETTING_FIX_FEATHER_FALL_AFFECTS_GUARDS,
 	SETTING_FIX_ONE_HP_STOPS_BLINKING,
+	SETTING_FIX_DEAD_FLOATING_IN_AIR,
 	SETTING_ENABLE_SUPER_HIGH_JUMP,
 	SETTING_ENABLE_JUMP_GRAB,
 	SETTING_USE_CUSTOM_OPTIONS,
@@ -636,6 +637,10 @@ setting_type gameplay_settings[] = {
 				.linked = &fixes_saved.fix_one_hp_stops_blinking, .required = &use_fixes_and_enhancements,
 				.text = "Fix one hit point stops blinking",
 				.explanation = "If the prince has only one hit point when he defeats Jaffar, it stops blinking."},
+		{.id = SETTING_FIX_DEAD_FLOATING_IN_AIR, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fixes_saved.fix_dead_floating_in_air, .required = &use_fixes_and_enhancements,
+				.text = "Fix dead bodies floating in the air",
+				.explanation = "If the prince or a guard falls to his death onto a loose floor, the floor drops, but the body stays there in the air."},
 };
 
 NAMES_LIST(tile_type_setting_names, {

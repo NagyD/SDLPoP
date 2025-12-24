@@ -316,6 +316,10 @@ The authors of this program may be contacted at https://forum.princed.org
 // See also: https://github.com/NagyD/SDLPoP/issues/338
 #define FIX_ONE_HP_STOPS_BLINKING
 
+// If the prince or a guard falls to his death onto a loose floor, the floor drops, but the body stays there in the air.
+// See also: https://github.com/NagyD/SDLPoP/issues/343
+#define FIX_DEAD_FLOATING_IN_AIR
+
 #endif // ifndef DISABLE_ALL_FIXES
 
 // Prince can jump 2 stories up in feather fall mode
