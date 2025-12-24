@@ -310,6 +310,12 @@ The authors of this program may be contacted at https://forum.princed.org
 // At least one mod requires this fix to be turned off: https://www.popot.org/custom_levels.php?mod=0000111 (level 2)
 #define FIX_FEATHER_FALL_AFFECTS_GUARDS
 
+// After Jaffar is defeated, the timer stops.
+// If the prince has only one hit point, then it stops blinking, because the blinking is based on the timer.
+// If the timer stops when the blinking hit point is off, it may even look like the prince has no hit points!
+// See also: https://github.com/NagyD/SDLPoP/issues/338
+#define FIX_ONE_HP_STOPS_BLINKING
+
 #endif // ifndef DISABLE_ALL_FIXES
 
 // Prince can jump 2 stories up in feather fall mode

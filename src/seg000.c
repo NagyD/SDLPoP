@@ -1446,9 +1446,16 @@ void draw_hp() {
 	if (hitp_delta) {
 		draw_kid_hp(hitp_curr, hitp_max);
 	}
+
+#ifdef FIX_ONE_HP_STOPS_BLINKING
+	bool blink_state = fixes->fix_one_hp_stops_blinking ? global_blink_state : rem_tick & 1;
+#else
+	bool blink_state = rem_tick & 1;
+#endif
+
 	if (hitp_curr == 1 && current_level != 15) {
 		// blinking hitpoint
-		if (rem_tick & 1) {
+		if (blink_state) {
 			draw_kid_hp(1, 0);
 		} else {
 			draw_kid_hp(0, 1);
@@ -1458,7 +1465,7 @@ void draw_hp() {
 		draw_guard_hp(guardhp_curr, guardhp_max);
 	}
 	if (guardhp_curr == 1) {
-		if (rem_tick & 1) {
+		if (blink_state) {
 			draw_guard_hp(1, 0);
 		} else {
 			draw_guard_hp(0, 1);

@@ -294,6 +294,7 @@ static int global_ini_callback(const char *section, const char *name, const char
 		process_boolean("fix_register_quick_input", &fixes_saved.fix_register_quick_input);
 		process_boolean("fix_turn_running_near_wall", &fixes_saved.fix_turn_running_near_wall);
 		process_boolean("fix_feather_fall_affects_guards", &fixes_saved.fix_feather_fall_affects_guards);
+		process_boolean("fix_one_hp_stops_blinking", &fixes_saved.fix_one_hp_stops_blinking);
 	}
 
 	if (check_ini_section("CustomGameplay")) {

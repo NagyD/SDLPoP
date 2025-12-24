@@ -778,3 +778,5 @@ FIXED: In the list of high scores, show 0:00 if the time has expired.
 	Details: https://github.com/NagyD/SDLPoP/issues/340
 FIXED: Added a configurable fix for: Feather fall should not affect guards, because only the prince can drink the feather fall potion.
 	Details: See FIX_FEATHER_FALL_AFFECTS_GUARDS in config.h and https://github.com/NagyD/SDLPoP/issues/337
+FIXED: Added a configurable fix for: If the prince has only one hit point when he defeats Jaffar, it stops blinking.
+	Details: See FIX_ONE_HP_STOPS_BLINKING in config.h and https://github.com/NagyD/SDLPoP/issues/338

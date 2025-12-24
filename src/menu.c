@@ -209,6 +209,7 @@ enum setting_ids {
 	SETTING_FIX_REGISTER_QUICK_INPUT,
 	SETTING_FIX_TURN_RUNNING_NEAR_WALL,
 	SETTING_FIX_FEATHER_FALL_AFFECTS_GUARDS,
+	SETTING_FIX_ONE_HP_STOPS_BLINKING,
 	SETTING_ENABLE_SUPER_HIGH_JUMP,
 	SETTING_ENABLE_JUMP_GRAB,
 	SETTING_USE_CUSTOM_OPTIONS,
@@ -631,6 +632,10 @@ setting_type gameplay_settings[] = {
 				.linked = &fixes_saved.fix_feather_fall_affects_guards, .required = &use_fixes_and_enhancements,
 				.text = "Fix feather fall affecting guards",
 				.explanation = "Feather fall should not affect guards, because only the prince can drink the feather fall potion."},
+		{.id = SETTING_FIX_ONE_HP_STOPS_BLINKING, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fixes_saved.fix_one_hp_stops_blinking, .required = &use_fixes_and_enhancements,
+				.text = "Fix one hit point stops blinking",
+				.explanation = "If the prince has only one hit point when he defeats Jaffar, it stops blinking."},
 };
 
 NAMES_LIST(tile_type_setting_names, {

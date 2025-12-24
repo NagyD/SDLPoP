@@ -1745,6 +1745,11 @@ void load_frame_to_obj() {
 void show_time() {
 	char sprintf_temp[40];
 	word rem_sec;
+
+#ifdef FIX_ONE_HP_STOPS_BLINKING
+	global_blink_state = !global_blink_state;
+#endif
+
 	if (Kid.alive < 0 &&
 		#ifdef FREEZE_TIME_DURING_END_MUSIC
 		(!(fixes->enable_freeze_time_during_end_music && next_level != current_level)) &&
