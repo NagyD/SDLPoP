@@ -1,0 +1,14 @@
+# How to compile and run
+Install latest PS2DEV toolchain, then go to src and run these commands:
+
+```
+cmake -S src -B build "-DCMAKE_TOOLCHAIN_FILE=${PS2DEV}/share/ps2dev.cmake" -DCMAKE_BUILD_TYPE=Release
+cmake --build build
+```
+
+Then move the `prince.elf` file into a dir with the data/ files (WITH MUSIC!),
+then finally load it into your PS2.
+
+## Credits
+- SDLPoP and others (Github)
+- PS2DEV and others (toolchain)
