@@ -735,11 +735,17 @@ void show_hof() {
 	char time_text[12];
 	for (short index = 0; index < hof_count; ++index) {
 
+		printf("index = %d, hof[index].min = %d, hof[index].tick = %d\n", index, hof[index].min, hof[index].tick);
 #ifdef ALLOW_INFINITE_TIME
 		int minutes, seconds;
 		if (hof[index].min > 0) {
+			// if there was a time limit
 			minutes = hof[index].min - 1;
 			seconds = hof[index].tick / 12;
+		} else if (hof[index].min == 0) {
+			// if there was a time limit and it expired
+			minutes = 0;
+			seconds = 0;
 		} else {
 			// negative minutes means time ran 'forward' from 0:00 upwards
 			minutes = abs(hof[index].min) - 1;
@@ -747,6 +753,11 @@ void show_hof() {
 		}
 		snprintf(time_text, sizeof(time_text), "%d:%02d", minutes, seconds);
 #else
+		// if the time limit expired (from PoP 1.4)
+		if (hof[index].min == 0) {
+			hof[index].min = 1;
+			hof[index].tick = 0;
+		}
 		snprintf(time_text, sizeof(time_text), "%d:%02d", hof[index].min - 1, hof[index].tick / 12);
 #endif
 

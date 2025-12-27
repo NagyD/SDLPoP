@@ -955,6 +955,10 @@ extern int key_action     INIT(= SDL_SCANCODE_RSHIFT);
 extern int key_enter      INIT(= SDL_SCANCODE_RETURN);
 extern int key_esc        INIT(= SDL_SCANCODE_ESCAPE);
 
+#ifdef FIX_ONE_HP_STOPS_BLINKING
+extern bool global_blink_state INIT(= false);
+#endif
+
 #undef INIT
 #undef extern
 

@@ -876,7 +876,12 @@ void x_to_xh_and_xl(int xpos, sbyte* xh_addr, sbyte* xl_addr) {
 // seg006:057C
 void fall_accel() {
 	if (Char.action == actions_4_in_freefall) {
-		if (is_feather_fall) {
+		if (is_feather_fall
+#ifdef FIX_FEATHER_FALL_AFFECTS_GUARDS
+			// Only the prince should be affected if the fix is on.
+			&& (!fixes->fix_feather_fall_affects_guards || Char.charid == charid_0_kid)
+#endif
+		) {
 			Char.fall_y += FALLING_SPEED_ACCEL_FEATHER;
 			if (Char.fall_y > FALLING_SPEED_MAX_FEATHER) Char.fall_y = FALLING_SPEED_MAX_FEATHER;
 		} else {
@@ -919,6 +924,12 @@ void check_action() {
 			#ifdef FIX_STAND_ON_THIN_AIR
 			|| (fixes->fix_stand_on_thin_air &&
 				frame >= frame_110_stand_up_from_crouch_1 && frame <= frame_119_stand_up_from_crouch_10)
+			#endif
+
+			#ifdef FIX_DEAD_FLOATING_IN_AIR
+			// action == actions_5_bumped if the prince is lying dead.
+			|| (fixes->fix_dead_floating_in_air &&
+				frame >= frame_177_spiked && frame <= frame_185_dead)
 			#endif
 
 				) {

@@ -208,6 +208,9 @@ enum setting_ids {
 	SETTING_FIX_FALLING_THROUGH_FLOOR_DURING_SWORD_STRIKE,
 	SETTING_FIX_REGISTER_QUICK_INPUT,
 	SETTING_FIX_TURN_RUNNING_NEAR_WALL,
+	SETTING_FIX_FEATHER_FALL_AFFECTS_GUARDS,
+	SETTING_FIX_ONE_HP_STOPS_BLINKING,
+	SETTING_FIX_DEAD_FLOATING_IN_AIR,
 	SETTING_ENABLE_SUPER_HIGH_JUMP,
 	SETTING_ENABLE_JUMP_GRAB,
 	SETTING_USE_CUSTOM_OPTIONS,
@@ -626,6 +629,18 @@ setting_type gameplay_settings[] = {
 				.linked = &fixes_saved.fix_turn_running_near_wall, .required = &use_fixes_and_enhancements,
 				.text = "Fix run turning near wall",
 				.explanation = "Ensures Prince safe steps near a wall/gate when facing in an opposite direction."},
+		{.id = SETTING_FIX_FEATHER_FALL_AFFECTS_GUARDS, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fixes_saved.fix_feather_fall_affects_guards, .required = &use_fixes_and_enhancements,
+				.text = "Fix feather fall affecting guards",
+				.explanation = "Feather fall should not affect guards, because only the prince can drink the feather fall potion."},
+		{.id = SETTING_FIX_ONE_HP_STOPS_BLINKING, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fixes_saved.fix_one_hp_stops_blinking, .required = &use_fixes_and_enhancements,
+				.text = "Fix one hit point stops blinking",
+				.explanation = "If the prince has only one hit point when he defeats Jaffar, it stops blinking."},
+		{.id = SETTING_FIX_DEAD_FLOATING_IN_AIR, .style = SETTING_STYLE_TOGGLE,
+				.linked = &fixes_saved.fix_dead_floating_in_air, .required = &use_fixes_and_enhancements,
+				.text = "Fix dead bodies floating in the air",
+				.explanation = "If the prince or a guard falls to his death onto a loose floor, the floor drops, but the body stays there in the air."},
 };
 
 NAMES_LIST(tile_type_setting_names, {
