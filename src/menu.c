@@ -159,6 +159,7 @@ enum setting_ids {
 	SETTING_ENABLE_FADE,
 	SETTING_ENABLE_FLASH,
 	SETTING_ENABLE_LIGHTING,
+	SETTING_ENABLE_MULTIPLAYER,
 	SETTING_ENABLE_CHEATS,
 	SETTING_ENABLE_COPYPROT,
 	SETTING_ENABLE_QUICKSAVE,
@@ -311,6 +312,14 @@ enum setting_ids {
 	SETTING_KEY_ACTION,
 	SETTING_KEY_ENTER,
 	SETTING_KEY_ESC,
+	// Multiplayer: Player 2 controls
+	SETTING_KEY_LEFT_P2,
+	SETTING_KEY_RIGHT_P2,
+	SETTING_KEY_UP_P2,
+	SETTING_KEY_DOWN_P2,
+	SETTING_KEY_JUMP_LEFT_P2,
+	SETTING_KEY_JUMP_RIGHT_P2,
+	SETTING_KEY_ACTION_P2,
 };
 
 typedef struct setting_type {
@@ -412,6 +421,13 @@ setting_type visuals_settings[] = {
 };
 
 setting_type gameplay_settings[] = {
+		{.id = SETTING_ENABLE_MULTIPLAYER, .style = SETTING_STYLE_TOGGLE, .linked = &is_multiplayer_mode,
+				.text = "Multiplayer 1v1 mode",
+				.explanation = "Enable 1v1 multiplayer mode.\n"
+						"Player 1 (Kid): Arrow keys + Shift\n"
+						"Player 2 (Guard): WASD + X\n"
+						"Both players start facing each other with swords drawn.\n"
+						"NOTE: Requires restarting the game to take effect."},
 		{.id = SETTING_ENABLE_CHEATS, .style = SETTING_STYLE_TOGGLE, .linked = &cheats_enabled,
 				.text = "Enable cheats",
 				.explanation = "Turn cheats on or off."/*"\nAlso, display the CHEATS option on the pause menu."*/},
@@ -1069,6 +1085,35 @@ setting_type controls_settings[] = {
 				.linked = &key_action, .number_type = SETTING_INT,
 				.text = "Action",
 				.explanation = ""},
+		// Multiplayer: Player 2 controls
+		{.id = SETTING_KEY_LEFT_P2, .style = SETTING_STYLE_KEY, .required = &is_multiplayer_mode,
+				.linked = &key_left_p2, .number_type = SETTING_INT,
+				.text = "Player 2: Left",
+				.explanation = "Left movement key for Player 2 (Guard)."},
+		{.id = SETTING_KEY_RIGHT_P2, .style = SETTING_STYLE_KEY, .required = &is_multiplayer_mode,
+				.linked = &key_right_p2, .number_type = SETTING_INT,
+				.text = "Player 2: Right",
+				.explanation = "Right movement key for Player 2 (Guard)."},
+		{.id = SETTING_KEY_UP_P2, .style = SETTING_STYLE_KEY, .required = &is_multiplayer_mode,
+				.linked = &key_up_p2, .number_type = SETTING_INT,
+				.text = "Player 2: Up",
+				.explanation = "Up movement key for Player 2 (Guard)."},
+		{.id = SETTING_KEY_DOWN_P2, .style = SETTING_STYLE_KEY, .required = &is_multiplayer_mode,
+				.linked = &key_down_p2, .number_type = SETTING_INT,
+				.text = "Player 2: Down",
+				.explanation = "Down movement key for Player 2 (Guard)."},
+		{.id = SETTING_KEY_JUMP_LEFT_P2, .style = SETTING_STYLE_KEY, .required = &is_multiplayer_mode,
+				.linked = &key_jump_left_p2, .number_type = SETTING_INT,
+				.text = "Player 2: Jump left",
+				.explanation = "Jump left key for Player 2 (Guard)."},
+		{.id = SETTING_KEY_JUMP_RIGHT_P2, .style = SETTING_STYLE_KEY, .required = &is_multiplayer_mode,
+				.linked = &key_jump_right_p2, .number_type = SETTING_INT,
+				.text = "Player 2: Jump right",
+				.explanation = "Jump right key for Player 2 (Guard)."},
+		{.id = SETTING_KEY_ACTION_P2, .style = SETTING_STYLE_KEY, .required = &is_multiplayer_mode,
+				.linked = &key_action_p2, .number_type = SETTING_INT,
+				.text = "Player 2: Action",
+				.explanation = "Action key for Player 2 (Guard)."},
 		{.id = SETTING_KEY_ENTER, .style = SETTING_STYLE_KEY, .required = NULL,
 				.linked = &key_enter, .number_type = SETTING_INT,
 				.text = "Enter a menu",
@@ -1431,6 +1476,60 @@ void turn_setting_on_off(int setting_id, byte new_state, void* linked) {
 			break;
 		case SETTING_USE_CUSTOM_OPTIONS:
 			turn_custom_options_on_off(new_state);
+			break;
+		case SETTING_ENABLE_MULTIPLAYER:
+			// Set the flag first
+			if (linked != NULL) {
+				*(word*)linked = new_state;
+			}
+			// Multiplayer mode toggled - NEVER spawn a new Guard, only enable controls on existing Guard
+			if (new_state) {
+				extern char_type Guard;
+				extern char_type Kid;
+				// Only enable controls if Guard is already active in the same room
+				// If Guard is not active, multiplayer mode will just wait for a Guard to appear naturally
+				if (Guard.direction != 0x56 && Guard.room == Kid.room) { // Guard is active and in same room
+					// Guard is already active - just ensure it's set up for multiplayer
+					// Make sure Guard has a sword if it doesn't have one
+					if (Guard.sword != 2) { // sword_2_drawn
+						Guard.sword = 2; // Give Guard a sword if it doesn't have one
+					}
+					// Ensure Guard is alive
+					Guard.alive = -1;
+					// Set Guard's HP to match Kid's if it's zero
+					extern word hitp_max;
+					extern word guardhp_max;
+					extern word guardhp_curr;
+					guardhp_max = hitp_max;
+					if (guardhp_curr == 0) {
+						guardhp_curr = guardhp_max;
+					}
+					// Ensure Guard is in a controllable frame (stand with sword)
+					// This is important for movement controls to work
+					// Note: We use a safer approach that doesn't modify global Char
+					// to avoid affecting Kid's state
+					extern void loadshad(void);
+					extern void saveshad(void);
+					extern char_type Char;
+					char_type saved_char = Char; // Save current Char (might be Kid)
+					loadshad();
+					Char = Guard;
+					// If Guard is not in a stand/walk frame, set it to stand with sword
+					// Check frame numbers directly (158, 170, 171 are stand frames, 157, 165 are walk frames)
+					if (Char.frame != 158 && Char.frame != 170 && Char.frame != 171 &&
+					    Char.frame != 165 && Char.frame != 157) {
+						extern const word seqtbl_offsets[];
+						// seq_90_en_garde is 90, use numeric value
+						Char.curr_seq = seqtbl_offsets[90]; // stand active (en garde)
+						extern void play_seq(void);
+						play_seq(); // Play sequence to set frame
+					}
+					Guard = Char;
+					saveshad();
+					Char = saved_char; // Restore Char to avoid affecting Kid
+				}
+				// If Guard is not active, do nothing - let the game spawn Guards naturally
+			}
 			break;
 	}
 }
@@ -2336,6 +2435,14 @@ void process_ingame_settings_user_managed(SDL_RWops* rw, rw_process_func_type pr
 	process(key_jump_left );
 	process(key_jump_right);
 	process(key_action    );
+	// Multiplayer: Player 2 controls
+	process(key_left_p2   );
+	process(key_right_p2  );
+	process(key_up_p2     );
+	process(key_down_p2   );
+	process(key_jump_left_p2 );
+	process(key_jump_right_p2);
+	process(key_action_p2    );
 	process(key_enter     );
 	process(key_esc       );
 }

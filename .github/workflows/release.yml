@@ -1,0 +1,746 @@
+name: Build Release
+
+on:
+  release:
+    types: [published]
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-linux:
+    name: Build Linux AppImage
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          build-essential \
+          libsdl2-dev \
+          libsdl2-image-dev \
+          wget \
+          curl \
+          file \
+          fuse
+    
+    - name: Build SDLPoP
+      working-directory: src
+      run: |
+        make clean
+        make all
+    
+    - name: Verify build output
+      run: |
+        if [ ! -f prince ]; then
+          echo "Error: prince binary not found in root directory"
+          echo "Contents of root directory:"
+          ls -la
+          echo "Contents of src directory:"
+          ls -la src/
+          exit 1
+        fi
+        echo "✓ Build successful: prince binary found"
+        file prince
+    
+    - name: Download linuxdeploy
+      run: |
+        wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+        chmod +x linuxdeploy-x86_64.AppImage
+    
+    - name: Download linuxdeploy SDL2 plugin
+      run: |
+        # Try to download the plugin with curl (better redirect handling)
+        # If it fails, we'll use linuxdeploy's built-in SDL2 detection
+        if curl -L -f -o linuxdeploy-plugin-sdl2-x86_64.AppImage https://github.com/linuxdeploy/linuxdeploy-plugin-sdl2/releases/download/continuous/linuxdeploy-plugin-sdl2-x86_64.AppImage; then
+          chmod +x linuxdeploy-plugin-sdl2-x86_64.AppImage
+          echo "✓ SDL2 plugin downloaded successfully"
+          echo "PLUGIN_AVAILABLE=true" >> $GITHUB_ENV
+        else
+          echo "⚠ SDL2 plugin not available at continuous release"
+          echo "⚠ Trying alternative: latest release..."
+          # Try latest release instead of continuous
+          if curl -L -f -o linuxdeploy-plugin-sdl2-x86_64.AppImage https://github.com/linuxdeploy/linuxdeploy-plugin-sdl2/releases/latest/download/linuxdeploy-plugin-sdl2-x86_64.AppImage; then
+            chmod +x linuxdeploy-plugin-sdl2-x86_64.AppImage
+            echo "✓ SDL2 plugin downloaded from latest release"
+            echo "PLUGIN_AVAILABLE=true" >> $GITHUB_ENV
+          else
+            echo "⚠ SDL2 plugin not available, linuxdeploy will use built-in SDL2 detection"
+            echo "PLUGIN_AVAILABLE=false" >> $GITHUB_ENV
+          fi
+        fi
+    
+    - name: Create AppDir structure
+      run: |
+        mkdir -p AppDir/usr/bin
+        mkdir -p AppDir/usr/share/applications
+        mkdir -p AppDir/usr/share/icons/hicolor/256x256/apps
+        
+        # Copy binary (Makefile outputs to ../prince, which is root)
+        if [ ! -f prince ]; then
+          echo "Error: prince binary not found"
+          exit 1
+        fi
+        cp prince AppDir/usr/bin/
+        chmod +x AppDir/usr/bin/prince
+        
+        # Copy data directory
+        if [ ! -d data ]; then
+          echo "Error: data directory not found"
+          exit 1
+        fi
+        cp -r data AppDir/usr/bin/
+        
+        # Copy config file (optional)
+        if [ -f SDLPoP.ini ]; then
+          cp SDLPoP.ini AppDir/usr/bin/
+        else
+          echo "# SDLPoP Configuration" > AppDir/usr/bin/SDLPoP.ini
+        fi
+        
+        # Copy README (optional)
+        if [ -f doc/Readme.txt ]; then
+          cp doc/Readme.txt AppDir/usr/bin/README.txt
+        else
+          echo "SDLPoP" > AppDir/usr/bin/README.txt
+        fi
+        
+        echo "✓ AppDir structure created successfully"
+    
+    - name: Create desktop file
+      run: |
+        cat > AppDir/usr/share/applications/sdlpop.desktop << 'EOF'
+        [Desktop Entry]
+        Type=Application
+        Name=SDLPoP
+        Comment=Prince of Persia port
+        Exec=prince
+        Icon=sdlpop
+        Categories=Game;
+        EOF
+    
+    - name: Copy icon (if exists)
+      run: |
+        if [ -f data/icon.png ]; then
+          cp data/icon.png AppDir/usr/share/icons/hicolor/256x256/apps/sdlpop.png
+        fi
+    
+    - name: Create AppImage
+      env:
+        VERSION: ${{ github.ref_name }}
+      run: |
+        export VERSION=${VERSION#v}  # Remove 'v' prefix if present
+        export ARCH=x86_64
+        
+        # Build linuxdeploy command
+        LINUXDEPLOY_CMD="./linuxdeploy-x86_64.AppImage \
+          --appdir AppDir \
+          --executable AppDir/usr/bin/prince \
+          --desktop-file AppDir/usr/share/applications/sdlpop.desktop \
+          --icon-file AppDir/usr/share/icons/hicolor/256x256/apps/sdlpop.png"
+        
+        # Add plugin flag only if plugin is available
+        if [ "$PLUGIN_AVAILABLE" = "true" ] && [ -f linuxdeploy-plugin-sdl2-x86_64.AppImage ]; then
+          LINUXDEPLOY_CMD="$LINUXDEPLOY_CMD --plugin sdl2"
+          echo "Using SDL2 plugin"
+        else
+          echo "Using linuxdeploy built-in SDL2 detection"
+          # Manually copy SDL2 libraries if plugin is not available
+          if [ -f /usr/lib/x86_64-linux-gnu/libSDL2.so ]; then
+            mkdir -p AppDir/usr/lib
+            cp /usr/lib/x86_64-linux-gnu/libSDL2*.so* AppDir/usr/lib/ 2>/dev/null || true
+            cp /usr/lib/x86_64-linux-gnu/libSDL2_image*.so* AppDir/usr/lib/ 2>/dev/null || true
+            echo "Copied SDL2 libraries manually"
+          fi
+        fi
+        
+        LINUXDEPLOY_CMD="$LINUXDEPLOY_CMD --output appimage"
+        
+        # Execute linuxdeploy
+        eval $LINUXDEPLOY_CMD
+        
+        # Find the created AppImage and rename if needed
+        APPIMAGE=$(ls SDLPoP-*.AppImage 2>/dev/null | head -n 1)
+        TARGET_NAME="SDLPoP-${VERSION}-x86_64.AppImage"
+        
+        if [ -z "$APPIMAGE" ]; then
+          echo "Error: No AppImage file found"
+          exit 1
+        fi
+        
+        if [ "$APPIMAGE" != "$TARGET_NAME" ]; then
+          echo "Renaming $APPIMAGE to $TARGET_NAME"
+          mv "$APPIMAGE" "$TARGET_NAME"
+        else
+          echo "AppImage already has correct name: $TARGET_NAME"
+        fi
+        
+        # Verify the final file exists
+        if [ ! -f "$TARGET_NAME" ]; then
+          echo "Error: Final AppImage file not found: $TARGET_NAME"
+          exit 1
+        fi
+        echo "✓ Created $TARGET_NAME"
+        ls -lh "$TARGET_NAME"
+        
+        # Verify that SDL2 libraries are bundled
+        echo "Verifying bundled libraries..."
+        ./"$TARGET_NAME" --appimage-extract 2>/dev/null || true
+        if [ -d "squashfs-root" ]; then
+          echo "Checking for SDL2 libraries in AppImage..."
+          find squashfs-root/usr/lib -name "*SDL2*" -type f 2>/dev/null | head -10 || echo "Note: Libraries may be in different location"
+          rm -rf squashfs-root
+        fi
+    
+    - name: Upload AppImage artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: SDLPoP-Linux-AppImage
+        path: SDLPoP-*.AppImage
+        retention-days: 30
+
+  build-windows:
+    name: Build Windows x86_64
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Install MSYS2 and dependencies
+      uses: msys2/setup-msys2@v2
+      with:
+        update: true
+        install: >-
+          mingw-w64-x86_64-gcc
+          mingw-w64-x86_64-SDL2
+          mingw-w64-x86_64-SDL2_image
+          make
+          zip
+    
+    - name: Build SDLPoP
+      shell: msys2 {0}
+      working-directory: src
+      run: |
+        export SDL2=/mingw64
+        export SDL2INC=/mingw64/include/SDL2
+        export SDL2LIB=/mingw64/lib
+        export PATH=/mingw64/bin:$PATH
+        
+        # Compile all source files
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c main.c -o main.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c data.c -o data.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c seg000.c -o seg000.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c seg001.c -o seg001.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c seg002.c -o seg002.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c seg003.c -o seg003.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c seg004.c -o seg004.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c seg005.c -o seg005.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c seg006.c -o seg006.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c seg007.c -o seg007.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c seg008.c -o seg008.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c seg009.c -o seg009.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c seqtbl.c -o seqtbl.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c replay.c -o replay.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c options.c -o options.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c lighting.c -o lighting.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c screenshot.c -o screenshot.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c menu.c -o menu.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c midi.c -o midi.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c opl3.c -o opl3.o
+        gcc -Wall -std=c99 -O3 -ffast-math -I"$SDL2INC" -I"$SDL2INC/../include" -c stb_vorbis.c -o stb_vorbis.o
+        
+        # Link
+        gcc -mwindows main.o data.o seg000.o seg001.o seg002.o seg003.o seg004.o seg005.o seg006.o seg007.o seg008.o seg009.o seqtbl.o replay.o options.o lighting.o screenshot.o menu.o midi.o opl3.o stb_vorbis.o -L"$SDL2LIB" -Wl,--whole-archive -lSDL2main -Wl,--no-whole-archive -lSDL2 -lSDL2_image -lm -o ../prince.exe
+    
+    - name: Verify build output
+      shell: msys2 {0}
+      run: |
+        if [ ! -f prince.exe ]; then
+          echo "Error: prince.exe not found in root directory"
+          echo "Contents of root directory:"
+          ls -la
+          echo "Contents of src directory:"
+          ls -la src/
+          exit 1
+        fi
+        echo "✓ Build successful: prince.exe found"
+        ls -lh prince.exe
+    
+    - name: Create release package
+      shell: msys2 {0}
+      working-directory: .
+      run: |
+        version="${{ github.ref_name }}"
+        version=${version#v}  # Remove 'v' prefix if present
+        zipName="SDLPoP-${version}-Windows-x86_64.zip"
+        
+        # Create release directory
+        mkdir -p release
+        
+        # Verify and copy executable
+        if [ ! -f prince.exe ]; then
+          echo "Error: prince.exe not found"
+          exit 1
+        fi
+        cp prince.exe release/
+        echo "✓ Copied prince.exe"
+        
+        # Verify and copy DLLs from MSYS2 installation
+        if [ ! -f /mingw64/bin/SDL2.dll ]; then
+          echo "Error: SDL2.dll not found at /mingw64/bin/SDL2.dll"
+          echo "Searching for SDL2.dll..."
+          find /mingw64 -name "SDL2.dll" 2>/dev/null || true
+          exit 1
+        fi
+        if [ ! -f /mingw64/bin/SDL2_image.dll ]; then
+          echo "Error: SDL2_image.dll not found at /mingw64/bin/SDL2_image.dll"
+          echo "Searching for SDL2_image.dll..."
+          find /mingw64 -name "SDL2_image.dll" 2>/dev/null || true
+          exit 1
+        fi
+        cp /mingw64/bin/SDL2.dll release/
+        cp /mingw64/bin/SDL2_image.dll release/
+        echo "✓ Copied SDL2 DLLs"
+        
+        # Verify and copy data directory
+        if [ ! -d data ]; then
+          echo "Error: data directory not found"
+          exit 1
+        fi
+        cp -r data release/
+        echo "✓ Copied data directory"
+        
+        # Copy config file (optional)
+        if [ -f SDLPoP.ini ]; then
+          cp SDLPoP.ini release/
+          echo "✓ Copied SDLPoP.ini"
+        else
+          echo "# SDLPoP Configuration" > release/SDLPoP.ini
+          echo "✓ Created default SDLPoP.ini"
+        fi
+        
+        # Copy README (optional)
+        if [ -f doc/Readme.txt ]; then
+          cp doc/Readme.txt release/README.txt
+          echo "✓ Copied README.txt"
+        fi
+        
+        # Create zip using zip command (avoids PowerShell nesting issues)
+        cd release
+        zip -r "../$zipName" . -q
+        cd ..
+        
+        if [ ! -f "$zipName" ]; then
+          echo "Error: Failed to create zip file"
+          exit 1
+        fi
+        
+        echo "✓ Created $zipName"
+        ls -lh "$zipName"
+    
+    - name: Upload Windows zip artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: SDLPoP-Windows-x86_64
+        path: SDLPoP-*.zip
+        retention-days: 30
+
+  build-linux-arm64:
+    name: Build Linux ARM64
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install dependencies and cross-compiler
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          build-essential \
+          gcc-aarch64-linux-gnu \
+          g++-aarch64-linux-gnu \
+          pkg-config \
+          wget \
+          file \
+          fuse \
+          autoconf \
+          automake \
+          libtool \
+          cmake \
+          ninja-build
+    
+    - name: Build SDL2 from source for ARM64
+      run: |
+        # Download and build SDL2 for ARM64
+        cd /tmp
+        wget -q https://github.com/libsdl-org/SDL/releases/download/release-2.30.0/SDL2-2.30.0.tar.gz
+        tar -xzf SDL2-2.30.0.tar.gz
+        cd SDL2-2.30.0
+        export CC=aarch64-linux-gnu-gcc
+        export CXX=aarch64-linux-gnu-g++
+        # Unset PKG_CONFIG to prevent it from trying to find packages
+        unset PKG_CONFIG
+        unset PKG_CONFIG_PATH
+        ./configure --host=aarch64-linux-gnu --prefix=/usr/aarch64-linux-gnu --disable-shared --enable-static --without-x --disable-video-x11
+        make -j$(nproc)
+        sudo make install
+        
+        # Download and build SDL2_image for ARM64
+        wget -q https://github.com/libsdl-org/SDL_image/releases/download/release-2.8.2/SDL2_image-2.8.2.tar.gz
+        tar -xzf SDL2_image-2.8.2.tar.gz
+        cd SDL2_image-2.8.2
+        export CC=aarch64-linux-gnu-gcc
+        export CXX=aarch64-linux-gnu-g++
+        # Unset PKG_CONFIG to prevent it from trying to find packages
+        unset PKG_CONFIG
+        unset PKG_CONFIG_PATH
+        export SDL2_CFLAGS="-I/usr/aarch64-linux-gnu/include/SDL2"
+        export SDL2_LIBS="-L/usr/aarch64-linux-gnu/lib -lSDL2"
+        ./configure --host=aarch64-linux-gnu --prefix=/usr/aarch64-linux-gnu --with-sdl-prefix=/usr/aarch64-linux-gnu --disable-shared --enable-static --without-x --disable-png-shared --disable-jpg-shared --disable-tif-shared --disable-webp-shared
+        make -j$(nproc)
+        sudo make install
+    
+    - name: Build SDLPoP (ARM64)
+      working-directory: src
+      run: |
+        # Set up cross-compilation paths
+        export CC=aarch64-linux-gnu-gcc
+        export PKG_CONFIG_PATH=/usr/aarch64-linux-gnu/lib/pkgconfig
+        export SDL2_CFLAGS="-I/usr/aarch64-linux-gnu/include/SDL2"
+        export SDL2_LIBS="-L/usr/aarch64-linux-gnu/lib -lSDL2 -lSDL2_image"
+        
+        # Compile all source files (ARM64)
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c main.c -o main.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c data.c -o data.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c seg000.c -o seg000.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c seg001.c -o seg001.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c seg002.c -o seg002.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c seg003.c -o seg003.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c seg004.c -o seg004.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c seg005.c -o seg005.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c seg006.c -o seg006.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c seg007.c -o seg007.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c seg008.c -o seg008.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c seg009.c -o seg009.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c seqtbl.c -o seqtbl.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c replay.c -o replay.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c options.c -o options.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c lighting.c -o lighting.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c screenshot.c -o screenshot.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c menu.c -o menu.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c midi.c -o midi.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c opl3.c -o opl3.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c stb_vorbis.c -o stb_vorbis.o
+        
+        # Link (ARM64)
+        $CC main.o data.o seg000.o seg001.o seg002.o seg003.o seg004.o seg005.o seg006.o seg007.o seg008.o seg009.o seqtbl.o replay.o options.o lighting.o screenshot.o menu.o midi.o opl3.o stb_vorbis.o $SDL2_LIBS -lm -o ../prince
+    
+    - name: Verify build output (ARM64)
+      run: |
+        if [ ! -f prince ]; then
+          echo "Error: prince binary not found in root directory"
+          echo "Contents of root directory:"
+          ls -la
+          echo "Contents of src directory:"
+          ls -la src/
+          exit 1
+        fi
+        echo "✓ Build successful: prince binary found"
+        file prince
+        # Verify it's ARM64
+        if ! file prince | grep -q "ARM aarch64"; then
+          echo "Warning: Binary might not be ARM64"
+        fi
+    
+    - name: Download linuxdeploy for ARM64
+      run: |
+        # Note: linuxdeploy may not have ARM64 AppImage, so we'll create a tarball instead
+        echo "Creating ARM64 tarball package"
+    
+    - name: Create ARM64 package
+      run: |
+        version="${{ github.ref_name }}"
+        version=${version#v}  # Remove 'v' prefix if present
+        packageName="SDLPoP-${version}-Linux-ARM64.tar.gz"
+        
+        # Create package directory
+        mkdir -p package/usr/bin
+        mkdir -p package/usr/share/applications
+        mkdir -p package/usr/share/icons/hicolor/256x256/apps
+        
+        # Copy binary
+        if [ ! -f prince ]; then
+          echo "Error: prince binary not found"
+          exit 1
+        fi
+        cp prince package/usr/bin/
+        chmod +x package/usr/bin/prince
+        
+        # Copy data directory
+        if [ ! -d data ]; then
+          echo "Error: data directory not found"
+          exit 1
+        fi
+        cp -r data package/usr/bin/
+        
+        # Copy config file (optional)
+        if [ -f SDLPoP.ini ]; then
+          cp SDLPoP.ini package/usr/bin/
+        else
+          echo "# SDLPoP Configuration" > package/usr/bin/SDLPoP.ini
+        fi
+        
+        # Copy README (optional)
+        if [ -f doc/Readme.txt ]; then
+          cp doc/Readme.txt package/usr/bin/README.txt
+        else
+          echo "SDLPoP" > package/usr/bin/README.txt
+        fi
+        
+        # Create desktop file
+        cat > package/usr/share/applications/sdlpop.desktop << 'EOF'
+        [Desktop Entry]
+        Type=Application
+        Name=SDLPoP
+        Comment=Prince of Persia port
+        Exec=prince
+        Icon=sdlpop
+        Categories=Game;
+        EOF
+        
+        # Copy icon (if exists)
+        if [ -f data/icon.png ]; then
+          cp data/icon.png package/usr/share/icons/hicolor/256x256/apps/sdlpop.png
+        fi
+        
+        # Create tarball
+        tar -czf "$packageName" -C package .
+        
+        if [ ! -f "$packageName" ]; then
+          echo "Error: Failed to create tarball"
+          exit 1
+        fi
+        
+        echo "✓ Created $packageName"
+        ls -lh "$packageName"
+    
+    - name: Upload ARM64 artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: SDLPoP-Linux-ARM64
+        path: SDLPoP-*-Linux-ARM64.tar.gz
+        retention-days: 30
+
+  build-linux-arm32:
+    name: Build Linux ARM 32-bit (armhf)
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install dependencies and cross-compiler
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          build-essential \
+          gcc-arm-linux-gnueabihf \
+          g++-arm-linux-gnueabihf \
+          pkg-config \
+          wget \
+          file \
+          fuse
+    
+    - name: Build SDL2 from source for ARM 32-bit
+      run: |
+        # Download and build SDL2 for ARM 32-bit (armhf)
+        cd /tmp
+        wget -q https://github.com/libsdl-org/SDL/releases/download/release-2.30.0/SDL2-2.30.0.tar.gz
+        tar -xzf SDL2-2.30.0.tar.gz
+        cd SDL2-2.30.0
+        ./configure --host=arm-linux-gnueabihf --prefix=/usr/arm-linux-gnueabihf --disable-shared --enable-static
+        make -j$(nproc)
+        sudo make install
+        
+        # Download and build SDL2_image for ARM 32-bit
+        wget -q https://github.com/libsdl-org/SDL_image/releases/download/release-2.8.2/SDL2_image-2.8.2.tar.gz
+        tar -xzf SDL2_image-2.8.2.tar.gz
+        cd SDL2_image-2.8.2
+        ./configure --host=arm-linux-gnueabihf --prefix=/usr/arm-linux-gnueabihf --with-sdl-prefix=/usr/arm-linux-gnueabihf --disable-shared --enable-static
+        make -j$(nproc)
+        sudo make install
+    
+    - name: Build SDLPoP (ARM 32-bit)
+      working-directory: src
+      run: |
+        # Set up cross-compilation paths
+        export CC=arm-linux-gnueabihf-gcc
+        export PKG_CONFIG_PATH=/usr/arm-linux-gnueabihf/lib/pkgconfig
+        export SDL2_CFLAGS="-I/usr/arm-linux-gnueabihf/include/SDL2"
+        export SDL2_LIBS="-L/usr/arm-linux-gnueabihf/lib -lSDL2 -lSDL2_image"
+        
+        # Compile all source files (ARM 32-bit)
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c main.c -o main.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c data.c -o data.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c seg000.c -o seg000.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c seg001.c -o seg001.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c seg002.c -o seg002.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c seg003.c -o seg003.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c seg004.c -o seg004.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c seg005.c -o seg005.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c seg006.c -o seg006.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c seg007.c -o seg007.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c seg008.c -o seg008.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c seg009.c -o seg009.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c seqtbl.c -o seqtbl.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c replay.c -o replay.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c options.c -o options.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c lighting.c -o lighting.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c screenshot.c -o screenshot.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c menu.c -o menu.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c midi.c -o midi.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c opl3.c -o opl3.o
+        $CC -Wall -std=c99 -O3 -ffast-math $SDL2_CFLAGS -c stb_vorbis.c -o stb_vorbis.o
+        
+        # Link (ARM 32-bit)
+        $CC main.o data.o seg000.o seg001.o seg002.o seg003.o seg004.o seg005.o seg006.o seg007.o seg008.o seg009.o seqtbl.o replay.o options.o lighting.o screenshot.o menu.o midi.o opl3.o stb_vorbis.o $SDL2_LIBS -lm -o ../prince
+    
+    - name: Verify build output (ARM 32-bit)
+      run: |
+        if [ ! -f prince ]; then
+          echo "Error: prince binary not found in root directory"
+          echo "Contents of root directory:"
+          ls -la
+          echo "Contents of src directory:"
+          ls -la src/
+          exit 1
+        fi
+        echo "✓ Build successful: prince binary found"
+        file prince
+        # Verify it's ARM 32-bit
+        if ! file prince | grep -q "ARM"; then
+          echo "Warning: Binary might not be ARM"
+        fi
+    
+    - name: Create ARM 32-bit package
+      run: |
+        version="${{ github.ref_name }}"
+        version=${version#v}  # Remove 'v' prefix if present
+        packageName="SDLPoP-${version}-Linux-ARM32.tar.gz"
+        
+        # Create package directory
+        mkdir -p package/usr/bin
+        mkdir -p package/usr/share/applications
+        mkdir -p package/usr/share/icons/hicolor/256x256/apps
+        
+        # Copy binary
+        if [ ! -f prince ]; then
+          echo "Error: prince binary not found"
+          exit 1
+        fi
+        cp prince package/usr/bin/
+        chmod +x package/usr/bin/prince
+        
+        # Copy data directory
+        if [ ! -d data ]; then
+          echo "Error: data directory not found"
+          exit 1
+        fi
+        cp -r data package/usr/bin/
+        
+        # Copy config file (optional)
+        if [ -f SDLPoP.ini ]; then
+          cp SDLPoP.ini package/usr/bin/
+        else
+          echo "# SDLPoP Configuration" > package/usr/bin/SDLPoP.ini
+        fi
+        
+        # Copy README (optional)
+        if [ -f doc/Readme.txt ]; then
+          cp doc/Readme.txt package/usr/bin/README.txt
+        else
+          echo "SDLPoP" > package/usr/bin/README.txt
+        fi
+        
+        # Create desktop file
+        cat > package/usr/share/applications/sdlpop.desktop << 'EOF'
+        [Desktop Entry]
+        Type=Application
+        Name=SDLPoP
+        Comment=Prince of Persia port
+        Exec=prince
+        Icon=sdlpop
+        Categories=Game;
+        EOF
+        
+        # Copy icon (if exists)
+        if [ -f data/icon.png ]; then
+          cp data/icon.png package/usr/share/icons/hicolor/256x256/apps/sdlpop.png
+        fi
+        
+        # Create tarball
+        tar -czf "$packageName" -C package .
+        
+        if [ ! -f "$packageName" ]; then
+          echo "Error: Failed to create tarball"
+          exit 1
+        fi
+        
+        echo "✓ Created $packageName"
+        ls -lh "$packageName"
+    
+    - name: Upload ARM 32-bit artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: SDLPoP-Linux-ARM32
+        path: SDLPoP-*-Linux-ARM32.tar.gz
+        retention-days: 30
+
+  create-release:
+    name: Create GitHub Release
+    needs: [build-linux, build-windows, build-linux-arm64, build-linux-arm32]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release' || startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+    - name: Download Linux x86_64 artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: SDLPoP-Linux-AppImage
+        path: artifacts/linux-x86_64
+    
+    - name: Download Windows x86_64 artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: SDLPoP-Windows-x86_64
+        path: artifacts/windows-x86_64
+    
+    - name: Download Linux ARM64 artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: SDLPoP-Linux-ARM64
+        path: artifacts/linux-arm64
+    
+    - name: Download Linux ARM32 artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: SDLPoP-Linux-ARM32
+        path: artifacts/linux-arm32
+    
+    - name: Upload to Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          artifacts/linux-x86_64/*
+          artifacts/windows-x86_64/*
+          artifacts/linux-arm64/*
+          artifacts/linux-arm32/*
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

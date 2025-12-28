@@ -107,6 +107,10 @@ void pop_main() {
 
 	show_loading();
 	set_joy_mode();
+	
+	// Multiplayer: Enable multiplayer mode if requested via command line
+	is_multiplayer_mode = (check_param("multiplayer") != NULL || check_param("mp") != NULL);
+	
 	cheats_enabled = check_param("megahit") != NULL;
 #ifdef USE_DEBUG_CHEATS
 	debug_cheats_enabled = check_param("debug") != NULL;
@@ -1812,6 +1816,131 @@ void read_keyb_control() {
 		else if (key_states[SDL_SCANCODE_LEFTBRACKET] & key_state) --Char.x;
 	}
 	#endif
+}
+
+// Multiplayer: Player 2 keyboard controls (configurable keys, default WASD)
+void read_keyb_control_p2() {
+	int key_state;
+	if (fixes->fix_register_quick_input) {
+		key_state = KEYSTATE_HELD | KEYSTATE_HELD_NEW;
+	} else {
+		key_state = KEYSTATE_HELD;
+	}
+
+	// Initialize control values
+	control_y_p2 = CONTROL_RELEASED;
+	control_x_p2 = CONTROL_RELEASED;
+	control_shift_p2 = CONTROL_RELEASED;
+
+	// Player 2 uses configurable keys (default: W=up, S=down, A=left, D=right, Space=action)
+	if (key_states[key_up_p2] & key_state || key_states[key_jump_left_p2] & key_state || key_states[key_jump_right_p2] & key_state) {
+		control_y_p2 = CONTROL_HELD_UP;
+	} else if (key_states[key_down_p2] & key_state) {
+		control_y_p2 = CONTROL_HELD_DOWN;
+	}
+	
+	if (key_states[key_left_p2] & key_state || key_states[key_jump_left_p2] & key_state) {
+		control_x_p2 = CONTROL_HELD_LEFT;
+	} else if (key_states[key_right_p2] & key_state || key_states[key_jump_right_p2] & key_state) {
+		control_x_p2 = CONTROL_HELD_RIGHT;
+	}
+	
+	if (key_states[key_action_p2] & key_state) {
+		control_shift_p2 = CONTROL_HELD;
+	}
+}
+
+// Multiplayer: Player 2 joystick controls (second controller)
+void read_joyst_control_p2() {
+	if (sdl_controller_p2_ == NULL && sdl_joystick_p2_ == NULL) {
+		// No controller for Player 2 - don't clear keyboard controls!
+		// Keyboard controls are handled by read_keyb_control_p2()
+		// Only clear joystick-specific controls if we had a controller before
+		return;
+	}
+
+	int key_state;
+	int joy_axis_p2[JOY_AXIS_NUM];
+	int joy_left_stick_states_p2[2];
+	int joy_right_stick_states_p2[2];
+	int joy_button_states_p2[JOYINPUT_NUM];
+	
+	if (fixes->fix_register_quick_input) {
+		key_state = KEYSTATE_HELD | KEYSTATE_HELD_NEW;
+	} else {
+		key_state = KEYSTATE_HELD;
+	}
+
+	// Read axes from Player 2 controller
+	if (sdl_controller_p2_ != NULL && !using_sdl_joystick_interface_p2) {
+		joy_axis_p2[SDL_CONTROLLER_AXIS_LEFTX] = SDL_GameControllerGetAxis(sdl_controller_p2_, SDL_CONTROLLER_AXIS_LEFTX);
+		joy_axis_p2[SDL_CONTROLLER_AXIS_LEFTY] = SDL_GameControllerGetAxis(sdl_controller_p2_, SDL_CONTROLLER_AXIS_LEFTY);
+		joy_axis_p2[SDL_CONTROLLER_AXIS_RIGHTX] = SDL_GameControllerGetAxis(sdl_controller_p2_, SDL_CONTROLLER_AXIS_RIGHTX);
+		joy_axis_p2[SDL_CONTROLLER_AXIS_RIGHTY] = SDL_GameControllerGetAxis(sdl_controller_p2_, SDL_CONTROLLER_AXIS_RIGHTY);
+		joy_axis_p2[SDL_CONTROLLER_AXIS_TRIGGERLEFT] = SDL_GameControllerGetAxis(sdl_controller_p2_, SDL_CONTROLLER_AXIS_TRIGGERLEFT);
+		joy_axis_p2[SDL_CONTROLLER_AXIS_TRIGGERRIGHT] = SDL_GameControllerGetAxis(sdl_controller_p2_, SDL_CONTROLLER_AXIS_TRIGGERRIGHT);
+		
+		// Read buttons
+		joy_button_states_p2[JOYINPUT_DPAD_LEFT] = SDL_GameControllerGetButton(sdl_controller_p2_, SDL_CONTROLLER_BUTTON_DPAD_LEFT) ? key_state : 0;
+		joy_button_states_p2[JOYINPUT_DPAD_RIGHT] = SDL_GameControllerGetButton(sdl_controller_p2_, SDL_CONTROLLER_BUTTON_DPAD_RIGHT) ? key_state : 0;
+		joy_button_states_p2[JOYINPUT_DPAD_UP] = SDL_GameControllerGetButton(sdl_controller_p2_, SDL_CONTROLLER_BUTTON_DPAD_UP) ? key_state : 0;
+		joy_button_states_p2[JOYINPUT_DPAD_DOWN] = SDL_GameControllerGetButton(sdl_controller_p2_, SDL_CONTROLLER_BUTTON_DPAD_DOWN) ? key_state : 0;
+		joy_button_states_p2[JOYINPUT_X] = SDL_GameControllerGetButton(sdl_controller_p2_, SDL_CONTROLLER_BUTTON_X) ? key_state : 0;
+		joy_button_states_p2[JOYINPUT_Y] = SDL_GameControllerGetButton(sdl_controller_p2_, SDL_CONTROLLER_BUTTON_Y) ? key_state : 0;
+		joy_button_states_p2[JOYINPUT_A] = SDL_GameControllerGetButton(sdl_controller_p2_, SDL_CONTROLLER_BUTTON_A) ? key_state : 0;
+	} else if (sdl_joystick_p2_ != NULL) {
+		// Use SDL_Joystick interface (fallback for non-GameController devices)
+		joy_axis_p2[SDL_CONTROLLER_AXIS_LEFTX] = SDL_JoystickGetAxis(sdl_joystick_p2_, 0);
+		joy_axis_p2[SDL_CONTROLLER_AXIS_LEFTY] = SDL_JoystickGetAxis(sdl_joystick_p2_, 1);
+		joy_axis_p2[SDL_CONTROLLER_AXIS_RIGHTX] = SDL_JoystickGetAxis(sdl_joystick_p2_, 2);
+		joy_axis_p2[SDL_CONTROLLER_AXIS_RIGHTY] = SDL_JoystickGetAxis(sdl_joystick_p2_, 3);
+		joy_axis_p2[SDL_CONTROLLER_AXIS_TRIGGERLEFT] = SDL_JoystickGetAxis(sdl_joystick_p2_, 4);
+		joy_axis_p2[SDL_CONTROLLER_AXIS_TRIGGERRIGHT] = SDL_JoystickGetAxis(sdl_joystick_p2_, 5);
+		
+		// Read buttons (assuming standard mapping)
+		joy_button_states_p2[JOYINPUT_DPAD_LEFT] = SDL_JoystickGetButton(sdl_joystick_p2_, 11) ? key_state : 0;
+		joy_button_states_p2[JOYINPUT_DPAD_RIGHT] = SDL_JoystickGetButton(sdl_joystick_p2_, 12) ? key_state : 0;
+		joy_button_states_p2[JOYINPUT_DPAD_UP] = SDL_JoystickGetButton(sdl_joystick_p2_, 13) ? key_state : 0;
+		joy_button_states_p2[JOYINPUT_DPAD_DOWN] = SDL_JoystickGetButton(sdl_joystick_p2_, 14) ? key_state : 0;
+		joy_button_states_p2[JOYINPUT_X] = SDL_JoystickGetButton(sdl_joystick_p2_, 2) ? key_state : 0;
+		joy_button_states_p2[JOYINPUT_Y] = SDL_JoystickGetButton(sdl_joystick_p2_, 3) ? key_state : 0;
+		joy_button_states_p2[JOYINPUT_A] = SDL_JoystickGetButton(sdl_joystick_p2_, 0) ? key_state : 0;
+	} else {
+		return; // No controller
+	}
+
+	// Process stick states
+	if (joystick_only_horizontal) {
+		get_joystick_state_hor_only(joy_axis_p2[SDL_CONTROLLER_AXIS_LEFTX], joy_left_stick_states_p2);
+		get_joystick_state_hor_only(joy_axis_p2[SDL_CONTROLLER_AXIS_RIGHTX], joy_right_stick_states_p2);
+	} else {
+		get_joystick_state(joy_axis_p2[SDL_CONTROLLER_AXIS_LEFTX], joy_axis_p2[SDL_CONTROLLER_AXIS_LEFTY], joy_left_stick_states_p2);
+		get_joystick_state(joy_axis_p2[SDL_CONTROLLER_AXIS_RIGHTX], joy_axis_p2[SDL_CONTROLLER_AXIS_RIGHTY], joy_right_stick_states_p2);
+	}
+
+	// Apply stick/button input to Player 2 controls
+	if (joy_left_stick_states_p2[0] == -1 || joy_right_stick_states_p2[0] == -1 || joy_button_states_p2[JOYINPUT_DPAD_LEFT] & key_state)
+		control_x_p2 = CONTROL_HELD_LEFT;
+	else if (joy_left_stick_states_p2[0] == 1 || joy_right_stick_states_p2[0] == 1 || joy_button_states_p2[JOYINPUT_DPAD_RIGHT] & key_state)
+		control_x_p2 = CONTROL_HELD_RIGHT;
+	else
+		control_x_p2 = CONTROL_RELEASED;
+
+	if (joy_left_stick_states_p2[1] == -1 || joy_right_stick_states_p2[1] == -1 || joy_button_states_p2[JOYINPUT_DPAD_UP] & key_state || joy_button_states_p2[JOYINPUT_Y] & key_state)
+		control_y_p2 = CONTROL_HELD_UP;
+	else if (joy_left_stick_states_p2[1] == 1 || joy_right_stick_states_p2[1] == 1 || joy_button_states_p2[JOYINPUT_DPAD_DOWN] & key_state || joy_button_states_p2[JOYINPUT_A] & key_state)
+		control_y_p2 = CONTROL_HELD_DOWN;
+	else
+		control_y_p2 = CONTROL_RELEASED;
+
+	if (joy_button_states_p2[JOYINPUT_X] & key_state ||
+			joy_axis_p2[SDL_CONTROLLER_AXIS_TRIGGERLEFT] > 8000 ||
+			joy_axis_p2[SDL_CONTROLLER_AXIS_TRIGGERRIGHT] > 8000)
+	{
+		control_shift_p2 = CONTROL_HELD;
+	} else {
+		control_shift_p2 = CONTROL_RELEASED;
+	}
 }
 
 // We need a version of showmessage() which can detect modifier keys as well, in case someone wants to configure such a key for controls.
