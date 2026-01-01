@@ -1,0 +1,24 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        { // This configuration fails to attach the process for debugging as described here: https://github.com/microsoft/vscode-cpptools/issues/3161.
+            "name": "(lldb) Launch",
+            "type": "cppdbg",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "program": "${command:cmake.launchTargetPath}",
+            "args": [],
+            "stopAtEntry": false,
+            "externalConsole": false,
+            "MIMode": "lldb",
+        },        
+        { // Requires the CodeLLDB plugin, works for debugging
+            "name": "Launch",
+            "type": "lldb",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "program": "${command:cmake.launchTargetPath}",
+            "args": [],
+        }
+    ]
+}
