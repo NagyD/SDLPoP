@@ -112,7 +112,8 @@ if(APPLE AND CREATE_BUNDLE)
             COMMAND ${CMAKE_COMMAND} -E copy
             ${CMAKE_SOURCE_DIR}/../SDLPoP.ini ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/prince.app/Contents/MacOS/SDLPoP.ini)
 elseif(PS2)
-    add_executable(prince.elf ${SOURCE_FILES})
+    set(CMAKE_EXECUTABLE_SUFFIX .elf)
+    add_executable(prince ${SOURCE_FILES})
 else()
     add_executable(prince ${SOURCE_FILES})
 endif()
@@ -122,7 +123,7 @@ if(WIN32)
 elseif(APPLE)
     target_link_libraries(prince SDL2main SDL2 SDL2_image m)
 elseif(PS2)
-	target_link_libraries(prince.elf PRIVATE SDL2main SDL2 SDL2_image SDL2_mixer 
+	target_link_libraries(prince PRIVATE SDL2main SDL2 SDL2_image SDL2_mixer 
     atomic ogg vorbis modplug mikmod stdc++ m debug c
     gskit dmakit dma xmp ps2_drivers patches config draw)
 elseif(PSP) # Linux, *BSD, etc.
