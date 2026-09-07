@@ -3,10 +3,14 @@
 An open-source port of Prince of Persia, based on the disassembly of the DOS version, extended with new features.
 
 ## About this fork
-The original intention of this fork of SDLPoP was to build a native Universal MacOS App, based on the V1.24RC code by NagyD.
-There wasn't to much activity on their Github page, so I decided to fork the project and create a universal binary by myself. Also, the popot.org website doesn't have a release yet on based on that code.
-Now with that out of the way, my next goals would be to fix some of the issue's still present in the code. For that, I will be first be looking after the issue's present on the NagyD github page.
-I will try to keep the changes as small as possible. In doing so, I hope to stay compatible with the upstream project. So hopefully we can merge the code once work on the original project will be resumed.
+
+The original purpose of this fork of SDLPoP was to create a native Universal macOS application, based on the v1.24 RC code by NagyD.
+
+There has been relatively little recent activity in the upstream repository, and no compiled release based on this version is currently available on popot.org. I therefore decided to create this fork and build a Universal macOS version myself.
+
+Now that the initial macOS build is complete, my next goal is to address some of the issues that are still present in the code. I will initially focus on issues reported in the upstream NagyD/SDLPoP repository.
+
+I will try to keep my changes as small as possible in order to remain compatible with the upstream project. Hopefully, this will make it possible to contribute or merge changes back upstream if development of the original project becomes active again.
 
 ## Links
 
