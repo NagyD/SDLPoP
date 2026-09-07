@@ -2,6 +2,12 @@
 
 An open-source port of Prince of Persia, based on the disassembly of the DOS version, extended with new features.
 
+## About this fork
+The original intention of this fork of SDLPoP was to build a native Universal MacOS App, based on the V1.24RC code by NagyD.
+There wasn't to much activity on their Github page, so I decided to fork the project and create a universal binary by myself. Also, the popot.org website doesn't have a release yet on based on that code.
+Now with that out of the way, my next goals would be to fix some of the issue's still present in the code. For that, I will be first be looking after the issue's present on the NagyD github page.
+I will try to keep the changes as small as possible. In doing so, I hope to stay compatible with the upstream project. So hopefully we can merge the code once work on the original project will be resumed.
+
 ## Links
 
 * Forum board: https://forum.princed.org/viewforum.php?f=126
@@ -97,6 +103,10 @@ This program is open source under the GNU General Public License terms, see `COP
 The following files are external libraries with their own licenses: `src/opl3.c`, `src/opl3.h`, `src/stb_vorbis.c`.
 See their contents for license information.
 
+SDLPoP does not claim ownership of the original Prince of Persia game assets included with or used by the project. These assets are the property of their respective copyright holders and are not covered by the GPL license.
+This project does not grant any rights or licenses to the original game assets. Users are responsible for ensuring that their use and distribution of such assets complies with applicable copyright laws and the rights of their respective owners.
+
+
 ## USAGE
 
 ### Running the game
@@ -126,6 +136,7 @@ See their contents for license information.
 
 * You can find compiled versions for these three platforms here: https://www.popot.org/get_the_games.php?game=SDLPoP
 * Unofficial ports for other systems can be found here: https://forum.princed.org/viewtopic.php?f=126&t=4728. These were not made by the authors of SDLPoP.
+
 
 ### What command-line options are there?
 
