@@ -782,3 +782,5 @@ FIXED: Added a configurable fix for: If the prince has only one hit point when h
 	Details: See FIX_ONE_HP_STOPS_BLINKING in config.h and https://github.com/NagyD/SDLPoP/issues/338
 FIXED: Added a configurable fix for: If the prince or a guard falls to his death onto a loose floor, the floor drops, but the body stays there in the air.
 	Details: See FIX_DEAD_FLOATING_IN_AIR in config.h and https://github.com/NagyD/SDLPoP/issues/343
+FIXED: Crash if the player starts a new game at the exact moment the intro music finishes.
+	Details: https://github.com/NagyD/SDLPoP/issues/374
