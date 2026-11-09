@@ -178,12 +178,17 @@ static int global_ini_callback(const char *section, const char *name, const char
 #ifdef USE_MENU
 		process_boolean("enable_pause_menu", &enable_pause_menu);
 #endif
-		if (strcasecmp(name, "mods_folder") == 0) {
-			if (value[0] != '\0' && strcasecmp(value, "default") != 0) {
-				snprintf_check(mods_folder, sizeof(mods_folder), "%s", locate_file(value));
+	if (strcasecmp(name, "mods_folder") == 0) {
+		if (value[0] != '\0' && strcasecmp(value, "default") != 0) {
+			const char* home_path = getenv("HOME");
+			if (home_path != NULL && home_path[0] != '\0') {
+				snprintf_check(mods_folder, sizeof(mods_folder), "%s/prince/mods/%s", home_path, value);
+			} else {
+				snprintf_check(mods_folder, sizeof(mods_folder), "./prince/mods/%s", value);
 			}
-			return 1;
 		}
+		return 1;
+	}
 		process_boolean("enable_copyprot", &enable_copyprot);
 		process_boolean("enable_music", &enable_music);
 		process_boolean("enable_fade", &enable_fade);

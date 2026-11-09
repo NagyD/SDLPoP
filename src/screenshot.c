@@ -22,28 +22,37 @@ The authors of this program may be contacted at https://forum.princed.org
 
 #ifdef USE_SCREENSHOT
 
-char screenshots_folder[POP_MAX_PATH] = "screenshots";
+char screenshots_folder[POP_MAX_PATH];
 char screenshot_filename[POP_MAX_PATH] = "screenshot.png";
 int screenshot_index = 0;
 
 // Use incrementing numbers and a separate folder, like DOSBox.
 void make_screenshot_filename(void) {
-	// Create the screenshots directory in SDLPoP's directory, even if the current directory is something else.
-	snprintf_check(screenshots_folder, sizeof(screenshots_folder), "%s", locate_file("screenshots"));
-	// Create the folder if it doesn't exist yet:
+    const char *home_dir = getenv("HOME");
+    if (home_dir == NULL) {
+        home_dir = ".";
+    }
+
+    snprintf_check(screenshots_folder, sizeof(screenshots_folder), "%s/prince/screenshots", home_dir);
+
+    // Create the folder if it doesn't exist yet:
 #if defined WIN32 || _WIN32 || WIN64 || _WIN64
-	mkdir (screenshots_folder);
+    mkdir (screenshots_folder);
 #else
-	mkdir (screenshots_folder, 0700);
+    char prince_path[POP_MAX_PATH];
+    snprintf_check(prince_path, sizeof(prince_path), "%s/prince", home_dir);
+    mkdir(prince_path, 0700);
+    mkdir(screenshots_folder, 0700);
 #endif
-	// Find the first unused filename:
-	for (;;) {
-		snprintf_check(screenshot_filename, sizeof(screenshot_filename), "%s/screenshot_%03d.png", screenshots_folder, screenshot_index);
-		if (! file_exists(screenshot_filename)) {
-			return;
-		}
-		screenshot_index++;
-	}
+
+    // Find the first unused filename:
+    for (;;) {
+        snprintf_check(screenshot_filename, sizeof(screenshot_filename), "%s/screenshot_%03d.png", screenshots_folder, screenshot_index);
+        if (! file_exists(screenshot_filename)) {
+            return;
+        }
+        screenshot_index++;
+    }
 }
 
 #define EVENT_OFFSET 0 // Add this number to displayed event numbers. Use 1 for Apoplexy compatibility.
