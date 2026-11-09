@@ -44,6 +44,11 @@ void sdlperror(const char* header) {
 
 char exe_dir[POP_MAX_PATH] = ".";
 bool found_exe_dir = false;
+#ifdef __APPLE__
+char resources_dir[POP_MAX_PATH];
+bool found_resources_dir = false;
+#endif
+
 #if ! (defined WIN32 || _WIN32 || WIN64 || _WIN64)
 char home_dir[POP_MAX_PATH];
 bool found_home_dir = false;
@@ -98,19 +103,62 @@ bool file_exists(const char* filename) {
 	return (access(filename, F_OK) != -1);
 }
 
+#ifdef __APPLE__
+void find_resources_dir(void) {
+
+    if (found_resources_dir) return;
+
+    find_exe_dir();
+
+    snprintf_check(
+        resources_dir,
+        sizeof(resources_dir),
+        "%s/../Resources",
+        exe_dir
+    );
+
+    found_resources_dir = file_exists(resources_dir);
+}
+#endif
+
 const char* find_first_file_match(char* dst, int size, char* format, const char* filename) {
 	find_exe_dir();
 #if defined WIN32 || _WIN32 || WIN64 || _WIN64
-	snprintf_check(dst, size, format, exe_dir, filename);
+    snprintf_check(dst, size, format, exe_dir, filename);
 #else
-	find_home_dir();
-	find_share_dir();
-	char* dirs[3] = {home_dir, share_dir, exe_dir};
-	for (int i = 0; i < 3; i++) {
-		snprintf_check(dst, size, format, dirs[i], filename);
-		if(file_exists(dst))
-			break;
-	}
+    find_home_dir();
+    find_share_dir();
+#ifdef __APPLE__
+
+    find_resources_dir();
+
+    char* dirs[4] = {
+        home_dir,
+        share_dir,
+        resources_dir,
+        exe_dir
+    };
+
+    for (int i = 0; i < 4; i++) {
+
+#else
+
+    char* dirs[3] = {
+        home_dir,
+        share_dir,
+        exe_dir
+    };
+
+    for (int i = 0; i < 3; i++) {
+
+#endif
+
+        snprintf_check(dst, size, format, dirs[i], filename);
+
+        if (file_exists(dst))
+            break;
+    }
+
 #endif
 	return (const char*) dst;
 }

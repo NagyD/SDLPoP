@@ -1,4 +1,10 @@
-                    GNU GENERAL PUBLIC LICENSE
+Note regarding game assets
+The source code of SDLPoP is licensed under the GNU General Public License, version 3, as described in the COPYING file.
+SDLPoP does not claim ownership of the original Prince of Persia game assets included with or used by the project. These assets are the property of their respective copyright holders and are not covered by the GPL license.
+This project does not grant any rights or licenses to the original game assets. Users are responsible for ensuring that their use and distribution of such assets complies with applicable copyright laws and the rights of their respective owners.
+
+=========
+					   GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
 
  Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/>

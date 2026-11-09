@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.13)
 project(SDLPoP)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -std=c99")
@@ -18,7 +18,33 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${SDLPoP_SOURCE_DIR}/..")
 
 #set(SDL2 "/usr/local/Cellar/sdl2/2.0.5")
 
-if (NOT(WIN32) AND (DEFINED SDL2))
+if(APPLE)
+
+    set(SDL2_ROOT "" CACHE PATH
+        "Root directory containing SDL2.framework and libSDL2_image")
+
+    if(NOT SDL2_ROOT AND DEFINED SDL2)
+        set(SDL2_ROOT "${SDL2}")
+    endif()
+
+    if(NOT SDL2_ROOT)
+        message(FATAL_ERROR
+            "On macOS, specify the SDL libraries using:\n"
+            "  -DSDL2_ROOT=/path/to/SDL-libraries")
+    endif()
+
+    set(SDL2_FRAMEWORK
+        "${SDL2_ROOT}/SDL2.framework")
+
+    set(SDL2_IMAGE_LIBRARY
+        "${SDL2_ROOT}/lib/libSDL2_image-2.0.0.900.0.dylib")
+
+    include_directories(
+        "${SDL2_ROOT}/include"
+    )
+
+elseif (NOT(WIN32) AND (DEFINED SDL2))
+
     include_directories(${SDL2}/include/SDL2)
     link_directories(${SDL2}/lib)
 endif()
@@ -90,35 +116,102 @@ else()
     # By default, a normal binary executable will be created.
     # If you want an Application Bundle instead, pass CREATE_BUNDLE to CMake like so: -DCREATE_BUNDLE=1
 
-    # NOTE: Currently, the SDL2 and SDL2_image frameworks are not being correctly included/linked in the bundle!
-    #       As long as this isn't fixed, these bundles will only work if SDL2 and SDL2_image are installed.
+# macOS bundle metadata
 
-    set (SDLPoP_VERSION "1.24 RC")
-    set (MACOSX_BUNDLE_INFO_STRING          ${PROJECT_NAME})
-    set (MACOSX_BUNDLE_ICON_FILE            "icon.icns")
-    set_source_files_properties(${MACOSX_BUNDLE_ICON_FILE} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
-    set (MACOSX_BUNDLE_GUI_IDENTIFIER       "org.princed.SDLPoP")
-    set (MACOSX_BUNDLE_LONG_VERSION_STRING  ${SDLPoP_VERSION})
-    set (MACOSX_BUNDLE_BUNDLE_NAME          "SDLPoP")
-    set (MACOSX_BUNDLE_SHORT_VERSION_STRING ${SDLPoP_VERSION})
-    set (MACOSX_BUNDLE_BUNDLE_VERSION       ${SDLPoP_VERSION})
-    set (MACOSX_BUNDLE_COPYRIGHT            "GNU General Public Licence, v3")
+set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0")
+
+set(SDLPoP_VERSION "1.24 RC")
+set(SDLPoP_BUILD_VERSION "1.24.0")
+
+set(MACOSX_BUNDLE_INFO_STRING
+    "SDLPoP - Prince of Persia")
+
+set(MACOSX_BUNDLE_ICON_FILE
+    "icon.icns")
+
+set_source_files_properties(
+    ${MACOSX_BUNDLE_ICON_FILE}
+    PROPERTIES MACOSX_PACKAGE_LOCATION Resources
+)
+
+set(MACOSX_BUNDLE_GUI_IDENTIFIER
+    "org.princed.SDLPoP")
+
+set(MACOSX_BUNDLE_LONG_VERSION_STRING
+    ${SDLPoP_VERSION})
+
+set(MACOSX_BUNDLE_BUNDLE_NAME
+    "SDLPoP")
+
+set(MACOSX_BUNDLE_SHORT_VERSION_STRING
+    ${SDLPoP_VERSION})
+
+set(MACOSX_BUNDLE_BUNDLE_VERSION
+    ${SDLPoP_BUILD_VERSION})
+
+set(MACOSX_BUNDLE_COPYRIGHT
+    "GNU General Public Licence, v3")
+
+
     add_executable(prince MACOSX_BUNDLE ${SOURCE_FILES} ${MACOSX_BUNDLE_ICON_FILE})
+
+    set_target_properties(prince PROPERTIES
+        MACOSX_BUNDLE_INFO_PLIST
+        "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist.in"
+    )
+
     add_custom_command(TARGET prince POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_directory
-            ${CMAKE_SOURCE_DIR}/../data ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/prince.app/Contents/MacOS/data)
+
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_SOURCE_DIR}/../data"
+        "$<TARGET_BUNDLE_DIR:prince>/Contents/Resources/data"
+
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_SOURCE_DIR}/../doc"
+        "$<TARGET_BUNDLE_DIR:prince>/Contents/Resources/doc"
+
+        COMMAND ${CMAKE_COMMAND} -E copy
+        "${CMAKE_SOURCE_DIR}/../SDLPoP.ini"
+        "$<TARGET_BUNDLE_DIR:prince>/Contents/Resources/SDLPoP.ini"
+    )
+
     add_custom_command(TARGET prince POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_directory
-            ${CMAKE_SOURCE_DIR}/../doc ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/prince.app/Contents/MacOS/doc)
-    add_custom_command(TARGET prince POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy
-            ${CMAKE_SOURCE_DIR}/../SDLPoP.ini ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/prince.app/Contents/MacOS/SDLPoP.ini)
+
+	# Bundle the complete SDL2 framework.
+        COMMAND ditto
+        "${SDL2_FRAMEWORK}"
+        "$<TARGET_BUNDLE_DIR:prince>/Contents/Frameworks/SDL2.framework"
+
+        # Bundle SDL2_image.
+        COMMAND ${CMAKE_COMMAND} -E copy
+        "${SDL2_IMAGE_LIBRARY}"
+        "$<TARGET_BUNDLE_DIR:prince>/Contents/Frameworks/libSDL2_image-2.0.0.900.0.dylib"
+
+        COMMAND ${CMAKE_COMMAND} -E create_symlink
+        "libSDL2_image-2.0.0.900.0.dylib"
+        "$<TARGET_BUNDLE_DIR:prince>/Contents/Frameworks/libSDL2_image-2.0.0.dylib"
+    )
+
 endif()
 
 if(WIN32)
     target_link_libraries(prince mingw32 SDL2main SDL2 SDL2_image)
 elseif(APPLE)
-    target_link_libraries(prince SDL2main SDL2 SDL2_image m)
+    set_target_properties(prince PROPERTIES
+        SKIP_BUILD_RPATH TRUE
+    )
+
+    target_link_libraries(prince
+        "-framework SDL2"
+        "${SDL2_IMAGE_LIBRARY}"
+        m
+    )
+
+    target_link_options(prince PRIVATE
+        "-F${SDL2_ROOT}"
+        "-Wl,-rpath,@executable_path/../Frameworks"
+    )
+
 elseif(PSP) # Linux, *BSD, etc.
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3")
 	include(FindPkgConfig)

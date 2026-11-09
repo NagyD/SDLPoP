@@ -2,6 +2,16 @@
 
 An open-source port of Prince of Persia, based on the disassembly of the DOS version, extended with new features.
 
+## About this fork
+
+The original purpose of this fork of SDLPoP was to create a native Universal macOS application, based on the v1.24 RC code by NagyD.
+
+There has been relatively little recent activity in the upstream repository, and no compiled release based on this version is currently available on popot.org. I therefore decided to create this fork and build a Universal macOS version myself.
+
+Now that the initial macOS build is complete, my next goal is to address some of the issues that are still present in the code. I will initially focus on issues reported in the upstream NagyD/SDLPoP repository.
+
+I will try to keep my changes as small as possible in order to remain compatible with the upstream project. Hopefully, this will make it possible to contribute or merge changes back upstream if development of the original project becomes active again.
+
 ## Links
 
 * Forum board: https://forum.princed.org/viewforum.php?f=126
@@ -97,6 +107,10 @@ This program is open source under the GNU General Public License terms, see `COP
 The following files are external libraries with their own licenses: `src/opl3.c`, `src/opl3.h`, `src/stb_vorbis.c`.
 See their contents for license information.
 
+SDLPoP does not claim ownership of the original Prince of Persia game assets included with or used by the project. These assets are the property of their respective copyright holders and are not covered by the GPL license.
+This project does not grant any rights or licenses to the original game assets. Users are responsible for ensuring that their use and distribution of such assets complies with applicable copyright laws and the rights of their respective owners.
+
+
 ## USAGE
 
 ### Running the game
@@ -126,6 +140,7 @@ See their contents for license information.
 
 * You can find compiled versions for these three platforms here: https://www.popot.org/get_the_games.php?game=SDLPoP
 * Unofficial ports for other systems can be found here: https://forum.princed.org/viewtopic.php?f=126&t=4728. These were not made by the authors of SDLPoP.
+
 
 ### What command-line options are there?
 
@@ -488,27 +503,45 @@ Remove it with:
 
 ### macOS
 
-#### Install SDL2 + SDL2 image
+#### Requirements
 
-##### With Homebrew
+Install Xcode and the Command Line Tools:
 
-    brew install sdl2 sdl2_image pkg-config
+    xcode-select --install
 
-##### With Port
+The native macOS bundle requires SDL2 and SDL2_image.
 
-Install "port" from https://www.macports.org/, then:
+Provide an SDL library directory containing:
 
-    sudo port install libsdl2 libsdl2_image pkgconfig
+    SDL2_ROOT/
+    ├── SDL2.framework/
+    ├── include/
+    │   └── SDL2/
+    └── lib/
+        └── libSDL2_image-2.0.0.900.0.dylib
 
-#### Install development tools
+#### Build a native macOS application bundle
 
-1. Install Xcode.
-2. Install the "command line developer tools" by typing `xcode-select --install` at the prompt.
-3. Using terminal, in the '/src' directory of SDLPoP, type: `make`
+From the project root:
+
+    cmake -S src -B build \
+      -DCREATE_BUNDLE=1 \
+      -DSDL2_ROOT=/path/to/SDL-libraries
+
+    cmake --build build
+
+The resulting application bundle will be created as:
+
+    prince.app
+
+The current bundle configuration has been tested on Apple Silicon.
 
 #### Start the game
 
-Tested on OSX 10.9.5, OSX 10.11.2, macOS 10.13 and 10.14.
+Open the application from Finder, or run:
 
-1. In the project root directory. Type `./prince` or `./prince full`.
-2. Hit Ctrl+Q to quit.
+    open prince.app
+
+The executable can also be started directly:
+
+    ./prince.app/Contents/MacOS/prince
