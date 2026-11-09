@@ -24,15 +24,60 @@ The authors of this program may be contacted at https://forum.princed.org
 #define STB_VORBIS_HEADER_ONLY
 #include "stb_vorbis.c"
 
-#if !defined(_MSC_VER)
-# include <SDL2/SDL.h>
-# include <SDL2/SDL_image.h>
+#ifdef USE_SDL3
+// SDL3 + SDL3_image. SDL_ENABLE_OLD_NAMES makes SDL3's own SDL_oldnames.h map the
+// SDL2 symbol names 1:1; sdl2_to_sdl3.h then handles the rest (signature/return
+// changes, removed APIs, the audio model). See src/sdl2_to_sdl3.h.
+# define SDL_ENABLE_OLD_NAMES
+# if !defined(_MSC_VER)
+#  include <SDL3/SDL.h>
+#  include <SDL3_image/SDL_image.h>
+# else
+#  include <SDL3/SDL.h>
+#  include <SDL_image.h>
+# endif
+# include "sdl2_to_sdl3.h"
 #else
+# if !defined(_MSC_VER)
+#  include <SDL2/SDL.h>
+#  include <SDL2/SDL_image.h>
+# else
 // These headers for SDL seem to be the pkgconfig/meson standard as per the
 // latest versions. If the old ones should be used, the ifdef must be used
-// to compare versions. 
-# include <SDL.h>
-# include <SDL_image.h>
+// to compare versions.
+#  include <SDL.h>
+#  include <SDL_image.h>
+# endif
+#endif
+
+// Version-neutral accessors for things that moved/changed between SDL2 and SDL3
+// (SDL3 made SDL_Surface.format a plain enum, flattened the key event, renamed
+// the gamepad event fields, and changed the keyboard-state element type). These
+// expand to the native form on each backend so the shared code stays single-path.
+#ifdef USE_SDL3
+# define SURFACE_BPP(s)        SDL_BITSPERPIXEL((s)->format)
+# define SURFACE_BYTESPP(s)    SDL_BYTESPERPIXEL((s)->format)
+# define SURFACE_PALETTE(s)    SDL_GetSurfacePalette(s)
+# define SURFACE_FMT_ENUM(s)   ((s)->format)
+# define EVENT_KEY_SCANCODE(e) ((e).key.scancode)
+# define EVENT_KEY_MOD(e)      ((e).key.mod)
+# define EVENT_GP_AXIS(e)      ((e).gaxis.axis)
+# define EVENT_GP_VALUE(e)     ((e).gaxis.value)
+# define EVENT_GP_BUTTON(e)    ((e).gbutton.button)
+# define EVENT_GP_WHICH(e)     ((e).gdevice.which)
+# define KEYSTATE_PTR_T        bool
+#else
+# define SURFACE_BPP(s)        ((s)->format->BitsPerPixel)
+# define SURFACE_BYTESPP(s)    ((s)->format->BytesPerPixel)
+# define SURFACE_PALETTE(s)    ((s)->format->palette)
+# define SURFACE_FMT_ENUM(s)   ((s)->format->format)
+# define EVENT_KEY_SCANCODE(e) ((e).key.keysym.scancode)
+# define EVENT_KEY_MOD(e)      ((e).key.keysym.mod)
+# define EVENT_GP_AXIS(e)      ((e).caxis.axis)
+# define EVENT_GP_VALUE(e)     ((e).caxis.value)
+# define EVENT_GP_BUTTON(e)    ((e).cbutton.button)
+# define EVENT_GP_WHICH(e)     ((e).cdevice.which)
+# define KEYSTATE_PTR_T        Uint8
 #endif
 
 #if SDL_BYTEORDER != SDL_LIL_ENDIAN

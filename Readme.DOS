@@ -1,0 +1,36 @@
+SDLPoP for MS-DOS (DJGPP)
+=========================
+
+Requirements
+------------
+- A DJGPP cross toolchain (i686-pc-msdosdjgpp-gcc, GCC 16 was used).
+- SDL3 and SDL3_image built for DJGPP and installed in the toolchain sysroot
+  (<sysroot>/lib/libSDL3.a, libSDL3_image.a, libpng.a, libz.a and
+  <sysroot>/include/SDL3). The DOS SDL3 port uses VESA video, Sound Blaster
+  audio and the BIOS keyboard/mouse.
+- CMake 3.5+ and Ninja or Make.
+
+Building
+--------
+    cd src
+    mkdir builddos && cd builddos
+    cmake -G Ninja \
+      -DCMAKE_TOOLCHAIN_FILE=/usr/local/i686-pc-msdosdjgpp/scripts/i686-pc-msdosdjgpp.cmake \
+      -DCMAKE_BUILD_TYPE=Release ..
+    ninja
+
+The result is prince.exe in the repository root. Copy it together with the
+data/ directory and SDLPoP.ini onto the DOS machine (all data file names are
+already 8.3 compatible, so long file name support is not required).
+
+Running
+-------
+- On real DOS you need a DPMI host: put CWSDPMI.EXE next to prince.exe
+  (or load any other DPMI server). DOSBox and DOSBox-X provide DPMI built in.
+- A 486 is not enough: the code is compiled for i686 (uses CMOV). In
+  DOSBox-X set cputype=ppro_slow or newer, otherwise it dies with
+  "Invalid Opcode" right after start-up.
+- A VESA 2.0 capable graphics card (or emulated SVGA) is required.
+- Saves, replays and screenshots are written next to prince.exe
+  (SDLPOP_SAVE_PATH overrides the save location); there is no home directory
+  on DOS.

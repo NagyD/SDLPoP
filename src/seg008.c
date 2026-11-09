@@ -847,7 +847,7 @@ int add_midtable(short chtab_id, int id, sbyte xh, sbyte xl, int ybottom, int bl
 		return 0;
 	}
 	word index = midtable_count;
-	if (index >= 50) {
+	if (index >= 128) { // GBA: array bumped to 128
 		show_dialog("MidTable Overflow");
 		return 0; // added
 	}
@@ -880,7 +880,7 @@ int add_midtable(short chtab_id, int id, sbyte xh, sbyte xl, int ybottom, int bl
 // seg008:1208
 void add_peel(int left,int right,int top,int height) {
 	rect_type rect;
-	if (peels_count >= 50) {
+	if (peels_count >= 128) { // GBA: array bumped to 128
 		show_dialog("Peels OverFlow");
 		return /*0*/; // added
 	}
@@ -895,7 +895,7 @@ void add_peel(int left,int right,int top,int height) {
 // seg008:1254
 void add_wipetable(sbyte layer,short left,short bottom,sbyte height,short width,sbyte color) {
 	word index = wipetable_count;
-	if (index >= 300) {
+	if (index >= 512) { // GBA: array bumped to 512
 		show_dialog("WipeTable Overflow");
 		return /*0*/; // added
 	}
@@ -956,13 +956,53 @@ void draw_back_fore(int which_table,int index) {
 }
 
 
+#ifdef __GBA__
+/* GBA hflip: the upstream version calls SDL_ConvertSurface() on a ROM-backed
+   surface and then issues one SDL_BlitSurface() per column — for a compressed
+   sprite that re-decodes the whole image `width` times, and the colorkey
+   toggling leaves the background opaque. On the slow ARM7 that mirror loop is
+   what froze the game the instant the prince turned to face right (the first
+   time any sprite is flipped). Instead we decode the source once and write the
+   columns out reversed in a single pass, preserving the raw 0..15 pixel values
+   (0 = transparent) and the palette-row offset so the normal transparent blit
+   in method_6_blit_img_to_scr draws it correctly. */
+extern uint8_t* gba_decode_compressed_surface(SDL_Surface* src);
+SDL_Surface* hflip(SDL_Surface* input) {
+	int w = input->w, h = input->h;
+	SDL_Surface* output = SDL_CreateRGBSurface(0, w, h, 8, 0, 0, 0, 0);
+	if (output == NULL) return input; /* degrade to unflipped rather than crash */
+
+	const uint8_t* src;
+	int spitch;
+	if (input->gba_rom_compressed) {
+		src = gba_decode_compressed_surface(input); /* w*h raw pixels in scratch */
+		if (src == NULL) { SDL_FreeSurface(output); return input; }
+		spitch = w;
+	} else {
+		src = (const uint8_t*)input->pixels;        /* raw 8bpp in ROM */
+		spitch = input->pitch;
+	}
+
+	for (int y = 0; y < h; ++y) {
+		const uint8_t* sp = src + (size_t)y * spitch;
+		uint8_t* dp = (uint8_t*)output->pixels + (size_t)y * output->pitch;
+		for (int x = 0; x < w; ++x) dp[w - 1 - x] = sp[x];
+	}
+
+	output->gba_palette_offset = input->gba_palette_offset;
+	output->gba_rom_compressed = 0;
+	output->has_colorkey = 1;
+	output->colorkey = 0;
+	return output;
+}
+#else
 SDL_Surface* hflip(SDL_Surface* input) {
 	int width = input->w;
 	int height = input->h;
 
 	// The simplest way to create a surface with same format as input:
 	SDL_Surface* output = SDL_ConvertSurface(input, input->format, 0);
-	SDL_SetSurfacePalette(output, input->format->palette);
+	SDL_SetSurfacePalette(output, SURFACE_PALETTE(input));
 	// The copied image will be overwritten anyway.
 	if (output == NULL) {
 		sdlperror("hflip: SDL_ConvertSurface");
@@ -986,6 +1026,7 @@ SDL_Surface* hflip(SDL_Surface* input) {
 
 	return output;
 }
+#endif
 
 
 // seg008:140C
@@ -1030,6 +1071,16 @@ void draw_mid(int index) {
 		add_peel(round_xpos_to_byte(xpos, 0), round_xpos_to_byte(image->w/*width*/ + xpos, 1), ypos, image->h/*height*/);
 	}
 	//printf("Midtable: drawing (chtab %d, image %d) at (x=%d, y=%d)\n",chtab_id,image_id,xpos,ypos); // debug
+#ifdef __GBA__
+	/* Record the prince's real drawn pixel position so the GBA camera can
+	   centre the 240x160 viewport on him (Char.x is not a buffer pixel x). */
+	if (chtab_id == id_chtab_2_kid && image != NULL) {
+		extern int gba_kid_px, gba_kid_py, gba_kid_valid;
+		gba_kid_px = xpos + image->w / 2;
+		gba_kid_py = ypos + image->h / 2;
+		gba_kid_valid = 1;
+	}
+#endif
 	draw_image(image, mask, xpos, ypos, blit);
 
 	if (chtab_flip_clip[chtab_id]) {
@@ -1406,7 +1457,7 @@ void add_drect(rect_type *source) {
 			return;
 		}
 	}
-	if (drects_count >= 30){
+	if (drects_count >= 128){ // GBA: array bumped to 128
 		show_dialog("DRects Overflow");
 		return /*0*/; // added
 	}
@@ -1697,7 +1748,7 @@ void add_objtable(byte obj_type) {
 	//printf("in add_objtable: objtable_count = %d\n",objtable_count); // debug
 	word index = objtable_count++;
 	//printf("in add_objtable: objtable_count = %d\n",objtable_count); // debug
-	if (index >= 50) {
+	if (index >= 128) { // GBA: array bumped to 128
 		show_dialog("ObjTable Overflow");
 		return /*0*/; // added
 	}

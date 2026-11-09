@@ -17,20 +17,37 @@ if ERRORLEVEL 1 (
   exit /b
 )
 
-:: To override the directory for SDL2 library files, simply set the SDL environment variable in the command shell.
-:: (You could do that from the command-line, or from a wrapper script that calls this one.)
+:: SDL3 is the default backend. To build against SDL2 instead, set the
+:: SDLPOP_SDL2 environment variable (e.g. "set SDLPOP_SDL2=1") before running.
+:: Override the SDL directory by setting the SDL3 (or SDL2) environment variable.
 
+if not [%SDLPOP_SDL2%]==[] goto sdl2_setup
+
+:sdl3_setup
+if [%SDL3%]==[] (
+  set SDL3=..\..\SDL3
+)
+set SDL_DIR=%SDL3%
+set SDL_LIBS=SDL3.lib SDL3_image.lib
+set SDL_DEFINES=-DUSE_SDL3
+goto sdl_done
+
+:sdl2_setup
 if [%SDL2%]==[] (
   set SDL2=..\..\SDL2-2.0.6
 )
+set SDL_DIR=%SDL2%
+set SDL_LIBS=SDL2main.lib SDL2.lib SDL2_image.lib
+set SDL_DEFINES=
 
-if not exist %SDL2% (
-  echo Problem^: Could not find SDL2 directory.
-  echo Tried to look here^: %SDL2%
+:sdl_done
+if not exist %SDL_DIR% (
+  echo Problem^: Could not find the SDL directory.
+  echo Tried to look here^: %SDL_DIR%
   echo,
-  echo To specify the SDL2 directory, set the SDL2 environment variable.
+  echo To specify it, set the SDL3 (or SDL2) environment variable.
   echo Example command:
-  echo set "SDL2=C:\work\libraries\SDL2-2.0.6"
+  echo set "SDL3=C:\work\libraries\SDL3"
   exit /b
 )
 
@@ -52,9 +69,9 @@ set BuildTypeCompilerFlags= /MT /O2
 set PreprocessorDefinitions=
 
 :compile
-set SourceFiles= main.c data.c seg000.c seg001.c seg002.c seg003.c seg004.c seg005.c seg006.c seg007.c seg008.c seg009.c seqtbl.c replay.c options.c lighting.c screenshot.c menu.c midi.c opl3.c stb_vorbis.c
-set CommonCompilerFlags= /nologo /MP /fp:fast /GR- /wd4048 %PreprocessorDefinitions% /I"%SDL2%\include"
-set CommonLinkerFlags= /subsystem:windows,5.01 /libpath:"%SDL2%\lib\%VSCMD_ARG_TGT_ARCH%" SDL2main.lib SDL2.lib SDL2_image.lib Shell32.lib icon.res /out:..\prince.exe
+set SourceFiles= main.c data.c seg000.c seg001.c seg002.c seg003.c seg004.c seg005.c seg006.c seg007.c seg008.c seg009.c seqtbl.c replay.c options.c lighting.c screenshot.c menu.c midi.c opl3.c stb_vorbis.c sdl2_to_sdl3.c
+set CommonCompilerFlags= /nologo /MP /fp:fast /GR- /wd4048 %PreprocessorDefinitions% %SDL_DEFINES% /I"%SDL_DIR%\include"
+set CommonLinkerFlags= /subsystem:windows,5.01 /libpath:"%SDL_DIR%\lib\%VSCMD_ARG_TGT_ARCH%" %SDL_LIBS% Shell32.lib icon.res /out:..\prince.exe
 
 rc /nologo /fo icon.res icon.rc
 cl %BuildTypeCompilerFlags% %CommonCompilerFlags% %SourceFiles% /link %CommonLinkerFlags%

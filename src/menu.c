@@ -314,20 +314,31 @@ enum setting_ids {
 };
 
 typedef struct setting_type {
-	int index;
 	int id;
-	int previous, next;
 	byte style;
 	byte number_type;
 	void* linked;
 	void* required;
 	int min, max; // for 'number'-style settings
-	char text[64];
-	char explanation[256];
+	// Stored as pointers to string literals (in .rodata) rather than inline
+	// buffers: nothing writes to these, and on GBA the inline char[64]+char[256]
+	// per entry pushed the settings tables ~56 KB over the EWRAM budget.
+	const char* text;
+	const char* explanation;
 	names_list_type* names_list;
 } setting_type;
 
-setting_type general_settings[] = {
+// The settings descriptor tables are read-only at runtime (the up/down nav
+// indices used to live in setting_type but are now computed on the fly in
+// draw_setting, and the values themselves are reached through ->linked). On
+// GBA we park them in ROM (.rodata) instead of the scarce 256 KB EWRAM.
+#ifdef __GBA__
+#define MENU_SETTINGS_RODATA __attribute__((section(".rodata.menusettings")))
+#else
+#define MENU_SETTINGS_RODATA
+#endif
+
+setting_type general_settings[] MENU_SETTINGS_RODATA = {
 		{.id = SETTING_SHOW_MENU_ON_PAUSE, .style = SETTING_STYLE_TOGGLE, .linked = &enable_pause_menu,
 				.text = "Enable pause menu",
 				.explanation = "Show the in-game menu when you pause the game.\n"
@@ -367,7 +378,7 @@ int integer_scaling_possible =
 #endif
 ;
 
-setting_type visuals_settings[] = {
+setting_type visuals_settings[] MENU_SETTINGS_RODATA = {
 		{.id = SETTING_FULLSCREEN, .style = SETTING_STYLE_TOGGLE, .linked = &start_fullscreen,
 				.text = "Start fullscreen",
 				.explanation = "Start the game in fullscreen mode.\nYou can also toggle fullscreen by pressing Alt+Enter."},
@@ -411,7 +422,7 @@ setting_type visuals_settings[] = {
 #endif
 };
 
-setting_type gameplay_settings[] = {
+setting_type gameplay_settings[] MENU_SETTINGS_RODATA = {
 		{.id = SETTING_ENABLE_CHEATS, .style = SETTING_STYLE_TOGGLE, .linked = &cheats_enabled,
 				.text = "Enable cheats",
 				.explanation = "Turn cheats on or off."/*"\nAlso, display the CHEATS option on the pause menu."*/},
@@ -656,7 +667,7 @@ NAMES_LIST(row_setting_names, {"Top", "Middle", "Bottom"});
 KEY_VALUE_LIST(direction_setting_names, {{"Left", dir_FF_left}, {"Right", dir_0_right}});
 extern names_list_type never_is_16_list;
 
-setting_type mods_settings[] = {
+setting_type mods_settings[] MENU_SETTINGS_RODATA = {
 		{.id = SETTING_USE_CUSTOM_OPTIONS, .style = SETTING_STYLE_TOGGLE, .linked = &use_custom_options,
 				.text = "Use customization options",
 				.explanation = "Turn customization options on or off.\n(default = OFF)"},
@@ -999,7 +1010,7 @@ KEY_VALUE_LIST(guard_type_setting_names, {{"None", -1}, {"Normal", 0}, {"Fat", 1
 NAMES_LIST(entry_pose_setting_names, {"Turning", "Falling", "Running"});
 KEY_VALUE_LIST(off_setting_name, {{"Off", -1}}); // used for the seamless exit setting
 
-setting_type level_settings[] = {
+setting_type level_settings[] MENU_SETTINGS_RODATA = {
 		{.id = SETTING_LEVEL_SETTINGS, .style = SETTING_STYLE_TEXT_ONLY, .required = &use_custom_options,
 				.text = "Customize another level...",
 				.explanation = "Select another level to customize."},
@@ -1040,7 +1051,7 @@ setting_type level_settings[] = {
 						"Set to -1 to disable."},
 };
 
-setting_type controls_settings[] = {
+setting_type controls_settings[] MENU_SETTINGS_RODATA = {
 		{.id = SETTING_KEY_LEFT, .style = SETTING_STYLE_KEY, .required = NULL,
 				.linked = &key_left, .number_type = SETTING_INT,
 				.text = "Left",
@@ -1124,17 +1135,13 @@ void init_pause_menu_items(pause_menu_item_type* first_item, int item_count) {
 }
 
 void init_settings_list(setting_type* first_setting, int setting_count) {
-	if (setting_count > 0) {
-		for (int i = 0; i < setting_count; ++i) {
-			setting_type* item = first_setting + i;
-			item->index = i;
-			item->previous = (first_setting + MAX(0, i-1))->id;
-			item->next = (first_setting + MIN(setting_count-1, i+1))->id;
-		}
-//		setting_type* last_item = first_setting + (setting_count-1);
-//		first_setting->previous = last_item->id;
-//		last_item->next = first_setting->id;
-	}
+	// The per-setting navigation indices (index/previous/next) used to be
+	// precomputed and stored in each setting_type here. They are now derived on
+	// the fly in draw_setting() from the setting's position, which lets the
+	// settings tables be const/ROM-resident (see MENU_SETTINGS_RODATA). Nothing
+	// to initialize anymore.
+	(void)first_setting;
+	(void)setting_count;
 }
 
 
@@ -1565,7 +1572,8 @@ char* print_setting_value_(setting_type* setting, int value, char* buffer, size_
 	return buffer;
 }
 
-void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int inactive_text_color) {
+void draw_setting(settings_area_type* settings_area, int i, rect_type* parent, int* y_offset, int inactive_text_color) {
+	setting_type* setting = &settings_area->settings[i];
 	rect_type text_rect = *parent;
 	text_rect.top += *y_offset;
 	int text_color = inactive_text_color;
@@ -1584,18 +1592,28 @@ void draw_setting(setting_type* setting, rect_type* parent, int* y_offset, int i
 	}
 
 	if (highlighted_setting_id == setting->id) {
-		next_setting_id = setting->next;
-		previous_setting_id = setting->previous;
-		at_scroll_up_boundary = (setting->index == scroll_position);
-		at_scroll_down_boundary = (setting->index == scroll_position + 8);
+		// Up/down navigation targets, derived from this setting's position in the
+		// area (previously precomputed into setting_type by init_settings_list).
+		int count = settings_area->setting_count;
+		next_setting_id = settings_area->settings[MIN(count - 1, i + 1)].id;
+		previous_setting_id = settings_area->settings[MAX(0, i - 1)].id;
+		at_scroll_up_boundary = (i == scroll_position);
+		at_scroll_down_boundary = (i == scroll_position + 8);
 
 		SDL_Rect dest_rect;
 		rect_to_sdlrect(&setting_box, &dest_rect);
+#ifdef __GBA__
+		// No ARGB overlay on GBA: fill the 8bpp screen directly with a PoP
+		// palette index (SDL_MapRGB can't help — the screen surface's palette
+		// is never populated, the hardware palette is driven from palette[]).
+		SDL_FillRect(current_target_surface, &dest_rect, (Uint32)color_8_darkgray);
+#else
 		uint32_t rgb_color = SDL_MapRGBA(overlay_surface->format, 55, 55, 55, 255);
 		if (SDL_FillRect(overlay_surface, &dest_rect, rgb_color) != 0) {
 			sdlperror("draw_setting: SDL_FillRect");
 			quit(1);
 		}
+#endif
 		rect_type left_side_of_setting_box = setting_box;
 		left_side_of_setting_box.left = setting_box.left - 2;
 		left_side_of_setting_box.right = setting_box.left;
@@ -1782,7 +1800,7 @@ void draw_settings_area(settings_area_type* settings_area) {
 	for (int i = 0; (i < settings_area->setting_count) && (num_drawn_settings < 9); ++i) {
 		if (i >= scroll_position) {
 			++num_drawn_settings;
-			draw_setting(&settings_area->settings[i], &settings_area_rect, &y_offset, color_15_brightwhite);
+			draw_setting(settings_area, i, &settings_area_rect, &y_offset, color_15_brightwhite);
 		}
 	}
 
@@ -1975,7 +1993,7 @@ void draw_confirmation_dialog(int which_dialog, const char* text) {
 			old_highlighted_button = highlighted_button;
 			// Need to redraw the dialog box.
 			uint32_t clear_color = SDL_MapRGBA(current_target_surface->format, 0, 0, 0, 255);
-			SDL_FillRect(overlay_surface, NULL, clear_color);
+			SDL_FillRect(current_target_surface, NULL, clear_color); // == overlay_surface on desktop; onscreen_surface_ on GBA (overlay is NULL)
 			draw_rect(&copyprot_dialog->peel_rect, color_0_black);
 			dialog_method_2_frame(copyprot_dialog);
 			rect_type rect;
@@ -2040,7 +2058,7 @@ void draw_select_level_dialog(void) {
 			old_edited_level_number = menu_current_level;
 			// Need to redraw the dialog box.
 			uint32_t clear_color = SDL_MapRGBA(current_target_surface->format, 0, 0, 0, 255);
-			SDL_FillRect(overlay_surface, NULL, clear_color);
+			SDL_FillRect(current_target_surface, NULL, clear_color); // == overlay_surface on desktop; onscreen_surface_ on GBA (overlay is NULL)
 			draw_rect(&copyprot_dialog->peel_rect, color_0_black);
 			dialog_method_2_frame(copyprot_dialog);
 			rect_type rect;
@@ -2067,10 +2085,35 @@ void draw_select_level_dialog(void) {
 
 int need_full_menu_redraw_count;
 
+#ifdef __GBA__
+extern int gba_menu_active; // gba/src/gba_viewport.c — freezes the gameplay camera
+// The menu is laid out for the full 320x192 world surface, but the GBA only
+// shows a 240x160 window into it. Pin the camera (gba_menu_active) and pan the
+// window so whichever part the player is interacting with is on screen: the
+// centred pause menu, the left subsection column, or the wider settings panel.
+static void gba_menu_set_viewport(void) {
+	extern void gba_set_viewport(int x, int y);
+	int vx = 40, vy = 16; // pause menu: centred (items are centred at x~160)
+	if (drawn_menu == 1) {
+		vy = 8;
+		vx = (controlled_area == 1) ? 80 : 0; // settings panel (right) vs. subsection list (left)
+	}
+	gba_set_viewport(vx, vy);
+}
+#endif
+
 void draw_menu() {
 	escape_key_suppressed = (key_states[SDL_SCANCODE_BACKSPACE] & KEYSTATE_HELD || key_states[SDL_SCANCODE_ESCAPE] & KEYSTATE_HELD);
 	surface_type* saved_target_surface = current_target_surface;
+#ifdef __GBA__
+	// overlay_surface is NULL on GBA (no separate ARGB overlay / compositing
+	// step); draw straight into the 8bpp screen surface that update_screen()
+	// presents. The menu fills the screen with an opaque backdrop anyway.
+	current_target_surface = onscreen_surface_;
+	gba_menu_active = 1;
+#else
 	current_target_surface = overlay_surface;
+#endif
 
 	need_close_menu = false;
 	while (!need_close_menu) {
@@ -2134,6 +2177,12 @@ void draw_menu() {
 			draw_settings_menu();
 		}
 		textstate.ptr_font = saved_font;
+#ifdef __GBA__
+		// Pan the 240x160 window to whatever the player is on now (set after
+		// drawing so drawn_menu/controlled_area reflect this frame), then
+		// present — gba_camera_update() leaves it alone while gba_menu_active.
+		gba_menu_set_viewport();
+#endif
 		if (!need_close_menu) {
 			update_screen();
 		}
@@ -2143,6 +2192,9 @@ void draw_menu() {
 	}
 
 	current_target_surface = saved_target_surface;
+#ifdef __GBA__
+	gba_menu_active = 0; // hand the viewport back to the gameplay camera
+#endif
 }
 
 void clear_menu_controls() {

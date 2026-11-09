@@ -20,6 +20,7 @@ The authors of this program may be contacted at https://forum.princed.org
 
 #include "common.h"
 #include <setjmp.h>
+#include <stdlib.h>
 #define _USE_MATH_DEFINES
 #include <math.h>
 #ifndef M_PI
@@ -176,7 +177,6 @@ void init_game_main() {
 	init_lighting();
 #endif
 	load_all_sounds();
-
 	hof_read();
 	show_splash(); // added
 	start_game();
@@ -523,8 +523,14 @@ void check_quick_op() {
 
 #endif // USE_QUICKSAVE
 
+#ifdef USE_SDL3
+// SDL3 changed the timer callback signature to (userdata, timerID, interval).
+Uint32 SDLCALL temp_shift_release_callback(void *param, SDL_TimerID timerID, Uint32 interval) {
+	(void)param; (void)timerID; (void)interval;
+#else
 Uint32 temp_shift_release_callback(Uint32 interval, void *param) {
-	const Uint8* state = SDL_GetKeyboardState(NULL);
+#endif
+	const KEYSTATE_PTR_T* state = SDL_GetKeyboardState(NULL);
 	if (state[SDL_SCANCODE_LSHIFT]) key_states[SDL_SCANCODE_LSHIFT] |= KEYSTATE_HELD | KEYSTATE_HELD_NEW;
 	if (state[SDL_SCANCODE_RSHIFT]) key_states[SDL_SCANCODE_RSHIFT] |= KEYSTATE_HELD | KEYSTATE_HELD_NEW;
 	return 0; // causes the timer to be removed
@@ -584,6 +590,22 @@ int process_key() {
 	if (rem_min != 0 && Kid.alive > 6 && (control_shift || key == SDL_SCANCODE_RETURN)) {
 		key = SDL_SCANCODE_A | WITH_CTRL; // Ctrl+A
 	}
+#ifdef __GBA__
+	// On GBA the death "Press Button to Continue" sequence can stall before
+	// Kid.alive reaches the >6 "ready" state above: play_kid() only advances
+	// Char.alive on frames where check_sound_playing() is false, and the GBA
+	// SFX voices can read as still-playing (see gba_sound_bridge.c), so the
+	// normal restart never arms and the body never reaches its resting frame.
+	// Let the Start button (mapped to Enter) restart the moment the Kid is
+	// actually dead (alive >= 0). After the level reloads the Kid is alive
+	// again (alive == -1), so holding Start restarts exactly once, not in a
+	// loop. The persistent keystate is used instead of the single-shot `key`
+	// because the latter can be consumed before we get here.
+	else if (rem_min != 0 && Kid.alive >= 0 && current_level != 15 &&
+	         (key_states[SDL_SCANCODE_RETURN] & KEYSTATE_HELD)) {
+		key = SDL_SCANCODE_A | WITH_CTRL; // Ctrl+A
+	}
+#endif
 #ifdef USE_REPLAY
 	if (recording) key_press_while_recording(&key);
 	else if (replaying) key_press_while_replaying(&key);
@@ -929,6 +951,28 @@ void draw_game_frame() {
 				need_redraw_because_flipped = 0;
 				redraw_screen(0);
 			} else {
+#ifdef __GBA__
+				/* The GBA front-end has no separate offscreen/onscreen surface:
+				   make_offscreen_buffer() aliases onscreen_surface_, and
+				   gba_present_surface() copies the ENTIRE camera window to VRAM
+				   every frame. SDLPoP's incremental renderer wipes dirty tiles to
+				   black and redraws only those tiles, relying on the desktop
+				   dirty-rectangle copy (copy_screen_rect of `drects` only) to keep
+				   the display correct while the shared buffer accumulates
+				   over-cleared regions outside the dirty rects. On GBA the whole
+				   buffer is displayed, so those over-cleared regions show as black
+				   and peels propagate them (the "black blocks/trail" behind the
+				   moving prince). Redraw the whole room every frame so the single
+				   buffer is always complete. This is the same full-room draw the
+				   game already performs on every room entry.
+				   NOTE: redraw_screen() ends by setting exit_room_timer = 2, which
+				   makes exit_room() a no-op for 2 frames. Calling it every frame would
+				   permanently freeze room transitions (prince can never leave a room),
+				   so save and restore the timer around the redraw. */
+				int saved_exit_room_timer = exit_room_timer;
+				redraw_screen(0);
+				exit_room_timer = saved_exit_room_timer;
+#else
 				memset(&table_counts, 0, sizeof(table_counts));
 				draw_moving();
 				draw_tables();
@@ -946,6 +990,7 @@ void draw_game_frame() {
 					flip_screen(offscreen_surface);
 				}
 				drects_count = 0;
+#endif
 			}
 		}
 	}
@@ -1684,6 +1729,17 @@ void load_more_opt_graf(const char* filename) {
 	// stub
 	dat_shpl_type area;
 	dat_type* dathandle = NULL;
+#ifdef __GBA__
+	/* These optgraf sprites belong to the environment chtab (palette row 5).
+	   load_one_optgraf -> load_image -> decode_image uses our pixel-offset
+	   global to bake row*16 into pixel values; without setting it here those
+	   sprites would land on palette[1..15] (PoP VGA defaults: blue, green)
+	   instead of palette[81..95] (loaded environment colours) and the level
+	   tiles render as dark blue. */
+	extern int gba_decode_palette_offset;
+	int saved_offset = gba_decode_palette_offset;
+	gba_decode_palette_offset = 5 * 16;
+#endif
 	for (short graf_index = 0; graf_index < 8; ++graf_index) {
 		/*if (...) */ {
 			if (dathandle == NULL) {
@@ -1697,6 +1753,9 @@ void load_more_opt_graf(const char* filename) {
 	if (dathandle != NULL) {
 		close_dat(dathandle);
 	}
+#ifdef __GBA__
+	gba_decode_palette_offset = saved_offset;
+#endif
 }
 
 // seg000:148D
@@ -1716,6 +1775,12 @@ int do_paused() {
 	} else {
 		read_keyb_control();
 	}
+#ifdef __GBA__
+	if (control_x != CONTROL_RELEASED || control_y != CONTROL_RELEASED || control_shift != CONTROL_RELEASED) {
+		extern void gba_log(const char*,...);
+		gba_log("control: x=%d y=%d shift=%d joyst=%d", control_x, control_y, control_shift, is_joyst_mode);
+	}
+#endif
 	key = process_key();
 	if (is_ending_sequence && is_paused) {
 		is_paused = 0; // fix being able to pause the game during the ending sequence
@@ -2318,7 +2383,7 @@ void load_title_images(int bgcolor) {
 			color.a = 0xFF;
 		}
 		if (NULL != chtab_title40) {
-			SDL_SetPaletteColors(chtab_title40->images[0]->format->palette, &color, 14, 1);
+			SDL_SetPaletteColors(SURFACE_PALETTE(chtab_title40->images[0]), &color, 14, 1);
 		}
 	} else if (graphics_mode == gmEga || graphics_mode == gmTga) {
 		// ...
@@ -2470,7 +2535,8 @@ void show_splash() {
 const char* get_writable_file_path(char* custom_path_buffer, size_t max_len, const char* file_name) {
 	// If the SDLPOP_SAVE_PATH environment variable is set, put all saves into the directory it points to.
 	// Otherwise, save to the home directory
-#if defined WIN32 || _WIN32 || WIN64 || _WIN64
+#if defined WIN32 || _WIN32 || WIN64 || _WIN64 || defined __DJGPP__
+	// DOS: no HOME directory; saves go next to the executable unless overridden.
 	const char* save_path = getenv("SDLPOP_SAVE_PATH");
 #else
 	char save_path[POP_MAX_PATH];

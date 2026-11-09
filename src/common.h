@@ -31,10 +31,11 @@ extern "C" {
 #define _POSIX_C_SOURCE 200809L
 #endif
 
-#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <stdio.h>
 #include <sys/stat.h>
+#include <string.h>
+#include <strings.h>
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -60,6 +61,45 @@ extern "C" {
 #include "types.h"
 #include "proto.h"
 #include "data.h"
+
+#ifdef __GBA__
+/* On GBA there is no filesystem; data files live in ROM as linked blobs.
+   These macros route every libc-style file call to the GBA backend. */
+FILE*  gba_fopen(const char* path, const char* mode);
+int    gba_fclose(FILE* fp);
+size_t gba_fread(void* buf, size_t sz, size_t n, FILE* fp);
+size_t gba_fwrite(const void* buf, size_t sz, size_t n, FILE* fp);
+int    gba_fseek(FILE* fp, long ofs, int whence);
+long   gba_ftell(FILE* fp);
+int    gba_feof(FILE* fp);
+int    gba_fgetc(FILE* fp);
+int    gba_fputc(int c, FILE* fp);
+int    gba_ferror(FILE* fp);
+int    gba_access(const char* path);
+
+#define fopen   gba_fopen
+#define fclose  gba_fclose
+#define fread   gba_fread
+#define fwrite  gba_fwrite
+#define fseek   gba_fseek
+#define ftell   gba_ftell
+#define feof    gba_feof
+#define fgetc   gba_fgetc
+#define fputc   gba_fputc
+#define ferror  gba_ferror
+#define access(p, m)  gba_access(p)
+#define remove(p)     ((void)(p), 0)
+#define perror(s)     ((void)(s))
+#define mkdir(a, b)   ((void)0, -1)
+
+/* stat() is harder to override (it's a function-like macro on some toolchains),
+   so we provide a wrapper that the few SDLPoP callers actually use. */
+#define stat(p, s) gba_stat_compat((p), (s))
+#define S_ISREG(m) (((m) & 0170000) == 0100000)
+#define S_ISDIR(m) (0)
+struct stat;
+int gba_stat_compat(const char* path, struct stat* st);
+#endif /* __GBA__ */
 
 #ifndef MAX
 #define MAX(a,b) ((a)>(b)?(a):(b))

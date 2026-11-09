@@ -184,11 +184,11 @@ extern back_table_type foretable[200];
 // data:463C
 extern back_table_type backtable[200];
 // data:3D38
-extern midtable_type midtable[50];
+extern midtable_type midtable[128]; // GBA: bumped 50->128 (avoid overflow dialog)
 // data:5F1E
-extern peel_type* peels_table[50];
+extern peel_type* peels_table[128]; // GBA: bumped 50->128
 // data:4D9A
-extern rect_type drects[30];
+extern rect_type drects[128];       // GBA: bumped 30->128
 
 // data:4CB8
 extern sbyte obj_direction;
@@ -203,7 +203,7 @@ extern short obj_clip_right;
 // data:4082
 extern short obj_clip_bottom;
 // data:34D2
-extern wipetable_type wipetable[300];
+extern wipetable_type wipetable[512]; // GBA: bumped 300->512
 // data:2592
 extern const byte chtab_shift[10] INIT(= {0,1,0,0,0,0,1,1,1,0});
 // data:4354
@@ -400,7 +400,7 @@ extern word need_full_redraw;
 // data:588E
 extern short n_curr_objs;
 // data:5BAC
-extern objtable_type objtable[50];
+extern objtable_type objtable[128]; // GBA: bumped 50->128
 // data:5F8C
 extern short curr_objs[50];
 
@@ -732,7 +732,12 @@ extern byte enable_music INIT(= 1);
 extern byte enable_fade INIT(= 1);
 extern byte enable_flash INIT(= 1);
 extern byte enable_text INIT(= 1);
+#ifdef __GBA__
+/* show_splash waits for Shift to be pressed; on GBA we skip it so the game just starts. */
+extern byte enable_info_screen INIT(= 0);
+#else
 extern byte enable_info_screen INIT(= 1);
+#endif
 extern byte enable_controller_rumble INIT(= 0);
 extern byte joystick_only_horizontal INIT(= 0);
 extern int joystick_threshold INIT(= 8000);

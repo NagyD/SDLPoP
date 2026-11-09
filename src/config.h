@@ -27,8 +27,22 @@ The authors of this program may be contacted at https://forum.princed.org
 #define strcasecmp _stricmp
 #endif
 
+#ifdef __GBA__
+/* Disable everything that won't fit on a 16.78 MHz ARM7 with 256 KB EWRAM,
+   set BEFORE the rest of config.h sets defaults. */
+#define DISABLE_ALL_FIXES
+#define POP_MAX_PATH 64
+#define POP_MAX_OPTIONS_SIZE 128
+#define SDLPOP_NO_FILE_IO 1
+#define _GBA_CONFIG_TRIM 1
+#endif
+
+#ifndef POP_MAX_PATH
 #define POP_MAX_PATH 256
+#endif
+#ifndef POP_MAX_OPTIONS_SIZE
 #define POP_MAX_OPTIONS_SIZE 256
+#endif
 
 #define SDLPOP_VERSION "1.24 RC"
 #define WINDOW_TITLE "Prince of Persia (SDLPoP) v" SDLPOP_VERSION
@@ -38,9 +52,11 @@ The authors of this program may be contacted at https://forum.princed.org
 #define SHARE_PATH "/usr/share"
 #endif
 
+#ifndef __GBA__
 // Enable or disable fading.
 // Fading used to be very buggy, but now it works correctly.
 #define USE_FADE
+#endif
 
 // Enable or disable the potions level. (copy protection)
 #define USE_COPYPROT
@@ -58,8 +74,10 @@ The authors of this program may be contacted at https://forum.princed.org
 // Disabled, because it introduces some timing bugs.
 //#define USE_COMPAT_TIMER
 
+#ifndef __GBA__
 // Enable quicksave/load feature.
 #define USE_QUICKSAVE
+#endif
 
 // Try to let time keep running out when quickloading. (similar to Ctrl+A)
 // Technically, the 'remaining time' is still restored, but with a penalty for elapsed time (up to 1 minute).
@@ -340,32 +358,42 @@ The authors of this program may be contacted at https://forum.princed.org
 // Enable debug cheats (with command-line argument "debug")
 // "[" and "]" : nudge x position by one pixel
 // "T" : display remaining time in minutes, seconds and ticks
+#ifndef __GBA__
 #define USE_DEBUG_CHEATS
+#endif
+
 
 
 
 // Darken those parts of the screen which are not near a torch.
+#ifndef __GBA__
 #define USE_LIGHTING
+#endif
 
 // Enable screenshot features.
+#ifndef __GBA__
 #define USE_SCREENSHOT
+#endif
 
-// Automatically switch to keyboard or joystick/gamepad mode if there is input from that device.
-// Useful if SDL detected a gamepad but there is none.
+// Automatically switch to keyboard or joystick/gamepad mode if there is input
+// from that device.  Useful if SDL detected a gamepad but there is none.
+#ifndef __GBA__
 #define USE_AUTO_INPUT_MODE
+#endif
 
-#ifdef USE_TEXT // The menu won't work without text.
-
-// Display the in-game menu.
+#if defined(USE_TEXT)
+// Display the in-game menu. (Enabled on GBA too: the menu draws through the
+// text/dialog routines that are already compiled in.)
 #define USE_MENU
-
 #endif
 
 // Enable colored torches. A torch can be colored by changing its modifier in a level editor.
 #define USE_COLORED_TORCHES
 
 // Enable fast forwarding with the backtick key.
+#ifndef __GBA__
 #define USE_FAST_FORWARD
+#endif
 
 // Set how much should the fast forwarding speed up the game.
 #define FAST_FORWARD_RATIO 10
@@ -378,12 +406,16 @@ The authors of this program may be contacted at https://forum.princed.org
 //#define FAST_FORWARD_MUTE
 
 // Briefly show a dark screen when changing rooms, like in the original game.
+#ifndef __GBA__
 #define USE_DARK_TRANSITION
+#endif
 
 // Turn the balconies into teleports.
 // Each balcony (whose left half has a non-zero modifier) will behave as a teleport to another balcony with the same modifier.
 // The right half of such balconies must have modifier == 1.
+#ifndef __GBA__
 #define USE_TELEPORTS
+#endif
 
 
 // Default SDL_Joystick button values

@@ -477,7 +477,11 @@ void set_options_to_default() {
 	enable_fade = 1;
 	enable_flash = 1;
 	enable_text = 1;
+#ifdef __GBA__
+	enable_info_screen = 0; /* show_splash waits for Shift; skip on GBA */
+#else
 	enable_info_screen = 1;
+#endif
 	start_fullscreen = 0;
 	use_hardware_acceleration = 2;
 	use_correct_aspect_ratio = 0;

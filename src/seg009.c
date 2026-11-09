@@ -44,7 +44,7 @@ void sdlperror(const char* header) {
 
 char exe_dir[POP_MAX_PATH] = ".";
 bool found_exe_dir = false;
-#if ! (defined WIN32 || _WIN32 || WIN64 || _WIN64)
+#if ! (defined WIN32 || _WIN32 || WIN64 || _WIN64 || defined __DJGPP__)
 char home_dir[POP_MAX_PATH];
 bool found_home_dir = false;
 char share_dir[POP_MAX_PATH];
@@ -77,7 +77,7 @@ void find_exe_dir(void) {
 	found_exe_dir = true;
 }
 
-#if ! (defined WIN32 || _WIN32 || WIN64 || _WIN64)
+#if ! (defined WIN32 || _WIN32 || WIN64 || _WIN64 || defined __DJGPP__)
 void find_home_dir(void) {
 	if (found_home_dir) return;
 	const char* home_path = getenv("HOME");
@@ -100,7 +100,7 @@ bool file_exists(const char* filename) {
 
 const char* find_first_file_match(char* dst, int size, char* format, const char* filename) {
 	find_exe_dir();
-#if defined WIN32 || _WIN32 || WIN64 || _WIN64
+#if defined WIN32 || _WIN32 || WIN64 || _WIN64 || defined __DJGPP__
 	snprintf_check(dst, size, format, exe_dir, filename);
 #else
 	find_home_dir();
@@ -117,7 +117,7 @@ const char* find_first_file_match(char* dst, int size, char* format, const char*
 
 const char* locate_save_file_(const char* filename, char* dst, int size) {
 	find_exe_dir();
-#if defined WIN32 || _WIN32 || WIN64 || _WIN64
+#if defined WIN32 || _WIN32 || WIN64 || _WIN64 || defined __DJGPP__
 	snprintf_check(dst, size, "%s/%s", exe_dir, filename);
 #else
 	find_home_dir();
@@ -336,8 +336,13 @@ int round_xpos_to_byte(int xpos,int round_direction) {
 
 // seg009:0C7A
 void quit(int exit_code) {
+#ifdef __GBA__
+	extern void gba_panic(unsigned char color_idx);
+	gba_panic(exit_code ? 1 : 2);
+#else
 	restore_stuff();
 	exit(exit_code);
+#endif
 }
 
 // seg009:0C90
@@ -466,11 +471,25 @@ dat_type* open_dat(const char* filename, int optional) {
 	if (fp != NULL) {
 		if (fread(&dat_header, 6, 1, fp) != 1)
 			goto failed;
+#ifdef __GBA__
+		/* Point dat_table directly into ROM instead of malloc+fread. Saves
+		   ~1.7 KB per open DAT (and avoids a malloc that fails late in
+		   the boot sequence when EWRAM is fragmented). The freed-up RAM
+		   is exactly what was running out for VDUNGEON / KID. */
+		if (fseek(fp, SDL_SwapLE32(dat_header.table_offset), SEEK_SET)) goto failed;
+		extern const uint8_t* gba_file_rom_ptr(FILE* fp, size_t* out_avail);
+		size_t avail = 0;
+		const uint8_t* rom = gba_file_rom_ptr(fp, &avail);
+		if (rom == NULL || (int)avail < SDL_SwapLE16(dat_header.table_size))
+			goto failed;
+		dat_table = (dat_table_type*)rom;
+#else
 		dat_table = (dat_table_type*) malloc(SDL_SwapLE16(dat_header.table_size));
 		if (dat_table == NULL ||
 		    fseek(fp, SDL_SwapLE32(dat_header.table_offset), SEEK_SET) ||
 		    fread(dat_table, SDL_SwapLE16(dat_header.table_size), 1, fp) != 1)
 			goto failed;
+#endif
 		pointer->handle = fp;
 		pointer->dat_table = dat_table;
 	} else if (optional == 0) {
@@ -562,8 +581,24 @@ chtab_type* load_sprites_from_file(int resource,int palette_bits, int quit_on_er
 	int n_images = shpl->n_images;
 	size_t alloc_size = sizeof(chtab_type) + sizeof(void *) * n_images;
 	chtab_type* chtab = (chtab_type*) malloc(alloc_size);
+	if (chtab == NULL) {
+		free(shpl);
+		return NULL;
+	}
 	memset(chtab, 0, alloc_size);
 	chtab->n_images = n_images;
+#ifdef __GBA__
+	/* Pre-compute the palette-row offset for this chtab so decode_image can
+	   bake `row*16 + v` into each sprite pixel value. Our 8bpp blits then
+	   write straight into the global palette[]'s correct chtab slot, where
+	   set_loaded_palette has just installed the colours. */
+	extern int gba_decode_palette_offset;
+	{
+		int rb = palette_bits, row = 0;
+		while (rb && !(rb & 1)) { rb >>= 1; ++row; }
+		gba_decode_palette_offset = rb ? (row * 16) : 0;
+	}
+#endif
 	for (int i = 1; i <= n_images; i++) {
 		SDL_Surface* image = load_image(resource + i, pal_ptr);
 //		if (image == NULL) printf(" failed");
@@ -584,7 +619,28 @@ chtab_type* load_sprites_from_file(int resource,int palette_bits, int quit_on_er
 //		printf("\n");
 		chtab->images[i-1] = image;
 	}
+#ifdef __GBA__
+	gba_decode_palette_offset = 0;
+	/* On GBA, pal_ptr lives in cartridge ROM so the earlier
+	   `pal_ptr->row_bits = palette_bits` write was a no-op; the global
+	   set_loaded_palette() would then iterate against a zero row mask and
+	   never load this chtab's colours. Inline the row-walk here using the
+	   local `palette_bits` value so the chtab's 16 vga[] colours actually
+	   get installed into the global palette[]. */
+	{
+		int row_bits   = palette_bits;
+		int dest_index = 0;
+		int source_row = 0;
+		for (int dest_row = 0; dest_row < 16; ++dest_row, dest_index += 16) {
+			if (row_bits & (1 << dest_row)) {
+				set_pal_arr(dest_index, 16, pal_ptr->vga + source_row * 16);
+				++source_row;
+			}
+		}
+	}
+#else
 	set_loaded_palette(pal_ptr);
+#endif
 	return chtab;
 }
 
@@ -818,6 +874,7 @@ int calc_stride(image_data_type* image_data) {
 
 byte* conv_to_8bpp(byte* in_data, int width, int height, int stride, int depth) {
 	byte* out_data = (byte*) malloc(width * height);
+	if (out_data == NULL) return NULL;
 	int pixels_per_byte = 8 / depth;
 	int mask = (1 << depth) - 1;
 	for (int y = 0; y < height; ++y) {
@@ -844,17 +901,63 @@ image_type* decode_image(image_data_type* image_data, dat_pal_type* palette) {
 	int flags = SDL_SwapLE16(image_data->flags);
 	int depth = ((flags >> 12) & 7) + 1;
 	int cmeth = (flags >> 8) & 0x0F;
+#ifdef __GBA__
+	/* GBA: don't allocate a pixel buffer. Either point straight at the
+	   pre-decoded 8bpp pixels in ROM (built by tools/preproc_dat) or, for
+	   the few sprites that didn't get preprocessed (mostly the built-in
+	   hc_font_data glyphs), stash the original image_data_type pointer
+	   and let the blit decode on demand. Saves ~1 KB per sprite + the
+	   big static scratch the legacy decoder used. */
+	{
+		extern int gba_decode_palette_offset;
+		extern image_type* gba_new_rom_surface(int w, int h, int bpp);
+		/* Struct-only surface; ->pixels is pointed at the sprite data fixed in
+		   ROM below. No throwaway width*height buffer is allocated per sprite
+		   (that used to fragment the heap and stall level loading). */
+		image_type* image = gba_new_rom_surface(width, height, 8);
+		if (image == NULL) return NULL;
+		if (cmeth == 0 && depth == 8) {
+			/* Pre-decoded: pixels point at raw 8bpp data right after the
+			   6-byte image_data_type header.  Blits read directly from ROM. */
+			image->pixels = (void*)((byte*)image_data + sizeof(image_data_type));
+			image->pitch  = width;
+			image->gba_rom_compressed = 0;
+		} else {
+			/* Legacy compressed path. */
+			image->pixels = (void*)image_data;
+			image->pitch  = width;
+			image->gba_rom_compressed = 1;
+		}
+		image->gba_palette_offset = (Uint8)gba_decode_palette_offset;
+		image->gba_depth          = (Uint8)depth;
+		image->gba_cmeth          = (Uint8)cmeth;
+
+		SDL_Color colors[16];
+		for (int i = 0; i < 16; ++i) {
+			colors[i].r = palette->vga[i].r << 2;
+			colors[i].g = palette->vga[i].g << 2;
+			colors[i].b = palette->vga[i].b << 2;
+			colors[i].a = SDL_ALPHA_OPAQUE;
+		}
+		colors[0].r = 0; colors[0].g = 0; colors[0].b = 0;
+		colors[0].a = SDL_ALPHA_TRANSPARENT;
+		SDL_SetPaletteColors(SURFACE_PALETTE(image), colors, 0, 16);
+		return image;
+	}
+#else
 	int stride = calc_stride(image_data);
 	int dest_size = stride * height;
 	byte* dest = (byte*) malloc(dest_size);
+	if (dest == NULL) return NULL;
 	memset(dest, 0, dest_size);
 	decompr_img(dest, image_data, dest_size, cmeth, stride);
 	byte* image_8bpp = conv_to_8bpp(dest, width, height, stride, depth);
 	free(dest); dest = NULL;
+	if (image_8bpp == NULL) return NULL;
 	image_type* image = SDL_CreateRGBSurface(0, width, height, 8, 0, 0, 0, 0);
 	if (image == NULL) {
-		sdlperror("decode_image: SDL_CreateRGBSurface");
-		quit(1);
+		free(image_8bpp);
+		return NULL;
 	}
 	if (SDL_LockSurface(image) != 0) {
 		sdlperror("decode_image: SDL_LockSurface");
@@ -871,16 +974,13 @@ image_type* decode_image(image_data_type* image_data, dat_pal_type* palette) {
 		colors[i].r = palette->vga[i].r << 2;
 		colors[i].g = palette->vga[i].g << 2;
 		colors[i].b = palette->vga[i].b << 2;
-		colors[i].a = SDL_ALPHA_OPAQUE;   // SDL2's SDL_Color has a fourth alpha component
+		colors[i].a = SDL_ALPHA_OPAQUE;
 	}
-	// Force 0th color to be black for non-transparent blitters. (hitpoints, shadow)
-	// This is needed to remove the colored rectangles around hitpoints and the shadow, when using Brain's SNES graphics for example.
-	colors[0].r = 0;
-	colors[0].g = 0;
-	colors[0].b = 0;
+	colors[0].r = 0; colors[0].g = 0; colors[0].b = 0;
 	colors[0].a = SDL_ALPHA_TRANSPARENT;
-	SDL_SetPaletteColors(image->format->palette, colors, 0, 16); // SDL_SetColors = deprecated
+	SDL_SetPaletteColors(SURFACE_PALETTE(image), colors, 0, 16);
 	return image;
+#endif  /* __GBA__ */
 }
 
 // seg009:121A
@@ -952,6 +1052,40 @@ void draw_image_transp(image_type* image,image_type* mask,int xpos,int ypos) {
 // seg009:157E
 int set_joy_mode() {
 	// stub
+#ifdef USE_SDL3
+	// SDL3 dropped the index-based joystick/gamepad/haptic open calls; query the
+	// device lists and open the first one instead.
+	int num_joysticks = 0;
+	SDL_JoystickID* joystick_ids = SDL_GetJoysticks(&num_joysticks);
+	if (num_joysticks < 1) {
+		is_joyst_mode = 0;
+	} else {
+		if (gamecontrollerdb_file[0] != '\0') {
+			SDL_AddGamepadMappingsFromFile(gamecontrollerdb_file);
+		}
+		SDL_JoystickID first = joystick_ids[0];
+		if (SDL_IsGamepad(first)) {
+			sdl_controller_ = SDL_OpenGamepad(first);
+			is_joyst_mode = (sdl_controller_ != NULL) ? 1 : 0;
+		}
+		// Not compatible with the gamepad interface: fall back to the joystick interface.
+		else {
+			sdl_joystick_ = SDL_OpenJoystick(first);
+			is_joyst_mode = 1;
+			using_sdl_joystick_interface = 1;
+		}
+	}
+	if (joystick_ids != NULL) SDL_free(joystick_ids);
+	if (enable_controller_rumble && is_joyst_mode) {
+		int num_haptics = 0;
+		SDL_HapticID* haptic_ids = SDL_GetHaptics(&num_haptics);
+		sdl_haptic = (num_haptics > 0) ? SDL_OpenHaptic(haptic_ids[0]) : NULL;
+		if (sdl_haptic != NULL) SDL_InitHapticRumble(sdl_haptic);
+		if (haptic_ids != NULL) SDL_free(haptic_ids);
+	} else {
+		sdl_haptic = NULL;
+	}
+#else
 	if (SDL_NumJoysticks() < 1) {
 		is_joyst_mode = 0;
 	} else {
@@ -981,6 +1115,7 @@ int set_joy_mode() {
 	} else {
 		sdl_haptic = NULL;
 	}
+#endif
 
 	is_keyboard_mode = !is_joyst_mode;
 	return is_joyst_mode;
@@ -989,7 +1124,16 @@ int set_joy_mode() {
 // seg009:178B
 surface_type* make_offscreen_buffer(const rect_type* rect) {
 	// stub
-#ifndef USE_ALPHA
+#ifdef __GBA__
+	/* On GBA we can't afford a second 62 KB framebuffer. Reuse
+	   onscreen_surface_ — bump its refcount so SDLPoP can free_surface()
+	   it like an independent buffer. Drawing happens directly on the
+	   buffer that gba_present_surface() reads, so fade-by-blit effects
+	   become no-ops, but the game runs and shows content. */
+	(void)rect;
+	onscreen_surface_->refcount++;
+	return onscreen_surface_;
+#elif !defined(USE_ALPHA)
 	// Bit order matches onscreen buffer, good for fading.
 	return SDL_CreateRGBSurface(0, rect->right, rect->bottom, 24, Rmsk, Gmsk, Bmsk, 0);
 #else
@@ -1222,6 +1366,15 @@ font_type load_font_from_data(/*const*/ rawfont_type* data) {
 extern byte hc_small_font_data[];
 
 void load_font(void) {
+#ifdef __GBA__
+	/* Use the build-time pre-decompressed font (tools/predecomp_font + bin2c,
+	   generated into gba/src/hc_font_decoded.c). Every glyph is already
+	   depth=8/cmeth=0, so decode_image() takes its no-decode fast path and the
+	   per-blit decoder (gba_decode_compressed_surface) is never invoked while
+	   drawing text. */
+	extern const unsigned char hc_font_decoded[];
+	hc_font = load_font_from_data((rawfont_type*)hc_font_decoded);
+#else
 	// Try to load font from a file.
 	dat_type* dathandle = open_dat("font", 1);
 	hc_font.chtab = load_sprites_from_file(1000, 1<<1, 0);
@@ -1230,6 +1383,7 @@ void load_font(void) {
 		// Use built-in font.
 		hc_font = load_font_from_data((/*const*/ rawfont_type*)hc_font_data);
 	}
+#endif
 
 #ifdef USE_MENU
 	hc_small_font = load_font_from_data((rawfont_type*)hc_small_font_data);
@@ -1582,9 +1736,22 @@ void dialog_method_2_frame(dialog_type* dialog) {
 
 // seg009:0C44
 void show_dialog(const char* text) {
+#ifdef __GBA__
+	/* show_dialog is only used for non-fatal error notices (mostly the
+	   draw-table overflow checks in seg008). The overflowing entry has
+	   already been dropped by the caller's early return, so there is nothing
+	   to acknowledge. On GBA showmessage()'s "press any key" wait loop would
+	   freeze the game forever — a held movement key never satisfies
+	   key_test_quit(), which is exactly what hung the port on the first move.
+	   Log it and keep running. */
+	extern void gba_log(const char*, ...);
+	gba_log("show_dialog (dropped): %s", text);
+	return;
+#else
 	char string[256];
 	snprintf(string, sizeof(string), "%s\n\nPress any key to continue.", text);
 	showmessage(string, 1, &key_test_quit);
+#endif
 }
 
 // seg009:0791
@@ -1801,7 +1968,14 @@ peel_type* read_peel_from_screen(const rect_type* rect) {
 	peel_type* result = calloc(1, sizeof(peel_type));
 	//memset(&result, 0, sizeof(result));
 	result->rect = *rect;
-#ifndef USE_ALPHA
+#ifdef __GBA__
+	/* The GBA backbuffer is 8bpp indexed; matching that here saves ~27 KB
+	   per peel vs. the desktop 24bpp variant, which is the difference
+	   between fitting init_copyprot_dialog + sprite loading in EWRAM or not. */
+	SDL_Surface* peel_surface = SDL_CreateRGBSurface(0, rect->right - rect->left,
+	                                                 rect->bottom - rect->top, 8,
+	                                                 0, 0, 0, 0);
+#elif !defined(USE_ALPHA)
 	SDL_Surface* peel_surface = SDL_CreateRGBSurface(0, rect->right - rect->left, rect->bottom - rect->top,
 	                                                 24, Rmsk, Gmsk, Bmsk, 0);
 #else
@@ -1854,6 +2028,7 @@ enum userevents {
 	userevent_TIMER,
 };
 
+#ifndef __GBA__
 short speaker_playing = 0;
 short digi_playing = 0;
 short midi_playing = 0;
@@ -2118,6 +2293,13 @@ void audio_callback(void* userdata, Uint8* stream_orig, int len_orig) {
 		memset(stream_orig, digi_audiospec->silence, len_orig);
 #else
 #ifdef FAST_FORWARD_RESAMPLE_SOUND
+#ifdef USE_SDL3
+		// SDL3 replaced SDL_AudioCVT with one-shot SDL_ConvertAudioSamples; the
+		// resample is done in sdl2_to_sdl3.c (where the real SDL_AudioSpec lives).
+		compat_SDL_AudioResampleFF(digi_audiospec->format, digi_audiospec->channels,
+			digi_audiospec->freq * audio_speed, digi_audiospec->freq,
+			stream, len, stream_orig, len_orig);
+#else
 		static SDL_AudioCVT cvt;
 		static bool cvt_initialized = false;
 		if (!cvt_initialized) {
@@ -2139,6 +2321,7 @@ void audio_callback(void* userdata, Uint8* stream_orig, int len_orig) {
 		memcpy(stream_orig, cvt.buf, len_orig);
 		free(cvt.buf);
 		cvt.buf = NULL;
+#endif
 #else
 		// Hack: use the beginning of the buffer instead of resampling.
 		memcpy(stream_orig, stream, len_orig);
@@ -2478,7 +2661,9 @@ void turn_sound_on_off(byte new_state) {
 int check_sound_playing() {
 	return speaker_playing || digi_playing || midi_playing || ogg_playing;
 }
+#endif // !__GBA__
 
+#ifndef __GBA__
 void apply_aspect_ratio() {
 	// Allow us to use a consistent set of screen co-ordinates, even if the screen size changes
 	if (use_correct_aspect_ratio) {
@@ -2537,6 +2722,10 @@ void init_scaling(void) {
 			int access = is_renderer_targettexture_supported ? SDL_TEXTUREACCESS_TARGET : SDL_TEXTUREACCESS_STREAMING;
 			texture_fuzzy = SDL_CreateTexture(renderer_, SDL_PIXELFORMAT_RGB24, access, 320*2, 200*2);
 			SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
+#ifdef USE_SDL3
+			// SDL3 ignores SDL_HINT_RENDER_SCALE_QUALITY; set the scale mode per-texture.
+			if (texture_fuzzy != NULL) SDL_SetTextureScaleMode(texture_fuzzy, SDL_SCALEMODE_LINEAR);
+#endif
 		}
 		target_texture = texture_fuzzy;
 	} else if (scaling_type == 2) {
@@ -2544,6 +2733,9 @@ void init_scaling(void) {
 			SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
 			texture_blurry = SDL_CreateTexture(renderer_, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, 320, 200);
 			SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
+#ifdef USE_SDL3
+			if (texture_blurry != NULL) SDL_SetTextureScaleMode(texture_blurry, SDL_SCALEMODE_LINEAR);
+#endif
 		}
 		target_texture = texture_blurry;
 	} else {
@@ -2613,12 +2805,18 @@ void set_gr_mode(byte grmode) {
 		default: break;
 	}
 	renderer_ = SDL_CreateRenderer(window_, -1 , flags | SDL_RENDERER_TARGETTEXTURE);
+#ifdef USE_SDL3
+	// SDL3 removed SDL_GetRendererInfo/SDL_RendererInfo; accelerated renderers
+	// support render targets, so assume it's available.
+	is_renderer_targettexture_supported = true;
+#else
 	SDL_RendererInfo renderer_info;
 	if (SDL_GetRendererInfo(renderer_, &renderer_info) == 0) {
 		if (renderer_info.flags & SDL_RENDERER_TARGETTEXTURE) {
 			is_renderer_targettexture_supported = true;
 		}
 	}
+#endif
 	if (use_integer_scaling) {
 #if SDL_VERSION_ATLEAST(2,0,5) // SDL_RenderSetIntegerScale
 		SDL_RenderSetIntegerScale(renderer_, SDL_TRUE);
@@ -2790,6 +2988,33 @@ void update_screen() {
 	SDL_RenderCopy(renderer_, target_texture, NULL, NULL);
 	SDL_RenderPresent(renderer_);
 }
+#else  /* __GBA__ */
+void apply_aspect_ratio(void) { }
+void window_resized(void) { }
+void init_overlay(void) { }
+void init_scaling(void) { }
+void set_gr_mode(byte grmode) {
+	(void)grmode;
+	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
+	onscreen_surface_ = SDL_CreateRGBSurface(0, 320, 192, 8, 0, 0, 0, 0);
+	if (!onscreen_surface_) quit(1);
+	graphics_mode = gmMcgaVga;
+#ifdef USE_TEXT
+	/* Without this, hc_font.chtab is NULL, and the very first draw_text in
+	   show_loading dereferences font->chtab->images[c], reading garbage from
+	   BIOS and then iterating a huge image in method_3_blit_mono. */
+	load_font();
+#endif
+}
+SDL_Surface* get_final_surface(void) { return onscreen_surface_; }
+void draw_overlay(void) { }
+void update_screen(void) {
+	extern void gba_camera_update(void);
+	extern int  gba_present_surface(SDL_Surface*);
+	gba_camera_update();
+	gba_present_surface(onscreen_surface_);
+}
+#endif /* __GBA__ */
 
 // seg009:9289
 void set_pal_arr(int start,int count,const rgb_type* array) {
@@ -2967,6 +3192,20 @@ void *load_from_opendats_alloc(int resource, const char* extension, data_locatio
 	if (out_result != NULL) *out_result = result;
 	if (out_size != NULL) *out_size = size;
 	if (result == data_none) return NULL;
+#ifdef __GBA__
+	/* DAT data already lives in cartridge ROM. Return a pointer into ROM
+	   instead of malloc+fread'ing a copy: each chtab load would otherwise
+	   duplicate every sprite into EWRAM (~150 KB just for kid sprites,
+	   blowing the 158 KB heap). Callers must free with gba_free_safe(). */
+	if (result == data_DAT) {
+		extern const uint8_t* gba_file_rom_ptr(FILE* fp, size_t* out_avail);
+		size_t avail = 0;
+		const uint8_t* rom = gba_file_rom_ptr(fp, &avail);
+		if (rom != NULL && (int)avail >= size) {
+			return (void*)rom;
+		}
+	}
+#endif
 	void* area = malloc(size);
 	//read(fd, area, size);
 	if (fread(area, size, 1, fp) != 1) {
@@ -2992,6 +3231,20 @@ int load_from_opendats_to_area(int resource,void* area,int length, const char* e
 	FILE* fp = NULL;
 	load_from_opendats_metadata(resource, extension, &fp, &result, &checksum, &size, &pointer);
 	if (result == data_none) return 0;
+#ifdef __GBA__
+	/* No fread: copy directly from the ROM-resident DAT bytes. */
+	if (result == data_DAT) {
+		extern const uint8_t* gba_file_rom_ptr(FILE* fp, size_t* out_avail);
+		size_t avail = 0;
+		const uint8_t* rom = gba_file_rom_ptr(fp, &avail);
+		int n = MIN(size, length);
+		if (rom != NULL && (int)avail >= n) {
+			memcpy(area, rom, n);
+		} else {
+			memset(area, 0, n);
+		}
+	}
+#else
 	if (fread(area, MIN(size, length), 1, fp) != 1) {
 		fprintf(stderr, "%s: %s, resource %d, size %d, failed: %s\n",
 			__func__, pointer->filename, resource,
@@ -2999,6 +3252,7 @@ int load_from_opendats_to_area(int resource,void* area,int length, const char* e
 		memset(area, 0, MIN(size, length));
 	}
 	if (result == data_directory) fclose(fp);
+#endif
 	/* XXX: check checksum */
 	return 0;
 }
@@ -3040,6 +3294,51 @@ void method_1_blit_rect(surface_type* target_surface,surface_type* source_surfac
 image_type* method_3_blit_mono(image_type* image,int xpos,int ypos,int blitter,byte color) {
 	int w = image->w;
 	int h = image->h;
+#ifdef __GBA__
+	/* GBA fast path: both image (font glyph) and current_target_surface are
+	   8bpp indexed. The desktop path converts to ARGB8888 just to recolor,
+	   then relies on SDL's 32->8bpp blit with the dest palette to map back
+	   to indices. We have no destination palette, so write the requested
+	   palette index directly. Any non-zero source pixel becomes "color";
+	   zero stays transparent.
+	   Sources marked gba_rom_compressed hold a ROM image_data_type pointer
+	   in pixels (decode_image deferred the unpack to save RAM); decode into
+	   the shared scratch first or text/mono blits render struct headers as
+	   gibberish. */
+	const byte* src_pixels;
+	int         src_pitch;
+	if (image->gba_rom_compressed) {
+		extern uint8_t* gba_decode_compressed_surface(SDL_Surface*);
+		uint8_t* unpacked = gba_decode_compressed_surface(image);
+		if (unpacked == NULL) return image;
+		src_pixels = unpacked;
+		src_pitch  = w;
+	} else {
+		src_pixels = (const byte*)image->pixels;
+		src_pitch  = image->pitch;
+	}
+	/* Clamp the iteration to the on-screen region. A glyph/sprite with a
+	   corrupted huge w/h (seen on the kid's first move: a bad font image made
+	   this loop run ~w*h≈billions of times = a hard freeze inside
+	   draw_text_character) would otherwise spin even though every write is
+	   bounds-checked. Iterating only the visible rows/cols caps the work at
+	   the surface size no matter how broken the dimensions are. */
+	int surf_w = current_target_surface->w;
+	int surf_h = current_target_surface->h;
+	int y0 = (ypos < 0) ? -ypos : 0;
+	int y1 = h; if (y1 > surf_h - ypos) y1 = surf_h - ypos;
+	int x0 = (xpos < 0) ? -xpos : 0;
+	int x1 = w; if (x1 > surf_w - xpos) x1 = surf_w - xpos;
+	for (int y = y0; y < y1; ++y) {
+		const byte* sp = src_pixels + (size_t)y * src_pitch;
+		byte* dp = (byte*)current_target_surface->pixels +
+		           (size_t)(ypos + y) * current_target_surface->pitch + xpos;
+		for (int x = x0; x < x1; ++x) {
+			if (sp[x] != 0) dp[x] = color;
+		}
+	}
+	return image;
+#else
 	if (SDL_SetColorKey(image, SDL_TRUE, 0) != 0) {
 		sdlperror("method_3_blit_mono: SDL_SetColorKey");
 		quit(1);
@@ -3086,6 +3385,7 @@ image_type* method_3_blit_mono(image_type* image,int xpos,int ypos,int blitter,b
 	SDL_FreeSurface(colored_image);
 
 	return image;
+#endif /* __GBA__ */
 }
 
 // Workaround for a bug in SDL2 (before v2.0.4):
@@ -3096,6 +3396,11 @@ bool RGB24_bug_checked = false;
 bool RGB24_bug_affected;
 
 bool RGB24_bug_check(void) {
+#ifdef USE_SDL3
+	// This is an old SDL2-specific SDL_FillRect bug; it does not occur on SDL3
+	// (and test_surface->format->Rmask no longer exists). Never affected.
+	return false;
+#else
 	if (!RGB24_bug_checked) {
 		// Check if the bug occurs in this version of SDL.
 		SDL_Surface* test_surface = SDL_CreateRGBSurface(0, 1, 1, 24, 0, 0, 0, 0);
@@ -3110,10 +3415,11 @@ bool RGB24_bug_check(void) {
 		RGB24_bug_checked = true;
 	}
 	return RGB24_bug_affected;
+#endif
 }
 
 int safe_SDL_FillRect(SDL_Surface* dst, const SDL_Rect* rect, Uint32 color) {
-	if (dst->format->BitsPerPixel == 24 && RGB24_bug_check()) {
+	if (SURFACE_BPP(dst) == 24 && RGB24_bug_check()) {
 		// In the buggy version, SDL_FillRect swaps R and B, so we swap it once more.
 		color = ((color & 0xFF) << 16) | (color & 0xFF00) | ((color & 0xFF0000) >> 16);
 	}
@@ -3124,6 +3430,15 @@ int safe_SDL_FillRect(SDL_Surface* dst, const SDL_Rect* rect, Uint32 color) {
 const rect_type* method_5_rect(const rect_type* rect,int blit,byte color) {
 	SDL_Rect dest_rect;
 	rect_to_sdlrect(rect, &dest_rect);
+#ifdef __GBA__
+	/* current_target_surface is the 8bpp screen buffer whose SDL_Palette is
+	   empty (we drive the hardware palette from the global PoP palette[]),
+	   so SDL_MapRGB would round-trip to index 0 for every input. The fill
+	   value IS the PoP palette index — write it straight. */
+	(void)blit;
+	SDL_FillRect(current_target_surface, &dest_rect, (Uint32)color);
+	return rect;
+#else
 	rgb_type palette_color = palette[color];
 #ifndef USE_ALPHA
 	uint32_t rgb_color = SDL_MapRGBA(current_target_surface->format, palette_color.r<<2, palette_color.g<<2, palette_color.b<<2, 0xFF);
@@ -3135,23 +3450,54 @@ const rect_type* method_5_rect(const rect_type* rect,int blit,byte color) {
 		quit(1);
 	}
 	return rect;
+#endif
 }
 
 void draw_rect_with_alpha(const rect_type* rect, byte color, byte alpha) {
 	SDL_Rect dest_rect;
 	rect_to_sdlrect(rect, &dest_rect);
+#ifdef __GBA__
+	// The 8bpp screen surface can't alpha-blend. alpha==0 means "leave the
+	// background showing" (used so "GAME PAUSED" stays visible), so skip it;
+	// otherwise fill opaquely with the PoP palette index. The menu's dimming
+	// backdrop just becomes a solid panel — fine for a pause overlay.
+	if (alpha == 0) return;
+	SDL_FillRect(current_target_surface, &dest_rect, (Uint32)color);
+#else
 	rgb_type palette_color = palette[color];
 	uint32_t rgb_color = SDL_MapRGBA(overlay_surface->format, palette_color.r<<2, palette_color.g<<2, palette_color.b<<2, alpha);
 	if (safe_SDL_FillRect(current_target_surface, &dest_rect, rgb_color) != 0) {
 		sdlperror("draw_rect_with_alpha: SDL_FillRect");
 		quit(1);
 	}
+#endif
 }
 
 void draw_rect_contours(const rect_type* rect, byte color) {
+#ifdef __GBA__
+	// 8bpp screen: draw the 4 edges directly, writing the PoP palette index.
+	{
+		SDL_Rect r;
+		rect_to_sdlrect(rect, &r);
+		byte* pixels = (byte*)current_target_surface->pixels;
+		int pitch = current_target_surface->pitch;
+		int xmin = MAX(0, r.x), xmax = MIN(current_target_surface->w, r.x + r.w);
+		int ymin = MAX(0, r.y), ymax = MIN(current_target_surface->h, r.y + r.h);
+		if (xmax <= xmin || ymax <= ymin) return;
+		for (int x = xmin; x < xmax; ++x) {
+			pixels[(size_t)ymin * pitch + x] = color;
+			pixels[(size_t)(ymax - 1) * pitch + x] = color;
+		}
+		for (int y = ymin; y < ymax; ++y) {
+			pixels[(size_t)y * pitch + xmin] = color;
+			pixels[(size_t)y * pitch + (xmax - 1)] = color;
+		}
+		return;
+	}
+#endif
 	// TODO: handle 24 bit surfaces? (currently, 32 bit surface is assumed)
-	if (current_target_surface->format->BitsPerPixel != 32) {
-		printf("draw_rect_contours: not implemented for %d bit surfaces\n", current_target_surface->format->BitsPerPixel);
+	if (SURFACE_BPP(current_target_surface) != 32) {
+		printf("draw_rect_contours: not implemented for %d bit surfaces\n", SURFACE_BPP(current_target_surface));
 		return;
 	}
 	SDL_Rect dest_rect;
@@ -3162,7 +3508,7 @@ void draw_rect_contours(const rect_type* rect, byte color) {
 		sdlperror("draw_rect_contours: SDL_LockSurface");
 		quit(1);
 	}
-	int bytes_per_pixel = current_target_surface->format->BytesPerPixel;
+	int bytes_per_pixel = SURFACE_BYTESPP(current_target_surface);
 	int pitch = current_target_surface->pitch;
 	byte* pixels = current_target_surface->pixels;
 	int xmin = MIN(dest_rect.x,               current_target_surface->w);
@@ -3312,7 +3658,7 @@ image_type* method_6_blit_img_to_scr(image_type* image,int xpos,int ypos,int bli
 	// Fix the background color of teleport images on SDL_image 2.6.2, where they are loaded as RGBA.
 	// For transparency, paletted images need colorkeying, RGB(A) images need blending.
 	if (blit == blitters_0_no_transp) {
-		if (SDL_ISPIXELFORMAT_INDEXED(image->format->format)) {
+		if (SDL_ISPIXELFORMAT_INDEXED(SURFACE_FMT_ENUM(image))) {
 			SDL_SetColorKey(image, SDL_FALSE, 0);
 			//printf("colorkey = SDL_FALSE\n");
 		} else {
@@ -3321,7 +3667,7 @@ image_type* method_6_blit_img_to_scr(image_type* image,int xpos,int ypos,int bli
 		}
 	}
 	else {
-		if (SDL_ISPIXELFORMAT_INDEXED(image->format->format)) {
+		if (SDL_ISPIXELFORMAT_INDEXED(SURFACE_FMT_ENUM(image))) {
 			SDL_SetColorKey(image, SDL_TRUE, 0);
 			//printf("colorkey = SDL_TRUE\n");
 		} else {
@@ -3351,7 +3697,13 @@ int wait_time[NUM_TIMERS];
 
 
 #ifdef USE_COMPAT_TIMER
+#ifdef USE_SDL3
+// SDL3 changed the timer callback signature to (userdata, timerID, interval).
+Uint32 SDLCALL timer_callback(void *param, SDL_TimerID timerID, Uint32 interval) {
+	(void)timerID;
+#else
 Uint32 timer_callback(Uint32 interval, void *param) {
+#endif
 	SDL_Event event;
 	memset(&event, 0, sizeof(event));
 	event.type = SDL_USEREVENT;
@@ -3435,8 +3787,8 @@ void process_events() {
 		switch (event.type) {
 			case SDL_KEYDOWN:
 			{
-				int modifier = event.key.keysym.mod;
-				int scancode = event.key.keysym.scancode;
+				int modifier = EVENT_KEY_MOD(event);
+				int scancode = EVENT_KEY_SCANCODE(event);
 
 				// Handle these separately, so they won't interrupt things that are usually interrupted by a keypress. (pause, cutscene)
 #ifdef USE_FAST_FORWARD
@@ -3493,7 +3845,10 @@ void process_events() {
 						case SDL_SCANCODE_VOLUMEDOWN:
 						// Why are there two mute key codes?
 						case SDL_SCANCODE_MUTE:
+#ifndef USE_SDL3
+						// SDL3 makes SDL_SCANCODE_AUDIOMUTE an alias of SDL_SCANCODE_MUTE (duplicate case).
 						case SDL_SCANCODE_AUDIOMUTE:
+#endif
 						case SDL_SCANCODE_PAUSE:
 							break;
 
@@ -3537,32 +3892,32 @@ void process_events() {
 			}
 			case SDL_KEYUP:
 				// If Alt was held down from Alt+Tab but now it's released: stop ignoring Tab.
-				if (event.key.keysym.scancode == SDL_SCANCODE_TAB && ignore_tab) ignore_tab = false;
+				if (EVENT_KEY_SCANCODE(event) == SDL_SCANCODE_TAB && ignore_tab) ignore_tab = false;
 
 #ifdef USE_FAST_FORWARD
-				if (event.key.keysym.scancode == SDL_SCANCODE_GRAVE) {
+				if (EVENT_KEY_SCANCODE(event) == SDL_SCANCODE_GRAVE) {
 					init_timer(BASE_FPS); // fast-forward off
 					audio_speed = 1;
 					break;
 				}
 #endif
 
-				key_states[event.key.keysym.scancode] &= ~KEYSTATE_HELD;
+				key_states[EVENT_KEY_SCANCODE(event)] &= ~KEYSTATE_HELD;
 #ifdef USE_MENU
 				// Prevent repeated keystrokes opening/closing the menu as long as the key is held down.
-				if (event.key.keysym.scancode == SDL_SCANCODE_BACKSPACE || event.key.keysym.scancode == SDL_SCANCODE_ESCAPE) {
+				if (EVENT_KEY_SCANCODE(event) == SDL_SCANCODE_BACKSPACE || EVENT_KEY_SCANCODE(event) == SDL_SCANCODE_ESCAPE) {
 					escape_key_suppressed = false;
 				}
 #endif
 				break;
 			case SDL_CONTROLLERAXISMOTION:
-				if (event.caxis.axis < 6) {
-					joy_axis[event.caxis.axis] = event.caxis.value;
-					if (abs(event.caxis.value) > abs(joy_axis_max[event.caxis.axis]))
-						joy_axis_max[event.caxis.axis] = event.caxis.value;
+				if (EVENT_GP_AXIS(event) < 6) {
+					joy_axis[EVENT_GP_AXIS(event)] = EVENT_GP_VALUE(event);
+					if (abs(EVENT_GP_VALUE(event)) > abs(joy_axis_max[EVENT_GP_AXIS(event)]))
+						joy_axis_max[EVENT_GP_AXIS(event)] = EVENT_GP_VALUE(event);
 
 #ifdef USE_AUTO_INPUT_MODE
-					if (!is_joyst_mode && (event.caxis.value >= joystick_threshold || event.caxis.value <= -joystick_threshold)) {
+					if (!is_joyst_mode && (EVENT_GP_VALUE(event) >= joystick_threshold || EVENT_GP_VALUE(event) <= -joystick_threshold)) {
 						is_joyst_mode = 1;
 						is_keyboard_mode = 0;
 					}
@@ -3570,7 +3925,7 @@ void process_events() {
 				}
 				break;
 			case SDL_CONTROLLERDEVICEADDED:
-				SDL_GameControllerOpen(event.cdevice.which);
+				SDL_GameControllerOpen(EVENT_GP_WHICH(event));
 				if (gamecontrollerdb_file[0] != '\0') {
 					SDL_GameControllerAddMappingsFromFile(gamecontrollerdb_file);
 				}
@@ -3578,23 +3933,23 @@ void process_events() {
 				using_sdl_joystick_interface = 0;
 				break;
 			case SDL_CONTROLLERDEVICEREMOVED:
-				if (sdl_controller_ == SDL_GameControllerFromInstanceID(event.cdevice.which)) {
+				if (sdl_controller_ == SDL_GameControllerFromInstanceID(EVENT_GP_WHICH(event))) {
 					sdl_controller_ = NULL;
 					is_joyst_mode = 0;
 					is_keyboard_mode = 1;
 				}
-				SDL_GameControllerClose(SDL_GameControllerFromInstanceID(event.cdevice.which));
+				SDL_GameControllerClose(SDL_GameControllerFromInstanceID(EVENT_GP_WHICH(event)));
 				break;
 			case SDL_CONTROLLERBUTTONDOWN:
 				//Make sure sdl_controller_ always points to the active controller
-				sdl_controller_ = SDL_GameControllerFromInstanceID(event.cdevice.which);
+				sdl_controller_ = SDL_GameControllerFromInstanceID(EVENT_GP_WHICH(event));
 #ifdef USE_AUTO_INPUT_MODE
 				if (!is_joyst_mode) {
 					is_joyst_mode = 1;
 					is_keyboard_mode = 0;
 				}
 #endif
-				switch (event.cbutton.button)
+				switch (EVENT_GP_BUTTON(event))
 				{
 					case SDL_CONTROLLER_BUTTON_DPAD_LEFT:  joy_button_states[JOYINPUT_DPAD_LEFT] |= KEYSTATE_HELD | KEYSTATE_HELD_NEW; break; // left
 					case SDL_CONTROLLER_BUTTON_DPAD_RIGHT: joy_button_states[JOYINPUT_DPAD_RIGHT] |= KEYSTATE_HELD | KEYSTATE_HELD_NEW; break; // right
@@ -3608,9 +3963,9 @@ void process_events() {
 
 					case SDL_CONTROLLER_BUTTON_START:
 					case SDL_CONTROLLER_BUTTON_BACK:
-						if(event.cbutton.button == SDL_CONTROLLER_BUTTON_START)
+						if(EVENT_GP_BUTTON(event) == SDL_CONTROLLER_BUTTON_START)
 							joy_button_states[JOYINPUT_START] |= KEYSTATE_HELD | KEYSTATE_HELD_NEW;
-						else if(event.cbutton.button == SDL_CONTROLLER_BUTTON_BACK)
+						else if(EVENT_GP_BUTTON(event) == SDL_CONTROLLER_BUTTON_BACK)
 							joy_button_states[JOYINPUT_BACK] |= KEYSTATE_HELD | KEYSTATE_HELD_NEW;
 #ifdef USE_MENU
 						last_key_scancode = SDL_SCANCODE_BACKSPACE;  /*** bring up pause menu ***/
@@ -3623,7 +3978,7 @@ void process_events() {
 				}
 				break;
 			case SDL_CONTROLLERBUTTONUP:
-				switch (event.cbutton.button)
+				switch (EVENT_GP_BUTTON(event))
 				{
 					case SDL_CONTROLLER_BUTTON_DPAD_LEFT:  joy_button_states[JOYINPUT_DPAD_LEFT] &= ~KEYSTATE_HELD; break; // left
 					case SDL_CONTROLLER_BUTTON_DPAD_RIGHT: joy_button_states[JOYINPUT_DPAD_RIGHT] &= ~KEYSTATE_HELD; break; // right
@@ -3699,6 +4054,32 @@ void process_events() {
 				}
 
 				break;
+#ifdef USE_SDL3
+			// SDL3 has no SDL_WINDOWEVENT wrapper: window events are top-level types.
+#ifdef __amigaos4__
+			case SDL_EVENT_WINDOW_MINIMIZED: /* pause game */
+				if (!is_menu_shown) {
+					last_key_scancode = SDL_SCANCODE_BACKSPACE;
+				}
+				break;
+			case SDL_EVENT_WINDOW_RESTORED: /* show "game paused/menu" */
+				update_screen();
+				break;
+#endif
+			case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
+				window_resized();
+				// fallthrough!
+			case SDL_EVENT_WINDOW_EXPOSED:
+				update_screen();
+				break;
+			case SDL_EVENT_WINDOW_FOCUS_GAINED:
+			// Fix for this bug: When playing back a recording, Alt+Tabbing back to SDLPoP stops the replay if Alt is released before Tab.
+			{ // If Alt is held down from Alt+Tab: ignore it until it's released.
+				const bool *state = SDL_GetKeyboardState(NULL);
+				if (state[SDL_SCANCODE_TAB]) ignore_tab = true;
+			}
+			break;
+#else
 			case SDL_WINDOWEVENT:
 				// In case the user switches away while holding a key: do as if all keys were released.
 				// (DOSBox does the same.)
@@ -3743,6 +4124,7 @@ void process_events() {
 					break;
 				}
 				break;
+#endif
 			case SDL_USEREVENT:
 				if (event.user.code == userevent_TIMER /*&& event.user.data1 == (void*)timer_index*/) {
 #ifdef USE_COMPAT_TIMER
@@ -3801,6 +4183,12 @@ void do_simple_wait(int timer_index) {
 	if ((replaying && skipping_replay) || is_validate_mode) return;
 #endif
 	update_screen();
+	// Always pump events at least once per frame. On slow targets (e.g. the
+	// GBA) a frame's logic+render can overrun the timer budget, so
+	// has_timer_stopped() returns true on the first check and the loop body
+	// below never runs. Since this is the only process_events() call in the
+	// gameplay loop, skipping it freezes key_states and kills all input.
+	process_events();
 	while (! has_timer_stopped(timer_index)) {
 		SDL_Delay(1);
 		process_events();
@@ -3813,6 +4201,13 @@ int do_wait(int timer_index) {
 	if ((replaying && skipping_replay) || is_validate_mode) return 0;
 #endif
 	update_screen();
+	// Pump events + check input at least once per frame even if the frame
+	// already overran the timer budget (see do_simple_wait above).
+	{
+		process_events();
+		int key = do_paused();
+		if (key != 0 && (word_1D63A != 0 || key == 0x1B)) return 1;
+	}
 	while (! has_timer_stopped(timer_index)) {
 		SDL_Delay(1);
 		process_events();
@@ -4178,6 +4573,27 @@ void set_pal_256(rgb_type* source) {
 }
 #endif // USE_FADE
 
+#ifdef __GBA__
+/* GBA: rendering ignores the per-image SDL_Palette and instead maps each sprite
+   pixel v -> global palette[image->gba_palette_offset + v] at blit time. So the
+   colour-variation palettes (guard colours, level 1.3 environment/wall variants)
+   that the desktop applies via SDL_SetPaletteColors have no effect unless we
+   write them into palette[] at the chtab's offset. Without this the guard kept
+   its placeholder load-time colours and drew as garbled flame-coloured blobs.
+   `colors` is packed r,g,b bytes in 6-bit VGA range (the same format set_pal
+   wants); index 0 is the transparent slot and is never drawn. */
+void set_chtab_palette(chtab_type* chtab, byte* colors, int n_colors) {
+	if (chtab == NULL) return;
+	int off = -1;
+	for (int i = 0; i < chtab->n_images; ++i) {
+		if (chtab->images[i] != NULL) { off = chtab->images[i]->gba_palette_offset; break; }
+	}
+	if (off < 0) return;
+	for (int i = 0; i < n_colors && (off + i) < 256; ++i) {
+		set_pal(off + i, colors[i*3 + 0], colors[i*3 + 1], colors[i*3 + 2]);
+	}
+}
+#else
 void set_chtab_palette(chtab_type* chtab, byte* colors, int n_colors) {
 	if (chtab != NULL) {
 		SDL_Color* scolors = (SDL_Color*) malloc(n_colors*sizeof(SDL_Color));
@@ -4202,7 +4618,7 @@ void set_chtab_palette(chtab_type* chtab, byte* colors, int n_colors) {
 			if (current_image != NULL) {
 
 				int n_colors_to_be_set = n_colors;
-				SDL_Palette* current_palette = current_image->format->palette;
+				SDL_Palette* current_palette = SURFACE_PALETTE(current_image);
 
 				// Fix crashing with the guard graphics of Christmas of Persia.
 				if (current_palette != NULL) {
@@ -4221,6 +4637,7 @@ void set_chtab_palette(chtab_type* chtab, byte* colors, int n_colors) {
 		free(scolors);
 	}
 }
+#endif /* __GBA__ */
 
 int has_timer_stopped(int timer_index) {
 #ifdef USE_COMPAT_TIMER
