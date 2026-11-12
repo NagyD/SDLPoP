@@ -2076,7 +2076,11 @@ void transition_ltr() {
 				last_transition_counter = current_counter;
 				break; // Proceed to the next frame.
 			} else {
-				SDL_Delay(1);
+#ifdef __EMSCRIPTEN__
+				emscripten_sleep(1);
+#else
+				SDL_Delay(1); // Prevent 100% cpu usage.
+#endif
 			}
 		}
 

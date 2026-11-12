@@ -2001,7 +2001,11 @@ void draw_confirmation_dialog(int which_dialog, const char* text) {
 			update_screen();
 		}
 
+#ifdef __EMSCRIPTEN__
+		emscripten_sleep(1);
+#else
 		SDL_Delay(1); // Prevent 100% cpu usage.
+#endif
 
 	}
 	current_dialog_box = 0;
@@ -2059,7 +2063,11 @@ void draw_select_level_dialog(void) {
 			textstate.ptr_font = saved_font;
 		}
 
+#ifdef __EMSCRIPTEN__
+		emscripten_sleep(1);
+#else
 		SDL_Delay(1); // Prevent 100% cpu usage.
+#endif
 
 	}
 	clear_menu_controls();
@@ -2120,7 +2128,11 @@ void draw_menu() {
 			need_full_menu_redraw_count = 2;
 		} else {
 			if (need_full_menu_redraw_count == 0) {
-				SDL_Delay(1);
+#ifdef __EMSCRIPTEN__
+				emscripten_sleep(1);
+#else
+				SDL_Delay(1); // Prevent 100% cpu usage.
+#endif
 				continue; // Don't redraw if there is no input to process (save CPU cycles).
 			}
 		}

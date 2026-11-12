@@ -244,7 +244,11 @@ void redraw_screen(int drawing_different_room) {
 #ifdef USE_DARK_TRANSITION
 		// Briefly show a dark screen when changing rooms, like in the original game.
 		update_screen();
+#ifdef __EMSCRIPTEN__
+		emscripten_sleep(100);
+#else
 		SDL_Delay(100);
+#endif
 #endif
 	}
 

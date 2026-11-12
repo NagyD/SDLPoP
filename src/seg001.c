@@ -556,7 +556,11 @@ void delay_ticks(Uint32 ticks) {
 #ifdef USE_REPLAY
 	if (replaying && skipping_replay) return;
 #endif
+#ifdef __EMSCRIPTEN__
+	emscripten_sleep(ticks *(1000/60));
+#else
 	SDL_Delay(ticks *(1000/60));
+#endif
 }
 
 // seg001:0981

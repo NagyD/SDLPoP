@@ -1,0 +1,35 @@
+# Project: SDLPoP WebAssembly
+
+CC = emcc
+RM = rm -f
+
+HFILES = common.h config.h data.h proto.h types.h
+OBJ = main.o data.o seg000.o seg001.o seg002.o seg003.o seg004.o seg005.o seg006.o seg007.o seg008.o seg009.o seqtbl.o replay.o options.o lighting.o screenshot.o menu.o midi.o opl3.o stb_vorbis.o
+BIN = ../prince.html
+BIN_ASSETS = ../prince.js ../prince.wasm ../prince.wasm.debug.wasm ../prince.data
+
+EMS += -s USE_SDL=2 -s USE_SDL_IMAGE=2 -sSDL2_IMAGE_FORMATS='["png", "jpeg"]'
+EMS += -s DISABLE_EXCEPTION_CATCHING=1
+
+CPPFLAGS += -Wall -D_GNU_SOURCE=1
+CFLAGS += -std=c99
+#CFLAGS += -O0
+CFLAGS += -O3
+
+LIBS := -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s EXIT_RUNTIME=0 -s ASSERTIONS=1 --preload-file ../data@/data/ $(EMS) -s ASYNCIFY
+CFLAGS += -Wall -Wformat $(EMS)
+#LDFLAGS += -g -fdebug-prefix-map=$(PWD)=./src
+LDFLAGS += --shell-file webassembly-minimal-page-template.html
+
+all: $(BIN)
+
+clean:
+	$(RM) $(OBJ) $(BIN) $(BIN_ASSETS)
+
+$(BIN): $(OBJ)
+	$(CC) $(LDFLAGS) $(OBJ) -o $@ $(LIBS) -lm
+
+%.o: %.c $(HFILES)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -c $<
+
+.PHONY: all clean

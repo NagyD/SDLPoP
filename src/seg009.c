@@ -3802,7 +3802,11 @@ void do_simple_wait(int timer_index) {
 #endif
 	update_screen();
 	while (! has_timer_stopped(timer_index)) {
-		SDL_Delay(1);
+#ifdef __EMSCRIPTEN__
+	  emscripten_sleep(1);
+#else
+    SDL_Delay(1);
+#endif
 		process_events();
 	}
 }
@@ -3814,7 +3818,11 @@ int do_wait(int timer_index) {
 #endif
 	update_screen();
 	while (! has_timer_stopped(timer_index)) {
-		SDL_Delay(1);
+#ifdef __EMSCRIPTEN__
+	  emscripten_sleep(1);
+#else
+    SDL_Delay(1);
+#endif
 		process_events();
 		int key = do_paused();
 		if (key != 0 && (word_1D63A != 0 || key == 0x1B)) return 1;

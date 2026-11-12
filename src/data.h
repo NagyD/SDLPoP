@@ -742,6 +742,8 @@ extern byte enable_quicksave_penalty INIT(= 1);
 extern byte enable_replay INIT(= 1);
 #ifdef __PSP__
 extern byte use_hardware_acceleration INIT(= 1);
+#elif defined(__EMSCRIPTEN__)
+extern byte use_hardware_acceleration INIT(= 0);
 #else
 extern byte use_hardware_acceleration INIT(= 2);
 #endif
