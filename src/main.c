@@ -30,7 +30,12 @@ static const char stack[] = "$STACK:200000";
 #include <psppower.h>
 #endif
 
+#ifdef __SWITCH__
+// On Nintendo Switch the entry point is main() in switch_main.c, which calls sdlpop_main().
+int sdlpop_main(int argc, char *argv[])
+#else
 int main(int argc, char *argv[])
+#endif
 {
 	#ifdef __PSP__
 	scePowerSetClockFrequency(333,333,166);
